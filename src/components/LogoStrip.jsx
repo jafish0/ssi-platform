@@ -11,7 +11,7 @@ export default function LogoStrip({ variant = 'full' }) {
     return (
       <div className="flex justify-center mb-6">
         <img
-          src="/logos/gains.png"
+          src="/logos/gains.jpeg"
           alt="GAINS — Growth and Innovation for Success"
           className="h-14 w-auto"
         />
@@ -31,7 +31,7 @@ export default function LogoStrip({ variant = 'full' }) {
         className="h-12 sm:h-14 w-auto"
       />
       <img
-        src="/logos/gains.png"
+        src="/logos/gains.jpeg"
         alt="GAINS — Growth and Innovation for Success"
         className="h-12 sm:h-14 w-auto"
       />
