@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { callEdgeFunction } from '../lib/api.js'
+import LogoStrip from '../components/LogoStrip.jsx'
 
 const ERROR_MESSAGES = {
   invalid_code: "That code didn't work — try again?",
@@ -62,13 +63,15 @@ export default function CodeEntryPage() {
 
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-10">
-      <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8">
+      <div className="w-full max-w-[540px]">
+        <LogoStrip variant="full" />
+        <div className="bg-white rounded-2xl shadow-card p-6 sm:p-8">
         <h1 className="text-[28px] font-bold leading-tight mb-3">
-          Welcome to Ready! Set! Dedicate!
+          Welcome
         </h1>
         <p className="text-[16px] leading-relaxed text-slate-700 mb-6">
-          This is a space for you. Enter the code you were given and we&apos;ll
-          get started — at your pace.
+          Enter the code you were given and we&apos;ll get started — at your
+          pace.
         </p>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
@@ -121,6 +124,7 @@ export default function CodeEntryPage() {
           </a>
           .
         </p>
+        </div>
       </div>
     </main>
   )

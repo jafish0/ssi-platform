@@ -73,7 +73,14 @@ export default function DeliveryStepPage() {
 
   async function handleItemSave(responseValue) {
     try {
-      await saveResponse(currentItem.id, currentItem.token_key, responseValue)
+      const result = await saveResponse(
+        currentItem.id,
+        currentItem.token_key,
+        responseValue,
+      )
+      // If the item triggered a hard exit, the engine has already marked the
+      // session completed and the shell will swap to the exit screen.
+      if (result?.exited) return
       goNext()
     } catch (err) {
       console.error('Failed to save response', err)

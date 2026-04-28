@@ -30,3 +30,7 @@ Thumbs.db
 # Misc
 .cache/
 coverage/
+
+# Local working files (not for commit)
+.gains.qsf
+*.qsf

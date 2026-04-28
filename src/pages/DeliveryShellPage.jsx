@@ -19,20 +19,21 @@ function ProgressBar() {
 }
 
 function CompletedScreen() {
-  const { sessionMeta } = useSession()
+  const { exitInfo } = useSession()
   const navigate = useNavigate()
   function handleStart() {
     sessionStorage.removeItem('session_id')
     navigate('/', { replace: true })
   }
+  const title = exitInfo?.title || "You've already finished this one."
+  const message =
+    exitInfo?.message || 'Thanks for showing up. Your responses are saved.'
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-10">
       <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
-        <h1 className="text-[28px] font-bold leading-tight mb-3">
-          You&apos;ve already finished this one.
-        </h1>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-6">
-          Thanks for showing up. Your responses are saved.
+        <h1 className="text-[28px] font-bold leading-tight mb-3">{title}</h1>
+        <p className="text-[16px] leading-relaxed text-slate-700 whitespace-pre-wrap mb-6">
+          {message}
         </p>
         <button
           type="button"

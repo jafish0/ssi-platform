@@ -12,6 +12,29 @@ import { resolveTokenPath } from '../lib/tokens.js'
 
 const SessionContext = createContext(null)
 
+// Returns true if the given exit rule matches the response value of a choice item.
+// Rule shapes supported:
+//   { selected: 'optionId' }              — single-select match
+//   { selected: ['optionId', ...] }       — multi-select must include any of these
+//   { any_of: ['optionId', ...] }         — alias for the multi-select case
+function matchesExitRule(rule, responseValue) {
+  if (!rule) return false
+  const sel = responseValue?.selected
+  if (rule.selected !== undefined) {
+    if (Array.isArray(rule.selected)) {
+      const arr = Array.isArray(sel) ? sel : [sel]
+      return rule.selected.some((s) => arr.includes(s))
+    }
+    if (Array.isArray(sel)) return sel.includes(rule.selected)
+    return sel === rule.selected
+  }
+  if (Array.isArray(rule.any_of)) {
+    const arr = Array.isArray(sel) ? sel : [sel]
+    return rule.any_of.some((s) => arr.includes(s))
+  }
+  return false
+}
+
 function normalizeSnapshot(snapshot) {
   // The snapshot_json is expected to look like:
   //   { sections: [{ id, type, title, order_index, items: [{ id, type, content_json, token_key, order_index, is_required }] }, ...] }
@@ -56,6 +79,7 @@ export function SessionProvider({ sessionId, children }) {
   const [responsesByItemId, setResponsesByItemId] = useState({}) // keyed by item.id
   const [sessionMeta, setSessionMeta] = useState(null) // { status, current_section }
   const [completed, setCompleted] = useState(false)
+  const [exitInfo, setExitInfo] = useState(null) // { title, message } when an exit_on rule fires
 
   // Avoid spurious progress updates when sections haven't actually changed.
   const lastSyncedSectionRef = useRef(-1)
@@ -159,8 +183,39 @@ export function SessionProvider({ sessionId, children }) {
         console.error('save-response failed', err)
         throw err
       }
+
+      // Hard-branch exit support: a `choice` item may declare exit_on rules in
+      // its content_json. If the saved selection matches, end the session here
+      // with a custom message (no further items rendered).
+      const item = currentItem
+      if (item && item.id === itemId && item.type === 'choice') {
+        const rules = item.content_json?.exit_on
+        const ruleArr = Array.isArray(rules) ? rules : rules ? [rules] : []
+        for (const rule of ruleArr) {
+          if (!rule) continue
+          const match = matchesExitRule(rule, responseValue)
+          if (match) {
+            setExitInfo({
+              title: rule.title || 'Thanks for stopping by',
+              message: rule.message || '',
+            })
+            setCompleted(true)
+            try {
+              await callEdgeFunction('update-session-progress', {
+                session_id: sessionId,
+                current_section: currentSectionIndex,
+                status: 'completed',
+              })
+            } catch (err) {
+              console.error('exit progress update failed', err)
+            }
+            return { exited: true }
+          }
+        }
+      }
+      return { exited: false }
     },
-    [sessionId],
+    [sessionId, currentItem, currentSectionIndex],
   )
 
   const completeSession = useCallback(async () => {
@@ -224,6 +279,7 @@ export function SessionProvider({ sessionId, children }) {
       loading,
       error,
       completed,
+      exitInfo,
       sessionMeta,
       sessionId,
       // navigation
@@ -249,6 +305,7 @@ export function SessionProvider({ sessionId, children }) {
       loading,
       error,
       completed,
+      exitInfo,
       sessionMeta,
       sessionId,
       goNext,
