@@ -11,6 +11,7 @@ import ResearcherDashboardPage from './pages/ResearcherDashboardPage.jsx'
 import InterventionListPage from './pages/InterventionListPage.jsx'
 import BuilderPage from './pages/BuilderPage.jsx'
 import AccessCodeManagementPage from './pages/AccessCodeManagementPage.jsx'
+import PreviewPage from './pages/PreviewPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -64,6 +65,16 @@ export default function App() {
         <Route path="step" element={<DeliveryStepPage />} />
       </Route>
       <Route path="/admin/*" element={<AdminRoutes />} />
+      <Route
+        path="/preview/:id"
+        element={
+          <AuthProvider>
+            <ProtectedRoute requiredRole="admin">
+              <PreviewPage />
+            </ProtectedRoute>
+          </AuthProvider>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
