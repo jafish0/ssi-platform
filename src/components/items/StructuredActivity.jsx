@@ -214,7 +214,46 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
       )
     }
 
-    case 'number_input':
+    case 'number_input': {
+      const min = Number.isFinite(field.min) ? field.min : null
+      const max = Number.isFinite(field.max) ? field.max : null
+      const step = field.step || 1
+      // If the range is small and discrete, render as bubble buttons.
+      const useBubbles =
+        min !== null &&
+        max !== null &&
+        step > 0 &&
+        (max - min) / step <= 10
+      if (useBubbles) {
+        const stops = []
+        for (let v = min; v <= max; v += step) stops.push(v)
+        return (
+          <div>
+            {labelEl}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(48px,1fr))] gap-2">
+              {stops.map((v) => {
+                const sel = value === v
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => onChange(v)}
+                    aria-pressed={sel}
+                    className={
+                      'min-h-[52px] rounded-2xl border text-[16px] font-semibold transition-colors ' +
+                      (sel
+                        ? 'bg-amber-200 border-amber-400 text-amber-900'
+                        : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                    }
+                  >
+                    {v}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      }
       return (
         <div>
           {labelEl}
@@ -222,7 +261,7 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
             type="number"
             min={field.min}
             max={field.max}
-            step={field.step || 1}
+            step={step}
             value={value ?? ''}
             onChange={(e) => {
               const n = e.target.value === '' ? '' : Number(e.target.value)
@@ -232,6 +271,7 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
           />
         </div>
       )
+    }
 
     case 'rating': {
       const min = field.min_value ?? 1
