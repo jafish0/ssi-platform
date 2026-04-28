@@ -151,7 +151,7 @@ export default function AlliesSafetyNet({ onSave = console.log, initialStep = 1 
     if (!over) return
     const dragId = String(active.id)
     if (!dragId.startsWith('ally-')) return
-    const idx = Number(dragId.slice(4))
+    const idx = Number(dragId.slice(5))
     const overId = String(over.id)
     if (overId.startsWith('bucket-')) {
       const supportTypeId = overId.slice(7)
