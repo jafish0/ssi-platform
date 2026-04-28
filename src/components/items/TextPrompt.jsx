@@ -1,0 +1,53 @@
+import { useState } from 'react'
+import { interpolate } from '../../lib/tokens.js'
+import { PrimaryButton } from './shared.jsx'
+
+export default function TextPrompt({ content, onSave, sessionData }) {
+  const [submitting, setSubmitting] = useState(false)
+  const heading = content?.heading
+  const body = interpolate(content?.body || '', sessionData || {})
+  const format = content?.format || 'standard'
+  const showButton = content?.show_continue_button !== false
+  const continueLabel = content?.continue_label || 'Keep going →'
+
+  async function handleContinue() {
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      await onSave({ viewed: true })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  let bodyClass = 'text-[16px] leading-relaxed text-slate-800 whitespace-pre-wrap'
+  let wrapperClass = ''
+  if (format === 'callout') {
+    wrapperClass = 'bg-amber-50 border-l-4 border-amber-300 rounded-2xl px-5 py-4 mb-6'
+  } else if (format === 'pull_forward_highlight') {
+    wrapperClass = 'bg-amber-50 border-l-4 border-amber-300 rounded-2xl px-5 py-4 mb-6'
+  } else {
+    wrapperClass = 'mb-6'
+  }
+
+  return (
+    <div>
+      {heading && <h2 className="text-[22px] font-semibold mb-3">{heading}</h2>}
+      <div className={wrapperClass}>
+        {format === 'pull_forward_highlight' && (
+          <div className="text-[13px] font-medium text-amber-800 mb-1">
+            From earlier:
+          </div>
+        )}
+        <p className={bodyClass}>{body}</p>
+      </div>
+      {showButton && (
+        <div className="flex justify-end">
+          <PrimaryButton onClick={handleContinue} disabled={submitting}>
+            {submitting ? 'Saving…' : continueLabel}
+          </PrimaryButton>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -59,8 +59,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<CodeEntryPage />} />
-      <Route path="/session/:sessionId" element={<DeliveryShellPage />} />
-      <Route path="/session/:sessionId/step" element={<DeliveryStepPage />} />
+      <Route path="/session/:sessionId" element={<DeliveryShellPage />}>
+        <Route index element={null} />
+        <Route path="step" element={<DeliveryStepPage />} />
+      </Route>
       <Route path="/admin/*" element={<AdminRoutes />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

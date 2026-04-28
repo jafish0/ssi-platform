@@ -1,69 +1,133 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import SessionGuard from '../components/SessionGuard.jsx'
+import { SessionProvider, useSession } from '../engine/SessionEngine.jsx'
 
-function ShellContent({ session }) {
+function ProgressBar() {
+  const { progressFraction } = useSession()
+  return (
+    <div
+      className="fixed top-0 left-0 right-0 h-1 bg-amber-100 z-50"
+      aria-hidden="true"
+    >
+      <div
+        className="h-full bg-amber-400 transition-all duration-[600ms] ease-out"
+        style={{ width: `${Math.round(progressFraction * 100)}%` }}
+      />
+    </div>
+  )
+}
+
+function CompletedScreen() {
+  const { sessionMeta } = useSession()
   const navigate = useNavigate()
-
-  function handleBack() {
+  function handleStart() {
     sessionStorage.removeItem('session_id')
     navigate('/', { replace: true })
+  }
+  return (
+    <main className="min-h-screen flex items-start justify-center px-4 py-10">
+      <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
+        <h1 className="text-[28px] font-bold leading-tight mb-3">
+          You&apos;ve already finished this one.
+        </h1>
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-6">
+          Thanks for showing up. Your responses are saved.
+        </p>
+        <button
+          type="button"
+          onClick={handleStart}
+          className="text-amber-700 hover:text-amber-900 underline text-[14px] min-h-[48px]"
+        >
+          ← Back to start
+        </button>
+      </div>
+    </main>
+  )
+}
+
+function LoadingScreen() {
+  return (
+    <main className="min-h-screen flex items-center justify-center px-4">
+      <p className="text-[14px] text-slate-500">Loading…</p>
+    </main>
+  )
+}
+
+function ErrorScreen({ error }) {
+  const navigate = useNavigate()
+  return (
+    <main className="min-h-screen flex items-start justify-center px-4 py-10">
+      <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6">
+        <h1 className="text-[22px] font-semibold mb-3">Something went wrong</h1>
+        <p className="text-[15px] text-slate-700 mb-4">
+          We couldn&apos;t load this session. Try again in a moment, or start over.
+        </p>
+        <p className="text-[12px] text-slate-500 font-mono break-all mb-4">
+          {error?.message || 'Unknown error'}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.removeItem('session_id')
+            navigate('/', { replace: true })
+          }}
+          className="text-amber-700 hover:text-amber-900 underline text-[14px] min-h-[48px]"
+        >
+          ← Back to start
+        </button>
+      </div>
+    </main>
+  )
+}
+
+function ShellInner() {
+  const { loading, error, completed, sections, currentSection } = useSession()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { sessionId } = useParams()
+
+  // Auto-redirect /session/:id to /session/:id/step once content is loaded
+  useEffect(() => {
+    if (loading || error || completed) return
+    if (!sections.length) return
+    const onShellRoute = location.pathname === `/session/${sessionId}`
+    if (onShellRoute) {
+      navigate(`/session/${sessionId}/step`, { replace: true })
+    }
+  }, [loading, error, completed, sections.length, location.pathname, navigate, sessionId])
+
+  if (loading) return <LoadingScreen />
+  if (error) return <ErrorScreen error={error} />
+  if (completed) return <CompletedScreen />
+  if (!sections.length) {
+    return (
+      <main className="min-h-screen flex items-start justify-center px-4 py-10">
+        <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6">
+          <h1 className="text-[22px] font-semibold mb-3">No content yet</h1>
+          <p className="text-[15px] text-slate-700">
+            This program doesn&apos;t have content to show yet. Check back soon.
+          </p>
+        </div>
+      </main>
+    )
   }
 
   return (
     <>
-      <div
-        className="fixed top-0 left-0 right-0 h-1 bg-amber-400 origin-left"
-        style={{ width: '0%' }}
-        aria-hidden="true"
-      />
-      <main className="min-h-screen flex items-start justify-center px-4 py-10">
-        <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8">
-          <h1 className="text-[28px] font-bold leading-tight mb-3">
-            Session active
-          </h1>
-          <p className="text-[16px] leading-relaxed text-slate-700 mb-6">
-            You&apos;re signed in to this session. The full experience is being
-            built — check back soon.
-          </p>
-
-          <dl className="space-y-3 text-[14px] mb-6">
-            <div>
-              <dt className="font-medium text-slate-600">Session id</dt>
-              <dd className="font-mono text-slate-800 break-all">
-                {session?.session_id || '—'}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-600">Status</dt>
-              <dd className="text-slate-800 capitalize">
-                {session?.status?.replace('_', ' ') || '—'}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-600">Intervention</dt>
-              <dd className="font-mono text-slate-800">
-                {session?.intervention_slug || '—'}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-600">Current section</dt>
-              <dd className="text-slate-800">{session?.current_section ?? 0}</dd>
-            </div>
-          </dl>
-
-          <button
-            type="button"
-            onClick={handleBack}
-            className="text-[14px] text-amber-700 hover:text-amber-900 underline min-h-[48px]"
-          >
-            ← Back to start
-          </button>
-        </div>
-      </main>
+      <ProgressBar />
+      <Outlet />
     </>
   )
 }
 
 export default function DeliveryShellPage() {
-  return <SessionGuard>{(session) => <ShellContent session={session} />}</SessionGuard>
+  const { sessionId } = useParams()
+  return (
+    <SessionGuard>
+      <SessionProvider sessionId={sessionId}>
+        <ShellInner />
+      </SessionProvider>
+    </SessionGuard>
+  )
 }
