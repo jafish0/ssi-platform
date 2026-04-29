@@ -44,6 +44,15 @@ export default function DeliveryStepPage() {
   const [showTransition, setShowTransition] = useState(false)
   const lastSectionRef = useRef(currentSectionIndex)
 
+  // Scroll to top whenever the current item changes so a long form (e.g. the
+  // demographics structured_activity) starts from its heading rather than
+  // wherever the previous page was scrolled to.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    }
+  }, [currentItem?.id, showTransition])
+
   useEffect(() => {
     if (lastSectionRef.current !== currentSectionIndex) {
       // Just advanced into a new section

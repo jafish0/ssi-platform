@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { CheckCircle2, RefreshCw } from 'lucide-react'
 import { PrimaryButton } from './shared.jsx'
 
 function shuffle(arr) {
@@ -13,6 +14,7 @@ function shuffle(arr) {
 export default function Choice({ content, onSave, existingResponse }) {
   const isMultiple = content?.selection_type === 'multiple'
   const style = content?.display_style || 'card_grid'
+  const quiz = content?.quiz // { correct_id, correct_message?, incorrect_message?, allow_retry? }
 
   const options = useMemo(() => {
     let opts = content?.options || []
@@ -28,16 +30,19 @@ export default function Choice({ content, onSave, existingResponse }) {
     return existingResponse?.selected || null
   })
   const [submitting, setSubmitting] = useState(false)
+  // Quiz state: feedback visible after a wrong/right tap
+  const [feedback, setFeedback] = useState(null) // 'correct' | 'incorrect' | null
+  const [attempts, setAttempts] = useState([])
 
   function isSelected(id) {
     if (isMultiple) return Array.isArray(selected) && selected.includes(id)
     return selected === id
   }
 
-  async function commit(value) {
+  async function commit(payload) {
     setSubmitting(true)
     try {
-      await onSave({ selected: value })
+      await onSave(payload)
     } finally {
       setSubmitting(false)
     }
@@ -45,10 +50,55 @@ export default function Choice({ content, onSave, existingResponse }) {
 
   function handleClick(id) {
     if (submitting) return
+
+    // Quiz flow takes priority for single-select with a quiz block.
+    if (!isMultiple && quiz?.correct_id) {
+      // Ignore taps while a "correct" feedback is animating away.
+      if (feedback === 'correct') return
+      const isCorrect = id === quiz.correct_id
+      const nextAttempts = [...attempts, id]
+      setAttempts(nextAttempts)
+      setSelected(id)
+
+      if (isCorrect) {
+        setFeedback('correct')
+        // Brief celebration, then commit + advance.
+        setTimeout(() => {
+          commit({
+            selected: id,
+            attempts: nextAttempts,
+            got_correct: true,
+          })
+        }, 900)
+        return
+      }
+
+      // Incorrect tap.
+      setFeedback('incorrect')
+      const allowRetry = quiz.allow_retry !== false
+      if (allowRetry) {
+        // Let them try again — clear selection after a beat so they can
+        // tap a different option, but keep the feedback visible.
+        setTimeout(() => setSelected(null), 600)
+        return
+      }
+      // No retry: commit the wrong answer after a moment so the participant
+      // sees the feedback before moving on.
+      setTimeout(() => {
+        commit({
+          selected: id,
+          attempts: nextAttempts,
+          got_correct: false,
+        })
+      }, 1200)
+      return
+    }
+
+    // Default (non-quiz) behavior.
     if (!isMultiple) {
       setSelected(id)
       // brief amber flash, then auto-advance via save
-      setTimeout(() => commit(id), 150)
+      setTimeout(() => commit({ selected: id }), 150)
       return
     }
     setSelected((prev) => {
@@ -62,7 +112,7 @@ export default function Choice({ content, onSave, existingResponse }) {
   async function handleContinue() {
     if (!isMultiple) return
     if (!Array.isArray(selected) || selected.length === 0) return
-    await commit(selected)
+    await commit({ selected })
   }
 
   const containerClass =
@@ -72,12 +122,43 @@ export default function Choice({ content, onSave, existingResponse }) {
         ? 'flex flex-wrap gap-2'
         : 'flex flex-col gap-2'
 
+  // Style override for incorrect-feedback visualization on the wrong button.
+  function quizClassFor(id, baseSelectedCx, baseUnselectedCx) {
+    if (!quiz?.correct_id) return null
+    if (feedback === 'correct' && id === quiz.correct_id) {
+      return 'bg-emerald-100 border-emerald-400 text-emerald-900'
+    }
+    if (feedback === 'incorrect' && attempts[attempts.length - 1] === id && selected === id) {
+      return 'bg-rose-100 border-rose-300 text-rose-700'
+    }
+    return null
+  }
+
   return (
     <div>
       <p className="text-[16px] leading-relaxed text-slate-800 mb-5">{content?.prompt}</p>
+
+      {feedback === 'correct' && (
+        <div className="mb-4 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-800">
+          <CheckCircle2 size={18} strokeWidth={2} />
+          <span className="text-[15px]">
+            {quiz?.correct_message || "That's right."}
+          </span>
+        </div>
+      )}
+      {feedback === 'incorrect' && (
+        <div className="mb-4 flex items-center gap-2 rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3 text-rose-700">
+          <RefreshCw size={18} strokeWidth={2} />
+          <span className="text-[15px]">
+            {quiz?.incorrect_message || 'Not quite — give it another try.'}
+          </span>
+        </div>
+      )}
+
       <div className={containerClass}>
         {options.map((opt) => {
           const sel = isSelected(opt.id)
+          const quizCx = quizClassFor(opt.id)
           if (style === 'chip_row') {
             return (
               <button
@@ -86,9 +167,10 @@ export default function Choice({ content, onSave, existingResponse }) {
                 onClick={() => handleClick(opt.id)}
                 className={
                   'rounded-full px-4 py-2 min-h-[44px] text-[14px] transition-colors ' +
-                  (sel
-                    ? 'bg-amber-200 text-amber-900'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700')
+                  (quizCx ||
+                    (sel
+                      ? 'bg-amber-200 text-amber-900'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'))
                 }
               >
                 {opt.text}
@@ -103,9 +185,10 @@ export default function Choice({ content, onSave, existingResponse }) {
                 onClick={() => handleClick(opt.id)}
                 className={
                   'text-left rounded-2xl border min-h-[52px] px-5 py-3 text-[16px] transition-colors ' +
-                  (sel
-                    ? 'bg-amber-200 border-amber-400 text-amber-900'
-                    : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                  (quizCx ||
+                    (sel
+                      ? 'bg-amber-200 border-amber-400 text-amber-900'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300'))
                 }
               >
                 {opt.text}
@@ -120,9 +203,10 @@ export default function Choice({ content, onSave, existingResponse }) {
               onClick={() => handleClick(opt.id)}
               className={
                 'text-left rounded-2xl border min-h-[80px] px-5 py-4 text-[16px] transition-colors ' +
-                (sel
-                  ? 'bg-amber-200 border-amber-400 text-amber-900'
-                  : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                (quizCx ||
+                  (sel
+                    ? 'bg-amber-200 border-amber-400 text-amber-900'
+                    : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300'))
               }
             >
               {opt.text}
