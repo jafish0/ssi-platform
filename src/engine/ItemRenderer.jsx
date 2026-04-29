@@ -38,6 +38,11 @@ export default function ItemRenderer({
   }
   return (
     <Component
+      // key forces a fresh component instance per item so internal useState
+      // re-initializes when the engine advances. Without this, two consecutive
+      // items of the same type would share state (e.g. text from one free_text
+      // bleeds into the next).
+      key={item.id}
       content={item.content_json}
       onSave={onSave}
       sessionData={sessionData}

@@ -2,6 +2,10 @@ import { useMemo, useState } from 'react'
 import { resolveTokenPath, unwrapTokenExpression } from '../../lib/tokens.js'
 import { PrimaryButton, PullForwardCallout } from './shared.jsx'
 
+// Loose RFC-5322-style validator — accepts most real addresses without
+// rejecting legitimate but unusual ones (`+` aliases, dotted local parts).
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export default function StructuredActivity({ content, onSave, existingResponse, sessionData }) {
   const fields = content?.fields || []
   const layout = content?.layout || 'single_column'
@@ -46,9 +50,18 @@ export default function StructuredActivity({ content, onSave, existingResponse, 
 
   function isFieldComplete(f) {
     const v = values[f.id]
-    if (!f.required) return true
+    if (!f.required) {
+      // optional email fields still need to validate format if filled
+      if (f.type === 'free_text' && f.input_type === 'email' && typeof v === 'string' && v.trim()) {
+        return EMAIL_RX.test(v.trim())
+      }
+      return true
+    }
     if (v === undefined || v === null || v === '') return false
     if (Array.isArray(v) && v.length === 0) return false
+    if (f.type === 'free_text' && f.input_type === 'email') {
+      return typeof v === 'string' && EMAIL_RX.test(v.trim())
+    }
     return true
   }
 
@@ -125,7 +138,17 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
       : null
 
   switch (field.type) {
-    case 'free_text':
+    case 'free_text': {
+      // input_type lets a free_text field render as a single-line input
+      // instead of a textarea, optionally with email/phone semantics.
+      const inputType = field.input_type
+      const showEmailError =
+        inputType === 'email' &&
+        typeof value === 'string' &&
+        value.trim().length > 0 &&
+        !EMAIL_RX.test(value.trim())
+      const sharedCx =
+        'w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white'
       return (
         <div>
           {labelEl}
@@ -137,16 +160,39 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
               onToggle={field.pull_forward?.user_can_exclude ? onPullToggle : null}
             />
           )}
-          <textarea
-            rows={field.rows || 3}
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={field.placeholder || ''}
-            maxLength={field.max_chars || undefined}
-            className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
-          />
+          {inputType === 'single_line' || inputType === 'email' || inputType === 'phone' ? (
+            <input
+              type={inputType === 'email' ? 'email' : inputType === 'phone' ? 'tel' : 'text'}
+              inputMode={inputType === 'phone' ? 'tel' : inputType === 'email' ? 'email' : undefined}
+              autoComplete={
+                inputType === 'email' ? 'email' : inputType === 'phone' ? 'tel' : 'off'
+              }
+              value={value || ''}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={field.placeholder || ''}
+              maxLength={field.max_chars || undefined}
+              className={
+                sharedCx + ' min-h-[52px] ' + (showEmailError ? 'border-rose-300 ' : '')
+              }
+            />
+          ) : (
+            <textarea
+              rows={field.rows || 3}
+              value={value || ''}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={field.placeholder || ''}
+              maxLength={field.max_chars || undefined}
+              className={sharedCx}
+            />
+          )}
+          {showEmailError && (
+            <div className="text-[13px] text-rose-600 mt-1">
+              That doesn&apos;t look like a valid email.
+            </div>
+          )}
         </div>
       )
+    }
 
     case 'single_choice':
       return (
