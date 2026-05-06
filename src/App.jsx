@@ -12,6 +12,8 @@ import InterventionListPage from './pages/InterventionListPage.jsx'
 import BuilderPage from './pages/BuilderPage.jsx'
 import AccessCodeManagementPage from './pages/AccessCodeManagementPage.jsx'
 import PreviewPage from './pages/PreviewPage.jsx'
+import TestingDashboardPage from './pages/TestingDashboardPage.jsx'
+import TestingSandboxPage from './pages/TestingSandboxPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -47,6 +49,22 @@ function AdminRoutes() {
           element={
             <ProtectedRoute requiredRole="researcher">
               <AccessCodeManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="testing"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <TestingDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="testing/:activityId"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <TestingSandboxPage />
             </ProtectedRoute>
           }
         />
