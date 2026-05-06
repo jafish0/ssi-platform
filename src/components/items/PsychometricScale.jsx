@@ -113,7 +113,9 @@ export default function PsychometricScale({ content, onSave, existingResponse })
 
   return (
     <div>
-      <h2 className="text-[22px] font-semibold mb-2">{content?.scale_name || 'Scale'}</h2>
+      {content?.scale_name && (
+        <h2 className="text-[22px] font-semibold mb-2">{content.scale_name}</h2>
+      )}
       {content?.instructions && (
         <p className="text-[16px] leading-relaxed text-slate-700 mb-6">{content.instructions}</p>
       )}
