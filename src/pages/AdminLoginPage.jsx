@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CheckCircle2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
+
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function AdminLoginPage() {
   const navigate = useNavigate()
   const { user, loading } = useAuth()
+  const [mode, setMode] = useState('signin') // 'signin' | 'reset'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  const [resetSent, setResetSent] = useState(false)
 
   // If already signed in, jump to dashboard
   useEffect(() => {
@@ -18,7 +23,7 @@ export default function AdminLoginPage() {
     }
   }, [loading, user, navigate])
 
-  async function handleSubmit(e) {
+  async function handleSignIn(e) {
     e.preventDefault()
     setError(null)
     if (!email || !password) {
@@ -38,68 +43,187 @@ export default function AdminLoginPage() {
     navigate('/admin/dashboard', { replace: true })
   }
 
+  async function handleSendReset(e) {
+    e.preventDefault()
+    setError(null)
+    setResetSent(false)
+    const trimmed = email.trim().toLowerCase()
+    if (!trimmed || !EMAIL_RX.test(trimmed)) {
+      setError('Please enter the email address on your account.')
+      return
+    }
+    setSubmitting(true)
+    // We don't pass redirectTo — the live recovery email template should
+    // hard-code the /set-password URL with TokenHash, same way as the
+    // invite template does. (See docs/supabase_recovery_email_template.html.)
+    const { error: rErr } = await supabase.auth.resetPasswordForEmail(trimmed)
+    setSubmitting(false)
+    // Always show the same message regardless of whether the email exists,
+    // to avoid leaking which addresses have accounts.
+    if (rErr && !/security|rate/i.test(rErr.message || '')) {
+      console.warn('resetPasswordForEmail error', rErr)
+    }
+    setResetSent(true)
+  }
+
+  function switchMode(next) {
+    setMode(next)
+    setError(null)
+    setResetSent(false)
+    setPassword('')
+  }
+
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-10">
       <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8">
-        <h1 className="text-[28px] font-bold leading-tight mb-2">Sign in</h1>
-        <p className="text-[14px] text-slate-500 mb-6">
-          Researcher and admin access.
-        </p>
+        {mode === 'signin' ? (
+          <>
+            <h1 className="text-[28px] font-bold leading-tight mb-2">Sign in</h1>
+            <p className="text-[14px] text-slate-500 mb-6">
+              Researcher and admin access.
+            </p>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-[14px] font-medium text-slate-700 mb-2"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-              className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
-            />
-          </div>
+            <form onSubmit={handleSignIn} noValidate className="space-y-5">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-[14px] font-medium text-slate-700 mb-2"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={submitting}
+                  className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                />
+              </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-[14px] font-medium text-slate-700 mb-2"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={submitting}
-              className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
-            />
-          </div>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-[14px] font-medium text-slate-700 mb-2"
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={submitting}
+                  className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                />
+              </div>
 
-          {error && (
-            <div
-              role="alert"
-              className="text-[14px] text-rose-600 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3"
-            >
-              {error}
-            </div>
-          )}
+              {error && (
+                <div
+                  role="alert"
+                  className="text-[14px] text-rose-600 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3"
+                >
+                  {error}
+                </div>
+              )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
-          >
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
+              >
+                {submitting ? 'Signing in…' : 'Sign in'}
+              </button>
+            </form>
+
+            <p className="text-[13px] text-slate-500 mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => switchMode('reset')}
+                className="text-amber-700 hover:text-amber-900 underline"
+              >
+                Forgot your password?
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-[28px] font-bold leading-tight mb-2">Reset your password</h1>
+            <p className="text-[14px] text-slate-500 mb-6">
+              We&apos;ll email you a link to set a new password.
+            </p>
+
+            {resetSent ? (
+              <div role="status" className="space-y-4">
+                <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 text-[14px]">
+                  <CheckCircle2 size={16} strokeWidth={2} />
+                  Check your email. If an account exists for that address, a
+                  reset link is on its way.
+                </div>
+                <p className="text-[13px] text-slate-500 leading-relaxed">
+                  The link will expire in about an hour. If you don&apos;t see
+                  it, check your Junk folder.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => switchMode('signin')}
+                  className="text-amber-700 hover:text-amber-900 underline text-[14px]"
+                >
+                  ← Back to sign in
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSendReset} noValidate className="space-y-5">
+                <div>
+                  <label
+                    htmlFor="reset-email"
+                    className="block text-[14px] font-medium text-slate-700 mb-2"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={submitting}
+                    className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                  />
+                </div>
+
+                {error && (
+                  <div
+                    role="alert"
+                    className="text-[14px] text-rose-600 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3"
+                  >
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
+                >
+                  {submitting ? 'Sending…' : 'Send reset link'}
+                </button>
+
+                <p className="text-[13px] text-slate-500 text-center">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('signin')}
+                    className="text-amber-700 hover:text-amber-900 underline"
+                  >
+                    ← Back to sign in
+                  </button>
+                </p>
+              </form>
+            )}
+          </>
+        )}
       </div>
     </main>
   )

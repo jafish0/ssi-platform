@@ -151,9 +151,10 @@ Currently `p=none` (monitor mode). After ~4 weeks of clean sending across both B
 ## Open follow-ups
 
 - ~~**Build admin invite flow.**~~ ✅ Shipped 2026-05-06. Uses TokenHash pattern + `/set-password` route + `invite-admin` / `list-admins` edge functions. UI lives at `/admin/team` (admin-only). See `src/pages/SetPasswordPage.jsx`, `src/pages/AdminTeamPage.jsx`, and the two edge functions in Supabase.
-- ~~**Update invite email template after invite flow ships**~~ ✅ Updated in repo same day; live template needs to be repasted into Supabase dashboard via Authentication → Email Templates → Invite user → Source view (templates are dashboard-only — Supabase MCP cannot edit).
+- ~~**Update invite email template after invite flow ships**~~ ✅ Updated in repo same day; live template repasted into Supabase dashboard 2026-05-06.
+- ~~**Build forgot-password flow.**~~ ✅ Shipped 2026-05-06. Inline mode toggle on `/admin` (Forgot password? link) calls `supabase.auth.resetPasswordForEmail`. Recovery emails route through the same `/set-password` page (which already keys on `?type=`). Recovery template HTML at `docs/supabase_recovery_email_template.html` — needs to be pasted into Supabase dashboard → Authentication → Email Templates → Reset password.
 - **Coordinate DMARC tightening** (~early June 2026) with BSC-Manager owner.
-- **Customize remaining auth email templates** (recovery, magic link, email change, reauthentication) if/when those flows are added to the app. Each must use the TokenHash + `/set-password`-style pattern to survive Safe Links.
+- **Customize remaining auth email templates** (magic link, email change, reauthentication) if/when those flows are added to the app. Each must use the TokenHash + `/set-password`-style pattern to survive Safe Links.
 - **Revisit the legacy Vercel aliases** (`ctac-ssi.vercel.app` etc.) after a few months of `ssi.ctac.app` being live with no observed traffic — can be removed for hygiene.
 - **Admin removal flow.** AdminTeamPage currently only adds; an admin can't be removed via UI. Either add a "Remove" button (with confirm + edge function) or keep it SQL-only for now.
 - **Cleanup of leftover smoke-test users** in `auth.users` from earlier flows (e.g. `jafish0+ssi-test1@uky.edu`) — has no user_roles entry; harmless but can be deleted via dashboard.

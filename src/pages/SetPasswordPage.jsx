@@ -104,8 +104,9 @@ export default function SetPasswordPage() {
       return
     }
     setStage('done')
-    // The user is already signed in via the verifyOtp call above — go
-    // straight to the admin dashboard.
+    // The user is already signed in via the verifyOtp call above. Send admins
+    // to the dashboard; for any other role, drop them on /admin which will
+    // route appropriately.
     setTimeout(() => navigate('/admin/dashboard', { replace: true }), 250)
   }
 
@@ -136,12 +137,15 @@ export default function SetPasswordPage() {
               <div className="flex items-center gap-2 mb-3 text-amber-700">
                 <KeyRound size={20} strokeWidth={1.5} />
                 <h1 className="text-[24px] font-bold leading-tight text-slate-800">
-                  Welcome to the SSI Platform
+                  {linkType === 'recovery'
+                    ? 'Reset your password'
+                    : 'Welcome to the SSI Platform'}
                 </h1>
               </div>
               <p className="text-[16px] leading-relaxed text-slate-700 mb-6">
-                You&apos;ve been invited as an admin. Click the button below to
-                continue and set your password.
+                {linkType === 'recovery'
+                  ? 'Click the button below to continue and set a new password.'
+                  : "You've been invited as an admin. Click the button below to continue and set your password."}
               </p>
               <button
                 type="button"
