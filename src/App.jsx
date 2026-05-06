@@ -14,6 +14,8 @@ import AccessCodeManagementPage from './pages/AccessCodeManagementPage.jsx'
 import PreviewPage from './pages/PreviewPage.jsx'
 import TestingDashboardPage from './pages/TestingDashboardPage.jsx'
 import TestingSandboxPage from './pages/TestingSandboxPage.jsx'
+import SetPasswordPage from './pages/SetPasswordPage.jsx'
+import AdminTeamPage from './pages/AdminTeamPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -53,6 +55,14 @@ function AdminRoutes() {
           }
         />
         <Route
+          path="team"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminTeamPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="testing"
           element={
             <ProtectedRoute requiredRole="admin">
@@ -82,6 +92,7 @@ export default function App() {
         <Route index element={null} />
         <Route path="step" element={<DeliveryStepPage />} />
       </Route>
+      <Route path="/set-password" element={<SetPasswordPage />} />
       <Route path="/admin/*" element={<AdminRoutes />} />
       <Route
         path="/preview/:id"
