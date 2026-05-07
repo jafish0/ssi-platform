@@ -20,7 +20,7 @@ export default function DemoPageLayout({ children, narrow = false, banner = true
             <span className="font-semibold text-[16px]">SSI Platform · Demo</span>
           </Link>
           <div className="flex-1" />
-          <LogoStrip variant="full" />
+          <LogoStrip variant="institutional" />
         </div>
       </header>
 

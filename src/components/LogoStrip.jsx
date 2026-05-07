@@ -18,6 +18,24 @@ export default function LogoStrip({ variant = 'full' }) {
       </div>
     )
   }
+  if (variant === 'institutional') {
+    // UK + CTAC only — used in contexts that aren't tied to a specific
+    // intervention's brand mark (e.g. the cross-intervention public demo).
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-6">
+        <img
+          src="/logos/uk.png"
+          alt="University of Kentucky"
+          className="h-9 sm:h-10 w-auto"
+        />
+        <img
+          src="/logos/ctac.png"
+          alt="Center on Trauma and Children — Evidence in action"
+          className="h-12 sm:h-14 w-auto"
+        />
+      </div>
+    )
+  }
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-6">
       <img

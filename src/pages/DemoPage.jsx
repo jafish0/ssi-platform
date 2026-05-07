@@ -285,6 +285,20 @@ export default function DemoPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-card p-5">
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-2">
+            Click each format below to download a CSV and put it through
+            its paces in SPSS or Excel. The same data is exported four
+            different ways so you can pick whichever shape fits your
+            analysis.
+          </p>
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-4">
+            The great thing about having our own platform is that we can
+            design the export to look exactly like you want. The core
+            infrastructure is built — refinements from here are easy. If
+            something is missing or shaped wrong, tell us and we&apos;ll
+            adjust.
+          </p>
+
           {snapshotLoading ? (
             <p className="text-[14px] text-slate-500 italic">Loading RSD intervention…</p>
           ) : snapshotErr ? (
@@ -293,12 +307,12 @@ export default function DemoPage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => runExport('long')}
+                onClick={() => runExport('wide')}
                 disabled={exporting !== null}
-                className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
               >
-                <FileText size={14} strokeWidth={1.5} />
-                Long format
+                <Download size={14} strokeWidth={2} />
+                {exporting === 'wide' ? 'Exporting…' : 'Wide / SPSS-ready'}
               </button>
               <button
                 type="button"
@@ -311,12 +325,12 @@ export default function DemoPage() {
               </button>
               <button
                 type="button"
-                onClick={() => runExport('wide')}
+                onClick={() => runExport('long')}
                 disabled={exporting !== null}
-                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+                className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
               >
-                <Download size={14} strokeWidth={2} />
-                {exporting === 'wide' ? 'Exporting…' : 'Wide / SPSS-ready'}
+                <FileText size={14} strokeWidth={1.5} />
+                Long format
               </button>
               <button
                 type="button"
