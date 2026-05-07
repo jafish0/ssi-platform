@@ -176,7 +176,7 @@ export default function DemoPage() {
       {/* Intro */}
       <section className="mb-8">
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
-          Try the SSI Platform — Ready! Set! Dedicate!
+          Ready! Set! Dedicate! — Activities Testing and Data Export Demo
         </h1>
         <p className="text-[15px] text-slate-700 leading-relaxed max-w-[720px]">
           Two things you can do here. <strong>Test the activities</strong> —
