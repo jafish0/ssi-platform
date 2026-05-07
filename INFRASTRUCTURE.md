@@ -148,6 +148,35 @@ Currently `p=none` (monitor mode). After ~4 weeks of clean sending across both B
 
 ---
 
+## Partner integrations (server-to-server)
+
+### Qualtrics — RSD consent + completion webhook
+
+Two-way handshake between the lab's Qualtrics consent flow and the SSI Platform.
+
+**Outbound from Qualtrics → SSI Platform**
+
+- Endpoint: `POST https://fflezknnpmbemeqyqxml.supabase.co/functions/v1/mint-access-code`
+- Auth: `x-partner-key: <PARTNER_API_KEY_QUALTRICS>` (shared secret stored as a Supabase Edge Function secret).
+- Body: `{ intervention_slug, cohort_label?, max_uses?, expires_at?, external_ref? }`. Allow-listed slugs: `ready-set-dedicate`, `rsd-follow-up-90d`. `external_ref` should be the Qualtrics response ID so the two codes for one participant share it.
+- Response: `{ code, intervention_slug, url, expires_at, external_ref }`.
+
+**Inbound to Qualtrics ← SSI Platform**
+
+- The `update-session-progress` edge function fires a one-shot webhook to `QUALTRICS_COMPLETION_WEBHOOK_URL` (with `X-API-TOKEN: <QUALTRICS_API_TOKEN>`) the first time a session transitions to `status='completed'`. Skipped silently if the access_code has no `external_ref` (e.g. codes minted via the Admin UI rather than Qualtrics).
+- Payload: `{ external_ref, code, intervention_slug, session_id, completed_at }`. Qualtrics' workflow can branch on `intervention_slug` to route follow-up scheduling vs. gift-card flow.
+- Retries once on 5xx / network error after 2s; never retries 4xx; fire-and-forget from the participant's perspective.
+
+**Required Supabase Edge Function secrets**
+
+- `PARTNER_API_KEY_QUALTRICS` — set this before Qualtrics can mint codes.
+- `QUALTRICS_COMPLETION_WEBHOOK_URL` — set this once Qualtrics workflow exposes its inbound webhook URL.
+- `QUALTRICS_API_TOKEN` — set if Qualtrics requires a token header (it does for direct API calls; the inbound-webhook flow may or may not need it depending on workflow config).
+
+Manage at: Supabase dashboard → Project Settings → Edge Functions → Secrets, or via Supabase CLI.
+
+**Related schema:** `access_codes.external_ref TEXT` (indexed, b-tree, partial WHERE NOT NULL). Multiple codes can share an `external_ref`; this is how a participant's intervention code and 90-day follow-up code are joined.
+
 ## Open follow-ups
 
 - ~~**Build admin invite flow.**~~ ✅ Shipped 2026-05-06. Uses TokenHash pattern + `/set-password` route + `invite-admin` / `list-admins` edge functions. UI lives at `/admin/team` (admin-only). See `src/pages/SetPasswordPage.jsx`, `src/pages/AdminTeamPage.jsx`, and the two edge functions in Supabase.
