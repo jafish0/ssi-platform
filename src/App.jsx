@@ -17,6 +17,8 @@ import TestingSandboxPage from './pages/TestingSandboxPage.jsx'
 import SetPasswordPage from './pages/SetPasswordPage.jsx'
 import AdminTeamPage from './pages/AdminTeamPage.jsx'
 import AdminExportsPage from './pages/AdminExportsPage.jsx'
+import DemoPage from './pages/DemoPage.jsx'
+import DemoSandboxPage from './pages/DemoSandboxPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -102,6 +104,9 @@ export default function App() {
         <Route path="step" element={<DeliveryStepPage />} />
       </Route>
       <Route path="/set-password" element={<SetPasswordPage />} />
+      {/* TEMP public demo. Remove these two routes when no longer needed. */}
+      <Route path="/demo" element={<DemoPage />} />
+      <Route path="/demo/sandbox/:activityId" element={<DemoSandboxPage />} />
       <Route path="/admin/*" element={<AdminRoutes />} />
       <Route
         path="/preview/:id"
