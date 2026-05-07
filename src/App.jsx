@@ -16,6 +16,7 @@ import TestingDashboardPage from './pages/TestingDashboardPage.jsx'
 import TestingSandboxPage from './pages/TestingSandboxPage.jsx'
 import SetPasswordPage from './pages/SetPasswordPage.jsx'
 import AdminTeamPage from './pages/AdminTeamPage.jsx'
+import AdminExportsPage from './pages/AdminExportsPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -51,6 +52,14 @@ function AdminRoutes() {
           element={
             <ProtectedRoute requiredRole="researcher">
               <AccessCodeManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="exports"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminExportsPage />
             </ProtectedRoute>
           }
         />

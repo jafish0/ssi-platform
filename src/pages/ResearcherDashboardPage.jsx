@@ -388,42 +388,18 @@ export default function ResearcherDashboardPage() {
         />
       </div>
 
-      {/* Export panel */}
-      <div className="bg-white rounded-2xl shadow-card p-5 mb-6">
-        <div className="flex items-center gap-2 mb-3">
+      {/* Export panel — moved to /admin/exports for filters, demo data, and SPSS-ready output */}
+      <div className="bg-white rounded-2xl shadow-card p-5 mb-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
           <Download size={18} strokeWidth={1.5} className="text-amber-700" />
-          <h2 className="text-[16px] font-semibold text-slate-800">Export data</h2>
+          <h2 className="text-[16px] font-semibold text-slate-800">Need to export?</h2>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={exportInterventionId}
-            onChange={(e) => setExportInterventionId(e.target.value)}
-            className="flex-1 min-w-[200px] text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
-          >
-            <option value="">Choose an intervention…</option>
-            {interventions.map((iv) => (
-              <option key={iv.id} value={iv.id}>
-                {iv.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            disabled={!exportInterventionId || exporting !== null}
-            onClick={() => exportLong(exportInterventionId)}
-            className="bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
-          >
-            {exporting === 'long' ? 'Exporting…' : 'Long format (one row per response)'}
-          </button>
-          <button
-            type="button"
-            disabled={!exportInterventionId || exporting !== null}
-            onClick={() => exportSummary(exportInterventionId)}
-            className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
-          >
-            {exporting === 'summary' ? 'Exporting…' : 'Summary (one row per session)'}
-          </button>
-        </div>
+        <a
+          href="/admin/exports"
+          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+        >
+          Open Data export →
+        </a>
       </div>
 
       {/* Filters */}
