@@ -1,10 +1,10 @@
 // Public temporary demo page at /demo. Combines:
 //   1. The 6 RSD activity cards (clickable, launch into /demo/sandbox/:id)
 //   2. The data-export demo with the "How exports work" explainer always
-//      expanded, the four export buttons, and basic filters.
+//      expanded and four export buttons.
 //
 // Intended for sharing with the team or external reviewers without
-// requiring admin sign-in. Easy to delete:
+// requiring admin sign-in. Easy to delete later:
 //   - This file + DemoSandboxPage.jsx + DemoPageLayout.jsx
 //   - The /demo and /demo/sandbox/:id routes in App.jsx
 //   - The get-rsd-snapshot edge function
@@ -21,26 +21,11 @@ import { buildRsdDemoDataset } from '../lib/demoDataset.js'
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-function fmtDate(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
 export default function DemoPage() {
-  // ---- snapshot + demo dataset ----
   const [snapshot, setSnapshot] = useState(null)
   const [versionNumber, setVersionNumber] = useState(null)
   const [snapshotErr, setSnapshotErr] = useState(null)
   const [snapshotLoading, setSnapshotLoading] = useState(true)
-
-  // ---- filter state ----
-  const [statusFilter, setStatusFilter] = useState('completed')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
   const [exporting, setExporting] = useState(null)
 
   useEffect(() => {
@@ -81,30 +66,17 @@ export default function DemoPage() {
     return buildRsdDemoDataset(snapshot, { versionNumber: versionNumber ?? 0 })
   }, [snapshot, versionNumber])
 
-  function applyFilters(sessions) {
-    return sessions.filter((s) => {
-      if (statusFilter !== 'all' && s.status !== statusFilter) return false
-      if (dateFrom && s.started_at && new Date(s.started_at) < new Date(dateFrom)) return false
-      if (dateTo) {
-        const end = new Date(dateTo)
-        end.setHours(23, 59, 59, 999)
-        if (s.started_at && new Date(s.started_at) > end) return false
-      }
-      return true
-    })
-  }
-
   function runExport(kind) {
     if (!snapshot || !demo) return
     setExporting(kind)
     try {
-      const filtered = applyFilters(demo.sessions)
+      const sessions = demo.sessions
       const stamp = todayStamp()
       const prefix = 'demo_ready-set-dedicate'
 
       if (kind === 'long') {
         const rows = []
-        for (const s of filtered) {
+        for (const s of sessions) {
           const m = demo.responsesByItemId[s.id] || {}
           for (const itemId of Object.keys(m)) {
             const rv = m[itemId]
@@ -141,7 +113,7 @@ export default function DemoPage() {
       if (kind === 'summary') {
         const tokenSet = new Set()
         const respByToken = {}
-        for (const s of filtered) {
+        for (const s of sessions) {
           const m = demo.responsesByItemId[s.id] || {}
           respByToken[s.id] = {}
           for (const itemId of Object.keys(m)) {
@@ -158,7 +130,7 @@ export default function DemoPage() {
         }
         const tokens = Array.from(tokenSet).sort()
         const headers = ['session_id', 'access_code', 'cohort', 'status', 'started_at', 'completed_at', ...tokens]
-        const rows = filtered.map((s) => {
+        const rows = sessions.map((s) => {
           const row = {
             session_id: s.id,
             access_code: s.access_code,
@@ -177,7 +149,7 @@ export default function DemoPage() {
       if (kind === 'wide') {
         const { headers, rows } = buildWideRows({
           snapshot,
-          sessions: filtered,
+          sessions,
           responsesByItemId: demo.responsesByItemId,
         })
         downloadCSV(`${prefix}_wide_${stamp}.csv`, rowsToCSV(headers, rows))
@@ -198,7 +170,6 @@ export default function DemoPage() {
   }
 
   const activities = TEST_REGISTRY.filter((e) => e.category === 'RSD activity')
-  const filteredCount = demo ? applyFilters(demo.sessions).length : 0
 
   return (
     <DemoPageLayout>
@@ -210,10 +181,10 @@ export default function DemoPage() {
         <p className="text-[15px] text-slate-700 leading-relaxed max-w-[720px]">
           Two things you can do here. <strong>Test the activities</strong> —
           launch any of the six RSD activities in isolation; nothing you
-          enter is saved. <strong>Try the data export</strong> — generate
-          CSVs for SPSS / Excel against a synthetic 52-participant dataset.
-          The same export pipeline that ships your real research data
-          produces these files.
+          enter is saved. <strong>Try the data export</strong> — download
+          CSVs for SPSS / Excel built from a synthetic 52-participant
+          dataset. The same export pipeline that ships your real research
+          data produces these files.
         </p>
       </section>
 
@@ -319,116 +290,44 @@ export default function DemoPage() {
           ) : snapshotErr ? (
             <p className="text-[14px] text-rose-600">{snapshotErr}</p>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-600 mb-1">Status</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
-                  >
-                    <option value="all">All statuses</option>
-                    <option value="completed">Completed only</option>
-                    <option value="in_progress">In progress</option>
-                    <option value="abandoned">Abandoned</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-600 mb-1">From</label>
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-600 mb-1">To</label>
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-              </div>
-
-              <div className="text-[12px] text-slate-500 mb-3">
-                {filteredCount} of {demo?.sessions?.length || 0} synthetic sessions match the
-                current filters.
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => runExport('long')}
-                  disabled={exporting !== null}
-                  className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
-                >
-                  <FileText size={14} strokeWidth={1.5} />
-                  Long format
-                </button>
-                <button
-                  type="button"
-                  onClick={() => runExport('summary')}
-                  disabled={exporting !== null}
-                  className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
-                >
-                  <FileText size={14} strokeWidth={1.5} />
-                  Summary
-                </button>
-                <button
-                  type="button"
-                  onClick={() => runExport('wide')}
-                  disabled={exporting !== null}
-                  className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
-                >
-                  <Download size={14} strokeWidth={2} />
-                  {exporting === 'wide' ? 'Exporting…' : 'Wide / SPSS-ready'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => runExport('codebook')}
-                  disabled={exporting !== null}
-                  className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
-                >
-                  <Download size={14} strokeWidth={2} />
-                  Codebook
-                </button>
-              </div>
-
-              {/* Quick preview of the demo dataset */}
-              {demo?.sessions?.length > 0 && (
-                <details className="mt-5">
-                  <summary className="cursor-pointer text-[13px] text-amber-700 hover:text-amber-900">
-                    Preview first 10 demo sessions
-                  </summary>
-                  <div className="overflow-x-auto mt-2 border border-slate-200 rounded-2xl">
-                    <table className="w-full text-[13px]">
-                      <thead>
-                        <tr className="bg-amber-50 text-left text-[11px] uppercase tracking-wide text-amber-800">
-                          <th className="px-3 py-2">Access code</th>
-                          <th className="px-3 py-2">Cohort</th>
-                          <th className="px-3 py-2 whitespace-nowrap">Started</th>
-                          <th className="px-3 py-2 whitespace-nowrap">Completed</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {applyFilters(demo.sessions).slice(0, 10).map((s) => (
-                          <tr key={s.id} className="border-t border-slate-100">
-                            <td className="px-3 py-1.5 font-mono text-slate-800">{s.access_code}</td>
-                            <td className="px-3 py-1.5 text-slate-700">{s.cohort}</td>
-                            <td className="px-3 py-1.5 text-slate-600 whitespace-nowrap">{fmtDate(s.started_at)}</td>
-                            <td className="px-3 py-1.5 text-slate-600 whitespace-nowrap">{fmtDate(s.completed_at)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </details>
-              )}
-            </>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => runExport('long')}
+                disabled={exporting !== null}
+                className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+              >
+                <FileText size={14} strokeWidth={1.5} />
+                Long format
+              </button>
+              <button
+                type="button"
+                onClick={() => runExport('summary')}
+                disabled={exporting !== null}
+                className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+              >
+                <FileText size={14} strokeWidth={1.5} />
+                Summary
+              </button>
+              <button
+                type="button"
+                onClick={() => runExport('wide')}
+                disabled={exporting !== null}
+                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+              >
+                <Download size={14} strokeWidth={2} />
+                {exporting === 'wide' ? 'Exporting…' : 'Wide / SPSS-ready'}
+              </button>
+              <button
+                type="button"
+                onClick={() => runExport('codebook')}
+                disabled={exporting !== null}
+                className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+              >
+                <Download size={14} strokeWidth={2} />
+                Codebook
+              </button>
+            </div>
           )}
         </div>
       </section>
