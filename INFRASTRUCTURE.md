@@ -179,6 +179,16 @@ Manage at: Supabase dashboard → Project Settings → Edge Functions → Secret
 
 ## Open follow-ups
 
+- **Smoke-test the Qualtrics integration end-to-end (after team decisions).** Three secrets must be set first in Supabase → Project Settings → Edge Functions → Secrets:
+  - `PARTNER_API_KEY_QUALTRICS` — generated value handed off in chat (`f6TVZubUCx_LYPyU7YsbiOIERt_PLuEe`); share with lab Qualtrics admin to configure on their side.
+  - `QUALTRICS_COMPLETION_WEBHOOK_URL` — TBD; set once the Qualtrics workflow exposes its inbound webhook URL.
+  - `QUALTRICS_API_TOKEN` — TBD; set if the Qualtrics workflow requires header auth on the inbound webhook.
+
+  Then run:
+  1. **Mint test (Task 2):** `curl -X POST https://fflezknnpmbemeqyqxml.supabase.co/functions/v1/mint-access-code -H "x-partner-key: $PARTNER_KEY" -H "Content-Type: application/json" -d '{"intervention_slug":"ready-set-dedicate","cohort_label":"Smoke test","max_uses":1,"external_ref":"R_TEST001"}'` — expect a JSON body with `code` and `url`. Wrong header → 401. Unknown slug → 400.
+  2. **Webhook test (Task 3):** point `QUALTRICS_COMPLETION_WEBHOOK_URL` at https://webhook.site, walk a test session through to completion in the app, verify webhook.site receives a POST with `{ external_ref, code, intervention_slug, session_id, completed_at }`.
+  3. **End-to-end:** swap webhook URL for the real Qualtrics inbound URL once the lab has their workflow built; do a real consent → mint → intervention → webhook → 90-day-follow-up dry run.
+
 - ~~**Build admin invite flow.**~~ ✅ Shipped 2026-05-06. Uses TokenHash pattern + `/set-password` route + `invite-admin` / `list-admins` edge functions. UI lives at `/admin/team` (admin-only). See `src/pages/SetPasswordPage.jsx`, `src/pages/AdminTeamPage.jsx`, and the two edge functions in Supabase.
 - ~~**Update invite email template after invite flow ships**~~ ✅ Updated in repo same day; live template repasted into Supabase dashboard 2026-05-06.
 - ~~**Build forgot-password flow.**~~ ✅ Shipped 2026-05-06. Inline mode toggle on `/admin` (Forgot password? link) calls `supabase.auth.resetPasswordForEmail`. Recovery emails route through the same `/set-password` page (which already keys on `?type=`). Recovery template HTML at `docs/supabase_recovery_email_template.html` — needs to be pasted into Supabase dashboard → Authentication → Email Templates → Reset password.
