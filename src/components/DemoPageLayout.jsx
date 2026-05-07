@@ -26,8 +26,8 @@ export default function DemoPageLayout({ children, narrow = false, banner = true
 
       {banner && (
         <div className="bg-amber-100 border-b border-amber-200 text-amber-900 text-[13px] text-center px-4 py-2">
-          This is a public demo. No real participant data is involved. The
-          page is temporary and may be removed without notice.
+          This is a private demo for the IRF Team. No real participant data is
+          involved.
         </div>
       )}
 

@@ -201,10 +201,9 @@ export default function DemoPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {activities.map((entry) => (
             <article key={entry.id} className="bg-white rounded-2xl shadow-card p-4 flex flex-col">
-              <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
+              <h3 className="text-[16px] font-semibold text-slate-800 mb-2">
                 {entry.displayName}
               </h3>
-              <div className="text-[12px] font-mono text-slate-400 mb-2">{entry.id}</div>
               <p className="text-[13px] text-slate-600 leading-relaxed flex-1 mb-4">
                 {entry.description}
               </p>
@@ -218,6 +217,15 @@ export default function DemoPage() {
             </article>
           ))}
         </div>
+        <p className="text-[14px] text-slate-700 leading-relaxed mt-5 max-w-[760px]">
+          An <strong>individual plan</strong> can be generated for each youth
+          based on their responses across these activities — pulling forward
+          their stuck-thought reframes, named allies, identified skills, and
+          poem lines into a single keepsake artifact. Before we design that
+          plan, though, we need to refine the activities above so the inputs
+          we pull from are clinically right. Try them out and tell us what
+          should change.
+        </p>
       </section>
 
       {/* Data export demo */}
