@@ -221,9 +221,9 @@ export default function DemoPage() {
           An <strong>individual plan</strong> can be generated for each youth
           based on their responses across these activities — pulling forward
           their stuck-thought reframes, named allies, identified skills, and
-          poem lines into a single keepsake artifact. Before we design that
-          plan, though, we need to refine the activities above so the inputs
-          we pull from are clinically right. Try them out and tell us what
+          poem lines into a single keepsake artifact. Before I design that
+          plan, though, I need to refine the activities above so the inputs
+          I pull from are clinically right. Try them out and tell me what
           should change.
         </p>
       </section>
@@ -300,10 +300,10 @@ export default function DemoPage() {
             analysis.
           </p>
           <p className="text-[14px] text-slate-700 leading-relaxed mb-4">
-            The great thing about having our own platform is that we can
+            The great thing about having my own platform is that I can
             design the export to look exactly like you want. The core
             infrastructure is built — refinements from here are easy. If
-            something is missing or shaped wrong, tell us and we&apos;ll
+            something is missing or shaped wrong, tell me and I&apos;ll
             adjust.
           </p>
 
