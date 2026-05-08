@@ -17,6 +17,7 @@ import TestingSandboxPage from './pages/TestingSandboxPage.jsx'
 import SetPasswordPage from './pages/SetPasswordPage.jsx'
 import AdminTeamPage from './pages/AdminTeamPage.jsx'
 import AdminExportsPage from './pages/AdminExportsPage.jsx'
+import AdminFeedbackPage from './pages/AdminFeedbackPage.jsx'
 import DemoPage from './pages/DemoPage.jsx'
 import DemoSandboxPage from './pages/DemoSandboxPage.jsx'
 
@@ -70,6 +71,14 @@ function AdminRoutes() {
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminTeamPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="feedback"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminFeedbackPage />
             </ProtectedRoute>
           }
         />

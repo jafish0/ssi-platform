@@ -9,6 +9,7 @@
 import { Link } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
 import LogoStrip from './LogoStrip.jsx'
+import FeedbackButton from './FeedbackButton.jsx'
 
 export default function DemoPageLayout({ children, narrow = false, banner = true }) {
   return (
@@ -21,6 +22,7 @@ export default function DemoPageLayout({ children, narrow = false, banner = true
           </Link>
           <div className="flex-1" />
           <LogoStrip variant="institutional" />
+          <FeedbackButton />
         </div>
       </header>
 

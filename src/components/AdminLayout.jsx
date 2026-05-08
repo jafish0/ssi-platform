@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, FileText, KeyRound, LogOut, Menu, X, FlaskConical, Users, Download } from 'lucide-react'
+import { Home, FileText, KeyRound, LogOut, Menu, X, FlaskConical, Users, Download, MessageSquare } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
 function NavItem({ to, icon: Icon, label, onNavigate }) {
@@ -66,6 +66,14 @@ export default function AdminLayout({ children, title }) {
             to="/admin/exports"
             icon={Download}
             label="Data export"
+            onNavigate={() => setMobileOpen(false)}
+          />
+        )}
+        {isAdmin && (
+          <NavItem
+            to="/admin/feedback"
+            icon={MessageSquare}
+            label="Feedback"
             onNavigate={() => setMobileOpen(false)}
           />
         )}
