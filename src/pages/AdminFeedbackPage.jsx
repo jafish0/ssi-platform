@@ -31,6 +31,7 @@ const SUBMITTER_LABELS = {
   jessica: 'Jessica',
   holly: 'Holly',
   bianca: 'Bianca',
+  stephanie: 'Stephanie',
   josh: 'Josh',
   anonymous: 'Anonymous',
 }

@@ -23,6 +23,7 @@ const SUBMITTERS = [
   { value: 'jessica', label: 'Jessica' },
   { value: 'holly', label: 'Holly' },
   { value: 'bianca', label: 'Bianca' },
+  { value: 'stephanie', label: 'Stephanie' },
   { value: 'josh', label: 'Josh' },
   { value: 'anonymous', label: 'Anonymous' },
 ]
