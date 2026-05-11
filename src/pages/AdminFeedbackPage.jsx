@@ -112,6 +112,24 @@ export default function AdminFeedbackPage() {
 
   const refresh = useCallback(() => setReloadKey((k) => k + 1), [])
 
+  const filtered = useMemo(() => {
+    return rows.filter((r) => {
+      if (statusFilter !== 'all' && r.status !== statusFilter) return false
+      if (categoryFilter !== 'all' && r.category !== categoryFilter) return false
+      return true
+    })
+  }, [rows, statusFilter, categoryFilter])
+
+  const counts = useMemo(() => {
+    return {
+      total: rows.length,
+      new: rows.filter((r) => r.status === 'new').length,
+    }
+  }, [rows])
+
+  // NOTE: must be declared AFTER `filtered` — useCallback evaluates its
+  // dependency array at call time, so referencing `filtered` here while
+  // it's still in the temporal dead zone crashes the whole page render.
   const downloadSpreadsheet = useCallback(() => {
     // Export the *currently filtered* set. The filter UI is right above
     // the button, so "what you see is what you get" is the intuitive
@@ -142,21 +160,6 @@ export default function AdminFeedbackPage() {
           ].filter(Boolean).join('-')
     downloadCSV(`feedback-${filterTag}-${stamp}.csv`, csv)
   }, [filtered, statusFilter, categoryFilter])
-
-  const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      if (statusFilter !== 'all' && r.status !== statusFilter) return false
-      if (categoryFilter !== 'all' && r.category !== categoryFilter) return false
-      return true
-    })
-  }, [rows, statusFilter, categoryFilter])
-
-  const counts = useMemo(() => {
-    return {
-      total: rows.length,
-      new: rows.filter((r) => r.status === 'new').length,
-    }
-  }, [rows])
 
   async function updateRow(id, patch) {
     setSaveError(null)
