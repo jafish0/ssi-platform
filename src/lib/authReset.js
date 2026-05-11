@@ -17,19 +17,12 @@
 
 import { supabase } from './supabase.js'
 
-export async function clearAllAuthState() {
-  // First ask supabase-js to clean up properly (revoke refresh token,
-  // clear its own storage). scope:'local' so we don't hit the network —
-  // when this is called we already suspect the network/auth is unreliable.
-  try {
-    await supabase.auth.signOut({ scope: 'local' })
-  } catch (err) {
-    console.warn('signOut(local) failed (ignored):', err)
-  }
-  // Belt-and-suspenders: if supabase-js's own teardown didn't run for
-  // some reason (race, storage lock contention, broken adapter), nuke
-  // any sb-*-auth-token keys by hand. Safe to run even when there's
-  // nothing to clear.
+// SYNCHRONOUS, never-hangs cleanup. Used by the in-app "Reset session"
+// button — its entire purpose is to escape a wedged state, so it must
+// NOT call supabase.auth.signOut (which is itself one of the things
+// that hangs when the auth state machine is wedged). Safe to call
+// anywhere; deliberately quiet about failures.
+export function hardClearLocalAuthStorage() {
   try {
     if (typeof localStorage !== 'undefined') {
       const keys = []
@@ -40,8 +33,28 @@ export async function clearAllAuthState() {
       keys.forEach((k) => localStorage.removeItem(k))
     }
   } catch (err) {
-    console.warn('manual localStorage cleanup failed (ignored):', err)
+    console.warn('hardClearLocalAuthStorage failed (ignored):', err)
   }
+}
+
+export async function clearAllAuthState() {
+  // First ask supabase-js to clean up properly (revoke refresh token,
+  // clear its own storage). scope:'local' so we don't hit the network —
+  // when this is called we already suspect the network/auth is unreliable.
+  // Capped at 3s — supabase.auth.signOut is one of the things that can
+  // hang when the auth state machine is wedged, and we cannot let
+  // clearAllAuthState itself become a source of wedging.
+  try {
+    await withTimeout(
+      () => supabase.auth.signOut({ scope: 'local' }),
+      3000,
+      'signOut(local)',
+    )
+  } catch (err) {
+    console.warn('signOut(local) failed or timed out (ignored):', err)
+  }
+  // Belt-and-suspenders. Synchronous, never hangs.
+  hardClearLocalAuthStorage()
 }
 
 // Run `fn()` and reject if it takes longer than `ms`. Used by the sign-in

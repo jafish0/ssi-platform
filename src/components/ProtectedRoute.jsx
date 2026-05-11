@@ -38,7 +38,16 @@ export default function ProtectedRoute({ requiredRole = 'researcher', children }
               </p>
               <button
                 type="button"
-                onClick={() => resetAndReload?.()}
+                onClick={() => {
+                  // Defensive: this button MUST do something on every click,
+                  // even if resetAndReload happens to be undefined for any
+                  // reason. So fall back to a direct hard reload.
+                  if (typeof resetAndReload === 'function') {
+                    resetAndReload()
+                  } else {
+                    window.location.replace('/admin')
+                  }
+                }}
                 className="inline-flex items-center bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
               >
                 Reset session &amp; sign in

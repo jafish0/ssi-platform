@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
-import { clearAllAuthState } from '../lib/authReset.js'
+import { clearAllAuthState, hardClearLocalAuthStorage, withTimeout } from '../lib/authReset.js'
 
 const AuthContext = createContext(null)
 
@@ -11,6 +11,11 @@ const AuthContext = createContext(null)
 // at least sees the login form. Empirically, a healthy boot fires
 // INITIAL_SESSION in well under a second.
 const WATCHDOG_MS = 5000
+
+// If fetchRole takes longer than this, treat it as a wedged auth state
+// machine and recover. user_roles is a tiny table behind a fast index;
+// 4s is generous.
+const ROLE_FETCH_TIMEOUT_MS = 4000
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate()
@@ -87,14 +92,27 @@ export function AuthProvider({ children }) {
       lastHandledUserId.current = sessionUser.id
 
       setUser(sessionUser)
-      const { hadError } = await fetchRole(sessionUser.id)
+      let hadError = false
+      try {
+        const result = await withTimeout(
+          () => fetchRole(sessionUser.id),
+          ROLE_FETCH_TIMEOUT_MS,
+          'fetchRole',
+        )
+        hadError = !!result?.hadError
+      } catch (err) {
+        // Either fetchRole threw, OR our 4s timeout fired because the
+        // supabase auth state machine is wedged and the REST call is
+        // sitting waiting for a token that never arrives.
+        console.warn('Auth: fetchRole failed/timed out:', err)
+        hadError = true
+      }
       if (cancelled) return
 
       if (hadError) {
-        // Stale / revoked token: the cached session looked fine to
-        // supabase-js but the server rejected the very first authenticated
-        // call. Best-effort recovery: nuke local state so the user can re-login.
-        console.warn('Auth: role fetch failed for valid-looking session, clearing.')
+        // Stale / revoked token OR wedged supabase-js state. Best-effort
+        // recovery: nuke local state so the user lands on the login form.
+        console.warn('Auth: clearing state after role-fetch failure.')
         await clearAllAuthState()
         if (cancelled) return
         lastHandledUserId.current = null
@@ -135,11 +153,13 @@ export function AuthProvider({ children }) {
   }, [navigate])
 
   // Exposed for the "Stuck? Reset session" button on the loading screen.
-  // Does the most aggressive cleanup we can do client-side and forces a
-  // hard reload to start with a blank slate.
-  const resetAndReload = useCallback(async () => {
-    await clearAllAuthState()
-    // Hard reload so any in-flight supabase-js promises are abandoned too.
+  // This MUST never hang — its whole purpose is to escape a wedged state.
+  // So we deliberately do NOT await supabase.auth.signOut (which is one
+  // of the things that hangs in the wedged case). We just nuke the
+  // localStorage auth keys synchronously and force a hard reload; any
+  // in-flight supabase-js promises are abandoned by the page unload.
+  const resetAndReload = useCallback(() => {
+    hardClearLocalAuthStorage()
     window.location.replace('/admin')
   }, [])
 
