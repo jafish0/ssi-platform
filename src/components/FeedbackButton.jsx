@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { MessageSquare, X, CheckCircle2 } from 'lucide-react'
 import { findTestEntry } from '../lib/testRegistry.js'
+import { getActivityVersion } from '../lib/activityVersions.js'
 import { callEdgeFunction } from '../lib/api.js'
 
 const CATEGORIES = [
@@ -31,19 +32,24 @@ const SUBMITTERS = [
 function deriveContext(pathname, params) {
   // /demo/sandbox/:activityId — try to resolve the displayName from
   // TEST_REGISTRY so the area string reads naturally ("Activity: Getting
-  // Unstuck"). Fall back to the raw slug if anything's off.
+  // Unstuck · v1.0"). Fall back to the raw slug if anything's off.
   if (pathname.startsWith('/demo/sandbox/')) {
     const id = params.activityId || pathname.split('/').pop()
     const entry = findTestEntry(id)
+    const versionInfo = getActivityVersion(id)
+    const versionTag = versionInfo ? ` · ${versionInfo.version}` : ''
     return {
-      area: entry ? `Activity: ${entry.displayName}` : `Activity: ${id}`,
+      area: entry
+        ? `Activity: ${entry.displayName}${versionTag}`
+        : `Activity: ${id}${versionTag}`,
       activity_id: id || null,
+      activity_version: versionInfo ? versionInfo.version : null,
     }
   }
   if (pathname === '/demo' || pathname === '/demo/') {
-    return { area: 'Demo home', activity_id: null }
+    return { area: 'Demo home', activity_id: null, activity_version: null }
   }
-  return { area: pathname, activity_id: null }
+  return { area: pathname, activity_id: null, activity_version: null }
 }
 
 export default function FeedbackButton() {
@@ -101,6 +107,7 @@ export default function FeedbackButton() {
         page_path: location.pathname,
         area: area?.trim() || ctx.area,
         activity_id: ctx.activity_id,
+        activity_version: ctx.activity_version,
         category,
         submitter,
         message: trimmed,

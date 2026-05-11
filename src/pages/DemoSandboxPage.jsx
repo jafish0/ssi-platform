@@ -8,6 +8,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { ArrowLeft, RotateCcw, Smartphone, Monitor, Trash2 } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import { findTestEntry } from '../lib/testRegistry.js'
+import { getActivityVersion } from '../lib/activityVersions.js'
 import { resolveTokenPath } from '../lib/tokens.js'
 
 function LoadingFallback() {
@@ -60,6 +61,7 @@ export default function DemoSandboxPage() {
   }
 
   const Component = entry.component
+  const versionInfo = getActivityVersion(activityId)
   const props = {
     sessionData: {},
     resolveToken: (path) => resolveTokenPath(path, entry.mockProps?.sessionData || {}),
@@ -113,12 +115,20 @@ export default function DemoSandboxPage() {
             </button>
           </div>
         </div>
-        <div className="px-4 pb-3 text-[12px] text-slate-500">
+        <div className="px-4 pb-3 text-[12px] text-slate-500 flex items-center flex-wrap gap-x-2 gap-y-1">
           <span className="font-semibold text-slate-700">{entry.displayName}</span>
-          <span className="mx-2">·</span>
+          {versionInfo && (
+            <span
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-800"
+              title={`Updated ${versionInfo.updated}`}
+            >
+              {versionInfo.version}
+            </span>
+          )}
+          <span>·</span>
           <span className="font-mono">{entry.id}</span>
-          <span className="mx-2">·</span>
-          {entry.description}
+          <span>·</span>
+          <span>{entry.description}</span>
         </div>
       </div>
 

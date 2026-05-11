@@ -6,9 +6,10 @@
 // acknowledged → addressed | declined and can leave inline `admin_notes`.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw, MessageSquare, ChevronDown, ChevronRight } from 'lucide-react'
+import { RefreshCw, MessageSquare, ChevronDown, ChevronRight, Download } from 'lucide-react'
 import AdminLayout from '../components/AdminLayout.jsx'
 import { supabase } from '../lib/supabase.js'
+import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 
 const STATUSES = [
   { value: 'new', label: 'New', cls: 'bg-amber-100 text-amber-800' },
@@ -111,6 +112,37 @@ export default function AdminFeedbackPage() {
 
   const refresh = useCallback(() => setReloadKey((k) => k + 1), [])
 
+  const downloadSpreadsheet = useCallback(() => {
+    // Export the *currently filtered* set. The filter UI is right above
+    // the button, so "what you see is what you get" is the intuitive
+    // contract here — if you want everything, set both filters to All
+    // first. Mirrors the behavior of the /admin/exports CSV.
+    const headers = [
+      'created_at',
+      'submitter',
+      'category',
+      'status',
+      'area',
+      'activity_id',
+      'activity_version',
+      'page_path',
+      'message',
+      'admin_notes',
+      'user_agent',
+      'id',
+    ]
+    const stamp = todayStamp()
+    const csv = rowsToCSV(headers, filtered)
+    const filterTag =
+      statusFilter === 'all' && categoryFilter === 'all'
+        ? 'all'
+        : [
+            statusFilter !== 'all' ? statusFilter : null,
+            categoryFilter !== 'all' ? categoryFilter : null,
+          ].filter(Boolean).join('-')
+    downloadCSV(`feedback-${filterTag}-${stamp}.csv`, csv)
+  }, [filtered, statusFilter, categoryFilter])
+
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (statusFilter !== 'all' && r.status !== statusFilter) return false
@@ -162,14 +194,30 @@ export default function AdminFeedbackPage() {
               )}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={refresh}
-            className="flex items-center gap-1 text-[13px] text-amber-700 hover:text-amber-900"
-          >
-            <RefreshCw size={14} strokeWidth={1.5} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={downloadSpreadsheet}
+              disabled={filtered.length === 0}
+              title={
+                filtered.length === 0
+                  ? 'No rows in the current view'
+                  : `Download ${filtered.length} row${filtered.length === 1 ? '' : 's'} as CSV`
+              }
+              className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:hover:bg-amber-500 text-white font-semibold rounded-full px-4 py-2 min-h-[36px] text-[13px]"
+            >
+              <Download size={14} strokeWidth={2} />
+              Download CSV
+            </button>
+            <button
+              type="button"
+              onClick={refresh}
+              className="flex items-center gap-1 text-[13px] text-amber-700 hover:text-amber-900"
+            >
+              <RefreshCw size={14} strokeWidth={1.5} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
@@ -283,7 +331,14 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
         <td className="px-3 py-3 text-slate-800 whitespace-nowrap">
           {SUBMITTER_LABELS[row.submitter] || row.submitter}
         </td>
-        <td className="px-3 py-3 text-slate-700">{row.area || '—'}</td>
+        <td className="px-3 py-3 text-slate-700">
+          <span>{row.area || '—'}</span>
+          {row.activity_version && (
+            <span className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-800 align-middle">
+              {row.activity_version}
+            </span>
+          )}
+        </td>
         <td className="px-3 py-3">
           <CategoryBadge value={row.category} />
         </td>
@@ -316,6 +371,10 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
                 <div>
                   <div className="text-[12px] uppercase tracking-wide text-slate-500">Activity ID</div>
                   <div className="text-slate-700 font-mono">{row.activity_id || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-[12px] uppercase tracking-wide text-slate-500">Activity version</div>
+                  <div className="text-slate-700 font-mono">{row.activity_version || '—'}</div>
                 </div>
                 <div className="sm:col-span-2">
                   <div className="text-[12px] uppercase tracking-wide text-slate-500">User agent</div>

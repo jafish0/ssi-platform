@@ -51,3 +51,21 @@ If `WORKING_NOTES.md` is missing, bootstrap it before doing other work.
 - The public demo lives at `/demo` and `/demo/sandbox/:activityId`.
   Marked TEMP in comments — the relevant files are easy to `git rm`
   together when the demo is no longer needed.
+
+## Sandbox activity versions
+
+`src/lib/activityVersions.js` is the source of truth for which build of
+each sandbox activity is currently live. The version is shown as a badge
+on the sandbox page (so testers know what they're poking at) and is
+captured in every feedback submission (so admin triage can tell which
+version a comment refers to).
+
+**When you change an activity file under `src/activities/`, bump its
+version in the same commit.** Format is `vMAJOR.MINOR`:
+
+- Bump **MINOR** for copy / wording / styling / small UX tweaks
+- Bump **MAJOR** for structural changes to the flow, scoring, or data shape
+
+Always update `updated` to today's date and **prepend** a one-line note
+to `changelog` (older notes stay so the history is readable without git
+archaeology).
