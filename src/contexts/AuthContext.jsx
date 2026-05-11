@@ -1,33 +1,41 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 
 const AuthContext = createContext(null)
 
-// How long to wait for `getSession()` before assuming the local auth state
-// is wedged (stale refresh token, network blip, etc.) and forcing a clean
-// recovery. supabase-js caches sessions in localStorage but if it tries to
-// refresh and that hangs, the whole AuthProvider stays loading=true and the
-// admin pages get stuck on a "Loading…" screen — exactly the bug we're
-// trying to fix.
-const BOOTSTRAP_TIMEOUT_MS = 5000
+// If no auth event arrives within this window, assume supabase-js is wedged
+// (offline refresh hang, broken localStorage state, revoked refresh token
+// that's silently failing) and force a clean logged-out state so the user
+// at least sees the login form. Empirically, a healthy boot fires
+// INITIAL_SESSION in well under a second.
+const WATCHDOG_MS = 5000
 
-async function getSessionWithTimeout() {
-  const timeoutPromise = new Promise((resolve) => {
-    setTimeout(() => resolve({ __timedOut: true }), BOOTSTRAP_TIMEOUT_MS)
-  })
-  const result = await Promise.race([supabase.auth.getSession(), timeoutPromise])
-  if (result?.__timedOut) {
-    return { timedOut: true, session: null }
-  }
-  return { timedOut: false, session: result?.data?.session ?? null }
-}
-
-async function clearLocalSession() {
+// Same primitive used by the in-app "Stuck? Reset session" recovery button
+// on ProtectedRoute's loading screen and the manual signOut() flow below.
+async function clearAllAuthState() {
+  // First ask supabase-js to clean up properly (revoke refresh token, clear
+  // its own storage). scope:'local' so we don't hit the network — when this
+  // is called we already suspect the network/auth is unreliable.
   try {
     await supabase.auth.signOut({ scope: 'local' })
   } catch (err) {
-    console.warn('Local signOut failed (ignored):', err)
+    console.warn('signOut(local) failed (ignored):', err)
+  }
+  // Belt-and-suspenders: if supabase-js's own teardown didn't run for some
+  // reason (race, storage lock contention), nuke any sb-*-auth-token keys
+  // by hand. Safe to run even when there's nothing to clear.
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const keys = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && /^sb-.*-auth-token/.test(k)) keys.push(k)
+      }
+      keys.forEach((k) => localStorage.removeItem(k))
+    }
+  } catch (err) {
+    console.warn('manual localStorage cleanup failed (ignored):', err)
   }
 }
 
@@ -65,74 +73,104 @@ export function AuthProvider({ children }) {
     return { role: resolved, hadError: false }
   }, [])
 
+  // Use a ref to dedupe concurrent role fetches when supabase-js fires
+  // multiple events in quick succession (e.g. INITIAL_SESSION + TOKEN_REFRESHED
+  // for the same user). Otherwise we re-flash loading=true unnecessarily.
+  const lastHandledUserId = useRef(null)
+
   useEffect(() => {
     let cancelled = false
+    let watchdog = null
 
-    async function bootstrap() {
-      let session
-      try {
-        const result = await getSessionWithTimeout()
-        if (result.timedOut) {
-          console.warn('Auth bootstrap: getSession timed out, clearing local session.')
-          await clearLocalSession()
-          session = null
-        } else {
-          session = result.session
-        }
-      } catch (err) {
-        console.warn('Auth bootstrap threw, clearing local session:', err)
-        await clearLocalSession()
-        session = null
-      }
-
+    // Following the supabase-js recommended pattern: subscribe FIRST, then
+    // let INITIAL_SESSION drive bootstrap. Do NOT also call getSession() —
+    // the two paths race each other and that's what was wedging the page.
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return
-      const sessionUser = session?.user ?? null
-      setUser(sessionUser)
 
-      if (sessionUser) {
-        const { hadError } = await fetchRole(sessionUser.id)
-        if (cancelled) return
-        if (hadError) {
-          // Likely a stale token rejected by RLS — bail out cleanly so the
-          // user can re-login instead of getting stuck on Loading…
-          console.warn('Auth bootstrap: role fetch failed, clearing local session.')
-          await clearLocalSession()
-          setUser(null)
-          setRole(null)
-        }
-      } else {
-        setRole(null)
+      // We got an event — the watchdog can stand down.
+      if (watchdog) {
+        clearTimeout(watchdog)
+        watchdog = null
       }
-      if (!cancelled) setLoading(false)
-    }
 
-    bootstrap()
-
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const sessionUser = session?.user ?? null
+
+      if (!sessionUser) {
+        lastHandledUserId.current = null
+        setUser(null)
+        setRole(null)
+        setLoading(false)
+        return
+      }
+
+      // Same user we already resolved — just keep state as-is and make sure
+      // loading is false. Avoids the loading→ready→loading flicker on
+      // TOKEN_REFRESHED.
+      if (lastHandledUserId.current === sessionUser.id && event !== 'SIGNED_IN') {
+        setLoading(false)
+        return
+      }
+      lastHandledUserId.current = sessionUser.id
+
       setUser(sessionUser)
-      if (sessionUser) {
-        await fetchRole(sessionUser.id)
-      } else {
+      const { hadError } = await fetchRole(sessionUser.id)
+      if (cancelled) return
+
+      if (hadError) {
+        // Stale / revoked token: the cached session looked fine to
+        // supabase-js but the server rejected the very first authenticated
+        // call. Best-effort recovery: nuke local state so the user can re-login.
+        console.warn('Auth: role fetch failed for valid-looking session, clearing.')
+        await clearAllAuthState()
+        if (cancelled) return
+        lastHandledUserId.current = null
+        setUser(null)
         setRole(null)
       }
       setLoading(false)
     })
 
+    // Watchdog. If supabase-js never fires an event (very rare, but it
+    // happens — e.g. if its async storage adapter throws or a refresh hangs
+    // without rejecting), we'd otherwise sit on Loading… forever. After 5s
+    // assume the worst and force the user out to the login form.
+    watchdog = setTimeout(async () => {
+      if (cancelled) return
+      console.warn('Auth watchdog tripped — no auth event in', WATCHDOG_MS, 'ms.')
+      await clearAllAuthState()
+      if (cancelled) return
+      lastHandledUserId.current = null
+      setUser(null)
+      setRole(null)
+      setLoading(false)
+    }, WATCHDOG_MS)
+
     return () => {
       cancelled = true
+      if (watchdog) clearTimeout(watchdog)
       sub?.subscription?.unsubscribe()
     }
   }, [fetchRole])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
+    lastHandledUserId.current = null
     setUser(null)
     setRole(null)
     navigate('/admin', { replace: true })
   }, [navigate])
 
-  const value = { user, role, loading, signOut }
+  // Exposed for the "Stuck? Reset session" button on the loading screen.
+  // Does the most aggressive cleanup we can do client-side and forces a
+  // hard reload to start with a blank slate.
+  const resetAndReload = useCallback(async () => {
+    await clearAllAuthState()
+    // Hard reload so any in-flight supabase-js promises are abandoned too.
+    window.location.replace('/admin')
+  }, [])
+
+  const value = { user, role, loading, signOut, resetAndReload }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
