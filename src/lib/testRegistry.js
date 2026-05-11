@@ -19,38 +19,13 @@ const BelongingSkillsSort = lazy(() => import('../activities/BelongingSkillsSort
 const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
 
-// --- Mock sessionData used by activities that consume pull-forward data ---
-const MOCK_SESSION_DATA = {
-  getting_unstuck: {
-    activity: 'getting_unstuck',
-    stuck_thought_ids: ['st2'],
-    responses: [
-      {
-        thought_id: 'st2',
-        thought_text: "My foster/adoptive family isn't my real family.",
-        strategy: 'both_and',
-        and_statement: 'there can still be a place for them in my life',
-      },
-    ],
-  },
-  allies_safety_net: {
-    activity: 'allies_safety_net',
-    allies: [
-      { name: 'Coach Davis', support_types: ['emotional', 'social'] },
-      { name: 'Ms. Johnson', support_types: ['instrumental'] },
-    ],
-    removed_allies: [],
-    gaps_identified: [],
-  },
-}
-
 // --- Registry ---
 export const TEST_REGISTRY = [
   {
     id: 'getting-unstuck',
     displayName: 'Getting Unstuck',
     category: 'RSD activity',
-    description: 'Identify stuck thoughts; pick a strategy (Fight or Both/And) for each.',
+    description: 'Rate stuck thoughts on frequency + believability; pick a strategy (Challenge or Both/And) for the ones you want to work on.',
     component: GettingUnstuck,
     mockProps: {},
   },
@@ -82,7 +57,7 @@ export const TEST_REGISTRY = [
     id: 'who-i-am-poem',
     displayName: 'Who I Am Poem',
     category: 'RSD activity',
-    description: 'Two-stanza George-Ella-Lyons-style poem with keepsake card.',
+    description: '10-line "I am" poem on a single screen with a worked example.',
     component: WhoIAmPoem,
     mockProps: {},
   },
@@ -90,10 +65,9 @@ export const TEST_REGISTRY = [
     id: 'letter-builder',
     displayName: 'Letter to Another Youth',
     category: 'RSD activity',
-    description:
-      'Six-section letter with pull-forward from Getting Unstuck and Allies/Safety Net.',
+    description: 'Single-screen free write — no scaffolding, no pull-forward.',
     component: LetterBuilder,
-    mockProps: { sessionData: MOCK_SESSION_DATA },
+    mockProps: {},
   },
 ]
 

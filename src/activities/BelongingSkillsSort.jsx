@@ -12,14 +12,56 @@ import {
 } from '@dnd-kit/core'
 import { PrimaryButton } from '../components/items/shared.jsx'
 
+// Belonging Promoting Behaviors — kid-friendly labels and per-skill
+// definitions per Stephanie + Holly + Ginny's 2026-05-11 feedback. The 7
+// items below match the locked pretest doc ("Belonging Promoting
+// Behaviors (7 items)" in Pretest Draft Belongingness_5.2.26.docx,
+// confirmed final by Josh 2026-05-11). Skill IDs bs1-bs7 stay sequential
+// but the meaning of each ID has shifted; this is acceptable while the
+// platform is demo-only.
 const BEHAVIORS = [
-  { id: 'bs1', text: 'Active listening / attention (smiling and eye contact)' },
-  { id: 'bs2', text: 'Using inclusive language' },
-  { id: 'bs3', text: 'Expressing gratitude' },
-  { id: 'bs4', text: 'Providing support to others' },
-  { id: 'bs5', text: 'Creating space for belonging' },
-  { id: 'bs6', text: 'Reducing belonging uncertainty' },
-  { id: 'bs7', text: 'Effective conflict resolution' },
+  {
+    id: 'bs1',
+    text: 'Pay close attention when someone is talking to you (without checking your phone or getting distracted)',
+    definition:
+      "Giving someone your full attention when they're speaking — eyes on them, no phone, no looking around.",
+  },
+  {
+    id: 'bs2',
+    text: 'Use words like "we," "us," or "our group" to make people feel included',
+    definition:
+      'Saying things that signal everyone belongs in the group — "we" instead of "you guys," "our team" instead of "the group."',
+  },
+  {
+    id: 'bs3',
+    text: 'Say thank you or tell others when they do something you appreciate',
+    definition:
+      'Telling someone you noticed and appreciated what they did, instead of just thinking it.',
+  },
+  {
+    id: 'bs4',
+    text: 'Help someone out when they need it',
+    definition:
+      'Offering help when you see someone needs it, without waiting to be asked.',
+  },
+  {
+    id: 'bs5',
+    text: 'Invite others to spend time with you',
+    definition:
+      'Reaching out to bring someone into your plans or your day, instead of waiting for them to ask.',
+  },
+  {
+    id: 'bs6',
+    text: 'Include others in conversations and activities (like watching a movie, going for a walk, or playing a game)',
+    definition:
+      "Making space for others in what you're already doing — looping them into the conversation, the game, the show.",
+  },
+  {
+    id: 'bs7',
+    text: 'Talk through a disagreement with someone until you find an answer that works for everyone',
+    definition:
+      'Staying with a disagreement until you find something that works for everyone, instead of walking away or giving up.',
+  },
 ]
 
 const BUCKETS = [
@@ -27,8 +69,8 @@ const BUCKETS = [
   { id: 'willing_to_try', label: "What I'm willing to try" },
 ]
 
-function DraggableCard({ id, text, selected, onTap }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id })
+function DraggableCard({ behavior, selected, onTap, defOpen, onToggleDef }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: behavior.id })
   return (
     <div
       ref={setNodeRef}
@@ -43,12 +85,42 @@ function DraggableCard({ id, text, selected, onTap }) {
         (isDragging ? ' opacity-50' : '')
       }
     >
-      {text}
+      <div className="flex items-start gap-2">
+        <div className="flex-1 leading-snug">{behavior.text}</div>
+        <button
+          type="button"
+          aria-label={defOpen ? 'Hide definition' : 'Show definition'}
+          aria-expanded={defOpen}
+          onPointerDown={(e) => {
+            // Stop the drag sensor from activating when the kid hits the
+            // "?" — without this, dnd-kit's PointerSensor swallows the
+            // click intent and the popover never opens.
+            e.stopPropagation()
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleDef()
+          }}
+          className={
+            'flex-shrink-0 inline-flex items-center justify-center rounded-full w-6 h-6 text-[12px] font-bold border transition-colors ' +
+            (defOpen
+              ? 'bg-amber-500 text-white border-amber-500'
+              : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100')
+          }
+        >
+          ?
+        </button>
+      </div>
+      {defOpen && (
+        <div className="mt-2 pt-2 border-t border-amber-200 text-[13px] leading-relaxed text-slate-600 italic">
+          {behavior.definition}
+        </div>
+      )}
     </div>
   )
 }
 
-function DropBucket({ id, label, items, behaviors, onTapItem, tapSelected }) {
+function DropBucket({ id, label, items, behaviors, onTapItem, tapSelected, defOpenId, onToggleDef }) {
   const { isOver, setNodeRef } = useDroppable({ id })
   return (
     <div
@@ -70,13 +142,14 @@ function DropBucket({ id, label, items, behaviors, onTapItem, tapSelected }) {
           return (
             <DraggableCard
               key={b.id}
-              id={b.id}
-              text={b.text}
+              behavior={b}
               selected={tapSelected === b.id}
               onTap={(e) => {
                 e.stopPropagation()
                 onTapItem(b.id)
               }}
+              defOpen={defOpenId === b.id}
+              onToggleDef={() => onToggleDef(b.id)}
             />
           )
         })}
@@ -94,6 +167,9 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
     willing_to_try: [],
   })
   const [tapSelected, setTapSelected] = useState(null)
+  // Which card has its definition popover open. Single-open at a time
+  // keeps the layout from getting noisy.
+  const [defOpenId, setDefOpenId] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -140,6 +216,10 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
     }
   }
 
+  function toggleDef(itemId) {
+    setDefOpenId((prev) => (prev === itemId ? null : itemId))
+  }
+
   const anyPlaced =
     placement.already_doing.length > 0 || placement.willing_to_try.length > 0
 
@@ -173,28 +253,32 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <h2 className="text-[22px] font-semibold mb-2">Belonging skills</h2>
-      <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
+      <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
         Drag each one into a bucket. If a skill isn&apos;t for you right now,
         leave it where it is. There&apos;s no grade.
+      </p>
+      <p className="text-[13px] text-slate-500 mb-5">
+        Tap the <span className="font-semibold">?</span> on any skill for a quick definition.
       </p>
 
       <div className="mb-5">
         <div className="text-[13px] text-slate-500 mb-2">Skills</div>
         <div onClick={() => handleBucketTap('unplaced')}>
-          <div className="flex flex-wrap gap-2 min-h-[60px]">
+          <div className="flex flex-col gap-2 min-h-[60px]">
             {unplaced.map((id) => {
               const b = BEHAVIORS.find((x) => x.id === id)
               if (!b) return null
               return (
                 <DraggableCard
                   key={id}
-                  id={id}
-                  text={b.text}
+                  behavior={b}
                   selected={tapSelected === id}
                   onTap={(e) => {
                     e.stopPropagation()
                     handleTap(id)
                   }}
+                  defOpen={defOpenId === id}
+                  onToggleDef={() => toggleDef(id)}
                 />
               )
             })}
@@ -215,6 +299,8 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
               behaviors={BEHAVIORS}
               onTapItem={handleTap}
               tapSelected={tapSelected}
+              defOpenId={defOpenId}
+              onToggleDef={toggleDef}
             />
           </div>
         ))}

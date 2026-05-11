@@ -1,61 +1,80 @@
-import { useEffect, useState } from 'react'
-import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import { useState } from 'react'
+import { PrimaryButton } from '../components/items/shared.jsx'
 
-const STANZA_1_PROMPTS = [
-  { id: 'i_am', starter: 'I am', hint: 'two special things about you', required: true },
-  { id: 'i_wonder', starter: 'I wonder', hint: 'something you are actually curious about', required: true },
-  { id: 'i_fear', starter: 'I fear', hint: 'something you are afraid of', required: false },
-  { id: 'i_suffer_when', starter: 'I suffer when', hint: 'an event that makes you sad or angry', required: false },
-  { id: 'i_want', starter: 'I want', hint: 'an actual desire', required: true },
+// "Who I Am" poem — 10-line structure per Ginny's revision
+// (`Poem structure.png` in repo root). 8 kid-filled lines, lines 6 and 10
+// auto-mirror whatever the kid wrote for line 1. Single screen, no
+// multi-page flow. Worked example shown above the inputs so the kid sees
+// what a finished poem looks like before writing.
+//
+// Attribution to a named poet was intentionally removed per Ginny's note:
+// "Remove this label — this isn't the Lyons format." If a credit is
+// wanted later, "Inspired by traditional 'I am' poems" is fine.
+
+const LINES = [
+  { id: 'characteristics', n: 1, starter: 'I am',           hint: 'two special characteristics you have' },
+  { id: 'from',            n: 2, starter: 'I am from',      hint: 'a place, people, or way of life' },
+  { id: 'fear',            n: 3, starter: 'I fear',         hint: 'something you are afraid of' },
+  { id: 'suffer_when',     n: 4, starter: 'I suffer when',  hint: 'an event that makes you sad or angry' },
+  { id: 'want',            n: 5, starter: 'I want',         hint: 'an actual desire' },
+  // line 6 auto-mirrors line 1 — no kid input
+  { id: 'believe',         n: 7, starter: 'I believe',      hint: 'something you believe in' },
+  { id: 'dream',           n: 8, starter: 'I dream',        hint: 'something you actually dream about' },
+  { id: 'going',           n: 9, starter: 'I am going',     hint: 'where you hope to be' },
+  // line 10 auto-mirrors line 1 — no kid input
 ]
 
-const STANZA_2_PROMPTS = [
-  { id: 'i_understand', starter: 'I understand', hint: 'something you know', required: true },
-  { id: 'i_believe', starter: 'I believe', hint: 'something you believe in', required: false },
-  { id: 'i_dream', starter: 'I dream', hint: 'something you actually dream about', required: false },
-  { id: 'i_try', starter: 'I try', hint: 'something you really make an effort about', required: true },
-  { id: 'i_hope', starter: 'I hope', hint: 'something you actually hope for', required: true },
+// Short in-voice example shown above the inputs. Deliberately simple and
+// generic, not from a published poet. Two lines is enough — the kid just
+// needs to see the shape.
+const EXAMPLE_LINES = [
+  'I am curious and stubborn,',
+  'I am from a small kitchen with the radio on,',
+  'I dream of a quiet morning by the water.',
 ]
 
-function buildPoemText(s1, s2) {
-  const lines = []
-  for (const p of STANZA_1_PROMPTS) {
-    const v = (s1[p.id] || '').trim()
-    if (v) lines.push(`${p.starter} ${v}`)
+function buildPoemText(vals) {
+  const lineOne = (vals.characteristics || '').trim()
+  const out = []
+  for (const l of LINES) {
+    const v = (vals[l.id] || '').trim()
+    if (v) out.push(`${l.starter} ${v}`)
+    // Insert the mirrored line 6 after line 5
+    if (l.n === 5 && lineOne) out.push(`I am ${lineOne}`)
   }
-  if (s1.i_am) lines.push(`I am ${s1.i_am.trim()}`)
-  lines.push('')
-  for (const p of STANZA_2_PROMPTS) {
-    const v = (s2[p.id] || '').trim()
-    if (v) lines.push(`${p.starter} ${v}`)
-  }
-  if (s1.i_am) lines.push(`I am ${s1.i_am.trim()}`)
-  return lines.join('\n')
+  // Closing line 10 mirror
+  if (lineOne) out.push(`I am ${lineOne}`)
+  return out.join('\n')
 }
 
-export default function WhoIAmPoem({ onSave = console.log, initialStep = 1 }) {
-  const [step, setStep] = useState(initialStep)
-  const [s1, setS1] = useState({})
-  const [s2, setS2] = useState({})
+export default function WhoIAmPoem({ onSave = console.log }) {
+  const [vals, setVals] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
-  function update1(id, v) { setS1((prev) => ({ ...prev, [id]: v })) }
-  function update2(id, v) { setS2((prev) => ({ ...prev, [id]: v })) }
-
-  function stanzaComplete(prompts, vals) {
-    return prompts.every((p) => !p.required || (vals[p.id] || '').trim().length > 0)
+  function update(id, v) {
+    setVals((prev) => ({ ...prev, [id]: v }))
   }
 
+  // Require line 1 (since lines 6/10 mirror it, leaving it blank would
+  // produce a poem with three missing lines). Everything else is optional
+  // so the kid isn't punished for having one prompt they can't answer.
+  const canSave = (vals.characteristics || '').trim().length > 0
+
   async function handleSave() {
+    if (!canSave) return
     setSubmitting(true)
     try {
-      const fullText = buildPoemText(s1, s2)
       await onSave({
         activity: 'who_i_am_poem',
-        stanza_1: { ...s1, i_am_repeat: s1.i_am || '' },
-        stanza_2: { ...s2, i_am_repeat: s1.i_am || '' },
-        full_poem_text: fullText,
+        characteristics: (vals.characteristics || '').trim(),
+        from: (vals.from || '').trim(),
+        fear: (vals.fear || '').trim(),
+        suffer_when: (vals.suffer_when || '').trim(),
+        want: (vals.want || '').trim(),
+        believe: (vals.believe || '').trim(),
+        dream: (vals.dream || '').trim(),
+        going: (vals.going || '').trim(),
         saved_at: new Date().toISOString(),
       })
       setDone(true)
@@ -65,120 +84,81 @@ export default function WhoIAmPoem({ onSave = console.log, initialStep = 1 }) {
   }
 
   if (done) {
+    const poem = buildPoemText(vals)
     return (
       <div>
-        <h2 className="text-[22px] font-semibold mb-3">Saved</h2>
-        <p className="text-[16px] text-slate-700">That&apos;s yours.</p>
-      </div>
-    )
-  }
-
-  // Step 1: Stanza 1
-  if (step === 1) {
-    const ok = stanzaComplete(STANZA_1_PROMPTS, s1)
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-1">Who I Am</h2>
-        <p className="text-[14px] text-slate-500 mb-4">First half — just write what comes to mind.</p>
-
-        <div className="space-y-4">
-          {STANZA_1_PROMPTS.map((p) => (
-            <PromptRow key={p.id} prompt={p} value={s1[p.id] || ''} onChange={(v) => update1(p.id, v)} />
-          ))}
-          <div>
-            <label className="block text-[14px] font-medium text-slate-700 mb-2">
-              I am <span className="text-slate-500 italic font-normal">— repeat your first line</span>
-            </label>
-            <input
-              readOnly
-              value={s1.i_am || ''}
-              placeholder="Fill in the first line above"
-              className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-100 rounded-2xl text-slate-600"
-            />
+        <h2 className="text-[22px] font-semibold mb-2 text-center">Your poem</h2>
+        <p className="text-[14px] text-slate-500 text-center mb-5">It&apos;s yours to keep.</p>
+        <div className="bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-card p-8 text-center">
+          <div className="text-[17px] leading-loose text-slate-800 whitespace-pre-wrap font-serif italic">
+            {poem || '—'}
           </div>
         </div>
-
-        <div className="flex justify-end mt-6">
-          <PrimaryButton onClick={() => setStep(2)} disabled={!ok}>Next →</PrimaryButton>
-        </div>
       </div>
     )
   }
 
-  // Step 2: Stanza 2
-  if (step === 2) {
-    const ok = stanzaComplete(STANZA_2_PROMPTS, s2)
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-1">Who I Am</h2>
-        <p className="text-[14px] text-slate-500 mb-4">Second half — keep going.</p>
-
-        <div className="space-y-4">
-          {STANZA_2_PROMPTS.map((p) => (
-            <PromptRow key={p.id} prompt={p} value={s2[p.id] || ''} onChange={(v) => update2(p.id, v)} />
-          ))}
-          <div>
-            <label className="block text-[14px] font-medium text-slate-700 mb-2">
-              I am <span className="text-slate-500 italic font-normal">— from your first line</span>
-            </label>
-            <input
-              readOnly
-              value={s1.i_am || ''}
-              className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-100 rounded-2xl text-slate-600"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between mt-6">
-          <GhostButton onClick={() => setStep(1)}>← Back</GhostButton>
-          <PrimaryButton onClick={() => setStep(3)} disabled={!ok}>See your poem →</PrimaryButton>
-        </div>
-      </div>
-    )
-  }
-
-  // Step 3: Keepsake view
-  const poem = buildPoemText(s1, s2)
   return (
     <div>
-      <h2 className="text-[22px] font-semibold mb-2 text-center">Your poem</h2>
-      <p className="text-[14px] text-slate-500 text-center mb-5">It&apos;s yours to keep.</p>
+      <h2 className="text-[22px] font-semibold mb-1">Who I Am</h2>
+      <p className="text-[14px] text-slate-500 mb-4">
+        A short poem about you. Fill in the lines and we&apos;ll put it together.
+      </p>
 
-      <div className="bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-card p-8 text-center">
-        <div className="text-[17px] leading-loose text-slate-800 whitespace-pre-wrap font-serif italic">
-          {poem || '—'}
+      <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-4 mb-6">
+        <p className="text-[12px] uppercase tracking-wide text-slate-500 mb-2">Example</p>
+        <div className="text-[15px] leading-relaxed text-slate-700 italic font-serif whitespace-pre-line">
+          {EXAMPLE_LINES.join('\n')}
         </div>
       </div>
 
-      <p className="text-[15px] text-center text-slate-700 mt-5 mb-6">
-        That&apos;s your poem. It&apos;s yours to keep.
-      </p>
+      <div className="space-y-4">
+        {LINES.map((l) => (
+          <div key={l.id}>
+            <label className="block text-[14px] font-medium text-slate-700 mb-2">
+              <span className="text-slate-400 mr-2">{l.n}.</span>
+              {l.starter}
+              {l.id === 'characteristics' && <span className="text-rose-400 ml-1">*</span>}
+              <span className="ml-2 text-slate-500 italic font-normal">— {l.hint}</span>
+            </label>
+            <input
+              type="text"
+              value={vals[l.id] || ''}
+              onChange={(e) => update(l.id, e.target.value)}
+              maxLength={120}
+              className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+            />
+            {/* After line 5 and line 9, show the auto-mirrored line as a
+                read-only preview so the kid sees the structure. */}
+            {l.n === 5 && (
+              <MirroredLine n={6} value={vals.characteristics} />
+            )}
+            {l.n === 9 && (
+              <MirroredLine n={10} value={vals.characteristics} />
+            )}
+          </div>
+        ))}
+      </div>
 
-      <div className="flex items-center justify-between">
-        <GhostButton onClick={() => setStep(2)}>← Back</GhostButton>
-        <PrimaryButton onClick={handleSave} disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save'}
+      <div className="flex justify-end mt-6">
+        <PrimaryButton onClick={handleSave} disabled={!canSave || submitting}>
+          {submitting ? 'Saving…' : 'See your poem'}
         </PrimaryButton>
       </div>
     </div>
   )
 }
 
-function PromptRow({ prompt, value, onChange }) {
+function MirroredLine({ n, value }) {
+  const text = (value || '').trim()
   return (
-    <div>
-      <label className="block text-[14px] font-medium text-slate-700 mb-2">
-        {prompt.starter}
-        {prompt.required && <span className="text-rose-400 ml-1">*</span>}
-        <span className="ml-2 text-slate-500 italic font-normal">— {prompt.hint}</span>
-      </label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        maxLength={80}
-        className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
-      />
+    <div className="mt-3 ml-6 pl-3 border-l-2 border-amber-200">
+      <p className="text-[12px] text-slate-500 mb-1">
+        Line {n} <span className="italic">— same as line 1</span>
+      </p>
+      <p className="text-[15px] text-slate-700 font-serif italic">
+        {text ? `I am ${text}` : <span className="text-slate-400 not-italic">(fills in once you write line 1)</span>}
+      </p>
     </div>
   )
 }

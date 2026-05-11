@@ -1,5 +1,21 @@
 import { useMemo, useState } from 'react'
-import { PrimaryButton, GhostButton, SecondaryButton } from '../components/items/shared.jsx'
+import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+
+// Getting Unstuck — RSD's stuck-thought / strategy / reflection activity.
+//
+// 2026-05-11 rebuild:
+// - Replaced the standalone Kai-quote intro (Ginny flagged as confusing)
+//   with a 5-point appraisal scale on the stuck-thoughts screen itself.
+//   Each thought gets a frequency rating ("How often do you have this
+//   thought?") and a believability rating ("How strongly do you believe
+//   it is true?"). Thoughts rated ≥3 on either scale are eligible to
+//   work on; the kid explicitly picks which eligible ones to take into
+//   the strategy step.
+// - Restored the three challenge-strategy prompts as scaffolding above
+//   a single open-ended response field (Stephanie's PPT slide 12).
+// - Renamed "Fight it" → "Challenge it" throughout, including the
+//   saved-data strategy key (`fight` → `challenge`,
+//   `fight_response` → `challenge_response`). Both/And is unchanged.
 
 const STUCK_THOUGHTS = [
   { id: 'st1', text: "I'll never fit in here." },
@@ -12,30 +28,102 @@ const STUCK_THOUGHTS = [
   { id: 'st8', text: 'People treat me differently because of my story.' },
 ]
 
+const FREQ_LABELS = ['Never', 'Rarely', 'Sometimes', 'Often', 'Always']
+const BELIEF_LABELS = ['Not at all', 'A little', 'Somewhat', 'Mostly', 'Completely']
+
+// Thoughts at or above this on either scale are eligible to take into
+// the strategy step. Tunable here in one place.
+const ELIGIBILITY_THRESHOLD = 3
+
+const CHALLENGE_PROMPTS = [
+  'Is there another way I can think about this?',
+  "Is this really true, or can I think of a way it isn't true?",
+  'Is this thought helping me, and if not, what is a thought that might be more helpful?',
+]
+
 const BOTH_AND_EXAMPLES = [
   '"My foster family isn\'t my real family AND there can still be a place for them in my life"',
   '"I feel like no one understands me AND there are ways I can help people get to know me more"',
   '"A lot of people have given up on me in the past AND it doesn\'t mean everyone will"',
 ]
 
+// ---------- Small reusable 5-point scale ----------
+function FivePointScale({ value, onChange, anchors, label }) {
+  return (
+    <div>
+      <div className="text-[13px] text-slate-600 mb-2">{label}</div>
+      <div className="flex items-stretch gap-1.5">
+        {[1, 2, 3, 4, 5].map((n) => {
+          const selected = value === n
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange(n)}
+              aria-pressed={selected}
+              className={
+                'flex-1 min-h-[44px] rounded-full border text-[13px] font-semibold transition-colors ' +
+                (selected
+                  ? 'bg-amber-500 border-amber-500 text-white'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+              }
+            >
+              {n}
+            </button>
+          )
+        })}
+      </div>
+      <div className="flex justify-between mt-1 text-[11px] text-slate-500">
+        <span>{anchors[0]}</span>
+        <span>{anchors[4]}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }) {
   const [step, setStep] = useState(initialStep)
-  const [selectedIds, setSelectedIds] = useState([])
+
+  // Per-thought appraisal + selection. Shape: { [id]: { frequency, believability, selected } }
+  const [appraisal, setAppraisal] = useState({})
+
+  // Per-thought strategy response. Shape: { [id]: { strategy, challenge_response, and_statement } }
+  const [responses, setResponses] = useState({})
+
   const [thoughtIdx, setThoughtIdx] = useState(0)
-  // responses keyed by thought id
-  const [responses, setResponses] = useState({}) // { [thought_id]: { strategy, fight_response, and_statement } }
   const [submitting, setSubmitting] = useState(false)
   const [savedDone, setSavedDone] = useState(false)
 
+  // Thoughts the kid chose to work on, preserving STUCK_THOUGHTS order.
   const selectedThoughts = useMemo(
-    () => STUCK_THOUGHTS.filter((t) => selectedIds.includes(t.id)),
-    [selectedIds],
+    () => STUCK_THOUGHTS.filter((t) => appraisal[t.id]?.selected),
+    [appraisal],
   )
 
-  function toggle(id) {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    )
+  function setRating(thoughtId, field, value) {
+    setAppraisal((prev) => {
+      const cur = prev[thoughtId] || {}
+      const next = { ...cur, [field]: value }
+      // If raising a rating to threshold or above, leave selection alone.
+      // If dropping both scales below threshold, also drop selection so
+      // the eligibility rule stays consistent.
+      const eligible =
+        (next.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
+        (next.believability || 0) >= ELIGIBILITY_THRESHOLD
+      if (!eligible && next.selected) next.selected = false
+      return { ...prev, [thoughtId]: next }
+    })
+  }
+
+  function toggleSelected(thoughtId) {
+    setAppraisal((prev) => {
+      const cur = prev[thoughtId] || {}
+      const eligible =
+        (cur.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
+        (cur.believability || 0) >= ELIGIBILITY_THRESHOLD
+      if (!eligible) return prev // ignore taps on ineligible cards
+      return { ...prev, [thoughtId]: { ...cur, selected: !cur.selected } }
+    })
   }
 
   function setStrategy(thoughtId, strategy) {
@@ -55,7 +143,7 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
   function currentResponseValid(thought) {
     const r = responses[thought.id]
     if (!r?.strategy) return false
-    if (r.strategy === 'fight') return (r.fight_response || '').trim().length > 0
+    if (r.strategy === 'challenge') return (r.challenge_response || '').trim().length > 0
     if (r.strategy === 'both_and') return (r.and_statement || '').trim().length > 0
     return false
   }
@@ -65,7 +153,16 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     try {
       const payload = {
         activity: 'getting_unstuck',
-        stuck_thought_ids: selectedIds,
+        // Full appraisal record across all 8 thoughts, not just the
+        // chosen ones — useful for the data export later.
+        appraisals: STUCK_THOUGHTS.map((t) => ({
+          thought_id: t.id,
+          thought_text: t.text,
+          frequency: appraisal[t.id]?.frequency ?? null,
+          believability: appraisal[t.id]?.believability ?? null,
+          selected: !!appraisal[t.id]?.selected,
+        })),
+        stuck_thought_ids: selectedThoughts.map((t) => t.id),
         responses: selectedThoughts.map((t) => {
           const r = responses[t.id] || {}
           const out = {
@@ -73,7 +170,7 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
             thought_text: t.text,
             strategy: r.strategy,
           }
-          if (r.strategy === 'fight') out.fight_response = r.fight_response
+          if (r.strategy === 'challenge') out.challenge_response = r.challenge_response
           if (r.strategy === 'both_and') out.and_statement = r.and_statement
           return out
         }),
@@ -86,37 +183,73 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     }
   }
 
-  // ---- Step 1: Select stuck thoughts ----
+  // ---- Step 1: Appraise + select stuck thoughts ----
   if (step === 1) {
+    const anySelected = selectedThoughts.length > 0
     return (
       <div>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-3">
-          Like Kai said, it&apos;s usual to sometimes feel &quot;stuck&quot; and like
-          it&apos;s impossible to feel like we belong. And usually when we feel
-          this way, there are certain thoughts that are keeping us &quot;stuck.&quot;
-        </p>
+        <h2 className="text-[22px] font-semibold mb-1">Stuck thoughts</h2>
         <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
-          Tap any thoughts that feel true for you. There&apos;s no right number.
+          These are thoughts that can keep someone feeling stuck. For each one,
+          rate how it feels for you. Then pick which ones you want to work on.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <div className="space-y-4 mb-6">
           {STUCK_THOUGHTS.map((t) => {
-            const sel = selectedIds.includes(t.id)
+            const a = appraisal[t.id] || {}
+            const eligible =
+              (a.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
+              (a.believability || 0) >= ELIGIBILITY_THRESHOLD
+            const selected = !!a.selected
             return (
-              <button
+              <div
                 key={t.id}
-                type="button"
-                onClick={() => toggle(t.id)}
-                aria-pressed={sel}
                 className={
-                  'text-left rounded-2xl border min-h-[80px] px-5 py-4 text-[15px] leading-relaxed transition-colors ' +
-                  (sel
-                    ? 'bg-amber-200 border-amber-400 text-amber-900'
-                    : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                  'rounded-2xl border p-4 transition-colors ' +
+                  (selected
+                    ? 'bg-amber-50 border-amber-400'
+                    : 'bg-white border-slate-200')
                 }
               >
-                {t.text}
-              </button>
+                <div className="text-[15px] leading-relaxed text-slate-800 mb-4">
+                  {t.text}
+                </div>
+
+                <div className="space-y-4 mb-4">
+                  <FivePointScale
+                    label="How often do you have this thought?"
+                    anchors={FREQ_LABELS}
+                    value={a.frequency || 0}
+                    onChange={(v) => setRating(t.id, 'frequency', v)}
+                  />
+                  <FivePointScale
+                    label="How strongly do you believe this thought is true?"
+                    anchors={BELIEF_LABELS}
+                    value={a.believability || 0}
+                    onChange={(v) => setRating(t.id, 'believability', v)}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSelected(t.id)}
+                  disabled={!eligible}
+                  className={
+                    'w-full inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 min-h-[40px] text-[14px] font-semibold transition-colors ' +
+                    (selected
+                      ? 'bg-amber-500 text-white border border-amber-500'
+                      : eligible
+                        ? 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-50'
+                        : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed')
+                  }
+                >
+                  {selected
+                    ? '✓ Working on this'
+                    : eligible
+                      ? 'I want to work on this'
+                      : 'Rate it first to choose this one'}
+                </button>
+              </div>
             )
           })}
         </div>
@@ -127,7 +260,7 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
               setStep(2)
               setThoughtIdx(0)
             }}
-            disabled={selectedIds.length === 0}
+            disabled={!anySelected}
           >
             Keep going →
           </PrimaryButton>
@@ -176,17 +309,17 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
           <button
             type="button"
-            onClick={() => setStrategy(thought.id, 'fight')}
+            onClick={() => setStrategy(thought.id, 'challenge')}
             className={
               'text-left rounded-2xl border p-4 transition-colors ' +
-              (r.strategy === 'fight'
+              (r.strategy === 'challenge'
                 ? 'bg-amber-200 border-amber-400'
                 : 'bg-white border-slate-200 hover:border-amber-300')
             }
           >
-            <div className="font-semibold text-[16px] mb-1">Fight it</div>
+            <div className="font-semibold text-[16px] mb-1">Challenge it</div>
             <div className="text-[13px] text-slate-600">
-              Is there another way I can think about this? Is this really true?
+              Push back on the thought. Is there another way to see this?
             </div>
           </button>
           <button
@@ -207,16 +340,26 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
           </button>
         </div>
 
-        {r.strategy === 'fight' && (
+        {r.strategy === 'challenge' && (
           <div className="mb-5">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-3">
+              <div className="text-[13px] font-medium text-slate-600 mb-2">
+                Ask yourself:
+              </div>
+              <ul className="space-y-2 text-[15px] text-slate-800 list-disc pl-5 leading-relaxed">
+                {CHALLENGE_PROMPTS.map((q, i) => (
+                  <li key={i}>{q}</li>
+                ))}
+              </ul>
+            </div>
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
-              Another way to think about this:
+              What comes up when you ask yourself those?
             </label>
             <textarea
-              rows={4}
-              value={r.fight_response || ''}
-              onChange={(e) => setField(thought.id, 'fight_response', e.target.value)}
-              placeholder="What could be more true?"
+              rows={5}
+              value={r.challenge_response || ''}
+              onChange={(e) => setField(thought.id, 'challenge_response', e.target.value)}
+              placeholder="Take any of the questions above and write what comes up."
               className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
           </div>
@@ -299,11 +442,11 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
               <div className="text-[13px] text-slate-500 mb-1">Stuck thought</div>
               <div className="text-[15px] text-slate-800 mb-3">{t.text}</div>
               <div className="text-[13px] text-amber-800 font-medium mb-1">
-                {r.strategy === 'fight' ? 'Fight it' : 'Both/And it'}
+                {r.strategy === 'challenge' ? 'Challenge it' : 'Both/And it'}
               </div>
-              {r.strategy === 'fight' && (
+              {r.strategy === 'challenge' && (
                 <div className="text-[15px] text-slate-800 italic">
-                  {r.fight_response}
+                  {r.challenge_response}
                 </div>
               )}
               {r.strategy === 'both_and' && (
