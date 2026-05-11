@@ -3,8 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { CheckCircle2 } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { clearAllAuthState, withTimeout } from '../lib/authReset.js'
 
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// supabase-js's signInWithPassword does its own best-effort cleanup of any
+// existing session in localStorage before processing new credentials. If
+// that cleanup hangs (network blip, lock contention from a prior wedged
+// run), the call never resolves and the button sits on "Signing in…"
+// forever. We pre-clear state to avoid that path, and timeout below as a
+// final safety net.
+const SIGN_IN_TIMEOUT_MS = 12000
 
 export default function AdminLoginPage() {
   const navigate = useNavigate()
@@ -31,16 +40,39 @@ export default function AdminLoginPage() {
       return
     }
     setSubmitting(true)
-    const { error: signInErr } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    })
-    if (signInErr) {
-      setError("Those credentials didn't work — try again?")
+
+    // Clear any stale supabase-js auth state before attempting sign-in.
+    // Without this, a previous wedged/revoked session in localStorage can
+    // make signInWithPassword hang during its internal cleanup, leaving
+    // the button stuck on "Signing in…" forever.
+    await clearAllAuthState()
+
+    try {
+      const { error: signInErr } = await withTimeout(
+        () =>
+          supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          }),
+        SIGN_IN_TIMEOUT_MS,
+        'Sign-in',
+      )
+      if (signInErr) {
+        setError("Those credentials didn't work — try again?")
+        setSubmitting(false)
+        return
+      }
+      navigate('/admin/dashboard', { replace: true })
+    } catch (err) {
+      // Timeout (or unexpected throw). Clear state again so the next
+      // attempt is also clean, and surface a clear retry message.
+      console.warn('Sign-in failed:', err)
+      await clearAllAuthState()
+      setError(
+        "Sign-in didn't complete. Please refresh the page and try again. If it keeps happening, let Josh know.",
+      )
       setSubmitting(false)
-      return
     }
-    navigate('/admin/dashboard', { replace: true })
   }
 
   async function handleSendReset(e) {

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
+import { clearAllAuthState } from '../lib/authReset.js'
 
 const AuthContext = createContext(null)
 
@@ -10,34 +11,6 @@ const AuthContext = createContext(null)
 // at least sees the login form. Empirically, a healthy boot fires
 // INITIAL_SESSION in well under a second.
 const WATCHDOG_MS = 5000
-
-// Same primitive used by the in-app "Stuck? Reset session" recovery button
-// on ProtectedRoute's loading screen and the manual signOut() flow below.
-async function clearAllAuthState() {
-  // First ask supabase-js to clean up properly (revoke refresh token, clear
-  // its own storage). scope:'local' so we don't hit the network — when this
-  // is called we already suspect the network/auth is unreliable.
-  try {
-    await supabase.auth.signOut({ scope: 'local' })
-  } catch (err) {
-    console.warn('signOut(local) failed (ignored):', err)
-  }
-  // Belt-and-suspenders: if supabase-js's own teardown didn't run for some
-  // reason (race, storage lock contention), nuke any sb-*-auth-token keys
-  // by hand. Safe to run even when there's nothing to clear.
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const keys = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i)
-        if (k && /^sb-.*-auth-token/.test(k)) keys.push(k)
-      }
-      keys.forEach((k) => localStorage.removeItem(k))
-    }
-  } catch (err) {
-    console.warn('manual localStorage cleanup failed (ignored):', err)
-  }
-}
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate()
