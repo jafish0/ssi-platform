@@ -3,15 +3,28 @@
 // Emotional, Social). Ally icons sit inside their type wedge(s); empty
 // types collapse to a labelled 15° sliver.
 //
-// Visual reference: Activity ideas/trampoline-safety-net.svg (Claude
-// Design–generated). The reference has wedge angles hardcoded for a
-// specific 2/4/3 ratio; this component reimplements the geometry
-// parametrically. Patterns, colors, rim, label pills, and "YOU" hub
-// match the reference.
+// Visual reference: Activity ideas/trampoline-safety-net.svg. The
+// reference has wedge angles hardcoded for a specific ratio; this
+// component reimplements the geometry parametrically and scales the
+// wedge angles to the actual ally distribution. Rim, woven pattern,
+// label pills, and "YOU" hub match the reference.
+//
+// The reference is intentionally minimalist — woven pattern + rim +
+// hub + labels, nothing else. Previous versions of this component also
+// drew 24 radial cord lines and 4 concentric ring guides; those were
+// dropped in 2026-05-12 to match the cleaner aesthetic.
 //
 // Geometry convention: angles are measured CLOCKWISE from 12 o'clock
 // (the top of the net). This is the natural reading order for the
 // participant and also matches the reference SVG's path constructions.
+//
+// Sizing: the SVG fills its parent container (width="100%") with the
+// viewBox preserving the 400×440 aspect ratio. Callers control the
+// rendered size via wrapper max-width — usually
+// `max-w-[420px] md:max-w-[700px]` so phones stay compact and desktops
+// take advantage of the available real estate. The `size` prop is kept
+// as an optional max-width override for callers that need an explicit
+// cap.
 
 import { useMemo } from 'react'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
@@ -194,7 +207,8 @@ export default function TrampolineNet({
   onAllyTap,
   showLabels = true,
   showInspectedMarks = false,
-  size = 400,
+  highlightedAllyId = null,
+  size,
 }) {
   // Memo because both the activity and any wrapping page re-render
   // frequently; geometry math is cheap but allocates a lot of objects.
@@ -206,37 +220,25 @@ export default function TrampolineNet({
   // image (placement still occupies its angular slot).
   const iconUrl = (allyId) => ALLY_TILES.find((t) => t.id === allyId)?.icon
 
-  // 24 radial cord lines every 15°.
-  const cordLines = []
-  for (let i = 0; i < 24; i++) {
-    const a = degToRad(i * 15)
-    const p = pointAt(a, NET_RADIUS)
-    cordLines.push(
-      <line
-        key={`cord-${i}`}
-        x1={CENTER_X}
-        y1={CENTER_Y}
-        x2={p.x}
-        y2={p.y}
-        stroke="#5C3A28"
-        strokeWidth="0.7"
-        opacity="0.55"
-      />,
-    )
-  }
-
-  // 4 concentric ring guides (matches reference).
-  const ringRadii = [48, 82.5, 117, 150]
-
   return (
     <svg
       viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
-      width={size}
+      width="100%"
       role="img"
       aria-label="Safety net visualization"
-      style={{ maxWidth: '100%', height: 'auto' }}
+      style={{
+        // `size` is an optional explicit cap; without it the SVG fills
+        // its parent up to whatever max-width the wrapper sets.
+        maxWidth: typeof size === 'number' ? `${size}px` : size,
+        height: 'auto',
+        display: 'block',
+      }}
     >
       <defs>
+        {/* Woven pattern per type — bg + two diagonal weave strokes. The
+            old pattern definition also placed five dot circles at the
+            corners + center of each 14×14 tile; those were dropped to
+            match the cleaner reference. */}
         {SUPPORT_TYPES.map((t) => {
           const s = TYPE_STYLE[t.id]
           return (
@@ -262,11 +264,6 @@ export default function TrampolineNet({
                 strokeLinecap="round"
                 opacity="0.85"
               />
-              <circle cx="7" cy="7" r="1.1" fill={s.dot} />
-              <circle cx="0" cy="0" r="0.9" fill={s.dot} />
-              <circle cx="14" cy="0" r="0.9" fill={s.dot} />
-              <circle cx="0" cy="14" r="0.9" fill={s.dot} />
-              <circle cx="14" cy="14" r="0.9" fill={s.dot} />
             </pattern>
           )
         })}
@@ -293,43 +290,21 @@ export default function TrampolineNet({
         )
       })}
 
-      {/* Cord lines (radial) + concentric guides */}
-      {cordLines}
-      {ringRadii.map((r) => (
-        <circle
-          key={`ring-${r}`}
-          cx={CENTER_X}
-          cy={CENTER_Y}
-          r={r}
-          fill="none"
-          stroke="#5C3A28"
-          strokeWidth="0.7"
-          opacity="0.55"
-        />
-      ))}
-
-      {/* Thick wedge dividers — drawn AFTER the wedges so they sit on top */}
-      {wedges.map((w) => {
-        const p = pointAt(w.startAngle, NET_RADIUS)
-        return (
-          <line
-            key={`divider-${w.typeId}`}
-            x1={CENTER_X}
-            y1={CENTER_Y}
-            x2={p.x}
-            y2={p.y}
-            stroke="#3B2A1F"
-            strokeWidth="1.4"
-          />
-        )
-      })}
-
       {/* Ally icons + (optional) name pills */}
       {placements.map((p, idx) => {
         const url = iconUrl(p.ally.id)
         const half = p.size / 2
         const isInspected = !!p.ally.inspected
+        const isHighlighted = highlightedAllyId && p.ally.id === highlightedAllyId
         const handleTap = interactive && onAllyTap ? () => onAllyTap(p.ally.id) : undefined
+        // Halo stroke priority: highlighted (current walkthrough ally) >
+        // inspected (already done) > default.
+        const haloStroke = isHighlighted
+          ? '#F59E0B'
+          : isInspected
+            ? '#10B981'
+            : '#3B2A1F'
+        const haloStrokeWidth = isHighlighted ? 3 : isInspected ? 1.8 : 0.6
         return (
           <g
             key={`ally-${p.ally.id}-${p.wedgeTypeId}-${idx}`}
@@ -353,11 +328,11 @@ export default function TrampolineNet({
             <circle
               cx="0"
               cy="0"
-              r={half + 3}
+              r={half + (isHighlighted ? 5 : 3)}
               fill="#FFFDF7"
-              stroke={isInspected ? '#10B981' : '#3B2A1F'}
-              strokeWidth={isInspected ? 1.8 : 0.6}
-              opacity={0.9}
+              stroke={haloStroke}
+              strokeWidth={haloStrokeWidth}
+              opacity={0.95}
             />
             {url && (
               <image

@@ -5,7 +5,7 @@
 
 import { Suspense, useCallback, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { ArrowLeft, RotateCcw, Smartphone, Monitor, Trash2 } from 'lucide-react'
+import { ArrowLeft, RotateCcw, Smartphone, Monitor } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import { findTestEntry } from '../lib/testRegistry.js'
 import { getActivityVersion } from '../lib/activityVersions.js'
@@ -19,41 +19,25 @@ function LoadingFallback() {
   )
 }
 
-function SaveEntry({ entry }) {
-  let pretty
-  try {
-    pretty = JSON.stringify(entry.value, null, 2)
-  } catch {
-    pretty = String(entry.value)
-  }
-  return (
-    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-2">
-      <div className="text-[12px] text-slate-500 mb-1">{entry.timestamp}</div>
-      <pre className="text-[12px] font-mono text-slate-800 whitespace-pre-wrap break-all">
-        {pretty}
-      </pre>
-    </div>
-  )
-}
-
 export default function DemoSandboxPage() {
   const { activityId } = useParams()
   const entry = findTestEntry(activityId)
 
   const [resetCounter, setResetCounter] = useState(0)
   const [viewport, setViewport] = useState('desktop')
-  const [saves, setSaves] = useState([])
 
+  // We deliberately don't surface the onSave payload as a JSON panel on
+  // /demo — reviewers found the wall of JSON distracting. The admin-side
+  // /admin/testing/* surface still renders the panel for QA. Payloads are
+  // still logged to the browser console here so Josh can inspect them via
+  // DevTools when needed.
   const handleSave = useCallback((value) => {
-    const ts = new Date().toLocaleTimeString()
-    setSaves((prev) => [{ id: Math.random().toString(36).slice(2), value, timestamp: ts }, ...prev])
     // eslint-disable-next-line no-console
     console.log('[demo onSave]', value)
   }, [])
 
   const reset = useCallback(() => {
     setResetCounter((n) => n + 1)
-    setSaves([])
   }, [])
 
   if (!entry) {
@@ -141,41 +125,6 @@ export default function DemoSandboxPage() {
         </div>
       </div>
 
-      {/* Saves panel */}
-      <div className="bg-white rounded-2xl shadow-card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[14px] font-semibold text-slate-800">
-            Saved output
-            {saves.length > 0 && (
-              <span className="ml-2 text-[12px] text-slate-500 font-normal">
-                ({saves.length} call{saves.length === 1 ? '' : 's'})
-              </span>
-            )}
-          </h3>
-          {saves.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setSaves([])}
-              className="inline-flex items-center gap-1 text-[12px] text-slate-500 hover:text-rose-600"
-            >
-              <Trash2 size={12} strokeWidth={1.5} />
-              Clear
-            </button>
-          )}
-        </div>
-        {saves.length === 0 ? (
-          <p className="text-[13px] text-slate-500 italic">
-            Whatever the component passes to <span className="font-mono">onSave()</span> will
-            appear here. Each save is also logged to the browser console.
-          </p>
-        ) : (
-          <div className="max-h-[400px] overflow-y-auto">
-            {saves.map((s) => (
-              <SaveEntry key={s.id} entry={s} />
-            ))}
-          </div>
-        )}
-      </div>
     </DemoPageLayout>
   )
 }

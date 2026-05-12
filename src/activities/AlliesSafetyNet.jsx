@@ -1,17 +1,21 @@
-// Allies / Safety Net — Step 1 (Build) + Step 2 (Inspect), v3.0 per the
-// 2026-05-11 Draft 9 batch.
+// Allies / Safety Net — Step 1 (Build) + Step 2 (Inspect), v4.0 per the
+// 2026-05-12 batch.
 //
 // What ships:
 //   Screen 0  Build · Intro
 //   Screen 1  Build · Practical support (tile grid)
 //   Screen 2  Build · Emotional support
 //   Screen 3  Build · Social support
-//   Screen 4  Build · Your Safety Net — TrampolineNet (non-interactive) + Continue
+//   Screen 4  Build · Your Safety Net — TrampolineNet + list toggle + Continue
 //   Screen 5  Inspect · Intro (clinical-safety framing)
-//   Screen 6  Inspect · Interactive TrampolineNet — tap an ally to inspect
-//             Modal overlays on this screen: per-ally inspect, keep-advisory,
-//             removal-acknowledgment
-//   Screen 7  Inspect · Complete — final TrampolineNet + Save
+//   Screen 6  Inspect · Walkthrough — net stays as backdrop with the current
+//             ally highlighted; the inspect modal auto-opens for each ally in
+//             sequence, auto-advancing on Keep/Remove (with the existing
+//             advisory and removal-ack modals in between). The kid can use
+//             Back in the modal to revise a previous decision. If they bail
+//             out by closing the modal, a fallback view offers "Resume
+//             inspecting" or "Skip the rest."
+//   Screen 7  Inspect · Complete — final TrampolineNet + list toggle + Save
 //
 // Step 2's framing language (intro, advisory, removal-ack) is written
 // to address two specific notes from the team review:
@@ -24,6 +28,14 @@
 // does NOT pre-select her on Emotional. The cumulative ally entity is
 // built from the union of types across screens. Custom names typed into
 // other1/other2 persist across all three type screens.
+//
+// Mobile vs desktop: the project's rule is "no separate experiences" —
+// the one exception is the TrampolineNet's rendered size. On phones it
+// stays at ~420px; on desktop (md: breakpoint, 768px+) it grows to
+// ~700px to make better use of the available real estate. Every place
+// the net renders, it's wrapped in `mx-auto w-full max-w-[420px]
+// md:max-w-[700px]` and the TrampolineNet itself fills 100% of that
+// wrapper.
 
 import { useMemo, useRef, useState } from 'react'
 import { Check, X, Download } from 'lucide-react'
@@ -75,9 +87,14 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   // ---- Inspect phase state ----
   // inspectionState[tileId] = { inspected: bool, flags: {trouble,isolate,lies,afraid}, kept_in_net: bool }
   const [inspectionState, setInspectionState] = useState({})
-  // Modal overlay state on the interactive-net screen.
+  // Modal overlay state on the walkthrough screen.
   // type ∈ 'inspect' | 'keep-advisory' | 'removal-ack' | null
   const [modal, setModal] = useState({ type: null, allyId: null })
+  // Index into deduplicatedAllies for the currently-presenting ally on
+  // the walkthrough screen. Updated by auto-advance after Keep/Remove
+  // and by Back in the inspect modal. If currentInspectIdx ≥ totalAllies,
+  // the walkthrough is complete and we auto-advance to screen 7.
+  const [currentInspectIdx, setCurrentInspectIdx] = useState(0)
   // ---- Submit ----
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
@@ -168,10 +185,10 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
   // ---- Inspect-phase helpers ----
 
-  function openInspectModal(allyId) {
-    setModal({ type: 'inspect', allyId })
-  }
   function closeModal() {
+    // Closing via X mid-walkthrough drops the kid on the fallback view
+    // (net + Resume / Skip buttons). currentInspectIdx is preserved so
+    // Resume reopens the same ally.
     setModal({ type: null, allyId: null })
   }
 
@@ -188,6 +205,21 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
     })
   }
 
+  // Open the inspect modal for the ally at the given index. If the index
+  // is past the end of the list, auto-advance to screen 7 (Inspect
+  // Complete) and close any open modal.
+  function presentAllyAt(idx) {
+    if (idx >= deduplicatedAllies.length) {
+      setModal({ type: null, allyId: null })
+      setScreenIdx(7)
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
+    const ally = deduplicatedAllies[idx]
+    setCurrentInspectIdx(idx)
+    setModal({ type: 'inspect', allyId: ally.id })
+  }
+
   function commitKeep(allyId) {
     const cur = inspectionState[allyId] || { flags: {} }
     const hasYes = Object.values(cur.flags || {}).some((v) => v === 'yes')
@@ -199,7 +231,12 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         kept_in_net: true,
       },
     }))
-    setModal(hasYes ? { type: 'keep-advisory', allyId } : { type: null, allyId: null })
+    if (hasYes) {
+      // Show the advisory modal first; auto-advance happens on its Continue.
+      setModal({ type: 'keep-advisory', allyId })
+    } else {
+      presentAllyAt(currentInspectIdx + 1)
+    }
   }
 
   function commitRemove(allyId) {
@@ -211,30 +248,74 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         kept_in_net: false,
       },
     }))
+    // Show the removal-ack modal first; auto-advance happens on its Continue.
     setModal({ type: 'removal-ack', allyId })
+  }
+
+  // Continue handler for the advisory / removal-ack modals — auto-advances
+  // to the next ally in the walkthrough.
+  function handleAfterAcknowledge() {
+    presentAllyAt(currentInspectIdx + 1)
+  }
+
+  // Back handler within the inspect modal. If we're not on the first ally,
+  // step back one. If we're on the first ally, close the modal and return
+  // to the intro screen (5).
+  function handleInspectBack() {
+    if (currentInspectIdx > 0) {
+      presentAllyAt(currentInspectIdx - 1)
+    } else {
+      setModal({ type: null, allyId: null })
+      setScreenIdx(5)
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }
+
+  // Back from advisory / removal-ack returns to the same ally's inspect
+  // modal so the kid can reconsider Keep vs Remove (or change an answer).
+  // We DON'T clear the inspectionState[allyId].inspected flag — letting
+  // the kid get unstuck without erasing their answers is the goal.
+  function handleAcknowledgeBack(allyId) {
+    setModal({ type: 'inspect', allyId })
   }
 
   // ---- Navigation ----
 
   function goNext() {
-    if (screenIdx < TOTAL_SCREENS - 1) setScreenIdx((i) => i + 1)
+    const nextIdx = Math.min(screenIdx + 1, TOTAL_SCREENS - 1)
+    setScreenIdx(nextIdx)
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+    // Entering the Inspect walkthrough from the intro: auto-present the
+    // first un-inspected ally. If everyone is already inspected (e.g.
+    // the kid backed out and re-entered), present the first ally
+    // anyway so they can re-review. If there are no allies at all, skip
+    // straight past the walkthrough.
+    if (nextIdx === 6) {
+      if (deduplicatedAllies.length === 0) {
+        setScreenIdx(7)
+      } else {
+        // Start at the first ally — but if the kid is re-entering with a
+        // previously-running walkthrough, resume from where they were.
+        const resumeAt = Math.min(currentInspectIdx, deduplicatedAllies.length - 1)
+        presentAllyAt(resumeAt)
+      }
+    }
   }
   function goBack() {
     if (screenIdx > 0) setScreenIdx((i) => i - 1)
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
-  // "Done inspecting" — if not all allies inspected, confirm before advancing.
-  function handleDoneInspecting() {
-    if (inspectedCount < totalAllies) {
-      const remaining = totalAllies - inspectedCount
-      const ok = window.confirm(
-        `You haven't checked in on ${remaining} ${remaining === 1 ? 'ally' : 'allies'}.\n\nFinish anyway? You can come back if you change your mind.`,
-      )
-      if (!ok) return
-    }
-    goNext()
+  // Bail-out fallback actions (when the kid X-closes the inspect modal
+  // mid-walkthrough and lands on the no-modal view of screen 6).
+  function handleResumeInspecting() {
+    const resumeAt = Math.min(currentInspectIdx, Math.max(0, deduplicatedAllies.length - 1))
+    presentAllyAt(resumeAt)
+  }
+  function handleSkipRemaining() {
+    setModal({ type: null, allyId: null })
+    setScreenIdx(7)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
   async function handleSubmit() {
@@ -253,7 +334,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         finalAllies.length > 0 && finalAllies.every((a) => a.inspected)
       await onSave({
         activity: 'allies_safety_net',
-        version: '3.0',
+        version: '4.0',
         allies: finalAllies,
         none_for: {
           practical: !!noneFor.practical,
@@ -271,7 +352,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
   if (done) {
     return (
-      <SavedConfirmation allies={deduplicatedAllies} />
+      <SavedConfirmation allies={deduplicatedAllies} noneFor={noneFor} />
     )
   }
 
@@ -331,7 +412,10 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
           allies={deduplicatedAllies}
           inspectedCount={inspectedCount}
           totalAllies={totalAllies}
-          onAllyTap={openInspectModal}
+          currentInspectIdx={currentInspectIdx}
+          modalOpen={!!modal.type}
+          onResume={handleResumeInspecting}
+          onSkip={handleSkipRemaining}
         />
       )}
 
@@ -347,16 +431,13 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         )}
         <PrimaryAdvanceButton
           screenIdx={screenIdx}
-          inspectedCount={inspectedCount}
-          totalAllies={totalAllies}
           submitting={submitting}
           onNext={goNext}
-          onDoneInspecting={handleDoneInspecting}
           onSubmit={handleSubmit}
         />
       </div>
 
-      {/* Modal overlays — only render while on the interactive-net screen */}
+      {/* Modal overlays — only render while on the walkthrough screen. */}
       {isInspectNet && modal.type === 'inspect' && (
         <InspectModal
           ally={deduplicatedAllies.find((a) => a.id === modal.allyId)}
@@ -364,14 +445,23 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
           onSetFlag={(key, value) => setFlag(modal.allyId, key, value)}
           onKeep={() => commitKeep(modal.allyId)}
           onRemove={() => commitRemove(modal.allyId)}
+          onBack={handleInspectBack}
           onDismiss={closeModal}
+          currentIdx={currentInspectIdx}
+          totalAllies={totalAllies}
         />
       )}
       {isInspectNet && modal.type === 'keep-advisory' && (
-        <KeepAdvisoryModal onContinue={closeModal} />
+        <KeepAdvisoryModal
+          onContinue={handleAfterAcknowledge}
+          onBack={() => handleAcknowledgeBack(modal.allyId)}
+        />
       )}
       {isInspectNet && modal.type === 'removal-ack' && (
-        <RemovalAckModal onContinue={closeModal} />
+        <RemovalAckModal
+          onContinue={handleAfterAcknowledge}
+          onBack={() => handleAcknowledgeBack(modal.allyId)}
+        />
       )}
     </div>
   )
@@ -379,7 +469,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
 // ---------- Post-save confirmation (with downloadable keepsake) ----------
 
-function SavedConfirmation({ allies }) {
+function SavedConfirmation({ allies, noneFor }) {
   const wrapRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState(null)
@@ -388,6 +478,9 @@ function SavedConfirmation({ allies }) {
     setError(null)
     setDownloading(true)
     try {
+      // The wrapper renders the SVG via NetWithListToggle's inner SVG.
+      // The list view doesn't include an SVG, so this query always
+      // grabs the TrampolineNet regardless of list-toggle state.
       const svg = wrapRef.current?.querySelector('svg')
       if (!svg) throw new Error('No safety-net visual to download.')
       const stamp = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
@@ -406,12 +499,11 @@ function SavedConfirmation({ allies }) {
       <p className="text-[15px] text-slate-700 mb-5">
         Your safety net is captured. You can come back to it any time.
       </p>
-      <div ref={wrapRef} className="flex justify-center mb-4">
-        <TrampolineNet
+      <div ref={wrapRef} className="mb-4">
+        <NetWithListToggle
           allies={allies}
-          interactive={false}
-          showLabels={true}
-          showInspectedMarks={true}
+          noneFor={noneFor}
+          showInspectStatus={true}
         />
       </div>
       <div className="flex flex-col items-center gap-2">
@@ -437,20 +529,12 @@ function progressLabel(idx) {
   if (idx >= 1 && idx <= 3) return SUPPORT_TYPES[idx - 1].label
   if (idx === 4) return 'Your Safety Net'
   if (idx === 5) return 'Inspect · Intro'
-  if (idx === 6) return 'Inspect · Check in'
+  if (idx === 6) return 'Inspect · Walkthrough'
   if (idx === 7) return 'Done'
   return ''
 }
 
-function PrimaryAdvanceButton({
-  screenIdx,
-  inspectedCount,
-  totalAllies,
-  submitting,
-  onNext,
-  onDoneInspecting,
-  onSubmit,
-}) {
+function PrimaryAdvanceButton({ screenIdx, submitting, onNext, onSubmit }) {
   if (screenIdx === 0) {
     return <PrimaryButton onClick={onNext}>Let&apos;s build it →</PrimaryButton>
   }
@@ -464,12 +548,10 @@ function PrimaryAdvanceButton({
     return <PrimaryButton onClick={onNext}>Continue →</PrimaryButton>
   }
   if (screenIdx === 6) {
-    const allDone = totalAllies > 0 && inspectedCount === totalAllies
-    return (
-      <PrimaryButton onClick={onDoneInspecting}>
-        {allDone ? 'Done inspecting →' : 'Done inspecting'}
-      </PrimaryButton>
-    )
+    // Walkthrough screen has no page-level primary button — the modals
+    // drive advancement, and the fallback view (when the kid X-closes
+    // a modal) renders Resume / Skip inline.
+    return null
   }
   if (screenIdx === 7) {
     return (
@@ -684,14 +766,7 @@ function BuildFinalScreen({ allies, noneFor }) {
           ? 'No allies yet — that\'s okay. We\'ll look at where support could grow.'
           : 'Here\'s who you said is in your corner, grouped by the kind of support they give you. Some allies show up in more than one place — that\'s the strongest kind.'}
       </p>
-      <div className="flex justify-center">
-        <TrampolineNet
-          allies={allies}
-          interactive={false}
-          showLabels={true}
-          showInspectedMarks={false}
-        />
-      </div>
+      <NetWithListToggle allies={allies} noneFor={noneFor} />
     </div>
   )
 }
@@ -725,36 +800,80 @@ function InspectIntroScreen() {
   )
 }
 
-// ---------- Screen 6: Inspect — interactive net ----------
+// ---------- Screen 6: Inspect — walkthrough ----------
+//
+// The net is shown non-interactively as a backdrop with the current ally
+// highlighted. The inspect modal auto-opens on entry and auto-advances
+// between allies on Keep/Remove. If the kid X-closes the modal mid-
+// walkthrough, this screen renders a fallback view with "Resume
+// inspecting" and "Skip the rest" buttons.
 
-function InspectNetScreen({ allies, inspectedCount, totalAllies, onAllyTap }) {
+function InspectNetScreen({
+  allies,
+  inspectedCount,
+  totalAllies,
+  currentInspectIdx,
+  modalOpen,
+  onResume,
+  onSkip,
+}) {
   if (totalAllies === 0) {
     return (
       <div className="text-center py-6">
         <p className="text-[15px] text-slate-700 mb-3">
           No allies to inspect right now — that&apos;s okay. You can come
-          back and add some later. Hit Done inspecting to continue.
+          back and add some later. Use Continue below to skip ahead.
         </p>
       </div>
     )
   }
+  const currentAlly = allies[currentInspectIdx] || null
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-        <h2 className="text-[20px] font-semibold">Tap each ally to check in on them.</h2>
+        <h2 className="text-[20px] font-semibold">Checking in on your safety net</h2>
         <span className="text-[13px] text-slate-600">
           {inspectedCount} of {totalAllies} inspected
         </span>
       </div>
-      <div className="flex justify-center">
+
+      <div className="mx-auto w-full max-w-[420px] md:max-w-[700px]">
         <TrampolineNet
           allies={allies}
-          interactive={true}
-          onAllyTap={onAllyTap}
+          interactive={false}
           showLabels={true}
           showInspectedMarks={true}
+          highlightedAllyId={currentAlly?.id || null}
         />
       </div>
+
+      {/* Fallback panel — only shown when the kid X-closed the inspect
+          modal mid-walkthrough. Gives them a way to either resume or
+          jump to the final screen. When the modal IS open we hide this
+          so the modal isn't competing with two buttons underneath. */}
+      {!modalOpen && (
+        <div className="mt-5 bg-amber-50/60 border border-amber-200 rounded-2xl p-4 max-w-[520px] mx-auto text-center">
+          <p className="text-[14px] text-slate-700 mb-3">
+            {inspectedCount === totalAllies
+              ? 'You\'ve checked in on everyone. Ready to finish?'
+              : currentAlly
+                ? `Next up: checking in on ${currentAlly.name}.`
+                : 'Ready to keep going?'}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {inspectedCount < totalAllies && (
+              <PrimaryButton onClick={onResume}>Resume inspecting →</PrimaryButton>
+            )}
+            <button
+              type="button"
+              onClick={onSkip}
+              className="text-[13px] font-medium text-amber-700 hover:text-amber-900 underline px-3 py-2"
+            >
+              {inspectedCount === totalAllies ? 'Continue →' : 'Skip the rest'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -789,7 +908,17 @@ function ModalShell({ children, onDismiss }) {
   )
 }
 
-function InspectModal({ ally, flags, onSetFlag, onKeep, onRemove, onDismiss }) {
+function InspectModal({
+  ally,
+  flags,
+  onSetFlag,
+  onKeep,
+  onRemove,
+  onBack,
+  onDismiss,
+  currentIdx,
+  totalAllies,
+}) {
   if (!ally) return null
   const tile = ALLY_TILES.find((t) => t.id === ally.id)
   const allAnswered = INSPECT_QUESTIONS.every((q) => !!flags[q.key])
@@ -797,6 +926,22 @@ function InspectModal({ ally, flags, onSetFlag, onKeep, onRemove, onDismiss }) {
 
   return (
     <ModalShell onDismiss={onDismiss}>
+      {/* Walkthrough progress strip (e.g., "Ally 2 of 5") + Back affordance.
+          Back returns to the previous ally if there is one, otherwise
+          closes the modal and goes back to the intro screen. */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1 text-[12px] font-medium text-amber-700 hover:text-amber-900"
+        >
+          ← Back
+        </button>
+        <span className="text-[12px] text-slate-500 uppercase tracking-wide">
+          Ally {currentIdx + 1} of {totalAllies}
+        </span>
+      </div>
+
       <h2 className="text-[20px] font-semibold mb-3 text-center">
         Check in on {ally.name}.
       </h2>
@@ -890,9 +1035,23 @@ function InspectModal({ ally, flags, onSetFlag, onKeep, onRemove, onDismiss }) {
   )
 }
 
-function KeepAdvisoryModal({ onContinue }) {
+function KeepAdvisoryModal({ onContinue, onBack }) {
   return (
     <ModalShell onDismiss={onContinue}>
+      <div className="flex items-center justify-between mb-3">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1 text-[12px] font-medium text-amber-700 hover:text-amber-900"
+          >
+            ← Back
+          </button>
+        ) : (
+          <span />
+        )}
+        <span />
+      </div>
       <p className="text-[15px] leading-relaxed text-slate-800 mb-3">
         Keeping someone in your safety net is your choice, even when things
         feel complicated.
@@ -915,9 +1074,23 @@ function KeepAdvisoryModal({ onContinue }) {
   )
 }
 
-function RemovalAckModal({ onContinue }) {
+function RemovalAckModal({ onContinue, onBack }) {
   return (
     <ModalShell onDismiss={onContinue}>
+      <div className="flex items-center justify-between mb-3">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1 text-[12px] font-medium text-amber-700 hover:text-amber-900"
+          >
+            ← Back
+          </button>
+        ) : (
+          <span />
+        )}
+        <span />
+      </div>
       <p className="text-[15px] leading-relaxed text-slate-800 mb-3">
         Taken out of your safety net. They&apos;re still in your life — this
         is just about who you lean on for support right now.
@@ -932,6 +1105,127 @@ function RemovalAckModal({ onContinue }) {
   )
 }
 
+// ---------- Reusable: net + "Show me a list instead" toggle ----------
+//
+// Wraps a TrampolineNet in a responsive max-width container (compact on
+// phones, larger on desktop) and offers a toggle that expands an inline
+// AllyList below the visual. Both views stay visible when the list is
+// expanded.
+//
+// Used by BuildFinalScreen, SavedConfirmation, InspectCompleteScreen,
+// and the walkthrough screen 6.
+
+function NetWithListToggle({
+  allies,
+  noneFor,
+  showInspectStatus = false,
+  highlightedAllyId = null,
+}) {
+  const [listOpen, setListOpen] = useState(false)
+  return (
+    <div>
+      <div className="mx-auto w-full max-w-[420px] md:max-w-[700px]">
+        <TrampolineNet
+          allies={allies}
+          interactive={false}
+          showLabels={true}
+          showInspectedMarks={showInspectStatus}
+          highlightedAllyId={highlightedAllyId}
+        />
+      </div>
+      <div className="flex justify-center mt-3">
+        <button
+          type="button"
+          onClick={() => setListOpen((v) => !v)}
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-amber-700 hover:text-amber-900 underline-offset-2 hover:underline"
+        >
+          {listOpen ? 'Hide the list' : 'Show me a list of my allies instead'}
+        </button>
+      </div>
+      {listOpen && (
+        <div className="mt-4 mx-auto w-full max-w-[640px]">
+          <AllyList
+            allies={allies}
+            noneFor={noneFor}
+            showInspectStatus={showInspectStatus}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------- Reusable: textual ally list, grouped by support type ----------
+
+function AllyList({ allies, noneFor, showInspectStatus = false }) {
+  return (
+    <div className="space-y-3">
+      {SUPPORT_TYPES.map((type) => {
+        const inGroup = (allies || []).filter((a) =>
+          (a.support_types || []).includes(type.id),
+        )
+        const declaredNone = !!(noneFor && noneFor[type.id])
+        return (
+          <section
+            key={type.id}
+            className="bg-amber-50/60 border border-amber-100 rounded-2xl p-3"
+          >
+            <h3 className="text-[14px] font-semibold text-amber-900 mb-2">
+              {type.label}
+            </h3>
+            {inGroup.length > 0 ? (
+              <ul className="space-y-1.5">
+                {inGroup.map((ally) => {
+                  const tile = ALLY_TILES.find((t) => t.id === ally.id)
+                  return (
+                    <li
+                      key={`${ally.id}-${type.id}`}
+                      className="flex items-center gap-3 text-[14px] text-slate-800"
+                    >
+                      {tile && (
+                        <img
+                          src={tile.icon}
+                          alt=""
+                          className="w-8 h-8 flex-shrink-0"
+                          draggable={false}
+                        />
+                      )}
+                      <span className="flex-1">{ally.name}</span>
+                      {showInspectStatus && ally.inspected && (
+                        <span
+                          className={
+                            'inline-flex items-center justify-center rounded-full w-5 h-5 text-[12px] font-semibold ' +
+                            (ally.kept_in_net !== false
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-slate-200 text-slate-500')
+                          }
+                          aria-label={
+                            ally.kept_in_net !== false
+                              ? 'Kept in the net'
+                              : 'Taken out of the net'
+                          }
+                        >
+                          {ally.kept_in_net !== false ? '✓' : '✗'}
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="text-[13px] text-slate-500 italic">
+                {declaredNone
+                  ? `Nobody for ${type.label.toLowerCase()} support right now.`
+                  : `No ${type.label.toLowerCase()} support allies chosen.`}
+              </p>
+            )}
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
 // ---------- Screen 7: Inspection complete ----------
 
 function InspectCompleteScreen({ allies, noneFor }) {
@@ -942,19 +1236,11 @@ function InspectCompleteScreen({ allies, noneFor }) {
         Here&apos;s the net you came out with. You can come back to it any
         time.
       </p>
-      <div className="flex justify-center">
-        <TrampolineNet
-          allies={allies}
-          interactive={false}
-          showLabels={true}
-          showInspectedMarks={true}
-        />
-      </div>
-      {/* noneFor is preserved through to the save payload; not surfaced
-          on this screen because the visual already communicates empty
-          types via labelled slivers. Keeping the prop on hand if a
-          future copy edit wants to call it out. */}
-      <span className="sr-only">{Object.values(noneFor).join(',')}</span>
+      <NetWithListToggle
+        allies={allies}
+        noneFor={noneFor}
+        showInspectStatus={true}
+      />
     </div>
   )
 }
