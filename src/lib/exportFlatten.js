@@ -412,7 +412,7 @@ export function planWideColumns(snapshot) {
                 item_type: 'custom_activity',
                 sub_id: `${stId}.strategy`,
                 prompt: `Strategy chosen for stuck thought ${stId}`,
-                allowed_values: 'challenge | both_and | (blank if not chosen)',
+                allowed_values: 'fight | both_and | (blank if not chosen)',
                 notes: 'GettingUnstuck v2',
                 extract: (rv) =>
                   rv?.responses?.find((r) => r.thought_id === stId)?.strategy ?? '',
@@ -427,7 +427,7 @@ export function planWideColumns(snapshot) {
                 notes: 'Challenge response or Both/And statement, depending on strategy',
                 extract: (rv) => {
                   const r = rv?.responses?.find((x) => x.thought_id === stId)
-                  return r?.challenge_response ?? r?.and_statement ?? ''
+                  return r?.fight_response ?? r?.and_statement ?? ''
                 },
               })
             }
@@ -443,15 +443,15 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => joinList(rv?.stuck_thought_ids),
               },
               {
-                name: sanitizeCol(`${prefix}_n_challenge`),
+                name: sanitizeCol(`${prefix}_n_fight`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'n_challenge',
-                prompt: 'Count of Challenge-strategy responses',
+                sub_id: 'n_fight',
+                prompt: 'Count of Fight-strategy responses',
                 allowed_values: 'integer',
-                notes: 'GettingUnstuck (was n_fight before the 2026-05-11 rename)',
+                notes: 'GettingUnstuck',
                 extract: (rv) =>
-                  (rv?.responses || []).filter((r) => r.strategy === 'challenge').length,
+                  (rv?.responses || []).filter((r) => r.strategy === 'fight').length,
               },
               {
                 name: sanitizeCol(`${prefix}_n_both_and`),

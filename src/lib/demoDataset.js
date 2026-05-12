@@ -320,7 +320,7 @@ function makeResponseValue(item, rng, profile, phase) {
       if (componentName === 'GettingUnstuck') {
         // GettingUnstuck v2 (commit 7b7046e): rate ALL 8 thoughts on
         // frequency + believability; pick which to work on (≥3 on either
-        // unlocks selection); strategy renamed to challenge/both_and.
+        // unlocks selection); strategies are Fight it / Both/And it.
         // The synthetic distributions here intentionally produce a mix —
         // most participants rate a couple thoughts highly and pick 1–3.
         const appraisals = STUCK_THOUGHT_IDS.map((id) => ({
@@ -341,13 +341,13 @@ function makeResponseValue(item, rng, profile, phase) {
           if (chosenIds.has(a.thought_id)) a.selected = true
         }
         const responses = chosen.map((a) => {
-          const useChallenge = rng() < 0.5
+          const useFight = rng() < 0.5
           return {
             thought_id: a.thought_id,
             thought_text: a.thought_text,
-            strategy: useChallenge ? 'challenge' : 'both_and',
-            ...(useChallenge
-              ? { challenge_response: 'Maybe that’s not totally true — last week Coach showed up.' }
+            strategy: useFight ? 'fight' : 'both_and',
+            ...(useFight
+              ? { fight_response: 'Maybe that’s not totally true — last week Coach showed up.' }
               : { and_statement: 'there can still be people who stay.' }),
           }
         })

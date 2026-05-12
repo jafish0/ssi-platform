@@ -12,7 +12,7 @@ import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 //                5-point scales. No selection happens here.
 //   pick       — Eligible thoughts (rated ≥3 on either scale) shown as
 //                tappable cards. Max 2 selected.
-//   strategy   — Per-thought strategy (Challenge it / Both/And it) for
+//   strategy   — Per-thought strategy (Fight it / Both/And it) for
 //                each thought the kid picked. Walks through them in
 //                STUCK_THOUGHTS order.
 //   review     — Read-back of what they wrote before saving.
@@ -40,7 +40,10 @@ const BELIEF_LABELS = ['Not at all', 'A little', 'Somewhat', 'Mostly', 'Complete
 const ELIGIBILITY_THRESHOLD = 3
 const MAX_PICKS = 2
 
-const CHALLENGE_PROMPTS = [
+// Three "Fight it" prompts (Stephanie's PPT slide 12). Shown as
+// scaffolding above the open-ended response field when the kid picks
+// "Fight it" for a stuck thought.
+const FIGHT_PROMPTS = [
   'Is there another way I can think about this?',
   "Is this really true, or can I think of a way it isn't true?",
   'Is this thought helping me, and if not, what is a thought that might be more helpful?',
@@ -95,7 +98,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
   // Per-thought appraisal + selection. Shape: { [id]: { frequency, believability, selected } }
   const [appraisal, setAppraisal] = useState({})
 
-  // Per-thought strategy response. Shape: { [id]: { strategy, challenge_response, and_statement } }
+  // Per-thought strategy response. Shape: { [id]: { strategy, fight_response, and_statement } }
   const [responses, setResponses] = useState({})
 
   const [thoughtIdx, setThoughtIdx] = useState(0)
@@ -195,7 +198,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
   function currentResponseValid(thought) {
     const r = responses[thought.id]
     if (!r?.strategy) return false
-    if (r.strategy === 'challenge') return (r.challenge_response || '').trim().length > 0
+    if (r.strategy === 'fight') return (r.fight_response || '').trim().length > 0
     if (r.strategy === 'both_and') return (r.and_statement || '').trim().length > 0
     return false
   }
@@ -220,7 +223,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
             thought_text: t.text,
             strategy: r.strategy,
           }
-          if (r.strategy === 'challenge') out.challenge_response = r.challenge_response
+          if (r.strategy === 'fight') out.fight_response = r.fight_response
           if (r.strategy === 'both_and') out.and_statement = r.and_statement
           return out
         }),
@@ -468,15 +471,15 @@ export default function GettingUnstuck({ onSave = console.log }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
           <button
             type="button"
-            onClick={() => setStrategy(thought.id, 'challenge')}
+            onClick={() => setStrategy(thought.id, 'fight')}
             className={
               'text-left rounded-2xl border p-4 transition-colors ' +
-              (r.strategy === 'challenge'
+              (r.strategy === 'fight'
                 ? 'bg-amber-200 border-amber-400'
                 : 'bg-white border-slate-200 hover:border-amber-300')
             }
           >
-            <div className="font-semibold text-[16px] mb-1">Challenge it</div>
+            <div className="font-semibold text-[16px] mb-1">Fight it</div>
             <div className="text-[13px] text-slate-600">
               Push back on the thought. Is there another way to see this?
             </div>
@@ -499,14 +502,14 @@ export default function GettingUnstuck({ onSave = console.log }) {
           </button>
         </div>
 
-        {r.strategy === 'challenge' && (
+        {r.strategy === 'fight' && (
           <div className="mb-5">
             <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-3">
               <div className="text-[13px] font-medium text-slate-600 mb-2">
                 Ask yourself:
               </div>
               <ul className="space-y-2 text-[15px] text-slate-800 list-disc pl-5 leading-relaxed">
-                {CHALLENGE_PROMPTS.map((q, i) => (
+                {FIGHT_PROMPTS.map((q, i) => (
                   <li key={i}>{q}</li>
                 ))}
               </ul>
@@ -516,8 +519,8 @@ export default function GettingUnstuck({ onSave = console.log }) {
             </label>
             <textarea
               rows={5}
-              value={r.challenge_response || ''}
-              onChange={(e) => setField(thought.id, 'challenge_response', e.target.value)}
+              value={r.fight_response || ''}
+              onChange={(e) => setField(thought.id, 'fight_response', e.target.value)}
               placeholder="Take any of the questions above and write what comes up."
               className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
@@ -600,11 +603,11 @@ export default function GettingUnstuck({ onSave = console.log }) {
               <div className="text-[13px] text-slate-500 mb-1">Stuck thought</div>
               <div className="text-[15px] text-slate-800 mb-3">{t.text}</div>
               <div className="text-[13px] text-amber-800 font-medium mb-1">
-                {r.strategy === 'challenge' ? 'Challenge it' : 'Both/And it'}
+                {r.strategy === 'fight' ? 'Fight it' : 'Both/And it'}
               </div>
-              {r.strategy === 'challenge' && (
+              {r.strategy === 'fight' && (
                 <div className="text-[15px] text-slate-800 italic">
-                  {r.challenge_response}
+                  {r.fight_response}
                 </div>
               )}
               {r.strategy === 'both_and' && (

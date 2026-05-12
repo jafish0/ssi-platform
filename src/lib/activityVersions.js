@@ -19,9 +19,10 @@
 
 export const ACTIVITY_VERSIONS = {
   'getting-unstuck': {
-    version: 'v3.0',
+    version: 'v4.0',
     updated: '2026-05-12',
     changelog: [
+      '2026-05-12 · v4.0 — reverted the "Fight it" → "Challenge it" rename from v2.0. Strategy label back to "Fight it", strategy data key back to `fight`, response field back to `fight_response`. Stephanie\'s original clinical-content call (use "challenge" as more clinically standard) was overridden by Josh; the original RSD framing of "Fight it" is restored throughout — UI labels, data keys, export columns (`unstuck_n_fight`, allowed_values `fight | both_and`), and synthetic-demo dataset. Everything else from v3.0 (rate/pick split, max-2 thought selection, affirmation path for no-eligible) stays. Save payload data-shape change — analyst-side a downstream consumer expecting v2.0/v3.0 `challenge` keys would need updating, but no real participant data exists yet.',
       '2026-05-12 · v3.0 — separated rating and selection into two distinct screens. Rate screen now shows all 8 thoughts with the 5-point scales only; the per-thought "I want to work on this" button is gone. New Pick screen filters to thoughts rated ≥3 on either scale and shows them as selectable cards with a max-2 selection limit (non-blocking "Pick up to 2" nudge on third tap). New affirmation path: if no thought clears the eligibility threshold, Pick is skipped and a short "That\'s good news" screen leads straight to Save. Data shape unchanged — only the path to becoming selected changed.',
       '2026-05-11 · v2.0 — replaced the Kai-quote intro (Ginny: confusing) with a per-thought 5-point appraisal scale (frequency + believability). Eligibility threshold: rated ≥3 on either scale unlocks the "I want to work on this" button. "Fight it" renamed to "Challenge it" throughout (Stephanie — more clinically standard), including data keys (`fight` → `challenge`, `fight_response` → `challenge_response`). Restored the three challenge prompts as scaffolding above a single open-ended response field (Stephanie\'s PPT slide 12). Both/And unchanged. Save payload gains an `appraisals` array covering all 8 thoughts. Breaking change to data shape, demo-only.',
       '2026-05-11 · v1.0 — initial demo release.',
