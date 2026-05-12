@@ -5,6 +5,20 @@
 // snapshot (the schema) and the response data and produce flat rows.
 // That keeps them testable and lets the same code run against either real
 // Supabase data or the synthetic demo dataset.
+//
+// ---------- Column naming convention (Jessica, 2026-05-11) ----------
+//
+// Psychometric scales follow `<timepoint>_<scale_abbrev>_<item#>`
+//   e.g.  pre_bhs_1   pre_bhs_2   post_ascs_3
+// Score columns:        `<timepoint>_<scale_abbrev>_score`
+//
+// Demographics use bare names (no timepoint prefix) — they're captured
+// once at pretest, e.g. `age`, `sex`, `race_white`, `home_years`.
+//
+// Activity payloads use a short activity prefix:
+//   unstuck_*   safety_net_*   sort_*   poem_*   letter_*   reflect_*
+//
+// See SCALE_ABBREVIATIONS and ACTIVITY_PREFIXES below for the mappings.
 
 // ---------- Helpers ----------
 
@@ -36,6 +50,61 @@ function asScalar(v) {
   }
 }
 
+// ---------- Scale abbreviation map (psychometric_scale only) ----------
+// Keys are the prefix of the snapshot's token_key (the part before the
+// _pre / _post / _fu suffix). Add a new entry here when introducing a
+// new scale at the data layer.
+const SCALE_ABBREVIATIONS = {
+  hopelessness: 'bhs',          // Beck Hopelessness Scale
+  self_agency: 'ascs',          // Adolescent Sense of Control Scale
+  loneliness: 'ucla',           // UCLA 3-Item Loneliness Scale
+  fear_rejection: 'nb',         // Need to Belong
+  belong_behaviors: 'bpb',      // Belonging Promoting Behaviors
+  belong_stress: 'bw',          // Belonging Worries (2 sliders)
+  program_helpfulness: 'pe',    // Program Expectation
+  program_acceptability: 'pa',  // Program Acceptability (post-only)
+  // `appraisals` doesn't map to any item in the locked pretest doc.
+  // Flagged for Jessica/Stephanie to confirm origin. Mapping to `app`
+  // for now so the column name is predictable — see Discrepancy note
+  // in the 2026-05-11 batch brief.
+  appraisals: 'app',
+}
+
+function parseScaleTokenKey(tk) {
+  // "hopelessness_pre" → { scale: "hopelessness", phase: "pre", abbrev: "bhs" }
+  // Returns null if the key doesn't fit the pattern or the scale isn't mapped.
+  const m = /^(.+?)_(pre|post|fu)$/.exec(String(tk || ''))
+  if (!m) return null
+  const scale = m[1]
+  const phase = m[2]
+  const abbrev = SCALE_ABBREVIATIONS[scale]
+  if (!abbrev) return null
+  return { scale, phase, abbrev }
+}
+
+function extractItemNumber(id) {
+  // "bhs1" → 1, "ph_post1" → 1, "a9" → 9. Returns null if no trailing digits.
+  const m = /(\d+)$/.exec(String(id || ''))
+  return m ? parseInt(m[1], 10) : null
+}
+
+// ---------- Custom-activity short prefixes ----------
+// Per Jessica's 2026-05-11 brief: keep an activity-prefixed pattern, but
+// shorter than the underlying component name.
+const ACTIVITY_PREFIXES = {
+  GettingUnstuck: 'unstuck',
+  AlliesSafetyNet: 'safety_net',
+  BelongingSkillsSort: 'sort',
+  WhoIAmPoem: 'poem',
+  LetterBuilder: 'letter',
+  SelfReflection: 'reflect',
+}
+
+// Stable list of the 8 RSD stuck-thought IDs — used to emit per-thought
+// columns from the GettingUnstuck activity payload (one column per thought
+// × field). Must stay in sync with src/activities/GettingUnstuck.jsx.
+const STUCK_THOUGHT_IDS = ['st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8']
+
 // ---------- Column planning ----------
 
 // Walk the snapshot once and produce the list of column descriptors that
@@ -59,9 +128,18 @@ export function planWideColumns(snapshot) {
           const items = c.items || []
           const isVas = c.format === 'vas'
           const anchors = isVas ? c.vas_config || {} : c.anchors || {}
-          for (const sItem of items) {
+          const parsed = parseScaleTokenKey(tk)
+          for (let i = 0; i < items.length; i++) {
+            const sItem = items[i]
+            const itemNum = extractItemNumber(sItem.id) ?? i + 1
+            // New convention if the scale maps; fall back to the old
+            // <tk>_<sItem.id> shape only for unmapped scales so nothing
+            // silently disappears from the export.
+            const rawName = parsed
+              ? `${parsed.phase}_${parsed.abbrev}_${itemNum}`
+              : `${tk}_${sItem.id}`
             cols.push({
-              name: sanitizeCol(`${tk}_${sItem.id}`),
+              name: sanitizeCol(rawName),
               source_token_key: tk,
               item_type: item.type,
               sub_id: sItem.id,
@@ -84,8 +162,11 @@ export function planWideColumns(snapshot) {
             })
           }
           if (c.scoring) {
+            const scoreName = parsed
+              ? `${parsed.phase}_${parsed.abbrev}_score`
+              : `${tk}_score`
             cols.push({
-              name: sanitizeCol(`${tk}_score`),
+              name: sanitizeCol(scoreName),
               source_token_key: tk,
               item_type: 'psychometric_scale_score',
               sub_id: '',
@@ -284,36 +365,100 @@ export function planWideColumns(snapshot) {
         }
         case 'custom_activity': {
           const componentName = c.component_name || ''
+          const prefix = ACTIVITY_PREFIXES[componentName] || sanitizeCol(tk)
           // Per-component well-known scalars.
           if (componentName === 'GettingUnstuck') {
+            // Per-thought appraisal columns. v2.0 of the activity (commit
+            // 7b7046e) added frequency + believability ratings for every
+            // stuck thought (not just the chosen ones). Strategy/response
+            // columns are empty for unchosen thoughts.
+            for (const stId of STUCK_THOUGHT_IDS) {
+              cols.push({
+                name: sanitizeCol(`${prefix}_freq_${stId}`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: `${stId}.frequency`,
+                prompt: `How often do you have stuck thought ${stId}?`,
+                allowed_values: '1–5 (Never→Always)',
+                notes: 'GettingUnstuck v2 appraisal',
+                extract: (rv) =>
+                  rv?.appraisals?.find((a) => a.thought_id === stId)?.frequency ?? '',
+              })
+              cols.push({
+                name: sanitizeCol(`${prefix}_belief_${stId}`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: `${stId}.believability`,
+                prompt: `How strongly do you believe stuck thought ${stId}?`,
+                allowed_values: '1–5 (Not at all→Completely)',
+                notes: 'GettingUnstuck v2 appraisal',
+                extract: (rv) =>
+                  rv?.appraisals?.find((a) => a.thought_id === stId)?.believability ?? '',
+              })
+              cols.push({
+                name: sanitizeCol(`${prefix}_selected_${stId}`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: `${stId}.selected`,
+                prompt: `Did the participant choose to work on stuck thought ${stId}?`,
+                allowed_values: '0 or 1',
+                notes: 'GettingUnstuck v2',
+                extract: (rv) =>
+                  rv?.appraisals?.find((a) => a.thought_id === stId)?.selected ? 1 : 0,
+              })
+              cols.push({
+                name: sanitizeCol(`${prefix}_strategy_${stId}`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: `${stId}.strategy`,
+                prompt: `Strategy chosen for stuck thought ${stId}`,
+                allowed_values: 'challenge | both_and | (blank if not chosen)',
+                notes: 'GettingUnstuck v2',
+                extract: (rv) =>
+                  rv?.responses?.find((r) => r.thought_id === stId)?.strategy ?? '',
+              })
+              cols.push({
+                name: sanitizeCol(`${prefix}_response_${stId}`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: `${stId}.response`,
+                prompt: `Open-ended response for stuck thought ${stId}`,
+                allowed_values: 'free text',
+                notes: 'Challenge response or Both/And statement, depending on strategy',
+                extract: (rv) => {
+                  const r = rv?.responses?.find((x) => x.thought_id === stId)
+                  return r?.challenge_response ?? r?.and_statement ?? ''
+                },
+              })
+            }
             cols.push(
               {
-                name: sanitizeCol(`${tk}_thought_ids`),
+                name: sanitizeCol(`${prefix}_thought_ids`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'stuck_thought_ids',
-                prompt: 'Stuck thoughts selected',
+                prompt: 'Stuck thoughts the participant chose to work on',
                 allowed_values: 'semicolon-separated thought ids',
                 notes: 'GettingUnstuck',
                 extract: (rv) => joinList(rv?.stuck_thought_ids),
               },
               {
-                name: sanitizeCol(`${tk}_n_fight`),
+                name: sanitizeCol(`${prefix}_n_challenge`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'n_fight',
-                prompt: 'Count of fight-strategy responses',
+                sub_id: 'n_challenge',
+                prompt: 'Count of Challenge-strategy responses',
                 allowed_values: 'integer',
-                notes: 'GettingUnstuck',
+                notes: 'GettingUnstuck (was n_fight before the 2026-05-11 rename)',
                 extract: (rv) =>
-                  (rv?.responses || []).filter((r) => r.strategy === 'fight').length,
+                  (rv?.responses || []).filter((r) => r.strategy === 'challenge').length,
               },
               {
-                name: sanitizeCol(`${tk}_n_both_and`),
+                name: sanitizeCol(`${prefix}_n_both_and`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'n_both_and',
-                prompt: 'Count of both/and-strategy responses',
+                prompt: 'Count of Both/And-strategy responses',
                 allowed_values: 'integer',
                 notes: 'GettingUnstuck',
                 extract: (rv) =>
@@ -323,7 +468,7 @@ export function planWideColumns(snapshot) {
           } else if (componentName === 'AlliesSafetyNet') {
             cols.push(
               {
-                name: sanitizeCol(`${tk}_n_allies`),
+                name: sanitizeCol(`${prefix}_n_allies`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'n_allies',
@@ -333,7 +478,7 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => (rv?.allies || []).length,
               },
               {
-                name: sanitizeCol(`${tk}_n_removed`),
+                name: sanitizeCol(`${prefix}_n_removed`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'n_removed',
@@ -343,7 +488,7 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => (rv?.removed_allies || []).length,
               },
               {
-                name: sanitizeCol(`${tk}_n_gaps`),
+                name: sanitizeCol(`${prefix}_n_gaps`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'n_gaps',
@@ -353,7 +498,7 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => (rv?.gaps_identified || []).length,
               },
               {
-                name: sanitizeCol(`${tk}_ally_names`),
+                name: sanitizeCol(`${prefix}_ally_names`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'ally_names',
@@ -366,7 +511,7 @@ export function planWideColumns(snapshot) {
           } else if (componentName === 'BelongingSkillsSort') {
             cols.push(
               {
-                name: sanitizeCol(`${tk}_already_doing`),
+                name: sanitizeCol(`${prefix}_already_doing`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'already_doing',
@@ -376,7 +521,7 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => joinList(rv?.already_doing),
               },
               {
-                name: sanitizeCol(`${tk}_willing_to_try`),
+                name: sanitizeCol(`${prefix}_willing_to_try`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'willing_to_try',
@@ -386,7 +531,7 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => joinList(rv?.willing_to_try),
               },
               {
-                name: sanitizeCol(`${tk}_n_already`),
+                name: sanitizeCol(`${prefix}_n_already`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'n_already',
@@ -396,7 +541,7 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => (rv?.already_doing || []).length,
               },
               {
-                name: sanitizeCol(`${tk}_n_willing`),
+                name: sanitizeCol(`${prefix}_n_willing`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'n_willing',
@@ -407,54 +552,49 @@ export function planWideColumns(snapshot) {
               },
             )
           } else if (componentName === 'WhoIAmPoem') {
+            // v2.0 (commit 7b7046e) reshaped the save payload to 8 keyed
+            // fields. Emit one column per field; reconstruct full poem on
+            // the analyst's side if needed.
+            const POEM_FIELDS = [
+              ['characteristics', 'Line 1: "I am" — two special characteristics'],
+              ['from',            'Line 2: "I am from" — a place, people, or way of life'],
+              ['fear',            'Line 3: "I fear"'],
+              ['suffer_when',     'Line 4: "I suffer when"'],
+              ['want',            'Line 5: "I want"'],
+              ['believe',         'Line 7: "I believe"'],
+              ['dream',           'Line 8: "I dream"'],
+              ['going',           'Line 9: "I am going"'],
+            ]
+            for (const [field, prompt] of POEM_FIELDS) {
+              cols.push({
+                name: sanitizeCol(`${prefix}_${field}`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: field,
+                prompt,
+                allowed_values: 'free text',
+                notes: 'WhoIAmPoem v2',
+                extract: (rv) => rv?.[field] || '',
+              })
+            }
+          } else if (componentName === 'LetterBuilder') {
+            // v2.0 (commit 7b7046e) collapsed the 6-section letter to a
+            // single free-write. Just one text column now.
             cols.push({
-              name: sanitizeCol(`${tk}_full_poem_text`),
+              name: sanitizeCol(`${prefix}_text`),
               source_token_key: tk,
               item_type: 'custom_activity',
-              sub_id: 'full_poem_text',
-              prompt: 'Assembled poem',
+              sub_id: 'letter',
+              prompt: 'Letter text (single free-write)',
               allowed_values: 'free text',
-              notes: 'WhoIAmPoem',
-              extract: (rv) => rv?.full_poem_text || '',
+              notes: 'LetterBuilder v2',
+              extract: (rv) => rv?.letter || '',
             })
-          } else if (componentName === 'LetterBuilder') {
-            cols.push(
-              {
-                name: sanitizeCol(`${tk}_full_letter_text`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'full_letter_text',
-                prompt: 'Assembled letter',
-                allowed_values: 'free text',
-                notes: 'LetterBuilder',
-                extract: (rv) => rv?.full_letter_text || '',
-              },
-              {
-                name: sanitizeCol(`${tk}_used_getting_unstuck`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'used_getting_unstuck',
-                prompt: 'Did the letter pull-forward Getting Unstuck content?',
-                allowed_values: '0 or 1',
-                notes: 'LetterBuilder',
-                extract: (rv) => (rv?.pull_forward_used?.getting_unstuck ? 1 : 0),
-              },
-              {
-                name: sanitizeCol(`${tk}_used_allies`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'used_allies',
-                prompt: 'Did the letter pull-forward Allies/Safety Net content?',
-                allowed_values: '0 or 1',
-                notes: 'LetterBuilder',
-                extract: (rv) => (rv?.pull_forward_used?.allies_safety_net ? 1 : 0),
-              },
-            )
           } else if (componentName === 'SelfReflection') {
             for (const ctx of ['inclusion', 'exclusion']) {
               for (const sub of ['memory', 'thoughts', 'feelings']) {
                 cols.push({
-                  name: sanitizeCol(`${tk}_${ctx}_${sub}`),
+                  name: sanitizeCol(`${prefix}_${ctx}_${sub}`),
                   source_token_key: tk,
                   item_type: 'custom_activity',
                   sub_id: `${ctx}.${sub}`,
@@ -468,7 +608,7 @@ export function planWideColumns(snapshot) {
           }
           // Always include a JSON fallback column so nothing is lost.
           cols.push({
-            name: sanitizeCol(`${tk}_json`),
+            name: sanitizeCol(`${prefix}_json`),
             source_token_key: tk,
             item_type: 'custom_activity',
             sub_id: 'json',

@@ -302,19 +302,46 @@ function makeResponseValue(item, rng, profile, phase) {
     case 'custom_activity': {
       const componentName = c.component_name
       if (componentName === 'GettingUnstuck') {
-        const selectedIds = pickN(rng, STUCK_THOUGHT_IDS, intInRange(rng, 1, 3))
-        const responses = selectedIds.map((id) => {
-          const useFight = rng() < 0.5
+        // GettingUnstuck v2 (commit 7b7046e): rate ALL 8 thoughts on
+        // frequency + believability; pick which to work on (≥3 on either
+        // unlocks selection); strategy renamed to challenge/both_and.
+        // The synthetic distributions here intentionally produce a mix —
+        // most participants rate a couple thoughts highly and pick 1–3.
+        const appraisals = STUCK_THOUGHT_IDS.map((id) => ({
+          thought_id: id,
+          thought_text: `Stuck thought ${id}`,
+          frequency: intInRange(rng, 1, 5),
+          believability: intInRange(rng, 1, 5),
+          selected: false,
+        }))
+        // Pick 1–3 thoughts to "select" from the eligibility set
+        const eligible = appraisals.filter(
+          (a) => a.frequency >= 3 || a.believability >= 3,
+        )
+        const pool = eligible.length > 0 ? eligible : appraisals
+        const chosen = pickN(rng, pool, Math.min(pool.length, intInRange(rng, 1, 3)))
+        const chosenIds = new Set(chosen.map((a) => a.thought_id))
+        for (const a of appraisals) {
+          if (chosenIds.has(a.thought_id)) a.selected = true
+        }
+        const responses = chosen.map((a) => {
+          const useChallenge = rng() < 0.5
           return {
-            thought_id: id,
-            thought_text: `Stuck thought ${id}`,
-            strategy: useFight ? 'fight' : 'both_and',
-            ...(useFight
-              ? { fight_response: 'Maybe that’s not totally true — last week Coach showed up.' }
+            thought_id: a.thought_id,
+            thought_text: a.thought_text,
+            strategy: useChallenge ? 'challenge' : 'both_and',
+            ...(useChallenge
+              ? { challenge_response: 'Maybe that’s not totally true — last week Coach showed up.' }
               : { and_statement: 'there can still be people who stay.' }),
           }
         })
-        return { activity: 'getting_unstuck', stuck_thought_ids: selectedIds, responses, saved_at: new Date().toISOString() }
+        return {
+          activity: 'getting_unstuck',
+          appraisals,
+          stuck_thought_ids: [...chosenIds],
+          responses,
+          saved_at: new Date().toISOString(),
+        }
       }
       if (componentName === 'AlliesSafetyNet') {
         const n = intInRange(rng, 2, 4)
@@ -352,71 +379,38 @@ function makeResponseValue(item, rng, profile, phase) {
         }
       }
       if (componentName === 'WhoIAmPoem') {
-        const s1 = {
-          i_am: pick(rng, POEM_LINES.i_am),
-          i_wonder: pick(rng, POEM_LINES.i_wonder),
-          i_fear: pick(rng, POEM_LINES.i_fear),
-          i_suffer_when: pick(rng, POEM_LINES.i_suffer_when),
-          i_want: pick(rng, POEM_LINES.i_want),
-        }
-        s1.i_am_repeat = s1.i_am
-        const s2 = {
-          i_understand: pick(rng, POEM_LINES.i_understand),
-          i_believe: pick(rng, POEM_LINES.i_believe),
-          i_dream: pick(rng, POEM_LINES.i_dream),
-          i_try: pick(rng, POEM_LINES.i_try),
-          i_hope: pick(rng, POEM_LINES.i_hope),
-          i_am_repeat: s1.i_am,
-        }
-        const text = [
-          `I am ${s1.i_am}`,
-          `I wonder ${s1.i_wonder}`,
-          `I fear ${s1.i_fear}`,
-          `I suffer when ${s1.i_suffer_when}`,
-          `I want ${s1.i_want}`,
-          `I am ${s1.i_am}`,
-          '',
-          `I understand ${s2.i_understand}`,
-          `I believe ${s2.i_believe}`,
-          `I dream ${s2.i_dream}`,
-          `I try ${s2.i_try}`,
-          `I hope ${s2.i_hope}`,
-          `I am ${s1.i_am}`,
-        ].join('\n')
+        // WhoIAmPoem v2 (commit 7b7046e): 8 keyed fields on a single
+        // screen; lines 6/10 reconstruct from `characteristics` at
+        // render time. Old `stanza_1`, `stanza_2`, `full_poem_text`
+        // are gone.
         return {
           activity: 'who_i_am_poem',
-          stanza_1: s1,
-          stanza_2: s2,
-          full_poem_text: text,
+          characteristics: pick(rng, POEM_LINES.i_am),
+          from: pick(rng, ['a small kitchen with the radio on', 'a house that\'s changed a few times', 'a town where the seasons matter']),
+          fear: pick(rng, POEM_LINES.i_fear),
+          suffer_when: pick(rng, POEM_LINES.i_suffer_when),
+          want: pick(rng, POEM_LINES.i_want),
+          believe: pick(rng, POEM_LINES.i_believe),
+          dream: pick(rng, POEM_LINES.i_dream),
+          going: pick(rng, ['somewhere I can be myself', 'closer to the people I want around', 'wherever quiet mornings are']),
           saved_at: new Date().toISOString(),
         }
       }
       if (componentName === 'LetterBuilder') {
-        const sections = {
-          s1_why_writing: pick(rng, LETTER_SECTIONS.s1_why_writing),
-          s2_real_talk: pick(rng, LETTER_SECTIONS.s2_real_talk),
-          s3_both_and: pick(rng, LETTER_SECTIONS.s3_both_and),
-          s4_people: pick(rng, LETTER_SECTIONS.s4_people),
-          s5_advice: pick(rng, LETTER_SECTIONS.s5_advice),
-          s6_last_thing: pick(rng, LETTER_SECTIONS.s6_last_thing),
-        }
-        const fullText = [
-          'To a young person who needs to hear this,',
-          '',
-          sections.s1_why_writing,
-          sections.s2_real_talk,
-          sections.s3_both_and,
-          sections.s4_people,
-          sections.s5_advice,
-          sections.s6_last_thing,
-          '',
-          "You've got this. And now you know — you're not alone.\n— Someone who gets it",
-        ].join('\n\n')
+        // LetterBuilder v2 (commit 7b7046e): collapsed 6 sections to a
+        // single free-write. Save shape is now { activity, letter, saved_at }.
+        // Stitch a believable letter from the legacy section lines so the
+        // demo body has variety without re-curating new content.
+        const letter = [
+          pick(rng, LETTER_SECTIONS.s1_why_writing),
+          pick(rng, LETTER_SECTIONS.s2_real_talk),
+          pick(rng, LETTER_SECTIONS.s3_both_and),
+          pick(rng, LETTER_SECTIONS.s5_advice),
+          pick(rng, LETTER_SECTIONS.s6_last_thing),
+        ].join(' ')
         return {
           activity: 'letter_builder',
-          sections,
-          pull_forward_used: { getting_unstuck: rng() < 0.7, allies_safety_net: rng() < 0.7 },
-          full_letter_text: fullText,
+          letter,
           saved_at: new Date().toISOString(),
         }
       }
