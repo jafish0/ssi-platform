@@ -27,9 +27,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'allies-safety-net': {
-    version: 'v1.0',
+    version: 'v2.0',
     updated: '2026-05-11',
     changelog: [
+      '2026-05-11 · v2.0 — full rewrite. Old 4-step flow (Build → Inspect → Strengthen → Review) replaced with Variant C: per-support-type multi-select grid across 5 paginated screens (intro + Practical + Emotional + Social + Safety Net visual). 15 new SVG ally tiles (foster, bio, sibling, grandparent, otherfam, counselor, teacher, coach, babysitter, neighbor, friend, therapist, caseworker, other1, other2) with two custom-name slots. Per-screen "None of these" affirmative button captures meaningful "no one for this type" responses. Final screen is a placeholder grouped-by-type visual — final net+pie visual is a separate follow-up. Save payload reshaped: deduplicated allies list with support_types arrays + none_for flags. Steps 2–4 of the legacy activity removed; will be rebuilt as Task #7 after team design discussion.',
       '2026-05-11 · v1.0 — initial demo release (drag-id parsing fix already folded in).',
     ],
   },

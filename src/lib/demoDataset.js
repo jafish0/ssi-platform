@@ -27,7 +27,8 @@ const COHORT = 'Demo cohort 2026'
 const INTERVENTION_SLUG = 'ready-set-dedicate'
 
 // Generic, non-PHI-sounding placeholder content.
-const ALLY_NAMES = ['Coach', 'Ms. R', 'Mr. T', 'My aunt', 'My friend J', 'My sister', 'My counselor', 'My grandma', 'Pastor Mike', 'My older cousin']
+// (Old ALLY_NAMES free-text list removed in Draft 8 — synthetic data
+// now uses the stable AlliesSafetyNet v2 tile IDs from src/lib/allyTiles.js.)
 const STUCK_THOUGHT_IDS = ['st1','st2','st3','st4','st5','st6','st7','st8']
 const BEHAVIOR_IDS = ['bs1','bs2','bs3','bs4','bs5','bs6','bs7']
 const RACE_OPTIONS = ['white','black','native','asian','pacific','other','prefer_not']
@@ -344,16 +345,55 @@ function makeResponseValue(item, rng, profile, phase) {
         }
       }
       if (componentName === 'AlliesSafetyNet') {
-        const n = intInRange(rng, 2, 4)
-        const allies = pickN(rng, ALLY_NAMES, n).map((name) => {
-          const supportTypes = pickN(rng, ['emotional', 'social', 'instrumental'], intInRange(rng, 1, 3))
-          return { name, support_types: supportTypes }
+        // v2.0 (Draft 8 of the 2026-05-11 batch): payload reshaped to a
+        // deduplicated allies list with support_types arrays + per-type
+        // none_for flags. Synthetic distribution per brief: ~70% have
+        // 2–4 allies, ~20% have 5–7, ~10% have 0–1 with at least one
+        // "None of these" flag.
+        const TILE_IDS = [
+          'foster', 'bio', 'sibling', 'grandparent', 'otherfam',
+          'counselor', 'teacher', 'coach', 'babysitter', 'neighbor',
+          'friend', 'therapist', 'caseworker',
+        ]
+        const TILE_NAMES = {
+          foster: 'Foster Parent', bio: 'Biological Parent', sibling: 'Sibling',
+          grandparent: 'Grandparent', otherfam: 'Other family (aunts, uncles, cousins)',
+          counselor: 'School Counselor', teacher: 'Teacher', coach: 'Coach',
+          babysitter: 'Babysitter', neighbor: 'Neighbor', friend: 'Friend',
+          therapist: 'Therapist', caseworker: 'Caseworker / Social Worker',
+        }
+        const bucket = rng()
+        let nAllies
+        let lowAllies
+        if (bucket < 0.10) {
+          nAllies = intInRange(rng, 0, 1)
+          lowAllies = true
+        } else if (bucket < 0.80) {
+          nAllies = intInRange(rng, 2, 4)
+          lowAllies = false
+        } else {
+          nAllies = intInRange(rng, 5, 7)
+          lowAllies = false
+        }
+        const chosenIds = pickN(rng, TILE_IDS, nAllies)
+        const SUPPORT_TYPE_IDS = ['practical', 'emotional', 'social']
+        const allies = chosenIds.map((id) => {
+          const types = pickN(rng, SUPPORT_TYPE_IDS, intInRange(rng, 1, 3))
+          return { id, name: TILE_NAMES[id], custom: false, support_types: types }
         })
+        // Per-type none flags: only set when we have low allies and the
+        // type isn't covered. Otherwise all-false.
+        const covered = new Set(allies.flatMap((a) => a.support_types))
+        const none_for = {
+          practical: lowAllies && !covered.has('practical') && rng() < 0.6,
+          emotional: lowAllies && !covered.has('emotional') && rng() < 0.4,
+          social: lowAllies && !covered.has('social') && rng() < 0.5,
+        }
         return {
           activity: 'allies_safety_net',
+          version: '2.0',
           allies,
-          removed_allies: [],
-          gaps_identified: rng() < 0.4 ? [{ support_type: 'instrumental' }] : [],
+          none_for,
           saved_at: new Date().toISOString(),
         }
       }

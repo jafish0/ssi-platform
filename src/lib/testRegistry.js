@@ -34,7 +34,7 @@ export const TEST_REGISTRY = [
     id: 'allies-safety-net',
     displayName: 'Allies / Safety Net',
     category: 'RSD activity',
-    description: 'Build, inspect, strengthen, and view a support network.',
+    description: 'Build a safety net by tapping who provides practical, emotional, and social support.',
     component: AlliesSafetyNet,
     mockProps: {},
   },

@@ -1,544 +1,154 @@
+// Allies / Safety Net — Step 1 (Build) only, v2.0 per the 2026-05-11
+// review-meeting batch.
+//
+// The previous 4-step flow (Build → Inspect → Strengthen → Review) has
+// been torn down in this commit. Steps 2–4 will be rebuilt later (Task
+// #7) after the team's design discussion. For now this activity ships
+// just the Build step plus a competent placeholder visual for the
+// assembled Safety Net.
+//
+// Flow:
+//   Screen 1 — Intro: what an ally is, three support types previewed
+//   Screen 2 — Practical support: tile grid + multi-select + "None of these"
+//   Screen 3 — Emotional support: same
+//   Screen 4 — Social support: same
+//   Screen 5 — Your Safety Net: placeholder visual, then Save
+//
+// Selection is PER-TYPE. A kid who selects Mom on Practical does not
+// pre-select her on Emotional — the cumulative ally entity is built
+// from the union of types across screens. Custom names typed into
+// other1/other2 persist across the three type screens.
+
 import { useMemo, useState } from 'react'
-import {
-  DndContext,
-  PointerSensor,
-  TouchSensor,
-  KeyboardSensor,
-  useDraggable,
-  useDroppable,
-  useSensor,
-  useSensors,
-  closestCenter,
-} from '@dnd-kit/core'
-import { PrimaryButton, GhostButton, SecondaryButton } from '../components/items/shared.jsx'
+import { Check } from 'lucide-react'
+import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
 
-const SUPPORT_TYPES = [
-  {
-    id: 'instrumental',
-    label: 'Instrumental / Practical',
-    description:
-      'Help you solve problems, teach you things, or make sure you have what you need',
-  },
-  {
-    id: 'emotional',
-    label: 'Emotional',
-    description:
-      'Help you feel good about yourself, listen to you, or help you cope with hard feelings',
-  },
-  {
-    id: 'social',
-    label: 'Social',
-    description:
-      'You feel like you can be yourself around them, or they help you feel less alone',
-  },
-]
+// Convenience: which tile ids are custom-name-entry tiles. Keep ALLY_TILES
+// as the source of truth (via `custom: true`); this is a derived set.
+const CUSTOM_TILE_IDS = new Set(ALLY_TILES.filter((t) => t.custom).map((t) => t.id))
 
-const FLAGS = [
-  { id: 'trouble', text: 'Usually gets you into trouble' },
-  { id: 'isolates', text: 'Tries to keep you from talking to or getting close to other people' },
-  { id: 'lies', text: 'Frequently lies to you' },
-  { id: 'fear', text: 'Makes you feel afraid' },
-]
-
-const MAX_ALLIES = 5
-
-function DraggableAlly({ id, name, dragId }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: dragId })
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className={
-        'cursor-grab active:cursor-grabbing select-none rounded-full px-4 py-2 min-h-[44px] text-[14px] font-medium bg-white text-slate-800 shadow-card ' +
-        (isDragging ? 'opacity-50' : '')
-      }
-    >
-      {name}
-    </div>
-  )
+// Initial selection shape — { [type_id]: Set<tile_id> } plus per-type
+// "none of these" flags and per-custom-tile names.
+function initialSelection() {
+  const sel = {}
+  const none = {}
+  for (const t of SUPPORT_TYPES) {
+    sel[t.id] = new Set()
+    none[t.id] = false
+  }
+  return { sel, none }
 }
 
-function AllyDropBucket({ supportType, items, allies, onUntag }) {
-  const { isOver, setNodeRef } = useDroppable({ id: `bucket-${supportType.id}` })
-  return (
-    <div
-      ref={setNodeRef}
-      className={
-        'rounded-2xl border-2 border-dashed p-4 min-h-[140px] transition-colors ' +
-        (isOver ? 'bg-amber-100 border-amber-400' : items.length > 0 ? 'bg-white border-amber-300' : 'bg-amber-50 border-amber-200')
-      }
-    >
-      <div className="text-[14px] font-semibold text-amber-800 mb-1">{supportType.label}</div>
-      <div className="text-[12px] text-slate-500 mb-3">{supportType.description}</div>
-      <div className="flex flex-wrap gap-2">
-        {items.map((idx) => {
-          const a = allies[idx]
-          if (!a) return null
-          return (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => onUntag(idx, supportType.id)}
-              className="rounded-full px-3 py-1 min-h-[36px] text-[13px] bg-amber-200 text-amber-900 hover:bg-amber-300"
-              title="Tap to remove from this bucket"
-            >
-              {a.name} ✕
-            </button>
-          )
-        })}
-        {items.length === 0 && (
-          <div className="text-[13px] text-slate-500 italic">Drop allies here</div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-export default function AlliesSafetyNet({ onSave = console.log, initialStep = 1 }) {
-  const [step, setStep] = useState(initialStep)
-  // allies: [{ name, support_types: ['emotional', ...] }, ...]
-  const [allies, setAllies] = useState([])
-  const [draftName, setDraftName] = useState('')
-  const [removedAllies, setRemovedAllies] = useState([])
-  const [inspectIdx, setInspectIdx] = useState(0)
-  const [flagsByAlly, setFlagsByAlly] = useState({}) // { idx: [flagId, ...] }
-  const [strengthenIdx, setStrengthenIdx] = useState(0)
-  const [gaps, setGaps] = useState([]) // [{ support_type, has_potential, potential_ally, action }]
+export default function AlliesSafetyNet({ onSave = console.log }) {
+  const [screenIdx, setScreenIdx] = useState(0)
+  // selection[typeId] is a Set of tile ids
+  const [selection, setSelection] = useState(() => initialSelection().sel)
+  const [noneFor, setNoneFor] = useState(() => initialSelection().none)
+  // customNames[tileId] is the user-typed name for other1/other2.
+  // Persists across all three type screens.
+  const [customNames, setCustomNames] = useState({})
+  // editingCustom[tileId] toggles the inline text input on a custom tile.
+  const [editingCustom, setEditingCustom] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
-    useSensor(KeyboardSensor),
-  )
+  const totalScreens = 2 + SUPPORT_TYPES.length // 1 intro + 3 types + 1 visual
 
-  function addAlly() {
-    const name = draftName.trim()
-    if (!name) return
-    if (allies.length >= MAX_ALLIES) return
-    setAllies((prev) => [...prev, { name, support_types: [] }])
-    setDraftName('')
+  function goNext() {
+    if (screenIdx < totalScreens - 1) setScreenIdx((i) => i + 1)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+  function goBack() {
+    if (screenIdx > 0) setScreenIdx((i) => i - 1)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
-  function removeAlly(idx) {
-    setAllies((prev) => prev.filter((_, i) => i !== idx))
+  function toggleTile(typeId, tileId) {
+    // Tapping any tile clears the "none of these" flag for the current
+    // type. The two states are mutually exclusive — kid affirmed there
+    // is at least one ally for this type.
+    setNoneFor((prev) => ({ ...prev, [typeId]: false }))
+    setSelection((prev) => {
+      const next = { ...prev }
+      const cur = new Set(prev[typeId])
+      if (cur.has(tileId)) cur.delete(tileId)
+      else cur.add(tileId)
+      next[typeId] = cur
+      return next
+    })
   }
 
-  function tagAlly(idx, supportTypeId) {
-    setAllies((prev) =>
-      prev.map((a, i) => {
-        if (i !== idx) return a
-        if (a.support_types.includes(supportTypeId)) return a
-        return { ...a, support_types: [...a.support_types, supportTypeId] }
-      }),
-    )
-  }
-
-  function untagAlly(idx, supportTypeId) {
-    setAllies((prev) =>
-      prev.map((a, i) =>
-        i === idx
-          ? { ...a, support_types: a.support_types.filter((s) => s !== supportTypeId) }
-          : a,
-      ),
-    )
-  }
-
-  function handleDragEnd(event) {
-    const { active, over } = event
-    if (!over) return
-    const dragId = String(active.id)
-    if (!dragId.startsWith('ally-')) return
-    const idx = Number(dragId.slice(5))
-    const overId = String(over.id)
-    if (overId.startsWith('bucket-')) {
-      const supportTypeId = overId.slice(7)
-      tagAlly(idx, supportTypeId)
-    }
-  }
-
-  // ---- Step 1 ----
-  if (step === 1) {
-    const allTagged = allies.length > 0 && allies.every((a) => a.support_types.length > 0)
-    return (
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <h2 className="text-[22px] font-semibold mb-2">Build your safety net</h2>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-4">
-          Name up to 5 people in your corner — first names or nicknames are fine.
-          Then drag each one into the kind of support they give you. Someone can
-          go in more than one bucket.
-        </p>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-5">
-          <div className="text-[14px] font-medium text-slate-700 mb-2">
-            Add an ally
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={draftName}
-              onChange={(e) => setDraftName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addAlly()
-                }
-              }}
-              maxLength={40}
-              placeholder="First name or nickname"
-              disabled={allies.length >= MAX_ALLIES}
-              className="flex-1 text-[16px] px-4 py-2 min-h-[48px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
-            />
-            <button
-              type="button"
-              onClick={addAlly}
-              disabled={!draftName.trim() || allies.length >= MAX_ALLIES}
-              className="bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-5 py-2 min-h-[48px]"
-            >
-              Add
-            </button>
-          </div>
-          <div className="text-[12px] text-slate-500 mt-2">
-            {allies.length}/{MAX_ALLIES} allies
-          </div>
-        </div>
-
-        {allies.length > 0 && (
-          <div className="mb-5">
-            <div className="text-[13px] text-slate-500 mb-2">Drag your allies into a support type</div>
-            <div className="flex flex-wrap gap-2">
-              {allies.map((a, idx) => (
-                <div key={idx} className="flex items-center gap-2 bg-white rounded-full pl-1 pr-2 shadow-card">
-                  <DraggableAlly id={idx} dragId={`ally-${idx}`} name={a.name} />
-                  <button
-                    type="button"
-                    onClick={() => removeAlly(idx)}
-                    className="text-slate-500 hover:text-slate-700 text-[12px] px-1"
-                    title="Remove this ally"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {SUPPORT_TYPES.map((st) => {
-            const items = allies
-              .map((a, i) => (a.support_types.includes(st.id) ? i : null))
-              .filter((x) => x !== null)
-            return (
-              <AllyDropBucket
-                key={st.id}
-                supportType={st}
-                items={items}
-                allies={allies}
-                onUntag={untagAlly}
-              />
-            )
-          })}
-        </div>
-
-        <div className="flex justify-end mt-6">
-          <PrimaryButton onClick={() => setStep(2)} disabled={!allTagged}>
-            Next →
-          </PrimaryButton>
-        </div>
-      </DndContext>
-    )
-  }
-
-  // ---- Step 2: Inspect ----
-  if (step === 2) {
-    const ally = allies[inspectIdx]
-    if (!ally) {
-      // No allies left → skip to strengthen
-      setStep(3)
-      return null
-    }
-    const flags = flagsByAlly[inspectIdx] || []
-    const hasFlags = flags.length > 0
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-2">Inspect your net</h2>
-        <p className="text-[14px] text-slate-600 mb-4">
-          Ally {inspectIdx + 1} of {allies.length}
-        </p>
-        <div className="bg-amber-50 border-l-4 border-amber-300 rounded-2xl px-5 py-3 mb-4">
-          <div className="text-[13px] font-medium text-amber-800 mb-1">Ally</div>
-          <div className="text-[18px] font-semibold text-slate-800">{ally.name}</div>
-        </div>
-        <p className="text-[15px] text-slate-700 mb-3">
-          Does {ally.name} ever do any of these things?
-        </p>
-        <div className="space-y-2 mb-5">
-          {FLAGS.map((f) => {
-            const sel = flags.includes(f.id)
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => {
-                  setFlagsByAlly((prev) => {
-                    const cur = prev[inspectIdx] || []
-                    const next = cur.includes(f.id)
-                      ? cur.filter((x) => x !== f.id)
-                      : [...cur, f.id]
-                    return { ...prev, [inspectIdx]: next }
-                  })
-                }}
-                aria-pressed={sel}
-                className={
-                  'w-full text-left rounded-2xl border min-h-[52px] px-5 py-3 text-[15px] transition-colors ' +
-                  (sel
-                    ? 'bg-amber-100 border-amber-400 text-amber-900'
-                    : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
-                }
-              >
-                {f.text}
-              </button>
-            )
-          })}
-        </div>
-
-        {hasFlags && (
-          <div className="bg-amber-100 border border-amber-300 rounded-2xl p-4 mb-5">
-            <p className="text-[14px] text-amber-900 mb-3">
-              These characteristics describe an unhealthy relationship. Would you
-              like to remove {ally.name} from your safety net?
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <SecondaryButton
-                onClick={() => {
-                  setRemovedAllies((prev) => [...prev, ally])
-                  setAllies((prev) => prev.filter((_, i) => i !== inspectIdx))
-                  setFlagsByAlly((prev) => {
-                    const next = {}
-                    Object.entries(prev).forEach(([k, v]) => {
-                      const ki = Number(k)
-                      if (ki < inspectIdx) next[ki] = v
-                      else if (ki > inspectIdx) next[ki - 1] = v
-                    })
-                    return next
-                  })
-                  // Stay on the same index — it now points to the next ally (or out of bounds)
-                  if (inspectIdx >= allies.length - 1) {
-                    setStep(3)
-                    setInspectIdx(0)
-                  }
-                }}
-              >
-                Remove {ally.name}
-              </SecondaryButton>
-              <GhostButton
-                onClick={() => {
-                  if (inspectIdx < allies.length - 1) setInspectIdx((i) => i + 1)
-                  else {
-                    setStep(3)
-                    setInspectIdx(0)
-                  }
-                }}
-              >
-                Keep {ally.name}
-              </GhostButton>
-            </div>
-          </div>
-        )}
-
-        {!hasFlags && (
-          <div className="flex items-center justify-between">
-            <GhostButton
-              onClick={() => {
-                if (inspectIdx > 0) setInspectIdx((i) => i - 1)
-                else setStep(1)
-              }}
-            >
-              ← Back
-            </GhostButton>
-            <PrimaryButton
-              onClick={() => {
-                if (inspectIdx < allies.length - 1) setInspectIdx((i) => i + 1)
-                else {
-                  setStep(3)
-                  setInspectIdx(0)
-                }
-              }}
-            >
-              {inspectIdx < allies.length - 1 ? 'Next ally →' : 'Continue →'}
-            </PrimaryButton>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // ---- Step 3: Strengthen ----
-  if (step === 3) {
-    const counts = {}
-    for (const st of SUPPORT_TYPES) counts[st.id] = 0
-    for (const a of allies) for (const s of a.support_types) counts[s]++
-    const gapTypes = SUPPORT_TYPES.filter((st) => counts[st.id] < 2)
-
-    if (gapTypes.length === 0) {
-      // No gaps → skip ahead
-      return (
-        <div>
-          <h2 className="text-[22px] font-semibold mb-3">Your net is solid</h2>
-          <p className="text-[16px] text-slate-700 mb-5">
-            You have at least two people in every kind of support. That&apos;s
-            real.
-          </p>
-          <div className="flex justify-end">
-            <PrimaryButton onClick={() => setStep(4)}>Next →</PrimaryButton>
-          </div>
-        </div>
-      )
-    }
-
-    const st = gapTypes[strengthenIdx]
-    if (!st) {
-      setStep(4)
-      return null
-    }
-    const existingGap = gaps.find((g) => g.support_type === st.id) || {
-      support_type: st.id,
-      has_potential: null,
-      potential_ally: '',
-      action: '',
-    }
-
-    function updateGap(updates) {
-      setGaps((prev) => {
-        const without = prev.filter((g) => g.support_type !== st.id)
-        return [...without, { ...existingGap, ...updates }]
+  function commitCustomName(tileId, raw) {
+    const name = (raw || '').trim()
+    setEditingCustom((prev) => ({ ...prev, [tileId]: false }))
+    if (!name) {
+      // If the user emptied the field, drop the custom name and any
+      // selections of this tile across all type screens.
+      setCustomNames((prev) => {
+        const next = { ...prev }
+        delete next[tileId]
+        return next
       })
+      setSelection((prev) => {
+        const next = {}
+        for (const [k, v] of Object.entries(prev)) {
+          const s = new Set(v)
+          s.delete(tileId)
+          next[k] = s
+        }
+        return next
+      })
+      return
     }
-
-    function next() {
-      if (strengthenIdx < gapTypes.length - 1) setStrengthenIdx((i) => i + 1)
-      else setStep(4)
-    }
-
-    const isLast = strengthenIdx === gapTypes.length - 1
-    const canAdvance =
-      existingGap.has_potential === false ||
-      (existingGap.has_potential === true &&
-        existingGap.potential_ally.trim() &&
-        existingGap.action.trim())
-
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-2">Strengthen your net</h2>
-        <p className="text-[14px] text-slate-600 mb-4">
-          Gap {strengthenIdx + 1} of {gapTypes.length}
-        </p>
-        <div className="bg-amber-50 border-l-4 border-amber-300 rounded-2xl px-5 py-3 mb-5">
-          <div className="text-[13px] font-medium text-amber-800 mb-1">
-            {st.label} support
-          </div>
-          <div className="text-[14px] text-slate-700">{st.description}</div>
-        </div>
-        <p className="text-[16px] text-slate-800 mb-3">
-          Is there anyone who could provide {st.label.toLowerCase()} support?
-        </p>
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          {[
-            { v: true, label: 'Yes / maybe' },
-            { v: false, label: 'No' },
-          ].map((opt) => (
-            <button
-              key={String(opt.v)}
-              type="button"
-              onClick={() => updateGap({ has_potential: opt.v })}
-              className={
-                'rounded-2xl border min-h-[52px] px-5 py-3 text-[16px] font-semibold transition-colors ' +
-                (existingGap.has_potential === opt.v
-                  ? 'bg-amber-200 border-amber-400 text-amber-900'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
-              }
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        {existingGap.has_potential === true && (
-          <div className="space-y-4 mb-5">
-            <div>
-              <label className="block text-[14px] font-medium text-slate-700 mb-2">
-                Who?
-              </label>
-              <input
-                type="text"
-                value={existingGap.potential_ally}
-                onChange={(e) => updateGap({ potential_ally: e.target.value })}
-                maxLength={60}
-                placeholder="First name or nickname"
-                className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-[14px] font-medium text-slate-700 mb-2">
-                What could you do to encourage that support?
-              </label>
-              <textarea
-                rows={3}
-                value={existingGap.action}
-                onChange={(e) => updateGap({ action: e.target.value })}
-                placeholder="One small thing you could try…"
-                className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
-              />
-            </div>
-          </div>
-        )}
-
-        {existingGap.has_potential === false && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-5">
-            <p className="text-[15px] text-slate-800">
-              That&apos;s OK. Knowing what&apos;s missing is the first step.
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <GhostButton
-            onClick={() => {
-              if (strengthenIdx > 0) setStrengthenIdx((i) => i - 1)
-              else setStep(2)
-            }}
-          >
-            ← Back
-          </GhostButton>
-          <PrimaryButton onClick={next} disabled={!canAdvance}>
-            {isLast ? 'Continue →' : 'Next gap →'}
-          </PrimaryButton>
-        </div>
-      </div>
-    )
+    setCustomNames((prev) => ({ ...prev, [tileId]: name }))
   }
 
-  // ---- Step 4: View + save ----
-  if (done) {
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-3">Saved</h2>
-        <p className="text-[16px] text-slate-700">That&apos;s your safety net.</p>
-      </div>
-    )
+  function handleNoneOfThese(typeId) {
+    setNoneFor((prev) => ({ ...prev, [typeId]: !prev[typeId] }))
+    // Tapping "none of these" clears any tile selections for this type —
+    // they're mutually exclusive states.
+    setSelection((prev) => ({ ...prev, [typeId]: new Set() }))
   }
 
-  async function handleSave() {
+  // The deduplicated ally list — each tile id (or custom tile that has a
+  // name) appears once with the union of its support types across the
+  // three type screens. Memo because the safety-net visual reads from it.
+  const deduplicatedAllies = useMemo(() => {
+    const byTile = new Map() // tile_id → { id, name, custom, support_types: [] }
+    for (const t of SUPPORT_TYPES) {
+      for (const tileId of selection[t.id] || []) {
+        // Skip custom tiles that don't have a name yet.
+        if (CUSTOM_TILE_IDS.has(tileId) && !customNames[tileId]) continue
+        const tile = ALLY_TILES.find((x) => x.id === tileId)
+        if (!tile) continue
+        const displayName = tile.custom ? customNames[tileId] : tile.name
+        if (!byTile.has(tileId)) {
+          byTile.set(tileId, {
+            id: tileId,
+            name: displayName,
+            custom: !!tile.custom,
+            support_types: [],
+          })
+        }
+        byTile.get(tileId).support_types.push(t.id)
+      }
+    }
+    return Array.from(byTile.values())
+  }, [selection, customNames])
+
+  async function handleSubmit() {
     setSubmitting(true)
     try {
       await onSave({
         activity: 'allies_safety_net',
-        allies,
-        removed_allies: removedAllies,
-        gaps_identified: gaps,
+        version: '2.0',
+        allies: deduplicatedAllies,
+        none_for: {
+          practical: !!noneFor.practical,
+          emotional: !!noneFor.emotional,
+          social: !!noneFor.social,
+        },
         saved_at: new Date().toISOString(),
       })
       setDone(true)
@@ -547,35 +157,341 @@ export default function AlliesSafetyNet({ onSave = console.log, initialStep = 1 
     }
   }
 
+  if (done) {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-[22px] font-semibold mb-2">Saved</h2>
+        <p className="text-[15px] text-slate-700">
+          Your safety net is captured. You can come back to it any time.
+        </p>
+      </div>
+    )
+  }
+
+  // ---- Screen routing ----
+  // Index 0 = intro, 1..N = type screens, N+1 = visual
+  const isIntro = screenIdx === 0
+  const typeIdx = screenIdx - 1
+  const isTypeScreen = typeIdx >= 0 && typeIdx < SUPPORT_TYPES.length
+  const isVisual = screenIdx === totalScreens - 1
+
+  return (
+    <div>
+      {/* Progress strip */}
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[12px] text-slate-500 uppercase tracking-wide">
+            Step {screenIdx + 1} of {totalScreens}
+          </span>
+          <span className="text-[12px] text-slate-500">
+            {isIntro
+              ? 'Intro'
+              : isTypeScreen
+                ? SUPPORT_TYPES[typeIdx].label
+                : 'Your Safety Net'}
+          </span>
+        </div>
+        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-amber-500 transition-all"
+            style={{ width: `${((screenIdx + 1) / totalScreens) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {isIntro && <IntroScreen />}
+
+      {isTypeScreen && (
+        <TypeScreen
+          type={SUPPORT_TYPES[typeIdx]}
+          selectedIds={selection[SUPPORT_TYPES[typeIdx].id]}
+          isNone={!!noneFor[SUPPORT_TYPES[typeIdx].id]}
+          customNames={customNames}
+          editingCustom={editingCustom}
+          onToggleTile={(tileId) => toggleTile(SUPPORT_TYPES[typeIdx].id, tileId)}
+          onStartCustomEdit={(tileId) =>
+            setEditingCustom((prev) => ({ ...prev, [tileId]: true }))
+          }
+          onCommitCustomName={commitCustomName}
+          onNoneOfThese={() => handleNoneOfThese(SUPPORT_TYPES[typeIdx].id)}
+        />
+      )}
+
+      {isVisual && (
+        <SafetyNetVisual allies={deduplicatedAllies} noneFor={noneFor} />
+      )}
+
+      <div className="flex items-center justify-between mt-6">
+        {!isIntro ? (
+          <GhostButton onClick={goBack}>← Back</GhostButton>
+        ) : (
+          <span />
+        )}
+        {isVisual ? (
+          <PrimaryButton onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Saving…' : 'Save'}
+          </PrimaryButton>
+        ) : (
+          <PrimaryButton onClick={goNext}>
+            {isIntro ? "Let's build it →" : 'Continue →'}
+          </PrimaryButton>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ---------- Screen 1: Intro ----------
+
+function IntroScreen() {
+  return (
+    <div>
+      <h2 className="text-[22px] font-semibold mb-3">
+        Who are the allies in your safety net?
+      </h2>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
+        An ally is someone you trust to provide support and help you become
+        the person you want to be. They might not always get it right, but
+        you know they care about you, they&apos;re a positive influence,
+        and they try to help.
+      </p>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-3">
+        The strongest safety nets have allies who provide different kinds
+        of support:
+      </p>
+      <ul className="space-y-2 mb-4 text-[15px] leading-relaxed text-slate-800">
+        {SUPPORT_TYPES.map((t) => (
+          <li key={t.id} className="flex gap-2">
+            <span className="font-semibold text-amber-800">{t.label}</span>
+            <span>— {t.definition}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-[15px] leading-relaxed text-slate-800">
+        Let&apos;s build your safety net.
+      </p>
+    </div>
+  )
+}
+
+// ---------- Screens 2/3/4: Per-support-type tile grid ----------
+
+function TypeScreen({
+  type,
+  selectedIds,
+  isNone,
+  customNames,
+  editingCustom,
+  onToggleTile,
+  onStartCustomEdit,
+  onCommitCustomName,
+  onNoneOfThese,
+}) {
+  return (
+    <div>
+      <h2 className="text-[20px] font-semibold mb-1">
+        Who provides {type.label.toLowerCase()} support for you?
+      </h2>
+      <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
+        {type.definition}
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+        {ALLY_TILES.map((tile) => (
+          <AllyTile
+            key={tile.id}
+            tile={tile}
+            selected={selectedIds.has(tile.id)}
+            customName={customNames[tile.id]}
+            isEditing={!!editingCustom[tile.id]}
+            onToggle={() => onToggleTile(tile.id)}
+            onStartEdit={() => onStartCustomEdit(tile.id)}
+            onCommit={(v) => onCommitCustomName(tile.id, v)}
+          />
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={onNoneOfThese}
+        aria-pressed={isNone}
+        className={
+          'w-full text-[14px] font-medium rounded-2xl border min-h-[48px] px-4 py-2 transition-colors ' +
+          (isNone
+            ? 'bg-slate-200 border-slate-400 text-slate-800'
+            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400')
+        }
+      >
+        {isNone
+          ? `✓ Nobody for ${type.label.toLowerCase()} support right now`
+          : `None of these are ${type.label.toLowerCase()} support for me.`}
+      </button>
+    </div>
+  )
+}
+
+function AllyTile({ tile, selected, customName, isEditing, onToggle, onStartEdit, onCommit }) {
+  const displayName = tile.custom ? customName || tile.name : tile.name
+  const showInput = tile.custom && isEditing
+
+  function handleTap() {
+    // Custom tiles without a name yet route to the name editor instead of
+    // toggling — there's no useful selection without a name.
+    if (tile.custom && !customName) {
+      onStartEdit()
+      return
+    }
+    onToggle()
+  }
+
+  function handleInputKey(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const v = e.target.value
+      onCommit(v)
+      // After committing a name, auto-select the tile so the kid doesn't
+      // have to tap a second time.
+      if ((v || '').trim()) onToggle()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      onCommit('')
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={handleTap}
+        aria-pressed={selected}
+        className={
+          'w-full h-full flex flex-col items-center justify-start gap-2 rounded-2xl border-2 px-3 py-3 min-h-[160px] transition-all bg-white text-center ' +
+          (selected
+            ? 'border-amber-500 ring-2 ring-amber-200 shadow-card'
+            : 'border-slate-200 hover:border-amber-300')
+        }
+      >
+        <img
+          src={tile.icon}
+          alt=""
+          className="w-[88px] h-[88px] flex-shrink-0 pointer-events-none"
+          draggable={false}
+        />
+        {showInput ? (
+          <input
+            type="text"
+            autoFocus
+            defaultValue={customName || ''}
+            onBlur={(e) => onCommit(e.target.value)}
+            onKeyDown={handleInputKey}
+            onClick={(e) => e.stopPropagation()}
+            placeholder="Their name"
+            maxLength={40}
+            className="w-full text-[13px] px-2 py-1 bg-amber-50 border border-amber-200 rounded-full text-center focus:outline-none focus:border-amber-400"
+          />
+        ) : (
+          <span
+            className={
+              'text-[13px] leading-tight font-medium ' +
+              (selected ? 'text-amber-900' : 'text-slate-800')
+            }
+          >
+            {displayName}
+            {tile.custom && customName && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onStartEdit()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onStartEdit()
+                  }
+                }}
+                className="block text-[11px] text-amber-700 hover:text-amber-900 underline mt-0.5 cursor-pointer"
+              >
+                edit name
+              </span>
+            )}
+          </span>
+        )}
+      </button>
+      {selected && !showInput && (
+        <span
+          aria-hidden="true"
+          className="absolute top-2 right-2 inline-flex items-center justify-center bg-amber-500 text-white rounded-full w-6 h-6 shadow"
+        >
+          <Check size={14} strokeWidth={3} />
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ---------- Screen 5: Safety Net visual (placeholder) ----------
+// Deliberately not the final visual — Josh is exploring a merged
+// net + pie design in Claude Design separately. The data shape this
+// reads from is the source of truth; the final visual is a render-layer
+// swap.
+
+function SafetyNetVisual({ allies, noneFor }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">Your safety net</h2>
-      <div className="space-y-4 mb-6">
-        {SUPPORT_TYPES.map((st) => {
-          const here = allies.filter((a) => a.support_types.includes(st.id))
+      <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
+        Here&apos;s who you said is in your corner, grouped by the kind of
+        support they give you. Some allies show up in more than one place
+        — that&apos;s the strongest kind.
+      </p>
+
+      <div className="space-y-4">
+        {SUPPORT_TYPES.map((type) => {
+          const inGroup = allies.filter((a) => a.support_types.includes(type.id))
+          const declaredNone = !!noneFor[type.id]
           return (
-            <div key={st.id} className="bg-white border border-slate-200 rounded-2xl p-4">
-              <div className="text-[14px] font-semibold text-amber-800 mb-1">{st.label}</div>
-              <div className="text-[12px] text-slate-500 mb-3">{st.description}</div>
-              <div className="flex flex-wrap gap-2">
-                {here.length > 0 ? (
-                  here.map((a, i) => (
-                    <span key={i} className="rounded-full px-3 py-1 bg-amber-200 text-amber-900 text-[14px]">
-                      {a.name}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-[13px] text-slate-500 italic">No one yet</span>
-                )}
-              </div>
-            </div>
+            <section
+              key={type.id}
+              className="bg-amber-50/60 border border-amber-100 rounded-2xl p-4"
+            >
+              <h3 className="text-[16px] font-semibold text-amber-900 mb-2">
+                {type.label}
+              </h3>
+              {inGroup.length > 0 ? (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                  {inGroup.map((ally) => {
+                    const tile = ALLY_TILES.find((t) => t.id === ally.id)
+                    return (
+                      <div
+                        key={ally.id}
+                        className="flex flex-col items-center text-center"
+                      >
+                        <img
+                          src={tile?.icon}
+                          alt=""
+                          className="w-[64px] h-[64px] mb-1"
+                          draggable={false}
+                        />
+                        <span className="text-[12px] leading-tight text-slate-800">
+                          {ally.name}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-[13px] text-slate-500 italic leading-relaxed">
+                  {declaredNone
+                    ? `No ${type.label.toLowerCase()} support allies yet — that's okay. Sometimes it starts with looking for someone who could become one.`
+                    : `No ${type.label.toLowerCase()} support allies chosen.`}
+                </p>
+              )}
+            </section>
           )
         })}
-      </div>
-      <div className="flex justify-end">
-        <PrimaryButton onClick={handleSave} disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save'}
-        </PrimaryButton>
       </div>
     </div>
   )
