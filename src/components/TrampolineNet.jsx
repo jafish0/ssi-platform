@@ -148,6 +148,19 @@ function computeWedges(allies) {
 // Place each ally in its wedge(s). Returns an array of { ally, x, y,
 // size, wedgeTypeId } records — one per (ally × type) pairing, so a
 // multi-type ally renders in both wedges.
+//
+// Geometry notes for the angular inset:
+// An icon centered at angle θ and radius r has a halo of radius
+// (iconSize/2 + 3). Its visual extent subtends an angular half-width
+// of asin(haloRadius / r) at the center. To keep the halo entirely
+// inside the wedge, the icon's angular position must sit at least
+// that much inside the wedge boundary. We add a 2° buffer so icons
+// don't visibly hug the wedge edge either.
+//
+// Increasing inner/outer placement radii (vs. earlier 72/112) gives
+// icons more "elbow room" — at larger r, the same icon size subtends
+// less angular space, so more icons can fit without crossing the
+// wedge boundary lines.
 function placeAllies(allies, wedges) {
   const placements = []
   for (const wedge of wedges) {
@@ -159,13 +172,21 @@ function placeAllies(allies, wedges) {
     if (inWedge.length === 0) continue
     // Icon size scales down as wedges get crowded.
     const size = inWedge.length >= 10 ? 20 : inWedge.length >= 6 ? 24 : 32
-    // Distribute angular positions evenly within the wedge, with a
-    // small inset from the divider lines so icons don't ride the edge.
-    const insetRad = Math.min(degToRad(6), (wedge.endAngle - wedge.startAngle) / 4)
+    const haloRadius = size / 2 + 3
+    const innerRadius = 95
+    const outerRadius = 125
+    // Angular inset = half the icon's angular extent at the inner-most
+    // placement radius (most conservative) + a small visual buffer.
+    // Capped at one quarter of the wedge so even narrow wedges still
+    // get a usable placement zone.
+    const halfAngularExtent = Math.asin(Math.min(1, haloRadius / innerRadius))
+    const span = wedge.endAngle - wedge.startAngle
+    const insetRad = Math.min(
+      Math.max(halfAngularExtent + degToRad(2), degToRad(4)),
+      span / 4,
+    )
     const innerAngle = wedge.startAngle + insetRad
     const outerAngle = wedge.endAngle - insetRad
-    const innerRadius = 72
-    const outerRadius = 112
     inWedge.forEach((a, i) => {
       const n = inWedge.length
       // Angle: spread evenly. With one ally, place at midAngle.
@@ -173,13 +194,14 @@ function placeAllies(allies, wedges) {
         n === 1
           ? wedge.midAngle
           : innerAngle + ((outerAngle - innerAngle) * i) / (n - 1)
-      // Radius: stagger inner/outer to avoid overlap.
+      // Radius: stagger inner/outer to avoid overlap between adjacent
+      // angular neighbors.
       const radius =
         n === 1
           ? (innerRadius + outerRadius) / 2
           : i % 2 === 0
-            ? innerRadius + 8
-            : outerRadius - 8
+            ? innerRadius
+            : outerRadius
       const p = pointAt(angle, radius)
       placements.push({
         ally: a,
