@@ -16,6 +16,7 @@ import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import { TEST_REGISTRY } from '../lib/testRegistry.js'
 import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
+import { buildSpssSyntax } from '../lib/spssSyntax.js'
 import { buildRsdDemoDataset } from '../lib/demoDataset.js'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -74,9 +75,9 @@ export default function DemoPage() {
       const stamp = todayStamp()
       const prefix = 'demo_ready-set-dedicate'
 
-      // Only Wide/SPSS and Codebook are exposed on /demo per Jessica's
-      // 2026-05-11 brief. Summary and Long-format exports remain
-      // available on /admin/data-export for internal use.
+      // Only Wide CSV, .sps syntax, and Codebook are exposed on /demo per
+      // Jessica's 2026-05-11 brief. Summary and Long-format exports
+      // remain available on /admin/data-export for internal use.
 
       if (kind === 'wide') {
         const { headers, rows } = buildWideRows({
@@ -85,6 +86,35 @@ export default function DemoPage() {
           responsesByItemId: demo.responsesByItemId,
         })
         downloadCSV(`${prefix}_wide_${stamp}.csv`, rowsToCSV(headers, rows))
+        return
+      }
+
+      if (kind === 'sps') {
+        // The .sps file references the CSV filename, so emit a name
+        // matching the Wide CSV the user is expected to download alongside.
+        const csvFileName = `${prefix}_wide_${stamp}.csv`
+        const savFileName = `${prefix}_wide_${stamp}.sav`
+        const syntax = buildSpssSyntax({
+          snapshot,
+          csvFileName,
+          savFileName,
+          meta: {
+            row_count: sessions.length,
+            snapshot_version: versionNumber,
+            intervention_slug: 'ready-set-dedicate',
+          },
+        })
+        // Plain text download — no CSV escaping. Use the same UTF-8 BOM-free
+        // approach since SPSS expects ASCII-clean syntax.
+        const blob = new Blob([syntax], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${prefix}_wide_${stamp}.sps`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
         return
       }
 
@@ -218,14 +248,33 @@ export default function DemoPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-card p-5">
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-4">
-            <strong>Download the data.</strong> Column names follow
-            SPSS-import conventions: timepoint first, then scale
-            abbreviation, then item number (e.g.
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-3">
+            <strong>Download the SPSS bundle.</strong> Three files: the
+            Wide CSV (your data), the <span className="font-mono">.sps</span>
+            {' '}syntax file (variable labels, value labels, types, and
+            measurement levels), and the Codebook CSV (short column names
+            mapped to full item text). To get a labeled
+            {' '}<span className="font-mono">.sav</span> dataset in SPSS,
+            open the <span className="font-mono">.sps</span> file in SPSS —
+            it imports the CSV and applies all metadata in one run,
+            ending with a saved <span className="font-mono">.sav</span>.
+            This is the same approach REDCap and KoboToolbox use as their
+            primary SPSS export — it&apos;s the research-platform
+            standard, not a workaround.
+          </p>
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-3">
+            Column names follow SPSS-import conventions: timepoint first,
+            then scale abbreviation, then item number (e.g.
             {' '}<span className="font-mono">pre_bhs_1</span> is pretest
-            Beck Hopelessness item 1). Take the Wide/SPSS CSV into SPSS
-            for analysis; the Codebook CSV maps each short column to the
-            full item text and value labels.
+            Beck Hopelessness item 1).
+          </p>
+          <p className="text-[13px] text-slate-500 italic leading-relaxed mb-4">
+            Note: Qualtrics offers a native <span className="font-mono">.sav</span>
+            {' '}file directly. We may add that as a second download
+            option later if the open-via-syntax step proves clunky in
+            practice — for now, all the same metadata lands in your
+            {' '}<span className="font-mono">.sav</span> via this
+            two-step.
           </p>
 
           {snapshotLoading ? (
@@ -241,7 +290,16 @@ export default function DemoPage() {
                 className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
               >
                 <Download size={14} strokeWidth={2} />
-                {exporting === 'wide' ? 'Exporting…' : 'Download Wide/SPSS CSV'}
+                {exporting === 'wide' ? 'Exporting…' : 'Download Wide CSV'}
+              </button>
+              <button
+                type="button"
+                onClick={() => runExport('sps')}
+                disabled={exporting !== null}
+                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+              >
+                <Download size={14} strokeWidth={2} />
+                {exporting === 'sps' ? 'Exporting…' : 'Download .sps syntax'}
               </button>
               <button
                 type="button"
