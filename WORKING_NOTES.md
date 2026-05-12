@@ -14,6 +14,9 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`6e0308c` · 2026-05-11** — Draft 6 follow-up: SPSS syntax (`.sps`) generator I missed in `0415172`. New `src/lib/spssSyntax.js` reads the same column registry that `exportFlatten.planWideColumns()` produces, so the Wide CSV and the `.sps` stay in sync from a single source of truth. Emits header comment + `GET DATA` + `VARIABLE LABELS` + `VALUE LABELS` (psychometric scales grouped by shared anchor set; BHS/ASCS/UCLA/NB/BPB hard-coded labels) + `VARIABLE LEVEL` (ordinal/scale/nominal grouping) + `FORMATS` + `SAVE OUTFILE` to `.sav`. SPSS variable-name validation up front (64-char max, must start with a letter, no SPSS reserved words like `ALL`/`AND`/`BY`/etc.) — throws on violation rather than emitting a malformed file. `/demo` Data export now offers three downloads: Wide CSV, `.sps` syntax, Codebook CSV; copy rewritten to explain the SPSS bundle approach (open the `.sps` in SPSS to get a labeled `.sav`) with a note that the Qualtrics-native-`.sav` route is parked as Task #11 Phase B. INFRASTRUCTURE.md change-log entry added.
+- **`aa94130` · 2026-05-11** — Draft 7 of the data-and-pretest batch: Pretest paginated sandbox activity on /demo. New `src/activities/Pretest.jsx` renders the locked Belonging pretest (29 items: 6 demographics + 7 scales — Beck Hopelessness, Adolescent Sense of Control, UCLA, Need to Belong, Belonging Promoting Behaviors, Belonging Worries, Program Expectation) as a 10-screen paginated flow mirroring the live session. Save payload is FLAT and keyed by the SPSS column names from Draft 6, so participant submissions match the export CSV exactly with no recoding. Sliders require explicit drag/tap before counting as answered; Belonging Worries Q2 hidden when Q1 = 0 (saves `pre_bw_2` as null). Back button on every screen, progress strip up top. Wired in via the existing `TEST_REGISTRY` pattern under a new `RSD test` category; new "Tests" section on DemoPage between Activities and Data export demo. `activityVersions.js` gets `pretest` at v1.0.
+- **`0415172` · 2026-05-11** — Draft 6 of the data-and-pretest batch: export column-naming refactor per Jessica's 2026-05-11 brief. New convention `<timepoint>_<scale_abbrev>_<item#>` (e.g. `pre_bhs_1`, `post_ascs_3`); score columns `<timepoint>_<scale_abbrev>_score`. Scale abbreviations mapped in `src/lib/exportFlatten.js` (`SCALE_ABBREVIATIONS`): bhs, ascs, ucla, nb, bpb, bw, pe, pa. The `appraisals_*` columns from the live snapshot — origin unclear, not in the locked pretest doc — mapped to `app` with a code comment flagging "confirm with Jessica/Stephanie." Custom-activity payload columns now use short prefixes (`unstuck_*`, `safety_net_*`, `sort_*`, `poem_*`, `letter_*`, `reflect_*`) via `ACTIVITY_PREFIXES`. GettingUnstuck v2 emits per-thought columns covering all 8 stuck thoughts (`unstuck_freq_st1`..`st8`, `_belief_`, `_selected_`, `_strategy_`, `_response_`); `n_fight` renamed to `n_challenge`. WhoIAmPoem v2 emits 8 keyed-field columns; LetterBuilder v2 emits a single `letter_text` column. `src/lib/demoDataset.js` updated to produce the new save shapes for the three rebuilt activities. /demo's Data export section drops Summary + Long buttons (remain on `/admin/data-export`); new short copy explains the convention. INFRASTRUCTURE.md change-log entry added. No activity-version bumps — pipeline change only.
 - **`7b7046e` · 2026-05-11** — RSD activities: 2026-05-11 review-meeting batch. Five drafts shipped together as one stopping-point per Josh's batched-stopping-point workflow. **Draft 1 — Self-Reflection (v1.1, MINOR):** exclusion prompt reframed as agentive ("Now think of a time someone made you feel like you did not belong"). **Draft 2 — Who I Am Poem (v2.0, MAJOR):** rebuilt to Ginny's 10-line structure on a single screen with a worked example; George Ella Lyon attribution removed; save payload reshaped. **Draft 3 — Belonging Skills Sort (v2.0, MAJOR):** all 7 labels replaced with the locked pretest-doc items; tap-toggle "?" definition popovers added per Ginny/Stephanie/Holly; unplaced layout switched to vertical-stack to fit the longer sentence-style labels. **Draft 4 — Letter to Another Youth (v2.0, MAJOR):** collapsed 6-section structured letter to single free-write per Stephanie; removed word-bank chips, cross-activity pull-forward, and keepsake step. **Draft 5 — Getting Unstuck (v2.0, MAJOR):** replaced Kai-quote intro with per-thought 5-point appraisal scale (frequency + believability; eligibility ≥3 on either unlocks selection); restored Stephanie's three challenge prompts as scaffolding above a single response field; renamed "Fight it" → "Challenge it" throughout including data keys. Per-activity changelog in `src/lib/activityVersions.js`. Original batch prompt preserved verbatim below.
 
   <details>
@@ -207,7 +210,263 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — 2026-05-11 batch shipped as commit `7b7046e`, archived verbatim under that entry in Recently shipped)_
+_(none — 2026-05-11 data-and-pretest batch shipped as commits `0415172` + `aa94130` + `6e0308c`, summarized under those entries in Recently shipped above)_
+
+<!--
+
+### Draft 6 — Export variable rename + .sps syntax generator + /demo data-export section simplification
+
+Two coupled changes plus a UI cleanup. **(1)** Refactor the export pipeline to produce Jessica's SPSS-compatible column naming — the current `exportFlatten.js` produces names like `hopelessness_pre_bhs1`; after the rename that becomes `pre_bhs_1`. **(2)** Generate a companion `.sps` SPSS syntax file alongside the CSV that applies variable labels, value labels, types, and measurement levels in one syntax run after CSV import. This is what REDCap and KoboToolbox ship as their primary SPSS export today — research-platform standard, not a workaround. (Qualtrics ships both — native `.sav` *and* a separate `.sps` for relabeling. We're parking the native-.sav path as Task #11 Phase B, additive only if Jessica finds the syntax-run friction.) **(3)** Simplify the `/demo` data-export section to one CSV + .sps + Codebook bundle with a short explanation. Leave `/admin/data-export` untouched.
+
+**Convention (memory: `project_spss_variable_naming.md`):**
+- Pattern: `<timepoint>_<scale>_<item#>`
+- Timepoints: `pre`, `post`, `fu`
+- Numeric for likert/sliders (store the number, not the label); string for free text
+- Response values must match across pre/post/follow-up surveys for the same scale
+
+**Files to change:**
+- `src/lib/exportFlatten.js` — primary refactor. Each scale needs an explicit `abbreviation` field; the column builder reads from a **column registry** data structure that becomes the single source of truth for both CSV columns and the .sps file. `sanitizeCol` stays as a safety net but the input it sanitizes is now constructed correctly upstream.
+- **New: `src/lib/spssSyntax.js`** — generator for the `.sps` syntax file. Reads from the same column registry as `exportFlatten.js`. Emits the syntax text Jessica runs in SPSS after CSV import. Performs SPSS variable-name validation at generation time (64-char max, must start with a letter, no spaces, no reserved words like `ALL`/`AND`/`BY`/`EQ`/`GE`/`GT`/`LE`/`LT`/`NE`/`NOT`/`OR`/`TO`/`WITH`) — throw with a clear error if a column name fails, rather than emitting a bad file.
+- `src/lib/demoDataset.js` — column references update; synthetic data *values* stay identical so the demo dataset remains reproducible.
+- `src/pages/DemoPage.jsx` — drop Summary + Long buttons from the Data export demo section. Replace with three downloads: Wide CSV, `.sps` syntax, Codebook CSV. Add the explanation copy below. `/admin/data-export` is untouched (still has all four formats).
+
+**Proposed scale abbreviations** (call these out in the commit message so Jessica can react in the next review batch):
+
+| Scale | Abbreviation | Example column |
+|------|--------------|----------------|
+| Beck Hopelessness | `bhs` | `pre_bhs_1` |
+| Adolescent Sense of Control | `ascs` | `pre_ascs_1` |
+| UCLA 3-Item Loneliness | `ucla` | `pre_ucla_1` |
+| Need to Belong | `nb` | `pre_nb_1` |
+| Belonging Promoting Behaviors | `bpb` | `pre_bpb_1` |
+| Belonging Worries (2-slider) | `bw` | `pre_bw_1`, `pre_bw_2` |
+| Program Expectation | `pe` | `pre_pe_1` |
+
+Score columns become `pre_bhs_score`, `pre_ascs_score`, etc.
+
+**Demographic column names** (bare, no timepoint prefix):
+
+| Field | Column(s) | Coding |
+|------|-----------|--------|
+| Age | `age` | numeric |
+| Sex | `sex` | 1=Female, 2=Male, 3=Prefer not to answer |
+| Grade | `grade` | numeric |
+| Race (multi-select) | `race_white`, `race_black`, `race_amind`, `race_alaskan`, `race_pi`, `race_asian`, `race_pna`, `race_dunno` | 0/1 per column |
+| Hispanic | `hispanic` | 0=No, 1=Yes |
+| Time in current home | `home_years`, `home_months` | numeric |
+
+**Activity payload columns** — not psychometric scales, so the `<timepoint>_<scale>_<item#>` pattern doesn't apply cleanly. Keep an activity-prefixed pattern: `unstuck_*`, `safety_net_*`, `letter_*`, `poem_*`, `sort_*`, `reflect_*`. Shorten existing names where they're clunky but preserve the meaning.
+
+For the Getting Unstuck appraisal scores added in commit `7b7046e`: suggested `unstuck_freq_<thought_id>` and `unstuck_belief_<thought_id>` for the per-thought 5-point scores; `unstuck_strategy_<thought_id>` for the strategy choice (`challenge` / `bothand`); `unstuck_response_<thought_id>` for the open text.
+
+**Discrepancy to investigate during build:** the current code produces columns under a scale called `appraisals_*` (e.g., `appraisals_pre_a1`) that isn't part of the locked pretest doc. Possibly the appraisal instrument Stephanie referenced for Getting Unstuck. Either rename to `pre_app_<item#>` and leave a comment flagging "origin unclear, confirm with Jessica/Stephanie," or drop it from the pretest export and route it through the activity-payload path under `unstuck_*`. Use your judgment based on what the scale's items look like.
+
+**.sps syntax file format.** The generator emits a single text file that, when opened in SPSS, imports the CSV and applies every piece of metadata in one syntax run. Skeleton:
+
+```
+* Generated by RSD export — timestamp {ISO 8601}, rows {N}, activity versions {snapshot}.
+
+GET DATA
+  /TYPE=TXT
+  /FILE='participant_data.csv'
+  /ENCODING='UTF8'
+  /DELIMITERS=','
+  /QUALIFIER='"'
+  /FIRSTCASE=2
+  /VARIABLES={list with format specifiers like "age F2 sex F1 pre_bhs_1 F1 ..."}.
+
+VARIABLE LABELS
+  pre_bhs_1 "Beck Hopelessness item 1: I feel that my future is hopeless..."
+  pre_bhs_2 "Beck Hopelessness item 2: My future seems dark to me."
+  ...
+  /.
+
+VALUE LABELS
+  pre_bhs_1 pre_bhs_2 pre_bhs_3 pre_bhs_4
+    0 "Absolutely disagree"
+    1 "Somewhat disagree"
+    2 "Somewhat agree"
+    3 "Absolutely agree"
+  /
+  pre_ascs_1 pre_ascs_2 pre_ascs_3
+    1 "Never" 2 "Rarely" 3 "Sometimes" 4 "Often" 5 "Always"
+  /
+  sex
+    1 "Female" 2 "Male" 3 "Prefer not to answer"
+  /
+  hispanic 0 "No" 1 "Yes"
+  /.
+
+VARIABLE LEVEL
+  pre_bhs_1 pre_bhs_2 pre_bhs_3 pre_bhs_4 (ordinal)
+  pre_bw_1 pre_bw_2 pre_pe_1 (scale)
+  sex race_white race_black race_amind race_alaskan race_pi race_asian race_pna race_dunno hispanic (nominal)
+  age grade home_years home_months (scale)
+  /.
+
+FORMATS
+  age home_years home_months grade (F2)
+  pre_bhs_1 pre_bhs_2 pre_bhs_3 pre_bhs_4 pre_ascs_1 pre_ascs_2 pre_ascs_3 (F1)
+  pre_bw_1 pre_bw_2 pre_pe_1 (F2)
+  /.
+
+SAVE OUTFILE='participant_data.sav'.
+EXECUTE.
+```
+
+The header comment at the top is critical for triage — when Jessica references "the export from last Tuesday" three weeks from now, the timestamp and activity-version snapshot let us identify which build it came from.
+
+**Encoding details.** Emit the CSV as UTF-8 with BOM. The `/ENCODING='UTF8'` in the syntax handles any non-ASCII characters in free-text responses (which there will be).
+
+**/demo Data export demo section — new copy:**
+
+Replace the current 4-button layout with this:
+
+> **Download the SPSS bundle.** Three files: the Wide CSV (your data), the `.sps` syntax file (variable labels, value labels, types, and measurement levels), and the Codebook CSV (short column names mapped to full item text). To get a labeled `.sav` dataset in SPSS, open the `.sps` file in SPSS — it imports the CSV and applies all metadata in one run, ending with a saved `.sav`. This is the same approach REDCap and KoboToolbox use as their primary SPSS export — it's the research-platform standard, not a workaround.
+>
+> Column names follow SPSS-import conventions: timepoint first, then scale abbreviation, then item number (e.g., `pre_bhs_1` is pretest Beck Hopelessness item 1).
+>
+> *Note: Qualtrics offers a native `.sav` file directly. We may add that as a second download option later if the open-via-syntax step proves clunky in practice — for now, all the same metadata lands in your `.sav` via this two-step.*
+>
+> [Download CSV] [Download .sps] [Download Codebook]
+
+Drop the existing collapsible "How exports work" panel (or fold its substance into the new note). The Summary and Long buttons are gone from `/demo` — they remain available on `/admin/data-export`.
+
+**Update `INFRASTRUCTURE.md`** with a change-log entry describing the new column naming and the .sps generator.
+
+**No activity-version bumps** — none of the activities change.
+
+---
+
+### Draft 7 — Pretest Demo: interactive sandbox entry on /demo
+
+Build the pretest as a fully interactive sandbox entry, rendered as it'll appear in the live app. Captures responses with the new SPSS column names from Draft 6.
+
+**Source content (FINAL, confirmed by Josh 2026-05-11):** `Pretest Draft Belongingness_5.2.26.docx`. 29 items: 6 demographics + 7 scales. Embedded below verbatim so you don't need to re-extract from the docx.
+
+**Files:**
+- New: `src/activities/Pretest.jsx` — the rendered pretest.
+- `src/lib/testRegistry.js` (or wherever `TEST_REGISTRY` lives) — add a new category `RSD test` with one entry: `pretest`.
+- `src/pages/DemoPage.jsx` — add a new section "Tests" between the existing Activities and Data export demo sections; render items where `category === 'RSD test'` with the same card layout.
+- `src/pages/DemoSandboxPage.jsx` — should accept the new pretest entry automatically via the registry pattern; verify the sandbox route `/demo/sandbox/pretest` renders.
+- `src/lib/activityVersions.js` — add a `pretest` entry at v1.0 so the version badge works on the sandbox page. (Treat as a structural artifact, not a content version — initial 1.0.)
+- `src/lib/demoDataset.js` — if it doesn't already generate pretest responses, extend it. Use the SPSS column names from Draft 6.
+
+**Layout — paginated, mirroring the live session.** The goal of this demo is to show the team exactly how the pretest will paginate and feel in a real participant session — not to serve as a one-page review of items the team has already gone over endlessly. Build this to live-session fidelity from the start.
+
+- **One section per screen.** Suggested screen breakdown: (1) Intro / "Begin" → (2) Demographics → (3) Beck Hopelessness → (4) Adolescent Sense of Control → (5) UCLA Loneliness → (6) Need to Belong → (7) Belonging Promoting Behaviors → (8) Belonging Worries → (9) Program Expectation → (10) Thank-you / Submit. Ten screens. Adjust if a tighter grouping reads better (e.g., combining the two-item Belonging Worries with Program Expectation), but err toward more screens, not fewer — short single-section screens are easier on a kid.
+- **Progress indicator** at the top of each screen — either a thin progress bar or "Step X of 9" text. Pick whichever reads cleanest in the existing amber/slate style.
+- **Continue button** at the bottom of each section (primary amber-500 CTA per repo conventions). Validation: don't advance until required items on the current screen are answered (sliders default to no-value; explicit interaction required).
+- **Back button** available on every screen except the intro, so the kid can revise prior answers.
+- **Mobile-first.** Participants will mostly be on phones. Make sure each screen fits within a phone viewport without horizontal scroll, sliders are thumb-friendly, and the Continue button stays reachable.
+- **Conditional skip on Belonging Worries Q2** — if `pre_bw_1` is 0, the screen auto-advances past Q2 (or Q2 doesn't render and the section ends after Q1). `pre_bw_2` saves as null/empty.
+- **Final screen** shows a brief "Thanks — your responses are saved" message and the Submit action that fires the save panel capture. Don't show the JSON payload on this screen (it's already visible in the sandbox save panel below the activity frame).
+
+**Items (verbatim from the locked doc):**
+
+#### Intro (display only, no input)
+
+> Thank you for joining our project! We want to learn what helps kids and teens feel like they belong with their families and in their communities.
+>
+> We will ask you some questions before and after you watch some videos and complete some activities. Some of these questions might ask about feelings that are hard to talk about. If you feel upset and want to talk to someone, please tell your caregiver or email us at sprang@uky.edu. By completing the program today, you will receive a $25 e-gift card as a thank you. We're so glad you're working with us!
+
+#### Section 1 — Demographics (6 items)
+
+1. **How old are you?** — number input → `age`
+2. **What is your sex?** — radio (Female=1, Male=2, Prefer not to answer=3) → `sex`
+3. **What race do you consider yourself (choose all that apply)?** — checkboxes (White, Black/African American, American Indian, Alaska Native, Pacific Islander, Asian, Prefer not to answer, I don't know) → `race_white`, `race_black`, `race_amind`, `race_alaskan`, `race_pi`, `race_asian`, `race_pna`, `race_dunno`
+4. **Are you Hispanic or Latino?** — radio (No=0, Yes=1) → `hispanic`
+5. **What grade are you currently in at school?** — number input → `grade`
+6. **How long have you lived in your current home?** — two number inputs (years + months) → `home_years`, `home_months`
+
+#### Section 2 — Beck Hopelessness Scale (4 items)
+
+Stem: *Please share how you are feeling right now, at this moment.*
+Scale: Absolutely disagree (0) · Somewhat disagree (1) · Somewhat agree (2) · Absolutely agree (3)
+
+- `pre_bhs_1` I feel that my future is hopeless and that things will not improve.
+- `pre_bhs_2` My future seems dark to me.
+- `pre_bhs_3` Things just won't work out the way I want them to.
+- `pre_bhs_4` There is no use in really trying to get something I want because I probably won't get it.
+
+#### Section 3 — Adolescent Sense of Control Scale (3 items)
+
+Stem: *Below are several statements that may apply to you. There are no right or wrong answers or trick questions. Based on your understanding of the question, select how often this applies to you.*
+Scale: Never (1) · Rarely (2) · Sometimes (3) · Often (4) · Always (5)
+
+- `pre_ascs_1` If I decide to, I can make changes to get more control over how close I feel to other people in my life.
+- `pre_ascs_2` I am able to act in ways that help me feel close to people in my life.
+- `pre_ascs_3` I have the skills and ability to improve how close I get to people in my life.
+
+#### Section 4 — UCLA 3-Item Loneliness Scale (3 items)
+
+Stem: *Please answer the following:*
+Scale: Hardly ever (1) · Some of the time (2) · Often (3)
+
+- `pre_ucla_1` How often do you feel that you lack companionship?
+- `pre_ucla_2` How often do you feel left out?
+- `pre_ucla_3` How often do you feel isolated from others?
+
+#### Section 5 — Need to Belong (3 items)
+
+Stem: *For each of the statements below, indicate the degree to which you agree or disagree with the statement using the scale below.*
+Scale: Strongly disagree (1) · Moderately disagree (2) · Neither agree nor disagree (3) · Moderately agree (4) · Strongly agree (5)
+
+- `pre_nb_1` If other people don't seem to accept me, I don't let it bother me.
+- `pre_nb_2` I seldom (hardly ever) worry about whether other people care about me.
+- `pre_nb_3` My feelings are easily hurt when I feel that others do not accept me.
+
+#### Section 6 — Belonging Promoting Behaviors (7 items)
+
+Stem: *How often do you:*
+Scale: Never (0) · Sometimes (1) · Often (2) · Always (3)
+
+- `pre_bpb_1` Pay really close attention to what someone is saying to you without letting yourself get distracted (like not checking your phone while they are speaking)?
+- `pre_bpb_2` Use words like "we" or "us" or "our group" that make people feel included?
+- `pre_bpb_3` Say "Thank You" and/or tell others when they do something you appreciate?
+- `pre_bpb_4` Help someone out when they need it?
+- `pre_bpb_5` Invite others (like family members and friends) to spend time with you?
+- `pre_bpb_6` Include others in conversations and/or invite them to join in your activities (like watching a movie together, going for a walk, or playing a game)?
+- `pre_bpb_7` Talk through a disagreement with someone until you find an answer that works for everyone?
+
+#### Section 7 — Belonging Worries (2 slider items)
+
+Slider 0–10. Anchors: Not at all · Moderately · A lot
+
+- `pre_bw_1` To what degree do you have worries about belonging (e.g., fitting in, being understood or accepted)?
+  - **Conditional skip:** if `pre_bw_1` is 0, hide Q2 (don't show the slider). On save, store `pre_bw_2` as null/empty.
+- `pre_bw_2` To what degree do your worries about belonging interfere with your desire to stay in your current home?
+
+#### Section 8 — Program Expectation (1 slider)
+
+Stem: *Please rate the following sentence based on how you feel at this moment.*
+Slider 1–10. Anchors: Not at all · Somewhat · Very Much
+
+- `pre_pe_1` At this point, how helpful do you think this program will be for helping you feel close to your family and friends?
+
+**Save payload:** flat object keyed by the column names above, plus `saved_at`. The save panel on the sandbox shows the JSON so reviewers can confirm the shape matches the export.
+
+**Registry entry shape (suggested):**
+```
+{
+  id: 'pretest',
+  category: 'RSD test',
+  displayName: 'Pretest',
+  description: 'The pretest survey shown before activities begin. Captures demographics and baseline measures (Beck Hopelessness, Adolescent Sense of Control, UCLA Loneliness, Need to Belong, Belonging Promoting Behaviors, Belonging Worries, Program Expectation).',
+  component: 'Pretest',
+  route: '/demo/sandbox/pretest',
+}
+```
+
+**DemoPage new section:**
+
+Add the new "Tests" section after the existing Activities section. Same card layout as Activities. Single card for now (pretest); posttest + follow-up will be added later. Section header copy:
+
+> **Tests.** Pre-, post-, and follow-up surveys that bookend the program. Currently shown: pretest.
+
+*End of 2026-05-11 data-and-pretest batch.*
+
+-->
 
 <!--
 
