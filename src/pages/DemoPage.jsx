@@ -273,7 +273,7 @@ export default function DemoPage() {
             <ExportFileBlock
               number={1}
               title="Wide CSV — your data"
-              description="One row per session, every scale item in its own column. Drops straight into SPSS, Excel, or R."
+              description="One row per session, every scale item in its own column."
               buttonLabel="Download Wide CSV"
               busyLabel="Exporting…"
               isPrimary={true}
