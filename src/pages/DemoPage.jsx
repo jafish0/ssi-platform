@@ -248,72 +248,158 @@ export default function DemoPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-card p-5">
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-3">
-            <strong>Download the SPSS bundle.</strong> Three files: the
-            Wide CSV (your data), the <span className="font-mono">.sps</span>
-            {' '}syntax file (variable labels, value labels, types, and
-            measurement levels), and the Codebook CSV (short column names
-            mapped to full item text). To get a labeled
-            {' '}<span className="font-mono">.sav</span> dataset in SPSS,
-            open the <span className="font-mono">.sps</span> file in SPSS —
-            it imports the CSV and applies all metadata in one run,
-            ending with a saved <span className="font-mono">.sav</span>.
-            This is the same approach REDCap and KoboToolbox use as their
-            primary SPSS export — it&apos;s the research-platform
-            standard, not a workaround.
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-2">
+            <strong>Download the SPSS bundle.</strong> Three files designed to
+            work together.
           </p>
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-3">
+          <p className="text-[13px] text-slate-600 leading-relaxed mb-5">
             Column names follow SPSS-import conventions: timepoint first,
-            then scale abbreviation, then item number (e.g.
-            {' '}<span className="font-mono">pre_bhs_1</span> is pretest
-            Beck Hopelessness item 1).
-          </p>
-          <p className="text-[13px] text-slate-500 italic leading-relaxed mb-4">
-            Note: Qualtrics offers a native <span className="font-mono">.sav</span>
-            {' '}file directly. We may add that as a second download
-            option later if the open-via-syntax step proves clunky in
-            practice — for now, all the same metadata lands in your
-            {' '}<span className="font-mono">.sav</span> via this
-            two-step.
+            then scale abbreviation, then item number (e.g.{' '}
+            <span className="font-mono">pre_bhs_1</span> is pretest Beck
+            Hopelessness item 1).
           </p>
 
-          {snapshotLoading ? (
-            <p className="text-[14px] text-slate-500 italic">Loading RSD intervention…</p>
-          ) : snapshotErr ? (
-            <p className="text-[14px] text-rose-600">{snapshotErr}</p>
-          ) : (
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => runExport('wide')}
-                disabled={exporting !== null}
-                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
-              >
-                <Download size={14} strokeWidth={2} />
-                {exporting === 'wide' ? 'Exporting…' : 'Download Wide CSV'}
-              </button>
-              <button
-                type="button"
-                onClick={() => runExport('sps')}
-                disabled={exporting !== null}
-                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
-              >
-                <Download size={14} strokeWidth={2} />
-                {exporting === 'sps' ? 'Exporting…' : 'Download .sps syntax'}
-              </button>
-              <button
-                type="button"
-                onClick={() => runExport('codebook')}
-                disabled={exporting !== null}
-                className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
-              >
-                <Download size={14} strokeWidth={2} />
-                Download Codebook CSV
-              </button>
-            </div>
+          {snapshotLoading && (
+            <p className="text-[14px] text-slate-500 italic mb-4">
+              Loading RSD intervention…
+            </p>
           )}
+          {snapshotErr && (
+            <p className="text-[14px] text-rose-600 mb-4">{snapshotErr}</p>
+          )}
+
+          <div className="space-y-4">
+            {/* File 1 — Wide CSV */}
+            <ExportFileBlock
+              number={1}
+              title="Wide CSV — your data"
+              description="One row per session, every scale item in its own column. Drops straight into SPSS, Excel, or R."
+              buttonLabel="Download Wide CSV"
+              busyLabel="Exporting…"
+              isPrimary={true}
+              disabled={snapshotLoading || !!snapshotErr || exporting !== null}
+              busy={exporting === 'wide'}
+              onClick={() => runExport('wide')}
+            />
+
+            {/* File 2 — .sps syntax + how-to */}
+            <ExportFileBlock
+              number={2}
+              title={
+                <>
+                  <span className="font-mono">.sps</span> syntax — labels the data
+                </>
+              }
+              description={
+                <>
+                  Runs in SPSS to apply variable labels, value labels,
+                  data types, and measurement levels, producing a labeled{' '}
+                  <span className="font-mono">.sav</span>. This is the same
+                  pattern REDCap and KoboToolbox use as their primary SPSS
+                  export.
+                </>
+              }
+              buttonLabel={<>Download <span className="font-mono">.sps</span> syntax</>}
+              busyLabel="Exporting…"
+              isPrimary={true}
+              disabled={snapshotLoading || !!snapshotErr || exporting !== null}
+              busy={exporting === 'sps'}
+              onClick={() => runExport('sps')}
+            >
+              <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-3 mt-3">
+                <p className="text-[12px] uppercase tracking-wide text-amber-800 font-semibold mb-2">
+                  How to use it in SPSS
+                </p>
+                <ol className="list-decimal pl-5 text-[13px] text-slate-700 leading-relaxed space-y-1.5">
+                  <li>
+                    Save the <span className="font-mono">.sps</span> file in
+                    the same folder as your Wide CSV.
+                  </li>
+                  <li>
+                    Open the <span className="font-mono">.sps</span> file in
+                    SPSS (<span className="italic">File → Open → Syntax</span>).
+                  </li>
+                  <li>
+                    <span className="italic">Run → All</span>. SPSS will
+                    import the CSV, apply all the labels and types, and save
+                    a labeled <span className="font-mono">.sav</span> file in
+                    the same folder.
+                  </li>
+                </ol>
+                <p className="text-[12px] text-slate-500 italic mt-3">
+                  If SPSS can&apos;t find the CSV, set the working directory
+                  to that folder (<span className="italic">File → Change directory</span>),
+                  or edit the <span className="font-mono">/FILE=</span> path
+                  near the top of the syntax to the full path of your CSV.
+                </p>
+              </div>
+            </ExportFileBlock>
+
+            {/* File 3 — Codebook */}
+            <ExportFileBlock
+              number={3}
+              title="Codebook CSV — what each column means"
+              description="A reference table mapping each short column name to the full prompt text, allowed values, and reverse-scored flag. Useful for analysts who want to verify a column's meaning without running the syntax."
+              buttonLabel="Download Codebook CSV"
+              busyLabel="Exporting…"
+              isPrimary={false}
+              disabled={snapshotLoading || !!snapshotErr || exporting !== null}
+              busy={exporting === 'codebook'}
+              onClick={() => runExport('codebook')}
+            />
+          </div>
         </div>
       </section>
     </DemoPageLayout>
+  )
+}
+
+// ---------- Reusable: per-file download block ----------
+//
+// Numbered card with a title + description on the left, a download
+// button on the right, and optional children (used by the .sps block
+// for the "How to use it in SPSS" instructions). Primary buttons use
+// amber-500; secondary use amber-100/text-amber-800 — matches the
+// project's CTA palette.
+
+function ExportFileBlock({
+  number,
+  title,
+  description,
+  buttonLabel,
+  busyLabel,
+  isPrimary,
+  disabled,
+  busy,
+  onClick,
+  children,
+}) {
+  const buttonClass = isPrimary
+    ? 'inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]'
+    : 'inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]'
+  return (
+    <div className="border border-slate-200 rounded-2xl p-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="flex-1 min-w-[220px]">
+          <h3 className="text-[15px] font-semibold text-slate-800 mb-1 flex items-baseline gap-2">
+            <span className="text-amber-700 font-bold">{number}.</span>
+            <span>{title}</span>
+          </h3>
+          <p className="text-[13px] text-slate-600 leading-relaxed">
+            {description}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={disabled}
+          className={buttonClass}
+        >
+          <Download size={14} strokeWidth={2} />
+          {busy ? busyLabel : buttonLabel}
+        </button>
+      </div>
+      {children}
+    </div>
   )
 }
