@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`70d117b` · 2026-05-11** — Draft 9 of the Safety Net build: TrampolineNet parametric visual + Step 2 (Inspect). Three coupled changes shipped together. **(1)** Stripped the cream background `<rect>` from all 15 ally SVGs in `src/assets/allies/` so they composite cleanly on the woven trampoline-net wedges. **(2)** New `src/components/TrampolineNet.jsx` — parametric React reimplementation of the Claude Design reference (`Activity ideas/trampoline-safety-net.svg`). Matches the rim styling, woven type patterns, 24 radial cord lines, 4 ring guides, label pills, and "YOU" hub. Wedge sizing is proportional with empty types collapsing to a labelled 15° sliver. Ally icons sit in cream halos with optional `showInspectedMarks` (green check) and `interactive` (tappable button) modes; removed allies render in a faded "Taken out of net" strip below the rim. **(3)** `AlliesSafetyNet` v3.0 — expanded from 5 to 8 screens. Step 1's placeholder grouped-by-type visual is replaced with the real TrampolineNet. Step 2 (Inspect) is a new 3-screen flow inside the same activity: intro → interactive net (tap any ally to inspect) → final net + Save. Per-ally inspect modal asks 4 clinical-safety questions (trouble / isolate / lies / afraid) with Yes/No/Not sure radios. Keep + Remove buttons stay equally weighted; subtle amber border on "yes" cards, no destructive red. Keep-with-yes triggers a keep-advisory modal; remove triggers a removal-acknowledgment modal. Save now fires at the end of Step 2 (not Step 1). Save payload extends v2.0 with `inspected`, `flags`, `kept_in_net` per ally and an activity-level `inspection_completed` flag. `exportFlatten.js` gains 9 new safety_net_* columns (inspected_count, kept_count, removed_count, total_flags, 4 per-flag rollups, inspection_completed). `demoDataset.js` produces synthetic inspection per brief: ~80% inspect all, ~15% partial, ~5% skip; ~20% have a "yes" flag; removal probability tuned higher for noisy allies.
 - **`d515d0e` · 2026-05-11** — Draft 8 of the Safety Net Step 1 rebuild. Full rewrite of `src/activities/AlliesSafetyNet.jsx` to Variant C (per-support-type multi-select grid). 5 paginated screens: intro → Practical → Emotional → Social → placeholder Safety Net visual. 15 new SVG ally tiles in `src/assets/allies/` (data-om-id attributes stripped); new `src/lib/allyTiles.js` is single source of truth for tile registry + support-type definitions. Custom tiles (other1, other2) accept inline names that persist across all three type screens. Per-type "None of these" buttons capture affirmative "no one for this type" responses (meaningfully distinct from skipping). Save payload reshaped to `{ allies: [{id, name, custom, support_types}], none_for: {practical, emotional, social}, saved_at }`. Old 4-step flow (Build → Inspect → Strengthen → Review, ~580 LOC) torn down entirely; Steps 2–4 will be rebuilt later as Task #7 after team design discussion. Version bumped to v2.0 (MAJOR). `exportFlatten.js` safety_net_* columns reshaped accordingly (counts + none-flags + names/ids list); per-tile binary columns deferred pending Jessica's review. `demoDataset.js` produces the new shape with the distribution from the brief (70/20/10).
 - **`6e0308c` · 2026-05-11** — Draft 6 follow-up: SPSS syntax (`.sps`) generator I missed in `0415172`. New `src/lib/spssSyntax.js` reads the same column registry that `exportFlatten.planWideColumns()` produces, so the Wide CSV and the `.sps` stay in sync from a single source of truth. Emits header comment + `GET DATA` + `VARIABLE LABELS` + `VALUE LABELS` (psychometric scales grouped by shared anchor set; BHS/ASCS/UCLA/NB/BPB hard-coded labels) + `VARIABLE LEVEL` (ordinal/scale/nominal grouping) + `FORMATS` + `SAVE OUTFILE` to `.sav`. SPSS variable-name validation up front (64-char max, must start with a letter, no SPSS reserved words like `ALL`/`AND`/`BY`/etc.) — throws on violation rather than emitting a malformed file. `/demo` Data export now offers three downloads: Wide CSV, `.sps` syntax, Codebook CSV; copy rewritten to explain the SPSS bundle approach (open the `.sps` in SPSS to get a labeled `.sav`) with a note that the Qualtrics-native-`.sav` route is parked as Task #11 Phase B. INFRASTRUCTURE.md change-log entry added.
 - **`aa94130` · 2026-05-11** — Draft 7 of the data-and-pretest batch: Pretest paginated sandbox activity on /demo. New `src/activities/Pretest.jsx` renders the locked Belonging pretest (29 items: 6 demographics + 7 scales — Beck Hopelessness, Adolescent Sense of Control, UCLA, Need to Belong, Belonging Promoting Behaviors, Belonging Worries, Program Expectation) as a 10-screen paginated flow mirroring the live session. Save payload is FLAT and keyed by the SPSS column names from Draft 6, so participant submissions match the export CSV exactly with no recoding. Sliders require explicit drag/tap before counting as answered; Belonging Worries Q2 hidden when Q1 = 0 (saves `pre_bw_2` as null). Back button on every screen, progress strip up top. Wired in via the existing `TEST_REGISTRY` pattern under a new `RSD test` category; new "Tests" section on DemoPage between Activities and Data export demo. `activityVersions.js` gets `pretest` at v1.0.
@@ -211,7 +212,244 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — Draft 8 shipped as commit `d515d0e`, summarized under that entry in Recently shipped above)_
+_(none — Draft 9 shipped as commit `70d117b`, summarized under that entry in Recently shipped above)_
+
+<!--
+
+### Draft 9 — Trampoline-net visual component + Safety Net Step 2 (Inspect) + ally-icon transparency fix
+
+Three coupled changes that ship together. **(1)** Strip the cream background tile from each of the 15 ally SVGs so they sit transparently on any backdrop. **(2)** Build the parameterized trampoline-net React component we've been designing — this is the visual that Step 1 (final screen) and Step 2 (centerpiece) both consume. **(3)** Build Step 2 "Inspect Your Safety Net" using that component as an interactive surface.
+
+The trampoline-net visual is based on a Claude Design–generated reference at `Activity ideas/trampoline-safety-net.svg` (or wherever Josh dropped it — also in uploads as `trampoline-safety-net (1).svg`). The reference SVG has hardcoded wedge angles for a specific 2/4/3 ratio; we **do not** use it verbatim. We re-implement the geometry parametrically in React and use the reference as a visual target for patterns, colors, label pills, rim, and "YOU" hub.
+
+---
+
+#### Step 0 — Fix the ally-icon backgrounds
+
+Per the icon-set README: *"delete the first `<rect>` element for a fully transparent background."* Apply this to all 15 SVGs in `src/assets/allies/`. The first `<rect>` is the `#FAF6EF` cream tile (`<rect x="0" y="0" width="100" height="100" rx="14" ry="14" fill="#FAF6EF" ... />`). One-line sed pass works:
+
+```
+sed -i -E 's|<rect x="0" y="0" width="100" height="100" rx="14" ry="14" fill="#FAF6EF"[^/]*/>||' src/assets/allies/*.svg
+```
+
+After the fix, the icons sit cleanly on any background — both the cream tile context of the Step 1 grid (the *tile* component still has its own card background) and the colored trampoline-net wedges in Step 2.
+
+---
+
+#### Step 1 — Build the `TrampolineNet` React component
+
+**Location:** new `src/components/TrampolineNet.jsx` (or whatever the project's components convention is).
+
+**Visual reference:** `Activity ideas/trampoline-safety-net.svg`. Match the rim styling (3 nested circles, dark brown → lighter brown → dark brown), the woven net patterns (one per support type with type-specific colors), the radial cord lines + concentric ring guides inside, the thick wedge-divider lines, the center "YOU" hub disc, and the label pills outside the rim.
+
+**Type-specific palette** (lift from the reference SVG):
+- **Practical**: bg `#FEF1D6`, stroke `#F59E0B`, dots `#B45309`, label pill `#B45309`
+- **Emotional**: bg `#F8E5E5`, stroke `#C98686`, dots `#8E4A4A`, label pill `#8E4A4A`
+- **Social**: bg `#E4EFE6`, stroke `#84A98C`, dots `#4E7257`, label pill `#4E7257`
+
+**Props (component API):**
+```
+{
+  allies: [
+    { id, name, custom, support_types: ['practical', ...], inspected?, removed?: false },
+    ...
+  ],
+  interactive: false,        // false in Step 1; true in Step 2
+  onAllyTap?: (allyId) => {}, // fires only when interactive
+  showLabels?: true,          // ally name pills under each icon
+  showInspectedMarks?: false  // small checkmark on inspected allies (Step 2 only)
+}
+```
+
+**Wedge sizing — proportional, with sliver-plus-label for empty types:**
+- Compute counts per type from the allies array (allies with `removed === true` excluded).
+- If a type has 0 allies, reserve a 15° sliver and label it *"no [type] allies yet"* in muted type.
+- Remaining 345° (or 360° if no zero types) distributes proportionally by count.
+- Edge case: all three types empty → render an empty net (rim + center hub, three equal grey-shaded sliver wedges, each labeled).
+
+**Ally placement within wedges:**
+- For each wedge, place each ally's icon as an `<image>` element at a position computed from:
+  - Angle: distribute evenly within the wedge's angular range
+  - Radius: stagger between ~70 and ~110 from center to avoid overlap (alternate inner/outer for adjacent allies)
+- Icon size: 32×32 by default. For wedges with 6+ allies, scale down to 24×24. For 10+, 20×20.
+- Each ally appears once per wedge they're in. A multi-type ally (e.g., Mom = practical + emotional) renders twice — once in each wedge. Honest about "she contributes to both."
+- Ally name shown as a small pill below each icon (toggleable via `showLabels`).
+
+**Inspected-mark rendering (`showInspectedMarks: true`):**
+- Each inspected ally gets a small green checkmark in the upper-right of their icon
+- Removed allies (when in a Step 2 review state) are shown faded/grayed within their wedge with an X overlay, OR moved to a separate "removed from net" area below — pick whichever reads cleaner
+
+**Interactive behavior (`interactive: true`):**
+- Each ally icon is a tappable target (full icon + small padding)
+- Tap fires `onAllyTap(allyId)`
+- Visual feedback on tap: brief amber ring pulse
+
+**Mobile fidelity:** the visual must work at 390px wide. The rim+wedges scale down responsively; ally icons stay readable. Test at phone viewport.
+
+---
+
+#### Step 2 — Replace Step 1's placeholder final visual with the real `TrampolineNet`
+
+In `src/activities/AlliesSafetyNet.jsx`, Screen 5 ("Your Safety Net") currently renders a placeholder (three stacked sections). Replace with:
+
+```
+<TrampolineNet allies={state.allies} interactive={false} showLabels={true} />
+```
+
+Keep the existing copy and Save button above/below the visual.
+
+---
+
+#### Step 3 — Build Safety Net Step 2 (Inspect)
+
+**Add Step 2 as a follow-on flow** within the same `AlliesSafetyNet.jsx` activity, after the existing Step 1 save (or as a continue from the Step 1 final screen — TBD by you, but I'd lean toward a single Continue button on the Step 1 final screen that says "Inspect your net" and advances into Step 2). The save event for the whole activity fires at the end of Step 2.
+
+**Framing matters here — clinical-safety language.** The whole purpose of this redesign is to address Holly's flag (don't imply real-life dropping) and Stephanie's "more visual, less per-person interrogation" ask. Use the copy below as written; if Stephanie wants to revise, she will.
+
+**Screen 1 — Inspect intro.**
+
+> **Inspect your safety net.**
+>
+> Your safety net is the people you'd reach out to when you really need support. Not every important person in your life belongs in your safety net — and that's okay.
+>
+> An ally who belongs in your safety net is someone who:
+> - cares about you
+> - is a positive influence
+> - tries to help when you need it
+>
+> Let's check in on each ally. You can choose to keep them in your net or take them out. Taking someone out of your safety net doesn't mean they're not in your life — it just means they're not who you'd lean on right now for support.
+
+Single Continue button → advances to Screen 2.
+
+**Screen 2 — The interactive net.**
+
+The `TrampolineNet` rendered with `interactive={true}` and `showInspectedMarks={true}`. Above the visual, a header strip:
+
+> **Tap each ally to check in on them.**
+> *X of Y inspected*
+
+Where X is the count of allies with `inspected === true`, Y is the total. A "Done inspecting" button at the bottom — disabled until all allies are inspected, OR available with a confirmation modal asking "You haven't checked in on N allies — want to keep going, or finish anyway?" (let the kid skip if they want).
+
+Tapping any ally opens the per-ally inspect modal (Screen 3, modal overlay).
+
+**Screen 3 — Per-ally inspect modal.**
+
+Modal overlay (not full screen — partial overlay, dismissable by Back or Save). Content:
+
+> **Check in on [name].**
+>
+> [Ally icon, 80×80, centered]
+>
+> These questions might feel uncomfortable. You can answer honestly — the questions stay between you and the app.
+>
+> *Does [name] sometimes get you in trouble?* [Yes / No / Not sure]
+> *Does [name] try to keep you from spending time with other people who care about you?* [Yes / No / Not sure]
+> *Does [name] frequently lie to you?* [Yes / No / Not sure]
+> *Does [name] sometimes make you feel afraid?* [Yes / No / Not sure]
+>
+> [Keep [name] in my net]    [Take [name] out of my net]
+
+Visual treatment: if any "yes" is selected, the question card gets a subtle amber border — gentle acknowledgment, not an alarm. The keep/remove buttons stay equally weighted; don't style "remove" as destructive (no red).
+
+**Keep button** → returns to Screen 2, ally marked `inspected: true`. If any "yes" was selected, show the keep-advisory (Screen 4) before returning to net.
+
+**Remove button** → returns to Screen 2 with the removal acknowledgment (Screen 5) shown briefly, ally marked `inspected: true, removed: true`. Net re-renders with that ally faded/X'd or moved to a "removed" section, wedge proportions recalculate (a wedge may collapse to its sliver-plus-label state if its last ally got removed).
+
+**Screen 4 — Keep-advisory (shown after kid keeps an ally with any "yes").**
+
+> Keeping someone in your safety net is your choice, even when things feel complicated.
+>
+> Some things to remember:
+> - You get to decide who you reach out to when you need support.
+> - Some relationships are mixed — that's normal.
+> - If a relationship feels really hard, talking to a trusted adult, counselor, or therapist can help.
+
+Single Continue button → back to Screen 2.
+
+**Screen 5 — Removal acknowledgment (shown after a remove).**
+
+> Taken out of your safety net. They're still in your life — this is just about who you lean on for support right now.
+>
+> You can always change your mind later.
+
+Single Continue button → back to Screen 2.
+
+**Screen 6 — Inspection complete.**
+
+When all allies are inspected (or the kid hits "Done inspecting" early), show:
+
+> **Your safety net is ready.**
+>
+> [Final `TrampolineNet` rendering, non-interactive, showLabels true]
+>
+> [Save my safety net] button
+
+Save fires the full activity save event.
+
+---
+
+**Save payload shape (extends Step 1's shape):**
+
+```
+{
+  activity: "allies_safety_net",
+  version: "3.0",
+  allies: [
+    {
+      id: "foster",
+      name: "Foster Parent",
+      custom: false,
+      support_types: ["practical", "emotional"],
+      inspected: true,
+      flags: { trouble: "no", isolate: "no", lies: "no", afraid: "no" },
+      kept_in_net: true
+    },
+    {
+      id: "other1",
+      name: "Aunt Lisa",
+      custom: true,
+      support_types: ["emotional", "social"],
+      inspected: true,
+      flags: { trouble: "yes", isolate: "no", lies: "not_sure", afraid: "no" },
+      kept_in_net: false
+    },
+    ...
+  ],
+  none_for: { practical: false, emotional: false, social: false },
+  inspection_completed: true,  // false if kid skipped some
+  saved_at: "..."
+}
+```
+
+`flags` values are `"yes" | "no" | "not_sure"` strings. `kept_in_net` defaults to `true`; only `false` if kid actively removed.
+
+**Export columns** (extend the `safety_net_*` set):
+- `safety_net_inspected_count` — number of allies inspected
+- `safety_net_kept_count` — number kept in net
+- `safety_net_removed_count` — number removed
+- `safety_net_total_flags` — sum of "yes" answers across all flag dimensions
+- Per-flag rollups: `safety_net_flag_trouble_yes`, `_flag_isolate_yes`, `_flag_lies_yes`, `_flag_afraid_yes` — counts of "yes" across allies for each flag dimension
+- Per-tile inspection columns deferred — discuss with Jessica before adding
+
+`demoDataset.js` distribution: ~80% of demo participants complete inspection on all allies, 15% complete partial, 5% skip entirely. Of inspected, ~20% have at least one "yes" flag, ~10% remove at least one ally.
+
+---
+
+**Version bump:** `allies_safety_net` to v3.0 (MAJOR). Step 2 is new structural functionality and the save payload extends.
+
+**Files to change / create:**
+- `src/assets/allies/*.svg` — remove background `<rect>` (Step 0).
+- New: `src/components/TrampolineNet.jsx` — parameterized net visual.
+- `src/activities/AlliesSafetyNet.jsx` — swap Step 1 final-screen placeholder, append Step 2 flow.
+- `src/lib/activityVersions.js` — bump to v3.0, prepend changelog entry.
+- `src/lib/exportFlatten.js` — add new safety_net_* columns.
+- `src/lib/demoDataset.js` — extend synthetic data for inspection state.
+
+**Visual reference file location:** `Activity ideas/trampoline-safety-net (1).svg` in the repo root (or wherever Josh has it). Use as styling reference only — re-implement parametrically.
+
+*End of 2026-05-11 Safety Net Step 2 + visual draft.*
+
+-->
 
 <!--
 
