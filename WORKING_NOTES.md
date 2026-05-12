@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`71a37e9` · 2026-05-12** — Allies / Safety Net v4.1 (Draft 11): reverted the four inspect-modal questions to Stephanie's PPT Slide 4 originals — Q1 "usually get you into trouble" (was "sometimes get you in trouble"), Q2 "talking to or getting close to other people" (was the longer "spending time with other people who care about you"), Q4 "Do you feel afraid of {name}?" with the kid-perspective phrasing (was ally-active). Q3 unchanged. My v3.0 rewording was a judgment call about kid-friendly phrasing for content Stephanie wrote, not driven by team feedback; Josh decided to restore PPT phrasing as written. Flag keys + answer scheme unchanged — no data-shape change. Added a comment above `INSPECT_QUESTIONS` noting these are verbatim from the PPT.
 - **`c02a379` · 2026-05-12** — Getting Unstuck v4.0: reverted v2.0's "Fight it" → "Challenge it" rename. Strategy button label back to "Fight it", data key back to `fight`, response field back to `fight_response`, export column back to `unstuck_n_fight` (allowed values `fight | both_and`), demoDataset synthetic data regenerates with `strategy: 'fight'`. Stephanie's clinical-content rationale ("more clinically standard") was overridden by Josh; the original RSD framing is restored. Rate/pick split + max-2 selection + affirmation path from v3.0 all stay. MAJOR bump because of the data-shape change; no real participant data exists yet so no migration concerns.
 - **`6c4dfd2` · 2026-05-12** — Follow-up to v4.0: ally icons were bleeding across wedge color boundaries on the bigger desktop net. Fix is geometric — bumped placement radii from 72/112 to 95/125 (icons at larger r subtend less angular space) and replaced the fixed 6° inset with `asin(haloRadius / innerRadius) + 2°` so the inset auto-scales to the icon size at the inner placement ring. No version bump; this is a placement fix to v4.0, not a flow change.
 - **`583d34c` · 2026-05-12** — Allies / Safety Net v4.0 — five coupled changes. **(1)** Desktop-bigger TrampolineNet: SVG now fills 100% of its container with the `size` prop demoted to an optional CSS max-width; every render site wraps in `mx-auto w-full max-w-[420px] md:max-w-[700px]` so phones stay compact and desktops use the available real estate. **(2)** "Show me a list of my allies instead" toggle below every net render — new `NetWithListToggle` helper + new `AllyList` sub-component (grouped by support type, with kept/removed indicators on post-inspect contexts). Inline-expand, not replace. **(3)** Inspect flow restructured into a linear walkthrough — net stays as non-interactive backdrop with the current ally highlighted via new `highlightedAllyId` prop; inspect modal auto-opens for each ally and auto-advances on Keep/Remove. Back nav works within modals (previous ally with answers preserved). X-close mid-walkthrough drops to a fallback view with "Resume inspecting" + "Skip the rest" buttons. "Done inspecting" button removed. **(4)** Visual refresh to match the new cleaner reference SVG — dropped 24 radial cord lines, 4 concentric ring guides, thick wedge dividers, and the dot circles inside the woven patterns. Proportional wedge sizing by ally count is RETAINED. **(5)** Unrelated: hid the "Saved Output" JSON panel from `/demo/sandbox/*` (reviewers find it distracting); the admin-side `/admin/testing/*` panel is untouched. Save payload UNCHANGED, just the version string bumps to "4.0".
@@ -217,7 +218,35 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — Draft 10 shipped as commit `9b841da`, summarized under that entry in Recently shipped above)_
+_(none — Draft 11 shipped as commit `71a37e9`, summarized under that entry in Recently shipped above)_
+
+<!--
+
+### Draft 11 — Revert Safety Net Inspect questions to Stephanie's PPT originals
+
+Small copy revert. In commit `70d117b` (Draft 9) I reworded Stephanie's four PPT red-flag questions in the Safety Net Inspect modal — softened "usually" to "sometimes," added a "who care about you" qualifier to the isolation question, restructured the afraid-of question. The rewording wasn't driven by team feedback (Holly's clinical-safety concern was about the *keep/remove framing*, not the question wording itself); it was my judgment call about kid-friendly phrasing for clinical content Stephanie wrote. Josh decided 2026-05-12: restore Stephanie's wording as written.
+
+**File:** `src/activities/AlliesSafetyNet.jsx` — find the four inspect-modal question strings and revert.
+
+**Restore to these exact strings** (preserving the per-ally Yes / No / Not sure answer scheme):
+
+1. *Does [name] usually get you into trouble?*
+2. *Does [name] try to keep you from talking to or getting close to other people?*
+3. *Does [name] frequently lie to you?*
+4. *Do you feel afraid of [name]?*
+
+Where `[name]` is the runtime substitution of the ally's display name (existing pattern in the code — don't change the substitution mechanism, just the question template strings).
+
+The question framing notes from Slide 4 of Stephanie's PowerPoint:
+- The PPT phrasing was a descriptive list under *"Is there anyone in your net that:"* — these are the bullets cast as per-ally yes/no questions, which is the natural modal form. Question 4's pronoun flips because the original is framed from the kid's perspective ("you feel afraid of"), not the ally's behavior.
+
+**Version bump:** v4.0 → v4.1 (MINOR, copy revert). Prepend changelog entry: "Reverted inspect-modal question wording to Stephanie's PPT originals."
+
+**No data-shape changes.** The `flags` keys (`trouble`, `isolate`, `lies`, `afraid`) and the Yes/No/Not sure value set are unchanged. Export columns unchanged.
+
+*End of Draft 11.*
+
+-->
 
 <!--
 
