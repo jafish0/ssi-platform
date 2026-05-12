@@ -51,11 +51,17 @@ const CUSTOM_TILE_IDS = new Set(ALLY_TILES.filter((t) => t.custom).map((t) => t.
 // Per-ally inspect questions. Order matters — these are the order shown
 // in the modal and the keys are the column-name suffixes used in the
 // export pipeline. See exportFlatten.js / demoDataset.js.
+//
+// Question wording is verbatim from Stephanie's PPT (Slide 4 — "Is
+// there anyone in your net that:"), cast as per-ally yes/no questions.
+// Q4's pronoun flips because the source bullet is framed from the kid's
+// perspective ("you feel afraid of"), not the ally's behavior. Don't
+// edit the wording without Stephanie's sign-off.
 const INSPECT_QUESTIONS = [
-  { key: 'trouble', text: (name) => `Does ${name} sometimes get you in trouble?` },
-  { key: 'isolate', text: (name) => `Does ${name} try to keep you from spending time with other people who care about you?` },
+  { key: 'trouble', text: (name) => `Does ${name} usually get you into trouble?` },
+  { key: 'isolate', text: (name) => `Does ${name} try to keep you from talking to or getting close to other people?` },
   { key: 'lies',    text: (name) => `Does ${name} frequently lie to you?` },
-  { key: 'afraid',  text: (name) => `Does ${name} sometimes make you feel afraid?` },
+  { key: 'afraid',  text: (name) => `Do you feel afraid of ${name}?` },
 ]
 const INSPECT_ANSWERS = [
   { value: 'yes',      label: 'Yes' },
