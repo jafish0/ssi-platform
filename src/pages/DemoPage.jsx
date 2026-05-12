@@ -102,6 +102,7 @@ export default function DemoPage() {
   }
 
   const activities = TEST_REGISTRY.filter((e) => e.category === 'RSD activity')
+  const tests = TEST_REGISTRY.filter((e) => e.category === 'RSD test')
 
   return (
     <DemoPageLayout>
@@ -111,9 +112,11 @@ export default function DemoPage() {
           Ready! Set! Dedicate! — Activities Testing and Data Export Demo
         </h1>
         <p className="text-[15px] text-slate-700 leading-relaxed max-w-[720px]">
-          Two things you can do here. <strong>Test the activities</strong> —
+          Three things you can do here. <strong>Test the activities</strong> —
           launch any of the six RSD activities in isolation; nothing you
-          enter is saved. <strong>Try the data export</strong> — download
+          enter is saved. <strong>Try the pretest</strong> — walk through
+          the live participant-facing pretest as it&apos;ll paginate in a
+          real session. <strong>Try the data export</strong> — download
           CSVs for SPSS / Excel built from a synthetic 52-participant
           dataset. The same export pipeline that ships your real research
           data produces these files.
@@ -159,6 +162,43 @@ export default function DemoPage() {
           should change.
         </p>
       </section>
+
+      {/* Tests (pre-, post-, and follow-up surveys) */}
+      {tests.length > 0 && (
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
+              Tests ({tests.length})
+            </h2>
+            <span className="text-[12px] text-slate-500">
+              Click Launch test to try one in a sandbox.
+            </span>
+          </div>
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-4 max-w-[760px]">
+            <strong>Tests.</strong> Pre-, post-, and follow-up surveys
+            that bookend the program. Currently shown: pretest.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {tests.map((entry) => (
+              <article key={entry.id} className="bg-white rounded-2xl shadow-card p-4 flex flex-col">
+                <h3 className="text-[16px] font-semibold text-slate-800 mb-2">
+                  {entry.displayName}
+                </h3>
+                <p className="text-[13px] text-slate-600 leading-relaxed flex-1 mb-4">
+                  {entry.description}
+                </p>
+                <Link
+                  to={`/demo/sandbox/${entry.id}`}
+                  className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+                >
+                  <Play size={14} strokeWidth={2} />
+                  Launch test
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Data export demo */}
       <section className="mb-10">

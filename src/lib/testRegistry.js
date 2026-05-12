@@ -18,6 +18,7 @@ const SelfReflection = lazy(() => import('../activities/SelfReflection.jsx'))
 const BelongingSkillsSort = lazy(() => import('../activities/BelongingSkillsSort.jsx'))
 const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
+const Pretest = lazy(() => import('../activities/Pretest.jsx'))
 
 // --- Registry ---
 export const TEST_REGISTRY = [
@@ -67,6 +68,15 @@ export const TEST_REGISTRY = [
     category: 'RSD activity',
     description: 'Single-screen free write — no scaffolding, no pull-forward.',
     component: LetterBuilder,
+    mockProps: {},
+  },
+  {
+    id: 'pretest',
+    displayName: 'Pretest',
+    category: 'RSD test',
+    description:
+      'The pretest survey shown before activities begin. Captures demographics and baseline measures (Beck Hopelessness, Adolescent Sense of Control, UCLA Loneliness, Need to Belong, Belonging Promoting Behaviors, Belonging Worries, Program Expectation).',
+    component: Pretest,
     mockProps: {},
   },
 ]

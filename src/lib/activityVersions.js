@@ -65,6 +65,13 @@ export const ACTIVITY_VERSIONS = {
       '2026-05-11 · v1.0 — initial demo release.',
     ],
   },
+  pretest: {
+    version: 'v1.0',
+    updated: '2026-05-11',
+    changelog: [
+      '2026-05-11 · v1.0 — initial sandbox build of the locked Belonging pretest (29 items: 6 demographics + 7 scales). 10-screen paginated flow mirroring the live session layout. Sliders require explicit interaction before counting as answered; pre_bw_2 hidden when pre_bw_1 = 0. Save payload keyed by SPSS column names from Draft 6.',
+    ],
+  },
 }
 
 // Convenience lookup. Returns null if the id isn't registered (e.g. for
