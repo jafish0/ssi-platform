@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { Download } from 'lucide-react'
 import { PrimaryButton } from '../components/items/shared.jsx'
+import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
 
 // "Who I Am" poem — 10-line structure per Ginny's revision
 // (`Poem structure.png` in repo root). 8 kid-filled lines, lines 6 and 10
@@ -85,17 +87,7 @@ export default function WhoIAmPoem({ onSave = console.log }) {
 
   if (done) {
     const poem = buildPoemText(vals)
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-2 text-center">Your poem</h2>
-        <p className="text-[14px] text-slate-500 text-center mb-5">It&apos;s yours to keep.</p>
-        <div className="bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-card p-8 text-center">
-          <div className="text-[17px] leading-loose text-slate-800 whitespace-pre-wrap font-serif italic">
-            {poem || '—'}
-          </div>
-        </div>
-      </div>
-    )
+    return <PoemKeepsake poem={poem} />
   }
 
   return (
@@ -161,4 +153,99 @@ function MirroredLine({ n, value }) {
       </p>
     </div>
   )
+}
+
+// ---------- Keepsake screen + downloadable SVG ----------
+
+function PoemKeepsake({ poem }) {
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleDownload() {
+    setError(null)
+    setDownloading(true)
+    try {
+      const stamp = new Date().toISOString().slice(0, 10)
+      const { svg, width, height } = buildPoemKeepsakeSvg(poem)
+      await downloadSvgStringAsPng(svg, width, height, `my-poem-${stamp}.png`)
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || 'Could not save the image.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-[22px] font-semibold mb-2 text-center">Your poem</h2>
+      <p className="text-[14px] text-slate-500 text-center mb-5">It&apos;s yours to keep.</p>
+      <div className="bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-card p-8 text-center">
+        <div className="text-[17px] leading-loose text-slate-800 whitespace-pre-wrap font-serif italic">
+          {poem || '—'}
+        </div>
+      </div>
+      <div className="flex flex-col items-center gap-2 mt-5">
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={downloading || !poem}
+          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+        >
+          <Download size={14} strokeWidth={2} />
+          {downloading ? 'Saving image…' : 'Save as image'}
+        </button>
+        {error && (
+          <p role="alert" className="text-[12px] text-rose-600">{error}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Build a self-contained SVG poem keepsake — visually matches the
+// on-screen amber card. Returns { svg, width, height }. Each non-empty
+// poem line gets its own <text> at fixed vertical spacing; no wrapping
+// is attempted because the activity caps inputs at 120 chars and the
+// natural lines are short.
+function buildPoemKeepsakeSvg(poem) {
+  const escapeXml = (s) =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;')
+
+  const lines = String(poem || '').split('\n').map((l) => l.trim()).filter(Boolean)
+  const lineHeight = 30
+  const paddingY = 60
+  const paddingX = 40
+  const width = 600
+  const height = Math.max(360, paddingY * 2 + lines.length * lineHeight + 60)
+  const cx = width / 2
+
+  const titleY = 50
+  const linesStartY = titleY + 50
+
+  const lineEls = lines
+    .map((l, i) => {
+      const y = linesStartY + i * lineHeight
+      return `<text x="${cx}" y="${y}" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="20" fill="#1F2937">${escapeXml(l)}</text>`
+    })
+    .join('\n  ')
+
+  // Small footer credit — useful when the kid prints this out so it's
+  // obvious where it came from.
+  const stamp = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  const footerY = height - 30
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+  <rect x="6" y="6" width="${width - 12}" height="${height - 12}" rx="28" ry="28" fill="#FEF7E5" stroke="#F4D78F" stroke-width="3"/>
+  <text x="${cx}" y="${titleY}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="700" fill="#92400E" letter-spacing="0.18em">YOUR POEM</text>
+  ${lineEls}
+  <text x="${cx}" y="${footerY}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" fill="#A8773D">SSI Platform · ${escapeXml(stamp)}</text>
+</svg>`
+
+  return { svg, width, height }
 }

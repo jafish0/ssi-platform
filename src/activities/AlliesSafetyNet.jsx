@@ -25,11 +25,12 @@
 // built from the union of types across screens. Custom names typed into
 // other1/other2 persist across all three type screens.
 
-import { useMemo, useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { Check, X, Download } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
 import TrampolineNet from '../components/TrampolineNet.jsx'
+import { downloadSvgElementAsPng } from '../lib/imageDownload.js'
 
 // Convenience: which tile ids are custom-name-entry tiles. Keep ALLY_TILES
 // as the source of truth (via `custom: true`); this is a derived set.
@@ -270,12 +271,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
   if (done) {
     return (
-      <div className="text-center py-8">
-        <h2 className="text-[22px] font-semibold mb-2">Saved</h2>
-        <p className="text-[15px] text-slate-700">
-          Your safety net is captured. You can come back to it any time.
-        </p>
-      </div>
+      <SavedConfirmation allies={deduplicatedAllies} />
     )
   }
 
@@ -377,6 +373,61 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       {isInspectNet && modal.type === 'removal-ack' && (
         <RemovalAckModal onContinue={closeModal} />
       )}
+    </div>
+  )
+}
+
+// ---------- Post-save confirmation (with downloadable keepsake) ----------
+
+function SavedConfirmation({ allies }) {
+  const wrapRef = useRef(null)
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleDownload() {
+    setError(null)
+    setDownloading(true)
+    try {
+      const svg = wrapRef.current?.querySelector('svg')
+      if (!svg) throw new Error('No safety-net visual to download.')
+      const stamp = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+      await downloadSvgElementAsPng(svg, `my-safety-net-${stamp}.png`)
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || 'Could not save the image.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="text-center py-2">
+      <h2 className="text-[22px] font-semibold mb-2">Saved</h2>
+      <p className="text-[15px] text-slate-700 mb-5">
+        Your safety net is captured. You can come back to it any time.
+      </p>
+      <div ref={wrapRef} className="flex justify-center mb-4">
+        <TrampolineNet
+          allies={allies}
+          interactive={false}
+          showLabels={true}
+          showInspectedMarks={true}
+        />
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+        >
+          <Download size={14} strokeWidth={2} />
+          {downloading ? 'Saving image…' : 'Save as image'}
+        </button>
+        {error && (
+          <p role="alert" className="text-[12px] text-rose-600">{error}</p>
+        )}
+      </div>
     </div>
   )
 }

@@ -27,9 +27,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'allies-safety-net': {
-    version: 'v3.0',
-    updated: '2026-05-11',
+    version: 'v3.1',
+    updated: '2026-05-12',
     changelog: [
+      '2026-05-12 · v3.1 — post-save confirmation now shows the TrampolineNet visual + a "Save as image" button that exports a PNG of the kid\'s safety net (rasterized client-side from the inline SVG; ally icon hrefs inlined as data URLs first to avoid canvas-tainting issues). No data-shape change.',
       '2026-05-11 · v3.0 — Inspect step added. Step 1\'s placeholder final visual replaced with the real TrampolineNet component (see src/components/TrampolineNet.jsx) — parametric SVG matching the Claude Design reference (3 nested rims, woven type patterns, 24 cord lines, 4 ring guides, label pills, "YOU" hub). Step 2 (Inspect) is a new 3-screen flow inside the same activity: intro → interactive net (tap any ally to inspect) → final net. Per-ally inspect modal asks 4 clinical-safety questions (trouble / isolate / lies / afraid). Keep + Remove buttons stay equally weighted; subtle amber border on cards with a "yes" answer, no destructive red on Remove. Keep-with-yes triggers a keep-advisory modal; remove triggers a removal-acknowledgment modal. Save fires at the end of Step 2 (not Step 1 anymore). All 15 ally SVGs had their background <rect> stripped so they composite cleanly on the net wedges. Save payload extends v2.0: per-ally `inspected`, `flags`, `kept_in_net`; activity-level `inspection_completed` flag.',
       '2026-05-11 · v2.0 — full rewrite. Old 4-step flow (Build → Inspect → Strengthen → Review) replaced with Variant C: per-support-type multi-select grid across 5 paginated screens (intro + Practical + Emotional + Social + Safety Net visual). 15 new SVG ally tiles (foster, bio, sibling, grandparent, otherfam, counselor, teacher, coach, babysitter, neighbor, friend, therapist, caseworker, other1, other2) with two custom-name slots. Per-screen "None of these" affirmative button captures meaningful "no one for this type" responses. Final screen is a placeholder grouped-by-type visual — final net+pie visual is a separate follow-up. Save payload reshaped: deduplicated allies list with support_types arrays + none_for flags. Steps 2–4 of the legacy activity removed; will be rebuilt as Task #7 after team design discussion.',
       '2026-05-11 · v1.0 — initial demo release (drag-id parsing fix already folded in).',
@@ -52,9 +53,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'who-i-am-poem': {
-    version: 'v2.0',
-    updated: '2026-05-11',
+    version: 'v2.1',
+    updated: '2026-05-12',
     changelog: [
+      '2026-05-12 · v2.1 — keepsake screen gains a "Save as image" button. Builds a self-contained SVG of the poem (matches the on-screen amber card styling, with a small "SSI Platform · YYYY-MM-DD" footer credit) and rasterizes to PNG client-side. No data-shape change.',
       '2026-05-11 · v2.0 — rebuilt to Ginny\'s 10-line structure on a single screen (Poem structure.png). 8 kid inputs; lines 6 and 10 auto-mirror line 1. Worked example shown above the inputs (Holly). George Ella Lyon attribution removed (Ginny: "this isn\'t the Lyons format"). Save payload reshaped to 8 keys + saved_at — breaking change, demo-only.',
       '2026-05-11 · v1.0 — initial demo release.',
     ],
