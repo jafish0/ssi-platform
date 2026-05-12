@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`9b841da` · 2026-05-12** — Draft 10: three small-to-medium revisions to activities that shipped yesterday, bundled as one commit. **Self-Reflection v1.2 (revert):** exclusion prompt reverted to its pre-Draft-1 wording — the v1.1 agentive reframe didn't clear Ginny's UX review; Holly's proposal is moved to team-level design discussion. **Who I Am Poem v2.2 (content removal):** removed the worked example block above the input form — feedback was that the example was nudging kids toward mimicry. **Getting Unstuck v3.0 (MAJOR, structural flow change):** rating and selection are now separate screens. Rate screen shows the 8 scales only (no inline "I want to work on this" buttons). New Pick screen filters to eligible thoughts (≥3 on either scale) as selectable cards with a max-2 limit (non-blocking "Pick up to 2" nudge on a third tap). New affirmation path skips Pick entirely when no thoughts clear the threshold and leads straight to Save. Phase state moved from numeric `step` to named phases (`rate` / `pick` / `strategy` / `review` / `affirmation`) for clarity. Save payload UNCHANGED — only the path to becoming selected changed; export pipeline and demoDataset don't need updates.
 - **`92bfff9` · 2026-05-12** — Participant-facing "Save as image" downloads on the two activities that produce a visual artifact: Allies / Safety Net and Who I Am Poem. The other activities don't have an output by design and keep their simple confirmation copy (Josh confirmed on 2026-05-12). New `src/lib/imageDownload.js` exports `downloadSvgElementAsPng` (rasterizes a live SVG DOM node — used by the Safety Net post-save confirmation, which now shows the TrampolineNet visual + Save-as-image button) and `downloadSvgStringAsPng` (rasterizes a built-on-demand SVG string — used by Who I Am Poem to build an SVG keepsake at click time that matches the on-screen amber card with a "SSI Platform · date" footer). The utility inlines `<image href>` references as data URLs before rasterization to avoid canvas-tainting; renders at 2× for retina quality; cream-paper background fills any transparent areas. No new dependencies — html2canvas would have worked (transitive via jspdf) but our visuals are pure SVG. AlliesSafetyNet bumped to v3.1, WhoIAmPoem to v2.1 (both MINOR, no data-shape changes).
 - **`70d117b` · 2026-05-11** — Draft 9 of the Safety Net build: TrampolineNet parametric visual + Step 2 (Inspect). Three coupled changes shipped together. **(1)** Stripped the cream background `<rect>` from all 15 ally SVGs in `src/assets/allies/` so they composite cleanly on the woven trampoline-net wedges. **(2)** New `src/components/TrampolineNet.jsx` — parametric React reimplementation of the Claude Design reference (`Activity ideas/trampoline-safety-net.svg`). Matches the rim styling, woven type patterns, 24 radial cord lines, 4 ring guides, label pills, and "YOU" hub. Wedge sizing is proportional with empty types collapsing to a labelled 15° sliver. Ally icons sit in cream halos with optional `showInspectedMarks` (green check) and `interactive` (tappable button) modes; removed allies render in a faded "Taken out of net" strip below the rim. **(3)** `AlliesSafetyNet` v3.0 — expanded from 5 to 8 screens. Step 1's placeholder grouped-by-type visual is replaced with the real TrampolineNet. Step 2 (Inspect) is a new 3-screen flow inside the same activity: intro → interactive net (tap any ally to inspect) → final net + Save. Per-ally inspect modal asks 4 clinical-safety questions (trouble / isolate / lies / afraid) with Yes/No/Not sure radios. Keep + Remove buttons stay equally weighted; subtle amber border on "yes" cards, no destructive red. Keep-with-yes triggers a keep-advisory modal; remove triggers a removal-acknowledgment modal. Save now fires at the end of Step 2 (not Step 1). Save payload extends v2.0 with `inspected`, `flags`, `kept_in_net` per ally and an activity-level `inspection_completed` flag. `exportFlatten.js` gains 9 new safety_net_* columns (inspected_count, kept_count, removed_count, total_flags, 4 per-flag rollups, inspection_completed). `demoDataset.js` produces synthetic inspection per brief: ~80% inspect all, ~15% partial, ~5% skip; ~20% have a "yes" flag; removal probability tuned higher for noisy allies.
 - **`d515d0e` · 2026-05-11** — Draft 8 of the Safety Net Step 1 rebuild. Full rewrite of `src/activities/AlliesSafetyNet.jsx` to Variant C (per-support-type multi-select grid). 5 paginated screens: intro → Practical → Emotional → Social → placeholder Safety Net visual. 15 new SVG ally tiles in `src/assets/allies/` (data-om-id attributes stripped); new `src/lib/allyTiles.js` is single source of truth for tile registry + support-type definitions. Custom tiles (other1, other2) accept inline names that persist across all three type screens. Per-type "None of these" buttons capture affirmative "no one for this type" responses (meaningfully distinct from skipping). Save payload reshaped to `{ allies: [{id, name, custom, support_types}], none_for: {practical, emotional, social}, saved_at }`. Old 4-step flow (Build → Inspect → Strengthen → Review, ~580 LOC) torn down entirely; Steps 2–4 will be rebuilt later as Task #7 after team design discussion. Version bumped to v2.0 (MAJOR). `exportFlatten.js` safety_net_* columns reshaped accordingly (counts + none-flags + names/ids list); per-tile binary columns deferred pending Jessica's review. `demoDataset.js` produces the new shape with the distribution from the brief (70/20/10).
@@ -213,7 +214,61 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — Draft 9 shipped as commit `70d117b`, summarized under that entry in Recently shipped above)_
+_(none — Draft 10 shipped as commit `9b841da`, summarized under that entry in Recently shipped above)_
+
+<!--
+
+### Draft 10 — 2026-05-11 evening revisions (Self-Reflection revert + Poem example removal + Getting Unstuck sequence change)
+
+Three small-to-medium revisions to activities that shipped earlier today. Bundle as one commit.
+
+#### Change 1 — Self-Reflection: revert exclusion prompt to original
+
+In commit `7b7046e` Draft 1 we changed the exclusion prompt to *"Now think of a time someone made you feel like you did not belong."* That change should have gone past Ginny (who has final-word UX authority) and didn't. Revert it.
+
+**File:** `src/activities/SelfReflection.jsx`
+
+**Change:** Revert the exclusion prompt to its previous wording:
+
+> Now think of a time you felt excluded — a time you felt like you did not belong.
+
+The inclusion prompt stays as-is. This is the only change.
+
+**Version bump:** v1.1 → v1.2 (MINOR, copy revert). Prepend changelog entry noting the revert and that Holly's reframe proposal is moved to team-level design discussion.
+
+#### Change 2 — Who I Am Poem: remove the worked example
+
+Draft 2 added a brief worked example of a finished poem before the input form. Take it back out.
+
+**File:** `src/activities/WhoIAmPoem.jsx`
+
+**Change:** Remove the example block entirely. Don't replace it with anything — the activity starts directly with the input form.
+
+**Version bump:** v2.0 → v2.1 (MINOR, content removal). Prepend changelog entry: "Removed worked example before input form."
+
+#### Change 3 — Getting Unstuck: separate rating from selection
+
+In Draft 5 each thought had a 5-point appraisal scale plus an inline "I want to work on this" button that appeared when the thought met the eligibility threshold (freq ≥3 OR belief ≥3 on either scale). The kid rated AND chose what to work on in the same step. Restructure into two distinct steps.
+
+**File:** `src/activities/GettingUnstuck.jsx`
+
+**New flow:**
+
+1. **Rate screen** (existing, modified). Show all 8 thoughts with the 5-point frequency + believability scales per thought. Below the list: a single primary **"Keep going"** button. **Remove the per-thought "I want to work on this" button entirely.**
+
+2. **Pick screen** (new). Filter to thoughts where the kid rated ≥3 on EITHER frequency OR believability — same eligibility criteria as the previous build. Show those eligible thoughts as selectable cards. Header: *"Which of these thoughts would you like to work on?"* Subhead: *"Pick one or two."* Cards are tappable; selection limit is 2. Trying to select a third gently nudges with a small "Pick up to 2" hint (visual, non-blocking — show the hint as a small line under the cards or near the touched card). Continue button enabled when 1 or 2 are selected.
+
+3. **Strategy screen** (existing). Plays out on the 1-2 thoughts the kid picked on the Pick screen. No other changes to this step.
+
+**Edge case — no eligible thoughts.** If no thought meets the ≥3 threshold on either scale (kid rated everything low), skip the Pick screen entirely and show a brief affirmation screen: *"Looks like none of these thoughts are sticking with you right now — that's good news!"* with a Continue button that goes straight to Save (no strategy step).
+
+**Data shape:** unchanged. The `unstuck_selected_st<n>` flag continues to mean "kid is working on this thought"; what changes is the path to becoming selected (previously: clicked "I want to work on this" inline; now: picked from filtered set on a separate screen).
+
+**Version bump:** v2.0 → v3.0 (MAJOR, structural flow change). Prepend changelog entry: "Separated rating and selection into two distinct screens; max 2 thoughts may be selected to work on."
+
+*End of 2026-05-11 evening revisions batch.*
+
+-->
 
 <!--
 
