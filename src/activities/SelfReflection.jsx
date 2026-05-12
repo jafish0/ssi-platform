@@ -19,7 +19,7 @@ const SCREENS = {
   exclusion_memory: {
     heading: 'A time you felt excluded',
     prompt:
-      'Now think of a time someone made you feel like you did not belong. Write a few sentences about that experience.',
+      'Now think of a time you felt excluded — a time you felt like you did not belong. Write a few sentences about that experience.',
     field: 'memory',
     section: 'exclusion',
     placeholder: 'Where you were, who was there, what made it feel that way…',

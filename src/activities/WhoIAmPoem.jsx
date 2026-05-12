@@ -26,14 +26,10 @@ const LINES = [
   // line 10 auto-mirrors line 1 — no kid input
 ]
 
-// Short in-voice example shown above the inputs. Deliberately simple and
-// generic, not from a published poet. Two lines is enough — the kid just
-// needs to see the shape.
-const EXAMPLE_LINES = [
-  'I am curious and stubborn,',
-  'I am from a small kitchen with the radio on,',
-  'I dream of a quiet morning by the water.',
-]
+// Note: a worked example block used to live here. It was removed
+// 2026-05-12 per Draft 10 — feedback was that an example was nudging
+// kids toward mimicry. The activity now opens directly with the input
+// form.
 
 function buildPoemText(vals) {
   const lineOne = (vals.characteristics || '').trim()
@@ -96,13 +92,6 @@ export default function WhoIAmPoem({ onSave = console.log }) {
       <p className="text-[14px] text-slate-500 mb-4">
         A short poem about you. Fill in the lines and we&apos;ll put it together.
       </p>
-
-      <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-4 mb-6">
-        <p className="text-[12px] uppercase tracking-wide text-slate-500 mb-2">Example</p>
-        <div className="text-[15px] leading-relaxed text-slate-700 italic font-serif whitespace-pre-line">
-          {EXAMPLE_LINES.join('\n')}
-        </div>
-      </div>
 
       <div className="space-y-4">
         {LINES.map((l) => (

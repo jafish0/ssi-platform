@@ -3,19 +3,25 @@ import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 
 // Getting Unstuck — RSD's stuck-thought / strategy / reflection activity.
 //
-// 2026-05-11 rebuild:
-// - Replaced the standalone Kai-quote intro (Ginny flagged as confusing)
-//   with a 5-point appraisal scale on the stuck-thoughts screen itself.
-//   Each thought gets a frequency rating ("How often do you have this
-//   thought?") and a believability rating ("How strongly do you believe
-//   it is true?"). Thoughts rated ≥3 on either scale are eligible to
-//   work on; the kid explicitly picks which eligible ones to take into
-//   the strategy step.
-// - Restored the three challenge-strategy prompts as scaffolding above
-//   a single open-ended response field (Stephanie's PPT slide 12).
-// - Renamed "Fight it" → "Challenge it" throughout, including the
-//   saved-data strategy key (`fight` → `challenge`,
-//   `fight_response` → `challenge_response`). Both/And is unchanged.
+// v3.0 (2026-05-12, Draft 10): rating and selection are now separate
+// screens — the previous build had them combined on a single screen
+// with an inline "I want to work on this" button per card.
+//
+// Flow:
+//   rate       — All 8 thoughts shown with frequency + believability
+//                5-point scales. No selection happens here.
+//   pick       — Eligible thoughts (rated ≥3 on either scale) shown as
+//                tappable cards. Max 2 selected.
+//   strategy   — Per-thought strategy (Challenge it / Both/And it) for
+//                each thought the kid picked. Walks through them in
+//                STUCK_THOUGHTS order.
+//   review     — Read-back of what they wrote before saving.
+//   affirmation — Alt path: shown instead of `pick` when no thought met
+//                the eligibility threshold. Goes straight to save.
+//
+// Save payload shape is UNCHANGED from v2.0 — `appraisals` covers all
+// 8 thoughts, `stuck_thought_ids` lists the picked ones (0–2 items),
+// `responses` carries the strategy + open text per picked thought.
 
 const STUCK_THOUGHTS = [
   { id: 'st1', text: "I'll never fit in here." },
@@ -31,9 +37,8 @@ const STUCK_THOUGHTS = [
 const FREQ_LABELS = ['Never', 'Rarely', 'Sometimes', 'Often', 'Always']
 const BELIEF_LABELS = ['Not at all', 'A little', 'Somewhat', 'Mostly', 'Completely']
 
-// Thoughts at or above this on either scale are eligible to take into
-// the strategy step. Tunable here in one place.
 const ELIGIBILITY_THRESHOLD = 3
+const MAX_PICKS = 2
 
 const CHALLENGE_PROMPTS = [
   'Is there another way I can think about this?',
@@ -81,8 +86,11 @@ function FivePointScale({ value, onChange, anchors, label }) {
   )
 }
 
-export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }) {
-  const [step, setStep] = useState(initialStep)
+export default function GettingUnstuck({ onSave = console.log }) {
+  // Named phases — clearer than numeric steps when there are
+  // conditional paths (the affirmation branch skips `pick` and
+  // `strategy` entirely).
+  const [phase, setPhase] = useState('rate')
 
   // Per-thought appraisal + selection. Shape: { [id]: { frequency, believability, selected } }
   const [appraisal, setAppraisal] = useState({})
@@ -91,12 +99,41 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
   const [responses, setResponses] = useState({})
 
   const [thoughtIdx, setThoughtIdx] = useState(0)
+  // Transient nudge state for the Pick screen's max-2 limit. Goes
+  // false again on every state change so the hint doesn't linger.
+  const [limitNudge, setLimitNudge] = useState(false)
+
   const [submitting, setSubmitting] = useState(false)
   const [savedDone, setSavedDone] = useState(false)
 
-  // Thoughts the kid chose to work on, preserving STUCK_THOUGHTS order.
+  // Derived: which thoughts cleared the eligibility threshold on either
+  // scale. Used by the Pick screen and the rate→? transition.
+  const eligibleThoughts = useMemo(
+    () =>
+      STUCK_THOUGHTS.filter((t) => {
+        const a = appraisal[t.id] || {}
+        return (
+          (a.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
+          (a.believability || 0) >= ELIGIBILITY_THRESHOLD
+        )
+      }),
+    [appraisal],
+  )
+
+  // Selected (chosen to work on) thoughts in STUCK_THOUGHTS order.
   const selectedThoughts = useMemo(
     () => STUCK_THOUGHTS.filter((t) => appraisal[t.id]?.selected),
+    [appraisal],
+  )
+
+  // True once every thought has had both scales rated. Gates the
+  // Keep going button on the Rate screen.
+  const allRated = useMemo(
+    () =>
+      STUCK_THOUGHTS.every((t) => {
+        const a = appraisal[t.id] || {}
+        return !!a.frequency && !!a.believability
+      }),
     [appraisal],
   )
 
@@ -104,9 +141,9 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     setAppraisal((prev) => {
       const cur = prev[thoughtId] || {}
       const next = { ...cur, [field]: value }
-      // If raising a rating to threshold or above, leave selection alone.
-      // If dropping both scales below threshold, also drop selection so
-      // the eligibility rule stays consistent.
+      // If dropping both scales below threshold and the thought was
+      // already selected, clear the selection so eligibility stays
+      // consistent if the kid revisits the Rate screen later.
       const eligible =
         (next.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
         (next.believability || 0) >= ELIGIBILITY_THRESHOLD
@@ -115,15 +152,30 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     })
   }
 
-  function toggleSelected(thoughtId) {
-    setAppraisal((prev) => {
-      const cur = prev[thoughtId] || {}
-      const eligible =
-        (cur.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
-        (cur.believability || 0) >= ELIGIBILITY_THRESHOLD
-      if (!eligible) return prev // ignore taps on ineligible cards
-      return { ...prev, [thoughtId]: { ...cur, selected: !cur.selected } }
-    })
+  // Pick-screen tap handler. Enforces the max-2 limit by refusing the
+  // tap and showing a non-blocking nudge.
+  function handlePickTap(thoughtId) {
+    const cur = appraisal[thoughtId] || {}
+    if (cur.selected) {
+      // Always allow deselect.
+      setAppraisal((prev) => ({
+        ...prev,
+        [thoughtId]: { ...(prev[thoughtId] || {}), selected: false },
+      }))
+      setLimitNudge(false)
+      return
+    }
+    // Trying to select a new one — check the cap.
+    const selectedCount = STUCK_THOUGHTS.filter((t) => appraisal[t.id]?.selected).length
+    if (selectedCount >= MAX_PICKS) {
+      setLimitNudge(true)
+      return
+    }
+    setAppraisal((prev) => ({
+      ...prev,
+      [thoughtId]: { ...(prev[thoughtId] || {}), selected: true },
+    }))
+    setLimitNudge(false)
   }
 
   function setStrategy(thoughtId, strategy) {
@@ -153,8 +205,6 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     try {
       const payload = {
         activity: 'getting_unstuck',
-        // Full appraisal record across all 8 thoughts, not just the
-        // chosen ones — useful for the data export later.
         appraisals: STUCK_THOUGHTS.map((t) => ({
           thought_id: t.id,
           thought_text: t.text,
@@ -183,39 +233,65 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     }
   }
 
-  // ---- Step 1: Appraise + select stuck thoughts ----
-  if (step === 1) {
-    const anySelected = selectedThoughts.length > 0
+  // ---- Done state ----
+  if (savedDone) {
+    return (
+      <div>
+        <h2 className="text-[22px] font-semibold mb-3">Saved</h2>
+        <p className="text-[16px] text-slate-700">That&apos;s real work. Let&apos;s keep going.</p>
+      </div>
+    )
+  }
+
+  // ---- Phase: rate ----
+  if (phase === 'rate') {
+    function handleRateContinue() {
+      // Determine next phase based on whether any thoughts are eligible.
+      // No eligible → affirmation path (skip pick + strategy).
+      if (eligibleThoughts.length === 0) {
+        setPhase('affirmation')
+      } else {
+        // Entering Pick: clear stale selections that are no longer
+        // eligible (kid may have lowered ratings since picking). The
+        // setRating effect already handles individual eligibility drops,
+        // but a defensive sweep keeps the Pick screen clean.
+        setAppraisal((prev) => {
+          const next = { ...prev }
+          for (const t of STUCK_THOUGHTS) {
+            const a = next[t.id] || {}
+            const eligible =
+              (a.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
+              (a.believability || 0) >= ELIGIBILITY_THRESHOLD
+            if (!eligible && a.selected) next[t.id] = { ...a, selected: false }
+          }
+          return next
+        })
+        setLimitNudge(false)
+        setPhase('pick')
+      }
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-1">Stuck thoughts</h2>
         <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
           These are thoughts that can keep someone feeling stuck. For each one,
-          rate how it feels for you. Then pick which ones you want to work on.
+          rate how it feels for you.
         </p>
 
         <div className="space-y-4 mb-6">
           {STUCK_THOUGHTS.map((t) => {
             const a = appraisal[t.id] || {}
-            const eligible =
-              (a.frequency || 0) >= ELIGIBILITY_THRESHOLD ||
-              (a.believability || 0) >= ELIGIBILITY_THRESHOLD
-            const selected = !!a.selected
             return (
               <div
                 key={t.id}
-                className={
-                  'rounded-2xl border p-4 transition-colors ' +
-                  (selected
-                    ? 'bg-amber-50 border-amber-400'
-                    : 'bg-white border-slate-200')
-                }
+                className="rounded-2xl border bg-white border-slate-200 p-4"
               >
                 <div className="text-[15px] leading-relaxed text-slate-800 mb-4">
                   {t.text}
                 </div>
-
-                <div className="space-y-4 mb-4">
+                <div className="space-y-4">
                   <FivePointScale
                     label="How often do you have this thought?"
                     anchors={FREQ_LABELS}
@@ -229,38 +305,95 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
                     onChange={(v) => setRating(t.id, 'believability', v)}
                   />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => toggleSelected(t.id)}
-                  disabled={!eligible}
-                  className={
-                    'w-full inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 min-h-[40px] text-[14px] font-semibold transition-colors ' +
-                    (selected
-                      ? 'bg-amber-500 text-white border border-amber-500'
-                      : eligible
-                        ? 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-50'
-                        : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed')
-                  }
-                >
-                  {selected
-                    ? '✓ Working on this'
-                    : eligible
-                      ? 'I want to work on this'
-                      : 'Rate it first to choose this one'}
-                </button>
               </div>
             )
           })}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end">
+          <PrimaryButton onClick={handleRateContinue} disabled={!allRated}>
+            Keep going →
+          </PrimaryButton>
+        </div>
+        {!allRated && (
+          <p className="text-[12px] text-slate-500 italic text-right mt-2">
+            Rate both scales on every thought to continue.
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  // ---- Phase: pick (1-2 from the eligible set) ----
+  if (phase === 'pick') {
+    const selectedCount = selectedThoughts.length
+    return (
+      <div>
+        <h2 className="text-[22px] font-semibold mb-1">
+          Which of these thoughts would you like to work on?
+        </h2>
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
+          Pick one or two.
+        </p>
+
+        <div className="space-y-3 mb-2">
+          {eligibleThoughts.map((t) => {
+            const selected = !!appraisal[t.id]?.selected
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handlePickTap(t.id)}
+                aria-pressed={selected}
+                className={
+                  'w-full text-left rounded-2xl border-2 px-4 py-3 min-h-[60px] text-[15px] leading-relaxed transition-colors ' +
+                  (selected
+                    ? 'bg-amber-100 border-amber-500 text-amber-900'
+                    : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                }
+              >
+                <span className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className={
+                      'inline-flex items-center justify-center rounded-full w-6 h-6 flex-shrink-0 mt-0.5 ' +
+                      (selected
+                        ? 'bg-amber-500 text-white'
+                        : 'border border-slate-300 text-transparent')
+                    }
+                  >
+                    ✓
+                  </span>
+                  <span className="flex-1">{t.text}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {limitNudge && (
+          <p className="text-[13px] text-amber-700 italic mt-2">
+            Pick up to 2. Deselect one first if you want to swap it.
+          </p>
+        )}
+
+        <div className="flex items-center justify-between mt-6">
+          <GhostButton
+            onClick={() => {
+              setLimitNudge(false)
+              setPhase('rate')
+              if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+            }}
+          >
+            ← Back
+          </GhostButton>
           <PrimaryButton
             onClick={() => {
-              setStep(2)
               setThoughtIdx(0)
+              setPhase('strategy')
+              if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
             }}
-            disabled={!anySelected}
+            disabled={selectedCount < 1}
           >
             Keep going →
           </PrimaryButton>
@@ -269,12 +402,38 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     )
   }
 
-  // ---- Step 2: Strategy per thought ----
-  if (step === 2) {
+  // ---- Phase: affirmation (no eligible thoughts) ----
+  if (phase === 'affirmation') {
+    return (
+      <div className="text-center py-4">
+        <h2 className="text-[22px] font-semibold mb-3">That&apos;s good news.</h2>
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-6 max-w-[480px] mx-auto">
+          Looks like none of these thoughts are sticking with you right now —
+          you don&apos;t have to wrestle with them today.
+        </p>
+        <div className="flex items-center justify-between">
+          <GhostButton
+            onClick={() => {
+              setPhase('rate')
+              if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+            }}
+          >
+            ← Back
+          </GhostButton>
+          <PrimaryButton onClick={handleSave} disabled={submitting}>
+            {submitting ? 'Saving…' : 'Save'}
+          </PrimaryButton>
+        </div>
+      </div>
+    )
+  }
+
+  // ---- Phase: strategy (per picked thought) ----
+  if (phase === 'strategy') {
     const thought = selectedThoughts[thoughtIdx]
     if (!thought) {
-      // safety: nothing selected; bounce back
-      setStep(1)
+      // Safety: nothing selected; bounce back to pick.
+      setPhase('pick')
       return null
     }
     const r = responses[thought.id] || {}
@@ -396,8 +555,12 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
         <div className="flex items-center justify-between mt-6">
           <GhostButton
             onClick={() => {
-              if (thoughtIdx > 0) setThoughtIdx((i) => i - 1)
-              else setStep(1)
+              if (thoughtIdx > 0) {
+                setThoughtIdx((i) => i - 1)
+              } else {
+                setPhase('pick')
+              }
+              if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
             }}
           >
             ← Back
@@ -405,8 +568,12 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
           <PrimaryButton
             onClick={() => {
               if (!valid) return
-              if (isLastThought) setStep(3)
-              else setThoughtIdx((i) => i + 1)
+              if (isLastThought) {
+                setPhase('review')
+              } else {
+                setThoughtIdx((i) => i + 1)
+              }
+              if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
             }}
             disabled={!valid}
           >
@@ -417,16 +584,7 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
     )
   }
 
-  // ---- Step 3: Review ----
-  if (savedDone) {
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-3">Saved</h2>
-        <p className="text-[16px] text-slate-700">That&apos;s real work. Let&apos;s keep going.</p>
-      </div>
-    )
-  }
-
+  // ---- Phase: review ----
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">Your work</h2>
@@ -460,7 +618,15 @@ export default function GettingUnstuck({ onSave = console.log, initialStep = 1 }
       </div>
 
       <div className="flex items-center justify-between">
-        <GhostButton onClick={() => setStep(2)}>← Back</GhostButton>
+        <GhostButton
+          onClick={() => {
+            setThoughtIdx(selectedThoughts.length - 1)
+            setPhase('strategy')
+            if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+          }}
+        >
+          ← Back
+        </GhostButton>
         <PrimaryButton onClick={handleSave} disabled={submitting}>
           {submitting ? 'Saving…' : 'Save'}
         </PrimaryButton>
