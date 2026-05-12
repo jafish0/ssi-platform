@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`d515d0e` · 2026-05-11** — Draft 8 of the Safety Net Step 1 rebuild. Full rewrite of `src/activities/AlliesSafetyNet.jsx` to Variant C (per-support-type multi-select grid). 5 paginated screens: intro → Practical → Emotional → Social → placeholder Safety Net visual. 15 new SVG ally tiles in `src/assets/allies/` (data-om-id attributes stripped); new `src/lib/allyTiles.js` is single source of truth for tile registry + support-type definitions. Custom tiles (other1, other2) accept inline names that persist across all three type screens. Per-type "None of these" buttons capture affirmative "no one for this type" responses (meaningfully distinct from skipping). Save payload reshaped to `{ allies: [{id, name, custom, support_types}], none_for: {practical, emotional, social}, saved_at }`. Old 4-step flow (Build → Inspect → Strengthen → Review, ~580 LOC) torn down entirely; Steps 2–4 will be rebuilt later as Task #7 after team design discussion. Version bumped to v2.0 (MAJOR). `exportFlatten.js` safety_net_* columns reshaped accordingly (counts + none-flags + names/ids list); per-tile binary columns deferred pending Jessica's review. `demoDataset.js` produces the new shape with the distribution from the brief (70/20/10).
 - **`6e0308c` · 2026-05-11** — Draft 6 follow-up: SPSS syntax (`.sps`) generator I missed in `0415172`. New `src/lib/spssSyntax.js` reads the same column registry that `exportFlatten.planWideColumns()` produces, so the Wide CSV and the `.sps` stay in sync from a single source of truth. Emits header comment + `GET DATA` + `VARIABLE LABELS` + `VALUE LABELS` (psychometric scales grouped by shared anchor set; BHS/ASCS/UCLA/NB/BPB hard-coded labels) + `VARIABLE LEVEL` (ordinal/scale/nominal grouping) + `FORMATS` + `SAVE OUTFILE` to `.sav`. SPSS variable-name validation up front (64-char max, must start with a letter, no SPSS reserved words like `ALL`/`AND`/`BY`/etc.) — throws on violation rather than emitting a malformed file. `/demo` Data export now offers three downloads: Wide CSV, `.sps` syntax, Codebook CSV; copy rewritten to explain the SPSS bundle approach (open the `.sps` in SPSS to get a labeled `.sav`) with a note that the Qualtrics-native-`.sav` route is parked as Task #11 Phase B. INFRASTRUCTURE.md change-log entry added.
 - **`aa94130` · 2026-05-11** — Draft 7 of the data-and-pretest batch: Pretest paginated sandbox activity on /demo. New `src/activities/Pretest.jsx` renders the locked Belonging pretest (29 items: 6 demographics + 7 scales — Beck Hopelessness, Adolescent Sense of Control, UCLA, Need to Belong, Belonging Promoting Behaviors, Belonging Worries, Program Expectation) as a 10-screen paginated flow mirroring the live session. Save payload is FLAT and keyed by the SPSS column names from Draft 6, so participant submissions match the export CSV exactly with no recoding. Sliders require explicit drag/tap before counting as answered; Belonging Worries Q2 hidden when Q1 = 0 (saves `pre_bw_2` as null). Back button on every screen, progress strip up top. Wired in via the existing `TEST_REGISTRY` pattern under a new `RSD test` category; new "Tests" section on DemoPage between Activities and Data export demo. `activityVersions.js` gets `pretest` at v1.0.
 - **`0415172` · 2026-05-11** — Draft 6 of the data-and-pretest batch: export column-naming refactor per Jessica's 2026-05-11 brief. New convention `<timepoint>_<scale_abbrev>_<item#>` (e.g. `pre_bhs_1`, `post_ascs_3`); score columns `<timepoint>_<scale_abbrev>_score`. Scale abbreviations mapped in `src/lib/exportFlatten.js` (`SCALE_ABBREVIATIONS`): bhs, ascs, ucla, nb, bpb, bw, pe, pa. The `appraisals_*` columns from the live snapshot — origin unclear, not in the locked pretest doc — mapped to `app` with a code comment flagging "confirm with Jessica/Stephanie." Custom-activity payload columns now use short prefixes (`unstuck_*`, `safety_net_*`, `sort_*`, `poem_*`, `letter_*`, `reflect_*`) via `ACTIVITY_PREFIXES`. GettingUnstuck v2 emits per-thought columns covering all 8 stuck thoughts (`unstuck_freq_st1`..`st8`, `_belief_`, `_selected_`, `_strategy_`, `_response_`); `n_fight` renamed to `n_challenge`. WhoIAmPoem v2 emits 8 keyed-field columns; LetterBuilder v2 emits a single `letter_text` column. `src/lib/demoDataset.js` updated to produce the new save shapes for the three rebuilt activities. /demo's Data export section drops Summary + Long buttons (remain on `/admin/data-export`); new short copy explains the convention. INFRASTRUCTURE.md change-log entry added. No activity-version bumps — pipeline change only.
@@ -210,7 +211,148 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — 2026-05-11 data-and-pretest batch shipped as commits `0415172` + `aa94130` + `6e0308c`, summarized under those entries in Recently shipped above)_
+_(none — Draft 8 shipped as commit `d515d0e`, summarized under that entry in Recently shipped above)_
+
+<!--
+
+### Draft 8 — Allies / Safety Net Step 1 rebuild (Variant C flow + new SVG icon set)
+
+Full replacement of `src/activities/AlliesSafetyNet.jsx`. The current 4-step flow (Build → Inspect → Strengthen → Review) is being torn down. This draft delivers Step 1 (Build) only, with a competent placeholder final visual. Steps 2–4 are queued as Task #7 — strip them entirely in this commit; they'll be rebuilt later after the team's Step 2 design discussion.
+
+**Source of truth for the flow:** the 2026-05-11 review meeting + memory `project_team_email_pending.md` notes pending team discussion of ally-tile splits (don't pre-empt — build with the current 15 tiles, the team will weigh in on splits later).
+
+**Variant chosen:** per-support-type multi-select grid (recorded transcript landing point — see meeting notes). Not one-at-a-time-per-tile, not pre-filter-then-categorize.
+
+---
+
+**Step 0 — Drop in the new SVG icon set.**
+
+Source: `Activity ideas/safety-net-icons.zip` (in repo root). Contains 15 SVGs at 100×100 viewBox plus a `README.txt`.
+
+Process for each SVG before committing it to the repo:
+1. Strip the `data-om-id="..."` attributes that Claude Design embedded — these are internal tracking IDs, useless to us, and add ~30% size. A regex pass works: `sed -i -E 's/ data-om-id="[^"]*"//g' src/assets/allies/*.svg`
+2. **Keep** the first `<rect>` background tile. The cream `#FAF6EF` tile reads as a card; the activity will look cleaner with it. If we later want transparent, the README explains the one-line removal.
+
+Target location: `src/assets/allies/*.svg`. Use whatever SVG import pattern is already in the codebase (check if Vite is configured for `?react` component imports via vite-plugin-svgr, or just import as URL strings — either is fine for these).
+
+**Tile registry.** Create `src/lib/allyTiles.js` (or co-locate in the activity file if cleaner) — a single data structure mapping tile ID → display name → icon import. The 15 entries:
+
+| ID | Display name | Icon file |
+|----|--------------|-----------|
+| `foster` | Foster Parent | foster.svg |
+| `bio` | Biological Parent | bio.svg |
+| `sibling` | Sibling | sibling.svg |
+| `grandparent` | Grandparent | grandparent.svg |
+| `otherfam` | Other family (aunts, uncles, cousins) | otherfam.svg |
+| `counselor` | School Counselor | counselor.svg |
+| `teacher` | Teacher | teacher.svg |
+| `coach` | Coach | coach.svg |
+| `babysitter` | Babysitter | babysitter.svg |
+| `neighbor` | Neighbor | neighbor.svg |
+| `friend` | Friend | friend.svg |
+| `therapist` | Therapist | therapist.svg |
+| `caseworker` | Caseworker / Social Worker | caseworker.svg |
+| `other1` | Other (custom) | other1.svg |
+| `other2` | Other (custom) | other2.svg |
+
+---
+
+**Activity flow — 5 screens, paginated.**
+
+Match the pretest's paginated pattern (Continue + Back buttons, progress strip up top). Single sandbox component, internal step state.
+
+**Screen 1 — Intro.** Brief copy explaining what an "ally" is and previewing the three support types. Suggested copy (refine in voice as needed):
+
+> **Who are the allies in your safety net?**
+>
+> An ally is someone you trust to provide support and help you become the person you want to be. They might not always get it right, but you know they care about you, they're a positive influence, and they try to help.
+>
+> The strongest safety nets have allies who provide different kinds of support:
+>
+> - **Practical** — people who help you solve problems, teach you things, or make sure you have what you need.
+> - **Emotional** — people who help you feel good about yourself, listen to you, or help you cope with hard feelings.
+> - **Social** — people you can be yourself around, or who help you feel less alone.
+>
+> Let's build your safety net.
+
+Single Continue button to start.
+
+**Screens 2, 3, 4 — One per support type (Practical → Emotional → Social).**
+
+Each screen has the same structure:
+1. **Header:** *"Who provides [practical] support for you?"*
+2. **Definition repeated** (one line, lighter weight): *"People who help you solve problems, teach you things, or make sure you have what you need."*
+3. **Tile grid:** all 15 tiles. **2 columns on mobile**, 3 columns on tablet/desktop. Each tile ≈ 180×140px showing the SVG icon (≈100×100) on top with the display name centered below. Tappable target is the full tile.
+4. **Selection behavior:**
+   - Tap = select (amber-500 ring + subtle checkmark in the corner)
+   - Tap again = deselect
+   - Multi-select; no limit on number selected
+   - **Other tiles** (`other1`, `other2`): tapping opens an inline text input. The kid types a name; on commit (Enter or blur), the tile shows the custom name and is selected. The custom name persists across the three type screens — if the kid named "Aunt Lisa" on the Practical screen, the same `other1` tile shows "Aunt Lisa" pre-filled on the Emotional and Social screens.
+5. **"None of these" affirmative button** below the grid: *"None of these are [practical] support for me."* This captures the kid affirmatively saying "no one for this type" — meaningfully different from "kid scrolled past without selecting." Tapping it deselects everything on the screen and visibly marks the "none" state.
+6. **Back + Continue** buttons at the bottom (Continue is primary amber-500 CTA).
+
+**Selection state is per-type-screen.** A kid selecting "Mom" on the Practical screen does NOT pre-select Mom on the Emotional screen. Mom starts unselected on Emotional; tapping her selects her there too. The cumulative result is one ally entity with the union of support types tapped across screens.
+
+**Screen 5 — Your Safety Net (placeholder visual for now).**
+
+Show the assembled set of selected allies grouped by support type. **Placeholder layout to ship in this commit:**
+
+- Three labeled sections stacked vertically: Practical, Emotional, Social.
+- Inside each section, show the SVG icons of all allies tagged with that support type, with names below. Use a soft section background to visually contain each group.
+- If a support type has no allies, show muted copy: *"No practical support allies yet — that's okay. Sometimes it starts with looking for someone who could become one."*
+- Multi-type allies appear once in each of their sections (they're duplicated visually but it's one ally entity in the data).
+
+This placeholder is **deliberately not the final visual** — Josh is exploring a merged "net + pie" visual in Claude Design separately. A follow-up commit will swap this placeholder for the final visual. Build the data shape so the swap is just a render-layer change; the underlying data is the source of truth.
+
+Below the visual: a Save button that fires the activity save and shows the standard "your responses are saved" confirmation.
+
+---
+
+**Save payload shape.**
+
+```
+{
+  activity: "allies_safety_net",
+  version: "2.0",
+  allies: [
+    { id: "foster", name: "Foster Parent", custom: false, support_types: ["practical", "emotional"] },
+    { id: "sibling", name: "Sibling", custom: false, support_types: ["emotional"] },
+    { id: "other1", name: "Aunt Lisa", custom: true, support_types: ["emotional", "social"] }
+  ],
+  none_for: { practical: false, emotional: false, social: true },
+  saved_at: "..."
+}
+```
+
+- `allies` is the **deduplicated** list — each tile ID (or custom name for `other1`/`other2`) appears once with the union of its support types.
+- `none_for.<type>` is `true` only when the kid actively tapped the "None of these" button for that type. If they just continued without selecting anything *and* without tapping None, it's `false` (meaningful distinction — captures whether the kid considered the type vs. skipped through it).
+- Empty `allies` array is valid — possible if all three types got "None of these."
+
+Update `src/lib/demoDataset.js` to produce the new payload shape for this activity. Synthetic distribution: ~70% of demo participants have 2–4 allies, ~20% have 5–7, ~10% have 0–1 with at least one "None of these" flag.
+
+Update the export pipeline columns to match the new shape — under the `safety_net_*` activity prefix that Draft 6 established:
+- `safety_net_ally_count` — total deduplicated ally count
+- `safety_net_practical_count`, `_emotional_count`, `_social_count`
+- `safety_net_none_practical`, `_none_emotional`, `_none_social` (0/1)
+- Per-tile selections may be too sparse to encode as columns — discuss with Jessica before going down that path; for now stick to counts + none-flags.
+
+---
+
+**Files to change / create:**
+- `src/activities/AlliesSafetyNet.jsx` — full rewrite per above.
+- `src/assets/allies/*.svg` — 15 new icon files (stripped of `data-om-id` attributes).
+- `src/lib/allyTiles.js` (new) — tile registry data structure.
+- `src/lib/activityVersions.js` — bump `allies_safety_net` to v2.0 (MAJOR). Prepend changelog entry. Set `updated` to today's date.
+- `src/lib/exportFlatten.js` — update activity payload columns for the new shape.
+- `src/lib/demoDataset.js` — generate synthetic data matching the new shape.
+
+**Tear-down note.** The existing Step 2 (Inspect), Step 3 (Strengthen), Step 4 (Review) code paths in the current `AlliesSafetyNet.jsx` are gone in this commit. Don't preserve them. Task #7 will rebuild Step 2 from scratch after the team's design discussion next week.
+
+**Version bump:** MAJOR. v1.x → v2.0. Per `CLAUDE.md` convention, bump in this same commit, prepend changelog entry to `activityVersions.js`.
+
+*End of 2026-05-11 Safety Net Step 1 draft.*
+
+-->
 
 <!--
 
