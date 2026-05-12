@@ -134,6 +134,21 @@ function pickN(rng, arr, n) {
 function intInRange(rng, min, max) {
   return Math.floor(min + rng() * (max - min + 1))
 }
+// Synthetic answer picker for AlliesSafetyNet v3 inspect flags.
+// `noisy=true` (≈20% of inspected allies) leans toward "yes" / "not_sure";
+// otherwise most answers are "no" reflecting healthy allies.
+function pickFlag(rng, noisy) {
+  if (noisy) {
+    const r = rng()
+    if (r < 0.35) return 'yes'
+    if (r < 0.60) return 'not_sure'
+    return 'no'
+  }
+  const r = rng()
+  if (r < 0.05) return 'yes'
+  if (r < 0.15) return 'not_sure'
+  return 'no'
+}
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v))
 }
@@ -345,11 +360,14 @@ function makeResponseValue(item, rng, profile, phase) {
         }
       }
       if (componentName === 'AlliesSafetyNet') {
-        // v2.0 (Draft 8 of the 2026-05-11 batch): payload reshaped to a
-        // deduplicated allies list with support_types arrays + per-type
-        // none_for flags. Synthetic distribution per brief: ~70% have
-        // 2–4 allies, ~20% have 5–7, ~10% have 0–1 with at least one
-        // "None of these" flag.
+        // v3.0 (Draft 9 of the 2026-05-11 batch): same build payload as
+        // v2.0 plus per-ally inspection state and an
+        // `inspection_completed` flag. Inspection distribution: ~80%
+        // inspect all allies, ~15% inspect partial, ~5% skip entirely.
+        // Of inspected, ~20% have at least one "yes" flag, ~10% remove
+        // at least one ally.
+        //
+        // v2.0 build-phase block (unchanged):
         const TILE_IDS = [
           'foster', 'bio', 'sibling', 'grandparent', 'otherfam',
           'counselor', 'teacher', 'coach', 'babysitter', 'neighbor',
@@ -389,11 +407,50 @@ function makeResponseValue(item, rng, profile, phase) {
           emotional: lowAllies && !covered.has('emotional') && rng() < 0.4,
           social: lowAllies && !covered.has('social') && rng() < 0.5,
         }
+
+        // ----- v3.0 inspection state -----
+        const inspectionBucket = rng()
+        // Per-participant inspection coverage:
+        //   <0.80 → inspect all
+        //   <0.95 → inspect a partial set
+        //   else  → skip entirely
+        let inspectFraction
+        if (inspectionBucket < 0.80) inspectFraction = 1
+        else if (inspectionBucket < 0.95) inspectFraction = 0.5 + rng() * 0.4 // 50–90%
+        else inspectFraction = 0
+
+        const inspectedAllies = allies.map((a) => {
+          const willInspect = rng() < inspectFraction
+          if (!willInspect) return a // unchanged
+          // Most inspected allies have clean "no" answers; ~20% have at
+          // least one "yes" on one of the 4 dimensions.
+          const noisy = rng() < 0.20
+          const flags = {
+            trouble: pickFlag(rng, noisy),
+            isolate: pickFlag(rng, noisy),
+            lies:    pickFlag(rng, noisy),
+            afraid:  pickFlag(rng, noisy),
+          }
+          // ~10% of inspected allies get removed; bias removal slightly
+          // higher when there are "yes" flags.
+          const hasYes = Object.values(flags).some((v) => v === 'yes')
+          const removeThreshold = hasYes ? 0.35 : 0.05
+          const removed = rng() < removeThreshold
+          return {
+            ...a,
+            inspected: true,
+            flags,
+            kept_in_net: !removed,
+          }
+        })
+        const inspection_completed = inspectedAllies.every((a) => a.inspected)
+
         return {
           activity: 'allies_safety_net',
-          version: '2.0',
-          allies,
+          version: '3.0',
+          allies: inspectedAllies,
           none_for,
+          inspection_completed,
           saved_at: new Date().toISOString(),
         }
       }

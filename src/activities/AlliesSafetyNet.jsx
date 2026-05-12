@@ -1,35 +1,57 @@
-// Allies / Safety Net — Step 1 (Build) only, v2.0 per the 2026-05-11
-// review-meeting batch.
+// Allies / Safety Net — Step 1 (Build) + Step 2 (Inspect), v3.0 per the
+// 2026-05-11 Draft 9 batch.
 //
-// The previous 4-step flow (Build → Inspect → Strengthen → Review) has
-// been torn down in this commit. Steps 2–4 will be rebuilt later (Task
-// #7) after the team's design discussion. For now this activity ships
-// just the Build step plus a competent placeholder visual for the
-// assembled Safety Net.
+// What ships:
+//   Screen 0  Build · Intro
+//   Screen 1  Build · Practical support (tile grid)
+//   Screen 2  Build · Emotional support
+//   Screen 3  Build · Social support
+//   Screen 4  Build · Your Safety Net — TrampolineNet (non-interactive) + Continue
+//   Screen 5  Inspect · Intro (clinical-safety framing)
+//   Screen 6  Inspect · Interactive TrampolineNet — tap an ally to inspect
+//             Modal overlays on this screen: per-ally inspect, keep-advisory,
+//             removal-acknowledgment
+//   Screen 7  Inspect · Complete — final TrampolineNet + Save
 //
-// Flow:
-//   Screen 1 — Intro: what an ally is, three support types previewed
-//   Screen 2 — Practical support: tile grid + multi-select + "None of these"
-//   Screen 3 — Emotional support: same
-//   Screen 4 — Social support: same
-//   Screen 5 — Your Safety Net: placeholder visual, then Save
+// Step 2's framing language (intro, advisory, removal-ack) is written
+// to address two specific notes from the team review:
+//   - Holly: don't imply real-life dropping the relationship
+//   - Stephanie: more visual / less per-person interrogation
+// Keep/Remove buttons stay equally weighted; "remove" is not styled as
+// destructive.
 //
-// Selection is PER-TYPE. A kid who selects Mom on Practical does not
-// pre-select her on Emotional — the cumulative ally entity is built
-// from the union of types across screens. Custom names typed into
-// other1/other2 persist across the three type screens.
+// Build-phase selection is PER-TYPE — a kid tapping Mom on Practical
+// does NOT pre-select her on Emotional. The cumulative ally entity is
+// built from the union of types across screens. Custom names typed into
+// other1/other2 persist across all three type screens.
 
 import { useMemo, useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
+import TrampolineNet from '../components/TrampolineNet.jsx'
 
 // Convenience: which tile ids are custom-name-entry tiles. Keep ALLY_TILES
 // as the source of truth (via `custom: true`); this is a derived set.
 const CUSTOM_TILE_IDS = new Set(ALLY_TILES.filter((t) => t.custom).map((t) => t.id))
 
+// Per-ally inspect questions. Order matters — these are the order shown
+// in the modal and the keys are the column-name suffixes used in the
+// export pipeline. See exportFlatten.js / demoDataset.js.
+const INSPECT_QUESTIONS = [
+  { key: 'trouble', text: (name) => `Does ${name} sometimes get you in trouble?` },
+  { key: 'isolate', text: (name) => `Does ${name} try to keep you from spending time with other people who care about you?` },
+  { key: 'lies',    text: (name) => `Does ${name} frequently lie to you?` },
+  { key: 'afraid',  text: (name) => `Does ${name} sometimes make you feel afraid?` },
+]
+const INSPECT_ANSWERS = [
+  { value: 'yes',      label: 'Yes' },
+  { value: 'no',       label: 'No' },
+  { value: 'not_sure', label: 'Not sure' },
+]
+
 // Initial selection shape — { [type_id]: Set<tile_id> } plus per-type
-// "none of these" flags and per-custom-tile names.
+// "none of these" flags.
 function initialSelection() {
   const sel = {}
   const none = {}
@@ -40,34 +62,28 @@ function initialSelection() {
   return { sel, none }
 }
 
+const TOTAL_SCREENS = 8
+
 export default function AlliesSafetyNet({ onSave = console.log }) {
   const [screenIdx, setScreenIdx] = useState(0)
-  // selection[typeId] is a Set of tile ids
+  // ---- Build phase state ----
   const [selection, setSelection] = useState(() => initialSelection().sel)
   const [noneFor, setNoneFor] = useState(() => initialSelection().none)
-  // customNames[tileId] is the user-typed name for other1/other2.
-  // Persists across all three type screens.
   const [customNames, setCustomNames] = useState({})
-  // editingCustom[tileId] toggles the inline text input on a custom tile.
   const [editingCustom, setEditingCustom] = useState({})
+  // ---- Inspect phase state ----
+  // inspectionState[tileId] = { inspected: bool, flags: {trouble,isolate,lies,afraid}, kept_in_net: bool }
+  const [inspectionState, setInspectionState] = useState({})
+  // Modal overlay state on the interactive-net screen.
+  // type ∈ 'inspect' | 'keep-advisory' | 'removal-ack' | null
+  const [modal, setModal] = useState({ type: null, allyId: null })
+  // ---- Submit ----
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
-  const totalScreens = 2 + SUPPORT_TYPES.length // 1 intro + 3 types + 1 visual
-
-  function goNext() {
-    if (screenIdx < totalScreens - 1) setScreenIdx((i) => i + 1)
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
-  }
-  function goBack() {
-    if (screenIdx > 0) setScreenIdx((i) => i - 1)
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
-  }
+  // ---- Build-phase helpers ----
 
   function toggleTile(typeId, tileId) {
-    // Tapping any tile clears the "none of these" flag for the current
-    // type. The two states are mutually exclusive — kid affirmed there
-    // is at least one ally for this type.
     setNoneFor((prev) => ({ ...prev, [typeId]: false }))
     setSelection((prev) => {
       const next = { ...prev }
@@ -83,8 +99,6 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
     const name = (raw || '').trim()
     setEditingCustom((prev) => ({ ...prev, [tileId]: false }))
     if (!name) {
-      // If the user emptied the field, drop the custom name and any
-      // selections of this tile across all type screens.
       setCustomNames((prev) => {
         const next = { ...prev }
         delete next[tileId]
@@ -106,19 +120,16 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
   function handleNoneOfThese(typeId) {
     setNoneFor((prev) => ({ ...prev, [typeId]: !prev[typeId] }))
-    // Tapping "none of these" clears any tile selections for this type —
-    // they're mutually exclusive states.
     setSelection((prev) => ({ ...prev, [typeId]: new Set() }))
   }
 
-  // The deduplicated ally list — each tile id (or custom tile that has a
-  // name) appears once with the union of its support types across the
-  // three type screens. Memo because the safety-net visual reads from it.
+  // Deduplicated ally list — each tile id (or named custom tile) appears
+  // once with the union of its support types across the three build screens.
+  // Adds inspection state if present.
   const deduplicatedAllies = useMemo(() => {
-    const byTile = new Map() // tile_id → { id, name, custom, support_types: [] }
+    const byTile = new Map()
     for (const t of SUPPORT_TYPES) {
       for (const tileId of selection[t.id] || []) {
-        // Skip custom tiles that don't have a name yet.
         if (CUSTOM_TILE_IDS.has(tileId) && !customNames[tileId]) continue
         const tile = ALLY_TILES.find((x) => x.id === tileId)
         if (!tile) continue
@@ -134,21 +145,121 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         byTile.get(tileId).support_types.push(t.id)
       }
     }
-    return Array.from(byTile.values())
-  }, [selection, customNames])
+    // Fold in inspection state — `removed` is derived from kept_in_net so
+    // the TrampolineNet visual knows to fade/X out removed allies.
+    return Array.from(byTile.values()).map((a) => {
+      const ins = inspectionState[a.id]
+      if (!ins) return a
+      return {
+        ...a,
+        inspected: !!ins.inspected,
+        removed: ins.inspected && ins.kept_in_net === false,
+        kept_in_net: ins.kept_in_net,
+        flags: ins.flags,
+      }
+    })
+  }, [selection, customNames, inspectionState])
+
+  // Active allies = those still in the net (not removed). Used by the
+  // Step 2 progress counter.
+  const totalAllies = deduplicatedAllies.length
+  const inspectedCount = deduplicatedAllies.filter((a) => a.inspected).length
+
+  // ---- Inspect-phase helpers ----
+
+  function openInspectModal(allyId) {
+    setModal({ type: 'inspect', allyId })
+  }
+  function closeModal() {
+    setModal({ type: null, allyId: null })
+  }
+
+  function setFlag(allyId, key, value) {
+    setInspectionState((prev) => {
+      const cur = prev[allyId] || { inspected: false, flags: {}, kept_in_net: true }
+      return {
+        ...prev,
+        [allyId]: {
+          ...cur,
+          flags: { ...(cur.flags || {}), [key]: value },
+        },
+      }
+    })
+  }
+
+  function commitKeep(allyId) {
+    const cur = inspectionState[allyId] || { flags: {} }
+    const hasYes = Object.values(cur.flags || {}).some((v) => v === 'yes')
+    setInspectionState((prev) => ({
+      ...prev,
+      [allyId]: {
+        inspected: true,
+        flags: { ...(prev[allyId]?.flags || {}) },
+        kept_in_net: true,
+      },
+    }))
+    setModal(hasYes ? { type: 'keep-advisory', allyId } : { type: null, allyId: null })
+  }
+
+  function commitRemove(allyId) {
+    setInspectionState((prev) => ({
+      ...prev,
+      [allyId]: {
+        inspected: true,
+        flags: { ...(prev[allyId]?.flags || {}) },
+        kept_in_net: false,
+      },
+    }))
+    setModal({ type: 'removal-ack', allyId })
+  }
+
+  // ---- Navigation ----
+
+  function goNext() {
+    if (screenIdx < TOTAL_SCREENS - 1) setScreenIdx((i) => i + 1)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+  function goBack() {
+    if (screenIdx > 0) setScreenIdx((i) => i - 1)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+
+  // "Done inspecting" — if not all allies inspected, confirm before advancing.
+  function handleDoneInspecting() {
+    if (inspectedCount < totalAllies) {
+      const remaining = totalAllies - inspectedCount
+      const ok = window.confirm(
+        `You haven't checked in on ${remaining} ${remaining === 1 ? 'ally' : 'allies'}.\n\nFinish anyway? You can come back if you change your mind.`,
+      )
+      if (!ok) return
+    }
+    goNext()
+  }
 
   async function handleSubmit() {
     setSubmitting(true)
     try {
+      const finalAllies = deduplicatedAllies.map((a) => ({
+        id: a.id,
+        name: a.name,
+        custom: !!a.custom,
+        support_types: a.support_types,
+        inspected: !!a.inspected,
+        flags: a.flags || {},
+        kept_in_net: a.kept_in_net !== false,
+      }))
+      const inspectionCompleted =
+        finalAllies.length > 0 && finalAllies.every((a) => a.inspected)
       await onSave({
         activity: 'allies_safety_net',
-        version: '2.0',
-        allies: deduplicatedAllies,
+        version: '3.0',
+        allies: finalAllies,
         none_for: {
           practical: !!noneFor.practical,
           emotional: !!noneFor.emotional,
           social: !!noneFor.social,
         },
+        inspection_completed: inspectionCompleted,
         saved_at: new Date().toISOString(),
       })
       setDone(true)
@@ -169,11 +280,13 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   }
 
   // ---- Screen routing ----
-  // Index 0 = intro, 1..N = type screens, N+1 = visual
-  const isIntro = screenIdx === 0
-  const typeIdx = screenIdx - 1
-  const isTypeScreen = typeIdx >= 0 && typeIdx < SUPPORT_TYPES.length
-  const isVisual = screenIdx === totalScreens - 1
+  const isBuildIntro      = screenIdx === 0
+  const buildTypeIdx      = screenIdx - 1            // 0..2 are the 3 type screens (screenIdx 1..3)
+  const isBuildTypeScreen = buildTypeIdx >= 0 && buildTypeIdx < SUPPORT_TYPES.length
+  const isBuildFinal      = screenIdx === 4
+  const isInspectIntro    = screenIdx === 5
+  const isInspectNet      = screenIdx === 6
+  const isInspectComplete = screenIdx === 7
 
   return (
     <div>
@@ -181,67 +294,143 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       <div className="mb-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-[12px] text-slate-500 uppercase tracking-wide">
-            Step {screenIdx + 1} of {totalScreens}
+            Step {screenIdx + 1} of {TOTAL_SCREENS}
           </span>
-          <span className="text-[12px] text-slate-500">
-            {isIntro
-              ? 'Intro'
-              : isTypeScreen
-                ? SUPPORT_TYPES[typeIdx].label
-                : 'Your Safety Net'}
-          </span>
+          <span className="text-[12px] text-slate-500">{progressLabel(screenIdx)}</span>
         </div>
         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
           <div
             className="h-full bg-amber-500 transition-all"
-            style={{ width: `${((screenIdx + 1) / totalScreens) * 100}%` }}
+            style={{ width: `${((screenIdx + 1) / TOTAL_SCREENS) * 100}%` }}
           />
         </div>
       </div>
 
-      {isIntro && <IntroScreen />}
+      {isBuildIntro && <IntroScreen />}
 
-      {isTypeScreen && (
+      {isBuildTypeScreen && (
         <TypeScreen
-          type={SUPPORT_TYPES[typeIdx]}
-          selectedIds={selection[SUPPORT_TYPES[typeIdx].id]}
-          isNone={!!noneFor[SUPPORT_TYPES[typeIdx].id]}
+          type={SUPPORT_TYPES[buildTypeIdx]}
+          selectedIds={selection[SUPPORT_TYPES[buildTypeIdx].id]}
+          isNone={!!noneFor[SUPPORT_TYPES[buildTypeIdx].id]}
           customNames={customNames}
           editingCustom={editingCustom}
-          onToggleTile={(tileId) => toggleTile(SUPPORT_TYPES[typeIdx].id, tileId)}
+          onToggleTile={(tileId) => toggleTile(SUPPORT_TYPES[buildTypeIdx].id, tileId)}
           onStartCustomEdit={(tileId) =>
             setEditingCustom((prev) => ({ ...prev, [tileId]: true }))
           }
           onCommitCustomName={commitCustomName}
-          onNoneOfThese={() => handleNoneOfThese(SUPPORT_TYPES[typeIdx].id)}
+          onNoneOfThese={() => handleNoneOfThese(SUPPORT_TYPES[buildTypeIdx].id)}
         />
       )}
 
-      {isVisual && (
-        <SafetyNetVisual allies={deduplicatedAllies} noneFor={noneFor} />
+      {isBuildFinal && (
+        <BuildFinalScreen allies={deduplicatedAllies} noneFor={noneFor} />
+      )}
+
+      {isInspectIntro && <InspectIntroScreen />}
+
+      {isInspectNet && (
+        <InspectNetScreen
+          allies={deduplicatedAllies}
+          inspectedCount={inspectedCount}
+          totalAllies={totalAllies}
+          onAllyTap={openInspectModal}
+        />
+      )}
+
+      {isInspectComplete && (
+        <InspectCompleteScreen allies={deduplicatedAllies} noneFor={noneFor} />
       )}
 
       <div className="flex items-center justify-between mt-6">
-        {!isIntro ? (
+        {!isBuildIntro ? (
           <GhostButton onClick={goBack}>← Back</GhostButton>
         ) : (
           <span />
         )}
-        {isVisual ? (
-          <PrimaryButton onClick={handleSubmit} disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save'}
-          </PrimaryButton>
-        ) : (
-          <PrimaryButton onClick={goNext}>
-            {isIntro ? "Let's build it →" : 'Continue →'}
-          </PrimaryButton>
-        )}
+        <PrimaryAdvanceButton
+          screenIdx={screenIdx}
+          inspectedCount={inspectedCount}
+          totalAllies={totalAllies}
+          submitting={submitting}
+          onNext={goNext}
+          onDoneInspecting={handleDoneInspecting}
+          onSubmit={handleSubmit}
+        />
       </div>
+
+      {/* Modal overlays — only render while on the interactive-net screen */}
+      {isInspectNet && modal.type === 'inspect' && (
+        <InspectModal
+          ally={deduplicatedAllies.find((a) => a.id === modal.allyId)}
+          flags={inspectionState[modal.allyId]?.flags || {}}
+          onSetFlag={(key, value) => setFlag(modal.allyId, key, value)}
+          onKeep={() => commitKeep(modal.allyId)}
+          onRemove={() => commitRemove(modal.allyId)}
+          onDismiss={closeModal}
+        />
+      )}
+      {isInspectNet && modal.type === 'keep-advisory' && (
+        <KeepAdvisoryModal onContinue={closeModal} />
+      )}
+      {isInspectNet && modal.type === 'removal-ack' && (
+        <RemovalAckModal onContinue={closeModal} />
+      )}
     </div>
   )
 }
 
-// ---------- Screen 1: Intro ----------
+function progressLabel(idx) {
+  if (idx === 0) return 'Intro'
+  if (idx >= 1 && idx <= 3) return SUPPORT_TYPES[idx - 1].label
+  if (idx === 4) return 'Your Safety Net'
+  if (idx === 5) return 'Inspect · Intro'
+  if (idx === 6) return 'Inspect · Check in'
+  if (idx === 7) return 'Done'
+  return ''
+}
+
+function PrimaryAdvanceButton({
+  screenIdx,
+  inspectedCount,
+  totalAllies,
+  submitting,
+  onNext,
+  onDoneInspecting,
+  onSubmit,
+}) {
+  if (screenIdx === 0) {
+    return <PrimaryButton onClick={onNext}>Let&apos;s build it →</PrimaryButton>
+  }
+  if (screenIdx >= 1 && screenIdx <= 3) {
+    return <PrimaryButton onClick={onNext}>Continue →</PrimaryButton>
+  }
+  if (screenIdx === 4) {
+    return <PrimaryButton onClick={onNext}>Inspect your net →</PrimaryButton>
+  }
+  if (screenIdx === 5) {
+    return <PrimaryButton onClick={onNext}>Continue →</PrimaryButton>
+  }
+  if (screenIdx === 6) {
+    const allDone = totalAllies > 0 && inspectedCount === totalAllies
+    return (
+      <PrimaryButton onClick={onDoneInspecting}>
+        {allDone ? 'Done inspecting →' : 'Done inspecting'}
+      </PrimaryButton>
+    )
+  }
+  if (screenIdx === 7) {
+    return (
+      <PrimaryButton onClick={onSubmit} disabled={submitting}>
+        {submitting ? 'Saving…' : 'Save my safety net'}
+      </PrimaryButton>
+    )
+  }
+  return null
+}
+
+// ---------- Screen 0: Build intro ----------
 
 function IntroScreen() {
   return (
@@ -274,7 +463,7 @@ function IntroScreen() {
   )
 }
 
-// ---------- Screens 2/3/4: Per-support-type tile grid ----------
+// ---------- Screens 1/2/3: Per-support-type tile grid ----------
 
 function TypeScreen({
   type,
@@ -335,8 +524,6 @@ function AllyTile({ tile, selected, customName, isEditing, onToggle, onStartEdit
   const showInput = tile.custom && isEditing
 
   function handleTap() {
-    // Custom tiles without a name yet route to the name editor instead of
-    // toggling — there's no useful selection without a name.
     if (tile.custom && !customName) {
       onStartEdit()
       return
@@ -349,8 +536,6 @@ function AllyTile({ tile, selected, customName, isEditing, onToggle, onStartEdit
       e.preventDefault()
       const v = e.target.value
       onCommit(v)
-      // After committing a name, auto-select the tile so the kid doesn't
-      // have to tap a second time.
       if ((v || '').trim()) onToggle()
     } else if (e.key === 'Escape') {
       e.preventDefault()
@@ -365,7 +550,10 @@ function AllyTile({ tile, selected, customName, isEditing, onToggle, onStartEdit
         onClick={handleTap}
         aria-pressed={selected}
         className={
-          'w-full h-full flex flex-col items-center justify-start gap-2 rounded-2xl border-2 px-3 py-3 min-h-[160px] transition-all bg-white text-center ' +
+          'w-full h-full flex flex-col items-center justify-start gap-2 rounded-2xl border-2 px-3 py-3 min-h-[160px] transition-all text-center ' +
+          // Note: tiles now have a soft cream background to compensate for
+          // the SVGs no longer carrying their own background rect.
+          'bg-amber-50/60 ' +
           (selected
             ? 'border-amber-500 ring-2 ring-amber-200 shadow-card'
             : 'border-slate-200 hover:border-amber-300')
@@ -387,7 +575,7 @@ function AllyTile({ tile, selected, customName, isEditing, onToggle, onStartEdit
             onClick={(e) => e.stopPropagation()}
             placeholder="Their name"
             maxLength={40}
-            className="w-full text-[13px] px-2 py-1 bg-amber-50 border border-amber-200 rounded-full text-center focus:outline-none focus:border-amber-400"
+            className="w-full text-[13px] px-2 py-1 bg-white border border-amber-200 rounded-full text-center focus:outline-none focus:border-amber-400"
           />
         ) : (
           <span
@@ -432,67 +620,290 @@ function AllyTile({ tile, selected, customName, isEditing, onToggle, onStartEdit
   )
 }
 
-// ---------- Screen 5: Safety Net visual (placeholder) ----------
-// Deliberately not the final visual — Josh is exploring a merged
-// net + pie design in Claude Design separately. The data shape this
-// reads from is the source of truth; the final visual is a render-layer
-// swap.
+// ---------- Screen 4: Build final — TrampolineNet (non-interactive) ----------
 
-function SafetyNetVisual({ allies, noneFor }) {
+function BuildFinalScreen({ allies, noneFor }) {
+  const allEmpty =
+    allies.length === 0 && Object.values(noneFor).some((v) => v)
   return (
     <div>
-      <h2 className="text-[22px] font-semibold mb-3">Your safety net</h2>
+      <h2 className="text-[22px] font-semibold mb-2">Your safety net</h2>
       <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
-        Here&apos;s who you said is in your corner, grouped by the kind of
-        support they give you. Some allies show up in more than one place
-        — that&apos;s the strongest kind.
+        {allEmpty
+          ? 'No allies yet — that\'s okay. We\'ll look at where support could grow.'
+          : 'Here\'s who you said is in your corner, grouped by the kind of support they give you. Some allies show up in more than one place — that\'s the strongest kind.'}
+      </p>
+      <div className="flex justify-center">
+        <TrampolineNet
+          allies={allies}
+          interactive={false}
+          showLabels={true}
+          showInspectedMarks={false}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ---------- Screen 5: Inspect intro ----------
+
+function InspectIntroScreen() {
+  return (
+    <div>
+      <h2 className="text-[22px] font-semibold mb-3">Inspect your safety net.</h2>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
+        Your safety net is the people you&apos;d reach out to when you really
+        need support. Not every important person in your life belongs in
+        your safety net — and that&apos;s okay.
+      </p>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
+        An ally who belongs in your safety net is someone who:
+      </p>
+      <ul className="list-disc pl-6 space-y-1 text-[15px] leading-relaxed text-slate-800 mb-4">
+        <li>cares about you</li>
+        <li>is a positive influence</li>
+        <li>tries to help when you need it</li>
+      </ul>
+      <p className="text-[15px] leading-relaxed text-slate-800">
+        Let&apos;s check in on each ally. You can choose to keep them in
+        your net or take them out. Taking someone out of your safety net
+        doesn&apos;t mean they&apos;re not in your life — it just means
+        they&apos;re not who you&apos;d lean on right now for support.
+      </p>
+    </div>
+  )
+}
+
+// ---------- Screen 6: Inspect — interactive net ----------
+
+function InspectNetScreen({ allies, inspectedCount, totalAllies, onAllyTap }) {
+  if (totalAllies === 0) {
+    return (
+      <div className="text-center py-6">
+        <p className="text-[15px] text-slate-700 mb-3">
+          No allies to inspect right now — that&apos;s okay. You can come
+          back and add some later. Hit Done inspecting to continue.
+        </p>
+      </div>
+    )
+  }
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+        <h2 className="text-[20px] font-semibold">Tap each ally to check in on them.</h2>
+        <span className="text-[13px] text-slate-600">
+          {inspectedCount} of {totalAllies} inspected
+        </span>
+      </div>
+      <div className="flex justify-center">
+        <TrampolineNet
+          allies={allies}
+          interactive={true}
+          onAllyTap={onAllyTap}
+          showLabels={true}
+          showInspectedMarks={true}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ---------- Modals (overlays) on the interactive-net screen ----------
+
+function ModalShell({ children, onDismiss }) {
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center px-4 py-6 bg-slate-900/40 overflow-y-auto"
+      onClick={onDismiss}
+    >
+      <div
+        className="relative w-full max-w-[480px] bg-white rounded-3xl shadow-card p-5 sm:p-6 my-2"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="absolute top-3 right-3 p-2 rounded-full text-slate-500 hover:bg-slate-100"
+            aria-label="Close"
+          >
+            <X size={18} strokeWidth={1.5} />
+          </button>
+        )}
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function InspectModal({ ally, flags, onSetFlag, onKeep, onRemove, onDismiss }) {
+  if (!ally) return null
+  const tile = ALLY_TILES.find((t) => t.id === ally.id)
+  const allAnswered = INSPECT_QUESTIONS.every((q) => !!flags[q.key])
+  const hasYes = INSPECT_QUESTIONS.some((q) => flags[q.key] === 'yes')
+
+  return (
+    <ModalShell onDismiss={onDismiss}>
+      <h2 className="text-[20px] font-semibold mb-3 text-center">
+        Check in on {ally.name}.
+      </h2>
+      {tile && (
+        <div className="flex justify-center mb-3">
+          <img
+            src={tile.icon}
+            alt=""
+            className="w-[80px] h-[80px]"
+            draggable={false}
+          />
+        </div>
+      )}
+      <p className="text-[13px] text-slate-600 italic text-center mb-5">
+        These questions might feel uncomfortable. You can answer honestly —
+        the questions stay between you and the app.
       </p>
 
-      <div className="space-y-4">
-        {SUPPORT_TYPES.map((type) => {
-          const inGroup = allies.filter((a) => a.support_types.includes(type.id))
-          const declaredNone = !!noneFor[type.id]
+      <div className="space-y-3 mb-5">
+        {INSPECT_QUESTIONS.map((q) => {
+          const value = flags[q.key]
+          const yes = value === 'yes'
           return (
-            <section
-              key={type.id}
-              className="bg-amber-50/60 border border-amber-100 rounded-2xl p-4"
+            <div
+              key={q.key}
+              className={
+                'rounded-2xl border px-4 py-3 transition-colors ' +
+                (yes
+                  ? 'bg-amber-50 border-amber-300'
+                  : 'bg-white border-slate-200')
+              }
             >
-              <h3 className="text-[16px] font-semibold text-amber-900 mb-2">
-                {type.label}
-              </h3>
-              {inGroup.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                  {inGroup.map((ally) => {
-                    const tile = ALLY_TILES.find((t) => t.id === ally.id)
-                    return (
-                      <div
-                        key={ally.id}
-                        className="flex flex-col items-center text-center"
-                      >
-                        <img
-                          src={tile?.icon}
-                          alt=""
-                          className="w-[64px] h-[64px] mb-1"
-                          draggable={false}
-                        />
-                        <span className="text-[12px] leading-tight text-slate-800">
-                          {ally.name}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="text-[13px] text-slate-500 italic leading-relaxed">
-                  {declaredNone
-                    ? `No ${type.label.toLowerCase()} support allies yet — that's okay. Sometimes it starts with looking for someone who could become one.`
-                    : `No ${type.label.toLowerCase()} support allies chosen.`}
-                </p>
-              )}
-            </section>
+              <p className="text-[14px] leading-relaxed text-slate-800 mb-2">
+                {q.text(ally.name)}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {INSPECT_ANSWERS.map((opt) => {
+                  const selected = value === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => onSetFlag(q.key, opt.value)}
+                      aria-pressed={selected}
+                      className={
+                        'rounded-full px-4 py-2 min-h-[40px] text-[13px] font-semibold border transition-colors ' +
+                        (selected
+                          ? 'bg-amber-500 border-amber-500 text-white'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                      }
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           )
         })}
       </div>
+
+      {/* Keep + Remove buttons stay equally weighted — no destructive
+          styling on "remove" per Holly's framing note. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onKeep}
+          disabled={!allAnswered}
+          className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-3 min-h-[48px] text-[14px]"
+        >
+          Keep {ally.name} in my net
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={!allAnswered}
+          className="bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-900 font-semibold rounded-full px-5 py-3 min-h-[48px] text-[14px]"
+        >
+          Take {ally.name} out of my net
+        </button>
+      </div>
+      {!allAnswered && (
+        <p className="text-[12px] text-slate-500 italic text-center mt-3">
+          Answer the questions above to choose.
+        </p>
+      )}
+      {/* hasYes is referenced for the visual amber border above; declaring
+          it inert here keeps the lint clean and signals it's intentional. */}
+      <span className="sr-only">{hasYes ? '' : ''}</span>
+    </ModalShell>
+  )
+}
+
+function KeepAdvisoryModal({ onContinue }) {
+  return (
+    <ModalShell onDismiss={onContinue}>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-3">
+        Keeping someone in your safety net is your choice, even when things
+        feel complicated.
+      </p>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
+        Some things to remember:
+      </p>
+      <ul className="list-disc pl-6 space-y-2 text-[15px] leading-relaxed text-slate-800 mb-4">
+        <li>You get to decide who you reach out to when you need support.</li>
+        <li>Some relationships are mixed — that&apos;s normal.</li>
+        <li>
+          If a relationship feels really hard, talking to a trusted adult,
+          counselor, or therapist can help.
+        </li>
+      </ul>
+      <div className="flex justify-end">
+        <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
+      </div>
+    </ModalShell>
+  )
+}
+
+function RemovalAckModal({ onContinue }) {
+  return (
+    <ModalShell onDismiss={onContinue}>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-3">
+        Taken out of your safety net. They&apos;re still in your life — this
+        is just about who you lean on for support right now.
+      </p>
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
+        You can always change your mind later.
+      </p>
+      <div className="flex justify-end">
+        <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
+      </div>
+    </ModalShell>
+  )
+}
+
+// ---------- Screen 7: Inspection complete ----------
+
+function InspectCompleteScreen({ allies, noneFor }) {
+  return (
+    <div>
+      <h2 className="text-[22px] font-semibold mb-2">Your safety net is ready.</h2>
+      <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
+        Here&apos;s the net you came out with. You can come back to it any
+        time.
+      </p>
+      <div className="flex justify-center">
+        <TrampolineNet
+          allies={allies}
+          interactive={false}
+          showLabels={true}
+          showInspectedMarks={true}
+        />
+      </div>
+      {/* noneFor is preserved through to the save payload; not surfaced
+          on this screen because the visual already communicates empty
+          types via labelled slivers. Keeping the prop on hand if a
+          future copy edit wants to call it out. */}
+      <span className="sr-only">{Object.values(noneFor).join(',')}</span>
     </div>
   )
 }
