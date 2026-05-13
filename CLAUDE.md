@@ -69,3 +69,37 @@ version in the same commit.** Format is `vMAJOR.MINOR`:
 Always update `updated` to today's date and **prepend** a one-line note
 to `changelog` (older notes stay so the history is readable without git
 archaeology).
+
+## Supabase migrations — explicit Data API grants
+
+Starting **October 30, 2026**, Supabase stops auto-granting access to
+the Data API roles (`anon`, `authenticated`, `service_role`) on tables
+created in `public`. Existing tables keep their current grants, but
+**any new table** created after that cutover needs explicit `GRANT`
+statements or supabase-js calls will return `42501`.
+
+When using Supabase MCP `apply_migration` to create a new public-schema
+table that the app will read or write via supabase-js, include the
+grant block alongside the RLS policy. Standard pattern:
+
+```sql
+CREATE TABLE public.your_table (...);
+
+-- Data API roles must be explicitly granted (Supabase change effective
+-- Oct 30, 2026 — see INFRASTRUCTURE.md change log).
+GRANT SELECT                          ON public.your_table TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE  ON public.your_table TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE  ON public.your_table TO service_role;
+
+ALTER TABLE public.your_table ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY ...
+  ON public.your_table
+  FOR ...
+  USING (...);
+```
+
+Tune the verbs per table — a write-only edge-function intake table
+might only grant `INSERT` to `anon` and full CRUD to `service_role`.
+RLS does the actual access gating; the grants just make the table
+visible to the Data API.

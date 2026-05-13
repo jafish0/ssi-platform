@@ -81,6 +81,30 @@ These all live on the parent domain and benefit every subdomain automatically. N
 - **Invite user template:** Customized 2026-05-06 with CTAC navy/teal branding. Live source lives in the Supabase dashboard (templates are dashboard-only — Supabase MCP cannot edit them). Source archived at [`docs/supabase_invite_email_template.html`](docs/supabase_invite_email_template.html) for version control.
 - **Other templates** (recovery, magic link, email change, reauthentication): currently default Supabase. Customize using the same Outlook-safe pattern when those flows are added.
 
+### Data API grants — Oct 30, 2026 deadline
+
+Supabase is changing the default for `public` schema tables:
+
+- **May 30, 2026** — new projects no longer auto-grant Data API access to `anon` / `authenticated` / `service_role`. (Doesn't affect us — our project predates this.)
+- **October 30, 2026** — same change enforced on existing projects. Tables created in `public` after that date will need **explicit** `GRANT` statements or supabase-js / PostgREST / GraphQL calls will fail with a `42501` error.
+
+**Existing tables keep their current grants.** Audited 2026-05-13 via `information_schema.role_table_grants`: all 10 public tables (`access_codes`, `feedback`, `intervention_versions`, `interventions`, `items`, `responses`, `scheduled_messages`, `sections`, `sessions`, `user_roles`) have full SELECT/INSERT/UPDATE/DELETE grants on all three Data API roles. No retroactive action needed.
+
+**Convention for new migrations** (also documented in `CLAUDE.md`):
+
+```sql
+CREATE TABLE public.your_table (...);
+
+GRANT SELECT                          ON public.your_table TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE  ON public.your_table TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE  ON public.your_table TO service_role;
+
+ALTER TABLE public.your_table ENABLE ROW LEVEL SECURITY;
+CREATE POLICY ...
+```
+
+Tune the verbs per table (write-only intake tables might only `INSERT` to `anon`, for example). RLS still does the actual access gating — grants just make tables visible to the Data API.
+
 ## Resend
 
 - **Org:** `uky`
@@ -215,6 +239,7 @@ Manage at: Supabase dashboard → Project Settings → Edge Functions → Secret
 
 ## Change log
 
+- **2026-05-13** — Documented Supabase's upcoming Data API grant change (Oct 30, 2026 cutover for existing projects: new public-schema tables will need explicit `GRANT` statements or supabase-js calls fail with `42501`). Audited existing project — all 10 public tables already have the full SELECT/INSERT/UPDATE/DELETE grants on `anon` / `authenticated` / `service_role`, so nothing in the live app is at risk. Added a "Data API grants" section to this doc (under Supabase) with the new migration pattern; added a parallel section to `CLAUDE.md` so future Claude Code sessions include the grant block in `apply_migration` calls by default. No code or migration changes — convention update only.
 - **2026-05-11** — SPSS syntax (`.sps`) generator added at `src/lib/spssSyntax.js`. Reads the same column registry that `exportFlatten.planWideColumns()` produces, so the CSV and the `.sps` always stay in sync. Emits a complete syntax file that — when opened in SPSS — imports the participant CSV and applies VARIABLE LABELS, VALUE LABELS (for known psychometric scales), VARIABLE LEVEL (ordinal/scale/nominal grouping), FORMATS, and a final `SAVE OUTFILE` to `.sav`. Variable names are validated against SPSS rules (64-char max, must start with a letter, no SPSS reserved words like `ALL`/`AND`/`BY`/etc.) — the generator throws with a clear error rather than producing a malformed file. `/demo` Data export now offers three downloads: Wide CSV, `.sps` syntax, Codebook CSV. Approach matches REDCap and KoboToolbox's primary SPSS export. Native `.sav` is parked as a Phase B follow-up if Jessica finds the syntax-run friction.
 - **2026-05-11** — Export column-naming refactor per Jessica's 2026-05-11 brief. Psychometric scales now follow `<timepoint>_<scale_abbrev>_<item#>` (e.g. `pre_bhs_1`, `post_ascs_3`) instead of the prior `<scale>_<timepoint>_<item>` shape (`hopelessness_pre_bhs1`). Score columns are `<timepoint>_<scale_abbrev>_score`. Scale abbreviations are mapped in `src/lib/exportFlatten.js` (`SCALE_ABBREVIATIONS`): `bhs`, `ascs`, `ucla`, `nb`, `bpb`, `bw`, `pe`, `pa`. The `appraisals_*` columns from the current snapshot — origin unclear, not part of the locked pretest doc — get the abbreviation `app` for predictability with a code comment flagging "confirm with Jessica/Stephanie." Custom-activity payload columns now use short prefixes (`unstuck_*`, `safety_net_*`, `sort_*`, `poem_*`, `letter_*`, `reflect_*`) via `ACTIVITY_PREFIXES`. GettingUnstuck v2 (commit `7b7046e`) emits per-thought columns (`unstuck_freq_<st_id>`, `unstuck_belief_<st_id>`, `unstuck_selected_<st_id>`, `unstuck_strategy_<st_id>`, `unstuck_response_<st_id>`) covering all 8 stuck thoughts. The `n_fight` count was renamed to `n_challenge` matching the v2 strategy rename. WhoIAmPoem v2 emits 8 keyed-field columns; LetterBuilder v2 emits a single `letter_text` column. /demo's Data export section now shows only the Wide/SPSS and Codebook buttons — Summary and Long remain on `/admin/data-export`. `src/lib/demoDataset.js` was updated to produce the new save shapes for GettingUnstuck / WhoIAmPoem / LetterBuilder so the synthetic dataset stays consistent with the export pipeline.
 - **2026-05-11** — Auth bootstrap race fixed (the recurring "have to clear site data to log in" bug). Previous fix (commit `72e5017`, 2026-05-04) added a 5s `getSession()` timeout but didn't address the underlying race: `AuthContext` was calling both `getSession()` AND registering `onAuthStateChange` in the same tick, and supabase-js fires `INITIAL_SESSION` synchronously on subscription — so two parallel paths both called `fetchRole + setLoading(false)`, with non-deterministic order occasionally wedging the page. Rewritten to use **only** `onAuthStateChange` as the source of truth (the supabase-js recommended pattern). Added a 5s watchdog that clears `sb-*-auth-token` localStorage keys by hand if no event ever arrives, plus an in-app "Reset session & sign in" button on `ProtectedRoute`'s loading screen after 6s so users never need DevTools to recover. Commit `4e60c77`.
