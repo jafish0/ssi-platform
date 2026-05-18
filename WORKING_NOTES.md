@@ -14,6 +14,9 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`4d5ec6a` · 2026-05-13** — Draft 16: Posttest + FollowUp paginated sandbox activities built from the locked Final Measures docs. New `src/components/survey/SurveyItems.jsx` extracts the shared item renderers (LikertItem / SliderItem / NumberInput / RadioGroup / CheckboxGroup / ScaleScreen / ProgressStrip) so all three timepoint surveys render visually identically; Pretest left as-is for now to avoid churn. **Posttest.jsx (v1.0, 18 items, 9 screens):** BHS / ASCS / NB / Belonging Worries (with skip-Q2-on-Q1=0) / Perceived Helpfulness (past-tense pe_1) / Program Feedback Acceptability (NEW: 3 Likert + 2 open-response, optional, 2000-char cap). Save flat-keyed `post_*`. **FollowUp.jsx (v1.0, 30 items, 11 screens):** BHS / ASCS / UCLA / NB / BPB / **Appraisals (imported from `src/lib/appraisals.js`)** so survey items match the Getting Unstuck v5.0 intervention exactly / Belonging Worries / Permanency (NEW: radio + Other-text reveal) / Disruption Worry (NEW: 0-4 Likert). Save flat-keyed `fu_*`. Wiring: both registered in `TEST_REGISTRY` under `'Ready for Roots test'` category; activityVersions entries at v1.0; DemoPage Tests intro updated; `program_feedback: 'pf'` added to `SCALE_ABBREVIATIONS`. demoDataset NOT extended — the synthetic 52-participant dataset walks the snapshot's item structure, not these sandbox-only activities; when these scales make it into a real snapshot, demoDataset's existing logic picks them up automatically.
+- **`27e4d52` · 2026-05-13** — Draft 15: Getting Unstuck v5.0 — structural rebuild. 8 RSD-specific stuck thoughts → 6 locked Appraisal items shared with the FollowUp Survey (new `src/lib/appraisals.js` single-source-of-truth). Dropped "how often" rating dimension; only "how true" remains on a 0-5 scale with Not At All / Somewhat / Definitely True anchors. Pick eligibility threshold lowered from ≥3 to ≥2 (Stephanie: kids who rated above 1 weren't being pulled forward). New "Other thought" screen between Rate and Pick — Yes/No, optional free text + same 0-5 rating, eligible for Pick if rated ≥2. Fight → Challenge naming **finalized after three flips** (Josh's 2026-05-18 call is final): button "Challenge it", data key `strategy: "challenge"`, response field renamed to `response`. Jessica's 2026-05-18 copy edit applied ("those questions?"). Save payload reshaped to `appraisals: { a1..a6 [+a_other]: { truth_rating, selected, strategy?, response?, and_statement?, text? } }`. exportFlatten emits `unstuck_truth_a*`, `_selected_a*`, `_strategy_a*`, `_response_a*` + the same set for `a_other` + `unstuck_other_text` + rollups. demoDataset regenerated. v4.0 → v5.0 (MAJOR, breaking data shape).
+- **`0852261` · 2026-05-13** — Draft 14: renamed intervention "Ready! Set! Dedicate!" / "RSD" → **"Ready for Roots"** in all user-facing text. Internal code slugs (`ready-set-dedicate`), access-code prefix (`RSD-XXXX-XXXX`), and `RSD_*` filenames are unchanged — internal artifacts. Touched: DemoPage hero + body copy, AdminExports demo-tab strings, `testRegistry` categories (`'RSD activity'` → `'Ready for Roots activity'`, `'RSD test'` → `'Ready for Roots test'`) with DemoPage filter calls matching, plus repo-root docs (README, INFRASTRUCTURE, STATE_OF_THE_PLATFORM, SSI_Platform_Overview, RSD_Completion_GiftCard_Flow). The `.docx` parallels of the overview + gift-card-flow docs need a manual rename pass — flagged in INFRASTRUCTURE.md change log. No activity-version bumps, no code-logic changes, no data-shape changes.
 - **`88c3358` · 2026-05-13** — Draft 12: Belonging Skills Sort v3.0 — five converging pieces of feedback from the 2026-05-18 review meeting shipped as one rebuild. **(1)** Two CSS drop-zones → three illustrated trapezoidal bucket SVGs (shared `BucketSvg` component, amber-300/500). **(2)** New "Not interested right now" bucket — equal styling on purpose (Stephanie's call: don't desaturate, the whole point is to legitimize "not for me" as a valid answer). **(3)** Placement rebuilt as real pointer-event drag with a ghost-chip follower (Holly: "see the text moving") — offsets above the finger on touch, settles into bucket with a 240ms ease-out transition + bucket pulse on drop, springs back to origin on drop outside any bucket. Uses pointer events not @dnd-kit so it works uniformly on mouse/touch/pen. **(4)** Placed cards have a small × remove button that returns to unplaced (Jessica). **(5)** Full keyboard + screen-reader path: Tab/arrow nav, Space picks up, arrow keys cycle buckets, Space drops, Escape cancels; aria-live status region announces transitions. Save payload reshaped: now has `not_interested` array; `unplaced` stays in payload so analysts can distinguish "kid skipped" from "kid actively chose Not Interested." `exportFlatten.js` gains `sort_not_interested` + `sort_n_not_interested`. `demoDataset.js` distribution 25/25/15/35. v2.0 → v3.0 (MAJOR).
 - **`b571464` · 2026-05-13** — Draft 13: small-copy bundle from the 2026-05-18 review meeting, shipped as one stopping point. **LetterBuilder v2.0 → v2.1 (MINOR)**: replaced the context line above the textarea per Stephanie (2026-05-15) — was "Write a letter to another teen who is starting where you are now…", now "What you would want to say to another teen who feels like they don't belong." Anchors the recipient in the same emotional state the kid is being asked to write to; direct second-person framing in the kid's voice. **WhoIAmPoem v2.2 → v2.3 (MINOR)**: auto-titled the finished-poem card and keepsake-image PNG "Who I Am" (replacing "Your Poem"), both surfaces updated. No data-shape changes on either.
 - **`78a67cd` · 2026-05-12** — /demo Data export demo restructured: three numbered per-file blocks (Wide CSV / `.sps` syntax / Codebook CSV) instead of one long paragraph + button row. The `.sps` block now has its own amber "How to use it in SPSS" panel with a 3-step numbered list — save next to the CSV → open in SPSS → Run → All — plus a smaller italic fallback note about setting the working directory or editing the `/FILE=` path. Dropped the "Note: Qualtrics offers a native .sav…" paragraph per Josh. New `ExportFileBlock` helper at the bottom of `DemoPage.jsx` keeps the three files rendering consistently.
@@ -221,7 +224,316 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — Drafts 12 and 13 shipped as commits `88c3358` and `b571464`, summarized under those entries in Recently shipped above)_
+_(none — Drafts 14, 15, 16 shipped as commits `0852261`, `27e4d52`, `4d5ec6a`, summarized under those entries in Recently shipped above)_
+
+<!--
+
+### Draft 14 — Intervention rename: Ready! Set! Dedicate! → Ready for Roots
+
+**Status as of 2026-05-18: Josh announced the rename.** All user-facing text on ctac.app, in documentation, and in outbound email templates needs to change. Internal code slugs, activity IDs, file names, and the repo folder name **stay as-is** to avoid massive churn. We can do an optional internal-rename pass later if Josh wants.
+
+**Scope of this draft:** User-facing text only. Ship as one commit so the demo + admin both flip in lockstep — reviewers shouldn't see "RSD" on one screen and "Ready for Roots" on the next.
+
+**Find-and-replace mapping (user-facing surfaces only):**
+
+| Old | New |
+|---|---|
+| `Ready! Set! Dedicate!` | `Ready for Roots` |
+| `Ready Set Dedicate` | `Ready for Roots` |
+| `RSD` (when used as the program name, not as a code identifier) | `Ready for Roots` |
+
+**Files to update — confirm during build by grepping the repo for the strings above:**
+
+1. **Page titles + headers in `src/`** — Demo landing page header, admin landing page header, any `<title>` tags, hero copy on `/demo`, and any activity intro screens that mention the program by name.
+2. **Activity intro copy** — Pretest intro paragraph, posttest intro, follow-up intro (the survey doc preambles all reference "this program" or "our project" rather than naming it directly, but check `src/activities/*.jsx` for any hardcoded program-name references).
+3. **`README.md`** — repo readme.
+4. **`CLAUDE.md`** — project memory file; update the "Project memory — SSI Platform" framing if it references the intervention by name.
+5. **`INFRASTRUCTURE.md`** — change-log doc; add a new change-log entry for the rename, but also update header/intro text if it names the intervention.
+6. **`STATE_OF_THE_PLATFORM.md`** — accurate-snapshot doc; update any references.
+7. **`SSI_Platform_Overview.md` and `.docx`** — update both.
+8. **Resend / email templates** — if any outbound emails (program invite, gift-card delivery, 90-day follow-up reminder) include the program name in subject or body, update.
+9. **Gift-card flow copy** in `RSD_Completion_GiftCard_Flow.md` — update the user-facing strings inside the doc; the file name itself stays.
+10. **Any other repo-root `.md` files** that mention the program by name (do a `grep -rn "Ready! Set! Dedicate"` + `grep -rn "RSD"` and audit by hand — RSD appears in code slugs and file names that should NOT change).
+
+**What does NOT change:**
+
+- Internal code slugs and identifiers — activity IDs (`getting-unstuck`, `allies-safety-net`, etc.) stay; any internal constant like `RSD_VERSION` (if it exists) stays.
+- Repo folder name `SSI Platform A`.
+- File names like `RSD_Feedback_Review_v2.xlsx`, `RSD_Flow_Option_B.md` — these are internal artifacts, not user-facing.
+- Memory file names in the Cowork side (e.g., `project_rsd_*`).
+- The IRB label "Belongingness SSGMI" — that's a separate study-protocol label, not the user-facing name.
+- The Vercel deployment URL `ctac.app/demo` — unless Josh asks, we keep the route as-is.
+
+**Version bump:** No activity-version bumps; this is documentation + copy only. **Do** add an entry to `INFRASTRUCTURE.md`'s change log dated today: *"Renamed intervention from Ready! Set! Dedicate! / RSD to Ready for Roots in all user-facing text. Internal code slugs and file names unchanged."*
+
+**Open questions (build text for now, flag at the bottom of the commit message):**
+
+- Should the demo route stay at `/demo` or change to something like `/ready-for-roots/demo`? Default: keep `/demo` until Josh says otherwise.
+- Should an abbreviation be introduced (e.g., RFR)? Default: no; use the full name everywhere user-facing. Easy to add later if a need surfaces.
+
+**Approved by:** Josh, 2026-05-18.
+
+*End of Draft 14.*
+
+---
+
+### Draft 15 — Getting Unstuck v4.2: appraisal-items rebuild + final Challenge rename + threshold fix
+
+**Status as of 2026-05-18:** The Getting Unstuck activity needs to use the **same 6 Appraisal items as the FollowUp Survey** (locked in `Final Measures/FollowUp Survey Draft Belongingness_5.2.26.docx`), drop the "how often" rating dimension, swap to a 0-5 scale with the survey's anchors, add an Other-thought addendum, fix a pull-forward threshold bug Stephanie reported, and finalize the Fight → Challenge rename (which has now boomeranged twice — Josh is committing to Challenge going forward).
+
+**Driving feedback (oldest → newest):**
+
+- Stephanie (2026-05-15): *"Need to discuss if we want to include 'how often do you have this thought.' I think we just ask how strongly do you believe this thought to be true for you. This also needs a middle anchor for 3 'Somewhat.'"*
+- Stephanie (2026-05-15): *"There should be 6 appraisal questions."*
+- Stephanie (2026-05-15): *"It did not pull forward thoughts I selected that I believed to be true — higher than a 1."*
+- Ginny (in meeting, 2026-05-18): *"Is there another thought you've had that we didn't list here? If yes then question."*
+- Jessica (2026-05-18, 14:45): *"What comes up for you when you ask yourself those questions? (add the word question[s])"* — small copy edit on the challenge-prompts response screen.
+
+**File:** `src/activities/GettingUnstuck.jsx` (plus the data registry in `src/lib/`, `exportFlatten.js`, and `demoDataset.js`).
+
+#### Change 1 — Replace the 8 stuck thoughts with the 6 locked appraisal items
+
+The 8 thoughts (`st1`–`st8`) are out. Use these 6 items, in this order. Source: `Final Measures/FollowUp Survey Draft Belongingness_5.2.26.docx`, "Appraisals about self, others and future" section. Same wording, same scale, same anchors — this matters because we want the FollowUp Survey to read the same items at follow-up that the kid worked with during the intervention.
+
+1. **`a1`** — I will never really feel like I belong. *(future)*
+2. **`a2`** — Everyone will eventually leave me or give up on me. *(future)*
+3. **`a3`** — I am not lovable. *(self)*
+4. **`a4`** — No one would want me to be a part of their family. *(self)*
+5. **`a5`** — I can't trust anyone. *(others)*
+6. **`a6`** — My real family will be mad if I like my foster or adoptive family. *(others)*
+
+Item IDs `a1`–`a6` (for "appraisals"). The `(future / self / others)` qualifier is for analyst context; not shown in the kid's UI.
+
+**Implementation note:** Build the 6 items as a constant near the top of the activity component. Same data also lives in the FollowUp Survey component (Draft 16) — extract to `src/lib/appraisals.js` so it's a single source of truth and any future wording revisions only happen in one place.
+
+#### Change 2 — Drop the "how often" scale; keep only "how strongly"
+
+Only one rating per appraisal item. The scale is **0–5** with these anchors (the same as the FollowUp Survey):
+
+> 0 = Not At All True · 3 = Somewhat True · 5 = Definitely True
+
+(intermediate values 1, 2, 4 are unlabeled — pick the slider style or radio style that matches the existing pretest BHS UI for consistency).
+
+The current activity stores frequency + believability per thought. Drop frequency entirely. Save payload keeps only the believability rating (renamed to `truth_rating` to match the new "how true" framing — or keep `belief` if that's less churn).
+
+#### Change 3 — Lower the pull-forward threshold
+
+Stephanie said items she rated **above 1** should carry forward to the Pick screen. The current threshold (per commit `9b841da`) is ≥3 on either scale. New rule: any item where `truth_rating ≥ 2` is eligible for the Pick screen. (On the 0-5 scale, `2` is the first rating that signals at least minimal endorsement.)
+
+If no items clear the ≥2 threshold, the existing **affirmation path** (skip Pick, go to Save with a brief positive message) still applies — that path stays as-is.
+
+#### Change 4 — Add the "Other thought" addendum
+
+After the rate screen, before the pick screen, show one more rate-style screen for an optional Other thought.
+
+**Screen copy:**
+
+> Is there another thought you've had that we didn't list here?
+
+Yes / No buttons. If **No**: continue to Pick.
+
+If **Yes**: show a free-text input ("Type the thought in your own words") plus the same 0-5 scale with the same anchors. The kid rates their own thought the same way they rated the 6 listed items. After they continue, go to Pick.
+
+The Other item gets ID `a_other` and is included in the eligibility filter using the same `truth_rating ≥ 2` rule. If the kid says No, `a_other` is absent from the save payload entirely.
+
+#### Change 5 — Rename "Fight" → "Challenge" everywhere (final, no more reverts)
+
+This is the third commit on this rename. Josh's 2026-05-18 decision: **Challenge stays.** Apply to:
+
+- Strategy button label: "Fight it" → **"Challenge it"**
+- Data keys: `strategy: "fight"` → `strategy: "challenge"`; allowed values `challenge | both_and`
+- Response field: `fight_response` → `challenge_response`
+- Export column: `unstuck_n_fight` → `unstuck_n_challenge`
+- `demoDataset.js` synthetic data uses `strategy: "challenge"`
+- Any UI copy that says "fight" in user-visible text
+
+The three challenge-prompt scaffolding lines above the response field (from Stephanie's PPT slide 12) stay:
+
+> - Is there another way I can think about this?
+> - Is this really true, or can I think of a way it isn't true?
+> - Is this thought helping me, and if not, what is a thought that might be more helpful?
+
+#### Change 6 — Jessica's copy edit
+
+On the screen above the response field, the prompt currently reads (roughly): *"What comes up for you when you ask yourself those?"* Update to:
+
+> What comes up for you when you ask yourself those questions?
+
+(add the word "questions" — Jessica's 2026-05-18 14:45 submission).
+
+#### Change 7 — Data shape and export pipeline
+
+The new save payload shape (replacing the v4.0/v3.0 shape):
+
+```js
+{
+  activity: "getting_unstuck",
+  appraisals: {
+    a1: { truth_rating: 0..5, selected: bool, strategy?: "challenge"|"both_and", response?: "..." },
+    a2: { ... },
+    // ...a6
+    a_other?: { text: "...", truth_rating: 0..5, selected: bool, strategy?: ..., response?: ... }
+  },
+  saved_at: "..."
+}
+```
+
+`exportFlatten.js` updates:
+
+- Drop `unstuck_freq_st1..st8` columns entirely.
+- Replace `unstuck_belief_st1..st8` with `unstuck_truth_a1..a6` (and `unstuck_truth_a_other` when present, else null).
+- `unstuck_selected_a1..a6` (binary 0/1).
+- `unstuck_strategy_a1..a6` (`challenge` | `both_and` | null).
+- `unstuck_response_a1..a6` (free text).
+- `unstuck_n_challenge`, `unstuck_n_both_and` (counts).
+- For `a_other`: add `unstuck_other_text` (free text of the kid's own thought) alongside the per-item columns above.
+
+`demoDataset.js`: regenerate synthetic data using `a1..a6` IDs and `truth_rating: 0..5`. Roughly ~30% of synthetic responses include a non-empty `a_other`. Strategy distribution: ~60% `challenge`, ~40% `both_and`.
+
+`src/lib/appraisals.js` (new shared module): exports the 6 appraisal items, IDs `a1`–`a6`, with `text` and `dimension` (`future` | `self` | `others`) fields. Both `GettingUnstuck.jsx` and the FollowUp Survey (Draft 16) import from here.
+
+#### Change 8 — Version bump
+
+`belonging-skills-sort` analog: `getting-unstuck` from v4.0 (current) → v4.2 (skipping 4.1, since the change is structural enough to warrant a MINOR-after-MAJOR jump but doesn't introduce a wholly new flow — keeps the v4.x family).
+
+Actually — bump to **v5.0 (MAJOR)** since the item set is new, the scale changed (1-5 → 0-5), and the column registry is reshaped. Prepend a changelog entry: *"v5.0 — Replaced 8 stuck thoughts with 6 locked appraisal items from the FollowUp Survey; dropped 'how often' rating dimension; scale moved to 0-5 with Not At All / Somewhat / Definitely True anchors; threshold for Pick eligibility lowered to ≥2; added optional Other thought addendum; Fight → Challenge rename finalized; copy edit on challenge-prompt question screen."* Update `updated` to today's date.
+
+**Approved by:** Josh, 2026-05-18.
+
+*End of Draft 15.*
+
+---
+
+### Draft 16 — Posttest + FollowUp Survey build (paginated sandbox + admin entries)
+
+**Status as of 2026-05-18:** The locked Posttest (18 items) and FollowUp Survey (30 items) docs are in `Final Measures/`. Build both as paginated sandbox activities mirroring the live participant flow, same pattern as `Pretest.jsx` (commit `aa94130`). Ship as one commit so /demo gains both new "Tests" entries together.
+
+**Source docs:**
+
+- `Final Measures/Posttest Draft Belongingness_5.2.26.docx`
+- `Final Measures/FollowUp Survey Draft Belongingness_5.2.26.docx`
+
+Both share scales with the Pretest where item wording and anchors are identical — keep them identical so within-subject change scores at pre/post and pre/follow-up are valid. **Do not paraphrase** any item text or scale anchor — this is psychometric content.
+
+#### Component 1 — Posttest (18 items)
+
+**File:** `src/activities/Posttest.jsx` (new).
+
+**Intro paragraph (verbatim from the doc):**
+
+> Thank you for your participation in this program! Now, we would like to ask you some questions about what you are thinking and feeling right now. Some of these questions will be the same as questions you answered at the start of this of the program, but others will be different. If you experience feelings of distress, please tell your caregiver or you can email us at sprang@uky.edu. Your experiences are very important to us!
+
+**Item sections (in order):**
+
+1. **Beck Hopelessness Scale** (4 items, identical to pretest BHS, scale 0-3: Absolutely disagree, Somewhat disagree, Somewhat agree, Absolutely agree).
+2. **Adolescent Sense of Control Scale** (3 items, identical to pretest ASCS, scale 1-5: Never, Rarely, Sometimes, Often, Always).
+3. **Need to Belong Scale** (3 items, identical to pretest NB, scale 1-5: Strongly disagree → Strongly agree).
+4. **Belonging (2 items)** (slider 0-10, identical to pretest; same skip logic — if Q1 = 0, Q2 is hidden and `post_bw_2` saves as null).
+5. **Perceived helpfulness of program** (1 item, slider 1-10, anchors "Not at all / Somewhat / Very Much"). The wording differs from pretest's expectation item:
+
+   > At this point, how helpful has this program been for helping you feel close to your family and friends?
+
+   (Pretest asks "how helpful do you think this program *will be*"; posttest asks "how helpful *has this program been*." Match the pretest item's `pre_pe_1` column with `post_pe_1`.)
+
+6. **Program Feedback Scale: Acceptability (5 items, NEW)** — first time on the platform.
+
+   Scale for items 1-3 (Likert): 0-4 — Really Disagree, Disagree, Neither Agree nor Disagree, Agree, Really Agree.
+
+   1. I enjoyed the program.
+   2. I understood the program.
+   3. I would recommend this program to other kids my age.
+
+   Items 4-5 are open-response (textarea, no character limit):
+
+   4. What did you like about the program? Please share as many true thoughts and feelings as you would like.
+   5. What would you change about the program? Please share as many true thoughts and feelings as you would like.
+
+**Column-name plan** (`post_*` prefix, following Jessica's locked convention):
+
+- `post_bhs_1..4`, `post_bhs_score`
+- `post_ascs_1..3`, `post_ascs_score`
+- `post_nb_1..3`, `post_nb_score`
+- `post_bw_1`, `post_bw_2` (null when Q1 = 0)
+- `post_pe_1` (perceived helpfulness)
+- `post_pf_1..3` (program feedback Likert), `post_pf_score`
+- `post_pf_open_like` (text), `post_pf_open_change` (text)
+
+Register `pf` in `SCALE_ABBREVIATIONS` in `exportFlatten.js`.
+
+**Save payload shape:** flat, keyed by SPSS column names (same pattern as `Pretest.jsx`). No nested objects.
+
+#### Component 2 — FollowUp Survey (30 items)
+
+**File:** `src/activities/FollowUp.jsx` (new).
+
+**Intro paragraph (verbatim):**
+
+> Thanks for participating in our program about 3 months ago. To better understand the helpfulness of this program to you and how you are thinking and feeling right now, we would like to ask you some questions. Some of these questions will be the same as questions you answered at the start of this of the program, but others will be different. When you complete this short survey, you will receive another $25 gift card to thank you for your time. If you experience feelings of distress when answering these questions, please tell your caregiver or you can email us at sprang@uky.edu.
+
+**Item sections (in order):**
+
+1. **Beck Hopelessness Scale** (4 items, identical wording).
+2. **Adolescent Sense of Control Scale** (3 items, identical wording).
+3. **UCLA 3-Item Loneliness Scale** (3 items, identical to pretest UCLA, scale 1-3: Hardly ever, Some of the time, Often).
+4. **Need to Belong Scale** (3 items, identical wording).
+5. **Belonging Promoting Behaviors** (7 items, identical to pretest BPB, scale 0-3: Never, Sometimes, Often, Always).
+6. **Appraisals about self, others and future (6 items)** — **import from `src/lib/appraisals.js`** (the shared module created in Draft 15). Scale 0-5 with anchors Not At All True / Somewhat True / Definitely True. Same item set, same wording.
+7. **Belonging (2 items)** (same slider + skip logic as pretest/posttest).
+8. **Permanency (1 item, NEW)** — single-select radio with 4 options + Other (free text):
+
+   > Since you completed the Belonging course have you (please select one of the following):
+   > - Remained in the same home
+   > - Moved to a new foster home
+   > - Returned to live with birth family
+   > - Other: (please specify)
+
+   Selecting "Other" reveals a text input.
+
+9. **Placement Disruption Worry (1 item, NEW)** — scale 0-4: Not at all, A little, Somewhat, Very, Extremely.
+
+   > How worried are you right now that this placement will change?
+
+**Column-name plan** (`fu_*` prefix):
+
+- `fu_bhs_1..4`, `fu_bhs_score`
+- `fu_ascs_1..3`, `fu_ascs_score`
+- `fu_ucla_1..3`, `fu_ucla_score`
+- `fu_nb_1..3`, `fu_nb_score`
+- `fu_bpb_1..7`, `fu_bpb_score`
+- `fu_app_1..6`, `fu_app_score` (register `app` in `SCALE_ABBREVIATIONS` — this column is shared between FollowUp's appraisals section and Getting Unstuck's truth-rating data, so the convention has to match)
+- `fu_bw_1`, `fu_bw_2`
+- `fu_permanency` (string enum: `same_home` | `new_foster` | `birth_family` | `other`), `fu_permanency_other` (text, populated only when `fu_permanency = "other"`)
+- `fu_disruption_worry` (0-4 integer)
+
+#### Wiring + demo entries
+
+- Register both in `TEST_REGISTRY` under the "RSD test" category (or rename that category to "Ready for Roots test" if Draft 14 has shipped first; if Drafts 14 and 16 ship in the same session, do them in 14 → 16 order so the category name is already updated).
+- Add `posttest` and `followup` entries to `src/lib/activityVersions.js` at v1.0 each. `updated` = today.
+- Add demo entries to `/demo` under the "Tests" section (same pattern as the Pretest entry).
+- `demoDataset.js` generates synthetic posttest + followup rows. Distributions: psychometric scales drift slightly relative to pretest (e.g., mean BHS at posttest ≈ pretest - 0.3 with noise); permanency distribution roughly 70/15/10/5 (same_home / new_foster / birth_family / other); disruption_worry roughly normal around 1.
+
+#### Pagination + UX consistency
+
+- Same `<ScreenSliderQuestion>` / `<ScreenLikertGrid>` (or equivalent components used in `Pretest.jsx`) for visual consistency.
+- Progress strip up top.
+- Back button on every screen.
+- Sliders require explicit drag/tap before counting as answered (per the pretest precedent).
+- Mobile-first responsive layout; same amber/slate palette.
+
+#### Version bump
+
+Both activities at v1.0 (new). No bump for Getting Unstuck or Pretest here — those are separate concerns.
+
+**Approved by:** Josh, 2026-05-18.
+
+**Open questions (build text for now, flag at the bottom of the commit message):**
+
+- The Posttest doesn't include UCLA or BPB but the Pretest and FollowUp do. This is an intentional design choice per the locked docs; flag for Jessica to confirm at next data-review.
+- `post_pf_open_like` and `post_pf_open_change` are unbounded free text — set a reasonable maxlength (~2000 chars) in the textarea component to prevent abuse without limiting genuine responses.
+
+*End of Draft 16.*
+
+-->
 
 <!--
 
@@ -424,10 +736,23 @@ If the title currently lives as a single string constant near the top of the com
 
 **Supabase migration note.** Per CLAUDE.md, new public-schema tables created after 2026-10-30 need explicit Data API grants alongside RLS. The `participants` table is RLS-locked to admins only — `anon` gets no grants, `authenticated` gets nothing (RLS-policed), `service_role` gets full CRUD for the scheduled job.
 
+**Questions to ask the caregiver inside the Qualtrics consent survey:**
+
+Source: `Final Measures/Questions for Guardian.docx` (locked 2026-05-18).
+
+1. Child first and last name (collected in Qualtrics only — never passed to ctac.app)
+2. Caregiver first and last name
+3. Caregiver email (collected twice with a "must match" validator — used for program-link delivery, follow-up reminder, gift cards)
+4. Placement type — single-select: Foster care (non-relative) · Concurrent placement (foster/adoptive) · Relative caregiver · Other (specify)
+5. County of residence (free text)
+
+These five items live entirely in Qualtrics and never reach ctac.app. The bridge to ctac.app is the PID + caregiver email pair stored in the `participants` table per item 3 above. Placement type and county should be stored as embedded data in Qualtrics so they're exportable in the same SPSS bundle as the consent ResponseID.
+
 **Open before build:**
 - Jessica's preference on PID source (`ResponseID` vs custom random).
 - Whether the gift-card-sending workflow is already wired up or needs to be part of this build.
 - Coordination with whoever sets up the Qualtrics consent (likely Jessica or Adrienne) so the URL-parameter handoff is in place on both sides.
+- Where (if anywhere) the placement-type and county fields surface in analysis — they're collected in consent but may also be useful as covariates in the child-facing data analysis. Decide whether to mirror those two fields into the ctac.app `participants` table at consent time, or just leave them in Qualtrics.
 
 *End of pending requirement. When the Qualtrics consent build begins, this draft can be refined into a ready-to-ship implementation prompt.*
 
