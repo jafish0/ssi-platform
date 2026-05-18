@@ -50,9 +50,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'belonging-skills-sort': {
-    version: 'v2.0',
-    updated: '2026-05-11',
+    version: 'v3.0',
+    updated: '2026-05-13',
     changelog: [
+      '2026-05-13 · v3.0 — five converging pieces of feedback from the 2026-05-18 review meeting. (1) The two CSS drop-zones replaced with three illustrated trapezoidal bucket SVGs (single shared `BucketSvg` component). (2) New third bucket "Not interested right now" — equal styling, no greying/desaturation per Stephanie\'s call. (3) Placement rebuilt as real drag with a ghost-chip follower using pointer events (not @dnd-kit, not HTML5 drag) — uniform across mouse, touch, pen. Ghost chip offsets above the finger on touch so it stays visible; settles into the bucket on drop with a ~240ms ease-out transition + bucket pulse. (4) Placed cards have a small × remove button that returns them to unplaced (Jessica). (5) Keyboard + screen-reader path: Tab/arrow nav, Space picks up, arrow keys cycle buckets, Space drops, Escape cancels; aria-live region announces transitions. Save payload reshaped — now has `not_interested` array in addition to `already_doing` / `willing_to_try` / `unplaced`. Export pipeline gains `sort_not_interested` (list) and `sort_n_not_interested` (count) columns. demoDataset distribution updated to ~25/25/15/35 (already/willing/not_interested/unplaced). Breaking change to save shape — demo-only, no real participant data exists yet.',
       '2026-05-11 · v2.0 — replaced all 7 skill labels with the kid-friendly Belonging Promoting Behaviors items from the locked pretest doc. Added tap-toggle "?" affordance on each card showing a 1–2 sentence definition (per Ginny, Stephanie, Holly). Unplaced layout switched from horizontal-wrap to vertical-stack to fit the longer sentence-style labels.',
       '2026-05-11 · v1.0 — initial demo release.',
     ],

@@ -1,24 +1,44 @@
-import { useMemo, useState } from 'react'
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  KeyboardSensor,
-  TouchSensor,
-  useDraggable,
-  useDroppable,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
+// Belonging Skills Sort — v3.0 (Draft 12, 2026-05-18 meeting batch).
+//
+// What's new vs. v2.0:
+//   1. The two CSS drop-zones are replaced with three illustrated bucket
+//      SVGs side-by-side (desktop) / stacked (mobile).
+//   2. New third bucket: "Not interested right now." Equal styling on
+//      purpose — Stephanie's call. The whole point of adding the bucket
+//      is to legitimize "not for me" as a valid answer; visually
+//      desaturating it would undo that.
+//   3. The placement interaction is rebuilt as a real drag with a
+//      ghost-chip follower (Holly: "I want to see the text moving"). We
+//      use pointer events (NOT @dnd-kit, NOT HTML5 drag) — they work
+//      uniformly on mouse, touch, and pen, and let us render a fully
+//      custom ghost.
+//   4. Placed cards inside a bucket have a small × remove button that
+//      returns them to the unplaced list (Jessica: "If they accidentally
+//      drag an option, can they delete it or do they have to reset?").
+//   5. Keyboard + screen-reader path: Tab → arrow keys → Space picks up
+//      → arrow keys cycle buckets → Space drops. Escape cancels.
+//      aria-live region announces transitions.
+//
+// Save payload (v3.0):
+//   {
+//     activity: "belonging_skills_sort",
+//     already_doing: [bs_id],
+//     willing_to_try: [bs_id],
+//     not_interested: [bs_id],
+//     unplaced: [bs_id],
+//     saved_at: "..."
+//   }
+//
+// `unplaced` is preserved in the payload (even though it's derivable
+// from the placement arrays) so analysts can distinguish "kid skipped
+// this skill" from "kid actively chose Not Interested."
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PrimaryButton } from '../components/items/shared.jsx'
 
-// Belonging Promoting Behaviors — kid-friendly labels and per-skill
-// definitions per Stephanie + Holly + Ginny's 2026-05-11 feedback. The 7
-// items below match the locked pretest doc ("Belonging Promoting
-// Behaviors (7 items)" in Pretest Draft Belongingness_5.2.26.docx,
-// confirmed final by Josh 2026-05-11). Skill IDs bs1-bs7 stay sequential
-// but the meaning of each ID has shifted; this is acceptable while the
-// platform is demo-only.
+// Skill labels match the locked pretest doc (set in commit `7b7046e`,
+// Draft 3). bs1–bs7 IDs are stable; the meaning of each ID is preserved
+// across versions.
 const BEHAVIORS = [
   {
     id: 'bs1',
@@ -65,38 +85,146 @@ const BEHAVIORS = [
 ]
 
 const BUCKETS = [
-  { id: 'already_doing', label: "What I'm already doing" },
+  { id: 'already_doing',  label: "What I'm already doing" },
   { id: 'willing_to_try', label: "What I'm willing to try" },
+  { id: 'not_interested', label: 'Not interested right now' },
 ]
 
-function DraggableCard({ behavior, selected, onTap, defOpen, onToggleDef }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: behavior.id })
+// Used to truncate the ghost-chip label so it doesn't cover the screen
+// on mobile.
+const GHOST_LABEL_MAX = 30
+
+// Ghost chip vertical offsets — on mobile we float the chip well above
+// the touching finger so the kid can see it. On desktop, a small offset
+// from the cursor is fine.
+const GHOST_OFFSET_TOUCH = -56 // px above the finger
+const GHOST_OFFSET_MOUSE = -14 // px above the cursor
+
+// Drop-animation duration. Brief asks for ~250ms ease-out on settle,
+// ~200ms on spring-back. Close enough — using 240ms either way for
+// simpler CSS.
+const DROP_ANIM_MS = 240
+
+// ---------- Bucket SVG ----------
+// Simple trapezoidal bucket with an arched handle. Single shared SVG
+// used by all three buckets (color is the same per the brief).
+
+function BucketSvg({ className = '' }) {
+  return (
+    <svg
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid meet"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* Handle (back ear) */}
+      <path
+        d="M 70 38 Q 70 12 100 12 Q 130 12 130 38"
+        stroke="#F59E0B"
+        strokeWidth="6"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* Bucket body — trapezoid with slightly rounded bottom corners */}
+      <path
+        d="M 22 52 L 178 52 L 162 184 Q 162 192 154 192 L 46 192 Q 38 192 38 184 Z"
+        fill="#FCD34D"
+        stroke="#F59E0B"
+        strokeWidth="4"
+        strokeLinejoin="round"
+      />
+      {/* Inner rim shadow for depth */}
+      <line
+        x1="28"
+        y1="60"
+        x2="172"
+        y2="60"
+        stroke="#F59E0B"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
+    </svg>
+  )
+}
+
+// ---------- Skill card ----------
+// Used both in the unplaced list AND inside buckets. The two contexts
+// differ in:
+//   - Unplaced cards are draggable (pointerdown starts a drag) and
+//     keyboard-pickable (Space/Enter focuses the bucket row).
+//   - Placed cards have a small × remove button instead of being
+//     draggable. Tap × returns the skill to unplaced.
+// Both render the "?" tooltip affordance.
+
+function SkillCard({
+  behavior,
+  context, // 'unplaced' | 'placed'
+  isBeingDragged, // dim to ~40% while ghost is flying
+  isKeyboardPicked,
+  defOpen,
+  onToggleDef,
+  onPointerDownStart,
+  onRemove,
+  onKeyboardActivate,
+  index, // for the small leading "1." / "2." badge in unplaced
+}) {
+  const isUnplaced = context === 'unplaced'
+
+  // Pointerdown handler — kicks off a drag. Only on unplaced cards.
+  // We let buttons inside (the "?" affordance) stopPropagation in
+  // their own handlers so the drag doesn't get triggered by tap-on-?
+  function handlePointerDown(e) {
+    if (!isUnplaced || !onPointerDownStart) return
+    // Only respond to primary pointer button (or any touch / pen).
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    onPointerDownStart(behavior, e)
+  }
+
+  function handleKeyDown(e) {
+    if (!isUnplaced || !onKeyboardActivate) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onKeyboardActivate(behavior.id)
+    }
+  }
+
   return (
     <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={onTap}
-      className={
-        'cursor-grab active:cursor-grabbing select-none rounded-2xl px-4 py-3 min-h-[52px] text-[15px] shadow-card transition-shadow ' +
-        (selected
-          ? 'bg-amber-200 text-amber-900 ring-2 ring-amber-400'
-          : 'bg-white text-slate-800') +
-        (isDragging ? ' opacity-50' : '')
+      role={isUnplaced ? 'button' : 'group'}
+      tabIndex={isUnplaced ? 0 : -1}
+      aria-pressed={isKeyboardPicked || undefined}
+      aria-label={
+        isUnplaced
+          ? `Skill ${index ?? ''}: ${behavior.text}`
+          : behavior.text
       }
+      onPointerDown={handlePointerDown}
+      onKeyDown={handleKeyDown}
+      className={
+        'relative select-none rounded-2xl px-4 py-3 min-h-[52px] text-[14px] shadow-card transition-all ' +
+        (isUnplaced
+          ? 'bg-white text-slate-800 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-amber-200 '
+          : 'bg-white/95 text-slate-800 ') +
+        (isBeingDragged ? ' opacity-40 ' : '') +
+        (isKeyboardPicked
+          ? ' ring-2 ring-amber-500 shadow-lg scale-[1.02] '
+          : '')
+      }
+      style={{ touchAction: isUnplaced ? 'none' : undefined }}
     >
       <div className="flex items-start gap-2">
+        {isUnplaced && index != null && (
+          <span className="flex-shrink-0 inline-flex items-center justify-center bg-amber-100 text-amber-800 rounded-full w-5 h-5 text-[11px] font-bold mt-0.5">
+            {index}
+          </span>
+        )}
         <div className="flex-1 leading-snug">{behavior.text}</div>
         <button
           type="button"
           aria-label={defOpen ? 'Hide definition' : 'Show definition'}
           aria-expanded={defOpen}
-          onPointerDown={(e) => {
-            // Stop the drag sensor from activating when the kid hits the
-            // "?" — without this, dnd-kit's PointerSensor swallows the
-            // click intent and the popover never opens.
-            e.stopPropagation()
-          }}
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation()
             onToggleDef()
@@ -112,126 +240,409 @@ function DraggableCard({ behavior, selected, onTap, defOpen, onToggleDef }) {
         </button>
       </div>
       {defOpen && (
-        <div className="mt-2 pt-2 border-t border-amber-200 text-[13px] leading-relaxed text-slate-600 italic">
+        <div className="mt-2 pt-2 border-t border-amber-200 text-[12px] leading-relaxed text-slate-600 italic">
           {behavior.definition}
         </div>
+      )}
+      {!isUnplaced && onRemove && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove(behavior.id)
+          }}
+          aria-label={`Remove ${behavior.text.slice(0, 40)} from this bucket`}
+          className="absolute top-1 right-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 hover:bg-amber-200 text-slate-600 text-[14px] font-semibold leading-none"
+          title="Remove from this bucket"
+        >
+          ×
+        </button>
       )}
     </div>
   )
 }
 
-function DropBucket({ id, label, items, behaviors, onTapItem, tapSelected, defOpenId, onToggleDef }) {
-  const { isOver, setNodeRef } = useDroppable({ id })
+// ---------- Bucket container ----------
+
+function Bucket({
+  bucket,
+  placedBehaviors,
+  defOpenId,
+  onToggleDef,
+  onRemove,
+  isHovered,
+  isKeyboardTarget,
+  bucketRef,
+  pulseKey,
+}) {
   return (
-    <div
-      ref={setNodeRef}
-      className={
-        'rounded-2xl border-2 border-dashed p-4 min-h-[160px] transition-colors ' +
-        (isOver
-          ? 'bg-amber-100 border-amber-400'
-          : items.length > 0
-            ? 'bg-white border-amber-300'
-            : 'bg-amber-50 border-amber-200')
-      }
-    >
-      <div className="text-[14px] font-semibold text-amber-800 mb-3">{label}</div>
-      <div className="flex flex-col gap-2">
-        {items.map((bid) => {
-          const b = behaviors.find((x) => x.id === bid)
-          if (!b) return null
-          return (
-            <DraggableCard
-              key={b.id}
-              behavior={b}
-              selected={tapSelected === b.id}
-              onTap={(e) => {
-                e.stopPropagation()
-                onTapItem(b.id)
-              }}
-              defOpen={defOpenId === b.id}
-              onToggleDef={() => onToggleDef(b.id)}
-            />
-          )
-        })}
-        {items.length === 0 && (
-          <div className="text-[13px] text-slate-500 italic">Drag here</div>
-        )}
+    <div className="flex flex-col">
+      <div className="text-[13px] font-semibold text-amber-900 mb-2 text-center px-2">
+        {bucket.label}
+      </div>
+      <div
+        ref={bucketRef}
+        data-bucket-id={bucket.id}
+        className={
+          'relative w-full aspect-[5/4] transition-all duration-150 ' +
+          (isHovered
+            ? 'scale-[1.03] drop-shadow-xl '
+            : isKeyboardTarget
+              ? 'ring-4 ring-amber-300 ring-offset-2 rounded-3xl '
+              : '')
+        }
+      >
+        <BucketSvg className="absolute inset-0 w-full h-full" />
+        {/* Drop-pulse animation — bumps the key on each commit so the
+            animation re-fires. The inner div listens for the key change
+            and runs a quick scale animation. */}
+        <div
+          key={pulseKey}
+          className={
+            'absolute inset-0 pointer-events-none ' +
+            (pulseKey > 0 ? 'animate-bucket-drop' : '')
+          }
+        />
+        {/* Content overlay positioned roughly inside the bucket
+            interior (matches the trapezoidal viewBox of BucketSvg). */}
+        <div
+          className="absolute flex flex-col gap-1.5 overflow-y-auto pointer-events-auto"
+          style={{ left: '15%', right: '15%', top: '28%', bottom: '8%' }}
+        >
+          {placedBehaviors.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-[11px] text-amber-700/70 italic px-2 text-center">
+              {isHovered ? 'Drop here' : 'empty'}
+            </div>
+          ) : (
+            placedBehaviors.map((b) => (
+              <SkillCard
+                key={b.id}
+                behavior={b}
+                context="placed"
+                defOpen={defOpenId === b.id}
+                onToggleDef={() => onToggleDef(b.id)}
+                onRemove={onRemove}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
+// ---------- Ghost chip ----------
+// The pill-shaped chip that follows the pointer / finger during a drag.
+// Renders at fixed position in viewport coords. When dropMode is set,
+// it transitions to the target position then unmounts after the
+// animation runs.
+
+function GhostChip({ behavior, x, y, dropMode, targetX, targetY }) {
+  if (!behavior) return null
+  const text = behavior.text
+  const truncated =
+    text.length > GHOST_LABEL_MAX ? text.slice(0, GHOST_LABEL_MAX - 1) + '…' : text
+  const finalX = dropMode ? targetX : x
+  const finalY = dropMode ? targetY : y
+  const transition = dropMode
+    ? `transform ${DROP_ANIM_MS}ms ease-out, opacity ${DROP_ANIM_MS}ms ease-out`
+    : 'none'
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        transform: `translate(${finalX - 80}px, ${finalY - 22}px)`,
+        transition,
+        opacity: dropMode === 'settle' ? 0 : 1,
+        pointerEvents: 'none',
+        zIndex: 1000,
+      }}
+      className="bg-amber-500 text-white rounded-full px-3 py-2 shadow-2xl ring-2 ring-amber-200 font-semibold text-[13px] flex items-center gap-2 max-w-[200px]"
+    >
+      <span className="inline-flex items-center justify-center bg-white text-amber-700 rounded-full w-5 h-5 text-[11px] font-bold flex-shrink-0">
+        {/* Number badge derived from id (bs1 → 1) */}
+        {behavior.id.replace(/\D/g, '')}
+      </span>
+      <span className="truncate leading-tight">{truncated}</span>
+    </div>
+  )
+}
+
+// ---------- Main component ----------
+
 export default function BelongingSkillsSort({ onSave = console.log }) {
+  // Three placement arrays. `unplaced` is derived from BEHAVIORS - all placed.
   const [placement, setPlacement] = useState({
     already_doing: [],
     willing_to_try: [],
+    not_interested: [],
   })
-  const [tapSelected, setTapSelected] = useState(null)
-  // Which card has its definition popover open. Single-open at a time
-  // keeps the layout from getting noisy.
+
+  // Drag state. `null` when idle. While active, the ghost chip follows
+  // the cursor/finger and we hit-test against bucket refs.
+  const [drag, setDrag] = useState(null)
+  // Drop animation — set on pointerup. Drives the ghost chip's
+  // transition to the bucket center (settle) or origin (spring back).
+  const [dropAnim, setDropAnim] = useState(null)
+
+  // Keyboard pickup mode — runs in parallel to pointer drag.
+  const [keyboardPickup, setKeyboardPickup] = useState(null)
+  const [keyboardTargetBucket, setKeyboardTargetBucket] = useState(null)
+
+  // Which skill's definition tooltip is open. One at a time.
   const [defOpenId, setDefOpenId] = useState(null)
+
+  // aria-live status text — announced to screen readers on every
+  // pickup / placement / removal.
+  const [liveMessage, setLiveMessage] = useState('')
+
+  // Pulse keys per bucket — incremented each time a skill is dropped
+  // into that bucket, so the Bucket component's pulse animation
+  // re-fires (via React's key-change pattern).
+  const [pulseKeys, setPulseKeys] = useState({
+    already_doing: 0,
+    willing_to_try: 0,
+    not_interested: 0,
+  })
+
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
-    useSensor(KeyboardSensor),
+  // Refs for hit-testing against bucket rectangles on pointermove.
+  // Keyed by bucket.id; each holds the bucket container's DOM node.
+  const bucketRefs = useRef({})
+  const setBucketRef = useCallback(
+    (id) => (node) => {
+      bucketRefs.current[id] = node
+    },
+    [],
   )
 
   const unplaced = useMemo(() => {
-    const all = BEHAVIORS.map((b) => b.id)
-    const placed = new Set([...placement.already_doing, ...placement.willing_to_try])
-    return all.filter((id) => !placed.has(id))
+    const placed = new Set([
+      ...placement.already_doing,
+      ...placement.willing_to_try,
+      ...placement.not_interested,
+    ])
+    return BEHAVIORS.filter((b) => !placed.has(b.id))
   }, [placement])
 
-  function moveTo(itemId, bucketId) {
+  const lookupBehavior = useCallback((id) => BEHAVIORS.find((b) => b.id === id), [])
+
+  // ---------- Move helpers ----------
+
+  // Place a skill into a bucket. Idempotent — if the skill is already
+  // in another bucket, remove from there first.
+  const placeIntoBucket = useCallback((skillId, bucketId) => {
     setPlacement((prev) => {
-      const next = {
-        already_doing: prev.already_doing.filter((x) => x !== itemId),
-        willing_to_try: prev.willing_to_try.filter((x) => x !== itemId),
+      const stripped = {
+        already_doing:  prev.already_doing.filter((x) => x !== skillId),
+        willing_to_try: prev.willing_to_try.filter((x) => x !== skillId),
+        not_interested: prev.not_interested.filter((x) => x !== skillId),
       }
-      if (bucketId === 'unplaced') return next
-      next[bucketId] = [...next[bucketId], itemId]
-      return next
+      stripped[bucketId] = [...stripped[bucketId], skillId]
+      return stripped
     })
-  }
+    setPulseKeys((prev) => ({ ...prev, [bucketId]: (prev[bucketId] || 0) + 1 }))
+    const bucketLabel =
+      BUCKETS.find((b) => b.id === bucketId)?.label || bucketId
+    const b = lookupBehavior(skillId)
+    setLiveMessage(`${b?.text || skillId} placed in ${bucketLabel}.`)
+  }, [lookupBehavior])
 
-  function handleDragEnd(event) {
-    const { active, over } = event
-    if (!over) return
-    const targetId = over.id
-    if (targetId === 'unplaced' || targetId === 'already_doing' || targetId === 'willing_to_try') {
-      moveTo(active.id, targetId)
+  // Remove a skill from any bucket (returns to unplaced).
+  const removeFromBuckets = useCallback((skillId) => {
+    setPlacement((prev) => ({
+      already_doing:  prev.already_doing.filter((x) => x !== skillId),
+      willing_to_try: prev.willing_to_try.filter((x) => x !== skillId),
+      not_interested: prev.not_interested.filter((x) => x !== skillId),
+    }))
+    const b = lookupBehavior(skillId)
+    setLiveMessage(`${b?.text || skillId} returned to the skills list.`)
+  }, [lookupBehavior])
+
+  // ---------- Pointer drag ----------
+
+  // Hit-test a viewport coordinate against the three bucket rects.
+  // Returns the bucket id whose rect contains the point, or null.
+  function bucketAtPoint(clientX, clientY) {
+    for (const b of BUCKETS) {
+      const node = bucketRefs.current[b.id]
+      if (!node) continue
+      const r = node.getBoundingClientRect()
+      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+        return b.id
+      }
     }
+    return null
   }
 
-  function handleTap(itemId) {
-    setTapSelected((prev) => (prev === itemId ? null : itemId))
+  function startPointerDrag(behavior, e) {
+    if (dropAnim) return // ignore while a drop animation is in flight
+    const isTouchish = e.pointerType !== 'mouse'
+    const offsetY = isTouchish ? GHOST_OFFSET_TOUCH : GHOST_OFFSET_MOUSE
+    const target = e.currentTarget
+    const originRect = target.getBoundingClientRect()
+    const originX = originRect.left + originRect.width / 2
+    const originY = originRect.top + originRect.height / 2
+    setDrag({
+      skillId: behavior.id,
+      pointerX: e.clientX,
+      pointerY: e.clientY,
+      ghostX: e.clientX,
+      ghostY: e.clientY + offsetY,
+      offsetY,
+      originX,
+      originY,
+      hoveredBucket: null,
+      pointerType: e.pointerType,
+    })
+    setLiveMessage(`${behavior.text} picked up.`)
   }
-  function handleBucketTap(bucketId) {
-    if (tapSelected) {
-      moveTo(tapSelected, bucketId)
-      setTapSelected(null)
+
+  // Global pointermove + pointerup while dragging.
+  useEffect(() => {
+    if (!drag || dropAnim) return
+    function handleMove(e) {
+      const hovered = bucketAtPoint(e.clientX, e.clientY)
+      setDrag((d) => {
+        if (!d) return d
+        return {
+          ...d,
+          pointerX: e.clientX,
+          pointerY: e.clientY,
+          ghostX: e.clientX,
+          ghostY: e.clientY + d.offsetY,
+          hoveredBucket: hovered,
+        }
+      })
     }
+    function handleUp() {
+      setDrag((d) => {
+        if (!d) return d
+        // Resolve the drop. If a bucket is hovered, settle; else
+        // spring back. We immediately commit the placement (or no-op
+        // on spring), then animate the ghost to its visual resting
+        // place, then unmount the ghost.
+        if (d.hoveredBucket) {
+          const bucketNode = bucketRefs.current[d.hoveredBucket]
+          const r = bucketNode?.getBoundingClientRect()
+          const targetX = r ? r.left + r.width / 2 : d.ghostX
+          const targetY = r ? r.top + r.height / 2 : d.ghostY
+          placeIntoBucket(d.skillId, d.hoveredBucket)
+          setDropAnim({
+            skillId: d.skillId,
+            kind: 'settle',
+            targetX,
+            targetY,
+          })
+        } else {
+          setDropAnim({
+            skillId: d.skillId,
+            kind: 'spring',
+            targetX: d.originX,
+            targetY: d.originY,
+          })
+        }
+        return d
+      })
+    }
+    window.addEventListener('pointermove', handleMove)
+    window.addEventListener('pointerup', handleUp)
+    window.addEventListener('pointercancel', handleUp)
+    return () => {
+      window.removeEventListener('pointermove', handleMove)
+      window.removeEventListener('pointerup', handleUp)
+      window.removeEventListener('pointercancel', handleUp)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drag !== null && !dropAnim, placeIntoBucket])
+
+  // Clear drag + dropAnim after animation completes.
+  useEffect(() => {
+    if (!dropAnim) return
+    const t = setTimeout(() => {
+      setDropAnim(null)
+      setDrag(null)
+    }, DROP_ANIM_MS + 30)
+    return () => clearTimeout(t)
+  }, [dropAnim])
+
+  // ---------- Keyboard nav ----------
+
+  // Picks up a skill via keyboard. Focus moves into the bucket
+  // selection mode; arrow keys cycle buckets, Space drops, Esc cancels.
+  function handleKeyboardActivate(skillId) {
+    if (keyboardPickup === skillId) {
+      // Already picked up — cancel.
+      setKeyboardPickup(null)
+      setKeyboardTargetBucket(null)
+      const b = lookupBehavior(skillId)
+      setLiveMessage(`${b?.text || skillId} put back.`)
+      return
+    }
+    setKeyboardPickup(skillId)
+    setKeyboardTargetBucket(BUCKETS[0].id)
+    const b = lookupBehavior(skillId)
+    setLiveMessage(
+      `${b?.text || skillId} picked up. Choose a bucket with the arrow keys, then Space to drop. Escape to cancel.`,
+    )
   }
 
-  function toggleDef(itemId) {
-    setDefOpenId((prev) => (prev === itemId ? null : itemId))
-  }
+  // Document-level keydown for arrow-key bucket cycling + Space-to-drop
+  // + Escape-to-cancel. Active only when a keyboard pickup is in flight.
+  useEffect(() => {
+    if (!keyboardPickup) return
+    function handle(e) {
+      const idx = BUCKETS.findIndex((b) => b.id === keyboardTargetBucket)
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        const next = BUCKETS[(idx + 1) % BUCKETS.length]
+        setKeyboardTargetBucket(next.id)
+        setLiveMessage(`Bucket: ${next.label}`)
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        const next = BUCKETS[(idx - 1 + BUCKETS.length) % BUCKETS.length]
+        setKeyboardTargetBucket(next.id)
+        setLiveMessage(`Bucket: ${next.label}`)
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        const targetBucket = keyboardTargetBucket || BUCKETS[0].id
+        placeIntoBucket(keyboardPickup, targetBucket)
+        setKeyboardPickup(null)
+        setKeyboardTargetBucket(null)
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        const b = lookupBehavior(keyboardPickup)
+        setLiveMessage(`${b?.text || keyboardPickup} put back.`)
+        setKeyboardPickup(null)
+        setKeyboardTargetBucket(null)
+      }
+    }
+    window.addEventListener('keydown', handle)
+    return () => window.removeEventListener('keydown', handle)
+  }, [keyboardPickup, keyboardTargetBucket, placeIntoBucket, lookupBehavior])
+
+  // ---------- Save ----------
 
   const anyPlaced =
-    placement.already_doing.length > 0 || placement.willing_to_try.length > 0
+    placement.already_doing.length > 0 ||
+    placement.willing_to_try.length > 0 ||
+    placement.not_interested.length > 0
 
   async function handleSave() {
     setSubmitting(true)
     try {
       await onSave({
         activity: 'belonging_skills_sort',
-        already_doing: placement.already_doing,
+        already_doing:  placement.already_doing,
         willing_to_try: placement.willing_to_try,
-        unplaced,
-        saved_at: new Date().toISOString(),
+        not_interested: placement.not_interested,
+        unplaced:       unplaced.map((b) => b.id),
+        saved_at:       new Date().toISOString(),
       })
       setDone(true)
     } finally {
@@ -250,67 +661,111 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
     )
   }
 
+  const draggedBehavior = drag ? lookupBehavior(drag.skillId) : null
+  const draggingId = drag?.skillId || null
+
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <div>
+      {/* Inline tailwind-extension @keyframes via plain CSS. The drop
+          pulse runs once per pulseKey change. */}
+      <style>{`
+        @keyframes bucket-drop {
+          0%   { transform: scale(1);    }
+          40%  { transform: scale(1.06); }
+          100% { transform: scale(1);    }
+        }
+        .animate-bucket-drop { animation: bucket-drop 280ms ease-out 1; }
+      `}</style>
+
       <h2 className="text-[22px] font-semibold mb-2">Belonging skills</h2>
-      <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
-        Drag each one into a bucket. If a skill isn&apos;t for you right now,
-        leave it where it is. There&apos;s no grade.
+      <p className="text-[15px] leading-relaxed text-slate-700 mb-1">
+        Drag each skill into a bucket. If a skill isn&apos;t for you right
+        now, drop it in <em>Not interested right now</em> — that&apos;s a
+        real answer, not a wrong one.
       </p>
-      <p className="text-[13px] text-slate-500 mb-5">
-        Tap the <span className="font-semibold">?</span> on any skill for a quick definition.
+      <p className="text-[12px] text-slate-500 mb-5">
+        Tap <span className="font-semibold">?</span> for a quick definition.
+        Tap <span className="font-semibold">×</span> on a placed card to send
+        it back.
       </p>
 
+      {/* Buckets — three across on desktop, stacked on mobile */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        {BUCKETS.map((bucket) => {
+          const placedBehaviors = placement[bucket.id]
+            .map((id) => lookupBehavior(id))
+            .filter(Boolean)
+          return (
+            <Bucket
+              key={bucket.id}
+              bucket={bucket}
+              placedBehaviors={placedBehaviors}
+              defOpenId={defOpenId}
+              onToggleDef={(id) =>
+                setDefOpenId((prev) => (prev === id ? null : id))
+              }
+              onRemove={removeFromBuckets}
+              isHovered={drag?.hoveredBucket === bucket.id}
+              isKeyboardTarget={
+                keyboardPickup && keyboardTargetBucket === bucket.id
+              }
+              bucketRef={setBucketRef(bucket.id)}
+              pulseKey={pulseKeys[bucket.id]}
+            />
+          )
+        })}
+      </div>
+
+      {/* Unplaced list */}
       <div className="mb-5">
-        <div className="text-[13px] text-slate-500 mb-2">Skills</div>
-        <div onClick={() => handleBucketTap('unplaced')}>
-          <div className="flex flex-col gap-2 min-h-[60px]">
-            {unplaced.map((id) => {
-              const b = BEHAVIORS.find((x) => x.id === id)
-              if (!b) return null
-              return (
-                <DraggableCard
-                  key={id}
-                  behavior={b}
-                  selected={tapSelected === id}
-                  onTap={(e) => {
-                    e.stopPropagation()
-                    handleTap(id)
-                  }}
-                  defOpen={defOpenId === id}
-                  onToggleDef={() => toggleDef(id)}
-                />
-              )
-            })}
-            {unplaced.length === 0 && (
-              <div className="text-[13px] text-slate-400 italic w-full">All sorted</div>
-            )}
-          </div>
+        <div className="text-[12px] uppercase tracking-wide text-slate-500 mb-2 font-semibold">
+          Skills to sort {unplaced.length > 0 && `(${unplaced.length})`}
+        </div>
+        <div className="flex flex-col gap-2 min-h-[60px]">
+          {unplaced.map((b, i) => (
+            <SkillCard
+              key={b.id}
+              behavior={b}
+              context="unplaced"
+              index={i + 1}
+              isBeingDragged={draggingId === b.id}
+              isKeyboardPicked={keyboardPickup === b.id}
+              defOpen={defOpenId === b.id}
+              onToggleDef={() =>
+                setDefOpenId((prev) => (prev === b.id ? null : b.id))
+              }
+              onPointerDownStart={startPointerDrag}
+              onKeyboardActivate={handleKeyboardActivate}
+            />
+          ))}
+          {unplaced.length === 0 && (
+            <div className="text-[13px] text-slate-400 italic">All sorted</div>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
-        {BUCKETS.map((b) => (
-          <div key={b.id} onClick={() => handleBucketTap(b.id)}>
-            <DropBucket
-              id={b.id}
-              label={b.label}
-              items={placement[b.id]}
-              behaviors={BEHAVIORS}
-              onTapItem={handleTap}
-              tapSelected={tapSelected}
-              defOpenId={defOpenId}
-              onToggleDef={toggleDef}
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-end">
         <PrimaryButton onClick={handleSave} disabled={!anyPlaced || submitting}>
           {submitting ? 'Saving…' : 'Save'}
         </PrimaryButton>
       </div>
-    </DndContext>
+
+      {/* aria-live region for screen readers — visually hidden */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {liveMessage}
+      </div>
+
+      {/* Ghost chip — rendered last so it floats above everything */}
+      {drag && draggedBehavior && (
+        <GhostChip
+          behavior={draggedBehavior}
+          x={drag.ghostX}
+          y={drag.ghostY}
+          dropMode={dropAnim?.kind || null}
+          targetX={dropAnim?.targetX}
+          targetY={dropAnim?.targetY}
+        />
+      )}
+    </div>
   )
 }

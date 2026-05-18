@@ -463,14 +463,25 @@ function makeResponseValue(item, rng, profile, phase) {
         }
       }
       if (componentName === 'BelongingSkillsSort') {
-        const shuffled = pickN(rng, BEHAVIOR_IDS, BEHAVIOR_IDS.length)
-        const already = shuffled.slice(0, intInRange(rng, 1, 3))
-        const willing = shuffled.slice(already.length, already.length + intInRange(rng, 1, 3))
-        const unplaced = shuffled.slice(already.length + willing.length)
+        // v3.0 adds a third "not_interested" bucket. Per-skill
+        // probabilities per the brief: ~25% already_doing,
+        // ~25% willing_to_try, ~15% not_interested, ~35% unplaced.
+        const already = []
+        const willing = []
+        const not_interested = []
+        const unplaced = []
+        for (const id of BEHAVIOR_IDS) {
+          const r = rng()
+          if (r < 0.25)         already.push(id)
+          else if (r < 0.50)    willing.push(id)
+          else if (r < 0.65)    not_interested.push(id)
+          else                  unplaced.push(id)
+        }
         return {
           activity: 'belonging_skills_sort',
           already_doing: already,
           willing_to_try: willing,
+          not_interested,
           unplaced,
           saved_at: new Date().toISOString(),
         }

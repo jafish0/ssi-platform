@@ -674,6 +674,13 @@ export function planWideColumns(snapshot) {
               },
             )
           } else if (componentName === 'BelongingSkillsSort') {
+            // v3.0 (2026-05-18) added the third "not_interested" bucket
+            // alongside the existing already_doing / willing_to_try
+            // arrays. The unplaced array is preserved in the payload so
+            // analysts can distinguish "kid skipped this skill" from
+            // "kid actively chose Not Interested" — but we don't emit a
+            // separate `_unplaced` column since it's derivable from the
+            // other three.
             cols.push(
               {
                 name: sanitizeCol(`${prefix}_already_doing`),
@@ -696,6 +703,16 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => joinList(rv?.willing_to_try),
               },
               {
+                name: sanitizeCol(`${prefix}_not_interested`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'not_interested',
+                prompt: 'Behaviors marked not interested right now',
+                allowed_values: 'semicolon-separated behavior ids',
+                notes: 'BelongingSkillsSort v3 — new bucket',
+                extract: (rv) => joinList(rv?.not_interested),
+              },
+              {
                 name: sanitizeCol(`${prefix}_n_already`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
@@ -714,6 +731,16 @@ export function planWideColumns(snapshot) {
                 allowed_values: 'integer',
                 notes: 'BelongingSkillsSort',
                 extract: (rv) => (rv?.willing_to_try || []).length,
+              },
+              {
+                name: sanitizeCol(`${prefix}_n_not_interested`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'n_not_interested',
+                prompt: 'Count of behaviors marked not interested right now',
+                allowed_values: 'integer',
+                notes: 'BelongingSkillsSort v3 — new bucket',
+                extract: (rv) => (rv?.not_interested || []).length,
               },
             )
           } else if (componentName === 'WhoIAmPoem') {
