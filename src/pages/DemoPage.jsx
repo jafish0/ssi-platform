@@ -205,8 +205,9 @@ export default function DemoPage() {
             </span>
           </div>
           <p className="text-[14px] text-slate-700 leading-relaxed mb-4 max-w-[760px]">
-            <strong>Tests.</strong> Pre-, post-, and follow-up surveys
-            that bookend the program. Currently shown: pretest.
+            <strong>Tests.</strong> Pre-, post-, and 90-day follow-up
+            surveys that bookend the program. All three render as kids
+            will see them in a real session.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {tests.map((entry) => (

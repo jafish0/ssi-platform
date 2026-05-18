@@ -55,19 +55,16 @@ function asScalar(v) {
 // _pre / _post / _fu suffix). Add a new entry here when introducing a
 // new scale at the data layer.
 const SCALE_ABBREVIATIONS = {
-  hopelessness: 'bhs',          // Beck Hopelessness Scale
-  self_agency: 'ascs',          // Adolescent Sense of Control Scale
-  loneliness: 'ucla',           // UCLA 3-Item Loneliness Scale
-  fear_rejection: 'nb',         // Need to Belong
-  belong_behaviors: 'bpb',      // Belonging Promoting Behaviors
-  belong_stress: 'bw',          // Belonging Worries (2 sliders)
-  program_helpfulness: 'pe',    // Program Expectation
-  program_acceptability: 'pa',  // Program Acceptability (post-only)
-  // `appraisals` doesn't map to any item in the locked pretest doc.
-  // Flagged for Jessica/Stephanie to confirm origin. Mapping to `app`
-  // for now so the column name is predictable — see Discrepancy note
-  // in the 2026-05-11 batch brief.
-  appraisals: 'app',
+  hopelessness: 'bhs',           // Beck Hopelessness Scale (pre, post, fu)
+  self_agency: 'ascs',           // Adolescent Sense of Control Scale (pre, post, fu)
+  loneliness: 'ucla',            // UCLA 3-Item Loneliness Scale (pre, fu)
+  fear_rejection: 'nb',          // Need to Belong (pre, post, fu)
+  belong_behaviors: 'bpb',       // Belonging Promoting Behaviors (pre, fu)
+  belong_stress: 'bw',           // Belonging Worries (2 sliders) (pre, post, fu)
+  program_helpfulness: 'pe',     // Program Expectation (pre) / Perceived Helpfulness (post)
+  program_acceptability: 'pa',   // Program Acceptability (post-only, legacy alt name)
+  program_feedback: 'pf',        // Program Feedback Acceptability (post-only) — Draft 16
+  appraisals: 'app',             // Appraisals about self / others / future (fu-only via FollowUp survey; also used by Getting Unstuck activity per-thought columns)
 }
 
 function parseScaleTokenKey(tk) {

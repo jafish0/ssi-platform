@@ -19,6 +19,8 @@ const BelongingSkillsSort = lazy(() => import('../activities/BelongingSkillsSort
 const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
 const Pretest = lazy(() => import('../activities/Pretest.jsx'))
+const Posttest = lazy(() => import('../activities/Posttest.jsx'))
+const FollowUp = lazy(() => import('../activities/FollowUp.jsx'))
 
 // --- Registry ---
 export const TEST_REGISTRY = [
@@ -77,6 +79,24 @@ export const TEST_REGISTRY = [
     description:
       'The pretest survey shown before activities begin. Captures demographics and baseline measures (Beck Hopelessness, Adolescent Sense of Control, UCLA Loneliness, Need to Belong, Belonging Promoting Behaviors, Belonging Worries, Program Expectation).',
     component: Pretest,
+    mockProps: {},
+  },
+  {
+    id: 'posttest',
+    displayName: 'Posttest',
+    category: 'Ready for Roots test',
+    description:
+      'The posttest survey shown immediately after the program. Re-asks the pretest scales that change with the intervention (BHS, ASCS, NB, Belonging Worries) plus a new Program Feedback Acceptability scale and two open-response items.',
+    component: Posttest,
+    mockProps: {},
+  },
+  {
+    id: 'followup',
+    displayName: 'FollowUp (90-day)',
+    category: 'Ready for Roots test',
+    description:
+      'The 90-day follow-up survey. Same item set as the pretest where applicable (BHS, ASCS, UCLA, NB, BPB, Belonging Worries) plus the 6 shared Appraisals items from Getting Unstuck and two follow-up-only items (permanency, placement-disruption worry).',
+    component: FollowUp,
     mockProps: {},
   },
 ]

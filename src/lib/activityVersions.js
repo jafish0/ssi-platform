@@ -79,6 +79,20 @@ export const ACTIVITY_VERSIONS = {
       '2026-05-11 · v1.0 — initial demo release.',
     ],
   },
+  posttest: {
+    version: 'v1.0',
+    updated: '2026-05-13',
+    changelog: [
+      '2026-05-13 · v1.0 — initial sandbox build of the locked Posttest survey (18 items: BHS, ASCS, NB, Belonging Worries, Perceived Helpfulness, Program Feedback Acceptability Likert + 2 open-response). 9-screen paginated flow mirroring the Pretest pattern. Shared survey-item components (SurveyItems.jsx). Save payload flat-keyed by `post_*` SPSS column names.',
+    ],
+  },
+  followup: {
+    version: 'v1.0',
+    updated: '2026-05-13',
+    changelog: [
+      '2026-05-13 · v1.0 — initial sandbox build of the locked FollowUp Survey (30 items: BHS, ASCS, UCLA, NB, BPB, the 6 shared Appraisals items from `src/lib/appraisals.js`, Belonging Worries, permanency radio with Other-text, placement-disruption worry). 11-screen paginated flow mirroring the Pretest pattern. Save payload flat-keyed by `fu_*` SPSS column names.',
+    ],
+  },
   pretest: {
     version: 'v1.0',
     updated: '2026-05-11',
