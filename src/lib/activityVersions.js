@@ -58,9 +58,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'who-i-am-poem': {
-    version: 'v2.2',
-    updated: '2026-05-12',
+    version: 'v2.3',
+    updated: '2026-05-13',
     changelog: [
+      '2026-05-13 · v2.3 — auto-titled the finished-poem card and keepsake-image PNG "Who I Am" (replacing "Your Poem"). Both surfaces match. Footer credit on the keepsake PNG unchanged. Per Stephanie 2026-05-15 + confirmed 2026-05-18 meeting.',
       '2026-05-12 · v2.2 — removed the worked example block that v2.0 added above the input form. Feedback was that the example was nudging kids toward mimicry. Activity now opens directly with the input form.',
       '2026-05-12 · v2.1 — keepsake screen gains a "Save as image" button. Builds a self-contained SVG of the poem (matches the on-screen amber card styling, with a small "SSI Platform · YYYY-MM-DD" footer credit) and rasterizes to PNG client-side. No data-shape change.',
       '2026-05-11 · v2.0 — rebuilt to Ginny\'s 10-line structure on a single screen (Poem structure.png). 8 kid inputs; lines 6 and 10 auto-mirror line 1. Worked example shown above the inputs (Holly). George Ella Lyon attribution removed (Ginny: "this isn\'t the Lyons format"). Save payload reshaped to 8 keys + saved_at — breaking change, demo-only.',
@@ -68,9 +69,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'letter-builder': {
-    version: 'v2.0',
-    updated: '2026-05-11',
+    version: 'v2.1',
+    updated: '2026-05-13',
     changelog: [
+      '2026-05-13 · v2.1 — replaced context line above the textarea with Stephanie\'s reframe (2026-05-15, confirmed 2026-05-18 meeting): "What you would want to say to another teen who feels like they don\'t belong." Old wording ("Write a letter to another teen who is starting where you are now…") was too vague — recipient is now anchored in the same emotional state the kid is being asked to write to. Direct framing in the kid\'s own voice rather than instructional. No data-shape change.',
       '2026-05-11 · v2.0 — collapsed 6-section structured letter to a single free-write screen per Stephanie\'s 2026-05-11 feedback. Removed: click-to-add word-bank chips, cross-activity pull-forward from Getting Unstuck and Allies/Safety Net, keepsake-view step. Added a short context line and a one-sentence example (greyed/italic) outside the textarea. Save payload reshaped to { activity, letter, saved_at } — breaking change, demo-only.',
       '2026-05-11 · v1.0 — initial demo release.',
     ],

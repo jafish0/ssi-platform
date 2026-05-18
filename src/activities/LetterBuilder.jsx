@@ -15,8 +15,14 @@ import { PrimaryButton } from '../components/items/shared.jsx'
 // the schema from the previous structured-per-section format. Acceptable
 // because the platform is demo-only.
 
+// Stephanie's reframe (2026-05-15 → shipped 2026-05-13 batch): the
+// recipient is anchored as another teen who feels like they don't
+// belong (matching the emotional state of the kid being asked to
+// write), rather than the vague "starting where you are." Direct
+// second-person framing ("you would want to say") so the kid composes
+// in their own voice rather than performing the task of letter-writing.
 const PROMPT =
-  'Write a letter to another teen who is starting where you are now. What do you want them to know?'
+  "What you would want to say to another teen who feels like they don't belong."
 
 // Short generic example shown OUTSIDE the textarea (greyed/italic) so the
 // kid sees the kind of letter that's welcome without having a model to
