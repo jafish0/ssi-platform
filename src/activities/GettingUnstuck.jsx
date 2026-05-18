@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 
-// Getting Unstuck — RSD's stuck-thought / strategy / reflection activity.
+// Getting Unstuck — Ready for Roots' stuck-thought / strategy / reflection activity.
 //
 // v3.0 (2026-05-12, Draft 10): rating and selection are now separate
 // screens — the previous build had them combined on a single screen

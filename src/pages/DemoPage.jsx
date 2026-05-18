@@ -1,5 +1,5 @@
 // Public temporary demo page at /demo. Combines:
-//   1. The 6 RSD activity cards (clickable, launch into /demo/sandbox/:id)
+//   1. The 6 Ready for Roots activity cards (clickable, launch into /demo/sandbox/:id)
 //   2. The data-export demo with the "How exports work" explainer always
 //      expanded and four export buttons.
 //
@@ -131,25 +131,25 @@ export default function DemoPage() {
     }
   }
 
-  const activities = TEST_REGISTRY.filter((e) => e.category === 'RSD activity')
-  const tests = TEST_REGISTRY.filter((e) => e.category === 'RSD test')
+  const activities = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots activity')
+  const tests = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots test')
 
   return (
     <DemoPageLayout>
       {/* Intro */}
       <section className="mb-8">
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
-          Ready! Set! Dedicate! — Activities Testing and Data Export Demo
+          Ready for Roots — Activities Testing and Data Export Demo
         </h1>
         <p className="text-[15px] text-slate-700 leading-relaxed max-w-[720px]">
           Three things you can do here. <strong>Test the activities</strong> —
-          launch any of the six RSD activities in isolation; nothing you
-          enter is saved. <strong>Try the pretest</strong> — walk through
-          the live participant-facing pretest as it&apos;ll paginate in a
-          real session. <strong>Try the data export</strong> — download
-          CSVs for SPSS / Excel built from a synthetic 52-participant
-          dataset. The same export pipeline that ships your real research
-          data produces these files.
+          launch any of the six Ready for Roots activities in isolation;
+          nothing you enter is saved. <strong>Try the pretest</strong> —
+          walk through the live participant-facing pretest as it&apos;ll
+          paginate in a real session. <strong>Try the data export</strong>
+          {' '}— download CSVs for SPSS / Excel built from a synthetic
+          52-participant dataset. The same export pipeline that ships your
+          real research data produces these files.
         </p>
       </section>
 
@@ -240,7 +240,7 @@ export default function DemoPage() {
           <AlertCircle size={16} strokeWidth={2} className="mt-0.5 flex-shrink-0" />
           <div>
             The exports below run against a <strong>synthetic
-            52-participant RSD dataset</strong> generated in your browser.
+            52-participant Ready for Roots dataset</strong> generated in your browser.
             Filenames are prefixed <span className="font-mono">demo_</span>
             so they can&apos;t be confused with real research data. The
             same code path produces real exports in the admin dashboard.
@@ -261,7 +261,7 @@ export default function DemoPage() {
 
           {snapshotLoading && (
             <p className="text-[14px] text-slate-500 italic mb-4">
-              Loading RSD intervention…
+              Loading Ready for Roots intervention…
             </p>
           )}
           {snapshotErr && (

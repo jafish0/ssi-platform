@@ -180,7 +180,7 @@ export default function AdminExportsPage() {
           .eq('slug', 'ready-set-dedicate')
           .single()
         if (ivErr) throw ivErr
-        if (!ivs?.current_version_id) throw new Error('RSD has no published version yet.')
+        if (!ivs?.current_version_id) throw new Error('Ready for Roots has no published version yet.')
         const { data: ver, error: vErr } = await supabase
           .from('intervention_versions')
           .select('snapshot_json, version_number')
@@ -443,7 +443,7 @@ export default function AdminExportsPage() {
           }
         >
           <Sparkles size={16} strokeWidth={1.5} />
-          Demo · 52 RSD participants
+          Demo · 52 Ready for Roots participants
         </button>
       </div>
 
@@ -481,7 +481,7 @@ export default function AdminExportsPage() {
               ))}
             </select>
             {tab === TAB_DEMO && (
-              <div className="text-[11px] text-slate-500 mt-1">Locked to RSD for the demo dataset.</div>
+              <div className="text-[11px] text-slate-500 mt-1">Locked to Ready for Roots for the demo dataset.</div>
             )}
           </div>
           <div>

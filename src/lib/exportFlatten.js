@@ -100,7 +100,7 @@ const ACTIVITY_PREFIXES = {
   SelfReflection: 'reflect',
 }
 
-// Stable list of the 8 RSD stuck-thought IDs — used to emit per-thought
+// Stable list of the 8 Ready for Roots stuck-thought IDs — used to emit per-thought
 // columns from the GettingUnstuck activity payload (one column per thought
 // × field). Must stay in sync with src/activities/GettingUnstuck.jsx.
 const STUCK_THOUGHT_IDS = ['st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8']

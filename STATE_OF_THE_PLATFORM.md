@@ -8,8 +8,8 @@ This doc exists to support a decision about whether to consolidate CTAC apps (BS
 
 ## TL;DR
 
-- **Live and stable** at https://ssi.ctac.app. Two interventions imported and end-to-end runnable: *Ready! Set! Dedicate!* (RSD, youth) and *GAINS for Professionals* (adults). 15 sessions, 351 responses recorded so far (mostly seed/test data).
-- **One repo, one Vercel project, one Supabase project** today — but the schema is **intervention-agnostic**: a single `interventions` table is the top-level partition, and RSD + GAINS already coexist cleanly inside it.
+- **Live and stable** at https://ssi.ctac.app. Two interventions imported and end-to-end runnable: *Ready for Roots* (youth; formerly *Ready! Set! Dedicate!* / RSD, renamed 2026-05-13) and *GAINS for Professionals* (adults). 15 sessions, 351 responses recorded so far (mostly seed/test data).
+- **One repo, one Vercel project, one Supabase project** today — but the schema is **intervention-agnostic**: a single `interventions` table is the top-level partition, and Ready for Roots + GAINS already coexist cleanly inside it.
 - **Shared infrastructure across CTAC apps** (umbrella domain `ctac.app`, Resend sender domain, DMARC/DKIM/SPF) is already in place. Adding a sibling app is "spin up another Vercel project + Supabase project + attach a subdomain" — no DNS work, no email-pipeline work.
 - **The consolidation question is essentially "Supabase + repo," not infra.** Email and DNS are already shared. Vercel projects are cheap to spin up. The real decision is: do all CTAC programs share a single Postgres schema and a single React app, or do they stay isolated?
 
@@ -33,23 +33,23 @@ The same React+Supabase app runs two surfaces from one codebase:
 | `/admin/interventions` | admin | List/edit interventions (Builder entry) |
 | `/admin/interventions/:id` | admin | **Builder** — section + item editor, token picker, preview, publish-with-version-snapshot |
 | `/admin/codes` | researcher+ | Access-code management (mint individual / cohort codes, see use_count) |
-| `/admin/exports` | admin | SPSS-ready wide CSV + codebook PDF + 52-participant RSD demo dataset |
+| `/admin/exports` | admin | SPSS-ready wide CSV + codebook PDF + 52-participant Ready for Roots demo dataset |
 | `/admin/team` | admin | Invite admins (TokenHash flow) + roster + last-sign-in |
 | `/admin/feedback` | admin | IRF-Team feedback triage from the public demo (filter / status workflow / inline notes) |
-| `/admin/testing` | admin | Activity sandbox for any of the 6 RSD activities with mock props |
+| `/admin/testing` | admin | Activity sandbox for any of the 6 Ready for Roots activities with mock props |
 
 ### Builder
 
 - Section + item CRUD with drag-to-reorder (`@dnd-kit`).
 - 9 item types: `psychometric_scale`, `video`, `text_prompt`, `free_text`, `structured_activity`, `guided_creative`, `choice`, `page_break`, `custom_activity`.
-- **Custom-activity registry** (`src/lib/activityRegistry.js`) — Builder can drop in any of the 6 hand-coded RSD activities as a black-box step.
+- **Custom-activity registry** (`src/lib/activityRegistry.js`) — Builder can drop in any of the 6 hand-coded Ready for Roots activities as a black-box step.
 - **Pull-forward / token system** — items declare a `token_key`; later items reference responses as `{{response.token_key.path}}`. Used heavily for letter builders, action plans, etc.
 - **Publish creates an immutable version snapshot** (full JSON) so participants always see the version they started on, even if the intervention is republished mid-session.
 
 ### Delivery engine
 
 - `SessionEngine` + `ItemRenderer` — read-from-snapshot (never live), debounced response save, resumable mid-session.
-- 6 RSD custom activities (full React components, all under `src/activities/`):
+- 6 Ready for Roots custom activities (full React components, all under `src/activities/`):
   - `GettingUnstuck.jsx`
   - `AlliesSafetyNet.jsx`
   - `SelfReflection.jsx`
@@ -62,7 +62,7 @@ The same React+Supabase app runs two surfaces from one codebase:
 
 ### Public demo
 
-- `/demo` — combines an activity sandbox (try the 6 RSD activities standalone) with the data-export demo (52 synthetic participants, runs the real export pipeline).
+- `/demo` — combines an activity sandbox (try the 6 Ready for Roots activities standalone) with the data-export demo (52 synthetic participants, runs the real export pipeline).
 - `/demo/sandbox/:activityId` — direct deep-link to any one activity.
 - Persistent **Give feedback** button in the header — modal auto-fills "Where you are" from the route, fixed roster of 8 submitters (Ginny / Adrienne / Jessica / Holly / Bianca / Stephanie / Josh / Anonymous), 5 categories. Lands in `/admin/feedback`.
 
@@ -91,7 +91,7 @@ The same React+Supabase app runs two surfaces from one codebase:
 | `WORKING_NOTES.md` | Bidirectional Claude Cowork ↔ Claude Code scratchpad (recently shipped + drafts queued) |
 | `CLAUDE.md` | Project-scoped memory for Claude Code (workflow + repo conventions) |
 | `STATE_OF_THE_PLATFORM.md` | This doc |
-| `RSD_Flow_Option_A.md`, `RSD_Flow_Option_B.md` | RSD design alternatives |
+| `RSD_Flow_Option_A.md`, `RSD_Flow_Option_B.md` | Ready for Roots design alternatives (filenames retain "RSD" — internal artifacts) |
 | `IRB_Feedback_Notes.md`, `RSD_Completion_GiftCard_Flow.md` | Process notes |
 | Various `*_claude_code_prompt.md` | Archived prompts that built the major features |
 
@@ -99,7 +99,7 @@ The same React+Supabase app runs two surfaces from one codebase:
 
 ```
 src/
-  activities/          6 hand-coded RSD activity components
+  activities/          6 hand-coded Ready for Roots activity components
   components/
     builder/           Builder-specific UI (sidebar, item configs, token picker, publish modal)
     items/             Renderers for the 9 item types

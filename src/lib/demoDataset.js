@@ -1,4 +1,4 @@
-// Synthetic 52-participant RSD dataset used by the Demo tab on the Data
+// Synthetic 52-participant Ready for Roots dataset used by the Demo tab on the Data
 // Export page. The shape matches what AdminExportsPage expects from real
 // Supabase data:
 //   - `sessions`: array of session-shaped rows (id, access_code, cohort,
@@ -6,7 +6,7 @@
 //     last_active_at).
 //   - `responsesByItemId`: { [session_id]: { [item_id]: response_value } }
 //
-// We *do* need the published RSD snapshot at runtime because the synthetic
+// We *do* need the published Ready for Roots snapshot at runtime because the synthetic
 // responses key off real item ids — this means the demo dataset always
 // matches whatever's currently published.
 
@@ -530,7 +530,7 @@ function makeResponseValue(item, rng, profile, phase) {
   }
 }
 
-// Build the demo dataset given a published RSD snapshot.
+// Build the demo dataset given a published Ready for Roots snapshot.
 // Returns { sessions, responsesByItemId } shaped exactly like real data.
 export function buildRsdDemoDataset(snapshot, opts = {}) {
   const { count = PARTICIPANT_COUNT, seed = 20260506, versionNumber = 2 } = opts
