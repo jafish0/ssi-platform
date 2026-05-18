@@ -29,7 +29,6 @@ const INTERVENTION_SLUG = 'ready-set-dedicate'
 // Generic, non-PHI-sounding placeholder content.
 // (Old ALLY_NAMES free-text list removed in Draft 8 — synthetic data
 // now uses the stable AlliesSafetyNet v2 tile IDs from src/lib/allyTiles.js.)
-const STUCK_THOUGHT_IDS = ['st1','st2','st3','st4','st5','st6','st7','st8']
 const BEHAVIOR_IDS = ['bs1','bs2','bs3','bs4','bs5','bs6','bs7']
 const RACE_OPTIONS = ['white','black','native','asian','pacific','other','prefer_not']
 const JOB_OPTIONS = ['supervisor','direct','senior','admin','training','other'] // (not used by RSD demographics; placeholder list)
@@ -318,44 +317,68 @@ function makeResponseValue(item, rng, profile, phase) {
     case 'custom_activity': {
       const componentName = c.component_name
       if (componentName === 'GettingUnstuck') {
-        // GettingUnstuck v2 (commit 7b7046e): rate ALL 8 thoughts on
-        // frequency + believability; pick which to work on (≥3 on either
-        // unlocks selection); strategies are Fight it / Both/And it.
-        // The synthetic distributions here intentionally produce a mix —
-        // most participants rate a couple thoughts highly and pick 1–3.
-        const appraisals = STUCK_THOUGHT_IDS.map((id) => ({
-          thought_id: id,
-          thought_text: `Stuck thought ${id}`,
-          frequency: intInRange(rng, 1, 5),
-          believability: intInRange(rng, 1, 5),
-          selected: false,
-        }))
-        // Pick 1–3 thoughts to "select" from the eligibility set
-        const eligible = appraisals.filter(
-          (a) => a.frequency >= 3 || a.believability >= 3,
-        )
-        const pool = eligible.length > 0 ? eligible : appraisals
-        const chosen = pickN(rng, pool, Math.min(pool.length, intInRange(rng, 1, 3)))
-        const chosenIds = new Set(chosen.map((a) => a.thought_id))
-        for (const a of appraisals) {
-          if (chosenIds.has(a.thought_id)) a.selected = true
-        }
-        const responses = chosen.map((a) => {
-          const useFight = rng() < 0.5
-          return {
-            thought_id: a.thought_id,
-            thought_text: a.thought_text,
-            strategy: useFight ? 'fight' : 'both_and',
-            ...(useFight
-              ? { fight_response: 'Maybe that’s not totally true — last week Coach showed up.' }
-              : { and_statement: 'there can still be people who stay.' }),
+        // GettingUnstuck v5 (Draft 15, 2026-05-13): 6 locked appraisal
+        // items shared with the FollowUp Survey. Single rating per item
+        // (truth_rating 0-5). Eligibility threshold: ≥2. Strategies are
+        // Challenge / Both/And. Save payload is a dict keyed by id, not
+        // the v2/v4 arrays.
+        const APPRAISAL_IDS = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']
+        const appraisals = {}
+        for (const aid of APPRAISAL_IDS) {
+          appraisals[aid] = {
+            truth_rating: intInRange(rng, 0, 5),
+            selected: false,
           }
-        })
+        }
+        // Pick 1–2 from items rated ≥2; if none, leave selected=false
+        // for all (matches the affirmation path).
+        const eligibleIds = APPRAISAL_IDS.filter((aid) => appraisals[aid].truth_rating >= 2)
+        const pickCount = Math.min(eligibleIds.length, intInRange(rng, 1, 2))
+        const chosen = pickN(rng, eligibleIds, pickCount)
+        for (const aid of chosen) {
+          appraisals[aid].selected = true
+          const useChallenge = rng() < 0.55
+          if (useChallenge) {
+            appraisals[aid].strategy = 'challenge'
+            appraisals[aid].response = 'Maybe that\'s not totally true — last week Coach showed up.'
+          } else {
+            appraisals[aid].strategy = 'both_and'
+            appraisals[aid].and_statement = 'there can still be people who stay.'
+          }
+        }
+        // ~30% include a non-empty a_other.
+        if (rng() < 0.30) {
+          const otherText = pick(rng, [
+            'I feel like I take up too much space.',
+            'I have to keep moving to be okay.',
+            'I will always be the new kid.',
+            'Nobody really wants to listen.',
+          ])
+          const otherRating = intInRange(rng, 0, 5)
+          appraisals.a_other = {
+            text: otherText,
+            truth_rating: otherRating,
+            selected: false,
+          }
+          // If the Other rating clears threshold and the kid hasn't
+          // already picked 2 from the locked set, give them a chance to
+          // select it.
+          const picksSoFar = chosen.length
+          if (otherRating >= 2 && picksSoFar < 2 && rng() < 0.5) {
+            appraisals.a_other.selected = true
+            const useChallenge = rng() < 0.55
+            if (useChallenge) {
+              appraisals.a_other.strategy = 'challenge'
+              appraisals.a_other.response = 'I noticed Aunt Lisa always listens — so maybe not always.'
+            } else {
+              appraisals.a_other.strategy = 'both_and'
+              appraisals.a_other.and_statement = 'there are people who do listen when I let them.'
+            }
+          }
+        }
         return {
           activity: 'getting_unstuck',
           appraisals,
-          stuck_thought_ids: [...chosenIds],
-          responses,
           saved_at: new Date().toISOString(),
         }
       }

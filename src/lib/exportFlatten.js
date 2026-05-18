@@ -100,11 +100,6 @@ const ACTIVITY_PREFIXES = {
   SelfReflection: 'reflect',
 }
 
-// Stable list of the 8 Ready for Roots stuck-thought IDs — used to emit per-thought
-// columns from the GettingUnstuck activity payload (one column per thought
-// × field). Must stay in sync with src/activities/GettingUnstuck.jsx.
-const STUCK_THOUGHT_IDS = ['st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8']
-
 // ---------- Column planning ----------
 
 // Walk the snapshot once and produce the list of column descriptors that
@@ -368,90 +363,131 @@ export function planWideColumns(snapshot) {
           const prefix = ACTIVITY_PREFIXES[componentName] || sanitizeCol(tk)
           // Per-component well-known scalars.
           if (componentName === 'GettingUnstuck') {
-            // Per-thought appraisal columns. v2.0 of the activity (commit
-            // 7b7046e) added frequency + believability ratings for every
-            // stuck thought (not just the chosen ones). Strategy/response
-            // columns are empty for unchosen thoughts.
-            for (const stId of STUCK_THOUGHT_IDS) {
+            // v5.0 (2026-05-13, Draft 15): payload reshape to
+            //   { appraisals: { a1..a6 [+a_other]: { truth_rating, selected,
+            //     strategy?, response?, and_statement?, text? (a_other only) } } }
+            // The 8 RSD stuck thoughts are gone; the 6 locked appraisal
+            // items from the FollowUp Survey took their place. Only one
+            // rating per item now (truth_rating, 0-5). Strategy data key
+            // settled on `challenge` (final after the third flip).
+            const APPRAISAL_IDS = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']
+            for (const aid of APPRAISAL_IDS) {
               cols.push({
-                name: sanitizeCol(`${prefix}_freq_${stId}`),
+                name: sanitizeCol(`${prefix}_truth_${aid}`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: `${stId}.frequency`,
-                prompt: `How often do you have stuck thought ${stId}?`,
-                allowed_values: '1–5 (Never→Always)',
-                notes: 'GettingUnstuck v2 appraisal',
-                extract: (rv) =>
-                  rv?.appraisals?.find((a) => a.thought_id === stId)?.frequency ?? '',
+                sub_id: `${aid}.truth_rating`,
+                prompt: `Truth rating for appraisal item ${aid}`,
+                allowed_values: '0–5 (Not At All True→Definitely True)',
+                notes: 'GettingUnstuck v5 (shared with FollowUp appraisals)',
+                extract: (rv) => rv?.appraisals?.[aid]?.truth_rating ?? '',
               })
               cols.push({
-                name: sanitizeCol(`${prefix}_belief_${stId}`),
+                name: sanitizeCol(`${prefix}_selected_${aid}`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: `${stId}.believability`,
-                prompt: `How strongly do you believe stuck thought ${stId}?`,
-                allowed_values: '1–5 (Not at all→Completely)',
-                notes: 'GettingUnstuck v2 appraisal',
-                extract: (rv) =>
-                  rv?.appraisals?.find((a) => a.thought_id === stId)?.believability ?? '',
-              })
-              cols.push({
-                name: sanitizeCol(`${prefix}_selected_${stId}`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: `${stId}.selected`,
-                prompt: `Did the participant choose to work on stuck thought ${stId}?`,
+                sub_id: `${aid}.selected`,
+                prompt: `Did the participant choose to work on appraisal ${aid}?`,
                 allowed_values: '0 or 1',
-                notes: 'GettingUnstuck v2',
-                extract: (rv) =>
-                  rv?.appraisals?.find((a) => a.thought_id === stId)?.selected ? 1 : 0,
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => (rv?.appraisals?.[aid]?.selected ? 1 : 0),
               })
               cols.push({
-                name: sanitizeCol(`${prefix}_strategy_${stId}`),
+                name: sanitizeCol(`${prefix}_strategy_${aid}`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: `${stId}.strategy`,
-                prompt: `Strategy chosen for stuck thought ${stId}`,
-                allowed_values: 'fight | both_and | (blank if not chosen)',
-                notes: 'GettingUnstuck v2',
-                extract: (rv) =>
-                  rv?.responses?.find((r) => r.thought_id === stId)?.strategy ?? '',
+                sub_id: `${aid}.strategy`,
+                prompt: `Strategy chosen for appraisal ${aid}`,
+                allowed_values: 'challenge | both_and | (blank if not chosen)',
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => rv?.appraisals?.[aid]?.strategy ?? '',
               })
               cols.push({
-                name: sanitizeCol(`${prefix}_response_${stId}`),
+                name: sanitizeCol(`${prefix}_response_${aid}`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: `${stId}.response`,
-                prompt: `Open-ended response for stuck thought ${stId}`,
+                sub_id: `${aid}.response`,
+                prompt: `Open-ended response for appraisal ${aid}`,
                 allowed_values: 'free text',
                 notes: 'Challenge response or Both/And statement, depending on strategy',
                 extract: (rv) => {
-                  const r = rv?.responses?.find((x) => x.thought_id === stId)
-                  return r?.fight_response ?? r?.and_statement ?? ''
+                  const r = rv?.appraisals?.[aid]
+                  return r?.response ?? r?.and_statement ?? ''
                 },
               })
             }
+            // Optional "Other thought" the kid named themselves. Columns
+            // are blank unless the kid said Yes on the Other screen + typed
+            // a thought.
             cols.push(
               {
-                name: sanitizeCol(`${prefix}_thought_ids`),
+                name: sanitizeCol(`${prefix}_other_text`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'stuck_thought_ids',
-                prompt: 'Stuck thoughts the participant chose to work on',
-                allowed_values: 'semicolon-separated thought ids',
-                notes: 'GettingUnstuck',
-                extract: (rv) => joinList(rv?.stuck_thought_ids),
+                sub_id: 'a_other.text',
+                prompt: "Participant's own stuck-thought text (Other)",
+                allowed_values: 'free text',
+                notes: 'GettingUnstuck v5 — blank if the kid didn\'t add an Other thought',
+                extract: (rv) => rv?.appraisals?.a_other?.text ?? '',
               },
               {
-                name: sanitizeCol(`${prefix}_n_fight`),
+                name: sanitizeCol(`${prefix}_truth_a_other`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'n_fight',
-                prompt: 'Count of Fight-strategy responses',
+                sub_id: 'a_other.truth_rating',
+                prompt: "Truth rating for the participant's Other thought",
+                allowed_values: '0–5 (Not At All True→Definitely True)',
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => rv?.appraisals?.a_other?.truth_rating ?? '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_selected_a_other`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'a_other.selected',
+                prompt: 'Did the participant choose to work on their Other thought?',
+                allowed_values: '0 or 1',
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => (rv?.appraisals?.a_other?.selected ? 1 : 0),
+              },
+              {
+                name: sanitizeCol(`${prefix}_strategy_a_other`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'a_other.strategy',
+                prompt: "Strategy chosen for the participant's Other thought",
+                allowed_values: 'challenge | both_and | (blank if not chosen)',
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => rv?.appraisals?.a_other?.strategy ?? '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_response_a_other`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'a_other.response',
+                prompt: "Open-ended response for the participant's Other thought",
+                allowed_values: 'free text',
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => {
+                  const r = rv?.appraisals?.a_other
+                  return r?.response ?? r?.and_statement ?? ''
+                },
+              },
+            )
+            // Rollup counts across the locked 6 items + a_other if present.
+            cols.push(
+              {
+                name: sanitizeCol(`${prefix}_n_challenge`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'n_challenge',
+                prompt: 'Count of Challenge-strategy responses',
                 allowed_values: 'integer',
-                notes: 'GettingUnstuck',
-                extract: (rv) =>
-                  (rv?.responses || []).filter((r) => r.strategy === 'fight').length,
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => {
+                  const a = rv?.appraisals || {}
+                  return Object.values(a).filter((r) => r?.strategy === 'challenge').length
+                },
               },
               {
                 name: sanitizeCol(`${prefix}_n_both_and`),
@@ -460,9 +496,11 @@ export function planWideColumns(snapshot) {
                 sub_id: 'n_both_and',
                 prompt: 'Count of Both/And-strategy responses',
                 allowed_values: 'integer',
-                notes: 'GettingUnstuck',
-                extract: (rv) =>
-                  (rv?.responses || []).filter((r) => r.strategy === 'both_and').length,
+                notes: 'GettingUnstuck v5',
+                extract: (rv) => {
+                  const a = rv?.appraisals || {}
+                  return Object.values(a).filter((r) => r?.strategy === 'both_and').length
+                },
               },
             )
           } else if (componentName === 'AlliesSafetyNet') {
