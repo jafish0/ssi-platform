@@ -14,6 +14,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`88c3358` · 2026-05-13** — Draft 12: Belonging Skills Sort v3.0 — five converging pieces of feedback from the 2026-05-18 review meeting shipped as one rebuild. **(1)** Two CSS drop-zones → three illustrated trapezoidal bucket SVGs (shared `BucketSvg` component, amber-300/500). **(2)** New "Not interested right now" bucket — equal styling on purpose (Stephanie's call: don't desaturate, the whole point is to legitimize "not for me" as a valid answer). **(3)** Placement rebuilt as real pointer-event drag with a ghost-chip follower (Holly: "see the text moving") — offsets above the finger on touch, settles into bucket with a 240ms ease-out transition + bucket pulse on drop, springs back to origin on drop outside any bucket. Uses pointer events not @dnd-kit so it works uniformly on mouse/touch/pen. **(4)** Placed cards have a small × remove button that returns to unplaced (Jessica). **(5)** Full keyboard + screen-reader path: Tab/arrow nav, Space picks up, arrow keys cycle buckets, Space drops, Escape cancels; aria-live status region announces transitions. Save payload reshaped: now has `not_interested` array; `unplaced` stays in payload so analysts can distinguish "kid skipped" from "kid actively chose Not Interested." `exportFlatten.js` gains `sort_not_interested` + `sort_n_not_interested`. `demoDataset.js` distribution 25/25/15/35. v2.0 → v3.0 (MAJOR).
+- **`b571464` · 2026-05-13** — Draft 13: small-copy bundle from the 2026-05-18 review meeting, shipped as one stopping point. **LetterBuilder v2.0 → v2.1 (MINOR)**: replaced the context line above the textarea per Stephanie (2026-05-15) — was "Write a letter to another teen who is starting where you are now…", now "What you would want to say to another teen who feels like they don't belong." Anchors the recipient in the same emotional state the kid is being asked to write to; direct second-person framing in the kid's voice. **WhoIAmPoem v2.2 → v2.3 (MINOR)**: auto-titled the finished-poem card and keepsake-image PNG "Who I Am" (replacing "Your Poem"), both surfaces updated. No data-shape changes on either.
 - **`78a67cd` · 2026-05-12** — /demo Data export demo restructured: three numbered per-file blocks (Wide CSV / `.sps` syntax / Codebook CSV) instead of one long paragraph + button row. The `.sps` block now has its own amber "How to use it in SPSS" panel with a 3-step numbered list — save next to the CSV → open in SPSS → Run → All — plus a smaller italic fallback note about setting the working directory or editing the `/FILE=` path. Dropped the "Note: Qualtrics offers a native .sav…" paragraph per Josh. New `ExportFileBlock` helper at the bottom of `DemoPage.jsx` keeps the three files rendering consistently.
 - **`71a37e9` · 2026-05-12** — Allies / Safety Net v4.1 (Draft 11): reverted the four inspect-modal questions to Stephanie's PPT Slide 4 originals — Q1 "usually get you into trouble" (was "sometimes get you in trouble"), Q2 "talking to or getting close to other people" (was the longer "spending time with other people who care about you"), Q4 "Do you feel afraid of {name}?" with the kid-perspective phrasing (was ally-active). Q3 unchanged. My v3.0 rewording was a judgment call about kid-friendly phrasing for content Stephanie wrote, not driven by team feedback; Josh decided to restore PPT phrasing as written. Flag keys + answer scheme unchanged — no data-shape change. Added a comment above `INSPECT_QUESTIONS` noting these are verbatim from the PPT.
 - **`c02a379` · 2026-05-12** — Getting Unstuck v4.0: reverted v2.0's "Fight it" → "Challenge it" rename. Strategy button label back to "Fight it", data key back to `fight`, response field back to `fight_response`, export column back to `unstuck_n_fight` (allowed values `fight | both_and`), demoDataset synthetic data regenerates with `strategy: 'fight'`. Stephanie's clinical-content rationale ("more clinically standard") was overridden by Josh; the original RSD framing is restored. Rate/pick split + max-2 selection + affirmation path from v3.0 all stay. MAJOR bump because of the data-shape change; no real participant data exists yet so no migration concerns.
@@ -219,7 +221,215 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — Draft 11 shipped as commit `71a37e9`, summarized under that entry in Recently shipped above)_
+_(none — Drafts 12 and 13 shipped as commits `88c3358` and `b571464`, summarized under those entries in Recently shipped above)_
+
+<!--
+
+### Draft 12 — Belonging Skills Sort v3.0: visual buckets + ghost-chip drag + Not Interested bucket + remove-from-bucket
+
+Five converging pieces of feedback from the 2026-05-18 review meeting + the 20 minutes of submissions immediately before it. All five resolve into one coherent rebuild of the placement interaction; ship as a single v3.0 commit.
+
+**Driving feedback (verbatim, oldest → newest):**
+
+- Stephanie (2026-05-15): *"I can't drag responses straight into the 'what I'm already doing box.'"*
+- Stephanie (2026-05-15): *"Do we need a third option for if they are not doing it currently and not willing to try it?"*
+- Holly (2026-05-18, 14:48): *"Is it possible for you to select a skill and actually 'drag' it with your mouse? Like, you would be able to see the text moving towards the box you want to put it in."*
+- Ginny (2026-05-18, 14:57, anonymous): *"We call these buckets — can the spaces where we drag things look like buckets?"*
+- Jessica (2026-05-18, 14:58): *"If they accidentally drag an option, then change their mind, can they delete it or do they have to reset the whole page?"*
+
+The team aligned on a single direction in the meeting: replace the existing drop-zone-plus-tap interaction with a real drag-and-drop into visually rendered buckets, with a third "Not Interested" bucket and a way to remove items after placement.
+
+**File:** `src/activities/BelongingSkillsSort.jsx` (plus the skill registry in `src/lib/` if there's a separate data file — confirm at build time).
+
+---
+
+#### Change 1 — Visual bucket graphics replacing the drop zones
+
+Render each category as an illustrated bucket — not a labeled rectangle. A simple trapezoidal bucket SVG with a handle reads as a bucket to a teen at first glance; CSS rectangles do not. Single reusable SVG component takes a `label` prop and a `color` prop.
+
+Three buckets, displayed side-by-side on desktop and stacked vertically on mobile (the existing breakpoint pattern in the activity is fine):
+
+1. **What I'm already doing** — amber-300 fill, amber-500 outline
+2. **What I'm willing to try** — amber-300 fill, amber-500 outline
+3. **Not interested right now** — amber-300 fill, amber-500 outline
+
+**Equal styling on purpose.** Resist the temptation to grey out or desaturate the Not Interested bucket. Visual hierarchy that demotes it implies the kid should feel bad for picking it; the whole point of adding the bucket is to legitimize "not for me" as a valid answer.
+
+The bucket label sits above the bucket. Placed skill cards stack inside the bucket (clipped to the bucket's inner area, scrollable if more than ~3 stack up — though with only 7 skills total this should be rare).
+
+#### Change 2 — Add the "Not Interested" bucket as a third category
+
+The current data shape has `already_doing`, `willing_to_try`, and `unplaced` arrays. Add a fourth array: `not_interested`. The kid starts with all 7 skills in `unplaced` and ends with each skill in exactly one of the three placement arrays (or remaining in `unplaced` if they skip — same as today).
+
+**New save shape:**
+
+```js
+{
+  activity: "belonging_skills_sort",
+  already_doing: ["bs4"],
+  willing_to_try: ["bs7"],
+  not_interested: ["bs2"],
+  unplaced: ["bs1", "bs3", "bs5", "bs6"],
+  saved_at: "2026-05-18T..."
+}
+```
+
+`unplaced` stays in the payload so we can distinguish "kid didn't engage with this skill" from "kid actively chose Not Interested." That's the whole reason for adding the bucket — preserve the signal.
+
+#### Change 3 — Real drag with a ghost-chip visual
+
+Replace the current placement interaction with pointer-events-based drag-and-drop using a floating ghost chip that follows the cursor or finger. This addresses Holly's "I want to see the text moving" directly.
+
+**Interaction model:**
+
+1. **Pointer-down on a skill card** in the unplaced list: card scales up slightly (Tailwind `scale-105`), gains an amber-500 ring (`ring-2 ring-amber-500`), and a drop shadow lifts it visually (`shadow-lg`). Original card stays in place but dims to ~40% opacity (`opacity-40`) so the kid sees where they picked it up from.
+
+2. **A ghost chip lifts off and follows the pointer.** The chip is a small rounded pill (~120-160px wide, ~36-44px tall) showing the skill number badge ("1", "2", …) plus the first ~30 chars of the label with ellipsis. Don't try to drag the full sentence — labels are long enough that a full-card ghost would cover half the screen on mobile.
+
+3. **On mobile, offset the ghost chip ~32px above the finger** so the thumb doesn't cover it. On desktop, anchor the chip slightly above-right of the cursor (~12px offset).
+
+4. **Pointer-move** updates the chip position. While the pointer is over a valid bucket, that bucket gets an amber-200 glow (`ring-4 ring-amber-200 ring-offset-2`) and the chip itself adds a subtle scale-up to confirm "ready to drop here."
+
+5. **Pointer-up over a bucket**: ghost chip animates with an arc-into-bucket motion (~250ms, ease-out) and "settles" into the bucket's inner area as the real placed card. The original card removes from the unplaced list. The arc gives even quick-release users (touch users especially) the visual reinforcement that the skill traveled.
+
+6. **Pointer-up outside any bucket**: ghost chip springs back to the origin position with a quick bounce (~200ms) and the original card returns to full opacity. No placement happens.
+
+**Use `pointerdown` / `pointermove` / `pointerup` events**, not HTML5 `dragstart`/`dragover`/`drop`. HTML5 drag-and-drop has effectively no touch support across browsers and the ghost image is browser-controlled. Pointer events work uniformly on mouse, touch, and pen.
+
+**Cursor states**: `cursor-grab` on hover, `cursor-grabbing` while dragging.
+
+#### Change 4 — Remove items from buckets
+
+Placed cards inside a bucket show a small × button in the top-right corner (Tailwind: `absolute top-1 right-1 w-6 h-6 rounded-full bg-amber-100 hover:bg-amber-200 text-slate-600 text-xs flex items-center justify-center`). Tapping × returns the skill to the unplaced list (moves it from whatever category it's in back to `unplaced`).
+
+The × is the primary removal affordance. **Do not** also support "drag the placed card out of the bucket back to unplaced" — the × is a one-tap escape hatch and a different intent (correcting a mistake) than drag (sorting). Keep the interaction model simple: drag to place, × to remove.
+
+#### Change 5 — Keyboard + screen-reader accessibility
+
+Pointer events alone aren't accessible. Add a keyboard fallback:
+
+- Tab into the unplaced list. Arrow keys navigate between skill cards. Each card has an aria-label like "Skill 1: Pay close attention when someone is talking to you."
+- Space or Enter "picks up" the focused skill — same visual state as pointer-down (ring, shadow, dimmed original). Focus moves to the first bucket. An aria-live region announces "Skill 1 picked up. Choose a bucket: Already doing, Willing to try, Not interested right now."
+- Arrow keys cycle between the three buckets. Space or Enter drops the skill into the focused bucket. Aria-live announces "Skill 1 placed in Already doing."
+- Escape cancels the pickup and returns focus to the original card.
+- Tab into a placed card focuses the × button; Space/Enter removes.
+
+#### Change 6 — Export pipeline updates
+
+`src/lib/exportFlatten.js` currently emits `sort_*` columns derived from the three-array shape. Add columns for `not_interested`:
+
+- `sort_not_interested_count` — integer count of items in `not_interested`
+- `sort_not_interested_<skill_id>` — per-skill binary (1 if placed there, 0 otherwise), matching the existing per-skill column pattern for `already_doing` and `willing_to_try` if that pattern exists; otherwise just emit the count.
+
+Verify the existing convention by reading the current emission code — match it. If `unplaced` currently doesn't get its own count column, leave that as-is.
+
+`src/lib/demoDataset.js` synthetic data generator needs updated probabilities so that each of the 7 skills has ~25% chance of `already_doing`, ~25% `willing_to_try`, ~15% `not_interested`, ~35% `unplaced` — adjust to a reasonable distribution, doesn't need to be precise.
+
+#### Change 7 — Version bump
+
+`src/lib/activityVersions.js`: bump `belonging-skills-sort` from v2.0 to v3.0 (MAJOR — new bucket, new data shape, new interaction model). Update `updated` to today's date. Prepend a one-line changelog entry:
+
+> v3.0 — Visual bucket graphics replace drop zones; added "Not interested right now" as a third placement bucket; rebuilt placement as pointer-event drag with a ghost-chip follower and arc-into-bucket animation; placed cards have an × remove button; keyboard + screen-reader accessibility added.
+
+---
+
+**Out of scope for this draft:**
+
+- The bs1-bs7 skill labels themselves don't change. The 7 Belonging Promoting Behaviors items from the locked pretest doc (set in commit `7b7046e`, Draft 3) stay.
+- Hover/tap-define tooltips on each skill (the "?" affordance) stay. They should continue to work in the unplaced list; consider whether they should also work on placed cards inside a bucket (probably yes, but small — the kid may want to re-read a definition before deciding to remove).
+- The activity-completion criteria (when "Continue" enables) stays the same as today.
+
+**Approved by:** Josh, 2026-05-18, in Cowork session reviewing the 2026-05-18 meeting feedback.
+
+*End of Draft 12.*
+
+---
+
+### Draft 13 — Small-copy bundle: Letter to Another Youth v2.1 + Who I Am Poem v2.3
+
+Two unrelated small copy changes from the 2026-05-18 review meeting. Both are one-line edits with no data-shape implications; ship as a single commit so the team sees one stopping point rather than two micro-pushes.
+
+#### Change 1 — Letter to Another Youth v2.1: new instruction copy
+
+**Driving feedback:** Stephanie (2026-05-15): *"Instead of 'another teen starting where you are' would we want to say maybe another teen in out of home care that doesn't feel like they fit in or belong? something like that?"*
+
+The current context line above the textarea (set in commit `7b7046e`, Draft 4) reads roughly: *"Write a letter to another teen who is starting where you are now. What do you want them to know?"* The framing of "starting where you are now" is too vague — the recipient isn't anchored in the same emotional state the kid is being asked to write to. Stephanie's reframe lands on the actual recipient: another teen who doesn't feel like they belong.
+
+**File:** `src/activities/LetterBuilder.jsx`
+
+**Change:** Replace the existing context line above the textarea with:
+
+> What you would want to say to another teen who feels like they don't belong.
+
+This becomes the entire instruction line above the textarea. Don't keep the "Write a letter…" wrapper — the new line is the prompt. Tone is intentionally direct ("you would want to say") rather than instructional ("write a letter to…") so the kid is composing in their own voice rather than performing the task of letter-writing.
+
+Keep any small "optional" example block outside the textarea as-is if one exists from v2.0. If none exists, don't add one.
+
+**Version bump:** v2.0 → v2.1 (MINOR, copy change). Prepend changelog entry: *"Replaced context line above the textarea with Stephanie's reframe — 'What you would want to say to another teen who feels like they don't belong.'"* Update `updated` to today's date.
+
+**No data-shape changes.** Save payload `{ letter: "<full text>", saved_at: "..." }` unchanged.
+
+#### Change 2 — Who I Am Poem v2.3: auto-title the output "Who I Am"
+
+**Driving feedback:** Stephanie (2026-05-15): *"It would be nice to give this a title to replace 'Your Poem.'"* Confirmed in the 2026-05-18 meeting: title the output **"Who I Am"** (matches the activity name itself, which is the natural read).
+
+**File:** `src/activities/WhoIAmPoem.jsx` — and the keepsake-card builder used by `downloadSvgStringAsPng` (per commit `92bfff9`, the SVG keepsake card was added there; check `src/lib/imageDownload.js` if the title lives there instead).
+
+**Change:** Wherever the finished poem is displayed (the on-screen amber card after the kid submits, AND the downloadable PNG keepsake card) — replace the title text **"Your Poem"** with **"Who I Am."** Both surfaces should match; the keepsake-card SVG is built to mirror the on-screen card per the v2.1 spec, so updating both at once preserves that invariant.
+
+The "SSI Platform · date" footer on the keepsake card stays as-is.
+
+If the title currently lives as a single string constant near the top of the component or in the SVG builder, this is a one-line edit. If there are two separate hardcoded strings (one for the card, one for the SVG), update both.
+
+**Version bump:** v2.2 → v2.3 (MINOR, copy change). Prepend changelog entry: *"Auto-titled the finished-poem card and keepsake-image PNG 'Who I Am' (replacing 'Your Poem')."* Update `updated` to today's date.
+
+**No data-shape changes.** Save payload unchanged.
+
+---
+
+**Approved by:** Josh, 2026-05-18, in Cowork session reviewing the 2026-05-18 meeting feedback.
+
+**Out of scope for this draft:**
+
+- Allies / Safety Net icon additions (Boyfriend/Girlfriend, multi-friend redesign, split parent/grandparent tiles, possibly foster sibling) are parked — Josh is preparing those icons himself before that draft goes to Claude Code.
+- The Getting Unstuck v4.2 changes (drop "how often", add the six locked appraisal items + 0-5 anchor scale, add "Other thought" option, rename Fight → Challenge yet again, Jessica's "add the word questions" copy edit, fix the pull-forward threshold bug) will follow as Draft 14.
+
+*End of Draft 13.*
+
+-->
+
+---
+
+### Pending requirement — PID linking between Qualtrics consent and ctac.app surveys
+
+**Status:** Not a ready-to-ship prompt yet — captured here so it isn't forgotten when the Qualtrics consent build kicks off. This requirement is part of the IRB protocol (per the wording Josh sent Jessica on 2026-05-18 for the Description of Research Procedures), so it has to be in place before the first real participant goes through.
+
+**Background.** The RSD study links the caregiver consent (collected in Qualtrics) to all child-facing surveys (assent, pretest, intervention activities, posttest, 90-day follow-up — all in ctac.app) via a Participant ID (PID). The child's name is never collected by ctac.app. The IRB language Josh proposed:
+
+> A random alphanumeric PID is generated at the time of consent that contains no identifying information (no name, no date of birth, no email). The PID is passed to ctac.app as a URL parameter in the program link sent to the caregiver's email, and ctac.app stores all subsequent child-facing data keyed only by that PID. The caregiver's email address is required only to deliver the program link, the 90-day follow-up link, and the e-gift-card incentives; it is stored in a separate access-controlled table, not co-located with the child's response data.
+
+**Build requirements (must be in place before first real participant):**
+
+1. **PID generation.** Decide on Qualtrics' built-in `ResponseID` vs. a custom random PID stored as embedded data. Awaiting Jessica's preference — either works for the IRB. If we go custom, generate in Qualtrics with a JS embedded-data block (e.g., 12-char base32) so the PID is fixed at consent time.
+
+2. **PID handoff to ctac.app.** The intervention link emailed from Qualtrics must include the PID as a URL parameter (e.g., `https://ctac.app/start?pid=ABC123XYZ`). ctac.app reads the PID on entry and stamps every saved row (assent, pretest, activity payloads, posttest) with it. Same mechanism for the 90-day follow-up link.
+
+3. **Participants table in Supabase.** New `public.participants` table holding `(pid PRIMARY KEY, caregiver_email, consent_date, follow_up_due_date, follow_up_sent_at, completed_at)`. RLS-locked so it's accessible only to designated research personnel — no `anon` grants, only `service_role` / `authenticated` admins. This is the linking table; it lives separate from the response tables.
+
+4. **Response tables stamped with PID.** Wherever child-facing data is currently saved (`assents`, `pretest_responses`, `activity_saves`, `posttest_responses`, `follow_up_responses` — exact table names per current schema), each row needs a `pid` column. Existing demo data may need a backfill or just left as null (demo-only). Decide based on schema state at build time.
+
+5. **Child name never collected.** Audit all ctac.app screens to confirm no name-entry field for the kid. The "Other (custom)" ally tile names in Safety Net are fine — those are ally names, not the kid's name — but worth a sanity check on whatever copy currently asks for input.
+
+6. **90-day follow-up scheduling.** A scheduled job (Supabase edge function on cron, or Resend-side schedule) reads from `participants` where `follow_up_due_date <= now()` AND `follow_up_sent_at IS NULL`, sends the follow-up email with the PID-stamped link, and marks `follow_up_sent_at`. Same gift-card workflow on completion of the follow-up survey.
+
+**Supabase migration note.** Per CLAUDE.md, new public-schema tables created after 2026-10-30 need explicit Data API grants alongside RLS. The `participants` table is RLS-locked to admins only — `anon` gets no grants, `authenticated` gets nothing (RLS-policed), `service_role` gets full CRUD for the scheduled job.
+
+**Open before build:**
+- Jessica's preference on PID source (`ResponseID` vs custom random).
+- Whether the gift-card-sending workflow is already wired up or needs to be part of this build.
+- Coordination with whoever sets up the Qualtrics consent (likely Jessica or Adrienne) so the URL-parameter handoff is in place on both sides.
+
+*End of pending requirement. When the Qualtrics consent build begins, this draft can be refined into a ready-to-ship implementation prompt.*
 
 <!--
 
