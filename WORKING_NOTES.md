@@ -14,6 +14,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`<pending>` · 2026-05-19** — Draft 19: Allies / Safety Net v4.1 → **v5.0** (MAJOR) + Getting Unstuck v5.1 → **v5.2** (MINOR), shipped as one commit. **Allies v5.0** is a substantial restructure driven by Stephanie's 2026-05-18 transcript spec, Holly's color-coding ask, and the new 22-tile icon set Josh delivered 2026-05-19. **(1)** 22-tile icon set replaces v4.x's 15 — foster/bio/grandparent each split into mom+dad / mother+father pairs, friend split to friend + best-friend + friends (group), boyfriend + girlfriend added, sneaky-link deliberately not registered per Josh's 2026-05-19 call. SVGs stripped of background `<rect>` per the existing pattern. **(2)** Color-coded support types per Holly: Practical = amber, Emotional = rose, Social = sky. Colors appear on the type word in each screen heading, the per-type tile background tint on selection grids, and the full background of the new transition screens. **(3)** Brief transition screens between Practical → Emotional → Social selection, resolving Ginny's "kind of looked similar" feedback. **(4)** Inspect (Part 2) restructured per Stephanie: educational screen with a video placeholder (Adrian to record actual content — placeholder is a styled 16:9 div with "Video coming soon" caption, no player UI) + the four red-flag bullets verbatim from her PPT → single X-out-on-net screen where the kid taps × on any ally to take them out (visual: ally fades to ~30% opacity, big red X overlays; tap × again to restore). The per-ally modal walkthrough with the 4 Yes/No questions is gone. **(5)** Strengthen (Part 3) rebuilt from scratch (last torn down in commit `d515d0e`): per-type gap detection on post-removal counts (0 or 1 ally = gap); per-gap screen with same-kid ally chips as suggestion shortcuts ("Anyone here also fit?" — taps pre-fill the gap_filler), "Who could that be?" filler input, "What's one thing you could do?" action textarea, and a Skip option. Number of Strengthen screens is dynamic (0–3) based on the kid's specific gap pattern. **(6)** Final Review screen shows the net post-removal, kept-allies list, Strengthen commitments rendered as per-type callouts, and the existing Save-as-image button (commit `92bfff9` retained). **Save payload reshaped (BREAKING, demo-only):** per-ally `inspected` / `flags` / `kept_in_net` replaced with a top-level `removed_via_inspect: [ally_id, ...]` array; new top-level `strengthened: { practical|emotional|social: {gap_filler, action, skipped} | null }`. **exportFlatten:** dropped `safety_net_total_flags` + the 4 `_flag_*_yes` columns; kept `_inspected_count` (now pre-removal total) / `_kept_count` / `_removed_count` / `_inspection_completed`; added `_strengthen_{type}_filler` / `_action` / `_skipped` per support type + `_strengthen_gaps_count`. **demoDataset:** regenerated for the new shape — ~30% of synthetic participants remove ≥1 ally during Inspect; Strengthen gaps follow naturally from post-removal counts; of those with a gap, ~70% fill in and ~30% skip; small string pools drive synthetic gap_filler / action values. **TrampolineNet:** new `inspectMode` prop + `onAllyToggleRemoved` callback drives the × overlay + 30%-opacity-with-X-overlay state on the new X-out screen; the v4 walkthrough rendering paths (highlighted ally + inspected checkmark) stay intact for backward compatibility. **Getting Unstuck v5.2** (the second half of Draft 19): one-line Pick-screen prompt edit per Holly's 2026-05-18 transcript — replaced "Which of these thoughts… Pick one or two." with "Pick the top two thoughts you would like to work on." so the max-2 guidance lives in the prompt itself rather than as a footnote. No flow / data / threshold changes — just the wording on the Pick screen heading. Bumps: allies-safety-net v4.1 → v5.0 (MAJOR), getting-unstuck v5.1 → v5.2 (MINOR).
+- **`f705a41` · 2026-05-19** — Draft 18: /demo polish. **(1)** Removed the "Three things you can do here" intro paragraph and its three sub-paragraphs from `src/pages/DemoPage.jsx`; the section headers (Activities, Tests, Data export) are self-explanatory. **(2)** Hid the saved-output JSON panel from the participant-facing confirmation screens on Pretest, Posttest, and FollowUp (same call as commit `583d34c` made for `/demo/sandbox/*` activities). Dropped the *"The whole payload is visible in the saved-output panel below."* line and the JSON `<pre>` panel itself from the done-state and the pre-submit confirmation screens. Kept the simple "Thanks — your responses are saved." acknowledgment. `/admin/testing/*` surfaces untouched. **(3)** Flipped the persistent **Give feedback** button's submitter default from `"anonymous"` to `"ginny"` in `src/components/FeedbackButton.jsx` (initial useState + reset()). Anonymous stays as a selectable option for testers who want to submit without attribution. No activity version bumps — all three are demo-page polish, not activity-data-shape changes.
 - **`6900549` · 2026-05-19** — Draft 17: Getting Unstuck v5.1. Single-line revert of the Pick-screen eligibility threshold from `truth_rating ≥ 2` (set in Draft 15) back to `≥ 3` (the original v3.0/v4.0 threshold). Josh's clinical-content call overrides Stephanie's 2026-05-15 lowering — items rated below "Somewhat True" (3) on the 0-5 anchor scale aren't endorsed strongly enough to be worth the Pick / Challenge / Both-and flow. Affirmation path hit more often as a result; intended behavior. Constant flip in `src/activities/GettingUnstuck.jsx` (`ELIGIBILITY_THRESHOLD = 3`) plus header-comment + Other-screen-note updates so the docstring matches reality. No data-shape change, no flow change. v5.0 → v5.1 (MINOR).
 - **`4d5ec6a` · 2026-05-13** — Draft 16: Posttest + FollowUp paginated sandbox activities built from the locked Final Measures docs. New `src/components/survey/SurveyItems.jsx` extracts the shared item renderers (LikertItem / SliderItem / NumberInput / RadioGroup / CheckboxGroup / ScaleScreen / ProgressStrip) so all three timepoint surveys render visually identically; Pretest left as-is for now to avoid churn. **Posttest.jsx (v1.0, 18 items, 9 screens):** BHS / ASCS / NB / Belonging Worries (with skip-Q2-on-Q1=0) / Perceived Helpfulness (past-tense pe_1) / Program Feedback Acceptability (NEW: 3 Likert + 2 open-response, optional, 2000-char cap). Save flat-keyed `post_*`. **FollowUp.jsx (v1.0, 30 items, 11 screens):** BHS / ASCS / UCLA / NB / BPB / **Appraisals (imported from `src/lib/appraisals.js`)** so survey items match the Getting Unstuck v5.0 intervention exactly / Belonging Worries / Permanency (NEW: radio + Other-text reveal) / Disruption Worry (NEW: 0-4 Likert). Save flat-keyed `fu_*`. Wiring: both registered in `TEST_REGISTRY` under `'Ready for Roots test'` category; activityVersions entries at v1.0; DemoPage Tests intro updated; `program_feedback: 'pf'` added to `SCALE_ABBREVIATIONS`. demoDataset NOT extended — the synthetic 52-participant dataset walks the snapshot's item structure, not these sandbox-only activities; when these scales make it into a real snapshot, demoDataset's existing logic picks them up automatically.
 - **`27e4d52` · 2026-05-13** — Draft 15: Getting Unstuck v5.0 — structural rebuild. 8 RSD-specific stuck thoughts → 6 locked Appraisal items shared with the FollowUp Survey (new `src/lib/appraisals.js` single-source-of-truth). Dropped "how often" rating dimension; only "how true" remains on a 0-5 scale with Not At All / Somewhat / Definitely True anchors. Pick eligibility threshold lowered from ≥3 to ≥2 (Stephanie: kids who rated above 1 weren't being pulled forward). New "Other thought" screen between Rate and Pick — Yes/No, optional free text + same 0-5 rating, eligible for Pick if rated ≥2. Fight → Challenge naming **finalized after three flips** (Josh's 2026-05-18 call is final): button "Challenge it", data key `strategy: "challenge"`, response field renamed to `response`. Jessica's 2026-05-18 copy edit applied ("those questions?"). Save payload reshaped to `appraisals: { a1..a6 [+a_other]: { truth_rating, selected, strategy?, response?, and_statement?, text? } }`. exportFlatten emits `unstuck_truth_a*`, `_selected_a*`, `_strategy_a*`, `_response_a*` + the same set for `a_other` + `unstuck_other_text` + rollups. demoDataset regenerated. v4.0 → v5.0 (MAJOR, breaking data shape).
@@ -225,7 +227,308 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — Draft 17 shipped as commit `6900549`, summarized under that entry in Recently shipped above)_
+<!-- Drafts 18 + 19 shipped 2026-05-19 — archived below. -->
+
+<!--
+
+### Draft 18 — Demo polish: drop the "Three things you can do here" intro + hide the saved-output panel on Tests
+
+Two small UI removals surfaced during Josh's 2026-05-19 demo walkthrough. Both are content/visibility removals — no logic changes, no version bumps on any activity.
+
+#### Change 1 — Remove the "Three things you can do here" intro paragraph from /demo
+
+**File:** `src/pages/DemoPage.jsx` (or wherever the /demo landing hero / intro block lives).
+
+**Remove this block entirely** (the three "Test the activities / Try the pretest / Try the data export" callouts under it):
+
+> Three things you can do here.
+>
+> Test the activities — launch any of the six Ready for Roots activities in isolation; nothing you enter is saved.
+>
+> Try the pretest — walk through the live participant-facing pretest as it'll paginate in a real session.
+>
+> Try the data export — download CSVs for SPSS / Excel built from a synthetic 52-participant dataset. The same export pipeline that ships your real research data produces these files.
+
+Just delete it. Don't replace it with anything — the section headers ("Ready for Roots activities", "Ready for Roots tests", "Data export") are self-explanatory. If a one-line page subtitle is desired, leave the existing hero line as-is and let the section labels carry the structure.
+
+#### Change 2 — Hide the saved-output JSON panel on the three Test surveys
+
+After submitting Pretest, Posttest, or FollowUp on /demo, the confirmation currently reads:
+
+> Thanks — your responses are saved.
+> The whole payload is visible in the saved-output panel below.
+
+…followed by a panel showing the full save payload as formatted JSON. Reviewers don't need to see this — same call as commit `583d34c` made for the `/demo/sandbox/*` activities ("hid the 'Saved Output' JSON panel from `/demo/sandbox/*`"). Apply the same pattern to the Test surveys.
+
+**Files:** `src/activities/Pretest.jsx`, `src/activities/Posttest.jsx`, `src/activities/FollowUp.jsx` — or the shared confirmation/save component if these surveys share one. (`SurveyItems.jsx` is plausible — check there first.)
+
+**Change:** On the post-submit confirmation screen for the three timepoint tests:
+
+- Drop the line *"The whole payload is visible in the saved-output panel below."*
+- Drop the JSON saved-output panel itself.
+- Keep the simple acknowledgment line — *"Thanks — your responses are saved."* — that's enough.
+
+The admin-side data inspection surfaces (`/admin/testing/*`, the data export demo) stay untouched. This change only affects the participant-facing confirmation screens on /demo.
+
+#### Change 3 — Default the feedback-form submitter to "Ginny Sprang"
+
+The persistent **Give feedback** button on /demo opens a form with a submitter dropdown (per commits `0287706` + `cdbd78c`). The current default is **Anonymous**. Josh wants the default to be **Ginny Sprang** while keeping the rest of the roster unchanged — Stephanie, Holly, Ginny, Josh, Jessica, and Anonymous all remain selectable, just the initial selection flips.
+
+**File:** the FeedbackButton component (probably `src/components/FeedbackButton.jsx` or wherever the persistent feedback form lives — same component touched in commits `0287706` and `cdbd78c`).
+
+**Change:** Change the initial value of the submitter selector from `"anonymous"` to `"ginny"`. No other change to the form, the roster, the edge function allow-list, the `public.feedback.submitter` CHECK constraint, or the admin labels — Anonymous stays as a valid selectable option for testers who want to submit without attribution.
+
+**Version bump:** No activity version bumps. All three changes in Draft 18 are demo-page polish, not changes to any activity's data shape, flow, or content.
+
+**Approved by:** Josh, 2026-05-19, after walking through the demo punch list.
+
+*End of Draft 18.*
+
+---
+
+### Draft 19 — Allies / Safety Net v5.0 (major rework) + Getting Unstuck v5.2 (Pick copy edit)
+
+Bundled because both came out of the 2026-05-18 review meeting; Allies is the big change, the Getting Unstuck Pick copy edit is one line. Ship as one commit so the team gets one stopping point.
+
+---
+
+#### Part A — Allies / Safety Net v4.1 → v5.0 (MAJOR)
+
+Substantial restructure driven by Stephanie's vision for the Inspect step (transcript 2026-05-18), Holly's color-coding idea for the three support types, the new 22-tile icon set Josh delivered 2026-05-19, and the return of a Strengthen step (Part 3) that was torn down in commit `d515d0e` and is now being rebuilt from Stephanie's transcript spec.
+
+**Files:**
+
+- `src/activities/AlliesSafetyNet.jsx` — the activity component.
+- `src/lib/allyTiles.js` — tile registry (single source of truth per commit `d515d0e`).
+- `src/assets/allies/` — drop the existing 15 SVGs, replace with the 22 SVGs from `Activity ideas/safety-net-icons.zip` (2026-05-19). **Pull `sneaky-link.svg` and do not register it** — Josh's 2026-05-19 call after the meeting consensus leaned toward boyfriend/girlfriend only. Leave the file unimported.
+- `src/components/TrampolineNet.jsx` — gets a small new prop for the Inspect X-out interaction.
+- `src/lib/exportFlatten.js` — data shape changes ripple through here.
+- `src/lib/demoDataset.js` — synthetic data regenerator.
+
+##### A.1 — New tile registry (22 tiles)
+
+Drop the existing 15-tile set; replace with the 22-tile set from the zip. Strip the cream background `<rect>` from each SVG before importing — same pattern as commit `70d117b` (the README in the zip even calls out *"delete the first <rect> element for a fully transparent background"*).
+
+**Tiles** (id → display name):
+
+| id | name |
+|---|---|
+| `foster-mom` | Foster Mom |
+| `foster-dad` | Foster Dad |
+| `bio-mom` | Biological Mom |
+| `bio-dad` | Biological Dad |
+| `sibling` | Sibling |
+| `grandmother` | Grandmother |
+| `grandfather` | Grandfather |
+| `otherfam` | Other Family |
+| `counselor` | School Counselor |
+| `teacher` | Teacher |
+| `coach` | Coach |
+| `babysitter` | Babysitter |
+| `neighbor` | Neighbor |
+| `friend` | Friend |
+| `best-friend` | Best Friend |
+| `friends` | Friends (group) |
+| `boyfriend` | Boyfriend |
+| `girlfriend` | Girlfriend |
+| `therapist` | Therapist |
+| `caseworker` | Caseworker |
+| `other1` | Other (custom name) |
+| `other2` | Other (custom name) |
+
+Total: 22. **Do not include `sneaky-link`.**
+
+`other1` / `other2` retain the existing inline-text-input + cross-screen persistence behavior from commit `d515d0e`.
+
+Grid layout stays the same pattern: 2 columns on mobile, 3 on tablet/desktop. With 22 tiles instead of 15 the kid will scroll a bit on mobile (~11 rows) — acceptable, no pagination needed.
+
+##### A.2 — Color-coded support types
+
+Per Holly's transcript suggestion (2026-05-18): each of the three support types gets its own color identity that persists across screens.
+
+**Proposed colors** (Tailwind v3 native classes — Josh, push back if you want a different palette):
+
+| Type | Heading color | Tile background tint | Transition-screen background |
+|---|---|---|---|
+| **Practical** | `text-amber-700` | `bg-amber-50` | `bg-amber-100` |
+| **Emotional** | `text-rose-700` | `bg-rose-50` | `bg-rose-100` |
+| **Social** | `text-sky-700` | `bg-sky-50` | `bg-sky-100` |
+
+Practical stays in the platform's existing amber family (anchors the kid's familiarity with the rest of the activities). Emotional gets a soft warm rose. Social gets a cool sky-blue. All three are pale enough that the SVG tiles read cleanly on top.
+
+Where the colors apply:
+
+- **The word "practical" / "emotional" / "social" in screen headings** — colored + bold + larger than surrounding copy. Holly's specific ask: *"capitalized and bolded or something… maybe like each of the three different supports has a different color."*
+- **The tile background tint** on the per-type selection grid — subtle, so the kid sees they're on a different screen even if they're looking at the same grid of icons.
+- **The transition-screen background** (see A.3) — full color, brief moment.
+
+##### A.3 — Transition screens between Practical → Emotional → Social
+
+Before each of the three support-type selection screens, show a brief transition screen with the type name, a one-line definition, and a Continue button. Resolves Ginny's *"it kept having to look back and say no what why is this different than what I just did before looked kind of similar"* feedback.
+
+**Transition copy** (matches the existing per-type definition copy, just promoted to a full screen):
+
+- *Practical.* The people who help you with things — rides, food, getting your homework done.
+- *Emotional.* The people you go to when you're upset or just need to talk.
+- *Social.* The people you have fun with — hanging out, playing games, going places.
+
+Each transition screen uses the matching color background (A.2 table). One screen, one heading, one definition, one Continue button. ~3 seconds of read time.
+
+The intro screen for the whole activity (before Practical) explains what a safety net is and previews that they'll go through three types of support.
+
+##### A.4 — Inspect (Part 2) — restructure per Stephanie
+
+**Out:** the current per-ally walkthrough where each ally surfaces in a modal with the four PPT red-flag questions and Keep/Remove buttons (commit `583d34c` / `71a37e9`).
+
+**In:** Stephanie's two-screen pattern from the transcript.
+
+- **Screen 1 — Education.** A placeholder video block at top of the screen (Adrian to record actual content). Below it: a short summary of the four red flags as bullet copy — *"Watch out for relationships where the person usually gets you into trouble, tries to keep you from talking to or getting close to other people, frequently lies to you, or makes you feel afraid."* (Stephanie's PPT phrasing, verbatim from commit `71a37e9`.) Continue button.
+
+  The video placeholder is a styled `<div>` with a caption like *"Video coming soon"* — Claude Code: do NOT build a player UI; just leave a structurally-positioned container with a fixed aspect ratio so Adrian's eventual video drops in cleanly.
+
+- **Screen 2 — X-out screen.** The kid's full TrampolineNet renders as the centerpiece, same visual as v4.0. **Each ally icon gets a small × affordance overlaid in the top-right corner of its halo.** Tapping × removes that ally from the net (visual: ally fades to ~30% opacity, an X mark overlays). Tapping again restores. Below the net: a short instruction *"Tap the × on anyone you want to take out of your safety net."* and a Continue button.
+
+  No modal, no per-ally questions, no keep/remove advisory. The kid removes whoever they decide to remove based on the educational content, full stop.
+
+- **TrampolineNet component:** add a new `inspectMode` prop. When true, render each ally with the × overlay and handle the tap-to-toggle-remove interaction. When false, the existing v4.x behavior (just display, optional `interactive` mode for the older walkthrough) is preserved — don't delete it yet, just add the new mode alongside.
+
+**Data shape change for Inspect:** drop per-ally `inspected` and `flags` objects. Replace with one array `removed_via_inspect: ["ally_id_1", ...]`. Keep `inspection_completed: bool` (true once the kid taps Continue on Screen 2).
+
+##### A.5 — Strengthen (Part 3, NEW)
+
+Rebuilt from Stephanie's transcript spec — the v1 implementation is gone (torn down in commit `d515d0e`) so this is a fresh build.
+
+After Inspect, before Save, run the Strengthen step.
+
+**Gap detection logic:**
+
+After Inspect (so post-removal counts), for each support type compute the number of allies. A gap is:
+
+- **0 allies** in a support type → complete gap
+- **1 ally** in a support type → thin gap (Stephanie's *"only one person in an area"*)
+
+(The imbalance case Stephanie raised — *"a thousand people in practical and nobody in emotional"* — is rare in practice and is covered by the 0-allies gap on the other side. Leave it for a future polish round.)
+
+**For each gap (loop through the gap list in order Practical → Emotional → Social):**
+
+Show one screen per gap with:
+
+- **Header:** *"Let's strengthen your {type} support."* Colored per A.2.
+- **Sub-line for 0-ally case:** *"Right now nobody is in your {type} support. Is there someone in your life who could be?"*
+- **Sub-line for 1-ally case:** *"Right now you have one person in your {type} support. Is there someone else who could help out?"*
+- **Suggestion chips (per Holly's transcript point):** if the kid has ≥1 ally in any OTHER support type, surface those names as quick-add chips with the prompt *"Anyone here also fit?"* — tapping a chip pre-fills the gap_filler input. Holly: *"if it was a rebalance issue, you have a lot of people in practical support. Can any of them also be play the role of emotional support?"*
+- **Two text inputs:**
+  - `gap_filler` — *"Who could that be?"* (max ~50 chars)
+  - `action` — *"What's one thing you could do to make that happen?"* (max ~200 chars, textarea)
+- **Skip button** — kid can skip a gap (we don't force engagement; respect kid agency). If skipped, both inputs save as empty strings.
+- Continue button.
+
+Action-input suggestion examples for the placeholder text: *"e.g., text them and ask if we can hang out this weekend"* or *"ask my school counselor for a recommendation."* Per Stephanie's transcript: *"reach out to them. ask one of your ask another supportive person for a recommendation."*
+
+##### A.6 — Final Review + Save
+
+Screen 4 — Review/Save. Single screen showing:
+
+- Final TrampolineNet (post-removal — the version after Inspect Screen 2).
+- A small list below the net summarizing kept allies grouped by support type.
+- Any strengthening commitments from Part 3, rendered as "Your plan to strengthen {type} support: {action}" callouts.
+- "Save as image" button (existing per commit `92bfff9`) — keep working.
+- Continue/Save button.
+
+##### A.7 — Save payload (new shape)
+
+```js
+{
+  activity: "allies_safety_net",
+  allies: [
+    {id, name, custom, support_types: ["practical", "emotional", "social"]}, ...
+  ],
+  none_for: { practical: bool, emotional: bool, social: bool },
+  removed_via_inspect: ["ally_id_1", ...],
+  inspection_completed: bool,
+  strengthened: {
+    practical: { gap_filler: "...", action: "...", skipped: bool } | null,
+    emotional: { gap_filler: "...", action: "...", skipped: bool } | null,
+    social:    { gap_filler: "...", action: "...", skipped: bool } | null,
+  },
+  saved_at: "..."
+}
+```
+
+`strengthened.{type}` is `null` if no gap existed for that type. If a gap existed and the kid filled it in, the inputs save. If they skipped, `skipped: true` and the inputs are empty strings.
+
+##### A.8 — Export pipeline updates
+
+`src/lib/exportFlatten.js` `safety_net_*` column changes:
+
+**Drop** (no per-ally flag questions anymore):
+
+- `safety_net_total_flags`
+- `safety_net_n_trouble`
+- `safety_net_n_isolate`
+- `safety_net_n_lies`
+- `safety_net_n_afraid`
+
+**Keep / repurpose**:
+
+- `safety_net_inspected_count` — total ally count BEFORE removal (just the allies-grid count)
+- `safety_net_kept_count` — ally count AFTER removal
+- `safety_net_removed_count` — count of `removed_via_inspect`
+- `safety_net_inspection_completed` — bool
+
+**Add for Strengthen:**
+
+- `safety_net_strengthen_practical_filler` — text or null
+- `safety_net_strengthen_practical_action` — text or null
+- `safety_net_strengthen_practical_skipped` — bool or null
+- ...same triple for `emotional` and `social`
+- `safety_net_strengthen_gaps_count` — 0, 1, 2, or 3
+
+##### A.9 — Demo dataset
+
+`src/lib/demoDataset.js` regenerate `safety_net_*` synthetic data:
+
+- ~30% of synthetic participants have at least one inspect-removal.
+- ~50% have at least one Strengthen gap (1-ally case is the most common).
+- Of those with a gap, ~70% fill it in, ~30% skip.
+- Sample gap-filler names from a small string pool ("Aunt Tasha", "Coach Davis", "my friend Maya", etc.).
+
+##### A.10 — Version bump
+
+`activityVersions.js`: `allies-safety-net` v4.1 → **v5.0** (MAJOR — tile set changes, data shape changes, interaction model changes for Inspect, new Part 3). Update `updated` to today's date. Prepend changelog entry:
+
+> v5.0 — 22-tile icon set replaces v4.x's 15-tile set (no sneaky-link). Color-coded support types (amber / rose / sky) with transition screens between Practical → Emotional → Social. Inspect (Part 2) restructured per Stephanie: educational screen with video placeholder + single X-out-on-net screen, replacing the per-ally modal walkthrough. Strengthen (Part 3) rebuilt from scratch: gap detection (0 or 1 ally in a support type), per-gap "who could that be / what could you do" prompts with same-kid ally chips as suggestions, skippable. Save payload reshaped accordingly; per-flag export columns dropped, Strengthen columns added.
+
+---
+
+#### Part B — Getting Unstuck v5.1 → v5.2 (MINOR copy edit)
+
+Holly's 2026-05-18 transcript suggestion: on the Pick screen, change the framing so the "max 2" guidance is in the prompt itself rather than as a footnote.
+
+**File:** `src/activities/GettingUnstuck.jsx`.
+
+**Change:** On the Pick screen, the prompt above the eligible-thoughts list (currently roughly *"Pick the thoughts you'd like to work on. (You can pick up to 2.)"*) becomes:
+
+> Pick the top two thoughts you would like to work on.
+
+That's the only change to the screen — the max-2 cap behavior, the eligible-thoughts filter, and the non-blocking nudge on a third tap all stay as v5.0 implemented them. Just the prompt text shifts.
+
+**Version bump:** v5.1 → v5.2 (MINOR, copy edit). Prepend changelog: *"v5.2 — Pick-screen prompt reworded to 'Pick the top two thoughts you would like to work on' (Holly's 2026-05-18 transcript suggestion)."*
+
+---
+
+**Approved by:** Josh, 2026-05-19, after Cowork review of the meeting transcript + new icon set.
+
+**Out of scope for this draft:**
+
+- Adrian's actual video content for the Inspect Part 2 educational screen — placeholder only, video drops in later.
+- Adrian's video content for the Both-and strategy on Getting Unstuck (Holly raised this in the transcript; Stephanie offered to script a 1-minute version). Separate work, not blocking this draft.
+- The Pretest refactor to use `SurveyItems.jsx` (still pending from Draft 16 — separate).
+- The four `RSD_Flow_*.docx` files are still in the Cleanup queue, deferred until build is near-done.
+
+*End of Draft 19.*
+
+-->
 
 <!--
 

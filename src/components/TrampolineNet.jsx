@@ -230,8 +230,20 @@ export default function TrampolineNet({
   showLabels = true,
   showInspectedMarks = false,
   highlightedAllyId = null,
+  inspectMode = false,
+  onAllyToggleRemoved,
   size,
 }) {
+  // inspectMode (v5.0) — render each ally with an × affordance overlaid
+  // on the top-right of its halo. Tapping × calls `onAllyToggleRemoved`
+  // with the ally id; the parent owns the removed-state. When an ally
+  // has `removed_via_inspect: true`, the icon renders at ~30% opacity
+  // with a large X mark overlay so the kid can see "I took this person
+  // out." Tapping again restores. No modal, no questions — see Draft 19
+  // Part A.4.
+  //
+  // inspectMode allies still render in the wedges (they don't drop to
+  // the "Taken out of net" strip until the activity moves past Inspect).
   // Memo because both the activity and any wrapping page re-render
   // frequently; geometry math is cheap but allocates a lot of objects.
   const wedges = useMemo(() => computeWedges(allies), [allies])
@@ -318,7 +330,15 @@ export default function TrampolineNet({
         const half = p.size / 2
         const isInspected = !!p.ally.inspected
         const isHighlighted = highlightedAllyId && p.ally.id === highlightedAllyId
-        const handleTap = interactive && onAllyTap ? () => onAllyTap(p.ally.id) : undefined
+        const isRemovedViaInspect = inspectMode && !!p.ally.removed_via_inspect
+        // Click target: in inspectMode the whole ally toggles removal;
+        // otherwise the legacy `interactive` + onAllyTap path.
+        const handleTap = inspectMode && onAllyToggleRemoved
+          ? () => onAllyToggleRemoved(p.ally.id)
+          : interactive && onAllyTap
+            ? () => onAllyTap(p.ally.id)
+            : undefined
+        const isClickable = !!handleTap
         // Halo stroke priority: highlighted (current walkthrough ally) >
         // inspected (already done) > default.
         const haloStroke = isHighlighted
@@ -333,57 +353,131 @@ export default function TrampolineNet({
             transform={`translate(${p.x} ${p.y})`}
             onClick={handleTap}
             style={{
-              cursor: interactive ? 'pointer' : 'default',
+              cursor: isClickable ? 'pointer' : 'default',
               outline: 'none',
             }}
-            tabIndex={interactive ? 0 : -1}
-            role={interactive ? 'button' : undefined}
-            aria-label={interactive ? `Inspect ally ${p.ally.name}` : undefined}
+            tabIndex={isClickable ? 0 : -1}
+            role={isClickable ? 'button' : undefined}
+            aria-label={
+              inspectMode
+                ? isRemovedViaInspect
+                  ? `Restore ally ${p.ally.name} to the net`
+                  : `Take ally ${p.ally.name} out of the net`
+                : interactive
+                  ? `Inspect ally ${p.ally.name}`
+                  : undefined
+            }
             onKeyDown={(e) => {
-              if (interactive && handleTap && (e.key === 'Enter' || e.key === ' ')) {
+              if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault()
                 handleTap()
               }
             }}
           >
-            {/* Soft cream halo behind the icon so it reads on the patterned wedge */}
-            <circle
-              cx="0"
-              cy="0"
-              r={half + (isHighlighted ? 5 : 3)}
-              fill="#FFFDF7"
-              stroke={haloStroke}
-              strokeWidth={haloStrokeWidth}
-              opacity={0.95}
-            />
-            {url && (
-              <image
-                href={url}
-                x={-half}
-                y={-half}
-                width={p.size}
-                height={p.size}
-                preserveAspectRatio="xMidYMid meet"
+            {/* Faded group for removed-via-inspect allies. The whole
+                <g> child below applies the opacity so the icon, halo,
+                and name pill all dim together; the × badge overlays
+                at full opacity so it stays tappable. */}
+            <g opacity={isRemovedViaInspect ? 0.3 : 1}>
+              {/* Soft cream halo behind the icon so it reads on the patterned wedge */}
+              <circle
+                cx="0"
+                cy="0"
+                r={half + (isHighlighted ? 5 : 3)}
+                fill="#FFFDF7"
+                stroke={haloStroke}
+                strokeWidth={haloStrokeWidth}
+                opacity={0.95}
               />
-            )}
-            {/* Inspected checkmark (Step 2 only) */}
-            {showInspectedMarks && isInspected && (
-              <g transform={`translate(${half - 2} ${-half + 2})`}>
-                <circle cx="0" cy="0" r="5" fill="#10B981" />
-                <path
-                  d="M -2.2 0 L -0.6 1.8 L 2.4 -1.6"
-                  stroke="white"
-                  strokeWidth="1.6"
-                  fill="none"
+              {url && (
+                <image
+                  href={url}
+                  x={-half}
+                  y={-half}
+                  width={p.size}
+                  height={p.size}
+                  preserveAspectRatio="xMidYMid meet"
+                />
+              )}
+              {/* Inspected checkmark (legacy v4 walkthrough) */}
+              {showInspectedMarks && isInspected && (
+                <g transform={`translate(${half - 2} ${-half + 2})`}>
+                  <circle cx="0" cy="0" r="5" fill="#10B981" />
+                  <path
+                    d="M -2.2 0 L -0.6 1.8 L 2.4 -1.6"
+                    stroke="white"
+                    strokeWidth="1.6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              )}
+              {/* Name pill */}
+              {showLabels && (
+                <g transform={`translate(0 ${half + 9})`}>
+                  <NamePill text={p.ally.name} />
+                </g>
+              )}
+            </g>
+            {/* Big diagonal X overlay when removed via inspect (v5.0) */}
+            {isRemovedViaInspect && (
+              <g pointerEvents="none">
+                <line
+                  x1={-half}
+                  y1={-half}
+                  x2={half}
+                  y2={half}
+                  stroke="#B91C1C"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
-                  strokeLinejoin="round"
+                />
+                <line
+                  x1={half}
+                  y1={-half}
+                  x2={-half}
+                  y2={half}
+                  stroke="#B91C1C"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
                 />
               </g>
             )}
-            {/* Name pill */}
-            {showLabels && (
-              <g transform={`translate(0 ${half + 9})`}>
-                <NamePill text={p.ally.name} />
+            {/* × affordance in top-right corner of the halo (inspectMode
+                only). Visual only — the whole <g> handles the click. */}
+            {inspectMode && (
+              <g
+                transform={`translate(${half + 1} ${-half - 1})`}
+                pointerEvents="none"
+              >
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="6"
+                  fill={isRemovedViaInspect ? '#16A34A' : '#B91C1C'}
+                  stroke="#FFFDF7"
+                  strokeWidth="1"
+                />
+                {isRemovedViaInspect ? (
+                  // Restore icon: a small circular-arrow / plus to read
+                  // as "put back."
+                  <path
+                    d="M -2.4 0 L 0 -2.4 L 2.4 0 M 0 -2.4 L 0 2.4"
+                    stroke="white"
+                    strokeWidth="1.4"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ) : (
+                  <path
+                    d="M -2.2 -2.2 L 2.2 2.2 M 2.2 -2.2 L -2.2 2.2"
+                    stroke="white"
+                    strokeWidth="1.6"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                )}
               </g>
             )}
           </g>

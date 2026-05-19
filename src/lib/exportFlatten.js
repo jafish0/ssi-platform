@@ -501,12 +501,15 @@ export function planWideColumns(snapshot) {
               },
             )
           } else if (componentName === 'AlliesSafetyNet') {
-            // v2.0 (Draft 8 of the 2026-05-11 batch): payload shape is
+            // v5.0 (Draft 19, 2026-05-19): payload shape is
             //   { allies: [{ id, name, custom, support_types: [...] }],
-            //     none_for: { practical, emotional, social } }
-            // Per-tile selection columns are deliberately omitted for now —
-            // discuss with Jessica before encoding 15+ binary columns; they
-            // may be too sparse. Counts + none-flags + names list ship.
+            //     none_for: { practical, emotional, social },
+            //     removed_via_inspect: ["ally_id", ...],
+            //     inspection_completed: bool,
+            //     strengthened: { practical|emotional|social: {gap_filler, action, skipped} | null } }
+            // Per-ally flag columns dropped (the per-ally walkthrough was
+            // replaced by a single X-out screen — no Yes/No questions).
+            // Strengthen columns added for the rebuilt Part 3.
             cols.push(
               {
                 name: sanitizeCol(`${prefix}_ally_count`),
@@ -601,111 +604,102 @@ export function planWideColumns(snapshot) {
                 notes: 'AlliesSafetyNet v2',
                 extract: (rv) => joinList((rv?.allies || []).map((a) => a.id)),
               },
-              // ----- v3.0 Inspect columns (Draft 9) -----
+              // ----- v5.0 Inspect columns (Draft 19, 2026-05-19) -----
+              // Per-ally yes/no flag columns were dropped — the
+              // walkthrough modal pattern is gone, replaced by a single
+              // X-out screen where the kid just decides who's in or out.
               {
                 name: sanitizeCol(`${prefix}_inspected_count`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'inspected_count',
-                prompt: 'Number of allies the participant inspected (Step 2)',
+                prompt: 'Total ally count (pre-removal — the build-phase ally count)',
                 allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) =>
-                  (rv?.allies || []).filter((a) => a.inspected).length,
+                notes: 'AlliesSafetyNet v5 — total deduplicated allies before Inspect X-out',
+                extract: (rv) => (rv?.allies || []).length,
               },
               {
                 name: sanitizeCol(`${prefix}_kept_count`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'kept_count',
-                prompt: 'Allies kept in the net after inspection',
+                prompt: 'Allies kept in the net after Inspect (post-X-out)',
                 allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) =>
-                  (rv?.allies || []).filter((a) => a.inspected && a.kept_in_net !== false).length,
+                notes: 'AlliesSafetyNet v5',
+                extract: (rv) => {
+                  const removedSet = new Set(rv?.removed_via_inspect || [])
+                  return (rv?.allies || []).filter((a) => !removedSet.has(a.id)).length
+                },
               },
               {
                 name: sanitizeCol(`${prefix}_removed_count`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'removed_count',
-                prompt: 'Allies removed from the net after inspection',
+                prompt: 'Allies removed from the net during Inspect',
                 allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) =>
-                  (rv?.allies || []).filter((a) => a.inspected && a.kept_in_net === false).length,
-              },
-              {
-                name: sanitizeCol(`${prefix}_total_flags`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'total_flags',
-                prompt: 'Total count of "yes" answers across all flag dimensions and all allies',
-                allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) => {
-                  let n = 0
-                  for (const a of rv?.allies || []) {
-                    for (const v of Object.values(a.flags || {})) {
-                      if (v === 'yes') n += 1
-                    }
-                  }
-                  return n
-                },
-              },
-              {
-                name: sanitizeCol(`${prefix}_flag_trouble_yes`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'flag_trouble_yes',
-                prompt: 'Allies with "yes" on the gets-you-in-trouble flag',
-                allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) =>
-                  (rv?.allies || []).filter((a) => a.flags?.trouble === 'yes').length,
-              },
-              {
-                name: sanitizeCol(`${prefix}_flag_isolate_yes`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'flag_isolate_yes',
-                prompt: 'Allies with "yes" on the keeps-you-from-others flag',
-                allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) =>
-                  (rv?.allies || []).filter((a) => a.flags?.isolate === 'yes').length,
-              },
-              {
-                name: sanitizeCol(`${prefix}_flag_lies_yes`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'flag_lies_yes',
-                prompt: 'Allies with "yes" on the frequently-lies flag',
-                allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) =>
-                  (rv?.allies || []).filter((a) => a.flags?.lies === 'yes').length,
-              },
-              {
-                name: sanitizeCol(`${prefix}_flag_afraid_yes`),
-                source_token_key: tk,
-                item_type: 'custom_activity',
-                sub_id: 'flag_afraid_yes',
-                prompt: 'Allies with "yes" on the makes-you-afraid flag',
-                allowed_values: 'integer',
-                notes: 'AlliesSafetyNet v3',
-                extract: (rv) =>
-                  (rv?.allies || []).filter((a) => a.flags?.afraid === 'yes').length,
+                notes: 'AlliesSafetyNet v5',
+                extract: (rv) => (rv?.removed_via_inspect || []).length,
               },
               {
                 name: sanitizeCol(`${prefix}_inspection_completed`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'inspection_completed',
-                prompt: 'Did the participant inspect every ally (vs. skipped some)?',
+                prompt: 'Did the participant complete the Inspect X-out screen?',
                 allowed_values: '0 or 1',
-                notes: 'AlliesSafetyNet v3',
+                notes: 'AlliesSafetyNet v5',
                 extract: (rv) => (rv?.inspection_completed ? 1 : 0),
+              },
+              // ----- v5.0 Strengthen columns (Draft 19) -----
+              ...['practical', 'emotional', 'social'].flatMap((typeId) => [
+                {
+                  name: sanitizeCol(`${prefix}_strengthen_${typeId}_filler`),
+                  source_token_key: tk,
+                  item_type: 'custom_activity',
+                  sub_id: `strengthen_${typeId}_filler`,
+                  prompt: `Strengthen ${typeId}: who could fill the gap (open text). Null if no gap.`,
+                  allowed_values: 'open text or null',
+                  notes: 'AlliesSafetyNet v5',
+                  extract: (rv) => rv?.strengthened?.[typeId]?.gap_filler ?? null,
+                },
+                {
+                  name: sanitizeCol(`${prefix}_strengthen_${typeId}_action`),
+                  source_token_key: tk,
+                  item_type: 'custom_activity',
+                  sub_id: `strengthen_${typeId}_action`,
+                  prompt: `Strengthen ${typeId}: one thing they could do (open text). Null if no gap.`,
+                  allowed_values: 'open text or null',
+                  notes: 'AlliesSafetyNet v5',
+                  extract: (rv) => rv?.strengthened?.[typeId]?.action ?? null,
+                },
+                {
+                  name: sanitizeCol(`${prefix}_strengthen_${typeId}_skipped`),
+                  source_token_key: tk,
+                  item_type: 'custom_activity',
+                  sub_id: `strengthen_${typeId}_skipped`,
+                  prompt: `Strengthen ${typeId}: did the participant skip this gap? Null if no gap.`,
+                  allowed_values: '0, 1, or null',
+                  notes: 'AlliesSafetyNet v5',
+                  extract: (rv) => {
+                    const e = rv?.strengthened?.[typeId]
+                    if (e == null) return null
+                    return e.skipped ? 1 : 0
+                  },
+                },
+              ]),
+              {
+                name: sanitizeCol(`${prefix}_strengthen_gaps_count`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'strengthen_gaps_count',
+                prompt: 'How many support types had a gap (0 or 1 ally post-Inspect)?',
+                allowed_values: '0 to 3',
+                notes: 'AlliesSafetyNet v5',
+                extract: (rv) => {
+                  const s = rv?.strengthened || {}
+                  return Object.values(s).filter((v) => v != null).length
+                },
               },
             )
           } else if (componentName === 'BelongingSkillsSort') {

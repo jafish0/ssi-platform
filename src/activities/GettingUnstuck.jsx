@@ -461,12 +461,9 @@ export default function GettingUnstuck({ onSave = console.log }) {
     const selectedCount = selectedItems.length
     return (
       <div>
-        <h2 className="text-[22px] font-semibold mb-1">
-          Which of these thoughts would you like to work on?
+        <h2 className="text-[22px] font-semibold mb-5">
+          Pick the top two thoughts you would like to work on.
         </h2>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
-          Pick one or two.
-        </p>
 
         <div className="space-y-3 mb-2">
           {eligibleItems.map((it) => {

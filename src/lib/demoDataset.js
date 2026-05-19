@@ -133,21 +133,9 @@ function pickN(rng, arr, n) {
 function intInRange(rng, min, max) {
   return Math.floor(min + rng() * (max - min + 1))
 }
-// Synthetic answer picker for AlliesSafetyNet v3 inspect flags.
-// `noisy=true` (≈20% of inspected allies) leans toward "yes" / "not_sure";
-// otherwise most answers are "no" reflecting healthy allies.
-function pickFlag(rng, noisy) {
-  if (noisy) {
-    const r = rng()
-    if (r < 0.35) return 'yes'
-    if (r < 0.60) return 'not_sure'
-    return 'no'
-  }
-  const r = rng()
-  if (r < 0.05) return 'yes'
-  if (r < 0.15) return 'not_sure'
-  return 'no'
-}
+// (AlliesSafetyNet v3's `pickFlag` helper was removed in v5.0 — the
+// per-ally yes/no flag walkthrough is gone, replaced by a flat X-out
+// list. See the v5.0 block below.)
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v))
 }
@@ -383,25 +371,45 @@ function makeResponseValue(item, rng, profile, phase) {
         }
       }
       if (componentName === 'AlliesSafetyNet') {
-        // v3.0 (Draft 9 of the 2026-05-11 batch): same build payload as
-        // v2.0 plus per-ally inspection state and an
-        // `inspection_completed` flag. Inspection distribution: ~80%
-        // inspect all allies, ~15% inspect partial, ~5% skip entirely.
-        // Of inspected, ~20% have at least one "yes" flag, ~10% remove
-        // at least one ally.
+        // v5.0 (Draft 19, 2026-05-19): 22-tile set replaces v4.x's 15.
+        // Per-ally inspect flags dropped (the walkthrough modal pattern
+        // is gone, replaced by a single X-out screen). New `Strengthen`
+        // step (Part 3) produces per-type gap_filler / action / skipped
+        // entries when a support type has 0 or 1 ally post-removal.
         //
-        // v2.0 build-phase block (unchanged):
+        // Distributions per the Draft 19 spec:
+        //   - Build: same lowAllies / mid / high ally-count buckets.
+        //   - Inspect removal: ~30% of synthetic participants remove ≥1 ally.
+        //   - Strengthen: gaps come straight from post-removal counts;
+        //     ~70% of gaps get filled in, ~30% skipped.
         const TILE_IDS = [
-          'foster', 'bio', 'sibling', 'grandparent', 'otherfam',
+          'foster-mom', 'foster-dad', 'bio-mom', 'bio-dad',
+          'sibling', 'grandmother', 'grandfather', 'otherfam',
           'counselor', 'teacher', 'coach', 'babysitter', 'neighbor',
-          'friend', 'therapist', 'caseworker',
+          'friend', 'best-friend', 'friends',
+          'boyfriend', 'girlfriend', 'therapist', 'caseworker',
         ]
         const TILE_NAMES = {
-          foster: 'Foster Parent', bio: 'Biological Parent', sibling: 'Sibling',
-          grandparent: 'Grandparent', otherfam: 'Other family (aunts, uncles, cousins)',
-          counselor: 'School Counselor', teacher: 'Teacher', coach: 'Coach',
-          babysitter: 'Babysitter', neighbor: 'Neighbor', friend: 'Friend',
-          therapist: 'Therapist', caseworker: 'Caseworker / Social Worker',
+          'foster-mom': 'Foster Mom',
+          'foster-dad': 'Foster Dad',
+          'bio-mom': 'Biological Mom',
+          'bio-dad': 'Biological Dad',
+          sibling: 'Sibling',
+          grandmother: 'Grandmother',
+          grandfather: 'Grandfather',
+          otherfam: 'Other Family',
+          counselor: 'School Counselor',
+          teacher: 'Teacher',
+          coach: 'Coach',
+          babysitter: 'Babysitter',
+          neighbor: 'Neighbor',
+          friend: 'Friend',
+          'best-friend': 'Best Friend',
+          friends: 'Friends',
+          boyfriend: 'Boyfriend',
+          girlfriend: 'Girlfriend',
+          therapist: 'Therapist',
+          caseworker: 'Caseworker / Social Worker',
         }
         const bucket = rng()
         let nAllies
@@ -422,8 +430,6 @@ function makeResponseValue(item, rng, profile, phase) {
           const types = pickN(rng, SUPPORT_TYPE_IDS, intInRange(rng, 1, 3))
           return { id, name: TILE_NAMES[id], custom: false, support_types: types }
         })
-        // Per-type none flags: only set when we have low allies and the
-        // type isn't covered. Otherwise all-false.
         const covered = new Set(allies.flatMap((a) => a.support_types))
         const none_for = {
           practical: lowAllies && !covered.has('practical') && rng() < 0.6,
@@ -431,49 +437,67 @@ function makeResponseValue(item, rng, profile, phase) {
           social: lowAllies && !covered.has('social') && rng() < 0.5,
         }
 
-        // ----- v3.0 inspection state -----
-        const inspectionBucket = rng()
-        // Per-participant inspection coverage:
-        //   <0.80 → inspect all
-        //   <0.95 → inspect a partial set
-        //   else  → skip entirely
-        let inspectFraction
-        if (inspectionBucket < 0.80) inspectFraction = 1
-        else if (inspectionBucket < 0.95) inspectFraction = 0.5 + rng() * 0.4 // 50–90%
-        else inspectFraction = 0
+        // ----- v5.0 Inspect: X-out a subset of allies (~30% of participants
+        //       remove ≥1 ally; among removers, 1-2 allies typically). -----
+        const removed_via_inspect = []
+        if (allies.length > 0 && rng() < 0.30) {
+          const nRemove = intInRange(rng, 1, Math.min(2, allies.length))
+          const removedAllies = pickN(rng, allies.slice(), nRemove)
+          for (const a of removedAllies) removed_via_inspect.push(a.id)
+        }
+        // ~95% of synthetic participants make it through the X-out screen
+        // (Inspect is one screen, low friction). The other 5% bail.
+        const inspection_completed = rng() < 0.95
 
-        const inspectedAllies = allies.map((a) => {
-          const willInspect = rng() < inspectFraction
-          if (!willInspect) return a // unchanged
-          // Most inspected allies have clean "no" answers; ~20% have at
-          // least one "yes" on one of the 4 dimensions.
-          const noisy = rng() < 0.20
-          const flags = {
-            trouble: pickFlag(rng, noisy),
-            isolate: pickFlag(rng, noisy),
-            lies:    pickFlag(rng, noisy),
-            afraid:  pickFlag(rng, noisy),
+        // ----- v5.0 Strengthen: per-type gaps (0 or 1 ally post-removal). -----
+        const removedSet = new Set(removed_via_inspect)
+        const keptByType = {}
+        for (const tid of SUPPORT_TYPE_IDS) keptByType[tid] = 0
+        for (const a of allies) {
+          if (removedSet.has(a.id)) continue
+          for (const tid of a.support_types || []) {
+            if (keptByType[tid] != null) keptByType[tid] += 1
           }
-          // ~10% of inspected allies get removed; bias removal slightly
-          // higher when there are "yes" flags.
-          const hasYes = Object.values(flags).some((v) => v === 'yes')
-          const removeThreshold = hasYes ? 0.35 : 0.05
-          const removed = rng() < removeThreshold
-          return {
-            ...a,
-            inspected: true,
-            flags,
-            kept_in_net: !removed,
+        }
+        const GAP_FILLERS = [
+          'Aunt Tasha', 'Coach Davis', 'my friend Maya', 'Uncle James',
+          'Ms. Reed', 'my cousin Eli', 'Pastor Williams',
+          'my neighbor Sam',
+        ]
+        const ACTIONS = [
+          'text them and ask if we can hang out this weekend',
+          'ask my school counselor for a recommendation',
+          'sit with them at lunch tomorrow',
+          'call my aunt this week and ask if we can talk',
+          'ask my therapist who else I could reach out to',
+        ]
+        const strengthened = {}
+        for (const tid of SUPPORT_TYPE_IDS) {
+          const isGap = keptByType[tid] <= 1
+          if (!isGap) {
+            strengthened[tid] = null
+            continue
           }
-        })
-        const inspection_completed = inspectedAllies.every((a) => a.inspected)
+          const skipped = rng() < 0.30
+          if (skipped) {
+            strengthened[tid] = { gap_filler: '', action: '', skipped: true }
+          } else {
+            strengthened[tid] = {
+              gap_filler: pick(rng, GAP_FILLERS),
+              action: pick(rng, ACTIONS),
+              skipped: false,
+            }
+          }
+        }
 
         return {
           activity: 'allies_safety_net',
-          version: '3.0',
-          allies: inspectedAllies,
+          version: '5.0',
+          allies,
           none_for,
+          removed_via_inspect,
           inspection_completed,
+          strengthened,
           saved_at: new Date().toISOString(),
         }
       }
