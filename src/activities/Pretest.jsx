@@ -422,9 +422,6 @@ export default function Pretest({ onSave = console.log }) {
     return (
       <div className="text-center py-8">
         <h2 className="text-[24px] font-semibold mb-3">Thanks — your responses are saved.</h2>
-        <p className="text-[15px] text-slate-700">
-          The whole payload is visible in the saved-output panel below.
-        </p>
       </div>
     )
   }
@@ -690,9 +687,7 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
         <div>
           <h2 className="text-[22px] font-semibold mb-3">All done with the pretest</h2>
           <p className="text-[15px] leading-relaxed text-slate-700 mb-4">
-            Tap Submit when you&apos;re ready. The full response payload will
-            appear in the saved-output panel below so reviewers can confirm
-            the shape matches the SPSS export.
+            Tap Submit when you&apos;re ready.
           </p>
         </div>
       )

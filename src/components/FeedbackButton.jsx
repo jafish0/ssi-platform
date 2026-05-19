@@ -64,7 +64,10 @@ export default function FeedbackButton() {
 
   const [area, setArea] = useState(ctx.area)
   const [areaEditing, setAreaEditing] = useState(false)
-  const [submitter, setSubmitter] = useState('anonymous')
+  // Default to Ginny Sprang (Josh's 2026-05-19 call). Anonymous is
+  // still a selectable option in the dropdown; only the initial value
+  // flips.
+  const [submitter, setSubmitter] = useState('ginny')
   const [category, setCategory] = useState('general')
   const [message, setMessage] = useState('')
 
@@ -81,7 +84,7 @@ export default function FeedbackButton() {
     setDone(false)
     setArea(ctx.area)
     setAreaEditing(false)
-    setSubmitter('anonymous')
+    setSubmitter('ginny')
     setCategory('general')
     setMessage('')
   }

@@ -141,16 +141,6 @@ export default function DemoPage() {
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
           Ready for Roots — Activities Testing and Data Export Demo
         </h1>
-        <p className="text-[15px] text-slate-700 leading-relaxed max-w-[720px]">
-          Three things you can do here. <strong>Test the activities</strong> —
-          launch any of the six Ready for Roots activities in isolation;
-          nothing you enter is saved. <strong>Try the pretest</strong> —
-          walk through the live participant-facing pretest as it&apos;ll
-          paginate in a real session. <strong>Try the data export</strong>
-          {' '}— download CSVs for SPSS / Excel built from a synthetic
-          52-participant dataset. The same export pipeline that ships your
-          real research data produces these files.
-        </p>
       </section>
 
       {/* Activities */}

@@ -200,9 +200,6 @@ export default function Posttest({ onSave = console.log }) {
     return (
       <div className="text-center py-8">
         <h2 className="text-[24px] font-semibold mb-3">Thanks — your responses are saved.</h2>
-        <p className="text-[15px] text-slate-700">
-          The full payload is visible in the saved-output panel below.
-        </p>
       </div>
     )
   }
@@ -409,9 +406,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
         <div>
           <h2 className="text-[22px] font-semibold mb-3">All done with the posttest</h2>
           <p className="text-[15px] leading-relaxed text-slate-700">
-            Tap Submit when you&apos;re ready. The full response payload will
-            appear in the saved-output panel below so reviewers can confirm
-            the shape matches the SPSS export.
+            Tap Submit when you&apos;re ready.
           </p>
         </div>
       )
