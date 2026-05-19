@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`6900549` · 2026-05-19** — Draft 17: Getting Unstuck v5.1. Single-line revert of the Pick-screen eligibility threshold from `truth_rating ≥ 2` (set in Draft 15) back to `≥ 3` (the original v3.0/v4.0 threshold). Josh's clinical-content call overrides Stephanie's 2026-05-15 lowering — items rated below "Somewhat True" (3) on the 0-5 anchor scale aren't endorsed strongly enough to be worth the Pick / Challenge / Both-and flow. Affirmation path hit more often as a result; intended behavior. Constant flip in `src/activities/GettingUnstuck.jsx` (`ELIGIBILITY_THRESHOLD = 3`) plus header-comment + Other-screen-note updates so the docstring matches reality. No data-shape change, no flow change. v5.0 → v5.1 (MINOR).
 - **`4d5ec6a` · 2026-05-13** — Draft 16: Posttest + FollowUp paginated sandbox activities built from the locked Final Measures docs. New `src/components/survey/SurveyItems.jsx` extracts the shared item renderers (LikertItem / SliderItem / NumberInput / RadioGroup / CheckboxGroup / ScaleScreen / ProgressStrip) so all three timepoint surveys render visually identically; Pretest left as-is for now to avoid churn. **Posttest.jsx (v1.0, 18 items, 9 screens):** BHS / ASCS / NB / Belonging Worries (with skip-Q2-on-Q1=0) / Perceived Helpfulness (past-tense pe_1) / Program Feedback Acceptability (NEW: 3 Likert + 2 open-response, optional, 2000-char cap). Save flat-keyed `post_*`. **FollowUp.jsx (v1.0, 30 items, 11 screens):** BHS / ASCS / UCLA / NB / BPB / **Appraisals (imported from `src/lib/appraisals.js`)** so survey items match the Getting Unstuck v5.0 intervention exactly / Belonging Worries / Permanency (NEW: radio + Other-text reveal) / Disruption Worry (NEW: 0-4 Likert). Save flat-keyed `fu_*`. Wiring: both registered in `TEST_REGISTRY` under `'Ready for Roots test'` category; activityVersions entries at v1.0; DemoPage Tests intro updated; `program_feedback: 'pf'` added to `SCALE_ABBREVIATIONS`. demoDataset NOT extended — the synthetic 52-participant dataset walks the snapshot's item structure, not these sandbox-only activities; when these scales make it into a real snapshot, demoDataset's existing logic picks them up automatically.
 - **`27e4d52` · 2026-05-13** — Draft 15: Getting Unstuck v5.0 — structural rebuild. 8 RSD-specific stuck thoughts → 6 locked Appraisal items shared with the FollowUp Survey (new `src/lib/appraisals.js` single-source-of-truth). Dropped "how often" rating dimension; only "how true" remains on a 0-5 scale with Not At All / Somewhat / Definitely True anchors. Pick eligibility threshold lowered from ≥3 to ≥2 (Stephanie: kids who rated above 1 weren't being pulled forward). New "Other thought" screen between Rate and Pick — Yes/No, optional free text + same 0-5 rating, eligible for Pick if rated ≥2. Fight → Challenge naming **finalized after three flips** (Josh's 2026-05-18 call is final): button "Challenge it", data key `strategy: "challenge"`, response field renamed to `response`. Jessica's 2026-05-18 copy edit applied ("those questions?"). Save payload reshaped to `appraisals: { a1..a6 [+a_other]: { truth_rating, selected, strategy?, response?, and_statement?, text? } }`. exportFlatten emits `unstuck_truth_a*`, `_selected_a*`, `_strategy_a*`, `_response_a*` + the same set for `a_other` + `unstuck_other_text` + rollups. demoDataset regenerated. v4.0 → v5.0 (MAJOR, breaking data shape).
 - **`0852261` · 2026-05-13** — Draft 14: renamed intervention "Ready! Set! Dedicate!" / "RSD" → **"Ready for Roots"** in all user-facing text. Internal code slugs (`ready-set-dedicate`), access-code prefix (`RSD-XXXX-XXXX`), and `RSD_*` filenames are unchanged — internal artifacts. Touched: DemoPage hero + body copy, AdminExports demo-tab strings, `testRegistry` categories (`'RSD activity'` → `'Ready for Roots activity'`, `'RSD test'` → `'Ready for Roots test'`) with DemoPage filter calls matching, plus repo-root docs (README, INFRASTRUCTURE, STATE_OF_THE_PLATFORM, SSI_Platform_Overview, RSD_Completion_GiftCard_Flow). The `.docx` parallels of the overview + gift-card-flow docs need a manual rename pass — flagged in INFRASTRUCTURE.md change log. No activity-version bumps, no code-logic changes, no data-shape changes.
@@ -224,7 +225,54 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-_(none — Drafts 14, 15, 16 shipped as commits `0852261`, `27e4d52`, `4d5ec6a`, summarized under those entries in Recently shipped above)_
+_(none — Draft 17 shipped as commit `6900549`, summarized under that entry in Recently shipped above)_
+
+<!--
+
+### Draft 17 — Getting Unstuck v5.1: revert Pick threshold to ≥3
+
+Small revert. In Draft 15 / commit `27e4d52` the Pick-screen eligibility threshold was lowered from `truth_rating ≥ 3` to `truth_rating ≥ 2` based on Stephanie's 2026-05-15 feedback that thoughts she rated "higher than a 1" weren't being pulled forward. Josh has now decided (2026-05-18) that the clinical threshold should stay at **≥ 3** — items rated below "Somewhat True" on the 0-5 anchor scale aren't endorsed strongly enough to be worth the kid's time on the Pick / Challenge / Both-and flow.
+
+This restores the original v4.0 / v3.0 threshold. Same pattern as the Fight → Challenge boomerang in Draft 15 — Stephanie's reported expectation is being overridden by Josh's clinical-content call. The doc file `Final Measures/FollowUp Survey Draft Belongingness_5.2.26.docx` doesn't specify a Pick threshold (the FollowUp Survey just measures, doesn't pick), so this is purely an intervention-side decision.
+
+**File:** `src/activities/GettingUnstuck.jsx`.
+
+**Change:** In the eligibility filter that determines which appraisal items appear on the Pick screen, restore the comparison to `>= 3`. This applies identically to `a1`–`a6` and to `a_other` when present.
+
+Affirmation-path behavior stays unchanged in spec — if no items clear the ≥ 3 threshold, the activity skips Pick and goes to the brief positive-message Save path. With ≥ 3 instead of ≥ 2, the affirmation path will be hit more often than under v5.0; that's the intended behavior, not a regression.
+
+**Data shape:** No change. The `truth_rating` integers (0-5) saved per item are unchanged; only the eligibility comparison shifts.
+
+**Export pipeline:** No change. `unstuck_truth_a*`, `unstuck_selected_a*`, etc. all keep their columns and value sets.
+
+**Version bump:** v5.0 → **v5.1 (MINOR)** — single-line threshold revert, no data-shape change, no flow change. Prepend changelog entry: *"v5.1 — Reverted Pick-screen eligibility threshold from ≥2 back to ≥3 (Josh, 2026-05-18 — clinical-content call overriding the v5.0 lowering)."* Update `updated` to today's date.
+
+**Approved by:** Josh, 2026-05-18.
+
+*End of Draft 17.*
+
+-->
+
+---
+
+### Cleanup queue — manual housekeeping (not build work)
+
+> Lightweight to-do list for non-code cleanup that should happen before the project is considered "done." Not Claude Code drafts — these are doc-rewrites, file moves, or polish passes Josh wants to remember without making them blocking.
+
+**Replace the four `RSD_Flow_*.docx` files with a single up-to-date flow doc.**
+
+Status: deferred until the build is closer to done — Josh's 2026-05-18 call. Once the architecture, link-generation approach, and final activity flow are stable, write one clean flow doc (working name TBD — likely `ReadyForRoots_Participant_Flow.docx` or `Participant_Flow.docx`) that supersedes:
+
+- `RSD_Flow_Option_A.docx` — pre-decision option (2026-05-07, superseded by Option B pick on 2026-05-08).
+- `RSD_Flow_Option_B.docx` — the chosen option, but pre-rename and pre-Qualtrics-link-handoff change.
+- `RSD_Participant_Flow.docx` — consolidated post-decision flow, pre-rename, pre-glossary (2026-05-08 16:06).
+- `RSD_Participant_Flow_updated.docx` — same body as Participant_Flow.docx plus a 5-paragraph glossary (2026-05-08 16:15). **This is the current source of truth** until the new doc is written.
+
+The new doc should reflect: (a) the Ready for Roots name; (b) Qualtrics-generated participant links replacing the access-code minting pattern (Josh's 2026-05-18 call — no more `RSD-XXXX-XXXX` codes); (c) the locked Final Measures (Pretest 29 / Posttest 18 / FollowUp 30 items); (d) the Questions for Guardian items in the Qualtrics consent. The PID-linking requirement (the standalone section below) is the technical companion to this flow doc.
+
+After the new doc lands, leave the four old `RSD_Flow_*.docx` files in place as historical snapshots — they document the decision path and shouldn't be deleted, just superseded.
+
+*End of cleanup queue.*
 
 <!--
 
