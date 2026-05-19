@@ -13,12 +13,12 @@ import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 //     per item: how true it feels, on a 0-5 scale with anchors
 //     "Not At All True / Somewhat True / Definitely True." This matches
 //     the FollowUp Survey exactly so within-subject change scores work.
-//   - The eligibility threshold for the Pick screen is lowered to ≥2
-//     (Stephanie: kids who rated above 1 weren't being pulled forward
-//     under the old ≥3-on-either rule).
+//   - The eligibility threshold for the Pick screen is **≥3** as of
+//     v5.1. (v5.0 briefly tried ≥2 per Stephanie's feedback; reverted
+//     2026-05-19 — see header comment on ELIGIBILITY_THRESHOLD.)
 //   - A new "Other thought" screen sits between Rate and Pick — kid
 //     can name one of their own stuck thoughts and rate it on the same
-//     scale. If they hit Yes + rate ≥2, the Other item also becomes
+//     scale. If they hit Yes + rate ≥3, the Other item also becomes
 //     eligible in Pick under id `a_other`.
 //   - The Fight ↔ Challenge naming has now flipped three times. As of
 //     2026-05-18 the final answer is **Challenge**. Strategy data key
@@ -43,7 +43,13 @@ import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 // The `responses` array + `stuck_thought_ids` from v3/v4 are gone;
 // everything is keyed by appraisal id inside the `appraisals` object.
 
-const ELIGIBILITY_THRESHOLD = 2
+// v5.1 (2026-05-19, Draft 17): threshold reverted from 2 back to 3 —
+// Josh's clinical-content call. Items rated below "Somewhat True" (3)
+// on the 0-5 anchor scale aren't endorsed strongly enough to be worth
+// the kid's time on the Pick / Challenge / Both-and flow. With ≥3
+// instead of ≥2 the affirmation path will be hit more often — that's
+// the intended behavior, not a regression.
+const ELIGIBILITY_THRESHOLD = 3
 const MAX_PICKS = 2
 
 // Three "Challenge it" prompts (Stephanie's PPT slide 12). Shown as
