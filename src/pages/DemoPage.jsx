@@ -18,6 +18,15 @@ import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
 import { buildSpssSyntax } from '../lib/spssSyntax.js'
 import { buildRsdDemoDataset } from '../lib/demoDataset.js'
+import samBoy16 from '../assets/demo/sam-boy-16.png'
+import samBoy16b from '../assets/demo/sam-boy-16-2.png'
+import samBoy16c from '../assets/demo/sam-boy-16-3.png'
+
+const SAM_BOY_16_IMAGES = [samBoy16, samBoy16b, samBoy16c]
+
+// Animation sample — YouTube Short A8vVBE_2dNI. Shorts are vertical
+// (9:16), so the embed below uses a portrait aspect-ratio container.
+const ANIMATION_SAMPLE_YT_ID = 'A8vVBE_2dNI'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -339,6 +348,66 @@ export default function DemoPage() {
               onClick={() => runExport('codebook')}
             />
           </div>
+        </div>
+      </section>
+
+      {/* Video / characters — for team review of the animation direction */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
+          Video
+        </h2>
+        <p className="text-[14px] text-slate-700 leading-relaxed mb-4 max-w-[760px]">
+          Early character and animation direction for review. Nothing here is
+          final — it&apos;s a first look so the team can react to the style and
+          tone before we go further.
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Character: Sam (boy, 16) */}
+          <article className="bg-white rounded-2xl shadow-card p-5">
+            <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
+              Sam <span className="font-normal text-slate-500">(boy version, age 16)</span>
+            </h3>
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
+              Character concept art.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {SAM_BOY_16_IMAGES.map((src, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50"
+                >
+                  <img
+                    src={src}
+                    alt={`Sam — boy version, age 16 — character concept art ${i + 1}`}
+                    className="w-full h-auto block"
+                  />
+                </div>
+              ))}
+            </div>
+          </article>
+
+          {/* Animation sample (YouTube Short embed) */}
+          <article className="bg-white rounded-2xl shadow-card p-5">
+            <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
+              Animation sample
+            </h3>
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
+              A short sample clip of the animation style.
+            </p>
+            <div
+              className="relative mx-auto w-full max-w-[320px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900"
+              style={{ aspectRatio: '9 / 16' }}
+            >
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${ANIMATION_SAMPLE_YT_ID}`}
+                title="Animation sample"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </article>
         </div>
       </section>
     </DemoPageLayout>
