@@ -375,7 +375,12 @@ export default function DemoPage() {
               {SAM_BOY_16_IMAGES.map((src, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50"
+                  className={
+                    'rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 ' +
+                    // The first image (backstage) spans both columns so it
+                    // renders roughly twice as large as the other two.
+                    (i === 0 ? 'sm:col-span-2' : '')
+                  }
                 >
                   <img
                     src={src}
