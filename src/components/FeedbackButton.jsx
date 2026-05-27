@@ -15,6 +15,7 @@ const CATEGORIES = [
   { value: 'activity_design', label: 'Activity design / flow' },
   { value: 'bug', label: 'Bug or technical issue' },
   { value: 'data_export', label: 'Data export' },
+  { value: 'video', label: 'Video / animation' },
   { value: 'general', label: 'General comment' },
 ]
 

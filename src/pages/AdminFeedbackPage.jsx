@@ -23,6 +23,7 @@ const CATEGORIES = [
   { value: 'activity_design', label: 'Activity design' },
   { value: 'bug', label: 'Bug' },
   { value: 'data_export', label: 'Data export' },
+  { value: 'video', label: 'Video / animation' },
   { value: 'general', label: 'General' },
 ]
 
