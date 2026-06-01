@@ -449,17 +449,10 @@ function makeResponseValue(item, rng, profile, phase) {
         // (Inspect is one screen, low friction). The other 5% bail.
         const inspection_completed = rng() < 0.95
 
-        // ----- v5.0 Strengthen: per-type gaps (0 or 1 ally post-removal). -----
-        const removedSet = new Set(removed_via_inspect)
-        const keptByType = {}
-        for (const tid of SUPPORT_TYPE_IDS) keptByType[tid] = 0
-        for (const a of allies) {
-          if (removedSet.has(a.id)) continue
-          for (const tid of a.support_types || []) {
-            if (keptByType[tid] != null) keptByType[tid] += 1
-          }
-        }
-        const GAP_FILLERS = [
+        // ----- v5.1 Strengthen: runs for ALL three support types (no
+        //       gap gating). ~50% fill in an additional person per type;
+        //       the rest skip. Free-text from a small pool. -----
+        const STRENGTHEN_PEOPLE = [
           'Aunt Tasha', 'Coach Davis', 'my friend Maya', 'Uncle James',
           'Ms. Reed', 'my cousin Eli', 'Pastor Williams',
           'my neighbor Sam',
@@ -473,26 +466,28 @@ function makeResponseValue(item, rng, profile, phase) {
         ]
         const strengthened = {}
         for (const tid of SUPPORT_TYPE_IDS) {
-          const isGap = keptByType[tid] <= 1
-          if (!isGap) {
-            strengthened[tid] = null
-            continue
-          }
-          const skipped = rng() < 0.30
-          if (skipped) {
-            strengthened[tid] = { gap_filler: '', action: '', skipped: true }
-          } else {
+          const fillsIn = rng() < 0.50
+          if (fillsIn) {
             strengthened[tid] = {
-              gap_filler: pick(rng, GAP_FILLERS),
+              additional_person: pick(rng, STRENGTHEN_PEOPLE),
               action: pick(rng, ACTIONS),
               skipped: false,
+            }
+          } else {
+            // Half of the non-fillers explicitly skip; the rest just pass
+            // through untouched (empty, not skipped).
+            const didSkip = rng() < 0.5
+            strengthened[tid] = {
+              additional_person: '',
+              action: '',
+              skipped: didSkip,
             }
           }
         }
 
         return {
           activity: 'allies_safety_net',
-          version: '5.0',
+          version: '5.1',
           allies,
           none_for,
           removed_via_inspect,

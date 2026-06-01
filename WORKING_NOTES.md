@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`<pending-d20>` · 2026-06-01** — Draft 20: 2026-06-01 meeting bundle, three activities in one commit. **Getting Unstuck v5.2 → v5.3 (MINOR):** (1) Pick threshold reverted ≥3 → **≥2** (FINAL per meeting — third 3↔2 flip; full history now pinned in the `ELIGIBILITY_THRESHOLD` comment). (2) New `cycle_affirmation` phase — brief randomized "Nice work / Good job / …" + "Let's try the next one" beat between consecutive picked thoughts (Ginny's encouragement ask). Also surfaced a Challenge-vs-Both/And strategy explainer (video placeholder + text) on the affirmation path so kids who pick nothing still learn the strategies. No data-shape change. **Allies / Safety Net v5.0 → v5.1 (MINOR-ish):** Strengthen now runs for **all three support types** (was gap-only); removed the same-kid suggestion chips (Ginny's stress test: they re-suggested foster mom/dad everywhere and the net never expanded); copy reframed to neutral "Is there anyone else who could give you {type} support?"; typed-in names stay in the action callouts only, NOT added to the net visual (Stephanie's "isn't really in the net until we call him" framing). Data: `strengthened.{type}` always populated (no nulls); `gap_filler` → `additional_person`. exportFlatten drops `_strengthen_gaps_count`, adds `_strengthen_added_count` (0-3), renames `_filler` cols → `_person`. demoDataset regenerated (~50% fill per type). **Who I Am Poem v2.3 → v2.4 (MINOR):** removed visible line numbers + the "Line N — same as line 1" caption on the mirrored lines 6/10 (Ginny: confusing); they render silently now. No data-shape change. **Out of scope / still queued:** Draft 21 (tree-roots progress visual) — spec + assets only, integration deferred until activities are stitched into a continuous flow; left active in the Ideas section.
 - **`1edd96f` · 2026-05-19** — Added a **Video / animation** category to the feedback form so reviewers can tag feedback about the new Video section. Touched all three validation layers: DB `feedback_category_check` CHECK constraint (migration `feedback_add_video_category`), the `submit-feedback` edge function allow-list (now v4), and the frontend (`FeedbackButton` dropdown + `AdminFeedbackPage` label/filter). Additive enum value — no data migration, existing rows unaffected.
 - **`d64dbdb` · 2026-05-19** — Added a **Video** section to `/demo` (under the Data export demo) for team review of animation direction. Two cards: **Sam (boy version, age 16)** showing three character concept-art images (`backstage.png`, `Sam 2.png`, `Sam 3.png` from the repo-root `Video Content/` folder, copied into `src/assets/demo/` as `sam-boy-16{,-2,-3}.png` and imported as build assets) in a responsive 2-col grid; and **Animation sample**, an embedded YouTube Short (`A8vVBE_2dNI`) in a 9:16 portrait player capped at 320px wide. Demo-page-only, no activity version bump.
 - **`7a7d547` · 2026-05-19** — Draft 19: Allies / Safety Net v4.1 → **v5.0** (MAJOR) + Getting Unstuck v5.1 → **v5.2** (MINOR), shipped as one commit. **Allies v5.0** is a substantial restructure driven by Stephanie's 2026-05-18 transcript spec, Holly's color-coding ask, and the new 22-tile icon set Josh delivered 2026-05-19. **(1)** 22-tile icon set replaces v4.x's 15 — foster/bio/grandparent each split into mom+dad / mother+father pairs, friend split to friend + best-friend + friends (group), boyfriend + girlfriend added, sneaky-link deliberately not registered per Josh's 2026-05-19 call. SVGs stripped of background `<rect>` per the existing pattern. **(2)** Color-coded support types per Holly: Practical = amber, Emotional = rose, Social = sky. Colors appear on the type word in each screen heading, the per-type tile background tint on selection grids, and the full background of the new transition screens. **(3)** Brief transition screens between Practical → Emotional → Social selection, resolving Ginny's "kind of looked similar" feedback. **(4)** Inspect (Part 2) restructured per Stephanie: educational screen with a video placeholder (Adrian to record actual content — placeholder is a styled 16:9 div with "Video coming soon" caption, no player UI) + the four red-flag bullets verbatim from her PPT → single X-out-on-net screen where the kid taps × on any ally to take them out (visual: ally fades to ~30% opacity, big red X overlays; tap × again to restore). The per-ally modal walkthrough with the 4 Yes/No questions is gone. **(5)** Strengthen (Part 3) rebuilt from scratch (last torn down in commit `d515d0e`): per-type gap detection on post-removal counts (0 or 1 ally = gap); per-gap screen with same-kid ally chips as suggestion shortcuts ("Anyone here also fit?" — taps pre-fill the gap_filler), "Who could that be?" filler input, "What's one thing you could do?" action textarea, and a Skip option. Number of Strengthen screens is dynamic (0–3) based on the kid's specific gap pattern. **(6)** Final Review screen shows the net post-removal, kept-allies list, Strengthen commitments rendered as per-type callouts, and the existing Save-as-image button (commit `92bfff9` retained). **Save payload reshaped (BREAKING, demo-only):** per-ally `inspected` / `flags` / `kept_in_net` replaced with a top-level `removed_via_inspect: [ally_id, ...]` array; new top-level `strengthened: { practical|emotional|social: {gap_filler, action, skipped} | null }`. **exportFlatten:** dropped `safety_net_total_flags` + the 4 `_flag_*_yes` columns; kept `_inspected_count` (now pre-removal total) / `_kept_count` / `_removed_count` / `_inspection_completed`; added `_strengthen_{type}_filler` / `_action` / `_skipped` per support type + `_strengthen_gaps_count`. **demoDataset:** regenerated for the new shape — ~30% of synthetic participants remove ≥1 ally during Inspect; Strengthen gaps follow naturally from post-removal counts; of those with a gap, ~70% fill in and ~30% skip; small string pools drive synthetic gap_filler / action values. **TrampolineNet:** new `inspectMode` prop + `onAllyToggleRemoved` callback drives the × overlay + 30%-opacity-with-X-overlay state on the new X-out screen; the v4 walkthrough rendering paths (highlighted ally + inspected checkmark) stay intact for backward compatibility. **Getting Unstuck v5.2** (the second half of Draft 19): one-line Pick-screen prompt edit per Holly's 2026-05-18 transcript — replaced "Which of these thoughts… Pick one or two." with "Pick the top two thoughts you would like to work on." so the max-2 guidance lives in the prompt itself rather than as a footnote. No flow / data / threshold changes — just the wording on the Pick screen heading. Bumps: allies-safety-net v4.1 → v5.0 (MAJOR), getting-unstuck v5.1 → v5.2 (MINOR).
@@ -229,7 +230,273 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 <!-- Add new drafts BELOW this line, newest at the bottom so Claude Code works through them in submission order. -->
 
-<!-- Drafts 18 + 19 shipped 2026-05-19 — archived below. -->
+<!-- Drafts 18 + 19 shipped 2026-05-19, Draft 20 shipped 2026-06-01 — archived (commented out). Draft 21 below is still active (spec/assets only, integration deferred). -->
+
+<!--
+
+### Draft 20 — 2026-06-01 meeting bundle (Getting Unstuck v5.3 + Allies v5.1 + Poem v2.4)
+
+Bundle of three small-to-medium changes from the 2026-06-01 review meeting. Ship as one commit so the team sees one stopping point.
+
+---
+
+#### Part A — Getting Unstuck v5.2 → v5.3 (MINOR)
+
+Two changes to Getting Unstuck. Ship together.
+
+##### A.1 — Pick-screen threshold flip (≥3 → ≥2)
+
+**Context:** This is the third flip on this single line. The chronology, so future-us doesn't get whiplash:
+
+- Original (v3.0 / v4.0): `truth_rating ≥ 3` carries forward.
+- Draft 15 / commit `27e4d52` (v5.0): lowered to `≥ 2` per Stephanie's *"higher than 1"* feedback.
+- Draft 17 / commit `6900549` (v5.1): reverted to `≥ 3` — Josh's clinical-content call, items below "Somewhat True" not worth the kid's time.
+- **Now (v5.3): back to `≥ 2`.** Different rationale this time: the 2026-06-01 meeting landed on the operational-anchor logic — on the 0-5 scale, **2 is exactly the "Somewhat True" anchor**, so a kid who endorses an item even slightly (≥2) is meaningfully endorsing it and should get the option to work on it. Stephanie raised the issue again ("It did not pull forward thoughts I rated at a 1"), the team agreed in the meeting, Josh's admin note confirms.
+
+**This is the final landing.** If a future round opens it again, we should have a serious clinical conversation rather than another constant flip.
+
+**File:** `src/activities/GettingUnstuck.jsx`.
+
+**Change:** `ELIGIBILITY_THRESHOLD = 2` (was `3`). The header comment at the top of the file plus the Other-screen narrative note (which was updated in Draft 17 to match `≥3`) need re-updating to say `≥2 ("Somewhat True" or above)`.
+
+**Affirmation-path behavior:** if no items clear the `≥2` threshold, the kid still hits the affirmation path (no Pick screen, brief positive message, Save). The transcript discussion added a subtlety: in this no-eligible-thoughts case, the kid should still see the **strategy-explanation video** for Challenge vs. Both/And — even though they don't have a specific thought to work on, the educational content is valuable. The video is currently a placeholder per Draft 19; just make sure it surfaces on the affirmation path too (or at the very least, the text scaffolding does).
+
+**Data shape:** no change.
+
+**Export pipeline:** no change.
+
+##### A.2 — Affirmation screens between consecutive thought-work cycles
+
+**Context:** Ginny flagged in the feedback form *"I feel like we need some encouragement — like good work, nice job, let's try another"*; the transcript confirms — *"after each time they challenge that they needed an affirmation."* When the kid picks two thoughts to work on (max-2 cap from Draft 19), they go through Challenge or Both/And on the first thought, then directly to the second. Currently there's no transition.
+
+**Change:** After the kid completes a thought (saves a Challenge response or a Both/And statement), if they have another selected thought still to work on, show a brief affirmation screen before the next thought's strategy screen.
+
+**Screen content:**
+
+- Short heading from a small rotating pool — *"Nice work."* · *"Good job."* · *"You're doing this."* · *"Keep going."* (~4–6 options, randomized so a kid working through two thoughts doesn't see identical copy back-to-back).
+- A one-line follow-up: *"Let's try the next one."*
+- Continue button.
+
+Keep it small — single screen, no inputs, ~3 seconds of read time. Don't over-formalize the affirmation; the goal is a soft "you did the work, here's a beat to breathe" rather than a celebration.
+
+**No affirmation screen** after the final thought (the activity ends with the existing Save / Review flow).
+
+**Implementation note:** the affirmation screen is purely visual — no data is saved. Don't add anything to the payload.
+
+**Out of scope here:** the *kind* of richer encouragement Ginny gestured at ("more encouragement and affirmation") could be expanded later — visual celebration, a tree-roots growth tick (tied to Draft 21), confetti, etc. For now, just text.
+
+##### A.3 — Version bump
+
+`getting-unstuck` v5.2 → **v5.3 (MINOR)**. Prepend changelog entry: *"v5.3 — Pick-screen threshold reverted to ≥2 ('Somewhat True' anchor logic, final per 2026-06-01 meeting); added brief affirmation screen between consecutive thought-work cycles per Ginny's encouragement ask."* Update `updated`.
+
+---
+
+#### Part B — Allies / Safety Net v5.0 → v5.1 (MINOR-ish; behavior change, no breaking data-shape)
+
+Two related changes to the Strengthen step, both from Ginny's stress-test (she selected foster mom/dad for every support type and ended up with only those two in her net) and the meeting discussion.
+
+##### B.1 — Strengthen runs for all three support types, not just gaps
+
+**Context (v5.0 spec, per Draft 19):** Strengthen step ran only for support types with 0 or 1 ally (gap detection).
+
+**New behavior:** Strengthen step runs **for all three support types**, regardless of how many allies the kid has selected. Same screens, same inputs, same Skip option — just always three screens instead of 0–3.
+
+The rationale (transcript): even a kid with five practical-support allies might think of someone else worth adding when prompted. The gap-only detection misses that. Prompting everyone normalizes the "let's expand" framing.
+
+##### B.2 — Remove the "same-kid ally suggestion chips" from Strengthen
+
+**Context (v5.0 spec):** each Strengthen screen showed quick-add chips with names of allies the kid had selected for OTHER support types, so they could re-use a name without retyping.
+
+**Remove these.** Per Ginny's stress test (kid selects foster mom/dad for every type → strengthen suggests them again → kid clicks the chip → safety net stays small): the chips encourage re-using existing allies instead of expanding. Goal of the Strengthen step is expansion. Take the chips out entirely.
+
+Replace with a clean text input. The kid types the name from scratch.
+
+##### B.3 — Copy adjustments for the new behavior
+
+The Strengthen-screen heading was *"Let's strengthen your {type} support"* with a sub-line that varied by gap size (0-ally vs 1-ally). Replace both sub-lines with a single neutral version:
+
+> Is there anyone else who could give you **{type}** support? Adding more people can make your safety net stronger.
+
+(Color the **{type}** word per the existing support-type color scheme from Draft 19.)
+
+The two inputs and Skip button stay as v5.0 spec'd them.
+
+##### B.4 — Final Review screen — no change to net visualization
+
+Per the meeting discussion: typed-in names from Strengthen stay in the action callouts only; they do **not** get added to the net visualization. Stephanie's framing — *"Frank isn't really in the net until we call him and see"* — the net should reflect actual current connections, not aspirational ones. The action callout is where the aspiration lives.
+
+##### B.5 — Data shape + export pipeline
+
+The `strengthened` object stays the same shape but is now always populated for all three types (no more `null`). Field semantics shift slightly:
+
+- `gap_filler` → consider renaming the field to `additional_person` to match the new framing (this isn't strictly about filling a gap anymore). Optional — keep `gap_filler` if churn isn't worth it; if renaming, update `exportFlatten.js` columns to match.
+- `action` unchanged.
+- `skipped: bool` unchanged.
+
+Export pipeline:
+
+- Drop `safety_net_strengthen_gaps_count` (no longer meaningful — every kid sees all three types).
+- Add `safety_net_strengthen_added_count` — integer 0-3, count of types where the kid filled in an additional person (i.e., `additional_person` non-empty AND `skipped = false`).
+- Keep `safety_net_strengthen_{type}_filler` / `_action` / `_skipped` columns (renamed if field renamed in B.5 above).
+
+##### B.6 — Demo dataset
+
+`demoDataset.js` regenerate `safety_net_*` synthetic data:
+
+- Every synthetic participant now goes through all three Strengthen screens.
+- ~50% fill in an additional person per type (skip rate ~50%).
+- Free-text values pull from the same small string pool from Draft 19.
+
+##### B.7 — Version bump
+
+`allies-safety-net` v5.0 → **v5.1 (MINOR)**. Behavior change but no breaking data-shape change at the JSON level. Prepend changelog entry: *"v5.1 — Strengthen step now runs for all three support types (not just gaps); removed the same-kid suggestion chips per Ginny's 2026-06-01 stress test (chips encouraged re-using existing allies rather than expanding); copy reframed as 'who else' instead of gap-specific phrasing."* Update `updated`.
+
+---
+
+#### Part C — Who I Am Poem v2.3 → v2.4 (MINOR copy/UI cleanup)
+
+**Context:** Ginny's feedback — *"I think having line 6 and line 10 written in like that might be confusing."* Josh's admin note: *"Take out the numbering and take out the Instructions visible on line 6 and 10."* Meeting confirmed.
+
+**File:** `src/activities/WhoIAmPoem.jsx`.
+
+**Two changes:**
+
+1. **Remove the visible line numbers** (the small "1", "2", "3"… numbers next to each input/display line). The kid doesn't need to see them — the structure is implicit in the layout.
+
+2. **Remove the "same as line 1" instruction text** currently visible next to lines 6 and 10. Those two lines auto-mirror line 1 silently; the kid doesn't need to be told. Just render lines 6 and 10 as the mirrored "I am ___" text without explanation.
+
+The poem structure itself, the auto-mirroring logic, and the keepsake output are all unchanged.
+
+**Version bump:** v2.3 → **v2.4 (MINOR)**. Prepend changelog: *"v2.4 — Removed visible line numbers and the 'same as line 1' instructional text from lines 6 and 10 per Ginny's 2026-06-01 feedback ('confusing')."*
+
+---
+
+**Approved by:** Josh, 2026-06-01.
+
+**Out of scope for this draft:**
+
+- Continue buttons at the end of standalone activities (Ginny flagged across multiple). Per the meeting transcript, this is an artifact of activities being standalone for testing; covered by the eventual flow-integration draft.
+- Self-Reflection "feedback for nonsense input or feeling/thought mismatches" (Ginny's question). Hard NLP problem, no clear meeting decision; defer.
+- Sam character art revisions (brighter backgrounds, happier baseline, more ethnically ambiguous, age-appropriate clothing progression). Josh's asset-generation workflow, not a code change.
+- The tree-roots progress visual — separate spec in Draft 21.
+
+*End of Draft 20.*
+
+-->
+
+---
+
+### Draft 21 — Tree-roots progress visual: spec + assets + state model (integration deferred)
+
+**Status:** Design + asset prep now, integration deferred until the standalone activities are stitched into a continuous flow. The team converged on this at the 2026-06-01 meeting — ties cleanly to the Ready for Roots metaphor, addresses the kids-research finding about wanting feedback and a sense of progress, and resolves the "I'm at a dead end" feeling Ginny flagged across multiple standalone activities.
+
+**What this draft delivers:**
+
+1. A spec'd visual: a tree with growth stages, where the visible state grows as the kid completes sections of the intervention.
+2. An asset list so Josh (or an art workflow) can generate the SVG growth-stage frames now.
+3. A state model so the data tracking is decided before integration time.
+4. A spec for the "progress reveal" screen that flashes between sections.
+
+**What this draft does NOT deliver yet:**
+
+- The actual integration into the participant flow (deferred — activities are still standalone). When the activities are stitched together, a follow-up draft wires this in.
+
+---
+
+#### 1. Visual spec
+
+A tree that visibly grows as the kid progresses. Five growth stages:
+
+| Stage | Trigger | Visual |
+|---|---|---|
+| **0 — Seed** | Intervention start | A small seed or sprout, roots barely visible underground. |
+| **1 — Sapling** | After Self-Reflection | Roots have spread a little. Small trunk emerges above ground. A leaf or two. |
+| **2 — Young tree** | After Getting Unstuck | More extensive root system underground (visibly bigger). Several branches. A few leaves. |
+| **3 — Established tree** | After Belonging Skills Sort | Full root system. Sturdy trunk. Branches with leaves. |
+| **4 — Flourishing tree** | After Allies / Safety Net | Roots clearly anchored and spread wide. Full canopy. Leaves are full color. |
+| **5 — Blooming** | After Letter to Another Youth + Who I Am Poem (final activity / completion) | Same tree, now with flowers / fruit. Roots wind clear across the bottom of the frame. |
+
+**Art direction notes:**
+
+- The roots are the visual focus, not the canopy. Reinforces the "Ready for Roots" name. Roots should be more prominent than they would be on a typical tree illustration — drawn proudly, visible below an implied ground line.
+- Style: soft, warm, not overly literal. Should match the platform's amber/slate palette and the Sam character's art direction once that's locked. Defer final style to Josh's art workflow.
+- Same composition / framing across all six stages so the growth is continuous (kid sees the same tree, just bigger). One canvas, layered.
+- SVG so it scales cleanly across desktop and mobile.
+- 16:9 aspect ratio recommended so it fills a phone screen comfortably in landscape and works as a hero on desktop.
+
+**Asset deliverable from Josh's side (when art workflow is ready):** six SVG files named `tree-stage-0.svg` through `tree-stage-5.svg`, dropped into `src/assets/tree/` (new directory).
+
+---
+
+#### 2. State model
+
+Track which stages the kid has completed.
+
+**New top-level participant state field** (decide location at integration time — likely a `progress` table or a column on the existing participant record):
+
+```js
+progress: {
+  current_stage: 0 | 1 | 2 | 3 | 4 | 5,
+  completed_activities: ["self-reflection", "getting-unstuck", ...],
+  stage_advanced_at: { "1": "2026-06-15T...", "2": "...", ... }
+}
+```
+
+`current_stage` is the highest stage the kid has unlocked. `completed_activities` is the source-of-truth list of activity slugs the kid has finished (drives the stage calculation). `stage_advanced_at` is a timestamp log so we know when each stage advanced (useful for analytics later).
+
+The mapping from completed-activities count to stage is deterministic per the table above; compute on read rather than storing redundantly. This means if the activity order ever changes, only one mapping function changes.
+
+**Persistence:** stage state lives keyed by PID (per the pending PID-linking requirement section below). For demo-only testing, can be localStorage-backed initially with a TODO comment to move to Supabase at flow-integration time.
+
+---
+
+#### 3. Progress-reveal screen spec
+
+When the kid completes an activity and the stage advances, show a dedicated full-screen "progress reveal":
+
+**Screen layout:**
+
+- Centered tree visual (the new stage's SVG, full size).
+- Above the tree: a short heading from a small rotating pool — *"Look at your roots."* · *"Your roots are growing."* · *"Keep going — your roots are spreading."*
+- Below the tree: a one-line context — *"You finished {activity name}."* (where `{activity name}` is the just-completed activity's display name).
+- A Continue button below that.
+
+**Behavior:**
+
+- Auto-shows after the kid's existing per-activity Save / Review screen, before they're routed back to the flow.
+- Plays a subtle one-time animation: roots / branches grow into their new positions from the previous stage's resting state. ~600ms ease-out. If reduced-motion preference is set in the user's OS, skip the animation and just show the final state.
+- Kid taps Continue → next activity in the flow (or completion screen if this was the final activity).
+
+**Where in the flow:** between every activity, at the moment of stage advance. If the kid completes multiple activities in one session, they see the progress reveal between each (the metaphor needs the repeated reinforcement).
+
+**Mobile:** the tree fills most of the screen vertically; heading + caption + Continue stack below it. Same composition as desktop, just smaller.
+
+---
+
+#### 4. Integration scope (out of this draft, parked for later)
+
+When the activities are stitched into a continuous flow (no draft for this yet — depends on the Qualtrics-link handoff and the broader Ready for Roots participant-flow rebuild), this draft's deliverables get wired in. That work is:
+
+- A new `<TreeProgress />` component that renders the right stage based on completed_activities.
+- A routing change so the post-Save handler on each activity routes through the progress-reveal screen before the next activity.
+- Persistence of the progress state per PID in Supabase (new column or new table).
+- Backfill for any in-flight demo participants (probably just clear demo state).
+
+Parked for a follow-up draft once the activities are joined.
+
+---
+
+**Approved by:** Josh, 2026-06-01 — design + assets + state model now, integration when the flow lands.
+
+**Out of scope:**
+
+- Actual SVG art generation — Josh's art workflow handles this, drops the six stage files into `src/assets/tree/`.
+- Flow integration — deferred to a follow-up draft when standalone activities are joined.
+- Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
+
+*End of Draft 21.*
+
+<!-- Drafts 18 + 19 archived below. -->
 
 <!--
 

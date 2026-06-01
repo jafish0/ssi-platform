@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { PlayCircle } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 
@@ -13,9 +14,9 @@ import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 //     per item: how true it feels, on a 0-5 scale with anchors
 //     "Not At All True / Somewhat True / Definitely True." This matches
 //     the FollowUp Survey exactly so within-subject change scores work.
-//   - The eligibility threshold for the Pick screen is **≥3** as of
-//     v5.1. (v5.0 briefly tried ≥2 per Stephanie's feedback; reverted
-//     2026-05-19 — see header comment on ELIGIBILITY_THRESHOLD.)
+//   - The eligibility threshold for the Pick screen is **≥2** as of
+//     v5.3. (See the ELIGIBILITY_THRESHOLD comment for the full flip
+//     history — this line has now moved 3↔2 three times.)
 //   - A new "Other thought" screen sits between Rate and Pick — kid
 //     can name one of their own stuck thoughts and rate it on the same
 //     scale. If they hit Yes + rate ≥3, the Other item also becomes
@@ -43,14 +44,32 @@ import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 // The `responses` array + `stuck_thought_ids` from v3/v4 are gone;
 // everything is keyed by appraisal id inside the `appraisals` object.
 
-// v5.1 (2026-05-19, Draft 17): threshold reverted from 2 back to 3 —
-// Josh's clinical-content call. Items rated below "Somewhat True" (3)
-// on the 0-5 anchor scale aren't endorsed strongly enough to be worth
-// the kid's time on the Pick / Challenge / Both-and flow. With ≥3
-// instead of ≥2 the affirmation path will be hit more often — that's
-// the intended behavior, not a regression.
-const ELIGIBILITY_THRESHOLD = 3
+// ELIGIBILITY_THRESHOLD flip history (this single constant has moved
+// 3 ↔ 2 three times — recorded here so future-us doesn't get whiplash):
+//   - v3.0 / v4.0: ≥3 carries forward to Pick.
+//   - v5.0 (Draft 15, commit 27e4d52): lowered to ≥2 per Stephanie.
+//   - v5.1 (Draft 17, commit 6900549): reverted to ≥3 — Josh's call.
+//   - v5.3 (Draft 20, 2026-06-01): back to ≥2, FINAL per the meeting.
+//     A kid who rates an item at 2 (above the "Not At All True" floor
+//     of 0) is endorsing it enough to be worth offering the Pick /
+//     Challenge / Both-and flow. With ≥2 the affirmation path is hit
+//     less often than under ≥3 — intended. If a future round reopens
+//     this, have a real clinical conversation rather than flipping the
+//     constant again.
+const ELIGIBILITY_THRESHOLD = 2
 const MAX_PICKS = 2
+
+// Brief affirmation headings shown between consecutive thought-work
+// cycles (Ginny's 2026-06-01 ask: "after each time they challenge that
+// they needed an affirmation"). With MAX_PICKS=2 a kid sees at most one
+// of these, so back-to-back repetition isn't really possible; we still
+// randomize so it doesn't always read the same across sessions.
+const CYCLE_AFFIRMATIONS = [
+  'Nice work.',
+  'Good job.',
+  "You're doing this.",
+  'Keep going.',
+]
 
 // Three "Challenge it" prompts (Stephanie's PPT slide 12). Shown as
 // scaffolding above the open-ended response field when the kid picks
@@ -117,9 +136,15 @@ export default function GettingUnstuck({ onSave = console.log }) {
   //   other       → Yes/No on an Other thought; if Yes, type + rate it
   //   pick        → choose 1-2 eligible items to work on
   //   strategy    → per-picked: Challenge or Both/And + open text
+  //   cycle_affirmation → brief "nice work, let's try the next one" beat
+  //                 shown between consecutive picked thoughts (v5.3)
   //   review      → read-back before save
   //   affirmation → alt path when zero items clear threshold (skip pick + strategy)
   const [phase, setPhase] = useState('rate')
+
+  // Heading for the between-thoughts affirmation beat (randomized when we
+  // enter the cycle_affirmation phase).
+  const [cycleHeading, setCycleHeading] = useState(CYCLE_AFFIRMATIONS[0])
 
   // Per-item state keyed by id ('a1'…'a6' and optionally 'a_other').
   // Shape: { truth_rating?: 0..5, selected?: bool, strategy?, response?, and_statement? }
@@ -534,12 +559,55 @@ export default function GettingUnstuck({ onSave = console.log }) {
   // ---- Phase: affirmation ----
   if (phase === 'affirmation') {
     return (
-      <div className="text-center py-4">
-        <h2 className="text-[22px] font-semibold mb-3">That&apos;s good news.</h2>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-6 max-w-[480px] mx-auto">
-          Looks like none of these thoughts are sticking with you right now —
-          you don&apos;t have to wrestle with them today.
-        </p>
+      <div className="py-4">
+        <div className="text-center">
+          <h2 className="text-[22px] font-semibold mb-3">That&apos;s good news.</h2>
+          <p className="text-[16px] leading-relaxed text-slate-700 mb-6 max-w-[480px] mx-auto">
+            Looks like none of these thoughts are sticking with you right now —
+            you don&apos;t have to wrestle with them today.
+          </p>
+        </div>
+
+        {/* Strategy explainer — even when there's no specific thought to
+            work on, the kid still learns the two strategies (Ginny's
+            2026-06-01 ask). Video is a placeholder for now (Adrian to
+            record; Stephanie offered to script a ~1-min version); the
+            text scaffolding below carries the content until then. */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-6 text-left max-w-[560px] mx-auto">
+          <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
+            If a stuck thought ever does come up, here are two ways to work
+            with it:
+          </p>
+
+          <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
+            <div className="relative w-full bg-slate-900" style={{ paddingBottom: '56.25%' }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-200 gap-2">
+                <PlayCircle size={44} strokeWidth={1.4} />
+                <span className="text-[13px] uppercase tracking-widest">
+                  Video coming soon
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-slate-200 p-3">
+              <div className="font-semibold text-[15px] mb-1">Challenge it</div>
+              <div className="text-[13px] text-slate-600 leading-relaxed">
+                Push back on the thought. Is there another way to see this? Is
+                it really true, or is there a more helpful way to think about it?
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-3">
+              <div className="font-semibold text-[15px] mb-1">Both/And it</div>
+              <div className="text-[13px] text-slate-600 leading-relaxed">
+                The thought might hold a piece of truth, but it leaves out other
+                truths. You hold both at once — &quot;this AND that.&quot;
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between">
           <GhostButton
             onClick={() => {
@@ -699,13 +767,42 @@ export default function GettingUnstuck({ onSave = console.log }) {
               if (isLastThought) {
                 setPhase('review')
               } else {
-                setThoughtIdx((i) => i + 1)
+                // Insert a brief affirmation beat before the next thought
+                // (v5.3, Ginny's encouragement ask). Continue on that
+                // screen advances thoughtIdx and returns to 'strategy'.
+                setCycleHeading(
+                  CYCLE_AFFIRMATIONS[
+                    Math.floor(Math.random() * CYCLE_AFFIRMATIONS.length)
+                  ],
+                )
+                setPhase('cycle_affirmation')
               }
               scrollTop()
             }}
             disabled={!valid}
           >
             {isLastThought ? 'Review →' : 'Next thought →'}
+          </PrimaryButton>
+        </div>
+      </div>
+    )
+  }
+
+  // ---- Phase: cycle_affirmation (between consecutive picked thoughts) ----
+  if (phase === 'cycle_affirmation') {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-[24px] font-semibold mb-2">{cycleHeading}</h2>
+        <p className="text-[16px] text-slate-700 mb-8">Let&apos;s try the next one.</p>
+        <div className="flex items-center justify-end">
+          <PrimaryButton
+            onClick={() => {
+              setThoughtIdx((i) => i + 1)
+              setPhase('strategy')
+              scrollTop()
+            }}
+          >
+            Continue →
           </PrimaryButton>
         </div>
       </div>

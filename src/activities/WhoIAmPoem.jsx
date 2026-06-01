@@ -97,7 +97,6 @@ export default function WhoIAmPoem({ onSave = console.log }) {
         {LINES.map((l) => (
           <div key={l.id}>
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
-              <span className="text-slate-400 mr-2">{l.n}.</span>
               {l.starter}
               {l.id === 'characteristics' && <span className="text-rose-400 ml-1">*</span>}
               <span className="ml-2 text-slate-500 italic font-normal">— {l.hint}</span>
@@ -110,13 +109,11 @@ export default function WhoIAmPoem({ onSave = console.log }) {
               className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
             {/* After line 5 and line 9, show the auto-mirrored line as a
-                read-only preview so the kid sees the structure. */}
-            {l.n === 5 && (
-              <MirroredLine n={6} value={vals.characteristics} />
-            )}
-            {l.n === 9 && (
-              <MirroredLine n={10} value={vals.characteristics} />
-            )}
+                read-only preview so the kid sees the structure. As of
+                v2.4 these render silently — no line numbers, no "same as
+                line 1" caption (Ginny: that was confusing). */}
+            {l.n === 5 && <MirroredLine value={vals.characteristics} />}
+            {l.n === 9 && <MirroredLine value={vals.characteristics} />}
           </div>
         ))}
       </div>
@@ -130,13 +127,10 @@ export default function WhoIAmPoem({ onSave = console.log }) {
   )
 }
 
-function MirroredLine({ n, value }) {
+function MirroredLine({ value }) {
   const text = (value || '').trim()
   return (
-    <div className="mt-3 ml-6 pl-3 border-l-2 border-amber-200">
-      <p className="text-[12px] text-slate-500 mb-1">
-        Line {n} <span className="italic">— same as line 1</span>
-      </p>
+    <div className="mt-3 pl-3 border-l-2 border-amber-200">
       <p className="text-[15px] text-slate-700 font-serif italic">
         {text ? `I am ${text}` : <span className="text-slate-400 not-italic">(fills in once you write line 1)</span>}
       </p>

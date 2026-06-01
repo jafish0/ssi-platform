@@ -652,53 +652,54 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => (rv?.inspection_completed ? 1 : 0),
               },
               // ----- v5.0 Strengthen columns (Draft 19) -----
+              // v5.1 (Draft 20): Strengthen runs for all three types, so
+              // these are always populated (no nulls). `_filler` renamed to
+              // `_person` to match the `additional_person` field rename.
               ...['practical', 'emotional', 'social'].flatMap((typeId) => [
                 {
-                  name: sanitizeCol(`${prefix}_strengthen_${typeId}_filler`),
+                  name: sanitizeCol(`${prefix}_strengthen_${typeId}_person`),
                   source_token_key: tk,
                   item_type: 'custom_activity',
-                  sub_id: `strengthen_${typeId}_filler`,
-                  prompt: `Strengthen ${typeId}: who could fill the gap (open text). Null if no gap.`,
-                  allowed_values: 'open text or null',
-                  notes: 'AlliesSafetyNet v5',
-                  extract: (rv) => rv?.strengthened?.[typeId]?.gap_filler ?? null,
+                  sub_id: `strengthen_${typeId}_person`,
+                  prompt: `Strengthen ${typeId}: additional person the kid named (open text; empty if none/skipped).`,
+                  allowed_values: 'open text',
+                  notes: 'AlliesSafetyNet v5.1',
+                  extract: (rv) => rv?.strengthened?.[typeId]?.additional_person ?? '',
                 },
                 {
                   name: sanitizeCol(`${prefix}_strengthen_${typeId}_action`),
                   source_token_key: tk,
                   item_type: 'custom_activity',
                   sub_id: `strengthen_${typeId}_action`,
-                  prompt: `Strengthen ${typeId}: one thing they could do (open text). Null if no gap.`,
-                  allowed_values: 'open text or null',
-                  notes: 'AlliesSafetyNet v5',
-                  extract: (rv) => rv?.strengthened?.[typeId]?.action ?? null,
+                  prompt: `Strengthen ${typeId}: one thing they could do (open text; empty if none/skipped).`,
+                  allowed_values: 'open text',
+                  notes: 'AlliesSafetyNet v5.1',
+                  extract: (rv) => rv?.strengthened?.[typeId]?.action ?? '',
                 },
                 {
                   name: sanitizeCol(`${prefix}_strengthen_${typeId}_skipped`),
                   source_token_key: tk,
                   item_type: 'custom_activity',
                   sub_id: `strengthen_${typeId}_skipped`,
-                  prompt: `Strengthen ${typeId}: did the participant skip this gap? Null if no gap.`,
-                  allowed_values: '0, 1, or null',
-                  notes: 'AlliesSafetyNet v5',
-                  extract: (rv) => {
-                    const e = rv?.strengthened?.[typeId]
-                    if (e == null) return null
-                    return e.skipped ? 1 : 0
-                  },
+                  prompt: `Strengthen ${typeId}: did the participant skip this type?`,
+                  allowed_values: '0 or 1',
+                  notes: 'AlliesSafetyNet v5.1',
+                  extract: (rv) => (rv?.strengthened?.[typeId]?.skipped ? 1 : 0),
                 },
               ]),
               {
-                name: sanitizeCol(`${prefix}_strengthen_gaps_count`),
+                name: sanitizeCol(`${prefix}_strengthen_added_count`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'strengthen_gaps_count',
-                prompt: 'How many support types had a gap (0 or 1 ally post-Inspect)?',
+                sub_id: 'strengthen_added_count',
+                prompt: 'How many support types the kid named an additional person for (non-empty, not skipped).',
                 allowed_values: '0 to 3',
-                notes: 'AlliesSafetyNet v5',
+                notes: 'AlliesSafetyNet v5.1',
                 extract: (rv) => {
                   const s = rv?.strengthened || {}
-                  return Object.values(s).filter((v) => v != null).length
+                  return Object.values(s).filter(
+                    (v) => v && !v.skipped && (v.additional_person || '').trim().length > 0,
+                  ).length
                 },
               },
             )

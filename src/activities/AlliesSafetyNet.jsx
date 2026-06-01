@@ -32,21 +32,27 @@
 // `mx-auto w-full max-w-[420px] md:max-w-[700px]`. Build-phase tile
 // grids stay at 2 columns on mobile / 3 on tablet+desktop.
 //
-// Save payload (v5.0 shape — see Draft 19 A.7):
+// Save payload (v5.1 shape — Draft 20 reshaped `strengthened`):
 //   {
 //     activity: "allies_safety_net",
-//     version: "5.0",
+//     version: "5.1",
 //     allies: [{id, name, custom, support_types: [...]}],
 //     none_for: { practical, emotional, social },
 //     removed_via_inspect: ["ally_id_1", ...],
 //     inspection_completed: bool,
-//     strengthened: {
-//       practical: { gap_filler, action, skipped } | null,
-//       emotional: { gap_filler, action, skipped } | null,
-//       social:    { gap_filler, action, skipped } | null,
+//     strengthened: {            // v5.1: always all three, never null
+//       practical: { additional_person, action, skipped },
+//       emotional: { additional_person, action, skipped },
+//       social:    { additional_person, action, skipped },
 //     },
 //     saved_at: "..."
 //   }
+//
+// v5.1 (Draft 20): Strengthen runs for ALL three support types (was
+// gap-only in v5.0); same-kid suggestion chips removed; `gap_filler`
+// field renamed to `additional_person`; `strengthened.{type}` is never
+// null now (a type the kid passed through untouched saves empty strings,
+// skipped:false).
 
 import { useMemo, useRef, useState } from 'react'
 import { Check, Download, PlayCircle } from 'lucide-react'
@@ -218,31 +224,12 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
     [deduplicatedAllies],
   )
 
-  // Allies still in the net after Inspect — drives gap detection.
-  const keptAllies = useMemo(
-    () => deduplicatedAllies.filter((a) => !a.removed_via_inspect),
-    [deduplicatedAllies],
-  )
-
-  // Per-type kept ally count post-removal. Drives gap detection.
-  const keptCountByType = useMemo(() => {
-    const counts = {}
-    for (const t of SUPPORT_TYPES) counts[t.id] = 0
-    for (const a of keptAllies) {
-      for (const tid of a.support_types || []) {
-        if (counts[tid] != null) counts[tid] += 1
-      }
-    }
-    return counts
-  }, [keptAllies])
-
-  // Types that need a Strengthen screen (post-removal count ≤ 1).
-  // Order matches SUPPORT_TYPES (Practical → Emotional → Social).
-  const gapTypeIds = useMemo(
-    () =>
-      SUPPORT_TYPES.filter((t) => keptCountByType[t.id] <= 1).map((t) => t.id),
-    [keptCountByType],
-  )
+  // Strengthen runs for ALL three support types as of v5.1 (Draft 20,
+  // 2026-06-01). v5.0 gated it to gaps (0 or 1 ally); Ginny's stress test
+  // showed that gate missed expansion opportunities — even a kid with
+  // five practical-support allies might add someone when prompted. Order
+  // matches SUPPORT_TYPES (Practical → Emotional → Social).
+  const strengthenTypeIds = SUPPORT_TYPES.map((t) => t.id)
 
   // ---- Screen flow ----
   //
@@ -262,11 +249,13 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       { type: 'build-final' },
       { type: 'inspect-education' },
       { type: 'inspect-xout' },
-      ...gapTypeIds.map((typeId) => ({ type: 'strengthen', supportType: typeId })),
+      ...strengthenTypeIds.map((typeId) => ({ type: 'strengthen', supportType: typeId })),
       { type: 'review' },
     ]
     return list
-  }, [gapTypeIds])
+    // strengthenTypeIds is a stable list (all three types) — listing it
+    // keeps the dependency array honest even though it never changes.
+  }, [strengthenTypeIds])
 
   const [screenIdx, setScreenIdx] = useState(0)
   // Clamp screenIdx if the screens array shrinks beneath the kid (e.g.
@@ -302,14 +291,14 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   // ---- Strengthen-phase helpers ----
   function updateStrengthen(typeId, patch) {
     setStrengthened((prev) => {
-      const cur = prev[typeId] || { gap_filler: '', action: '', skipped: false }
+      const cur = prev[typeId] || { additional_person: '', action: '', skipped: false }
       return { ...prev, [typeId]: { ...cur, ...patch } }
     })
   }
   function skipStrengthen(typeId) {
     setStrengthened((prev) => ({
       ...prev,
-      [typeId]: { gap_filler: '', action: '', skipped: true },
+      [typeId]: { additional_person: '', action: '', skipped: true },
     }))
     goNext()
   }
@@ -324,28 +313,21 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         custom: !!a.custom,
         support_types: a.support_types,
       }))
-      // Build strengthened payload — only keys for types that had a gap
-      // get an entry; other types stay null.
+      // Build strengthened payload — v5.1: every type always gets an
+      // entry (no nulls), since Strengthen now runs for all three.
+      // An entry the kid never touched defaults to empty / not-skipped.
       const strengthenedOut = {}
       for (const t of SUPPORT_TYPES) {
-        const isGap = gapTypeIds.includes(t.id)
-        if (!isGap) {
-          strengthenedOut[t.id] = null
-        } else if (strengthened[t.id]) {
-          strengthenedOut[t.id] = {
-            gap_filler: strengthened[t.id].gap_filler || '',
-            action: strengthened[t.id].action || '',
-            skipped: !!strengthened[t.id].skipped,
-          }
-        } else {
-          // Kid hit a gap screen but moved through without entering anything
-          // and without explicitly skipping — treat as skipped for cleanliness.
-          strengthenedOut[t.id] = { gap_filler: '', action: '', skipped: true }
+        const e = strengthened[t.id]
+        strengthenedOut[t.id] = {
+          additional_person: e?.additional_person || '',
+          action: e?.action || '',
+          skipped: !!e?.skipped,
         }
       }
       await onSave({
         activity: 'allies_safety_net',
-        version: '5.0',
+        version: '5.1',
         allies,
         none_for: {
           practical: !!noneFor.practical,
@@ -364,7 +346,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   }
 
   if (done) {
-    return <SavedConfirmation allies={reviewAllies} noneFor={noneFor} strengthened={strengthened} gapTypeIds={gapTypeIds} />
+    return <SavedConfirmation allies={reviewAllies} noneFor={noneFor} strengthened={strengthened} strengthenTypeIds={strengthenTypeIds} />
   }
 
   return (
@@ -425,8 +407,6 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       {screen?.type === 'strengthen' && (
         <StrengthenScreen
           typeId={screen.supportType}
-          keptCount={keptCountByType[screen.supportType]}
-          keptAllies={keptAllies}
           entry={strengthened[screen.supportType]}
           onChange={(patch) => updateStrengthen(screen.supportType, patch)}
           onSkip={() => skipStrengthen(screen.supportType)}
@@ -438,7 +418,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
           allies={reviewAllies}
           noneFor={noneFor}
           strengthened={strengthened}
-          gapTypeIds={gapTypeIds}
+          strengthenTypeIds={strengthenTypeIds}
         />
       )}
 
@@ -462,7 +442,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
 // ---------- Post-save confirmation (with downloadable keepsake) ----------
 
-function SavedConfirmation({ allies, noneFor, strengthened, gapTypeIds }) {
+function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds }) {
   const wrapRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState(null)
@@ -492,12 +472,10 @@ function SavedConfirmation({ allies, noneFor, strengthened, gapTypeIds }) {
       <div ref={wrapRef} className="mb-4">
         <NetWithListToggle allies={allies} noneFor={noneFor} />
       </div>
-      {gapTypeIds && gapTypeIds.length > 0 && (
-        <StrengthenSummary
-          strengthened={strengthened}
-          gapTypeIds={gapTypeIds}
-        />
-      )}
+      <StrengthenSummary
+        strengthened={strengthened}
+        strengthenTypeIds={strengthenTypeIds}
+      />
       <div className="flex flex-col items-center gap-2">
         <button
           type="button"
@@ -909,32 +887,22 @@ function InspectXOutScreen({ allies, onToggleRemoved }) {
   )
 }
 
-// ---------- Strengthen (per gap) ----------
+// ---------- Strengthen (one screen per support type) ----------
+//
+// v5.1 (Draft 20): runs for all three types, not just gaps. The
+// same-kid suggestion chips were removed — per Ginny's 2026-06-01 stress
+// test they encouraged re-using existing allies (foster mom/dad showing
+// up everywhere) rather than expanding the net. The kid types a name
+// from scratch. Typed-in names live in the action callout only; they do
+// NOT get added to the net visual (Stephanie: "Frank isn't really in the
+// net until we call him and see").
 
-function StrengthenScreen({ typeId, keptCount, keptAllies, entry, onChange, onSkip }) {
+function StrengthenScreen({ typeId, entry, onChange, onSkip }) {
   const t = SUPPORT_TYPES.find((x) => x.id === typeId)
   if (!t) return null
   const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
-  // Suggestion chips — allies the kid has in OTHER support types that
-  // could plausibly fit this one too. Holly's transcript point.
-  const otherTypeAllies = keptAllies.filter(
-    (a) => !(a.support_types || []).includes(typeId),
-  )
-  // Dedupe by id (an ally in two other types still suggests once).
-  const suggestionIds = new Set()
-  const suggestions = []
-  for (const a of otherTypeAllies) {
-    if (suggestionIds.has(a.id)) continue
-    suggestionIds.add(a.id)
-    suggestions.push(a)
-  }
-  const gapFiller = entry?.gap_filler || ''
+  const additionalPerson = entry?.additional_person || ''
   const action = entry?.action || ''
-
-  const subLine =
-    keptCount === 0
-      ? `Right now nobody is in your ${t.label.toLowerCase()} support. Is there someone in your life who could be?`
-      : `Right now you have one person in your ${t.label.toLowerCase()} support. Is there someone else who could help out?`
 
   return (
     <div>
@@ -942,29 +910,10 @@ function StrengthenScreen({ typeId, keptCount, keptAllies, entry, onChange, onSk
         Let&apos;s strengthen your {t.label.toLowerCase()} support.
       </h2>
       <p className="text-[15px] leading-relaxed text-slate-800 mb-5">
-        {subLine}
+        Is there anyone else who could give you{' '}
+        <span className={`font-semibold ${tones.word}`}>{t.label.toLowerCase()}</span>{' '}
+        support? Adding more people can make your safety net stronger.
       </p>
-
-      {suggestions.length > 0 && (
-        <div className="mb-4">
-          <p className="text-[13px] text-slate-600 mb-2">Anyone here also fit?</p>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => onChange({ gap_filler: a.name, skipped: false })}
-                className={
-                  'inline-flex items-center rounded-full border px-3 py-1.5 text-[13px] font-medium ' +
-                  tones.chip
-                }
-              >
-                {a.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="mb-4">
         <label className="block text-[13px] font-medium text-slate-700 mb-1">
@@ -972,8 +921,8 @@ function StrengthenScreen({ typeId, keptCount, keptAllies, entry, onChange, onSk
         </label>
         <input
           type="text"
-          value={gapFiller}
-          onChange={(e) => onChange({ gap_filler: e.target.value, skipped: false })}
+          value={additionalPerson}
+          onChange={(e) => onChange({ additional_person: e.target.value, skipped: false })}
           maxLength={60}
           placeholder="A name"
           className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
@@ -1012,7 +961,7 @@ function StrengthenScreen({ typeId, keptCount, keptAllies, entry, onChange, onSk
 
 // ---------- Review screen ----------
 
-function ReviewScreen({ allies, noneFor, strengthened, gapTypeIds }) {
+function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">Your safety net is ready.</h2>
@@ -1021,22 +970,20 @@ function ReviewScreen({ allies, noneFor, strengthened, gapTypeIds }) {
         time.
       </p>
       <NetWithListToggle allies={allies} noneFor={noneFor} />
-      {gapTypeIds.length > 0 && (
-        <StrengthenSummary
-          strengthened={strengthened}
-          gapTypeIds={gapTypeIds}
-        />
-      )}
+      <StrengthenSummary
+        strengthened={strengthened}
+        strengthenTypeIds={strengthenTypeIds}
+      />
     </div>
   )
 }
 
-function StrengthenSummary({ strengthened, gapTypeIds }) {
-  // Render only the gaps the kid actually filled in (skipped or empty ones
-  // don't get a callout — kid agency, no pressure).
-  const filled = gapTypeIds
+function StrengthenSummary({ strengthened, strengthenTypeIds }) {
+  // Render only the types the kid actually added someone to (skipped or
+  // empty ones don't get a callout — kid agency, no pressure).
+  const filled = strengthenTypeIds
     .map((id) => ({ id, entry: strengthened[id] }))
-    .filter(({ entry }) => entry && !entry.skipped && (entry.gap_filler || entry.action))
+    .filter(({ entry }) => entry && !entry.skipped && (entry.additional_person || entry.action))
   if (filled.length === 0) return null
   return (
     <div className="mt-5 space-y-3 text-left max-w-[640px] mx-auto">
@@ -1054,9 +1001,9 @@ function StrengthenSummary({ strengthened, gapTypeIds }) {
             <p className={`text-[13px] font-semibold mb-1 ${tones.word}`}>
               {t?.label} support
             </p>
-            {entry.gap_filler && (
+            {entry.additional_person && (
               <p className="text-[14px] text-slate-800">
-                <span className="font-medium">Who:</span> {entry.gap_filler}
+                <span className="font-medium">Who:</span> {entry.additional_person}
               </p>
             )}
             {entry.action && (
