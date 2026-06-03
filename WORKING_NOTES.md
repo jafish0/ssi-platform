@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`<pending-d22>` · 2026-06-03** — Draft 22: replaced the /demo **Video** section (commit `d64dbdb`) with a new **"Meet the cast"** section previewing Holly's Script 2.0 before animation. Five character cards — **Sam (14)**, **Sam (16)**, **Foster Mom**, **Foster Dad**, **Mrs. Johnson** — plus a borderless **Family Photo** closer. Each card: image (left ~40% on desktop, stacked on mobile) + role line + either a list of scripted lines (scene cue + quoted text + native `<audio>` ElevenLabs sample per line) or a single description paragraph for the two characters who don't speak in Script 2.0 yet (Foster Dad, Mrs. Johnson). Sam-16's seven lines render in script-narrative order (1→2→3→4→6→7→5), not recording order — audio filenames keep their recorded numbers. Section sits between Tests and Data export. New `src/lib/castData.js` holds all card content (verbatim line text from `Character_Profiles.docx`); 16 assets (6 images + 10 mp3s) copied into `/public/cast/{images,audio}/` and served statically (not Vite-imported — large media). Removed the old Sam concept-art assets (`src/assets/demo/sam-boy-16*.png`) + their imports and the YouTube animation-sample embed (`A8vVBE_2dNI`). Kept the `video` feedback category (commit `1edd96f`) — now applies to cast/voice feedback. No activity-version bump (DemoPage section, not an activity); INFRASTRUCTURE.md change log updated. Out of scope: audio for Foster Dad + Mrs. Johnson (drop mp3s + a `lines` array into castData later and the cards extend the same way).
 - **`0015acd` · 2026-06-01** — Draft 20: 2026-06-01 meeting bundle, three activities in one commit. **Getting Unstuck v5.2 → v5.3 (MINOR):** (1) Pick threshold reverted ≥3 → **≥2** (FINAL per meeting — third 3↔2 flip; full history now pinned in the `ELIGIBILITY_THRESHOLD` comment). (2) New `cycle_affirmation` phase — brief randomized "Nice work / Good job / …" + "Let's try the next one" beat between consecutive picked thoughts (Ginny's encouragement ask). Also surfaced a Challenge-vs-Both/And strategy explainer (video placeholder + text) on the affirmation path so kids who pick nothing still learn the strategies. No data-shape change. **Allies / Safety Net v5.0 → v5.1 (MINOR-ish):** Strengthen now runs for **all three support types** (was gap-only); removed the same-kid suggestion chips (Ginny's stress test: they re-suggested foster mom/dad everywhere and the net never expanded); copy reframed to neutral "Is there anyone else who could give you {type} support?"; typed-in names stay in the action callouts only, NOT added to the net visual (Stephanie's "isn't really in the net until we call him" framing). Data: `strengthened.{type}` always populated (no nulls); `gap_filler` → `additional_person`. exportFlatten drops `_strengthen_gaps_count`, adds `_strengthen_added_count` (0-3), renames `_filler` cols → `_person`. demoDataset regenerated (~50% fill per type). **Who I Am Poem v2.3 → v2.4 (MINOR):** removed visible line numbers + the "Line N — same as line 1" caption on the mirrored lines 6/10 (Ginny: confusing); they render silently now. No data-shape change. **Out of scope / still queued:** Draft 21 (tree-roots progress visual) — spec + assets only, integration deferred until activities are stitched into a continuous flow; left active in the Ideas section.
 - **`1edd96f` · 2026-05-19** — Added a **Video / animation** category to the feedback form so reviewers can tag feedback about the new Video section. Touched all three validation layers: DB `feedback_category_check` CHECK constraint (migration `feedback_add_video_category`), the `submit-feedback` edge function allow-list (now v4), and the frontend (`FeedbackButton` dropdown + `AdminFeedbackPage` label/filter). Additive enum value — no data migration, existing rows unaffected.
 - **`d64dbdb` · 2026-05-19** — Added a **Video** section to `/demo` (under the Data export demo) for team review of animation direction. Two cards: **Sam (boy version, age 16)** showing three character concept-art images (`backstage.png`, `Sam 2.png`, `Sam 3.png` from the repo-root `Video Content/` folder, copied into `src/assets/demo/` as `sam-boy-16{,-2,-3}.png` and imported as build assets) in a responsive 2-col grid; and **Animation sample**, an embedded YouTube Short (`A8vVBE_2dNI`) in a 9:16 portrait player capped at 320px wide. Demo-page-only, no activity version bump.
@@ -495,6 +496,244 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
+
+---
+
+<!-- Draft 22 shipped 2026-06-03 — archived (commented out). -->
+
+<!--
+
+### Draft 22 — "Meet the cast" section on /demo (replaces the existing Video section)
+
+New section on the /demo page that previews Holly's video script before it's animated. **Five** character cards with images + script lines + ElevenLabs audio playback per line (where lines exist), followed by a closing Family Photo. The team gets to hear how the voices land on each line and react in feedback before production locks.
+
+**This draft replaces the existing Video section** added in commit `d64dbdb` (2026-05-19) — the two-card preview with Sam concept-art images and the embedded YouTube animation sample. See Step 0 below.
+
+**Source materials** (all in `SSI Platform A/Video Content/`, drop into the repo during this build):
+
+- **Images:** `Sam 14.png`, `Sam 16.png`, `Foster Mom 2.png`, `Foster Dad 2.png`, `Mrs Johnson.png`, `Family Photo.png`
+- **Audio:** `Sam 14 Line 1.mp3`, `Sam 14 Line 2.mp3`, `Sam Line 1.mp3` through `Sam Line 7.mp3`, `Foster Mom.mp3` — 10 files total
+
+---
+
+#### 0. Remove the existing Video section first
+
+Before adding the new section, tear out the old one. Per commit `d64dbdb`, the current `/demo` Video section (positioned under Data export) has:
+
+- A section heading + container
+- Card 1: a 2-column grid of three Sam concept-art images
+- Card 2: an embedded YouTube Short (`A8vVBE_2dNI`) in a 9:16 portrait player
+
+**Remove:**
+
+- The Video section JSX from `src/pages/DemoPage.jsx` (heading, container, both cards, intro copy).
+- The three Sam concept-art assets from `src/assets/demo/`: `sam-boy-16.png`, `sam-boy-16-2.png`, `sam-boy-16-3.png`. Delete the files and the import statements.
+- The YouTube embed reference (`A8vVBE_2dNI`).
+- Any helper components that were specific to the Video section.
+
+**Keep:**
+
+- The **"Video / animation" feedback category** added in commit `1edd96f` (DB CHECK constraint, edge function v4 allow-list, FeedbackButton dropdown, AdminFeedbackPage label/filter). It still applies to the new Meet the cast section — reviewers tag feedback about voices, character look, animation direction. No DB migration needed; just keep what's already there.
+- The source files in `SSI Platform A/Video Content/` (`backstage.png`, `Sam 2.png`, `Sam 3.png`, etc.). Those are working artifacts in the repo-root content folder, not in `src/`. Leave them alone.
+
+---
+
+#### 1. Asset prep (rename + relocate)
+
+Move the new assets into the repo under `/public/cast/` with web-safe kebab-case names:
+
+**Images → `/public/cast/images/`:**
+- `Sam 14.png` → `sam-14.png`
+- `Sam 16.png` → `sam-16.png`
+- `Foster Mom 2.png` → `foster-mom.png` (this is the v2 image — the canonical version going forward; ignore the older `Foster Mom.png`)
+- `Foster Dad 2.png` → `foster-dad.png` (the v2 image; ignore the older `Foster Dad.png`)
+- `Mrs Johnson.png` → `mrs-johnson.png`
+- `Family Photo.png` → `family-photo.png`
+
+**Audio → `/public/cast/audio/`:**
+- `Sam 14 Line 1.mp3` → `sam-14-line-1.mp3`
+- `Sam 14 Line 2.mp3` → `sam-14-line-2.mp3`
+- `Sam Line 1.mp3` → `sam-16-line-1.mp3`
+- `Sam Line 2.mp3` → `sam-16-line-2.mp3`
+- `Sam Line 3.mp3` → `sam-16-line-3.mp3`
+- `Sam Line 4.mp3` → `sam-16-line-4.mp3`
+- `Sam Line 5.mp3` → `sam-16-line-5.mp3`
+- `Sam Line 6.mp3` → `sam-16-line-6.mp3`
+- `Sam Line 7.mp3` → `sam-16-line-7.mp3`
+- `Foster Mom.mp3` → `foster-mom-line-1.mp3`
+
+The 16yo Sam audio files map to the seven voice-over blocks in `Video Content/Character_Profiles.docx` in order (line 1 → opening narration, …, line 7 → closing metaphor). The 14yo Sam files map line 1 → inner monologue, line 2 → angry rejection. Foster Mom has the one dining-table line.
+
+---
+
+#### 2. Page placement + section heading
+
+New section on `src/pages/DemoPage.jsx`. Place it **between the Tests section and the Data export section** — that order takes the reviewer from activity sandbox → survey instruments → cast & voices → export. Tonally it sits well in the middle since it's the most narrative slot.
+
+**Section heading:** **"Meet the cast"**
+
+**Section sub-line** (small, italic, slate):
+
+> Preview of the cast and voice samples for Holly's video script (Script 2.0). Tap any line to hear it read.
+
+---
+
+#### 3. Component spec
+
+Build a new component, suggested name `<CastCard />` (or co-located in `src/pages/DemoPage.jsx` if that's lighter — judgment call).
+
+**Per-card layout (desktop):**
+
+Image column on the left at ~40% of card width, text column on the right at ~60%. Card has a subtle amber-200 border with `rounded-2xl` corners and `bg-amber-50` background — matches the existing demo card pattern. ~24px padding inside.
+
+**Per-card layout (mobile):**
+
+Image stacks on top, full width of the card, capped at ~280px tall with `object-cover` so it doesn't dominate the screen. Text and audio stack below.
+
+**Image:**
+
+- Sam 14 image is landscape (2304×1296). Render at full column width on desktop, `object-cover` to a slight portrait crop (~4:3) so the heads/faces remain centered.
+- Sam 16, Foster Mom, Foster Dad, Mrs. Johnson images are portrait (~1122×1402). Render at full column width on desktop, natural aspect.
+- All images: `rounded-xl`, subtle drop shadow.
+
+**Cards with audio vs without:**
+
+Three of the five cards have audio lines (Sam 14, Sam 16, Foster Mom). Two cards do not (Foster Dad, Mrs. Johnson) — neither character speaks in Script 2.0 yet. For audio-less cards, the text column has the character name, role line, and a single description paragraph in place of the lines list. No `<audio>` element. Layout otherwise identical so the cards visually balance the page. When their lines get recorded later, drop the mp3s in and the cards extend the same way as the audio-bearing ones.
+
+**Text column:**
+
+1. **Character name** — heading-style, `text-2xl font-bold text-slate-700`.
+2. **Role line** (italic, slate-500, `text-sm`):
+   - Sam (14): *"The 14-year-old version — at the heart of every flashback."*
+   - Sam (16): *"Our narrator — Sam two years later."*
+   - Foster Mom: *"The spark in the foster home."*
+   - Foster Dad: *"The anchor to Foster Mom's spark."*
+   - Mrs. Johnson: *"Sam's teacher and the catalyst for change."*
+3. **Lines list** — one block per line:
+   - **Scene context** (italic, slate-500, `text-sm`, ~80% leading): the per-line scene cue from `Character_Profiles.docx`.
+   - **Quoted line** (regular weight, `text-base`, slate-700, with smart-quote curlies `"…"` wrapping the line text): full line text verbatim from the doc.
+   - **Audio control:** native HTML5 `<audio controls src="/cast/audio/{filename}.mp3" preload="metadata" />` — full width of the text column, slight top margin. The native browser controls handle play / pause / scrubbing / volume. Keep it simple — no custom player.
+   - Spacing between lines: ~28px so the blocks read as separate beats.
+
+---
+
+#### 4. Card data (paste-and-go content for each card)
+
+##### Card 1 — Sam (14 years old)
+
+**Image:** `/cast/images/sam-14.png`
+**Role line:** *The 14-year-old version — at the heart of every flashback.*
+
+**Line 1.1** (`/cast/audio/sam-14-line-1.mp3`)
+*Scene:* Inner monologue voice-over (the moment after the adoption question)
+*Line:* "How do I feel about that? I have literally no idea."
+
+**Line 1.2** (`/cast/audio/sam-14-line-2.mp3`)
+*Scene:* At the dining table (becomes angry, before leaving)
+*Line:* "You aren't my parents and you never will be."
+
+##### Card 2 — Sam (16 years old)
+
+**Image:** `/cast/images/sam-16.png`
+**Role line:** *Our narrator — Sam two years later.*
+
+**Line 2.1** (`/cast/audio/sam-16-line-1.mp3`)
+*Scene:* Voice-over (opening narration)
+*Line:* "I remember this moment like it was yesterday. I was removed from my real mom when I was 10 and lived with my foster family after bouncing around placements for a couple of years."
+
+**Line 2.2** (`/cast/audio/sam-16-line-2.mp3`)
+*Scene:* Voice-over (reflecting on his thoughts at the adoption-offer moment)
+*Line:* "When she asked me this, the first thing I thought was 'they don't love me, they're just offering to do this because they feel bad for me.' I remembered the years where I moved from family to family because no one wanted me and I thought 'this will never work out, I don't even want to get my hopes up.' But at the same time, I was already hopeful, and that made me feel guilty. What was wrong with me that I felt excited about being adopted by this family, when my real mom was still out there? I couldn't give up on her by agreeing to be adopted."
+
+**Line 2.3** (`/cast/audio/sam-16-line-3.mp3`)
+*Scene:* Voice-over (after the rejection — grimace)
+*Line:* "Yeah, that was a low blow. But at the time I really couldn't picture myself belonging to their family. I had been through a lot. Going from elementary to middle to high school isn't easy for anyone, but it was even harder for me because I was changing schools and houses all the time. Who could keep up with friends or teams during all of that? It was tough but I was used to doing everything by myself my whole life."
+
+**Line 2.4** (`/cast/audio/sam-16-line-4.mp3`)
+*Scene:* Voice-over (Mrs. Johnson, backstage crew, opening night)
+*Line:* "After I said no, I stayed with my foster parents who said they understood but I could tell it was an issue. Not too long after they and my case worker really encouraged me to participate in something at school. My favorite teacher Mrs. Johnson was directing the school musical, and she suggested that I join the backstage crew. I had never done anything like that but I thought it was lowkey enough to try and I knew that Mrs. Johnson would support me if it was hard. Even though at first I didn't really care, I got really into it when I saw how we were all working on this one massive production and by opening night I wanted the show to run perfectly. After the show when everyone in the cast and crew were cheering and celebrating together, I really felt like a part of something for maybe the first time ever… and then I knew what I had been missing out on by holding back."
+
+**Line 2.5** (`/cast/audio/sam-16-line-5.mp3`)
+*Scene:* Voice-over (the metaphor and the resolution — closing narration)
+*Line:* "On the final night of our show, I was backstage using the light from the stage manager's lamp to read the directions for the next scene change while looking out at the main character standing on stage in her spotlight. And I realized: this backstage light isn't gone or unimportant just because of the spotlight shining on stage. Actually, the show only works because both lights are there. That's a lot like my mom and my new family. I'm only me because of both of my families. That's when I knew two things can be true at the same time: I can love and miss my mom, and I can belong to my new family too. I don't have to choose between them because they're just different roles in the same production, and they're both part of my story."
+
+**Line 2.6** (`/cast/audio/sam-16-line-6.mp3`)
+*Scene:* Voice-over (drive home, recognizing unhelpful thoughts)
+*Line:* "On the drive home with my foster family, I thought again about how I had said no to being adopted. I realized a lot of my thoughts weren't necessarily true, like the thought that they only offered to adopt me because they felt bad for me, not because they loved me — I didn't have any evidence for that. Even some thoughts that were true, like that past placements hadn't stuck, weren't helpful for me to think about, because my past placements and my current one weren't the same. Those thoughts weren't helping me, and they were actually getting in the way of me locking in with my current foster family."
+
+**Line 2.7** (`/cast/audio/sam-16-line-7.mp3`)
+*Scene:* Voice-over (transitioning toward the realization)
+*Line:* "Recognizing that helped me begin to picture myself belonging to their family. But there was still something major that I couldn't figure out: how could I be adopted and belong to a new family when my real mom was still out there?"
+
+**Note on Sam 16 line order in the UI:** display in script-narrative order (1 → 2 → 3 → 4 → 6 → 7 → 5) so the team hears them in story order, not in recording order. Audio file numbers 5 and 6/7 were recorded out of sequence (line 5 is the closing metaphor; lines 6 and 7 are middle-of-arc beats that were recorded after the rest). The line numbering on the audio files stays; only the UI render order shifts.
+
+##### Card 3 — Foster Mom
+
+**Image:** `/cast/images/foster-mom.png`
+**Role line:** *The spark in the foster home.*
+
+**Line 3.1** (`/cast/audio/foster-mom-line-1.mp3`)
+*Scene:* At the dining table (excited, happy voice — the cold open of the script)
+*Line:* "Sam, you've been in our foster home for two years now and we really want you to be an official part of this family. How would you feel about us adopting you?"
+
+##### Card 4 — Foster Dad (no audio yet)
+
+**Image:** `/cast/images/foster-dad.png`
+**Role line:** *The anchor to Foster Mom's spark.*
+
+**Description paragraph** (in place of the lines list — no `<audio>` element on this card):
+
+> No spoken lines in Script 2.0. Foster Dad is present at the dining-table scene alongside Foster Mom and 14-year-old Sam; the script describes his body language as solid, steady, and supportive — the still half of the conversation. If a line is added in a later revision (for example, an exchange with Foster Mom after Sam walks away), it would slot into the post-rejection beat.
+
+##### Card 5 — Mrs. Johnson (no audio yet)
+
+**Image:** `/cast/images/mrs-johnson.png`
+**Role line:** *Sam's teacher and the catalyst for change.*
+
+**Description paragraph** (in place of the lines list — no `<audio>` element on this card):
+
+> No directly quoted lines in Script 2.0. Mrs. Johnson is referenced in 16-year-old Sam's voice-over as the teacher who suggested he join the backstage crew of the school musical — the invitation that becomes the turning point in the story. If her own dialogue is added in a later revision (for example, the moment where she invites Sam to join the crew), it would slot into the school / hallway scene before Sam's decision to try it.
+
+**Card display order in the section:** Sam 14 → Sam 16 → Foster Mom → Foster Dad → Mrs. Johnson → Family Photo. That order tracks the script narrative: main character (two ages), parents at the opening table, teacher who appears mid-story, closing family image.
+
+---
+
+#### 5. Family Photo — closing image
+
+After the five character cards, render the Family Photo as a wide closing image. **No card border** — let it sit as a hero-style closer, full width of the section (capped at the same max-width as the cards), centered, with `rounded-2xl` and a subtle drop shadow.
+
+**Image:** `/cast/images/family-photo.png` (landscape ~4:3)
+
+**Caption** (below the image, centered, italic, slate-500, `text-sm`):
+
+> Sam and his foster family, after the realization.
+
+---
+
+#### 6. Accessibility + a few small details
+
+- Each `<audio>` element gets an `aria-label` of the form *"Audio: {character} — {scene description}"* so screen readers announce what's about to play.
+- Each character image gets a real `alt` attribute matching the role line (e.g., `alt="Sam at 14 — the 14-year-old version of the main character"`).
+- The Family Photo's `alt` is `"Sam with his foster family"`.
+- Cards have `tabindex="0"` so keyboard users can scroll through them; the audio controls inside are natively focusable.
+
+---
+
+#### 7. Out of scope for this draft
+
+- **Audio for Mrs. Johnson and Foster Dad.** Both cards ship with image + description text only. When their voice recordings exist, adding `<audio>` elements to those cards is a small follow-up — drop the mp3s in `/public/cast/audio/`, extend the card data with a `lines` array, and the card renders the same way as the audio-bearing ones.
+- No transcript download, no per-line copy-to-clipboard, no fancy playback ordering controls. Native audio controls only. Keep this lightweight and shippable in one session.
+- No analytics on which lines get the most plays. Future-us can add if helpful.
+
+#### 8. Version bump
+
+No activity-version bump. This is a new DemoPage section replacing the existing Video section, not a change to any existing activity. Update `INFRASTRUCTURE.md` change log with a one-line entry: *"Replaced the /demo Video section (commit `d64dbdb`) with a new 'Meet the cast' section — five character cards (Sam 14, Sam 16, Foster Mom, Foster Dad, Mrs. Johnson) + Family Photo closer. Audio playback on the three cards with recorded ElevenLabs lines; image + description only on the two without."*
+
+**Approved by:** Josh, 2026-06-03.
+
+*End of Draft 22.*
+
+-->
 
 <!-- Drafts 18 + 19 archived below. -->
 

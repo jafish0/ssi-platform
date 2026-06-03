@@ -18,15 +18,7 @@ import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
 import { buildSpssSyntax } from '../lib/spssSyntax.js'
 import { buildRsdDemoDataset } from '../lib/demoDataset.js'
-import samBoy16 from '../assets/demo/sam-boy-16.png'
-import samBoy16b from '../assets/demo/sam-boy-16-2.png'
-import samBoy16c from '../assets/demo/sam-boy-16-3.png'
-
-const SAM_BOY_16_IMAGES = [samBoy16, samBoy16b, samBoy16c]
-
-// Animation sample — YouTube Short A8vVBE_2dNI. Shorts are vertical
-// (9:16), so the embed below uses a portrait aspect-ratio container.
-const ANIMATION_SAMPLE_YT_ID = 'A8vVBE_2dNI'
+import { CAST, FAMILY_PHOTO } from '../lib/castData.js'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -230,6 +222,38 @@ export default function DemoPage() {
         </section>
       )}
 
+      {/* Meet the cast — preview of Holly's video script (Script 2.0)
+          before animation: character cards + per-line ElevenLabs voice
+          samples + a closing Family Photo. Sits between Tests and Data
+          export so the reviewer flows sandbox → surveys → cast → export. */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Meet the cast
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          Preview of the cast and voice samples for Holly&apos;s video script
+          (Script 2.0). Tap any line to hear it read.
+        </p>
+
+        <div className="space-y-4">
+          {CAST.map((character) => (
+            <CastCard key={character.id} character={character} />
+          ))}
+        </div>
+
+        {/* Family Photo — borderless hero-style closer */}
+        <figure className="mt-6 mx-auto w-full max-w-[820px] text-center">
+          <img
+            src={FAMILY_PHOTO.image}
+            alt={FAMILY_PHOTO.alt}
+            className="w-full h-auto rounded-2xl shadow-card"
+          />
+          <figcaption className="text-[13px] text-slate-500 italic mt-3">
+            {FAMILY_PHOTO.caption}
+          </figcaption>
+        </figure>
+      </section>
+
       {/* Data export demo */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
@@ -350,71 +374,6 @@ export default function DemoPage() {
           </div>
         </div>
       </section>
-
-      {/* Video / characters — for team review of the animation direction */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
-          Video
-        </h2>
-        <p className="text-[14px] text-slate-700 leading-relaxed mb-4 max-w-[760px]">
-          Early character and animation direction for review. Nothing here is
-          final — it&apos;s a first look so the team can react to the style and
-          tone before we go further.
-        </p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Character: Sam (boy, 16) */}
-          <article className="bg-white rounded-2xl shadow-card p-5">
-            <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
-              Sam <span className="font-normal text-slate-500">(boy version, age 16)</span>
-            </h3>
-            <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
-              Character concept art.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {SAM_BOY_16_IMAGES.map((src, i) => (
-                <div
-                  key={i}
-                  className={
-                    'rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 ' +
-                    // The first image (backstage) spans both columns so it
-                    // renders roughly twice as large as the other two.
-                    (i === 0 ? 'sm:col-span-2' : '')
-                  }
-                >
-                  <img
-                    src={src}
-                    alt={`Sam — boy version, age 16 — character concept art ${i + 1}`}
-                    className="w-full h-auto block"
-                  />
-                </div>
-              ))}
-            </div>
-          </article>
-
-          {/* Animation sample (YouTube Short embed) */}
-          <article className="bg-white rounded-2xl shadow-card p-5">
-            <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
-              Animation sample
-            </h3>
-            <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
-              A short sample clip of the animation style.
-            </p>
-            <div
-              className="relative mx-auto w-full max-w-[320px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900"
-              style={{ aspectRatio: '9 / 16' }}
-            >
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src={`https://www.youtube.com/embed/${ANIMATION_SAMPLE_YT_ID}`}
-                title="Animation sample"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-          </article>
-        </div>
-      </section>
     </DemoPageLayout>
   )
 }
@@ -466,5 +425,71 @@ function ExportFileBlock({
       </div>
       {children}
     </div>
+  )
+}
+
+// ---------- Reusable: cast character card ----------
+//
+// Image on the left (~40%) + text on the right (~60%) on desktop; stacks
+// on mobile. Characters with a `lines` array get per-line scene cue +
+// quoted text + a native <audio> control; characters with only a
+// `description` (no recorded lines yet) get a single paragraph in place
+// of the lines list. See src/lib/castData.js.
+
+function CastCard({ character }) {
+  const { name, image, alt, role, lines, description, landscape } = character
+  return (
+    <article
+      tabIndex={0}
+      className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row gap-6"
+    >
+      {/* Image column */}
+      <div className="w-full md:w-2/5 flex-shrink-0">
+        <img
+          src={image}
+          alt={alt}
+          className={
+            'w-full rounded-xl shadow-card ' +
+            // Sam 14 is landscape — crop to a gentle ~4:3 portrait so the
+            // faces stay centered. Portrait images render at natural ratio.
+            (landscape
+              ? 'object-cover aspect-[4/3] max-h-[320px] md:max-h-none'
+              : 'h-auto max-h-[280px] md:max-h-none object-cover md:object-contain')
+          }
+        />
+      </div>
+
+      {/* Text column */}
+      <div className="w-full md:w-3/5">
+        <h3 className="text-2xl font-bold text-slate-700 mb-1">{name}</h3>
+        <p className="text-sm italic text-slate-500 mb-4">{role}</p>
+
+        {lines && lines.length > 0 ? (
+          <div className="space-y-7">
+            {lines.map((line, i) => (
+              <div key={i}>
+                <p className="text-sm italic text-slate-500 leading-tight mb-1">
+                  {line.scene}
+                </p>
+                <p className="text-base text-slate-700 leading-relaxed mb-2">
+                  &ldquo;{line.text}&rdquo;
+                </p>
+                <audio
+                  controls
+                  preload="metadata"
+                  src={line.audio}
+                  aria-label={`Audio: ${name} — ${line.scene}`}
+                  className="w-full mt-1"
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-base text-slate-700 leading-relaxed">
+            {description}
+          </p>
+        )}
+      </div>
+    </article>
   )
 }
