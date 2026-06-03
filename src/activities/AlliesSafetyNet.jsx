@@ -107,6 +107,17 @@ function toneFor(typeId) {
   return TONE_TOKENS[t?.tone] || TONE_TOKENS.amber
 }
 
+// Join a list of names into readable prose with an Oxford comma:
+//   ["A"]            → "A"
+//   ["A","B"]        → "A and B"
+//   ["A","B","C"]    → "A, B, and C"
+function formatNameList(names) {
+  if (names.length === 0) return ''
+  if (names.length === 1) return names[0]
+  if (names.length === 2) return `${names[0]} and ${names[1]}`
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
+}
+
 // Initial selection shape — { [type_id]: Set<tile_id> } plus per-type
 // "none of these" flags.
 function initialSelection() {
@@ -407,6 +418,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       {screen?.type === 'strengthen' && (
         <StrengthenScreen
           typeId={screen.supportType}
+          allies={deduplicatedAllies}
           entry={strengthened[screen.supportType]}
           onChange={(patch) => updateStrengthen(screen.supportType, patch)}
           onSkip={() => skipStrengthen(screen.supportType)}
@@ -897,18 +909,39 @@ function InspectXOutScreen({ allies, onToggleRemoved }) {
 // NOT get added to the net visual (Stephanie: "Frank isn't really in the
 // net until we call him and see").
 
-function StrengthenScreen({ typeId, entry, onChange, onSkip }) {
+function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
   const t = SUPPORT_TYPES.find((x) => x.id === typeId)
   if (!t) return null
   const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
   const additionalPerson = entry?.additional_person || ''
   const action = entry?.action || ''
 
+  // Reminder of who the kid already selected for THIS support type
+  // (post-Inspect, so removed allies don't show). Read-only refresher —
+  // no chips, no tap-targets (Draft 23). Skipped entirely when empty.
+  const alreadySelected = (allies || [])
+    .filter(
+      (a) =>
+        (a.support_types || []).includes(typeId) && !a.removed_via_inspect,
+    )
+    .map((a) => a.name)
+
   return (
     <div>
-      <h2 className={`text-[22px] font-bold mb-2 ${tones.word}`}>
+      <h2 className={`text-[22px] font-bold mb-4 ${tones.word}`}>
         Let&apos;s strengthen your {t.label.toLowerCase()} support.
       </h2>
+      {alreadySelected.length > 0 && (
+        <p className="text-[14px] leading-relaxed text-slate-500 mb-3">
+          {alreadySelected.length === 1
+            ? 'Here is the person'
+            : 'Here are the people'}{' '}
+          you already selected for{' '}
+          <span className={`font-semibold ${tones.word}`}>{t.label.toLowerCase()}</span>{' '}
+          support:{' '}
+          <span className="text-slate-700">{formatNameList(alreadySelected)}</span>.
+        </p>
+      )}
       <p className="text-[15px] leading-relaxed text-slate-800 mb-5">
         Is there anyone else who could give you{' '}
         <span className={`font-semibold ${tones.word}`}>{t.label.toLowerCase()}</span>{' '}
