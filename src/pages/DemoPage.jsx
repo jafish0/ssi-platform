@@ -30,6 +30,18 @@ export default function DemoPage() {
   const [snapshotLoading, setSnapshotLoading] = useState(true)
   const [exporting, setExporting] = useState(null)
 
+  // Set the browser-tab title for /demo so it matches the visible H1.
+  // Other routes keep the app-wide default ("Ready for Roots") from
+  // index.html. Restore it on unmount so navigating away doesn't leave
+  // the demo title behind.
+  useEffect(() => {
+    const prev = document.title
+    document.title = 'Ready for Roots — Activities Testing, Videos and Data Export Demo'
+    return () => {
+      document.title = prev
+    }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     setSnapshotLoading(true)
@@ -140,7 +152,7 @@ export default function DemoPage() {
       {/* Intro */}
       <section className="mb-8">
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
-          Ready for Roots — Activities Testing and Data Export Demo
+          Ready for Roots — Activities Testing, Videos and Data Export Demo
         </h1>
       </section>
 
@@ -173,15 +185,6 @@ export default function DemoPage() {
             </article>
           ))}
         </div>
-        <p className="text-[14px] text-slate-700 leading-relaxed mt-5 max-w-[760px]">
-          An <strong>individual plan</strong> can be generated for each youth
-          based on their responses across these activities — pulling forward
-          their stuck-thought reframes, named allies, identified skills, and
-          poem lines into a single keepsake artifact. Before I design that
-          plan, though, I need to refine the activities above so the inputs
-          I pull from are clinically right. Try them out and tell me what
-          should change.
-        </p>
       </section>
 
       {/* Tests (pre-, post-, and follow-up surveys) */}
@@ -234,6 +237,22 @@ export default function DemoPage() {
           Preview of the cast and voice samples for Holly&apos;s video script
           (Script 2.0). Tap any line to hear it read.
         </p>
+
+        {/* Full-script download — so reviewers can read along while they
+            listen. The `download` attr sets a clean saved filename. */}
+        <div className="mb-6">
+          <p className="text-[13px] text-slate-500 italic mb-2">
+            Want the full script while you listen? Grab it here.
+          </p>
+          <a
+            href="/cast/script/ready-for-roots-script-v2.docx"
+            download="Ready for Roots — Script 2.0.docx"
+            className="inline-flex items-center gap-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 text-sm font-semibold"
+          >
+            <Download size={16} strokeWidth={2} />
+            Download Script 2.0 (.docx)
+          </a>
+        </div>
 
         <div className="space-y-4">
           {CAST.map((character) => (

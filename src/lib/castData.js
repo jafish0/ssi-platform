@@ -21,28 +21,6 @@
 
 export const CAST = [
   {
-    id: 'sam-14',
-    name: 'Sam (14 years old)',
-    image: '/cast/images/sam-14.png',
-    alt: 'Sam at 14 — the 14-year-old version of the main character',
-    role: 'The 14-year-old version — at the heart of every flashback.',
-    // Sam 14 image is landscape (2304×1296) — crop to a gentle ~4:3 so
-    // faces stay centered (see `landscape` flag, handled in the view).
-    landscape: true,
-    lines: [
-      {
-        audio: '/cast/audio/sam-14-line-1.mp3',
-        scene: 'Inner monologue voice-over (the moment after the adoption question)',
-        text: 'How do I feel about that? I have literally no idea.',
-      },
-      {
-        audio: '/cast/audio/sam-14-line-2.mp3',
-        scene: 'At the dining table (becomes angry, before leaving)',
-        text: 'You aren’t my parents and you never will be.',
-      },
-    ],
-  },
-  {
     id: 'sam-16',
     name: 'Sam (16 years old)',
     image: '/cast/images/sam-16.png',
@@ -90,6 +68,28 @@ export const CAST = [
         scene: 'Voice-over (the metaphor and the resolution — closing narration)',
         text:
           'On the final night of our show, I was backstage using the light from the stage manager’s lamp to read the directions for the next scene change while looking out at the main character standing on stage in her spotlight. And I realized: this backstage light isn’t gone or unimportant just because of the spotlight shining on stage. Actually, the show only works because both lights are there. That’s a lot like my mom and my new family. I’m only me because of both of my families. That’s when I knew two things can be true at the same time: I can love and miss my mom, and I can belong to my new family too. I don’t have to choose between them because they’re just different roles in the same production, and they’re both part of my story.',
+      },
+    ],
+  },
+  {
+    id: 'sam-14',
+    name: 'Sam (14 years old)',
+    image: '/cast/images/sam-14.png',
+    alt: 'Sam at 14 — the 14-year-old version of the main character',
+    role: 'The 14-year-old version — at the heart of every flashback.',
+    // Sam 14 image is landscape (2304×1296) — crop to a gentle ~4:3 so
+    // faces stay centered (see `landscape` flag, handled in the view).
+    landscape: true,
+    lines: [
+      {
+        audio: '/cast/audio/sam-14-line-1.mp3',
+        scene: 'Inner monologue voice-over (the moment after the adoption question)',
+        text: 'How do I feel about that? I have literally no idea.',
+      },
+      {
+        audio: '/cast/audio/sam-14-line-2.mp3',
+        scene: 'At the dining table (becomes angry, before leaving)',
+        text: 'You aren’t my parents and you never will be.',
       },
     ],
   },
