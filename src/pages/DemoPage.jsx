@@ -19,6 +19,44 @@ import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
 import { buildSpssSyntax } from '../lib/spssSyntax.js'
 import { buildRsdDemoDataset } from '../lib/demoDataset.js'
 import { CAST, FAMILY_PHOTO } from '../lib/castData.js'
+import TreeProgress from '../components/TreeProgress.jsx'
+
+// Per-stage encouragement copy for the "Growing your roots" preview
+// (Draft 25 Part C). Activity-name pairings are illustrative for the
+// preview — the production flow order may differ; Josh can tune.
+const TREE_STAGE_COPY = [
+  {
+    context: 'Before you begin.',
+    heading: 'Just getting started.',
+    body: 'Every tree starts as a seed. Yours starts here.',
+  },
+  {
+    context: 'You finished Self-Reflection.',
+    heading: 'Look — roots are forming.',
+    body: 'You took the first step. Notice the small roots starting below the surface.',
+  },
+  {
+    context: 'You finished Belonging Skills Sort.',
+    heading: 'Your roots are reaching further.',
+    body: 'Two activities in. New roots are spreading, and your first branches are starting to grow.',
+  },
+  {
+    context: 'You finished Getting Unstuck.',
+    heading: 'Solid roots, steady ground.',
+    body: 'Halfway there. Your roots are deep enough to hold you steady — whatever comes next.',
+  },
+  {
+    context: 'You finished Allies / Safety Net.',
+    heading: 'Wide and rooted.',
+    body: 'Almost there. Your roots are wide, your branches are full. You can feel the difference.',
+  },
+  {
+    context: 'You finished the program.',
+    heading: 'Look what you grew.',
+    body: 'Roots wide. Branches full. Even blossoms now. This is what belonging can look like.',
+  },
+]
+const TREE_MAX_STAGE = TREE_STAGE_COPY.length - 1
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -29,6 +67,8 @@ export default function DemoPage() {
   const [snapshotErr, setSnapshotErr] = useState(null)
   const [snapshotLoading, setSnapshotLoading] = useState(true)
   const [exporting, setExporting] = useState(null)
+  // "Growing your roots" preview — local-only stage cursor (0..5).
+  const [treeStage, setTreeStage] = useState(0)
 
   // Set the browser-tab title for /demo so it matches the visible H1.
   // Other routes keep the app-wide default ("Ready for Roots") from
@@ -271,6 +311,84 @@ export default function DemoPage() {
             {FAMILY_PHOTO.caption}
           </figcaption>
         </figure>
+      </section>
+
+      {/* Growing your roots — preview of the between-activity progress
+          visual (Draft 25). Click-through, local state only; not yet
+          wired into real activity completion. */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Growing your roots
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          Preview of the between-activity progress visual. Click through to
+          see how the tree grows as a youth completes each activity.
+        </p>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-[520px] mx-auto">
+          <div className="mx-auto w-full max-w-[280px]">
+            <TreeProgress stage={treeStage} animated />
+          </div>
+
+          {/* Stage caption */}
+          <div className="text-center mt-6">
+            <p className="text-sm italic text-slate-500">
+              {TREE_STAGE_COPY[treeStage].context}
+            </p>
+            <h3 className="text-xl font-bold text-slate-700 mt-2">
+              {TREE_STAGE_COPY[treeStage].heading}
+            </h3>
+            <p className="text-base text-slate-700 mt-2">
+              {TREE_STAGE_COPY[treeStage].body}
+            </p>
+          </div>
+
+          {/* Stage indicator dots */}
+          <div className="flex justify-center gap-2 mt-6">
+            {TREE_STAGE_COPY.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setTreeStage(i)}
+                aria-label={`Go to stage ${i}`}
+                aria-current={i === treeStage}
+                className={
+                  'w-2.5 h-2.5 rounded-full transition-colors ' +
+                  (i === treeStage ? 'bg-amber-500' : 'bg-slate-200 hover:bg-slate-300')
+                }
+              />
+            ))}
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-center gap-3 mt-5">
+            <button
+              type="button"
+              onClick={() => setTreeStage((s) => Math.max(0, s - 1))}
+              disabled={treeStage === 0}
+              className="bg-amber-50 hover:bg-amber-100 disabled:opacity-40 disabled:hover:bg-amber-50 border border-amber-300 rounded-full px-5 py-2 text-sm text-slate-700"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setTreeStage((s) => Math.min(TREE_MAX_STAGE, s + 1))}
+              disabled={treeStage === TREE_MAX_STAGE}
+              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:hover:bg-amber-500 text-white rounded-full px-5 py-2 text-sm font-semibold"
+            >
+              Next
+            </button>
+          </div>
+          <div className="text-center mt-3">
+            <button
+              type="button"
+              onClick={() => setTreeStage(0)}
+              className="text-amber-700 hover:text-amber-900 underline text-sm"
+            >
+              Reset to start
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Data export demo */}

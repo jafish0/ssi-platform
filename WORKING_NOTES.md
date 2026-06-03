@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`<pending-d25>` · 2026-06-04** — Draft 25: tree-progress preview. New parametric **`<TreeProgress />`** component (`src/components/TreeProgress.jsx`) rendering the "Ready for Roots" growth metaphor across six stages (Seed → Blooming) + a new **"Growing your roots"** click-through section on `/demo` (between Meet the cast and Data export) with stage dots, Previous/Next/Reset controls, and per-stage encouragement copy (Part C). Geometry is **machine-extracted** from Claude Design's six locked reference SVGs (`Activity ideas/tree-stage-*.svg`) via `scripts/extract-tree-stages.mjs` → `src/lib/treeStages.js`, so the component matches the references exactly rather than shipping them (same "rebuild parametrically" approach as the trampoline net). The references are per-stage full redraws (the whole tree scales each stage), so the component swaps the complete element set per stage. Forward stage changes animate growth-in (roots + branches draw on via `stroke-dashoffset` with `pathLength=1`; trunk/leaves/blossoms fade, staggered ~700ms); backward/jumps snap instantly; `prefers-reduced-motion` disables it. Verified against the references via DOM inspection — stage 5 = 13 roots, 6 branches, 14 leaves, 10 blossoms (60 petals). **Preview-only:** not wired into real activity completion or per-PID persistence (deferred until the activities are stitched into a continuous flow). No activity-version bump; INFRASTRUCTURE.md updated.
 - **`41693ec` · 2026-06-04** — Draft 24: Meet the cast fixes + /demo polish. **(1)** Card order swapped so **Sam 16 (narrator) leads, then Sam 14** — matches how Holly's script opens. **(2)** Swapped the two Sam 14 audio files (their contents were mislabeled in Draft 22's asset prep): `sam-14-line-1.mp3` is now the inner-monologue line, `-line-2` the angry line — card-data mapping was already correct, only the underlying files were crossed. **(3)** Added a **"Download Script 2.0 (.docx)"** link under the Meet-the-cast heading (`/public/cast/script/ready-for-roots-script-v2.docx`, served with a clean `download` filename). **(4)** Removed the "individual plan" preview paragraph from the Activities section. **(5)** Page title → *"Ready for Roots — Activities Testing, Videos and Data Export Demo"*: updated the visible `<h1>`, set a matching `/demo`-only browser-tab title via `useEffect` (restored on unmount so other routes keep the default), and de-staled `index.html`'s app-wide `<title>` from the pre-rename *"Ready! Set! Dedicate!"* to *"Ready for Roots"* (a Draft 14 rename miss). No activity-version bump.
 - **`ef557b0` · 2026-06-04** — Draft 23: Allies / Safety Net v5.1 → **v5.2 (MINOR)**. Each Strengthen screen now shows the kid which allies they already selected for that support type (post-Inspect, so removed allies are excluded) as a read-only refresher line above the "Is there anyone else…" prompt — singular/plural-aware, Oxford-comma list (`formatNameList` helper), skipped entirely when none. The `{type}` word keeps the per-type color. Helps the kid generate a genuinely new addition rather than restating someone already named. Display-only — reads from the existing `allies` array; no flow, data-shape, or export change.
 - **`de7aa3e` · 2026-06-03** — Draft 22: replaced the /demo **Video** section (commit `d64dbdb`) with a new **"Meet the cast"** section previewing Holly's Script 2.0 before animation. Five character cards — **Sam (14)**, **Sam (16)**, **Foster Mom**, **Foster Dad**, **Mrs. Johnson** — plus a borderless **Family Photo** closer. Each card: image (left ~40% on desktop, stacked on mobile) + role line + either a list of scripted lines (scene cue + quoted text + native `<audio>` ElevenLabs sample per line) or a single description paragraph for the two characters who don't speak in Script 2.0 yet (Foster Dad, Mrs. Johnson). Sam-16's seven lines render in script-narrative order (1→2→3→4→6→7→5), not recording order — audio filenames keep their recorded numbers. Section sits between Tests and Data export. New `src/lib/castData.js` holds all card content (verbatim line text from `Character_Profiles.docx`); 16 assets (6 images + 10 mp3s) copied into `/public/cast/{images,audio}/` and served statically (not Vite-imported — large media). Removed the old Sam concept-art assets (`src/assets/demo/sam-boy-16*.png`) + their imports and the YouTube animation-sample embed (`A8vVBE_2dNI`). Kept the `video` feedback category (commit `1edd96f`) — now applies to cast/voice feedback. No activity-version bump (DemoPage section, not an activity); INFRASTRUCTURE.md change log updated. Out of scope: audio for Foster Dad + Mrs. Johnson (drop mp3s + a `lines` array into castData later and the cards extend the same way).
@@ -498,6 +499,233 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
+
+---
+
+<!-- Draft 25 shipped 2026-06-04 — archived (commented out). Draft 21 above stays active: its flow-integration intent is still pending. -->
+
+<!--
+
+### Draft 25 — Tree-progress preview: parametric `<TreeProgress />` component + new /demo "Growing your roots" section
+
+Build the parametric React component for the tree-roots progress visual (per Draft 21's spec) and a click-through preview section on /demo so the team can see the visual progression with growth animation and per-stage encouragement copy.
+
+**Two deliverables in one commit:**
+
+1. `src/components/TreeProgress.jsx` — parametric SVG component with growth animation between stages.
+2. New section on `src/pages/DemoPage.jsx` called **"Growing your roots"** — places `<TreeProgress />` inside click-through controls so reviewers can see all six stages with copy.
+
+---
+
+#### Source materials (locked references from Claude Design)
+
+Claude Design has produced six reference SVG files showing the tree at each growth stage. They live in `SSI Platform A/Activity ideas/`:
+
+- `tree-stage-0.svg` (Seed / sprout)
+- `tree-stage-1.svg` (Sapling)
+- `tree-stage-2.svg` (Young tree)
+- `tree-stage-3.svg` (Established tree)
+- `tree-stage-4.svg` (Flourishing tree)
+- `tree-stage-5.svg` (Blooming)
+
+**These files are visual references, not shipped assets.** Study them as you'd study the original `trampoline-safety-net.svg` reference (per commit `70d117b`): use them as the target for the parametric component, but **rebuild parametrically** in `<TreeProgress />` so the dev controls per-element animation. Don't ship the reference SVGs themselves.
+
+All six files share:
+- viewBox `0 0 400 600`
+- Ground line at y≈420 (~70% above ground, ~30% below)
+- Trunk base at x≈200
+- Transparent background
+- Semantic grouping by layer (`<g id="roots">`, `<g id="trunk">`, `<g id="branches">`, `<g id="leaves">`, `<g id="blossoms">`)
+- Individual paths per root and per leaf
+
+---
+
+#### Part A — `<TreeProgress />` component
+
+**File:** `src/components/TreeProgress.jsx` (new).
+
+**Props:**
+
+```jsx
+<TreeProgress
+  stage={0 | 1 | 2 | 3 | 4 | 5}   // required — current growth stage
+  animated={boolean}               // optional, default true — animate growth-in on stage change
+  className=""                     // optional — wrapper styling
+/>
+```
+
+**Structure:**
+
+The component renders one SVG with `viewBox="0 0 400 600"`, sized at full width of its container (capped via CSS `max-w-md` or similar on the wrapper). Inside the SVG:
+
+- Ground line (single horizontal stroke, always visible across all stages)
+- `<g class="roots">` containing root paths — each root is its own `<path>` with a memorable id (`root-primary`, `root-lateral-1`, `root-lateral-2`, …)
+- `<g class="trunk">` containing the trunk path — same shape across all stages, just visible portion controlled by stroke-dasharray
+- `<g class="branches">` containing each branch as its own `<path>`
+- `<g class="leaves">` containing each leaf as its own grouped shape
+- `<g class="blossoms">` containing flowers — only renders at stage 5
+
+**Stage logic — what's visible at each stage:**
+
+| Stage | Visible roots | Visible trunk | Visible branches | Visible leaves | Blossoms |
+|---|---|---|---|---|---|
+| 0 | Tiny taproot only | Seed/sprout | none | none | none |
+| 1 | Taproot + 2-3 small laterals | Short, thin trunk | none | 1-2 leaves on sprout | none |
+| 2 | More laterals, deeper | Mid-height, slightly thicker | 2-3 branches | ~5 leaves | none |
+| 3 | Substantial spread | Full-height, mature thickness | 4-6 branches | ~12 leaves | none |
+| 4 | Wide, proud | Full mature trunk | Full canopy structure | Full canopy of leaves | none |
+| 5 | Same as 4, possibly extending further | Same as 4 | Same as 4 | Same as 4 | Blossoms/fruit on branches |
+
+The exact per-stage element set comes from Claude Design's reference SVGs — match them visually as the locked target.
+
+**Implementation pattern:**
+
+Hand-code the SVG paths in the component (study Claude Design's references; extract the actual path `d` attributes and clean them up). Use a per-element `visible` flag derived from the current `stage` prop:
+
+```jsx
+const ROOTS = [
+  { id: "root-primary", d: "M200,420 L200,520", minStage: 0 },
+  { id: "root-lateral-1", d: "M200,450 Q170,470 140,495", minStage: 1 },
+  { id: "root-lateral-2", d: "M200,450 Q230,470 260,495", minStage: 1 },
+  // …
+];
+
+{ROOTS.filter(r => r.minStage <= stage).map(r => (
+  <path key={r.id} d={r.d} stroke={ROOT_COLOR} strokeWidth={2} fill="none" />
+))}
+```
+
+Same pattern for branches, leaves, blossoms. Each element has a `minStage` — the first stage at which it appears. Once visible, it stays visible (growth is additive; nothing is removed).
+
+**Animation between stages:**
+
+When `stage` changes and `animated` is true, new elements (those whose `minStage === currentStage`) animate in:
+
+- **Roots and branches:** stroke-dashoffset animation. Each path's full length is computed (use `pathLength={1}` attribute trick to normalize), then transition `stroke-dashoffset` from 1 to 0 over ~400ms ease-out so the line draws in from origin to tip.
+- **Leaves and blossoms:** opacity 0 → 1 + scale 0.6 → 1 over ~300ms ease-out, staggered ~50ms between siblings so they appear in a soft cascade rather than all at once.
+- **Trunk thickening (stages 1 → 4):** the trunk's `stroke-width` transitions smoothly (1.5 at stage 0, 2 at stage 1, 3 at stage 2, 4 at stage 3, 5 at stages 4-5). CSS transition on `stroke-width` over ~400ms.
+
+**Total reveal duration:** ~600-800ms for new branches + roots to draw in, with leaves staggering slightly behind. Should feel like a moment of growth, not a flash.
+
+**Accessibility:**
+
+- Respect `prefers-reduced-motion: reduce` — when set, skip all transitions and just show the final state instantly. Wrap CSS transitions in `@media (prefers-reduced-motion: no-preference)`.
+- The SVG should have `role="img"` and an `aria-label` describing the current stage (e.g., `"Tree at stage 3 of 5 — established, with growing roots and a small canopy"`).
+
+**Visual styling (from the locked palette):**
+
+- Roots: stroke `#5a3a1f` to `#4a2d18`, varied stroke widths (primary 3, laterals 2)
+- Trunk: stroke + fill `#8b5a2b` to `#7c4d24`
+- Leaves: fill `#7c9a76` to `#5e8460`, no stroke (or very thin slate-700 outline)
+- Blossoms: fill `#f59e0b` or `#fda4af`
+- Ground line: `#e2e8f0` (slate-200), `stroke-width: 1.5`
+
+---
+
+#### Part B — "Growing your roots" section on /demo
+
+**File:** `src/pages/DemoPage.jsx` — new section.
+
+**Placement:** between **Meet the cast** and **Data export demo**. Keeps the narrative-content sections grouped and the technical export section at the bottom.
+
+**Section heading:** **"Growing your roots"**
+
+**Sub-line** (small, italic, slate):
+
+> Preview of the between-activity progress visual. Click through to see how the tree grows as a youth completes each activity.
+
+**Layout:**
+
+A centered card (`bg-amber-50`, `rounded-2xl`, `border border-amber-200`, ~32px padding) containing:
+
+1. **The tree visual** — `<TreeProgress stage={currentStage} animated />` at ~280px wide, centered.
+2. **Stage caption** — a heading + body block beneath the tree, ~24px below.
+3. **Stage indicator dots** — six small dots beneath the caption showing position in the 6-stage sequence; the active stage's dot is filled amber-500, the others are slate-200. Tappable (clicking a dot jumps to that stage).
+4. **Controls row** — three buttons centered below the dots:
+   - **Previous** (`bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-full px-5 py-2 text-sm text-slate-700`) — disabled at stage 0.
+   - **Next** (`bg-amber-500 hover:bg-amber-600 text-white rounded-full px-5 py-2 text-sm font-semibold`) — disabled at stage 5.
+   - **Reset to start** (`text-amber-700 underline text-sm`) — secondary affordance, resets to stage 0.
+
+**Behavior:**
+
+- Default stage on section mount: 0.
+- Next button: `setStage(s => Math.min(5, s + 1))` — triggers the growth animation.
+- Previous button: `setStage(s => Math.max(0, s - 1))` — visual "rewinds" to the prior state. The growth animation only plays on forward steps; back is an instant snap to the prior state (or a brief fade — judgment call).
+- Stage dot click: jump directly to that stage. If jumping forward more than one stage, the animation should still play for the new elements at the target stage (not all intermediate stages — that would feel chaotic).
+- Reset button: snap to stage 0.
+
+---
+
+#### Part C — Per-stage encouragement copy
+
+These are the captions that appear below the tree at each stage. **Heading** is the big line; **body** is the short follow-on. The activity context is the italic line above the heading.
+
+**Stage 0 — Seed / sprout** (intro state, before any activity completed)
+
+- *Activity context:* "Before you begin."
+- **Heading:** Just getting started.
+- **Body:** Every tree starts as a seed. Yours starts here.
+
+**Stage 1 — Sapling** (after the first activity)
+
+- *Activity context:* "You finished Self-Reflection."
+- **Heading:** Look — roots are forming.
+- **Body:** You took the first step. Notice the small roots starting below the surface.
+
+**Stage 2 — Young tree** (after the second activity)
+
+- *Activity context:* "You finished Belonging Skills Sort."
+- **Heading:** Your roots are reaching further.
+- **Body:** Two activities in. New roots are spreading, and your first branches are starting to grow.
+
+**Stage 3 — Established tree** (after the third activity)
+
+- *Activity context:* "You finished Getting Unstuck."
+- **Heading:** Solid roots, steady ground.
+- **Body:** Halfway there. Your roots are deep enough to hold you steady — whatever comes next.
+
+**Stage 4 — Flourishing tree** (after the fourth activity)
+
+- *Activity context:* "You finished Allies / Safety Net."
+- **Heading:** Wide and rooted.
+- **Body:** Almost there. Your roots are wide, your branches are full. You can feel the difference.
+
+**Stage 5 — Blooming** (after the final activities)
+
+- *Activity context:* "You finished the program."
+- **Heading:** Look what you grew.
+- **Body:** Roots wide. Branches full. Even blossoms now. This is what belonging can look like.
+
+**Notes on the copy:**
+
+- The activity-name pairing in the activity-context line is **illustrative** for the preview — the actual production flow may end up with a different activity order, in which case the activity names get reshuffled. Josh can tune.
+- The body copy intentionally *points out what's visibly different* at each stage ("Notice the small roots," "New roots are spreading," "your roots are deep enough," "your roots are wide, your branches are full," "even blossoms now"). The visual progress and the verbal reinforcement reinforce each other.
+- Tone is "quietly proud" per Draft 21's mood direction — warm, grounded, second-person. Not bouncy.
+
+**Copy styling:**
+
+- Activity context: italic, `text-sm`, slate-500.
+- Heading: `text-xl font-bold`, slate-700, ~8px below the context line.
+- Body: `text-base`, slate-700, ~8px below the heading.
+
+---
+
+#### Out of scope for this draft
+
+- **Real flow integration.** This is preview-only on /demo. The component does NOT yet wire into actual activity completion — that's deferred until the activities are stitched into a continuous flow (per the Cleanup queue). When that happens, a follow-up draft routes activity Save → progress-reveal screen → next activity.
+- **Per-PID persistence.** No Supabase column for `current_stage` yet. Preview state lives in component-local React state.
+- **Backend tracking.** No analytics yet on which stages get viewed.
+- **Animation variants.** No alternate animation styles (cross-fade, spring physics, etc.). One animation style, locked.
+
+#### Version bump
+
+No activity-version bump. This is a new component + new /demo section, not a change to any existing activity. Update `INFRASTRUCTURE.md` change log: *"Added 'Growing your roots' preview section to /demo with parametric `<TreeProgress />` component showing six growth stages + per-stage encouragement copy. Visual references from Claude Design at `Activity ideas/tree-stage-*.svg`; component rebuilt parametrically using those as locked targets."*
+
+**Approved by:** Josh, 2026-06-04.
+
+*End of Draft 25.*
+
+-->
 
 ---
 
