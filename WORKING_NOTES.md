@@ -14,6 +14,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`41693ec` · 2026-06-04** — Draft 24: Meet the cast fixes + /demo polish. **(1)** Card order swapped so **Sam 16 (narrator) leads, then Sam 14** — matches how Holly's script opens. **(2)** Swapped the two Sam 14 audio files (their contents were mislabeled in Draft 22's asset prep): `sam-14-line-1.mp3` is now the inner-monologue line, `-line-2` the angry line — card-data mapping was already correct, only the underlying files were crossed. **(3)** Added a **"Download Script 2.0 (.docx)"** link under the Meet-the-cast heading (`/public/cast/script/ready-for-roots-script-v2.docx`, served with a clean `download` filename). **(4)** Removed the "individual plan" preview paragraph from the Activities section. **(5)** Page title → *"Ready for Roots — Activities Testing, Videos and Data Export Demo"*: updated the visible `<h1>`, set a matching `/demo`-only browser-tab title via `useEffect` (restored on unmount so other routes keep the default), and de-staled `index.html`'s app-wide `<title>` from the pre-rename *"Ready! Set! Dedicate!"* to *"Ready for Roots"* (a Draft 14 rename miss). No activity-version bump.
+- **`ef557b0` · 2026-06-04** — Draft 23: Allies / Safety Net v5.1 → **v5.2 (MINOR)**. Each Strengthen screen now shows the kid which allies they already selected for that support type (post-Inspect, so removed allies are excluded) as a read-only refresher line above the "Is there anyone else…" prompt — singular/plural-aware, Oxford-comma list (`formatNameList` helper), skipped entirely when none. The `{type}` word keeps the per-type color. Helps the kid generate a genuinely new addition rather than restating someone already named. Display-only — reads from the existing `allies` array; no flow, data-shape, or export change.
 - **`de7aa3e` · 2026-06-03** — Draft 22: replaced the /demo **Video** section (commit `d64dbdb`) with a new **"Meet the cast"** section previewing Holly's Script 2.0 before animation. Five character cards — **Sam (14)**, **Sam (16)**, **Foster Mom**, **Foster Dad**, **Mrs. Johnson** — plus a borderless **Family Photo** closer. Each card: image (left ~40% on desktop, stacked on mobile) + role line + either a list of scripted lines (scene cue + quoted text + native `<audio>` ElevenLabs sample per line) or a single description paragraph for the two characters who don't speak in Script 2.0 yet (Foster Dad, Mrs. Johnson). Sam-16's seven lines render in script-narrative order (1→2→3→4→6→7→5), not recording order — audio filenames keep their recorded numbers. Section sits between Tests and Data export. New `src/lib/castData.js` holds all card content (verbatim line text from `Character_Profiles.docx`); 16 assets (6 images + 10 mp3s) copied into `/public/cast/{images,audio}/` and served statically (not Vite-imported — large media). Removed the old Sam concept-art assets (`src/assets/demo/sam-boy-16*.png`) + their imports and the YouTube animation-sample embed (`A8vVBE_2dNI`). Kept the `video` feedback category (commit `1edd96f`) — now applies to cast/voice feedback. No activity-version bump (DemoPage section, not an activity); INFRASTRUCTURE.md change log updated. Out of scope: audio for Foster Dad + Mrs. Johnson (drop mp3s + a `lines` array into castData later and the cards extend the same way).
 - **`0015acd` · 2026-06-01** — Draft 20: 2026-06-01 meeting bundle, three activities in one commit. **Getting Unstuck v5.2 → v5.3 (MINOR):** (1) Pick threshold reverted ≥3 → **≥2** (FINAL per meeting — third 3↔2 flip; full history now pinned in the `ELIGIBILITY_THRESHOLD` comment). (2) New `cycle_affirmation` phase — brief randomized "Nice work / Good job / …" + "Let's try the next one" beat between consecutive picked thoughts (Ginny's encouragement ask). Also surfaced a Challenge-vs-Both/And strategy explainer (video placeholder + text) on the affirmation path so kids who pick nothing still learn the strategies. No data-shape change. **Allies / Safety Net v5.0 → v5.1 (MINOR-ish):** Strengthen now runs for **all three support types** (was gap-only); removed the same-kid suggestion chips (Ginny's stress test: they re-suggested foster mom/dad everywhere and the net never expanded); copy reframed to neutral "Is there anyone else who could give you {type} support?"; typed-in names stay in the action callouts only, NOT added to the net visual (Stephanie's "isn't really in the net until we call him" framing). Data: `strengthened.{type}` always populated (no nulls); `gap_filler` → `additional_person`. exportFlatten drops `_strengthen_gaps_count`, adds `_strengthen_added_count` (0-3), renames `_filler` cols → `_person`. demoDataset regenerated (~50% fill per type). **Who I Am Poem v2.3 → v2.4 (MINOR):** removed visible line numbers + the "Line N — same as line 1" caption on the mirrored lines 6/10 (Ginny: confusing); they render silently now. No data-shape change. **Out of scope / still queued:** Draft 21 (tree-roots progress visual) — spec + assets only, integration deferred until activities are stitched into a continuous flow; left active in the Ideas section.
 - **`1edd96f` · 2026-05-19** — Added a **Video / animation** category to the feedback form so reviewers can tag feedback about the new Video section. Touched all three validation layers: DB `feedback_category_check` CHECK constraint (migration `feedback_add_video_category`), the `submit-feedback` edge function allow-list (now v4), and the frontend (`FeedbackButton` dropdown + `AdminFeedbackPage` label/filter). Additive enum value — no data migration, existing rows unaffected.
@@ -732,6 +734,182 @@ No activity-version bump. This is a new DemoPage section replacing the existing 
 **Approved by:** Josh, 2026-06-03.
 
 *End of Draft 22.*
+
+-->
+
+---
+
+<!-- Drafts 23 + 24 shipped 2026-06-04 — archived (commented out). -->
+
+<!--
+
+### Draft 23 — Allies / Safety Net v5.1 → v5.2: show previously-selected allies above each Strengthen prompt
+
+Small follow-up surfaced during Josh's verification of Draft 20 (2026-06-04). The Strengthen step now runs for all three support types (v5.1), and Josh wants each Strengthen screen to remind the kid which allies they already selected for that support type before asking *"Is there anyone else…"*. Improves recall — the kid sees their list, then generates an addition instead of vaguely restating someone they already named.
+
+**File:** `src/activities/AlliesSafetyNet.jsx`.
+
+**Change:** On each Strengthen screen, **above the existing "Is there anyone else who could give you {type} support?" question**, add a reminder block listing the allies the kid selected for that support type in Step 1 (post-Inspect, so removed allies don't show).
+
+**Copy format:**
+
+> Here are the people you already selected for **{type}** support: *{list of names}*.
+
+The **{type}** word stays colored + bold per the v5.0 color scheme (amber for practical, rose for emotional, sky for social — same treatment used elsewhere in the activity). Names render as a comma-separated list in a slightly smaller font weight than the main prompt — read-only, no tap-targets, no chips. Just a plain inline list so it reads like a refresher rather than a UI element.
+
+**Names to use:**
+
+- Predefined tile names from `src/lib/allyTiles.js` (e.g., "Foster Mom," "Best Friend," "Coach").
+- For the two custom `other1` / `other2` tiles, use the inline-entered name the kid typed.
+- Order them in the order the kid selected them (or alphabetically — judgment call; tile-registry order is fine if simpler).
+- Comma-separated, with "and" before the last item if there are three or more (standard Oxford-comma style).
+
+**Edge case — kid selected zero allies for that support type:**
+
+If the kid picked "None of these" for the type (or somehow got to Strengthen with zero allies for it after Inspect removal), **skip the reminder line entirely**. The existing "Is there anyone else..." prompt stands on its own — no awkward "Here are the people you already selected: (none)" copy.
+
+**Edge case — exactly one ally:**
+
+Render the line in the singular form: *"Here is the person you already selected for {type} support: {name}."* — small grammatical concession that reads more naturally than the plural form for a list of one.
+
+**Visual placement:**
+
+The reminder block sits between the screen heading ("Let's strengthen your {type} support") and the existing "Is there anyone else..." question. ~16px of vertical spacing between heading and reminder, then ~12px between reminder and question. Slight slate-500 color on the reminder text so it visually demotes vs the question — it's context, not a call to action.
+
+**Data:** no shape change. The reminder reads from the existing `allies` array, filtered by `support_types` containing the current step's type, with any `removed_via_inspect` ids excluded.
+
+**Export pipeline:** no change. This is a display-only addition.
+
+**Version bump:** v5.1 → **v5.2 (MINOR)** — copy/UI addition, no flow or data change. Prepend changelog: *"v5.2 — Each Strengthen screen now shows the kid which allies they already selected for that support type above the 'Is there anyone else...' prompt, so the new-name suggestion is generated against a visible reminder of the existing list."* Update `updated` to today's date.
+
+**Approved by:** Josh, 2026-06-04, after verifying Draft 20 in the demo.
+
+*End of Draft 23.*
+
+---
+
+### Draft 24 — Meet the cast fixes + /demo polish (Sam reorder, audio rename, script download, paragraph removal, title update)
+
+Five small post-ship changes from Josh's 2026-06-04 review of the live demo. Bundle as one commit.
+
+**Files touched:**
+
+- `src/pages/DemoPage.jsx` (Meet the cast card-data list, Activities section, page heading)
+- `/public/cast/audio/` (rename two Sam 14 mp3s)
+- `/public/cast/script/` (new directory — drop the script .docx in)
+- `index.html` or wherever the HTML `<title>` is set for the page (only if it's separate from the visible heading)
+
+#### Change 1 — Card order: Sam 16 leads, then Sam 14
+
+The current order per Draft 22 is Sam 14 → Sam 16 → Foster Mom → Foster Dad → Mrs. Johnson → Family Photo. Swap the first two so the 16-year-old (the narrator) comes before the 14-year-old (the kid he's narrating about).
+
+**New display order:** **Sam 16 → Sam 14** → Foster Mom → Foster Dad → Mrs. Johnson → Family Photo.
+
+Reasoning: 16yo Sam opens Holly's script with his voice-over; leading the cast preview with him matches the actual opening of the video. 14yo Sam then follows as the character the narration centers on.
+
+#### Change 2 — Swap the two Sam 14 audio file names
+
+The two Sam 14 audio files in `/public/cast/audio/` were misnamed during Draft 22's asset prep. Rename them so the file names match the line ordering.
+
+**Current state (after Draft 22 shipped):**
+
+- `sam-14-line-1.mp3` actually contains the *"You aren't my parents and you never will be."* angry line — which is **line 2** per the script.
+- `sam-14-line-2.mp3` actually contains the *"How do I feel about that? I have literally no idea."* inner monologue — which is **line 1** per the script.
+
+**Rename atomically** via a temp filename (so we don't lose either file if interrupted):
+
+1. `mv sam-14-line-1.mp3 sam-14-line-tmp.mp3`
+2. `mv sam-14-line-2.mp3 sam-14-line-1.mp3`
+3. `mv sam-14-line-tmp.mp3 sam-14-line-2.mp3`
+
+**After the swap:**
+
+- `sam-14-line-1.mp3` → *"How do I feel about that? I have literally no idea."* (inner monologue — line 1)
+- `sam-14-line-2.mp3` → *"You aren't my parents and you never will be."* (angry — line 2)
+
+**No change to the card-data list itself.** The line text + audio path mapping per Draft 22 was correct in principle; only the underlying file *contents* didn't match the names. After the rename, the existing mapping resolves to the right audio for each line text.
+
+#### Change 3 — Add a Script 2.0 download link under the section heading
+
+Reviewers want to read the full script while listening to the voice samples. Add a download affordance at the top of the Meet the cast section, between the existing sub-line and the first character card.
+
+**Asset to drop in:**
+
+Copy `SSI Platform A/Video Content/Script 2.0.docx` → `/public/cast/script/ready-for-roots-script-v2.docx`.
+
+(The repo-side filename is kebab-case for web safety; the user's downloaded file gets a clean display name via the `download` attribute — see below.)
+
+**Placement:**
+
+Inside the Meet the cast section container, between the existing sub-line (*"Preview of the cast and voice samples for Holly's video script (Script 2.0)…"*) and the first character card. ~24px of vertical spacing above and below so it has breathing room.
+
+**Copy:**
+
+A short prompt above the button (one line, italic, slate-500, `text-sm`):
+
+> Want the full script while you listen? Grab it here.
+
+Button label:
+
+> **Download Script 2.0 (.docx)**
+
+**Markup pattern** (Tailwind, matches existing demo CTAs):
+
+```jsx
+<a
+  href="/cast/script/ready-for-roots-script-v2.docx"
+  download="Ready for Roots — Script 2.0.docx"
+  className="inline-flex items-center gap-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 text-sm font-semibold"
+>
+  <DownloadIcon className="w-4 h-4" />
+  Download Script 2.0 (.docx)
+</a>
+```
+
+`<DownloadIcon />` can be a lucide-react `Download` icon (the project already uses lucide-react elsewhere; if not, an inline SVG download glyph works fine).
+
+The **`download` attribute** is the important part — it sets the saved filename so the user gets a clean `Ready for Roots — Script 2.0.docx` in their Downloads folder rather than the URL-kebab slug.
+
+**Out of scope:** No PDF version, no inline preview, no version history. Just one .docx download. When the script revs (Script 3.0 etc.), swap the file in `/public/cast/script/` and update the button label.
+
+#### Change 4 — Remove the "individual plan" paragraph under the Activities section
+
+There's a paragraph currently sitting somewhere in the Activities section (likely under the section heading or below the activity cards) that previews future work on a per-youth synthesis artifact. Take it out for now — the work it describes isn't on the near-term roadmap and surfacing it on the review demo distracts reviewers from the activities themselves.
+
+**File:** `src/pages/DemoPage.jsx` (Activities section).
+
+**Remove this exact paragraph block** (and its surrounding spacing):
+
+> An individual plan can be generated for each youth based on their responses across these activities — pulling forward their stuck-thought reframes, named allies, identified skills, and poem lines into a single keepsake artifact. Before I design that plan, though, I need to refine the activities above so the inputs I pull from are clinically right. Try them out and tell me what should change.
+
+Don't replace it with anything. The Activities section heading + the activity tiles carry the page on their own.
+
+#### Change 5 — Update the page title
+
+The main `/demo` page title currently reads:
+
+> Ready for Roots — Activities Testing and Data Export Demo
+
+Change to:
+
+> Ready for Roots — Activities Testing, Videos and Data Export Demo
+
+Reflects the new Meet the cast / Videos section that Draft 22 added between Tests and Data export. The Oxford-comma question is intentionally skipped — leave the title with the comma after "Testing" and no comma before "and" to match Josh's exact phrasing.
+
+**Files to update:**
+
+- The visible page heading in `src/pages/DemoPage.jsx` (likely an `<h1>` near the top).
+- The HTML document `<title>` tag — check `index.html` or wherever the document title is set for `/demo`. If it's dynamic via something like react-helmet, update there. If the title is set in a single static spot, that's the only place to change.
+
+If both are present, make sure both match.
+
+#### Version bump
+
+No activity version bump (no activity changed). No `INFRASTRUCTURE.md` change-log entry — these are fixes to the just-shipped Draft 22 / `Meet the cast` section, not a new feature.
+
+**Approved by:** Josh, 2026-06-04, after reviewing the live `/demo` Meet the cast section.
+
+*End of Draft 24.*
 
 -->
 
