@@ -1,8 +1,13 @@
-// One-off build helper (NOT shipped at runtime): parses the six locked
-// tree-stage reference SVGs in `Activity ideas/` and emits a JS data
-// structure for src/components/TreeProgress.jsx. Run with:
-//   node scripts/extract-tree-stages.mjs
-// then paste the printed `STAGES` constant into TreeProgress.jsx.
+// Build helper (NOT shipped at runtime): parses the six locked
+// tree-stage reference SVGs in `src/assets/tree/` and regenerates
+// `src/lib/treeStages.js`, which `TreeProgress.jsx` reads. Run with:
+//   node scripts/extract-tree-stages.mjs > src/lib/treeStages.js  (with header)
+// — but in practice the wrapper below writes the file directly.
+//
+// Source set updated 2026-06-08 (Draft 26 Part F follow-up): Claude
+// Design's denser "ready-for-roots-tree" set replaced the original
+// Draft 25 references. Same structure/conventions (see NOTES.md), just
+// fuller roots + canopy + blossoms.
 //
 // The references are per-stage full redraws (the whole tree scales each
 // stage), so we capture the complete element set per stage rather than a
@@ -10,7 +15,7 @@
 
 import { readFileSync } from 'node:fs'
 
-const DIR = 'Activity ideas'
+const DIR = 'src/assets/tree'
 const stages = []
 
 function attr(tag, name) {

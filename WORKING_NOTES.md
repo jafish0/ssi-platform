@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`<pending-tree>` · 2026-06-08** — Draft 26 Part F follow-up: swapped the tree-progress demo to Claude Design's new locked **"ready-for-roots-tree"** icon set (delivered in `Safety Net Exercise.zip → ready-for-roots-tree/`). The new six-stage set is noticeably **denser/fuller** — roots grow in count *and* branchiness per stage (1→6→9→15→20→28 root paths, incl. sub-roots + stage-5 spread roots), the three-tone canopy widens sharply, and stage 5 gains more blossoms (14 clusters). Extracted the six SVGs into **`src/assets/tree/`** (now the in-repo locked references, + `NOTES.md`); pointed `scripts/extract-tree-stages.mjs` at that folder and regenerated **`src/lib/treeStages.js`**. `TreeProgress.jsx` unchanged — it's parametric/data-driven and renders the new geometry as-is (same structure: per-stage full redraws, baked trunk widths, `<g>` layer ids). Verified via preview: stage 5 = 50 paths (28 roots + 1 trunk + 7 branches + 14 leaves) + 14 blossoms (84 petals), matching the extract. Also updated the **Growing Your Roots preamble** to the new locked 3-line copy ("Ready for Roots. Yours start here." / "This little seed is your tree…" / "Watch what grows."); Stage 0 caption unchanged. No version bump (demo surface). The "new tree icons (Josh providing)" non-code todo is now struck through as delivered.
 - **`80fa689` · 2026-06-08** — Draft 26: Round 4 feedback bundle, six activity refinements in one commit. **A. Self-Reflection v1.2 → v1.3:** dropped the false "we'll come back to it" closing line (Holly); added example thought/feeling placeholders on both prompts (Ginny) — inclusion "e.g., People like me" / "e.g., Happy", exclusion "e.g., Nobody likes me" / "e.g., I felt sad". **B. Letter v2.1 → v2.2:** two optional scaffolding prompts under the instruction ("What is one skill you would recommend?" / "What is one helpful thought you could share?"). **C. Belonging Skills Sort v3.0 → v3.1:** "!" on encouragement; saveable PNG snapshot of the three sorted buckets (downloadSvgElementAsPng, unsorted excluded); one-time "reconsider unsorted items?" Yes/No prompt after first Save. **D. Allies / Safety Net v5.2 → v5.3** (the draft said "v5.1 → v5.2" but Draft 23 had already shipped v5.2, so this lands as v5.3): "!" on the ready line; percentage labels on every support-type heading (transition screens, selection question, TrampolineNet pills via new `percentByType` prop, ally-list headers) computed as allies-in-type ÷ total distinct allies; visual demotion of the full net (60% opacity + "small net is a place to start" caption) when total allies ≤ 2. **E. Getting Unstuck v5.3 → v5.4 (MAJOR) + FollowUp v1.0 → v1.1 (coupled):** shared appraisals truth-rating scale shifted **0-5 → 0-4** (anchors 0 Not At All / 2 Somewhat / 4 Definitely) in `src/lib/appraisals.js`, cascading to both the intervention and the survey; Pick threshold stays ≥2 (now exactly the middle anchor); new "I need help" button per thought opening a panel of alternative-thought suggestions (PLACEHOLDER content — Stephanie producing real lists; tap to pre-fill the response). exportFlatten value-range comments + demoDataset truth_rating regen updated (0..4). **F. Growing Your Roots:** preamble before Stage 0 ("Every time you complete an activity, your tree and roots will grow. Let's see how big it gets.") + revised Stage 0 caption ("Here's your tree." / "Right now it's a seed…"). Verified via preview: GU renders 5 scale buttons (0-4) with correct anchors; "I need help" panel works. **Out of scope (tracked in the non-code todos section):** new tree-progress icons (Josh), Stephanie's real "I need help" content, ElevenLabs voice work, female/nonbinary Sam assets, 9:16 video direction.
 - **`edc439a` · 2026-06-04** — Draft 25: tree-progress preview. New parametric **`<TreeProgress />`** component (`src/components/TreeProgress.jsx`) rendering the "Ready for Roots" growth metaphor across six stages (Seed → Blooming) + a new **"Growing your roots"** click-through section on `/demo` (between Meet the cast and Data export) with stage dots, Previous/Next/Reset controls, and per-stage encouragement copy (Part C). Geometry is **machine-extracted** from Claude Design's six locked reference SVGs (`Activity ideas/tree-stage-*.svg`) via `scripts/extract-tree-stages.mjs` → `src/lib/treeStages.js`, so the component matches the references exactly rather than shipping them (same "rebuild parametrically" approach as the trampoline net). The references are per-stage full redraws (the whole tree scales each stage), so the component swaps the complete element set per stage. Forward stage changes animate growth-in (roots + branches draw on via `stroke-dashoffset` with `pathLength=1`; trunk/leaves/blossoms fade, staggered ~700ms); backward/jumps snap instantly; `prefers-reduced-motion` disables it. Verified against the references via DOM inspection — stage 5 = 13 roots, 6 branches, 14 leaves, 10 blossoms (60 petals). **Preview-only:** not wired into real activity completion or per-PID persistence (deferred until the activities are stitched into a continuous flow). No activity-version bump; INFRASTRUCTURE.md updated.
 - **`41693ec` · 2026-06-04** — Draft 24: Meet the cast fixes + /demo polish. **(1)** Card order swapped so **Sam 16 (narrator) leads, then Sam 14** — matches how Holly's script opens. **(2)** Swapped the two Sam 14 audio files (their contents were mislabeled in Draft 22's asset prep): `sam-14-line-1.mp3` is now the inner-monologue line, `-line-2` the angry line — card-data mapping was already correct, only the underlying files were crossed. **(3)** Added a **"Download Script 2.0 (.docx)"** link under the Meet-the-cast heading (`/public/cast/script/ready-for-roots-script-v2.docx`, served with a clean `download` filename). **(4)** Removed the "individual plan" preview paragraph from the Activities section. **(5)** Page title → *"Ready for Roots — Activities Testing, Videos and Data Export Demo"*: updated the visible `<h1>`, set a matching `/demo`-only browser-tab title via `useEffect` (restored on unmount so other routes keep the default), and de-staled `index.html`'s app-wide `<title>` from the pre-rename *"Ready! Set! Dedicate!"* to *"Ready for Roots"* (a Draft 14 rename miss). No activity-version bump.
@@ -938,27 +939,40 @@ appraisals: {
 
 ---
 
-#### Part F — Growing Your Roots: add preamble + revise Stage 0 copy
+#### Part F — Growing Your Roots: locked preamble + Stage 0 copy + drop in new tree assets
 
-**File:** `src/components/TreeProgress.jsx` (or wherever the per-stage captions live — likely in the DemoPage data array).
+**Files:** `src/components/TreeProgress.jsx` (or wherever the per-stage captions live — likely in the DemoPage data array) + `src/assets/tree/` (drop in the new SVG assets per below).
 
 1. **Add a preamble before Stage 0.** On the screen where the kid first encounters the tree (intro, or before the first activity), show this preamble copy:
 
-   > **Every time you complete an activity, your tree and roots will grow.**
-   > Let's see how big it gets.
+   > **Ready for Roots. Yours start here.**
+   >
+   > This little seed is your tree. As you finish each activity, your roots will reach further and your branches will fill in.
+   >
+   > Watch what grows.
 
-   Render above the Stage 0 tree visual. Two lines, the first bold, the second regular. Gives the metaphor an explicit set-up so kids understand what they're looking at.
+   Three lines, structured so the first line is the bold framing (program name + ownership), the middle line is the explanation, and the closer is short and invitational. Render the first line as bold-or-larger, the body lines regular. Center the block above the Stage 0 tree visual on the intro/before-first-activity screen.
 
 2. **Replace the Stage 0 caption.** The current Stage 0 caption block ("Just getting started." / "Every tree starts as a seed. Yours starts here.") gets replaced with:
 
    - **Heading:** Here's your tree.
    - **Body:** Right now it's a seed. As you finish each activity, you'll watch it grow into something bigger.
 
-   Holly flagged that the prior copy felt like it was missing a personal hook — "Yours starts here" without context. The new copy names the kid's relationship to the tree more directly.
+   Holly flagged that the prior copy felt like it was missing a personal hook — "Yours starts here" without context. The new preamble (item 1) plus this Stage 0 caption together name the kid's relationship to the tree more directly.
 
-3. **Out of scope for this draft:** Josh is producing **new tree icons** that add more canopy and more root variety (not just longer). When those land, a follow-up draft swaps the SVG assets and may slightly adjust the parametric component. Noted in the Cleanup queue.
+3. **Drop in the new tree icon set.** Claude Design has produced the locked six-stage reference SVGs. They live in `SSI Platform A/Safety Net Exercise.zip` → `ready-for-roots-tree/`:
 
-**Version bump:** No activity bump; this is a component + copy update on the demo preview surface.
+   - `tree-stage-0.svg` through `tree-stage-5.svg`
+   - All six share viewBox `0 0 400 600`, ground line at y=420, trunk base at x=200, transparent background
+   - Semantic layer groups: `<g id="ground">`, `<g id="roots">`, `<g id="trunk">`, `<g id="branches">`, `<g id="leaves">`, `<g id="blossoms">` (stage 5 only)
+   - Per-element ids inside each layer (`root-tap`, `root-lat-N`, `branch-N`, `clump-dN`, `leaf-N`, `bloom-N`) — the dev can target individual paths for the growth animation
+   - Full build notes from Claude Design at `Safety Net Exercise.zip` → `ready-for-roots-tree/NOTES.md` (read this — it documents the exact id conventions, the three-tone foliage approach, the sub-root naming pattern, and the locked-trunk-anchor strategy)
+
+   **Action:** Extract the six SVGs into `src/assets/tree/` with the same filenames. Then build the parametric `<TreeProgress />` component per Draft 25's spec, using these six files as the locked visual reference. Match the per-element semantic ids so the animation hooks (stroke-dashoffset for roots/branches, opacity+scale for leaves/blossoms, X-scale transform for trunk thickening) work as intended.
+
+   Trunk is the same continuous path across all six stages — only `height`, `wBase`, and `wTop` change. That's the parametric handle for trunk growth.
+
+**Version bump:** No activity bump; this is a component + asset + copy update on the demo preview surface.
 
 ---
 
@@ -1748,7 +1762,7 @@ After the new doc lands, leave the four old `RSD_Flow_*.docx` files in place as 
   - 16yo Sam — fix pacing on two specific lines: *"I remember this moment, like, it was, yesterday"* (pauses too long) and the 14yo question *"how do I feel about that?"* (not question-y enough) (Holly).
   - Goal: take several more passes and replace the demo clips with new versions for team approval.
 
-- **New tree-progress icons (Josh providing).** The current tree gets longer at each stage but doesn't get fuller. Josh is producing a revised icon set that adds more canopy and more root variety per stage, not just length. When delivered, follow-up draft swaps the SVG assets and may tune the parametric `<TreeProgress />` component to match.
+- ~~**New tree-progress icons (Josh providing).** The current tree gets longer at each stage but doesn't get fuller. Josh is producing a revised icon set that adds more canopy and more root variety per stage, not just length. When delivered, follow-up draft swaps the SVG assets and may tune the parametric `<TreeProgress />` component to match.~~ **DELIVERED 2026-06-08** — Claude Design produced six locked SVGs (`tree-stage-0.svg` through `tree-stage-5.svg`) at `SSI Platform A/Safety Net Exercise.zip` → `ready-for-roots-tree/`. Three-tone canopy clumps, root system densifies per stage (more laterals + sub-roots, not just longer), stage 5 adds amber + rose blossoms. Full build notes at `ready-for-roots-tree/NOTES.md`. Folded into Draft 26 Part F — Claude Code drops these into `src/assets/tree/` when Draft 26 ships.
 
 - **Female Sam character images + voice lines.** Per the Round 4 meeting decision, the video will eventually ship in three variants — male, female, and nonbinary Sam. Female variant images (use the Character Builder prompts from `Activity ideas/Tree_Progress_Design_Prompt.md`'s sibling doc `Character_Builder_Prompts.md`) and voice lines (ElevenLabs, same script). Generate when there's time.
 

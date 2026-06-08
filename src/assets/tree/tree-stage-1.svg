@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+  <g id="ground">
+    <line x1="24" y1="420" x2="376" y2="420" stroke="#e2e8f0" stroke-width="2.5" stroke-linecap="round"></line>
+  </g>
+  <g id="roots">
+      <path id="root-tap" class="root" d="M 200 420 Q 200 440 200.5 451.0 Q 201 462 200.5 472.0 T 200 482" fill="none" stroke="#5a3a1f" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-tap-sub-1" class="root" d="M 201 462 Q 210 474 212.0 481.0 T 214 488" fill="none" stroke="#5a3a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-1" class="root" d="M 200 424 Q 181 432 173.5 439.5 Q 166 447 162.0 453.5 T 158 460" fill="none" stroke="#5a3a1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-1-sub-1" class="root" d="M 172 442 Q 163 452 160.5 458.0 T 158 464" fill="none" stroke="#4a2d18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-2" class="root" d="M 200 424 Q 219 433 226.5 440.5 Q 234 448 238.0 454.5 T 242 461" fill="none" stroke="#5a3a1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-3" class="root" d="M 200 431 Q 190 447 187.5 454.5 T 185 462" fill="none" stroke="#4a2d18" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  </g>
+  <g id="trunk">
+      <path id="trunk-main" class="trunk" d="M 189.925 420 C 192.5 402.4, 198.6 365, 200.6 310 Q 204 306.26, 207.4 310 C 208.5 365, 207.5 402.4, 210.075 420 Z" fill="#8b5a2b"></path>
+  </g>
+  <g id="branches">
+      <path id="branch-1" class="branch" d="M 200 324 Q 188 314 176 308" fill="none" stroke="#7c4d24" stroke-width="2.6" stroke-linecap="round"></path>
+      <path id="branch-2" class="branch" d="M 202 316 Q 216 306 230 301" fill="none" stroke="#7c4d24" stroke-width="2.6" stroke-linecap="round"></path>
+      <path id="branch-3" class="branch" d="M 201 310 Q 201 298 202 290" fill="none" stroke="#7c4d24" stroke-width="2.2" stroke-linecap="round"></path>
+  </g>
+  <g id="leaves">
+      <path id="clump-d1" class="clump" d="M 221.7 300.0 Q 226.8 311.8 216.3 316.1 Q 208.9 326.0 197.1 319.2 Q 185.0 320.1 184.0 307.8 Q 172.7 298.4 178.7 289.9 Q 181.9 278.7 197.0 280.2 Q 209.0 273.5 216.6 283.5 Q 226.9 288.0 221.7 300.0 Z" fill="#5e8460"></path>
+      <path id="clump-1" class="clump" d="M 219.0 290.0 Q 224.6 302.1 216.0 307.0 Q 208.6 314.8 196.6 307.5 Q 184.8 308.5 183.5 297.6 Q 174.0 289.1 180.4 281.1 Q 183.0 270.2 196.2 271.1 Q 206.7 265.7 213.6 275.8 Q 223.5 279.6 219.0 290.0 Z" fill="#7c9a76"></path>
+      <path id="leaf-1" class="leaf" d="M0 0 C -6.800000000000001 -7.14, -3.7400000000000007 -14.62, 0 -17 C 3.7400000000000007 -14.62, 6.800000000000001 -7.14, 0 0 Z" fill="#5e8460" transform="translate(176.0 308.0) rotate(-54.0)"></path>
+      <path id="leaf-2" class="leaf" d="M0 0 C -6.800000000000001 -7.14, -3.7400000000000007 -14.62, 0 -17 C 3.7400000000000007 -14.62, 6.800000000000001 -7.14, 0 0 Z" fill="#7c9a76" transform="translate(230.0 301.0) rotate(46.0)"></path>
+      <path id="leaf-3" class="leaf" d="M0 0 C -6.4 -6.72, -3.5200000000000005 -13.76, 0 -16 C 3.5200000000000005 -13.76, 6.4 -6.72, 0 0 Z" fill="#90ab8a" transform="translate(202.0 276.0) rotate(4.0)"></path>
+  </g>
+  <g id="blossoms">
+
+  </g>
+</svg>

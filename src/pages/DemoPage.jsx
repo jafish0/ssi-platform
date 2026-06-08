@@ -327,13 +327,17 @@ export default function DemoPage() {
 
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-[520px] mx-auto">
           {/* Preamble — only before the first activity (Stage 0), to set
-              up the metaphor (Draft 26 Part F). */}
+              up the metaphor (Draft 26 Part F, locked copy 2026-06-08). */}
           {treeStage === 0 && (
             <div className="text-center mb-5">
-              <p className="text-[15px] font-bold text-slate-700">
-                Every time you complete an activity, your tree and roots will grow.
+              <p className="text-[17px] font-bold text-slate-700 mb-2">
+                Ready for Roots. Yours start here.
               </p>
-              <p className="text-[15px] text-slate-700">Let&apos;s see how big it gets.</p>
+              <p className="text-[15px] text-slate-700 mb-2">
+                This little seed is your tree. As you finish each activity, your
+                roots will reach further and your branches will fill in.
+              </p>
+              <p className="text-[15px] text-slate-700">Watch what grows.</p>
             </div>
           )}
           <div className="mx-auto w-full max-w-[280px]">

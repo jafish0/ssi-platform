@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+  <g id="ground">
+    <line x1="24" y1="420" x2="376" y2="420" stroke="#e2e8f0" stroke-width="2.5" stroke-linecap="round"></line>
+  </g>
+  <g id="roots">
+      <path id="root-tap" class="root" d="M 200 420 Q 200 432 199.5 439.0 T 199 446" fill="none" stroke="#5a3a1f" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  </g>
+  <g id="trunk">
+      <ellipse id="seed" cx="200" cy="416" rx="7" ry="5" fill="#8b5a2b"></ellipse>
+      <path id="sprout-stem" class="trunk" d="M 200 418 Q 199 404 203 392" fill="none" stroke="#5e8460" stroke-width="3.4" stroke-linecap="round"></path>
+  </g>
+  <g id="branches">
+
+  </g>
+  <g id="leaves">
+      <path id="cotyledon-1" class="leaf" d="M0 0 C -4.800000000000001 -5.04, -2.6400000000000006 -10.32, 0 -12 C 2.6400000000000006 -10.32, 4.800000000000001 -5.04, 0 0 Z" fill="#7c9a76" transform="translate(200.0 396.0) rotate(-40.0)"></path>
+      <path id="cotyledon-2" class="leaf" d="M0 0 C -4.800000000000001 -5.04, -2.6400000000000006 -10.32, 0 -12 C 2.6400000000000006 -10.32, 4.800000000000001 -5.04, 0 0 Z" fill="#7c9a76" transform="translate(204.0 394.0) rotate(34.0)"></path>
+  </g>
+  <g id="blossoms">
+
+  </g>
+</svg>
