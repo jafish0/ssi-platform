@@ -66,6 +66,12 @@ export default function LetterBuilder({ onSave = console.log }) {
     <div>
       <h2 className="text-[22px] font-semibold mb-2">A letter to another teen</h2>
       <p className="text-[16px] leading-relaxed text-slate-700 mb-2">{PROMPT}</p>
+      {/* Two optional scaffolding prompts (Draft 26 Part B) — seeds for
+          kids who freeze on the blank textarea, not required reading. */}
+      <ul className="text-[14px] text-slate-500 italic mb-2 list-disc pl-5 space-y-0.5">
+        <li>What is one skill you would recommend?</li>
+        <li>What is one helpful thought you could share?</li>
+      </ul>
       <p className="text-[13px] text-slate-500 italic mb-5">
         Example: {EXAMPLE}
       </p>

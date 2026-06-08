@@ -305,16 +305,16 @@ function makeResponseValue(item, rng, profile, phase) {
     case 'custom_activity': {
       const componentName = c.component_name
       if (componentName === 'GettingUnstuck') {
-        // GettingUnstuck v5 (Draft 15, 2026-05-13): 6 locked appraisal
+        // GettingUnstuck v5.4 (Draft 26, 2026-06-08): 6 locked appraisal
         // items shared with the FollowUp Survey. Single rating per item
-        // (truth_rating 0-5). Eligibility threshold: ≥2. Strategies are
-        // Challenge / Both/And. Save payload is a dict keyed by id, not
-        // the v2/v4 arrays.
+        // (truth_rating 0-4 — was 0-5 through v5.3). Eligibility
+        // threshold: ≥2. Strategies are Challenge / Both/And. Save payload
+        // is a dict keyed by id.
         const APPRAISAL_IDS = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']
         const appraisals = {}
         for (const aid of APPRAISAL_IDS) {
           appraisals[aid] = {
-            truth_rating: intInRange(rng, 0, 5),
+            truth_rating: intInRange(rng, 0, 4),
             selected: false,
           }
         }
@@ -342,7 +342,7 @@ function makeResponseValue(item, rng, profile, phase) {
             'I will always be the new kid.',
             'Nobody really wants to listen.',
           ])
-          const otherRating = intInRange(rng, 0, 5)
+          const otherRating = intInRange(rng, 0, 4)
           appraisals.a_other = {
             text: otherText,
             truth_rating: otherRating,

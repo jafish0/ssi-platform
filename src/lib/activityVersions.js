@@ -19,9 +19,10 @@
 
 export const ACTIVITY_VERSIONS = {
   'getting-unstuck': {
-    version: 'v5.3',
-    updated: '2026-06-01',
+    version: 'v5.4',
+    updated: '2026-06-08',
     changelog: [
+      '2026-06-08 · v5.4 — Draft 26 (MAJOR — scale change). Truth-rating scale shifted from 0-5 (6 points) to 0-4 (5 points): anchors now 0 Not At All True / 2 Somewhat True / 4 Definitely True (2 is exactly the middle). The shared `src/lib/appraisals.js` scale drives both this activity and the FollowUp Survey, so the change applies to both at once (FollowUp v1.1). Pick eligibility threshold stays at ≥2 ("Somewhat True" or above). Added an "I need help" button on each thought-work screen that opens a panel of alternative-thought suggestions for that appraisal item — tapping one pre-fills the response field as a starting point; PLACEHOLDER content for now (Stephanie producing the real lists; swap in a follow-up commit, no UI change). Save payload shape unchanged except `truth_rating` range narrows 0..5 → 0..4; exportFlatten value-range comments + demoDataset regen updated. Breaking value-range change; no real participant data exists yet.',
       '2026-06-01 · v5.3 — Draft 20. Two changes. (1) Pick-screen eligibility threshold reverted to ≥2 (was ≥3 since v5.1) — FINAL per the 2026-06-01 meeting; a kid who rates an item at 2 (above the 0 "Not At All True" floor) is endorsing it enough to be worth offering the Pick / Challenge / Both-and flow. This is the third 3↔2 flip on this constant; the flip history is recorded in the ELIGIBILITY_THRESHOLD comment so future-us doesn\'t reopen it casually. Affirmation path is hit less often as a result. (2) Added a brief affirmation beat between consecutive picked thoughts (new `cycle_affirmation` phase): when a kid finishes one thought and has another queued, they see a short randomized "Nice work / Good job / You\'re doing this / Keep going" screen + "Let\'s try the next one" before the next strategy screen (Ginny\'s 2026-06-01 encouragement ask). Also surfaced a Challenge-vs-Both/And strategy explainer (video placeholder + text scaffolding) on the affirmation path so kids who don\'t pick a thought still learn the two strategies. No data-shape change.',
       '2026-05-19 · v5.2 — Pick-screen prompt reworded to "Pick the top two thoughts you would like to work on" (Holly\'s 2026-05-18 transcript suggestion). Replaces the previous "Which of these thoughts… Pick one or two." pairing — max-2 guidance is now in the prompt itself rather than as a footnote. No data-shape change; the max-2 cap behavior, the eligible-thoughts filter, and the non-blocking nudge on a third tap all stay as v5.0 implemented them.',
       '2026-05-19 · v5.1 — Reverted Pick-screen eligibility threshold from ≥2 back to ≥3 (Josh, 2026-05-18 — clinical-content call overriding the v5.0 lowering). Items rated below "Somewhat True" on the 0-5 anchor scale aren\'t endorsed strongly enough to be worth the Pick / Challenge / Both-and flow. Affirmation path will be hit more often as a result — intended behavior. No data-shape change.',
@@ -33,9 +34,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'allies-safety-net': {
-    version: 'v5.2',
-    updated: '2026-06-04',
+    version: 'v5.3',
+    updated: '2026-06-08',
     changelog: [
+      '2026-06-08 · v5.3 — Draft 26 (NOTE: the draft labeled this "v5.1 → v5.2", but Draft 23 had already shipped v5.2, so this lands as v5.3). Adrienne\'s Round 4 feedback: (1) "!" added to the affirmation line ("Your safety net is ready!"). (2) Percentage labels appended to each support-type heading throughout — transition screens, per-type selection-screen question, the TrampolineNet label pills (so Inspect + Review show them), and the textual ally-list section headers. Percent = allies-in-type ÷ total distinct allies (a multi-type ally counts toward each type\'s numerator, so percents can sum >100%); rendered only when total allies > 0. (3) Visual demotion of the full net when total allies ≤ 2: the net dims to 60% opacity and a slate-600 caption ("A small net is a place to start — let\'s keep building.") appears, on the full-net screens (build-final, Inspect X-out, Review, saved confirmation). Per-type selection screens unaffected. New `percentByType` prop on TrampolineNet for the pill labels. No data-shape or export change.',
       '2026-06-04 · v5.2 — Draft 23. Each Strengthen screen now shows the kid which allies they already selected for that support type (post-Inspect, so removed allies are excluded) as a read-only refresher line above the "Is there anyone else…" prompt — singular/plural-aware, Oxford-comma list, skipped entirely when none. Helps the kid generate a genuinely new addition rather than restating someone already named. Display-only; no flow, data-shape, or export change.',
       '2026-06-01 · v5.1 — Draft 20, two Strengthen-step changes from Ginny\'s 2026-06-01 stress test. (1) Strengthen now runs for ALL three support types, not just gaps (0/1 ally) — even a kid with plenty of allies in a type might think of someone else worth adding when prompted, and the gap-only gate missed that. (2) Removed the same-kid suggestion chips: when a kid had selected the same people (e.g. foster mom/dad) across every type, the chips re-suggested them and the net never actually expanded. The kid now types a name from scratch. Copy reframed from gap-specific sub-lines ("nobody is in your X support") to a single neutral "Is there anyone else who could give you {type} support? Adding more people can make your safety net stronger." Typed-in names live in the action callouts only — they are NOT added to the net visual (Stephanie: an aspirational name "isn\'t really in the net until we call him and see"). Data shape: `strengthened.{type}` is now always populated (never null); `gap_filler` field renamed to `additional_person`. exportFlatten drops `safety_net_strengthen_gaps_count`, adds `safety_net_strengthen_added_count` (0-3), renames the per-type `_filler` columns to `_person`. demoDataset regenerated (~50% fill an additional person per type). No breaking JSON-level change beyond the field rename; demo-only.',
       '2026-05-19 · v5.0 — 22-tile icon set replaces v4.x\'s 15-tile set (foster → foster-mom + foster-dad; bio → bio-mom + bio-dad; grandparent → grandmother + grandfather; friend → friend + best-friend + friends; boyfriend, girlfriend added; sneaky-link deliberately not registered per Josh\'s 2026-05-19 call). Color-coded support types (Practical = amber, Emotional = rose, Social = sky) with brief transition screens between each Practical → Emotional → Social selection. Inspect (Part 2) restructured per Stephanie\'s 2026-05-18 transcript: educational screen with video placeholder + the four red-flag bullets (verbatim from her PPT) → single X-out-on-net screen where the kid taps × on any ally to take them out. The per-ally modal walkthrough with Yes/No/Not-sure questions is gone. Strengthen (Part 3) rebuilt from scratch (last torn down in v2.0): gap detection on post-removal counts (0 or 1 ally = gap); per-gap screen with same-kid ally chips as suggestion shortcuts, "Who could that be?" filler input, "What\'s one thing you could do?" action textarea, and a Skip option. Save payload reshaped: per-ally `inspected` / `flags` / `kept_in_net` replaced with a top-level `removed_via_inspect` array; new top-level `strengthened` object keyed by type. exportFlatten drops per-flag columns and adds `safety_net_strengthen_{type}_{filler|action|skipped}` + `_gaps_count`. demoDataset regenerated. Breaking data-shape change, demo-only.',
@@ -48,18 +50,20 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'self-reflection': {
-    version: 'v1.2',
-    updated: '2026-05-12',
+    version: 'v1.3',
+    updated: '2026-06-08',
     changelog: [
+      '2026-06-08 · v1.3 — Draft 26. Removed the closing "we\'ll come back to it" line (Holly — there\'s no later activity that revisits the reflections); the simple Save confirmation stays. Added example thought/feeling placeholder text on the thoughts/feelings fields (Ginny — the fields read as ambiguous): inclusion → "e.g., People like me" / "e.g., Happy"; exclusion → "e.g., Nobody likes me" / "e.g., I felt sad". No data-shape change.',
       '2026-05-12 · v1.2 — reverted the v1.1 exclusion-prompt reframe back to the original wording ("Now think of a time you felt excluded — a time you felt like you did not belong"). The agentive reframe didn\'t go past Ginny\'s UX review and shipped early; Holly\'s proposal is moved to team-level design discussion.',
       '2026-05-11 · v1.1 — exclusion prompt reframed as agentive ("someone made you feel like you did not belong") per Holly\'s 2026-05-11 feedback.',
       '2026-05-11 · v1.0 — initial demo release.',
     ],
   },
   'belonging-skills-sort': {
-    version: 'v3.0',
-    updated: '2026-05-13',
+    version: 'v3.1',
+    updated: '2026-06-08',
     changelog: [
+      '2026-06-08 · v3.1 — Draft 26. (1) Encouragement gains a "!" ("Nice work!"). (2) The post-submit screen renders a saveable PNG snapshot of the three sorted buckets (skill names inside each; unsorted excluded) via downloadSvgElementAsPng, same pattern as Allies / Safety Net + Who I Am Poem. (3) One-time "reconsider unsorted items?" prompt after the first Save click when skills remain unplaced — Yes returns to the sort UI, No saves; asked at most once. Data shape unchanged (the reconsider step just gives one more chance to move items from `unplaced` before save).',
       '2026-05-13 · v3.0 — five converging pieces of feedback from the 2026-05-18 review meeting. (1) The two CSS drop-zones replaced with three illustrated trapezoidal bucket SVGs (single shared `BucketSvg` component). (2) New third bucket "Not interested right now" — equal styling, no greying/desaturation per Stephanie\'s call. (3) Placement rebuilt as real drag with a ghost-chip follower using pointer events (not @dnd-kit, not HTML5 drag) — uniform across mouse, touch, pen. Ghost chip offsets above the finger on touch so it stays visible; settles into the bucket on drop with a ~240ms ease-out transition + bucket pulse. (4) Placed cards have a small × remove button that returns them to unplaced (Jessica). (5) Keyboard + screen-reader path: Tab/arrow nav, Space picks up, arrow keys cycle buckets, Space drops, Escape cancels; aria-live region announces transitions. Save payload reshaped — now has `not_interested` array in addition to `already_doing` / `willing_to_try` / `unplaced`. Export pipeline gains `sort_not_interested` (list) and `sort_n_not_interested` (count) columns. demoDataset distribution updated to ~25/25/15/35 (already/willing/not_interested/unplaced). Breaking change to save shape — demo-only, no real participant data exists yet.',
       '2026-05-11 · v2.0 — replaced all 7 skill labels with the kid-friendly Belonging Promoting Behaviors items from the locked pretest doc. Added tap-toggle "?" affordance on each card showing a 1–2 sentence definition (per Ginny, Stephanie, Holly). Unplaced layout switched from horizontal-wrap to vertical-stack to fit the longer sentence-style labels.',
       '2026-05-11 · v1.0 — initial demo release.',
@@ -78,9 +82,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'letter-builder': {
-    version: 'v2.1',
-    updated: '2026-05-13',
+    version: 'v2.2',
+    updated: '2026-06-08',
     changelog: [
+      '2026-06-08 · v2.2 — Draft 26. Added two optional scaffolding prompts (small italic list) under the main instruction: "What is one skill you would recommend?" and "What is one helpful thought you could share?" — seeds for kids who freeze on the blank textarea. No data-shape change.',
       '2026-05-13 · v2.1 — replaced context line above the textarea with Stephanie\'s reframe (2026-05-15, confirmed 2026-05-18 meeting): "What you would want to say to another teen who feels like they don\'t belong." Old wording ("Write a letter to another teen who is starting where you are now…") was too vague — recipient is now anchored in the same emotional state the kid is being asked to write to. Direct framing in the kid\'s own voice rather than instructional. No data-shape change.',
       '2026-05-11 · v2.0 — collapsed 6-section structured letter to a single free-write screen per Stephanie\'s 2026-05-11 feedback. Removed: click-to-add word-bank chips, cross-activity pull-forward from Getting Unstuck and Allies/Safety Net, keepsake-view step. Added a short context line and a one-sentence example (greyed/italic) outside the textarea. Save payload reshaped to { activity, letter, saved_at } — breaking change, demo-only.',
       '2026-05-11 · v1.0 — initial demo release.',
@@ -94,9 +99,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   followup: {
-    version: 'v1.0',
-    updated: '2026-05-13',
+    version: 'v1.1',
+    updated: '2026-06-08',
     changelog: [
+      '2026-06-08 · v1.1 — Draft 26. Appraisals section scale shifted from 0-5 to 0-4 to match Getting Unstuck v5.4 (the two read the same shared `src/lib/appraisals.js` scale — anchors 0 Not At All True / 2 Somewhat True / 4 Definitely True). Item wording and order unchanged. fu_app_* value range narrows 0..5 → 0..4.',
       '2026-05-13 · v1.0 — initial sandbox build of the locked FollowUp Survey (30 items: BHS, ASCS, UCLA, NB, BPB, the 6 shared Appraisals items from `src/lib/appraisals.js`, Belonging Worries, permanency radio with Other-text, placement-disruption worry). 11-screen paginated flow mirroring the Pretest pattern. Save payload flat-keyed by `fu_*` SPSS column names.',
     ],
   },

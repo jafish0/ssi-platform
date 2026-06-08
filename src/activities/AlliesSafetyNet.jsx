@@ -107,6 +107,13 @@ function toneFor(typeId) {
   return TONE_TOKENS[t?.tone] || TONE_TOKENS.amber
 }
 
+// " (NN%)" suffix for a support-type label, or "" when no percentage is
+// available (zero total allies). Draft 26 Part D.2.
+function pctSuffix(percentByType, typeId) {
+  if (!percentByType || percentByType[typeId] == null) return ''
+  return ` (${percentByType[typeId]}%)`
+}
+
 // Join a list of names into readable prose with an Oxford comma:
 //   ["A"]            → "A"
 //   ["A","B"]        → "A and B"
@@ -235,6 +242,31 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
     [deduplicatedAllies],
   )
 
+  // Per-type percentage of the kid's total allies (Draft 26 Part D.2).
+  // Denominator = distinct allies; numerator = allies in that type, so a
+  // multi-type ally counts toward several numerators (percents may sum
+  // >100%). null when there are no allies (label shows no percentage).
+  const totalAllyCount = deduplicatedAllies.length
+  const percentByType = useMemo(() => {
+    const counts = {}
+    for (const t of SUPPORT_TYPES) counts[t.id] = 0
+    for (const a of deduplicatedAllies) {
+      for (const tid of a.support_types || []) {
+        if (counts[tid] != null) counts[tid] += 1
+      }
+    }
+    const out = {}
+    for (const t of SUPPORT_TYPES) {
+      out[t.id] = totalAllyCount > 0 ? Math.round((counts[t.id] / totalAllyCount) * 100) : null
+    }
+    return out
+  }, [deduplicatedAllies, totalAllyCount])
+
+  // Visual demotion of the full net when total support is low (Draft 26
+  // Part D.3): with ≤2 allies the wedges fill the space and read as
+  // "full," so we dim + add a "place to start" caption on full-net screens.
+  const lowSupport = totalAllyCount <= 2
+
   // Strengthen runs for ALL three support types as of v5.1 (Draft 20,
   // 2026-06-01). v5.0 gated it to gaps (0 or 1 ally); Ginny's stress test
   // showed that gate missed expansion opportunities — even a kid with
@@ -357,7 +389,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   }
 
   if (done) {
-    return <SavedConfirmation allies={reviewAllies} noneFor={noneFor} strengthened={strengthened} strengthenTypeIds={strengthenTypeIds} />
+    return <SavedConfirmation allies={reviewAllies} noneFor={noneFor} strengthened={strengthened} strengthenTypeIds={strengthenTypeIds} percentByType={percentByType} lowSupport={lowSupport} />
   }
 
   return (
@@ -383,12 +415,13 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       {screen?.type === 'intro' && <IntroScreen />}
 
       {screen?.type === 'transition' && (
-        <TransitionScreen typeId={screen.supportType} />
+        <TransitionScreen typeId={screen.supportType} percentByType={percentByType} />
       )}
 
       {screen?.type === 'select' && (
         <TypeScreen
           typeId={screen.supportType}
+          percentByType={percentByType}
           selectedIds={selection[screen.supportType]}
           isNone={!!noneFor[screen.supportType]}
           customNames={customNames}
@@ -403,7 +436,12 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       )}
 
       {screen?.type === 'build-final' && (
-        <BuildFinalScreen allies={deduplicatedAllies} noneFor={noneFor} />
+        <BuildFinalScreen
+          allies={deduplicatedAllies}
+          noneFor={noneFor}
+          percentByType={percentByType}
+          lowSupport={lowSupport}
+        />
       )}
 
       {screen?.type === 'inspect-education' && <InspectEducationScreen />}
@@ -412,6 +450,8 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         <InspectXOutScreen
           allies={deduplicatedAllies}
           onToggleRemoved={toggleAllyRemoved}
+          percentByType={percentByType}
+          lowSupport={lowSupport}
         />
       )}
 
@@ -431,6 +471,8 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
           noneFor={noneFor}
           strengthened={strengthened}
           strengthenTypeIds={strengthenTypeIds}
+          percentByType={percentByType}
+          lowSupport={lowSupport}
         />
       )}
 
@@ -454,7 +496,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
 // ---------- Post-save confirmation (with downloadable keepsake) ----------
 
-function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds }) {
+function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds, percentByType, lowSupport }) {
   const wrapRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState(null)
@@ -482,7 +524,12 @@ function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds })
         Your safety net is captured. You can come back to it any time.
       </p>
       <div ref={wrapRef} className="mb-4">
-        <NetWithListToggle allies={allies} noneFor={noneFor} />
+        <NetWithListToggle
+          allies={allies}
+          noneFor={noneFor}
+          percentByType={percentByType}
+          lowSupport={lowSupport}
+        />
       </div>
       <StrengthenSummary
         strengthened={strengthened}
@@ -597,7 +644,7 @@ function IntroScreen() {
 
 // ---------- Transition screens (one per support type) ----------
 
-function TransitionScreen({ typeId }) {
+function TransitionScreen({ typeId, percentByType }) {
   const t = SUPPORT_TYPES.find((x) => x.id === typeId)
   if (!t) return null
   const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
@@ -609,7 +656,7 @@ function TransitionScreen({ typeId }) {
         Next up
       </p>
       <h2 className={`text-[28px] font-bold mb-3 ${tones.word}`}>
-        {t.label} support
+        {t.label} support{pctSuffix(percentByType, t.id)}
       </h2>
       <p className="text-[16px] leading-relaxed text-slate-800 max-w-[480px] mx-auto">
         {t.definition}
@@ -622,6 +669,7 @@ function TransitionScreen({ typeId }) {
 
 function TypeScreen({
   typeId,
+  percentByType,
   selectedIds,
   isNone,
   customNames,
@@ -639,7 +687,7 @@ function TypeScreen({
       <h2 className="text-[20px] font-semibold mb-1">
         Who provides{' '}
         <span className={`${tones.word} font-bold`}>{t.label.toLowerCase()}</span>{' '}
-        support for you?
+        support for you?{pctSuffix(percentByType, t.id)}
       </h2>
       <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
         {t.definition}
@@ -781,7 +829,7 @@ function AllyTile({ tile, tones, selected, customName, isEditing, onToggle, onSt
 
 // ---------- Build final — TrampolineNet (non-interactive) ----------
 
-function BuildFinalScreen({ allies, noneFor }) {
+function BuildFinalScreen({ allies, noneFor, percentByType, lowSupport }) {
   const allEmpty =
     allies.length === 0 && Object.values(noneFor).some((v) => v)
   return (
@@ -792,7 +840,12 @@ function BuildFinalScreen({ allies, noneFor }) {
           ? 'No allies yet — that\'s okay. We\'ll look at where support could grow.'
           : 'Here\'s who you said is in your corner, grouped by the kind of support they give you. Some allies show up in more than one place — that\'s the strongest kind.'}
       </p>
-      <NetWithListToggle allies={allies} noneFor={noneFor} />
+      <NetWithListToggle
+        allies={allies}
+        noneFor={noneFor}
+        percentByType={percentByType}
+        lowSupport={lowSupport}
+      />
     </div>
   )
 }
@@ -858,7 +911,7 @@ function InspectEducationScreen() {
 // take out. Visual: faded to 30%, big red X overlays the icon. Tap × in
 // the corner again to restore. No modals, no per-ally questions.
 
-function InspectXOutScreen({ allies, onToggleRemoved }) {
+function InspectXOutScreen({ allies, onToggleRemoved, percentByType, lowSupport }) {
   if (allies.length === 0) {
     return (
       <div className="text-center py-6">
@@ -880,12 +933,16 @@ function InspectXOutScreen({ allies, onToggleRemoved }) {
         Tap the <span className="font-semibold">×</span> on anyone you want
         to take out of your safety net. Tap again to put them back.
       </p>
-      <div className="mx-auto w-full max-w-[420px] md:max-w-[700px]">
+      {lowSupport && <LowSupportCaption />}
+      <div
+        className={'mx-auto w-full max-w-[420px] md:max-w-[700px]' + (lowSupport ? ' opacity-60' : '')}
+      >
         <TrampolineNet
           allies={allies}
           inspectMode={true}
           onAllyToggleRemoved={onToggleRemoved}
           showLabels={true}
+          percentByType={percentByType}
         />
       </div>
       {removedCount > 0 && (
@@ -994,15 +1051,20 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
 
 // ---------- Review screen ----------
 
-function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds }) {
+function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds, percentByType, lowSupport }) {
   return (
     <div>
-      <h2 className="text-[22px] font-semibold mb-2">Your safety net is ready.</h2>
+      <h2 className="text-[22px] font-semibold mb-2">Your safety net is ready!</h2>
       <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
         Here&apos;s the net you came out with. You can come back to it any
         time.
       </p>
-      <NetWithListToggle allies={allies} noneFor={noneFor} />
+      <NetWithListToggle
+        allies={allies}
+        noneFor={noneFor}
+        percentByType={percentByType}
+        lowSupport={lowSupport}
+      />
       <StrengthenSummary
         strengthened={strengthened}
         strengthenTypeIds={strengthenTypeIds}
@@ -1052,17 +1114,31 @@ function StrengthenSummary({ strengthened, strengthenTypeIds }) {
   )
 }
 
+// ---------- Reusable: low-support caption ----------
+
+function LowSupportCaption() {
+  return (
+    <p className="text-[13px] text-slate-600 text-center mb-3">
+      A small net is a place to start — let&apos;s keep building.
+    </p>
+  )
+}
+
 // ---------- Reusable: net + "Show me a list instead" toggle ----------
 
-function NetWithListToggle({ allies, noneFor }) {
+function NetWithListToggle({ allies, noneFor, percentByType = null, lowSupport = false }) {
   const [listOpen, setListOpen] = useState(false)
   return (
     <div>
-      <div className="mx-auto w-full max-w-[420px] md:max-w-[700px]">
+      {lowSupport && <LowSupportCaption />}
+      <div
+        className={'mx-auto w-full max-w-[420px] md:max-w-[700px]' + (lowSupport ? ' opacity-60' : '')}
+      >
         <TrampolineNet
           allies={allies}
           interactive={false}
           showLabels={true}
+          percentByType={percentByType}
         />
       </div>
       <div className="flex justify-center mt-3">
@@ -1076,7 +1152,7 @@ function NetWithListToggle({ allies, noneFor }) {
       </div>
       {listOpen && (
         <div className="mt-4 mx-auto w-full max-w-[640px]">
-          <AllyList allies={allies} noneFor={noneFor} />
+          <AllyList allies={allies} noneFor={noneFor} percentByType={percentByType} />
         </div>
       )}
     </div>
@@ -1085,7 +1161,7 @@ function NetWithListToggle({ allies, noneFor }) {
 
 // ---------- Reusable: textual ally list, grouped by support type ----------
 
-function AllyList({ allies, noneFor }) {
+function AllyList({ allies, noneFor, percentByType = null }) {
   return (
     <div className="space-y-3">
       {SUPPORT_TYPES.map((type) => {
@@ -1103,7 +1179,7 @@ function AllyList({ allies, noneFor }) {
             className={`border rounded-2xl p-3 ${tones.callout}`}
           >
             <h3 className={`text-[14px] font-semibold mb-2 ${tones.word}`}>
-              {type.label}
+              {type.label}{pctSuffix(percentByType, type.id)}
             </h3>
             {inGroup.length > 0 ? (
               <ul className="space-y-1.5">

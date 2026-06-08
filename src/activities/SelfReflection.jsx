@@ -39,6 +39,14 @@ const ORDER = [
   'exclusion_thoughts_feelings',
 ]
 
+// Example thought/feeling text shown as textarea placeholders on the
+// two-column thoughts/feelings screens (Ginny's 2026-06-08 ask — the
+// fields read as ambiguous without an example). Per support section.
+const TF_EXAMPLES = {
+  inclusion: { thoughts: 'e.g., People like me', feelings: 'e.g., Happy' },
+  exclusion: { thoughts: 'e.g., Nobody likes me', feelings: 'e.g., I felt sad' },
+}
+
 export default function SelfReflection({ onSave = console.log, initialStep = 1 }) {
   const [stepIdx, setStepIdx] = useState(Math.max(0, Math.min(3, initialStep - 1)))
   const [data, setData] = useState({
@@ -97,7 +105,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
       <div>
         <h2 className="text-[22px] font-semibold mb-3">Thanks for sharing</h2>
         <p className="text-[16px] leading-relaxed text-slate-700">
-          Hold onto what came up. We&apos;ll come back to it.
+          Hold onto what came up.
         </p>
       </div>
     )
@@ -136,7 +144,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
               rows={5}
               value={data[screen.section].thoughts}
               onChange={(e) => update(screen.section, 'thoughts', e.target.value)}
-              placeholder="What did you think to yourself?"
+              placeholder={TF_EXAMPLES[screen.section].thoughts}
               className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
           </div>
@@ -148,7 +156,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
               rows={5}
               value={data[screen.section].feelings}
               onChange={(e) => update(screen.section, 'feelings', e.target.value)}
-              placeholder="What did you feel?"
+              placeholder={TF_EXAMPLES[screen.section].feelings}
               className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
           </div>

@@ -365,8 +365,8 @@ export function planWideColumns(snapshot) {
             //     strategy?, response?, and_statement?, text? (a_other only) } } }
             // The 8 RSD stuck thoughts are gone; the 6 locked appraisal
             // items from the FollowUp Survey took their place. Only one
-            // rating per item now (truth_rating, 0-5). Strategy data key
-            // settled on `challenge` (final after the third flip).
+            // rating per item now (truth_rating, 0-4 as of v5.4 — was
+            // 0-5 through v5.3). Strategy data key settled on `challenge`.
             const APPRAISAL_IDS = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']
             for (const aid of APPRAISAL_IDS) {
               cols.push({
@@ -375,8 +375,8 @@ export function planWideColumns(snapshot) {
                 item_type: 'custom_activity',
                 sub_id: `${aid}.truth_rating`,
                 prompt: `Truth rating for appraisal item ${aid}`,
-                allowed_values: '0–5 (Not At All True→Definitely True)',
-                notes: 'GettingUnstuck v5 (shared with FollowUp appraisals)',
+                allowed_values: '0–4 (Not At All True→Definitely True)',
+                notes: 'GettingUnstuck v5.4 (0-4 scale; shared with FollowUp appraisals)',
                 extract: (rv) => rv?.appraisals?.[aid]?.truth_rating ?? '',
               })
               cols.push({
@@ -433,8 +433,8 @@ export function planWideColumns(snapshot) {
                 item_type: 'custom_activity',
                 sub_id: 'a_other.truth_rating',
                 prompt: "Truth rating for the participant's Other thought",
-                allowed_values: '0–5 (Not At All True→Definitely True)',
-                notes: 'GettingUnstuck v5',
+                allowed_values: '0–4 (Not At All True→Definitely True)',
+                notes: 'GettingUnstuck v5.4 (0-4 scale)',
                 extract: (rv) => rv?.appraisals?.a_other?.truth_rating ?? '',
               },
               {

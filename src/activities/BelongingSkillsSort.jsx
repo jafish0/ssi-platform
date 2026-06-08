@@ -1,6 +1,16 @@
-// Belonging Skills Sort — v3.0 (Draft 12, 2026-05-18 meeting batch).
+// Belonging Skills Sort — v3.1 (Draft 26, 2026-06-08).
 //
-// What's new vs. v2.0:
+// What's new in v3.1 (vs v3.0):
+//   - Encouragement copy gains a "!" ("Nice work!").
+//   - The post-submit screen renders a saveable PNG snapshot of the
+//     three sorted buckets (downloadSvgElementAsPng, same path as Allies
+//     / Safety Net + Who I Am Poem). Unsorted skills are excluded.
+//   - A one-time "reconsider unsorted items?" prompt appears after the
+//     first Save click if any skills are still unplaced (Yes → back to
+//     the sort UI; No → save). Asked at most once.
+//   Data shape unchanged.
+//
+// What was new in v3.0 (Draft 12, 2026-05-18 meeting batch) vs. v2.0:
 //   1. The two CSS drop-zones are replaced with three illustrated bucket
 //      SVGs side-by-side (desktop) / stacked (mobile).
 //   2. New third bucket: "Not interested right now." Equal styling on
@@ -34,7 +44,9 @@
 // this skill" from "kid actively chose Not Interested."
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PrimaryButton } from '../components/items/shared.jsx'
+import { Download } from 'lucide-react'
+import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import { downloadSvgElementAsPng } from '../lib/imageDownload.js'
 
 // Skill labels match the locked pretest doc (set in commit `7b7046e`,
 // Draft 3). bs1–bs7 IDs are stable; the meaning of each ID is preserved
@@ -409,7 +421,10 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
   })
 
   const [submitting, setSubmitting] = useState(false)
-  const [done, setDone] = useState(false)
+  // Phase: 'sort' (main UI) → optional 'reconsider' (one-time prompt for
+  // leftover unsorted skills) → 'done' (saved snapshot keepsake).
+  const [phase, setPhase] = useState('sort')
+  const [reconsidered, setReconsidered] = useState(false)
 
   // Refs for hit-testing against bucket rectangles on pointermove.
   // Keyed by bucket.id; each holds the bucket container's DOM node.
@@ -633,7 +648,19 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
     placement.willing_to_try.length > 0 ||
     placement.not_interested.length > 0
 
-  async function handleSave() {
+  // Primary-button handler. If the kid still has unsorted skills and we
+  // haven't already offered the reconsider step, surface it once before
+  // saving (Draft 26 Part C). Otherwise save straight through.
+  function handlePrimary() {
+    if (unplaced.length > 0 && !reconsidered) {
+      setPhase('reconsider')
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
+    doSave()
+  }
+
+  async function doSave() {
     setSubmitting(true)
     try {
       await onSave({
@@ -644,21 +671,35 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
         unplaced:       unplaced.map((b) => b.id),
         saved_at:       new Date().toISOString(),
       })
-      setDone(true)
+      setPhase('done')
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (done) {
+  function handleReconsiderYes() {
+    setReconsidered(true)
+    setPhase('sort')
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+  function handleReconsiderNo() {
+    setReconsidered(true)
+    doSave()
+  }
+
+  if (phase === 'reconsider') {
     return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-3">Nice work</h2>
-        <p className="text-[16px] text-slate-700">
-          That&apos;s a snapshot of where you are. We&apos;ll come back to this.
-        </p>
-      </div>
+      <ReconsiderScreen
+        unplaced={unplaced}
+        onYes={handleReconsiderYes}
+        onNo={handleReconsiderNo}
+        submitting={submitting}
+      />
     )
+  }
+
+  if (phase === 'done') {
+    return <SortSnapshotScreen placement={placement} lookup={lookupBehavior} />
   }
 
   const draggedBehavior = drag ? lookupBehavior(drag.skillId) : null
@@ -745,7 +786,7 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
       </div>
 
       <div className="flex justify-end">
-        <PrimaryButton onClick={handleSave} disabled={!anyPlaced || submitting}>
+        <PrimaryButton onClick={handlePrimary} disabled={!anyPlaced || submitting}>
           {submitting ? 'Saving…' : 'Save'}
         </PrimaryButton>
       </div>
@@ -767,5 +808,232 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
         />
       )}
     </div>
+  )
+}
+
+// ---------- Reconsider-unsorted prompt (one-time) ----------
+
+function ReconsiderScreen({ unplaced, onYes, onNo, submitting }) {
+  return (
+    <div>
+      <h2 className="text-[22px] font-semibold mb-2">You didn&apos;t sort these.</h2>
+      <p className="text-[16px] leading-relaxed text-slate-700 mb-4">
+        Are any of these worth reconsidering?
+      </p>
+      <ul className="flex flex-col gap-2 mb-6">
+        {unplaced.map((b) => (
+          <li
+            key={b.id}
+            className="rounded-2xl bg-white shadow-card px-4 py-3 text-[14px] text-slate-800 leading-snug"
+          >
+            {b.text}
+          </li>
+        ))}
+      </ul>
+      <div className="flex items-center justify-end gap-2">
+        <GhostButton onClick={onNo} disabled={submitting}>
+          {submitting ? 'Saving…' : 'No, I’m done'}
+        </GhostButton>
+        <PrimaryButton onClick={onYes} disabled={submitting}>
+          Yes, let me sort them
+        </PrimaryButton>
+      </div>
+    </div>
+  )
+}
+
+// ---------- Saved snapshot keepsake ----------
+//
+// Renders the kid's three sorted buckets (skill names inside each) as an
+// SVG, with a Save-as-image button (downloadSvgElementAsPng, same path
+// as Allies / Safety Net + Who I Am Poem). Unsorted skills are excluded.
+
+function SortSnapshotScreen({ placement, lookup }) {
+  const wrapRef = useRef(null)
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleDownload() {
+    setError(null)
+    setDownloading(true)
+    try {
+      const svg = wrapRef.current?.querySelector('svg')
+      if (!svg) throw new Error('No snapshot to download.')
+      const stamp = new Date().toISOString().slice(0, 10)
+      await downloadSvgElementAsPng(svg, `belonging-skills-${stamp}.png`)
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || 'Could not save the image.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="text-center">
+      <h2 className="text-[22px] font-semibold mb-2">Nice work!</h2>
+      <p className="text-[15px] text-slate-700 mb-5">
+        Here&apos;s where you landed. It&apos;s yours to keep.
+      </p>
+      <div ref={wrapRef} className="mb-4 mx-auto w-full max-w-[560px]">
+        <SortSnapshotSvg placement={placement} lookup={lookup} />
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+        >
+          <Download size={14} strokeWidth={2} />
+          {downloading ? 'Saving image…' : 'Save as image'}
+        </button>
+        {error && <p role="alert" className="text-[12px] text-rose-600">{error}</p>}
+      </div>
+    </div>
+  )
+}
+
+// Word-wrap a string into lines no longer than `max` characters,
+// breaking on spaces.
+function wrapText(text, max) {
+  const words = String(text || '').split(/\s+/)
+  const lines = []
+  let cur = ''
+  for (const w of words) {
+    const candidate = cur ? `${cur} ${w}` : w
+    if (candidate.length > max && cur) {
+      lines.push(cur)
+      cur = w
+    } else {
+      cur = candidate
+    }
+  }
+  if (cur) lines.push(cur)
+  return lines
+}
+
+// Inline SVG snapshot of the three buckets. Computes a running y so the
+// height fits the content. Renders all three bucket sections; empty ones
+// show a muted "(none)". Unsorted skills are never included.
+function SortSnapshotSvg({ placement, lookup }) {
+  const WIDTH = 560
+  const PAD_X = 28
+  const WRAP_CHARS = 56
+  const LINE_H = 19
+  const SKILL_GAP = 8
+  const SECTION_GAP = 20
+
+  const TYPE_TONE = {
+    already_doing: '#B45309',
+    willing_to_try: '#8E4A4A',
+    not_interested: '#4E7257',
+  }
+
+  // Build the element list + track y.
+  const els = []
+  let y = 48
+
+  // Title
+  els.push(
+    <text
+      key="title"
+      x={WIDTH / 2}
+      y={y}
+      textAnchor="middle"
+      fontFamily="ui-sans-serif, system-ui, sans-serif"
+      fontSize="13"
+      fontWeight="700"
+      fill="#92400E"
+      letterSpacing="0.18em"
+    >
+      BELONGING SKILLS
+    </text>,
+  )
+  y += 32
+
+  for (const bucket of BUCKETS) {
+    const ids = placement[bucket.id] || []
+    // Bucket header
+    els.push(
+      <text
+        key={`h-${bucket.id}`}
+        x={PAD_X}
+        y={y}
+        fontFamily="ui-sans-serif, system-ui, sans-serif"
+        fontSize="15"
+        fontWeight="700"
+        fill={TYPE_TONE[bucket.id] || '#92400E'}
+      >
+        {bucket.label}
+      </text>,
+    )
+    y += 22
+
+    if (ids.length === 0) {
+      els.push(
+        <text
+          key={`none-${bucket.id}`}
+          x={PAD_X + 12}
+          y={y}
+          fontFamily="ui-sans-serif, system-ui, sans-serif"
+          fontSize="13"
+          fontStyle="italic"
+          fill="#94a3b8"
+        >
+          (none)
+        </text>,
+      )
+      y += LINE_H + SECTION_GAP
+      continue
+    }
+
+    for (const id of ids) {
+      const b = lookup(id)
+      if (!b) continue
+      const lines = wrapText(`• ${b.text}`, WRAP_CHARS)
+      lines.forEach((line, li) => {
+        els.push(
+          <text
+            key={`s-${id}-${li}`}
+            x={PAD_X + 12}
+            y={y}
+            fontFamily="ui-sans-serif, system-ui, sans-serif"
+            fontSize="14"
+            fill="#1f2937"
+          >
+            {line}
+          </text>,
+        )
+        y += LINE_H
+      })
+      y += SKILL_GAP
+    }
+    y += SECTION_GAP
+  }
+
+  const height = y + 16
+
+  return (
+    <svg
+      viewBox={`0 0 ${WIDTH} ${height}`}
+      width="100%"
+      role="img"
+      aria-label="Snapshot of your sorted belonging skills"
+      style={{ display: 'block', height: 'auto' }}
+    >
+      <rect
+        x="4"
+        y="4"
+        width={WIDTH - 8}
+        height={height - 8}
+        rx="24"
+        ry="24"
+        fill="#FEF7E5"
+        stroke="#F4D78F"
+        strokeWidth="3"
+      />
+      {els}
+    </svg>
   )
 }

@@ -11,7 +11,7 @@ import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 //     source of truth in `src/lib/appraisals.js`). Item wording is
 //     verbatim from the locked clinical doc — see the appraisals module.
 //   - The "how often" rating dimension is gone. There's now ONE rating
-//     per item: how true it feels, on a 0-5 scale with anchors
+//     per item: how true it feels, on a 0-4 scale (v5.4; was 0-5) with anchors
 //     "Not At All True / Somewhat True / Definitely True." This matches
 //     the FollowUp Survey exactly so within-subject change scores work.
 //   - The eligibility threshold for the Pick screen is **≥2** as of
@@ -50,12 +50,12 @@ import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 //   - v5.0 (Draft 15, commit 27e4d52): lowered to ≥2 per Stephanie.
 //   - v5.1 (Draft 17, commit 6900549): reverted to ≥3 — Josh's call.
 //   - v5.3 (Draft 20, 2026-06-01): back to ≥2, FINAL per the meeting.
-//     A kid who rates an item at 2 (above the "Not At All True" floor
-//     of 0) is endorsing it enough to be worth offering the Pick /
-//     Challenge / Both-and flow. With ≥2 the affirmation path is hit
-//     less often than under ≥3 — intended. If a future round reopens
-//     this, have a real clinical conversation rather than flipping the
-//     constant again.
+//     A kid who rates an item at 2 is endorsing it enough to be worth
+//     offering the Pick / Challenge / Both-and flow.
+//   - v5.4 (Draft 26, 2026-06-08): scale shifted 0-5 → 0-4, so 2 is now
+//     EXACTLY the middle "Somewhat True" anchor. Threshold stays ≥2 —
+//     items rated "Somewhat True" or above (2, 3, 4) carry forward;
+//     0 and 1 don't. Same behavior in spirit, cleaner anchor math.
 const ELIGIBILITY_THRESHOLD = 2
 const MAX_PICKS = 2
 
@@ -88,7 +88,7 @@ const BOTH_AND_EXAMPLES = [
 
 const OTHER_ID = 'a_other'
 
-// ---------- Reusable 0-5 truth-rating scale ----------
+// ---------- Reusable truth-rating scale (0-4 as of v5.4) ----------
 //
 // Anchors come from APPRAISAL_SCALE so this component and the FollowUp
 // Survey use literally the same labels.
@@ -159,6 +159,10 @@ export default function GettingUnstuck({ onSave = console.log }) {
   // Pick-screen walkthrough index.
   const [thoughtIdx, setThoughtIdx] = useState(0)
   const [limitNudge, setLimitNudge] = useState(false)
+
+  // "I need help" panel (v5.4) — id of the item whose alternative-thought
+  // suggestions panel is currently open, or null.
+  const [helpOpenId, setHelpOpenId] = useState(null)
 
   const [submitting, setSubmitting] = useState(false)
   const [savedDone, setSavedDone] = useState(false)
@@ -635,6 +639,10 @@ export default function GettingUnstuck({ onSave = console.log }) {
     const r = items[item.id] || {}
     const isLastThought = thoughtIdx === selectedItems.length - 1
     const valid = currentResponseValid(item.id)
+    // Alternative-thought suggestions for the "I need help" panel. Only
+    // the locked appraisal items carry these; a_other has none.
+    const helpSuggestions =
+      APPRAISAL_ITEMS.find((it) => it.id === item.id)?.help_suggestions || []
     return (
       <div>
         <div className="flex justify-center gap-2 mb-4" aria-hidden="true">
@@ -745,6 +753,48 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 ))}
               </ul>
             </details>
+          </div>
+        )}
+
+        {/* "I need help" (v5.4) — alternative-thought suggestions for this
+            item. Shown once a strategy is chosen; only for the locked
+            appraisal items (which carry help_suggestions), not a_other.
+            Tapping a suggestion pre-fills the active response field. */}
+        {r.strategy && helpSuggestions.length > 0 && (
+          <div className="mb-5">
+            <button
+              type="button"
+              onClick={() => setHelpOpenId((id) => (id === item.id ? null : item.id))}
+              aria-expanded={helpOpenId === item.id}
+              className="text-[13px] font-medium text-amber-700 hover:text-amber-900 underline-offset-2 hover:underline"
+            >
+              {helpOpenId === item.id ? 'Hide help' : 'I need help'}
+            </button>
+            {helpOpenId === item.id && (
+              <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-4">
+                <p className="text-[13px] text-slate-600 mb-2">
+                  Here are some other ways to think about it. Tap one to use it
+                  as a starting point, then make it your own.
+                </p>
+                <ul className="space-y-2">
+                  {helpSuggestions.map((s, i) => (
+                    <li key={i}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const field = r.strategy === 'both_and' ? 'and_statement' : 'response'
+                          setField(item.id, field, s)
+                          setHelpOpenId(null)
+                        }}
+                        className="w-full text-left text-[14px] leading-relaxed text-slate-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl px-3 py-2"
+                      >
+                        {s}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 

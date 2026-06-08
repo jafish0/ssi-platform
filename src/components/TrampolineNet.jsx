@@ -232,6 +232,7 @@ export default function TrampolineNet({
   highlightedAllyId = null,
   inspectMode = false,
   onAllyToggleRemoved,
+  percentByType = null,
   size,
 }) {
   // inspectMode (v5.0) — render each ally with an × affordance overlaid
@@ -504,8 +505,18 @@ export default function TrampolineNet({
       {wedges.map((w) => {
         const s = TYPE_STYLE[w.typeId]
         const p = labelPosition(w.midAngle)
-        const text = w.isEmpty ? `No ${s.label.toLowerCase()} yet` : s.label
-        const pillWidth = w.isEmpty ? 130 : 76
+        // Non-empty wedges optionally show the kid's percentage in that
+        // support type (Draft 26 Part D). Empty wedges keep "No X yet".
+        const pct =
+          !w.isEmpty && percentByType && percentByType[w.typeId] != null
+            ? `${percentByType[w.typeId]}%`
+            : null
+        const text = w.isEmpty
+          ? `No ${s.label.toLowerCase()} yet`
+          : pct
+            ? `${s.label} ${pct}`
+            : s.label
+        const pillWidth = w.isEmpty ? 130 : pct ? 104 : 76
         const pillHeight = 22
         return (
           <g

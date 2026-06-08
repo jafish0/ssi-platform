@@ -27,8 +27,8 @@ import TreeProgress from '../components/TreeProgress.jsx'
 const TREE_STAGE_COPY = [
   {
     context: 'Before you begin.',
-    heading: 'Just getting started.',
-    body: 'Every tree starts as a seed. Yours starts here.',
+    heading: "Here's your tree.",
+    body: "Right now it's a seed. As you finish each activity, you'll watch it grow into something bigger.",
   },
   {
     context: 'You finished Self-Reflection.',
@@ -326,6 +326,16 @@ export default function DemoPage() {
         </p>
 
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-[520px] mx-auto">
+          {/* Preamble — only before the first activity (Stage 0), to set
+              up the metaphor (Draft 26 Part F). */}
+          {treeStage === 0 && (
+            <div className="text-center mb-5">
+              <p className="text-[15px] font-bold text-slate-700">
+                Every time you complete an activity, your tree and roots will grow.
+              </p>
+              <p className="text-[15px] text-slate-700">Let&apos;s see how big it gets.</p>
+            </div>
+          )}
           <div className="mx-auto w-full max-w-[280px]">
             <TreeProgress stage={treeStage} animated />
           </div>
