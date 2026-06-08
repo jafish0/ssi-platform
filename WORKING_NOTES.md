@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`80fa689` · 2026-06-08** — Draft 26: Round 4 feedback bundle, six activity refinements in one commit. **A. Self-Reflection v1.2 → v1.3:** dropped the false "we'll come back to it" closing line (Holly); added example thought/feeling placeholders on both prompts (Ginny) — inclusion "e.g., People like me" / "e.g., Happy", exclusion "e.g., Nobody likes me" / "e.g., I felt sad". **B. Letter v2.1 → v2.2:** two optional scaffolding prompts under the instruction ("What is one skill you would recommend?" / "What is one helpful thought you could share?"). **C. Belonging Skills Sort v3.0 → v3.1:** "!" on encouragement; saveable PNG snapshot of the three sorted buckets (downloadSvgElementAsPng, unsorted excluded); one-time "reconsider unsorted items?" Yes/No prompt after first Save. **D. Allies / Safety Net v5.2 → v5.3** (the draft said "v5.1 → v5.2" but Draft 23 had already shipped v5.2, so this lands as v5.3): "!" on the ready line; percentage labels on every support-type heading (transition screens, selection question, TrampolineNet pills via new `percentByType` prop, ally-list headers) computed as allies-in-type ÷ total distinct allies; visual demotion of the full net (60% opacity + "small net is a place to start" caption) when total allies ≤ 2. **E. Getting Unstuck v5.3 → v5.4 (MAJOR) + FollowUp v1.0 → v1.1 (coupled):** shared appraisals truth-rating scale shifted **0-5 → 0-4** (anchors 0 Not At All / 2 Somewhat / 4 Definitely) in `src/lib/appraisals.js`, cascading to both the intervention and the survey; Pick threshold stays ≥2 (now exactly the middle anchor); new "I need help" button per thought opening a panel of alternative-thought suggestions (PLACEHOLDER content — Stephanie producing real lists; tap to pre-fill the response). exportFlatten value-range comments + demoDataset truth_rating regen updated (0..4). **F. Growing Your Roots:** preamble before Stage 0 ("Every time you complete an activity, your tree and roots will grow. Let's see how big it gets.") + revised Stage 0 caption ("Here's your tree." / "Right now it's a seed…"). Verified via preview: GU renders 5 scale buttons (0-4) with correct anchors; "I need help" panel works. **Out of scope (tracked in the non-code todos section):** new tree-progress icons (Josh), Stephanie's real "I need help" content, ElevenLabs voice work, female/nonbinary Sam assets, 9:16 video direction.
 - **`edc439a` · 2026-06-04** — Draft 25: tree-progress preview. New parametric **`<TreeProgress />`** component (`src/components/TreeProgress.jsx`) rendering the "Ready for Roots" growth metaphor across six stages (Seed → Blooming) + a new **"Growing your roots"** click-through section on `/demo` (between Meet the cast and Data export) with stage dots, Previous/Next/Reset controls, and per-stage encouragement copy (Part C). Geometry is **machine-extracted** from Claude Design's six locked reference SVGs (`Activity ideas/tree-stage-*.svg`) via `scripts/extract-tree-stages.mjs` → `src/lib/treeStages.js`, so the component matches the references exactly rather than shipping them (same "rebuild parametrically" approach as the trampoline net). The references are per-stage full redraws (the whole tree scales each stage), so the component swaps the complete element set per stage. Forward stage changes animate growth-in (roots + branches draw on via `stroke-dashoffset` with `pathLength=1`; trunk/leaves/blossoms fade, staggered ~700ms); backward/jumps snap instantly; `prefers-reduced-motion` disables it. Verified against the references via DOM inspection — stage 5 = 13 roots, 6 branches, 14 leaves, 10 blossoms (60 petals). **Preview-only:** not wired into real activity completion or per-PID persistence (deferred until the activities are stitched into a continuous flow). No activity-version bump; INFRASTRUCTURE.md updated.
 - **`41693ec` · 2026-06-04** — Draft 24: Meet the cast fixes + /demo polish. **(1)** Card order swapped so **Sam 16 (narrator) leads, then Sam 14** — matches how Holly's script opens. **(2)** Swapped the two Sam 14 audio files (their contents were mislabeled in Draft 22's asset prep): `sam-14-line-1.mp3` is now the inner-monologue line, `-line-2` the angry line — card-data mapping was already correct, only the underlying files were crossed. **(3)** Added a **"Download Script 2.0 (.docx)"** link under the Meet-the-cast heading (`/public/cast/script/ready-for-roots-script-v2.docx`, served with a clean `download` filename). **(4)** Removed the "individual plan" preview paragraph from the Activities section. **(5)** Page title → *"Ready for Roots — Activities Testing, Videos and Data Export Demo"*: updated the visible `<h1>`, set a matching `/demo`-only browser-tab title via `useEffect` (restored on unmount so other routes keep the default), and de-staled `index.html`'s app-wide `<title>` from the pre-rename *"Ready! Set! Dedicate!"* to *"Ready for Roots"* (a Draft 14 rename miss). No activity-version bump.
 - **`ef557b0` · 2026-06-04** — Draft 23: Allies / Safety Net v5.1 → **v5.2 (MINOR)**. Each Strengthen screen now shows the kid which allies they already selected for that support type (post-Inspect, so removed allies are excluded) as a read-only refresher line above the "Is there anyone else…" prompt — singular/plural-aware, Oxford-comma list (`formatNameList` helper), skipped entirely when none. The `{type}` word keeps the per-type color. Helps the kid generate a genuinely new addition rather than restating someone already named. Display-only — reads from the existing `allies` array; no flow, data-shape, or export change.
@@ -724,6 +725,254 @@ No activity-version bump. This is a new component + new /demo section, not a cha
 **Approved by:** Josh, 2026-06-04.
 
 *End of Draft 25.*
+
+-->
+
+---
+
+<!-- Draft 26 shipped 2026-06-08 — archived (commented out). -->
+
+<!--
+
+### Draft 26 — Round 4 feedback bundle (Self-Reflection v1.3 + Letter v2.2 + BSS v3.1 + Allies v5.2 + Getting Unstuck v5.4 + FollowUp scale change + Tree-progress copy)
+
+Bundle of activity refinements driven by the 2026-06-08 review meeting feedback (Round 4 Feedback.csv). Ship as one commit so the team sees one stopping point. **Getting Unstuck + FollowUp Survey share an Appraisals scale change that must be applied to both in the same commit** — they read from the same locked item set and the scale shift is a coupled data-shape change.
+
+---
+
+#### Part A — Self-Reflection v1.2 → v1.3 (MINOR)
+
+Two small changes.
+
+**File:** `src/activities/SelfReflection.jsx`.
+
+1. **Remove the closing "we'll come back to it" message.** Holly flagged this isn't true — there's no later activity that comes back to the kid's reflections. Strip the line; the existing simple Save confirmation stays.
+
+2. **Add example thoughts and feelings to each side of the prompt.** Ginny asked for these because the input fields can read as ambiguous (what kind of thought? what kind of feeling?).
+
+   For the **inclusion** prompt, add italic placeholder/example text alongside the thoughts and feelings fields:
+   - Thought example: *"e.g., People like me"*
+   - Feeling example: *"e.g., Happy"*
+
+   For the **exclusion** prompt:
+   - Thought example: *"e.g., Nobody likes me"*
+   - Feeling example: *"e.g., I felt sad"*
+
+   Render as small italic placeholder text inside the textareas, or as small italic helper text directly below each field label — whichever pattern is already in use elsewhere in the activity. Don't pre-fill the inputs.
+
+**Version bump:** v1.2 → v1.3 (MINOR, copy + UX hint). Prepend changelog: *"v1.3 — Removed closing 'we'll come back to it' message; added example thought/feeling text on inclusion and exclusion prompts."*
+
+---
+
+#### Part B — Letter to Another Youth v2.1 → v2.2 (MINOR)
+
+Add two additional scaffolding prompts to the existing instruction line.
+
+**File:** `src/activities/LetterBuilder.jsx`.
+
+The current single instruction above the textarea reads: *"What you would want to say to another teen who feels like they don't belong."* Keep that as the primary prompt, and **append two more smaller prompts below it** as suggestions the kid can use or ignore:
+
+> - What is one skill you would recommend?
+> - What is one helpful thought you could share?
+
+Render the two new prompts as a small italic list under the primary instruction, in slate-500. Not bullet-required reading, just two seeds to help kids who freeze on the blank textarea.
+
+**No data-shape change.** Save payload `{ letter, saved_at }` unchanged.
+
+**Version bump:** v2.1 → v2.2 (MINOR, copy addition). Prepend changelog: *"v2.2 — Added two optional scaffolding prompts under the main instruction: 'What is one skill you would recommend?' and 'What is one helpful thought you could share?'"*
+
+---
+
+#### Part C — Belonging Skills Sort v3.0 → v3.1 (MINOR-medium)
+
+Three changes.
+
+**File:** `src/activities/BelongingSkillsSort.jsx`.
+
+1. **Punctuation tweak on encouragement.** Wherever the activity says "Nice work" / "Good job" / similar without final punctuation, add an exclamation mark: "Nice work!" / "Good job!" Matches the energy of the moment.
+
+2. **Saveable snapshot output.** Currently the post-submit screen says something like *"That's a snapshot of where you are."* Render an actual visual snapshot of the kid's three sorted buckets with the skill names inside each bucket, and offer a Save-as-image button (same `downloadSvgElementAsPng` pattern used by Allies / Safety Net and Who I Am Poem per commit `92bfff9`). The snapshot becomes a downloadable PNG keepsake. Unsorted items are excluded from the snapshot.
+
+3. **Reconsider-unsorted prompt.** After the kid clicks the initial Continue/Save, if there are any unsorted items still sitting in the unplaced area, surface a follow-up screen:
+
+   > **You didn't sort these.** Are any of these worth reconsidering?
+   >
+   > [list of unsorted skill cards]
+   >
+   > [Yes] [No]
+
+   - **Yes:** the kid returns to the sort interface with only the previously-unsorted items still draggable; sort what they want, leave the rest. On Continue, those newly-sorted items get added to the appropriate buckets and the snapshot regenerates.
+   - **No:** proceed straight to the snapshot screen. Unsorted items don't appear in the snapshot.
+
+   This is a one-time prompt — if they reconsider once and still leave items unsorted, don't ask again.
+
+**Data shape:** No change to the existing `{already_doing, willing_to_try, not_interested, unplaced}` arrays. The reconsider step just gives the kid one more chance to move items from `unplaced` into the placement arrays before final save.
+
+**Version bump:** v3.0 → v3.1 (MINOR). Prepend changelog: *"v3.1 — Added '!' to encouragement strings; added saveable snapshot of sorted buckets as a PNG keepsake; added a one-time 'reconsider unsorted items?' prompt after initial Continue, with Yes/No options."*
+
+---
+
+#### Part D — Allies / Safety Net v5.1 → v5.2 (MINOR-medium)
+
+Three changes from Adrienne's Round 4 feedback.
+
+**File:** `src/activities/AlliesSafetyNet.jsx` + `src/components/TrampolineNet.jsx`.
+
+1. **Encouragement punctuation.** Same fix as Part C — add exclamation marks: "Good job!" etc.
+
+2. **Percentage labels on each support type heading.** Throughout the activity, whenever a support type word appears as a heading (Practical / Emotional / Social), append the percentage of the kid's total ally count that falls in that type:
+
+   > Practical Support (22%)
+   > Emotional Support (45%)
+   > Social Support (33%)
+
+   The percentage is computed against the kid's TOTAL ally count (counting any ally who appears in multiple support types as a single ally for the denominator, but contributing to each support type's numerator they appear in). If total allies is zero, render the label without the percentage (just "Practical Support").
+
+   These labels surface:
+   - On the per-support-type selection screen heading (Step 1)
+   - On the Inspect step (Step 2) where the net is displayed
+   - On the Final Review screen
+   - Anywhere else the support type names appear
+
+3. **Visually demote the trampoline net when total support is low.** Adrienne flagged that with 1 ally total, the net visual reads as "full" because the wedges fill the available space. When the kid has **2 or fewer total allies**, the TrampolineNet should render with reduced visual weight:
+
+   - Reduce overall opacity to ~60%.
+   - Add a small slate-600 caption above or below the net: *"A small net is a place to start — let's keep building."*
+
+   The visual demotion only applies on screens where the FULL net is displayed (Step 2 Inspect intro, Step 2 X-out screen, Final Review). The Step 1 per-type selection screens are unaffected.
+
+   For 3+ allies total, the net renders at full visual weight as before.
+
+**Data shape:** No change.
+
+**Export pipeline:** No new columns. Percentages are computed at render time from existing data.
+
+**Version bump:** v5.1 → v5.2 (MINOR-medium). Prepend changelog: *"v5.2 — Added '!' to encouragement strings; added percentage labels to each support type heading throughout (computed from current ally counts); added visual demotion of the trampoline net (60% opacity + 'small net is a place to start' caption) when total ally count is 2 or fewer."*
+
+---
+
+#### Part E — Getting Unstuck v5.3 → v5.4 (MAJOR — scale change) + FollowUp Survey Appraisals scale change (coupled)
+
+**Three coupled changes; one bumps Getting Unstuck to MAJOR because the scale shifts and the save payload range changes.**
+
+**Files:**
+- `src/activities/GettingUnstuck.jsx`
+- `src/lib/appraisals.js` (the shared module from Draft 15 with the 6 items)
+- `src/activities/FollowUp.jsx` (the Appraisals scale section)
+- `src/lib/exportFlatten.js` (value-range comments / docs)
+- `src/lib/demoDataset.js` (synthetic data regenerator)
+
+##### E.1 — Scale shift: 0–5 (6 points) → 0–4 (5 points)
+
+Holly's ask: 5-point scale instead of 6. Cleaner middle anchor and easier mental load for the kid.
+
+**New scale:**
+
+| Value | Anchor |
+|---|---|
+| 0 | Not At All True |
+| 1 | (unlabeled) |
+| **2** | **Somewhat True** (middle, exactly) |
+| 3 | (unlabeled) |
+| 4 | Definitely True |
+
+This applies BOTH in Getting Unstuck (where the kid rates the 6 appraisal items) AND in the FollowUp Survey's Appraisals scale section (which uses the same 6 items from `src/lib/appraisals.js`).
+
+`src/lib/appraisals.js` should export the scale definition alongside the items so both consumers stay in sync.
+
+##### E.2 — Pick threshold stays at ≥2
+
+The threshold logic doesn't change in spirit — items rated "Somewhat True" or above carry forward to the Pick screen. On the new 0–4 scale that's `truth_rating >= 2` (items rated 2, 3, or 4 carry; items rated 0 or 1 don't). Same behavior as v5.3, just translated to the new scale where 2 is exactly the middle anchor.
+
+The affirmation path (no items clear ≥2) stays unchanged.
+
+##### E.3 — "I need help" button per thought
+
+Holly's ask. On each thought-work screen (where the kid is generating a Challenge or Both/And response), add a small *"I need help"* button below the response field.
+
+**Behavior:** Tapping the button opens a small panel showing 3–5 alternative thought suggestions tailored to that specific appraisal item. The kid can read them for inspiration, optionally tap one to pre-fill the response field as a starting point (they can then edit), or close the panel without using any.
+
+**Content:** Stephanie is producing the alternative-thought lists per appraisal item. **For this draft, build the UI with placeholder content** — a small array per item with generic "Sample alternative thought..." text. When Stephanie's content arrives, swap the placeholders for real content in a follow-up commit (no UI change needed).
+
+Suggested placeholder structure in `src/lib/appraisals.js`:
+
+```js
+export const APPRAISALS = [
+  {
+    id: "a1",
+    text: "I will never really feel like I belong.",
+    dimension: "future",
+    help_suggestions: [
+      "[Placeholder — Stephanie is producing real content. Example shape: 'There have been moments, even brief ones, when I have felt I belonged.']",
+      "[Placeholder — second alternative thought.]",
+      "[Placeholder — third alternative thought.]",
+    ],
+  },
+  // ...same for a2–a6
+];
+```
+
+The kid's free-write response stays primary; help-button content is supportive only.
+
+##### E.4 — Data shape changes
+
+The save payload for Getting Unstuck still has the shape:
+
+```js
+appraisals: {
+  a1: { truth_rating: 0..4, selected: bool, strategy?: "challenge"|"both_and", response?: "..." },
+  // ...a6 [+ a_other]
+}
+```
+
+`truth_rating` range narrows from `0..5` to `0..4`. The FollowUp Survey's appraisals section uses the same range.
+
+`exportFlatten.js`: update any value-range comments on `unstuck_truth_a*` and `fu_app_*` columns. The columns themselves stay (same names, new max value).
+
+`demoDataset.js`: regenerate synthetic `truth_rating` values to fall in 0..4 instead of 0..5.
+
+##### E.5 — Version bumps
+
+- `getting-unstuck` v5.3 → **v5.4 (MAJOR)** because the scale changes and the saved value range shifts. No real participant data exists yet so no migration concerns. Prepend changelog: *"v5.4 — Truth-rating scale shifted from 0-5 (6 points) to 0-4 (5 points), with anchor labels at 0 Not At All True / 2 Somewhat True / 4 Definitely True; threshold for Pick eligibility stays at ≥2 ('Somewhat True' or above); added 'I need help' button per thought that opens an alternative-thought-suggestions panel (placeholder content; Stephanie producing real content)."*
+- `followup` v1.0 → **v1.1 (MINOR-major)** — same scale change applied to the Appraisals section. Item wording and order unchanged. Prepend changelog: *"v1.1 — Appraisals scale shifted from 0-5 to 0-4 to match Getting Unstuck v5.4."*
+
+---
+
+#### Part F — Growing Your Roots: add preamble + revise Stage 0 copy
+
+**File:** `src/components/TreeProgress.jsx` (or wherever the per-stage captions live — likely in the DemoPage data array).
+
+1. **Add a preamble before Stage 0.** On the screen where the kid first encounters the tree (intro, or before the first activity), show this preamble copy:
+
+   > **Every time you complete an activity, your tree and roots will grow.**
+   > Let's see how big it gets.
+
+   Render above the Stage 0 tree visual. Two lines, the first bold, the second regular. Gives the metaphor an explicit set-up so kids understand what they're looking at.
+
+2. **Replace the Stage 0 caption.** The current Stage 0 caption block ("Just getting started." / "Every tree starts as a seed. Yours starts here.") gets replaced with:
+
+   - **Heading:** Here's your tree.
+   - **Body:** Right now it's a seed. As you finish each activity, you'll watch it grow into something bigger.
+
+   Holly flagged that the prior copy felt like it was missing a personal hook — "Yours starts here" without context. The new copy names the kid's relationship to the tree more directly.
+
+3. **Out of scope for this draft:** Josh is producing **new tree icons** that add more canopy and more root variety (not just longer). When those land, a follow-up draft swaps the SVG assets and may slightly adjust the parametric component. Noted in the Cleanup queue.
+
+**Version bump:** No activity bump; this is a component + copy update on the demo preview surface.
+
+---
+
+**Approved by:** Josh, 2026-06-08, after reviewing Round 4 Feedback.csv and the meeting notes.
+
+**Out of scope for this draft:**
+
+- New tree-progress icons (Josh providing). When delivered, follow-up draft updates the SVG asset / parametric component.
+- Stephanie's "I need help" alternative-thought content (Stephanie producing). When delivered, follow-up commit swaps placeholders for real content in `src/lib/appraisals.js`.
+- ElevenLabs voice work (Josh).
+- Female + Nonbinary Sam character images and voice lines (Josh).
+- Video format change to 9:16 vertical (production-direction note for Adrian — no code impact on the demo).
+
+*End of Draft 26.*
 
 -->
 
@@ -1488,6 +1737,26 @@ Status: deferred until the build is closer to done — Josh's 2026-05-18 call. O
 The new doc should reflect: (a) the Ready for Roots name; (b) Qualtrics-generated participant links replacing the access-code minting pattern (Josh's 2026-05-18 call — no more `RSD-XXXX-XXXX` codes); (c) the locked Final Measures (Pretest 29 / Posttest 18 / FollowUp 30 items); (d) the Questions for Guardian items in the Qualtrics consent. The PID-linking requirement (the standalone section below) is the technical companion to this flow doc.
 
 After the new doc lands, leave the four old `RSD_Flow_*.docx` files in place as historical snapshots — they document the decision path and shouldn't be deleted, just superseded.
+
+---
+
+**Round 4 non-code todos (2026-06-08).** Items from the 2026-06-08 review meeting that are non-code, asset-production, or content-creation work — captured here so they don't fall off the radar while Draft 26 ships.
+
+- **ElevenLabs voice re-passes (Josh).** Specific notes from the team:
+  - 14yo Sam — try higher pitch / mumbly / angrier as workarounds for the platform's child-voice restriction (Ginny's suggestion). Replace clips in the demo as new versions land.
+  - Foster Mom — slightly speed up delivery, but the voice itself is approved (Ginny).
+  - 16yo Sam — fix pacing on two specific lines: *"I remember this moment, like, it was, yesterday"* (pauses too long) and the 14yo question *"how do I feel about that?"* (not question-y enough) (Holly).
+  - Goal: take several more passes and replace the demo clips with new versions for team approval.
+
+- **New tree-progress icons (Josh providing).** The current tree gets longer at each stage but doesn't get fuller. Josh is producing a revised icon set that adds more canopy and more root variety per stage, not just length. When delivered, follow-up draft swaps the SVG assets and may tune the parametric `<TreeProgress />` component to match.
+
+- **Female Sam character images + voice lines.** Per the Round 4 meeting decision, the video will eventually ship in three variants — male, female, and nonbinary Sam. Female variant images (use the Character Builder prompts from `Activity ideas/Tree_Progress_Design_Prompt.md`'s sibling doc `Character_Builder_Prompts.md`) and voice lines (ElevenLabs, same script). Generate when there's time.
+
+- **Nonbinary Sam character images + voice lines.** Same as above for the nonbinary variant.
+
+- **Video format = 9:16 vertical.** Confirmed at the 2026-06-08 meeting. Production direction for Adrian's eventual video work — vertical mobile-first format (1080×1920 target resolution). Not a current code change; informs the eventual video container styling when real video drops in.
+
+- **Stephanie's "I need help" alternative-thought content for Getting Unstuck.** Stephanie is producing the per-appraisal-item alternative thought suggestions that the new "I need help" button will surface (per Draft 26 Part E.3). Expected end of week (2026-06-08 → ~2026-06-13). When delivered, follow-up commit swaps the placeholder strings in `src/lib/appraisals.js` for real content. No UI change needed.
 
 *End of cleanup queue.*
 
