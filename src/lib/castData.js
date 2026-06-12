@@ -14,8 +14,9 @@
 // Scene cues are the per-line stage directions from the same doc.
 //
 // A card can carry one of three content shapes, in precedence order:
-//   - `video`: { youtubeId, caption } — an embedded YouTube Short of a
-//     rendered Sam's Story shot (Sam 16, as of Draft 29 2026-06-12).
+//   - `video`: { src | youtubeId, caption } — a rendered Sam's Story
+//     shot (Sam 16). `src` = self-hosted mp4 (native <video>, no overlay
+//     chrome); `youtubeId` = YouTube Short embed fallback.
 //   - `lines`: [{ scene, text, audio? }] — scripted lines. `audio` is
 //     optional: a line with an ElevenLabs sample renders an <audio>
 //     player (Foster Mom); a line without one renders a "Voice model
@@ -23,9 +24,11 @@
 //   - `description`: a paragraph for characters who don't speak in
 //     Script 2.0 yet (Foster Dad, Mrs. Johnson).
 // Sam 16's card now previews the first rendered Sam's Story shot (the
-// bedroom opening-narration beat) via YouTube Short; its seven audio
-// scratch clips at /cast/audio/sam-16-line-*.mp3 are left in place but
-// no longer referenced.
+// bedroom opening-narration beat) via a self-hosted mp4 at
+// /cast/video/sam-16-opening.mp4 (temporary — replaced the YouTube
+// Short, whose player chrome blocked the first ~5s of the frame). Its
+// seven audio scratch clips at /cast/audio/sam-16-line-*.mp3 are left
+// in place but no longer referenced.
 
 export const CAST = [
   {
@@ -35,7 +38,12 @@ export const CAST = [
     alt: 'Sam at 16 — the narrator, two years later',
     role: 'Our narrator — Sam two years later.',
     video: {
-      youtubeId: 'q7QwX79vtEA',
+      // Self-hosted (temporary) — the YouTube Short's player chrome
+      // (title + controls) blocked the first ~5s of the frame. A native
+      // <video> shows only a centered play button, then auto-hides
+      // controls during playback. Falls back to `youtubeId` if a card
+      // ever provides that instead of `src`.
+      src: '/cast/video/sam-16-opening.mp4',
       caption: "Opening narration — the first scene of Sam's Story.",
     },
   },

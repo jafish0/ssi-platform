@@ -620,13 +620,26 @@ function CastCard({ character }) {
         {video ? (
           <div className="mx-auto w-full max-w-[320px]">
             <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-              <iframe
-                src={`https://www.youtube.com/embed/${video.youtubeId}`}
-                title={`${name} — Sam's Story video`}
-                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
+              {video.src ? (
+                // Self-hosted clip — native player, no overlay chrome
+                // blocking the frame (unlike the YouTube Short embed).
+                <video
+                  src={video.src}
+                  title={`${name} — Sam's Story video`}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200 bg-black object-cover"
+                />
+              ) : (
+                <iframe
+                  src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                  title={`${name} — Sam's Story video`}
+                  className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              )}
             </div>
             {video.caption && (
               <p className="mt-2 text-center text-sm text-slate-600 italic">
