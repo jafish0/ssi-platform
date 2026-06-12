@@ -582,13 +582,14 @@ function ExportFileBlock({
 // ---------- Reusable: cast character card ----------
 //
 // Image on the left (~40%) + text on the right (~60%) on desktop; stacks
-// on mobile. Characters with a `lines` array get per-line scene cue +
-// quoted text + a native <audio> control; characters with only a
-// `description` (no recorded lines yet) get a single paragraph in place
-// of the lines list. See src/lib/castData.js.
+// on mobile. A card's right column branches on one of three optional
+// fields, in precedence order: `video` (embedded YouTube Short of a
+// rendered Sam's Story shot), `lines` (per-line scene cue + quoted text
+// + native <audio> control), or `description` (a paragraph for cast who
+// don't speak in Script 2.0 yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
-  const { name, image, alt, role, lines, description, landscape } = character
+  const { name, image, alt, role, lines, description, landscape, video } = character
   return (
     <article
       tabIndex={0}
@@ -615,7 +616,24 @@ function CastCard({ character }) {
         <h3 className="text-2xl font-bold text-slate-700 mb-1">{name}</h3>
         <p className="text-sm italic text-slate-500 mb-4">{role}</p>
 
-        {lines && lines.length > 0 ? (
+        {video ? (
+          <div className="mx-auto w-full max-w-[320px]">
+            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                title={`${name} — Sam's Story video`}
+                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            {video.caption && (
+              <p className="mt-2 text-center text-sm text-slate-600 italic">
+                {video.caption}
+              </p>
+            )}
+          </div>
+        ) : lines && lines.length > 0 ? (
           <div className="space-y-7">
             {lines.map((line, i) => (
               <div key={i}>

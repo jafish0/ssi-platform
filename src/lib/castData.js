@@ -13,11 +13,17 @@
 // Line text is verbatim from `Video Content/Character_Profiles.docx`.
 // Scene cues are the per-line stage directions from the same doc.
 //
-// Sam (16) note: the `lines` array is ordered for SCRIPT-NARRATIVE
-// reading (1 → 2 → 3 → 4 → 6 → 7 → 5), not recording order. The audio
-// file numbers (…-line-5/6/7) stay as recorded; only this display order
-// shifts so the team hears the story in sequence. Line 5 is the closing
-// metaphor; lines 6 and 7 are mid-arc beats recorded after the rest.
+// A card can carry one of three content shapes, in precedence order:
+//   - `video`: { youtubeId, caption } — an embedded YouTube Short of a
+//     rendered Sam's Story shot (Sam 16, as of Draft 29 2026-06-12).
+//   - `lines`: [{ audio, scene, text }] — scripted lines with ElevenLabs
+//     voice samples (Sam 14, Foster Mom).
+//   - `description`: a paragraph for characters who don't speak in
+//     Script 2.0 yet (Foster Dad, Mrs. Johnson).
+// Sam 16's card now previews the first rendered Sam's Story shot (the
+// bedroom opening-narration beat) via YouTube Short; its seven audio
+// scratch clips at /cast/audio/sam-16-line-*.mp3 are left in place but
+// no longer referenced.
 
 export const CAST = [
   {
@@ -26,50 +32,10 @@ export const CAST = [
     image: '/cast/images/sam-16.png',
     alt: 'Sam at 16 — the narrator, two years later',
     role: 'Our narrator — Sam two years later.',
-    lines: [
-      {
-        audio: '/cast/audio/sam-16-line-1.mp3',
-        scene: 'Voice-over (opening narration)',
-        text:
-          'I remember this moment like it was yesterday. I was removed from my real mom when I was 10 and lived with my foster family after bouncing around placements for a couple of years.',
-      },
-      {
-        audio: '/cast/audio/sam-16-line-2.mp3',
-        scene: 'Voice-over (reflecting on his thoughts at the adoption-offer moment)',
-        text:
-          'When she asked me this, the first thing I thought was “they don’t love me, they’re just offering to do this because they feel bad for me.” I remembered the years where I moved from family to family because no one wanted me and I thought “this will never work out, I don’t even want to get my hopes up.” But at the same time, I was already hopeful, and that made me feel guilty. What was wrong with me that I felt excited about being adopted by this family, when my real mom was still out there? I couldn’t give up on her by agreeing to be adopted.',
-      },
-      {
-        audio: '/cast/audio/sam-16-line-3.mp3',
-        scene: 'Voice-over (after the rejection — grimace)',
-        text:
-          'Yeah, that was a low blow. But at the time I really couldn’t picture myself belonging to their family. I had been through a lot. Going from elementary to middle to high school isn’t easy for anyone, but it was even harder for me because I was changing schools and houses all the time. Who could keep up with friends or teams during all of that? It was tough but I was used to doing everything by myself my whole life.',
-      },
-      {
-        audio: '/cast/audio/sam-16-line-4.mp3',
-        scene: 'Voice-over (Mrs. Johnson, backstage crew, opening night)',
-        text:
-          'After I said no, I stayed with my foster parents who said they understood but I could tell it was an issue. Not too long after they and my case worker really encouraged me to participate in something at school. My favorite teacher Mrs. Johnson was directing the school musical, and she suggested that I join the backstage crew. I had never done anything like that but I thought it was lowkey enough to try and I knew that Mrs. Johnson would support me if it was hard. Even though at first I didn’t really care, I got really into it when I saw how we were all working on this one massive production and by opening night I wanted the show to run perfectly. After the show when everyone in the cast and crew were cheering and celebrating together, I really felt like a part of something for maybe the first time ever… and then I knew what I had been missing out on by holding back.',
-      },
-      {
-        audio: '/cast/audio/sam-16-line-6.mp3',
-        scene: 'Voice-over (drive home, recognizing unhelpful thoughts)',
-        text:
-          'On the drive home with my foster family, I thought again about how I had said no to being adopted. I realized a lot of my thoughts weren’t necessarily true, like the thought that they only offered to adopt me because they felt bad for me, not because they loved me — I didn’t have any evidence for that. Even some thoughts that were true, like that past placements hadn’t stuck, weren’t helpful for me to think about, because my past placements and my current one weren’t the same. Those thoughts weren’t helping me, and they were actually getting in the way of me locking in with my current foster family.',
-      },
-      {
-        audio: '/cast/audio/sam-16-line-7.mp3',
-        scene: 'Voice-over (transitioning toward the realization)',
-        text:
-          'Recognizing that helped me begin to picture myself belonging to their family. But there was still something major that I couldn’t figure out: how could I be adopted and belong to a new family when my real mom was still out there?',
-      },
-      {
-        audio: '/cast/audio/sam-16-line-5.mp3',
-        scene: 'Voice-over (the metaphor and the resolution — closing narration)',
-        text:
-          'On the final night of our show, I was backstage using the light from the stage manager’s lamp to read the directions for the next scene change while looking out at the main character standing on stage in her spotlight. And I realized: this backstage light isn’t gone or unimportant just because of the spotlight shining on stage. Actually, the show only works because both lights are there. That’s a lot like my mom and my new family. I’m only me because of both of my families. That’s when I knew two things can be true at the same time: I can love and miss my mom, and I can belong to my new family too. I don’t have to choose between them because they’re just different roles in the same production, and they’re both part of my story.',
-      },
-    ],
+    video: {
+      youtubeId: 'q7QwX79vtEA',
+      caption: "Opening narration — the first scene of Sam's Story.",
+    },
   },
   {
     id: 'sam-14',
