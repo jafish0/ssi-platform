@@ -14,6 +14,161 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`d8d3b1a` · 2026-06-12** — Draft 29: Meet-the-cast Sam 16 card swaps the seven ElevenLabs audio scratch clips for the first rendered **Sam's Story** shot (vertical 9:16 YouTube Short `q7QwX79vtEA`, the bedroom opening-narration beat). `src/lib/castData.js` Sam 16 entry's `lines` array → a `video: { youtubeId, caption }` object; top-of-file comment now documents the three card shapes (video / lines / description). `src/pages/DemoPage.jsx` CastCard gains a `video` branch (precedence video > lines > description) rendering the Short in a 320px-capped 9:16 player + italic caption, in the slot the lines block occupied. Other cast cards unchanged; the seven `sam-16-line-*.mp3` files left in `/public/cast/audio/` (unreferenced) per the draft. No version bump (DemoPage section). Verified via preview: Sam 16 card shows photo + embedded Short + caption, zero audio elements.
+
+  <details>
+  <summary>Draft 29 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 29 — Meet the cast: swap Sam 16's seven audio-line clips for the new Sam's Story opening-narration video
+
+  The first per-shot Sam's Story video is rendered and uploaded — the Sam 16 bedroom narrator beat (Line 1, ~13 seconds, vertical 9:16). It supersedes the seven ElevenLabs audio scratch clips on the Sam 16 cast card, which were only ever a pre-animation stand-in for the team to hear voice direction. Now that we have an actual animated shot to show, drop the audio scratch and embed the video.
+
+  **The video:** YouTube Short, ID `q7QwX79vtEA` — URL <https://www.youtube.com/shorts/q7QwX79vtEA>.
+
+  #### Change 1 — `src/lib/castData.js`: reshape the Sam 16 card
+
+  Remove the `lines: [ … ]` array from the Sam 16 entry (the seven scripted-line objects with `audio` / `scene` / `text`). Replace it with a single new `video` field.
+
+  **Before (Sam 16 card):**
+
+  ```js
+  {
+    id: 'sam-16',
+    name: 'Sam (16 years old)',
+    image: '/cast/images/sam-16.png',
+    alt: 'Sam at 16 — the narrator, two years later',
+    role: 'Our narrator — Sam two years later.',
+    lines: [ /* seven scripted-line objects */ ],
+  },
+  ```
+
+  **After:**
+
+  ```js
+  {
+    id: 'sam-16',
+    name: 'Sam (16 years old)',
+    image: '/cast/images/sam-16.png',
+    alt: 'Sam at 16 — the narrator, two years later',
+    role: 'Our narrator — Sam two years later.',
+    video: {
+      youtubeId: 'q7QwX79vtEA',
+      caption: 'Opening narration — the first scene of Sam\'s Story.',
+    },
+  },
+  ```
+
+  Use a `video` object (not just a string) so future scenes can be added by extending the same shape — `{ youtubeId, caption, recorded_at?, ... }` — and so other cast cards (Foster Mom, Sam 14, etc.) can pick up the same field later without a second refactor.
+
+  **Update the file's top-of-file comment block** to drop the now-stale Sam 16 line-ordering note (the paragraph that explains the script-narrative-vs-recording-order ordering for `…-line-5/6/7`). That paragraph is meaningless once `lines` is gone from this card. Add a one-line replacement noting that Sam 16's card now previews the first rendered Sam's Story shot via YouTube Short.
+
+  Other cast cards (Sam 14, Foster Mom, Foster Dad, Mrs. Johnson, Family Photo) — **no changes.** Sam 14 + Foster Mom keep their `lines` arrays; Foster Dad + Mrs. Johnson keep their `description` paragraphs. The card renderer needs to handle three card variants now: `video` (Sam 16), `lines` (Sam 14, Foster Mom), `description` (Foster Dad, Mrs. Johnson).
+
+  #### Change 2 — `src/pages/DemoPage.jsx`: render the YouTube Short on cards with a `video` field
+
+  In the Meet-the-cast section's per-card renderer, branch on which of the three optional fields the card has. Order of precedence: if `card.video`, render the YouTube embed (drop the `lines` and `description` branches for that card); else if `card.lines`, render the scripted-line block as today; else render the `card.description` paragraph as today.
+
+  **YouTube Short embed pattern** (prior art: the removed Video section in commit `d64dbdb`, *"an embedded YouTube Short … in a 9:16 portrait player capped at 320px wide"*):
+
+  ```jsx
+  <div className="mx-auto w-full max-w-[320px]">
+    <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+      <iframe
+        src={`https://www.youtube.com/embed/${card.video.youtubeId}`}
+        title={`${card.name} — Sam's Story video`}
+        className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    </div>
+    {card.video.caption && (
+      <p className="mt-2 text-center text-sm text-slate-600 italic">
+        {card.video.caption}
+      </p>
+    )}
+  </div>
+  ```
+
+  Sits **below** the image + role line on the Sam 16 card — same vertical stacking the lines block currently uses (image on the left ~40% on desktop, role + lines block to the right; on mobile the image stacks above the lines block). The video lives in the same position the lines block does today — replacing it, not appended alongside.
+
+  Use `aspectRatio: '9 / 16'` rather than the older padding-bottom percent trick — Tailwind's `aspect-[9/16]` class also works if cleaner.
+
+  #### Change 3 — Asset cleanup (optional, leave files in place by default)
+
+  The seven audio files at `/public/cast/audio/sam-16-line-*.mp3` are no longer referenced by `castData.js` after Change 1. Leave them in `/public/cast/audio/` for now — Josh may want them back if the next Sam's Story video iteration needs voice-direction refresh, and they're small enough that disk footprint isn't a concern. If a deliberate cleanup pass is wanted later, it's a separate commit (just `git rm /public/cast/audio/sam-16-line-*.mp3`).
+
+  #### What does NOT change
+
+  - The Meet-the-cast section heading, the Script 2.0 download link (Draft 24 Change 3), the Family Photo closer, and the surrounding /demo page structure all stay as today.
+  - No `activityVersions.js` bump — Meet-the-cast is a DemoPage section, not an activity.
+  - No `INFRASTRUCTURE.md` change-log entry needed (no schema or edge-function change).
+  - No feedback-category change — the existing `video` feedback category (commit `1edd96f`) already covers feedback on this card.
+  - The other cast cards' line / description handling is unchanged; the renderer just gains the `video` branch.
+
+  #### Out of scope (queued for future drafts)
+
+  - Embedding the next Sam's Story per-shot videos as they're rendered (Line 3 grimace beat, Line 7 transition beat, etc.). When those land, extend the same `video` field — possibly as `videos: [{ youtubeId, caption }, …]` if multiple shots per card need to be shown.
+  - Female + Nonbinary Sam variants — separate future cards / variants.
+  - Foster Mom / Foster Dad / Mrs. Johnson video shots — when their Character Builder locks are done and the relevant scenes are rendered, they'll pick up `video` the same way.
+
+  **Approved by:** Josh, 2026-06-12 — after the Sam Line 1 video landed (per the Sam's Story per-shot video recipe section above) and was uploaded to YouTube.
+
+  *End of Draft 29.*
+
+  </details>
+
+- **`f148028` · 2026-06-12** — Draft 28: Getting Unstuck **v5.5 → v5.6 (MINOR)**. Content-only swap of the "I need help" alternative thoughts to Stephanie's v2 source doc (`Alternative Thoughts list (1).docx`, 2026-06-12). Three string edits in `src/lib/appraisals.js`: **a5 Challenge #1** "There are people I can trust." → "There are people I can trust, even just a little bit, and trust can grow." (Holly's clinical edit — lowered entry bar + growth trajectory; Stephanie agreed); **a4 Both/And #2** em-dash → comma; **a5 Challenge #2** comma after "me" removed. Other 21 strings unchanged. Top-of-file comment updated to cite the v2 doc. No data-shape, UI, or export change. Verified via preview: a5 Challenge panel shows the new "even just a little bit, and trust can grow" text.
+
+  <details>
+  <summary>Draft 28 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 28 — Getting Unstuck "I need help" content: Holly's a5 trust edit + punctuation fixes from v2 source doc
+
+  Follow-up to Draft 27 / commit `6f46da8`. Stephanie sent her Alternative Thoughts list to the team for review (2026-06-11). Holly proposed an addition to the **a5 ("I can't trust anyone")** Challenge alternative; Stephanie agreed. Josh also made a small typo edit. The v2 docx (`Alternative Thoughts list (1).docx`, uploaded 2026-06-12) is now the source of truth and supersedes the v1 content currently in `src/lib/appraisals.js`.
+
+  This draft applies three changes, all in the `help_suggestions` content. No data-shape change, no UI change, no export-pipeline change — content-only swap.
+
+  **File:** `src/lib/appraisals.js`.
+
+  #### Change 1 — a5 Challenge #1 (the substantive clinical change)
+
+  Holly added two phrases (tracked changes in the docx), Stephanie approved. The flat assertion becomes a starter-bar + growth-trajectory framing.
+
+  - **From:** `'There are people I can trust.'`
+  - **To:** `'There are people I can trust, even just a little bit, and trust can grow.'`
+
+  This is the clinical lift: kids whose default schema is "trust is dangerous and total" can reject the flat version on its face but engage with the lowered entry bar (*"even just a little bit"*) + temporal hope (*"and trust can grow"*). Use Holly's text verbatim.
+
+  #### Change 2 — a4 Both/And #2 (em-dash → comma)
+
+  - **From:** `'I feel that no one would want me to be a part of their family AND that feeling might not be true — there may be people that want me to be a part of their family.'`
+  - **To:** `'I feel that no one would want me to be a part of their family AND that feeling might not be true, there may be people that want me to be a part of their family.'`
+
+  The em-dash was a Draft 27 transcription artifact; v2 doc uses a comma. Match the doc.
+
+  #### Change 3 — a5 Challenge #2 (comma after "me" removed)
+
+  - **From:** `"Other people have betrayed me, but that doesn't mean everyone will."`
+  - **To:** `"Other people have betrayed me but that doesn't mean everyone will."`
+
+  Same as Change 2 — v2 doc punctuation, match verbatim.
+
+  #### What does NOT change
+
+  The other 21 alternative-thought strings (a1 × 4, a2 × 4, a3 × 4, a4 Challenge × 2 + Both/And #1, a5 Both/And × 2, a6 × 4) are unchanged. The locked appraisal item text for a6 (*"My real family will be mad…"*) is unchanged — Stephanie's docx uses *"My family"* in the Stuck Thoughts column but the locked FollowUp Survey item keeps *"My real family"*; this is the same intentional divergence noted in Draft 27. The data shape, scale, scoring, export pipeline, and "I need help" panel UI are all unchanged.
+
+  #### Version bump
+
+  `getting-unstuck` v5.5 → **v5.6 (MINOR)**. Prepend changelog entry to `src/lib/activityVersions.js`: *"v5.6 — Updated 'I need help' alternative thoughts to v2 source doc (Holly's a5 Challenge edit "even just a little bit, and trust can grow" — Stephanie agreed — plus minor punctuation alignment on a4 Both/And and a5 Challenge)."* Update `updated` to today's date.
+
+  Update the comment block at the top of `src/lib/appraisals.js` to note the v2 update — change the existing "Content is Stephanie's 'Alternative Thoughts' list, verbatim" sentence to reference the v2 doc (2026-06-12) with Holly's a5 edit.
+
+  **Approved by:** Josh, 2026-06-12, after Holly + Stephanie agreed via email thread (2026-06-11).
+
+  *End of Draft 28.*
+
+  </details>
+
 - **`6f46da8` · 2026-06-09** — Draft 27: Getting Unstuck **v5.4 → v5.5 (MINOR)**. Swapped the placeholder "I need help" alternative-thought content for Stephanie's real content (Alternative Thoughts list, 2026-06-09) and made the help panel **strategy-aware**. `help_suggestions` in `src/lib/appraisals.js` went from a flat array to a strategy-keyed object `{ challenge: [...], both_and: [...] }` — two alternatives per strategy per item, 24 total, verbatim from Stephanie (a6's alternatives say "My family" where the locked item reads "My real family" — intentional). `GettingUnstuck.jsx` help-panel read-path now resolves `help_suggestions[currentStrategy]` (defaults to challenge). Verified via preview on a1: Challenge panel shows the challenge alternatives (no "AND"), Both/And panel shows the both_and alternatives (all contain "AND"). No save-payload or export change.
 - **`8a25a97` · 2026-06-08** — Draft 26 Part F follow-up: swapped the tree-progress demo to Claude Design's new locked **"ready-for-roots-tree"** icon set (delivered in `Safety Net Exercise.zip → ready-for-roots-tree/`). The new six-stage set is noticeably **denser/fuller** — roots grow in count *and* branchiness per stage (1→6→9→15→20→28 root paths, incl. sub-roots + stage-5 spread roots), the three-tone canopy widens sharply, and stage 5 gains more blossoms (14 clusters). Extracted the six SVGs into **`src/assets/tree/`** (now the in-repo locked references, + `NOTES.md`); pointed `scripts/extract-tree-stages.mjs` at that folder and regenerated **`src/lib/treeStages.js`**. `TreeProgress.jsx` unchanged — it's parametric/data-driven and renders the new geometry as-is (same structure: per-stage full redraws, baked trunk widths, `<g>` layer ids). Verified via preview: stage 5 = 50 paths (28 roots + 1 trunk + 7 branches + 14 leaves) + 14 blossoms (84 petals), matching the extract. Also updated the **Growing Your Roots preamble** to the new locked 3-line copy ("Ready for Roots. Yours start here." / "This little seed is your tree…" / "Watch what grows."); Stage 0 caption unchanged. No version bump (demo surface). The "new tree icons (Josh providing)" non-code todo is now struck through as delivered.
 - **`80fa689` · 2026-06-08** — Draft 26: Round 4 feedback bundle, six activity refinements in one commit. **A. Self-Reflection v1.2 → v1.3:** dropped the false "we'll come back to it" closing line (Holly); added example thought/feeling placeholders on both prompts (Ginny) — inclusion "e.g., People like me" / "e.g., Happy", exclusion "e.g., Nobody likes me" / "e.g., I felt sad". **B. Letter v2.1 → v2.2:** two optional scaffolding prompts under the instruction ("What is one skill you would recommend?" / "What is one helpful thought you could share?"). **C. Belonging Skills Sort v3.0 → v3.1:** "!" on encouragement; saveable PNG snapshot of the three sorted buckets (downloadSvgElementAsPng, unsorted excluded); one-time "reconsider unsorted items?" Yes/No prompt after first Save. **D. Allies / Safety Net v5.2 → v5.3** (the draft said "v5.1 → v5.2" but Draft 23 had already shipped v5.2, so this lands as v5.3): "!" on the ready line; percentage labels on every support-type heading (transition screens, selection question, TrampolineNet pills via new `percentByType` prop, ally-list headers) computed as allies-in-type ÷ total distinct allies; visual demotion of the full net (60% opacity + "small net is a place to start" caption) when total allies ≤ 2. **E. Getting Unstuck v5.3 → v5.4 (MAJOR) + FollowUp v1.0 → v1.1 (coupled):** shared appraisals truth-rating scale shifted **0-5 → 0-4** (anchors 0 Not At All / 2 Somewhat / 4 Definitely) in `src/lib/appraisals.js`, cascading to both the intervention and the survey; Pick threshold stays ≥2 (now exactly the middle anchor); new "I need help" button per thought opening a panel of alternative-thought suggestions (PLACEHOLDER content — Stephanie producing real lists; tap to pre-fill the response). exportFlatten value-range comments + demoDataset truth_rating regen updated (0..4). **F. Growing Your Roots:** preamble before Stage 0 ("Every time you complete an activity, your tree and roots will grow. Let's see how big it gets.") + revised Stage 0 caption ("Here's your tree." / "Right now it's a seed…"). Verified via preview: GU renders 5 scale buttons (0-4) with correct anchors; "I need help" panel works. **Out of scope (tracked in the non-code todos section):** new tree-progress icons (Josh), Stephanie's real "I need help" content, ElevenLabs voice work, female/nonbinary Sam assets, 9:16 video direction.
@@ -1887,6 +2042,89 @@ After the new doc lands, leave the four old `RSD_Flow_*.docx` files in place as 
 - ~~**Stephanie's "I need help" alternative-thought content for Getting Unstuck.** Stephanie is producing the per-appraisal-item alternative thought suggestions that the new "I need help" button will surface (per Draft 26 Part E.3). Expected end of week (2026-06-08 → ~2026-06-13). When delivered, follow-up commit swaps the placeholder strings in `src/lib/appraisals.js` for real content. No UI change needed.~~ **DELIVERED 2026-06-09** — Stephanie's `Alternative Thoughts list.docx` provided 2 Challenge + 2 Both/And alternatives per appraisal item (24 total). Live as **Draft 27** above with the strategy-aware data-shape expansion (`help_suggestions` becomes a strategy-keyed object so the panel only surfaces alternatives matching the kid's current strategy).
 
 *End of cleanup queue.*
+
+---
+
+### Sam's Story — per-shot video prompt recipe (proven, 2026-06-12)
+
+> Production reference for generating per-shot videos in Open Arts. This is **not a Claude Code draft** — it's a captured recipe Josh + Cowork follow each time we generate a new shot. Update this section as we learn more.
+
+#### The workflow that worked (Sam Line 1, opening narrator beat)
+
+1. **In Open Arts:** select the locked character (e.g., Sam 16) from Character Builder.
+2. Click **"Create Video from character."**
+3. **Upload the world reference image** for the scene (e.g., the W7 bedroom render). Open Arts uses this as the environment anchor.
+4. The voice model is **already uploaded** in Open Arts (per-character) — no need to re-attach it in the prompt.
+5. **Paste the per-shot prompt** (structure below).
+6. Generate. If the voice fumbles a specific word, iterate with one of the fixes in *"Calibration lessons"* below.
+
+#### Prompt structure (paste-ready template)
+
+> **[Character]** is **[position / setting]**, **[eyeline + demeanor]**, telling a story directly to the viewer in a **[voice description]**. He says, in his **[tone descriptor]**, at an **unhurried natural conversational pace with comfortable pauses between sentences**:
+>
+> "**[The spoken line, with natural punctuation — commas at beats, periods between sentences. Punctuation acts as pacing cues for the voice model.]**"
+>
+> Camera: **[shot size]**, **[height]**, **static** (no camera movement, no pan, no push-in). Vertical 9:16 composition. **[Framing detail — what fills upper/middle/lower thirds, what's softly visible behind.]**
+>
+> Performance: eyes are **just slightly off-camera** — talking to a friend, not lecturing. Expression is **[adjective + adjective]** — the face of someone who **[brief emotional state]**. Mouth moves precisely in sync with the spoken line. Subtle natural motion only: small head tilts, occasional natural blinks, a quiet breath between sentences. **No big gestures, no expressive acting, no animated face.**
+>
+> Mood: **[warm / grounded / settled / tense / etc.]** — short descriptor.
+>
+> Duration: approximately **[N]** seconds, matching the natural pace of the spoken line.
+
+#### Duration calibration
+
+- Voice model paces ~145–160 words per minute conversationally.
+- Formula: **target_seconds ≈ (word_count ÷ 150) × 60**, then round to the nearest second.
+- Sam Line 1 (~40 words) → 13 seconds was the sweet spot.
+- **15 seconds caused fumbles** — the voice model was stretching to fill the duration, which is when "placements" became "posations." Don't over-budget the duration; pace anchors are better than padding.
+
+#### Calibration lessons (what we learned from Sam Line 1)
+
+- **"unhurried natural conversational pace with comfortable pauses between sentences"** — this phrase is the pace tamer. Use it verbatim.
+- **Punctuation in the spoken line is a pacing cue.** Commas at natural breath beats, periods between sentences. Don't run sentences together.
+- **Static camera reads better for reflective narrator beats** than push-ins or pans. Stillness is the point — it earns the emotional weight.
+- **"Just slightly off-camera" gaze** = conversational, not lecturing. Eye-to-lens reads as confrontational at this age.
+- **"Subtle natural motion only / no big gestures / no expressive acting"** — without these constraints, the model adds Pixar-style emoting that breaks the grounded tone. Triple-state the restraint.
+- **Mouth-sync language is worth including** — "mouth moves precisely in sync with the spoken line" — even though the model usually handles this fine, it helps when the duration is tight.
+
+#### When a specific word fumbles
+
+The voice model tokenizes by syllable patterns and sometimes stumbles on words with unusual stress or low-frequency phonemes (e.g., "placements" → "posations" on the first Sam Line 1 take). Two fixes:
+
+1. **Phonetic respell in the spoken line** — e.g., `"place-ments"` (with the hyphen written into the script). The model parses the hyphen as a syllable boundary.
+2. **Synonym swap** — replace the problem word with a more common synonym. *Often a free upgrade in authenticity* if the original word was off-register for the character (e.g., "placements" is case-worker language; "different homes" is what a teen would actually say). **This was the fix Josh picked for Sam Line 1.**
+
+When in doubt, prefer the synonym swap — it usually improves the line, not just the audio.
+
+#### What carries over between shots
+
+When generating the next per-shot prompt (e.g., Sam Line 3, Sam Line 7), keep the **Camera / Composition / Performance / Mood / Duration** sections nearly identical for the same narrator beat type. Only swap:
+
+- The spoken line (with new punctuation cues).
+- The duration (recalibrated to new word count).
+- Performance adjectives if the emotional beat shifts (e.g., a grimace moment needs different expression language than a settled-reflective one).
+- The world reference image at upload time if the scene changes.
+
+#### Locked production state to surface per-shot (from memory)
+
+When drafting per-shot prompts, Cowork will automatically surface the right lighting variant for the scene:
+
+- **W3 + Mrs. Johnson (Scene 7 shots)** — add a warm-light variant sentence so her presence visibly warms the cool fluorescent hallway.
+- **W4 + metaphor moment (Scene 11 shots)** — add the "two warm lights coexisting" sentence (foreground stage manager's lamp + distant spotlight in a curtain gap).
+- **W1 closing shot (Scene 12.2)** — swap the base afternoon light to "soft late-afternoon or weekend morning" with the mood shifted from "gently anticipatory" to "settled, easy."
+
+(Full production-state notes in Cowork memory: `project_sams_story_production_notes.md`.)
+
+#### What's still TBD
+
+- Female + Nonbinary Sam character builds — voice models + Character Builder locks not yet done.
+- Foster Mom / Foster Dad / Mrs. Johnson Character Builder locks — status TBD; check before drafting prompts that need them.
+- W2 (cafeteria), W5 (stage with spotlight), W6 (family car interior at dusk) — generated ad-hoc per shot, not locked in World Builder (Open Arts 4-world cap).
+
+*End of Sam's Story per-shot video recipe.*
+
+---
 
 <!--
 
