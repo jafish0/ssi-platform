@@ -98,7 +98,14 @@ function wedgePath(a1, a2, r) {
 // distributed proportionally by ally count. Returns an array in
 // SUPPORT_TYPES order, each entry = { typeId, startAngle, endAngle,
 // isEmpty, count, midAngle }.
-function computeWedges(allies) {
+//
+// `equalThirds` (Draft 30): in the low-ally state (≤ 2 total allies, set
+// by the caller), force three equal 120° wedges regardless of which have
+// content — so a single ally doesn't expand to ~330° and read as "this
+// area is full." isEmpty/count are still computed per type, so empty
+// wedges keep their greyed fill + "No X yet" pill and the filled wedge
+// keeps its woven pattern + icons.
+function computeWedges(allies, equalThirds = false) {
   const counts = {}
   for (const t of SUPPORT_TYPES) counts[t.id] = 0
   for (const a of allies) {
@@ -107,6 +114,26 @@ function computeWedges(allies) {
       if (counts[t] != null) counts[t] += 1
     }
   }
+
+  if (equalThirds) {
+    let cursorDeg = 0
+    const widthDeg = 360 / SUPPORT_TYPES.length
+    return SUPPORT_TYPES.map((t) => {
+      const startDeg = cursorDeg
+      const endDeg = cursorDeg + widthDeg
+      cursorDeg = endDeg
+      return {
+        typeId: t.id,
+        startAngle: degToRad(startDeg),
+        endAngle: degToRad(endDeg),
+        midAngle: degToRad((startDeg + endDeg) / 2),
+        widthDeg,
+        isEmpty: counts[t.id] === 0,
+        count: counts[t.id],
+      }
+    })
+  }
+
   const emptyTypes = SUPPORT_TYPES.filter((t) => counts[t.id] === 0).map((t) => t.id)
   const totalAllyCount = SUPPORT_TYPES.reduce((s, t) => s + counts[t.id], 0)
   const sliverDeg = EMPTY_TYPE_SLIVER_DEG
@@ -233,6 +260,7 @@ export default function TrampolineNet({
   inspectMode = false,
   onAllyToggleRemoved,
   percentByType = null,
+  equalThirds = false,
   size,
 }) {
   // inspectMode (v5.0) — render each ally with an × affordance overlaid
@@ -247,7 +275,7 @@ export default function TrampolineNet({
   // the "Taken out of net" strip until the activity moves past Inspect).
   // Memo because both the activity and any wrapping page re-render
   // frequently; geometry math is cheap but allocates a lot of objects.
-  const wedges = useMemo(() => computeWedges(allies), [allies])
+  const wedges = useMemo(() => computeWedges(allies, equalThirds), [allies, equalThirds])
   const placements = useMemo(() => placeAllies(allies, wedges), [allies, wedges])
   const removedAllies = useMemo(() => allies.filter((a) => a.removed), [allies])
 

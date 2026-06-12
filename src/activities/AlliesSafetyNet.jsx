@@ -415,13 +415,12 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
       {screen?.type === 'intro' && <IntroScreen />}
 
       {screen?.type === 'transition' && (
-        <TransitionScreen typeId={screen.supportType} percentByType={percentByType} />
+        <TransitionScreen typeId={screen.supportType} />
       )}
 
       {screen?.type === 'select' && (
         <TypeScreen
           typeId={screen.supportType}
-          percentByType={percentByType}
           selectedIds={selection[screen.supportType]}
           isNone={!!noneFor[screen.supportType]}
           customNames={customNames}
@@ -644,7 +643,7 @@ function IntroScreen() {
 
 // ---------- Transition screens (one per support type) ----------
 
-function TransitionScreen({ typeId, percentByType }) {
+function TransitionScreen({ typeId }) {
   const t = SUPPORT_TYPES.find((x) => x.id === typeId)
   if (!t) return null
   const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
@@ -655,8 +654,10 @@ function TransitionScreen({ typeId, percentByType }) {
       <p className="text-[12px] uppercase tracking-widest text-slate-600 mb-2">
         Next up
       </p>
+      {/* No percentage here — labels are gated to post-selection
+          surfaces only (Draft 30). */}
       <h2 className={`text-[28px] font-bold mb-3 ${tones.word}`}>
-        {t.label} support{pctSuffix(percentByType, t.id)}
+        {t.label} support
       </h2>
       <p className="text-[16px] leading-relaxed text-slate-800 max-w-[480px] mx-auto">
         {t.definition}
@@ -669,7 +670,6 @@ function TransitionScreen({ typeId, percentByType }) {
 
 function TypeScreen({
   typeId,
-  percentByType,
   selectedIds,
   isNone,
   customNames,
@@ -684,10 +684,12 @@ function TypeScreen({
   const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
   return (
     <div>
+      {/* No percentage on the selection question — gated to
+          post-selection surfaces only (Draft 30). */}
       <h2 className="text-[20px] font-semibold mb-1">
         Who provides{' '}
         <span className={`${tones.word} font-bold`}>{t.label.toLowerCase()}</span>{' '}
-        support for you?{pctSuffix(percentByType, t.id)}
+        support for you?
       </h2>
       <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
         {t.definition}
@@ -943,6 +945,7 @@ function InspectXOutScreen({ allies, onToggleRemoved, percentByType, lowSupport 
           onAllyToggleRemoved={onToggleRemoved}
           showLabels={true}
           percentByType={percentByType}
+          equalThirds={lowSupport}
         />
       </div>
       {removedCount > 0 && (
@@ -1118,9 +1121,14 @@ function StrengthenSummary({ strengthened, strengthenTypeIds }) {
 
 function LowSupportCaption() {
   return (
-    <p className="text-[13px] text-slate-600 text-center mb-3">
-      A small net is a place to start — let&apos;s keep building.
-    </p>
+    <div className="text-center mb-3">
+      <p className="text-[13px] text-slate-600 italic">
+        A small net is a place to start — let&apos;s keep building.
+      </p>
+      <p className="text-[13px] text-slate-600 italic">
+        Lots of room to grow your safety net in the greyed-out areas.
+      </p>
+    </div>
   )
 }
 
@@ -1139,6 +1147,7 @@ function NetWithListToggle({ allies, noneFor, percentByType = null, lowSupport =
           interactive={false}
           showLabels={true}
           percentByType={percentByType}
+          equalThirds={lowSupport}
         />
       </div>
       <div className="flex justify-center mt-3">
