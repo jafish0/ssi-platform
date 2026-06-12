@@ -14,6 +14,78 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`6038d1c` · 2026-06-12** — Draft 30: Allies / Safety Net **v5.3 → v5.4 (MINOR)**. Two fixes from Josh's 2026-06-12 walkthrough. **(1)** Support-type percentage labels gated to post-selection surfaces only — removed from the three transition screens and the per-type selection question (where they shifted live mid-flow, e.g. "Practical 100% / Emotional 0%" before the kid was asked about Emotional); still shown on the net reveal, Inspect, Review, and saved confirmation (pills + ally-list headers). **(2)** Low-ally geometry: when total allies ≤ 2, TrampolineNet now uses equal 120° thirds instead of proportional wedges (new `equalThirds` prop, same ≤2 threshold as the 60%-opacity demotion), so a single ally no longer expands to ~330° / reads as "this area is full"; filled wedge keeps pattern + icon, empty wedges keep greyed fill + "No X yet" pill (now with room not to overlap). Added a second caption line: "Lots of room to grow your safety net in the greyed-out areas." Display-only; no data-shape/export/save change. Verified via preview: selection screens show no %, reveal shows "Practical 100%" + both captions + three equal-120° wedges (all large-arc flags 0).
+
+  <details>
+  <summary>Draft 30 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 30 — Allies / Safety Net v5.3 → v5.4: gate percentages to post-selection + low-ally geometry fix
+
+  Two small fixes to the Draft 26 Part D Safety Net percentage work + the Draft 19 wedge geometry, surfaced by Josh's 2026-06-12 walkthrough (with screenshot of the 1-ally case).
+
+  **Files:**
+  - `src/activities/AlliesSafetyNet.jsx`
+  - `src/components/TrampolineNet.jsx`
+
+  #### Change 1 — Percentage labels only show after all three support-type selections are done
+
+  **Current behavior (Draft 26 Part D, commit `80fa689`):** support-type percentage labels appear on every screen that shows a support-type heading — transition screens, selection question screens, the TrampolineNet `percentByType` pills, and ally-list headers. Percentages recompute in real time as the kid adds allies in each type, with the denominator being total distinct allies across types.
+
+  **Problem:** the percentages shift while the kid is mid-selection — after picking 1 Practical ally and before being asked about Emotional, the visual reads *"Practical 100% / Emotional 0%"* even though the kid hasn't been prompted for Emotional yet. The number-changing-in-real-time across the flow is also noisy. The percentages were intended as awareness on the final rendered net, not as live counters during selection.
+
+  **Fix:** gate the percentage display on a phase check. Percentage labels only appear from the **post-selection rendered safety net** onward — once the kid has been through all three of the Practical / Emotional / Social selection screens.
+
+  **Surfaces where percentages SHOULD show:**
+  - The post-selection "Your safety net" reveal screen
+  - Inspect step (Step 2) — the net + the ally list
+  - Strengthen step (Step 3) — the net + the ally list (where shown)
+  - Final Review screen
+
+  **Surfaces where percentages should NOT show:**
+  - The three transition screens (Practical / Emotional / Social intros)
+  - The three selection question screens ("Who gives you {type} support?")
+  - Any intermediate ally-list views during the selection flow
+
+  **Implementation suggestion:** add a `showPercentages` prop to `TrampolineNet` (default `false`) and a parallel flag for the ally-list headings and any inline `{type} N%` heading copy. Set it to `true` only at phase boundaries `>= 'reveal'` (or whatever the phase enum looks like). When false, render headings as plain `Practical` / `Emotional` / `Social` without the trailing `N%`, and skip the TrampolineNet pills' percent text.
+
+  **Data shape:** no change. The percentages are display-only; they're computed at render time from the existing `allies[]` array.
+
+  #### Change 2 — Low-ally state uses equal 120° thirds geometry + a sharper empty-space caption
+
+  **Current behavior (Draft 19, commit `7a7d547`):** TrampolineNet wedge sizing is proportional to per-type ally counts, with empty types collapsing to a 15° labelled sliver. Draft 26 Part D added 60% opacity + a "small net is a place to start" caption when total allies ≤ 2.
+
+  **Problem:** when a kid has 1 ally total (e.g., 1 Practical, 0 Emotional, 0 Social — see Josh's 2026-06-12 screenshot at `/demo/sandbox/allies-safety-net`), the Practical wedge expands to ~330° and the two empty types are tiny 15° slivers at the top. Even with the 60% opacity + caption, the geometry still reads *"Practical is full of allies"* rather than *"you have one person and lots of room to grow."* The two `No emotional yet` / `No social yet` pill labels also stack and overlap in the small upper sliver because there's no space for them.
+
+  **Fix:** when total distinct allies ≤ 2, switch to **equal 120° thirds** geometry across all three wedges regardless of which have content. The filled wedge keeps its yellow woven pattern + ally icon(s); the empty wedges keep their greyed-out / faded fill. Visually communicates *"1 of 3 areas has someone in it"* rather than *"this area is full."*
+
+  Above 2 allies total, **keep current proportional geometry unchanged** — the existing behavior reads correctly once the net has any meaningful spread, and the proportional sizing was intentional per Draft 19.
+
+  **Caption update:** in the same low-ally state (≤ 2 allies total), keep the existing italic "A small net is a place to start" line and add a second italic line directly below it:
+
+  > *Lots of room to grow your safety net in the greyed-out areas.*
+
+  Same styling as the existing caption (small, italic, centered, slate-600 or similar), stacked. Only renders in the low-ally state.
+
+  Both lines disappear once total allies ≥ 3 (same threshold as the 60% opacity demotion).
+
+  #### What does NOT change
+
+  - Proportional wedge sizing for kids with 3+ allies (today's behavior preserved — Draft 19's spec stands above the threshold).
+  - The 60% opacity demotion at ≤ 2 allies (still applied alongside the new geometry).
+  - Wedge colors (amber / rose / sky for practical / emotional / social per Holly's color-coding from Draft 19).
+  - The "No {type} yet" pill labels — they still appear in the empty wedges, just now those wedges are 120° each so the pills have room to sit without overlapping.
+  - Save payload, export pipeline, demoDataset — no data shape change.
+
+  #### Version bump
+
+  `allies-safety-net` v5.3 → **v5.4 (MINOR)**. Prepend changelog: *"v5.4 — Support-type percentage labels gated to post-selection surfaces only (hidden during the Practical/Emotional/Social selection flow per Josh's 2026-06-12 walkthrough); low-ally state (≤ 2 total) now uses equal 120° thirds geometry instead of proportional so a single ally doesn't visually fill the net; added a second caption line ('Lots of room to grow your safety net in the greyed-out areas') alongside the existing 'small net is a place to start' line."* Update `updated`.
+
+  **Approved by:** Josh, 2026-06-12.
+
+  *End of Draft 30.*
+
+  </details>
+
 - **`516a330` · 2026-06-12** — Meet-the-cast: **self-hosted** the Sam 16 video instead of the YouTube Short (in-conversation, no draft). The Short's player chrome (title + controls) blocked the first ~5s of the frame. Copied `Video Content/World Building/Sam 16 I remember it like it was yesterday.mp4` → `public/cast/video/sam-16-opening.mp4` (~8.4 MB) and switched the Sam 16 `video` object from `youtubeId` to `src`. `CastCard` renders a native `<video controls playsInline preload="metadata">` when `video.src` is set (only a centered play button until playback, then controls auto-hide — no overlay), falling back to the YouTube iframe when a card provides `youtubeId` instead. Verified via preview: native `<video>` renders, mp4 serves 200 `video/mp4`. Temporary hosting; DemoPage section, no version bump.
 - **`4586532` · 2026-06-12** — Meet-the-cast: dropped Sam 14's two ElevenLabs audio scratch clips, replaced each with a muted *"Voice model coming soon"* note (in-conversation, no draft). Removed the `audio` field from Sam 14's two line objects in `src/lib/castData.js`; the `CastCard` renderer now shows the "coming soon" note for any `lines` entry without an `audio` clip (scene cue + quoted text still render). Foster Mom keeps her audio player. Verified via preview: Sam 14 card = 0 audio elements, 2 "coming soon" notes, both lines intact. DemoPage section, no version bump.
 - **`d8d3b1a` · 2026-06-12** — Draft 29: Meet-the-cast Sam 16 card swaps the seven ElevenLabs audio scratch clips for the first rendered **Sam's Story** shot (vertical 9:16 YouTube Short `q7QwX79vtEA`, the bedroom opening-narration beat). `src/lib/castData.js` Sam 16 entry's `lines` array → a `video: { youtubeId, caption }` object; top-of-file comment now documents the three card shapes (video / lines / description). `src/pages/DemoPage.jsx` CastCard gains a `video` branch (precedence video > lines > description) rendering the Short in a 320px-capped 9:16 player + italic caption, in the slot the lines block occupied. Other cast cards unchanged; the seven `sam-16-line-*.mp3` files left in `/public/cast/audio/` (unreferenced) per the draft. No version bump (DemoPage section). Verified via preview: Sam 16 card shows photo + embedded Short + caption, zero audio elements.
