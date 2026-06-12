@@ -16,8 +16,10 @@
 // A card can carry one of three content shapes, in precedence order:
 //   - `video`: { youtubeId, caption } — an embedded YouTube Short of a
 //     rendered Sam's Story shot (Sam 16, as of Draft 29 2026-06-12).
-//   - `lines`: [{ audio, scene, text }] — scripted lines with ElevenLabs
-//     voice samples (Sam 14, Foster Mom).
+//   - `lines`: [{ scene, text, audio? }] — scripted lines. `audio` is
+//     optional: a line with an ElevenLabs sample renders an <audio>
+//     player (Foster Mom); a line without one renders a "Voice model
+//     coming soon" note (Sam 14, since 2026-06-12).
 //   - `description`: a paragraph for characters who don't speak in
 //     Script 2.0 yet (Foster Dad, Mrs. Johnson).
 // Sam 16's card now previews the first rendered Sam's Story shot (the
@@ -46,14 +48,14 @@ export const CAST = [
     // Sam 14 image is landscape (2304×1296) — crop to a gentle ~4:3 so
     // faces stay centered (see `landscape` flag, handled in the view).
     landscape: true,
+    // Audio scratch clips removed 2026-06-12 — a line with no `audio`
+    // renders a "Voice model coming soon" note instead of a player.
     lines: [
       {
-        audio: '/cast/audio/sam-14-line-1.mp3',
         scene: 'Inner monologue voice-over (the moment after the adoption question)',
         text: 'How do I feel about that? I have literally no idea.',
       },
       {
-        audio: '/cast/audio/sam-14-line-2.mp3',
         scene: 'At the dining table (becomes angry, before leaving)',
         text: 'You aren’t my parents and you never will be.',
       },

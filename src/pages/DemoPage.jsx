@@ -584,9 +584,10 @@ function ExportFileBlock({
 // Image on the left (~40%) + text on the right (~60%) on desktop; stacks
 // on mobile. A card's right column branches on one of three optional
 // fields, in precedence order: `video` (embedded YouTube Short of a
-// rendered Sam's Story shot), `lines` (per-line scene cue + quoted text
-// + native <audio> control), or `description` (a paragraph for cast who
-// don't speak in Script 2.0 yet). See src/lib/castData.js.
+// rendered Sam's Story shot), `lines` (per-line scene cue + quoted text;
+// each line shows a native <audio> player if it has an `audio` clip, else
+// a "Voice model coming soon" note), or `description` (a paragraph for
+// cast who don't speak in Script 2.0 yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
   const { name, image, alt, role, lines, description, landscape, video } = character
@@ -643,13 +644,19 @@ function CastCard({ character }) {
                 <p className="text-base text-slate-700 leading-relaxed mb-2">
                   &ldquo;{line.text}&rdquo;
                 </p>
-                <audio
-                  controls
-                  preload="metadata"
-                  src={line.audio}
-                  aria-label={`Audio: ${name} — ${line.scene}`}
-                  className="w-full mt-1"
-                />
+                {line.audio ? (
+                  <audio
+                    controls
+                    preload="metadata"
+                    src={line.audio}
+                    aria-label={`Audio: ${name} — ${line.scene}`}
+                    className="w-full mt-1"
+                  />
+                ) : (
+                  <p className="mt-1 text-sm italic text-slate-400">
+                    Voice model coming soon
+                  </p>
+                )}
               </div>
             ))}
           </div>
