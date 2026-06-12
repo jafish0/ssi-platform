@@ -17,10 +17,14 @@
 // response. Strategy-keyed (Draft 27, 2026-06-09): Stephanie wrote
 // DISTINCT alternatives for the Challenge strategy vs the Both/And
 // strategy, so the panel surfaces only the set matching the kid's
-// current strategy. Content is Stephanie's "Alternative Thoughts" list,
-// verbatim — do not paraphrase. (a6's alternatives say "My family"
-// where the locked item reads "My real family"; that's intentional per
-// Stephanie — the alternatives mirror the kid's natural phrasing.)
+// current strategy. Content is from Stephanie's "Alternative Thoughts
+// list" v2 doc (`Alternative Thoughts list (1).docx`, 2026-06-12),
+// verbatim — do not paraphrase. v2 incorporates Holly's a5 Challenge
+// edit ("…even just a little bit, and trust can grow" — Stephanie
+// agreed) plus minor punctuation alignment. (a6's alternatives say
+// "My family" where the locked item reads "My real family"; that's
+// intentional per Stephanie — the alternatives mirror the kid's
+// natural phrasing.)
 export const APPRAISAL_ITEMS = [
   {
     id: 'a1',
@@ -78,7 +82,7 @@ export const APPRAISAL_ITEMS = [
       ],
       both_and: [
         'I feel that no one would want me to be a part of their family AND I am worth choosing and being included.',
-        'I feel that no one would want me to be a part of their family AND that feeling might not be true — there may be people that want me to be a part of their family.',
+        'I feel that no one would want me to be a part of their family AND that feeling might not be true, there may be people that want me to be a part of their family.',
       ],
     },
   },
@@ -88,8 +92,8 @@ export const APPRAISAL_ITEMS = [
     dimension: 'others',
     help_suggestions: {
       challenge: [
-        'There are people I can trust.',
-        "Other people have betrayed me, but that doesn't mean everyone will.",
+        'There are people I can trust, even just a little bit, and trust can grow.',
+        "Other people have betrayed me but that doesn't mean everyone will.",
       ],
       both_and: [
         "I feel like I can't trust anyone AND not everyone will betray me.",
