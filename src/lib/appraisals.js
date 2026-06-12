@@ -12,71 +12,105 @@
 // UI): which of the three appraisal targets each item probes
 // (`future` | `self` | `others`).
 
-// `help_suggestions` (added Draft 26, 2026-06-08) feeds the Getting
-// Unstuck "I need help" button — 3+ alternative thoughts per item the
-// kid can read or tap to pre-fill their response. PLACEHOLDER CONTENT
-// for now: Stephanie is producing the real alternative-thought lists;
-// when they arrive, swap the strings here (no UI change needed).
+// `help_suggestions` feeds the Getting Unstuck "I need help" button —
+// alternative thoughts the kid can read or tap to pre-fill their
+// response. Strategy-keyed (Draft 27, 2026-06-09): Stephanie wrote
+// DISTINCT alternatives for the Challenge strategy vs the Both/And
+// strategy, so the panel surfaces only the set matching the kid's
+// current strategy. Content is Stephanie's "Alternative Thoughts" list,
+// verbatim — do not paraphrase. (a6's alternatives say "My family"
+// where the locked item reads "My real family"; that's intentional per
+// Stephanie — the alternatives mirror the kid's natural phrasing.)
 export const APPRAISAL_ITEMS = [
   {
     id: 'a1',
     text: 'I will never really feel like I belong.',
     dimension: 'future',
-    help_suggestions: [
-      '[Placeholder — Stephanie is producing real content. Example shape: "There have been moments, even brief ones, when I have felt I belonged."]',
-      '[Placeholder — second alternative thought.]',
-      '[Placeholder — third alternative thought.]',
-    ],
+    help_suggestions: {
+      challenge: [
+        'It is possible for me to feel like I belong.',
+        'There are people out there who will understand me and who I am.',
+      ],
+      both_and: [
+        "I don't feel like I belong, right now, AND there are things I can do to change that.",
+        "I don't feel like I belong, right now, AND I won't always feel that way.",
+      ],
+    },
   },
   {
     id: 'a2',
     text: 'Everyone will eventually leave me or give up on me.',
     dimension: 'future',
-    help_suggestions: [
-      '[Placeholder — alternative thought for "everyone will leave me."]',
-      '[Placeholder — second alternative thought.]',
-      '[Placeholder — third alternative thought.]',
-    ],
+    help_suggestions: {
+      challenge: [
+        "Just because people have left me in the past, doesn't mean everyone will leave me.",
+        "Everyone is not the same, and there are people that won't leave or give up on me.",
+      ],
+      both_and: [
+        "People have left me in the past AND that doesn't mean everyone will leave me in the future.",
+        "People have left me in the past AND there are people out there who won't leave or give up on me.",
+      ],
+    },
   },
   {
     id: 'a3',
     text: 'I am not lovable.',
     dimension: 'self',
-    help_suggestions: [
-      '[Placeholder — alternative thought for "I am not lovable."]',
-      '[Placeholder — second alternative thought.]',
-      '[Placeholder — third alternative thought.]',
-    ],
+    help_suggestions: {
+      challenge: [
+        'Everyone is worthy of love, including me.',
+        "I may not love everything about myself right now, but that doesn't make me unlovable.",
+      ],
+      both_and: [
+        'I do not feel like I am lovable AND there are people out there who can and do love me.',
+        'I do not feel like I am lovable AND I am capable of being loved if I accept it and let others in.',
+      ],
+    },
   },
   {
     id: 'a4',
     text: 'No one would want me to be a part of their family.',
     dimension: 'self',
-    help_suggestions: [
-      '[Placeholder — alternative thought for "no one would want me."]',
-      '[Placeholder — second alternative thought.]',
-      '[Placeholder — third alternative thought.]',
-    ],
+    help_suggestions: {
+      challenge: [
+        "Even if I haven't found a forever family yet, I am worthy of this and can find a chosen family one day.",
+        'There are people that care about me and may want to include me in their family, if I let them.',
+      ],
+      both_and: [
+        'I feel that no one would want me to be a part of their family AND I am worth choosing and being included.',
+        'I feel that no one would want me to be a part of their family AND that feeling might not be true — there may be people that want me to be a part of their family.',
+      ],
+    },
   },
   {
     id: 'a5',
     text: "I can't trust anyone.",
     dimension: 'others',
-    help_suggestions: [
-      '[Placeholder — alternative thought for "I can\'t trust anyone."]',
-      '[Placeholder — second alternative thought.]',
-      '[Placeholder — third alternative thought.]',
-    ],
+    help_suggestions: {
+      challenge: [
+        'There are people I can trust.',
+        "Other people have betrayed me, but that doesn't mean everyone will.",
+      ],
+      both_and: [
+        "I feel like I can't trust anyone AND not everyone will betray me.",
+        "I feel like I can't trust anyone AND there are people out there that are trustworthy.",
+      ],
+    },
   },
   {
     id: 'a6',
     text: 'My real family will be mad if I like my foster or adoptive family.',
     dimension: 'others',
-    help_suggestions: [
-      '[Placeholder — alternative thought for "my real family will be mad."]',
-      '[Placeholder — second alternative thought.]',
-      '[Placeholder — third alternative thought.]',
-    ],
+    help_suggestions: {
+      challenge: [
+        'People that love me want me to be safe and happy, even if it is with a different family.',
+        'It is okay to like my birth family and my foster and adoptive family.',
+      ],
+      both_and: [
+        "My family might get mad if I like my foster or adoptive family AND it's okay to let myself feel safe and cared for.",
+        'My family might get mad if I like my foster or adoptive family AND I can care about lots of different people in my life.',
+      ],
+    },
   },
 ]
 

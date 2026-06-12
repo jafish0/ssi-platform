@@ -14,6 +14,7 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`<pending-d27>` · 2026-06-09** — Draft 27: Getting Unstuck **v5.4 → v5.5 (MINOR)**. Swapped the placeholder "I need help" alternative-thought content for Stephanie's real content (Alternative Thoughts list, 2026-06-09) and made the help panel **strategy-aware**. `help_suggestions` in `src/lib/appraisals.js` went from a flat array to a strategy-keyed object `{ challenge: [...], both_and: [...] }` — two alternatives per strategy per item, 24 total, verbatim from Stephanie (a6's alternatives say "My family" where the locked item reads "My real family" — intentional). `GettingUnstuck.jsx` help-panel read-path now resolves `help_suggestions[currentStrategy]` (defaults to challenge). Verified via preview on a1: Challenge panel shows the challenge alternatives (no "AND"), Both/And panel shows the both_and alternatives (all contain "AND"). No save-payload or export change.
 - **`8a25a97` · 2026-06-08** — Draft 26 Part F follow-up: swapped the tree-progress demo to Claude Design's new locked **"ready-for-roots-tree"** icon set (delivered in `Safety Net Exercise.zip → ready-for-roots-tree/`). The new six-stage set is noticeably **denser/fuller** — roots grow in count *and* branchiness per stage (1→6→9→15→20→28 root paths, incl. sub-roots + stage-5 spread roots), the three-tone canopy widens sharply, and stage 5 gains more blossoms (14 clusters). Extracted the six SVGs into **`src/assets/tree/`** (now the in-repo locked references, + `NOTES.md`); pointed `scripts/extract-tree-stages.mjs` at that folder and regenerated **`src/lib/treeStages.js`**. `TreeProgress.jsx` unchanged — it's parametric/data-driven and renders the new geometry as-is (same structure: per-stage full redraws, baked trunk widths, `<g>` layer ids). Verified via preview: stage 5 = 50 paths (28 roots + 1 trunk + 7 branches + 14 leaves) + 14 blossoms (84 petals), matching the extract. Also updated the **Growing Your Roots preamble** to the new locked 3-line copy ("Ready for Roots. Yours start here." / "This little seed is your tree…" / "Watch what grows."); Stage 0 caption unchanged. No version bump (demo surface). The "new tree icons (Josh providing)" non-code todo is now struck through as delivered.
 - **`80fa689` · 2026-06-08** — Draft 26: Round 4 feedback bundle, six activity refinements in one commit. **A. Self-Reflection v1.2 → v1.3:** dropped the false "we'll come back to it" closing line (Holly); added example thought/feeling placeholders on both prompts (Ginny) — inclusion "e.g., People like me" / "e.g., Happy", exclusion "e.g., Nobody likes me" / "e.g., I felt sad". **B. Letter v2.1 → v2.2:** two optional scaffolding prompts under the instruction ("What is one skill you would recommend?" / "What is one helpful thought you could share?"). **C. Belonging Skills Sort v3.0 → v3.1:** "!" on encouragement; saveable PNG snapshot of the three sorted buckets (downloadSvgElementAsPng, unsorted excluded); one-time "reconsider unsorted items?" Yes/No prompt after first Save. **D. Allies / Safety Net v5.2 → v5.3** (the draft said "v5.1 → v5.2" but Draft 23 had already shipped v5.2, so this lands as v5.3): "!" on the ready line; percentage labels on every support-type heading (transition screens, selection question, TrampolineNet pills via new `percentByType` prop, ally-list headers) computed as allies-in-type ÷ total distinct allies; visual demotion of the full net (60% opacity + "small net is a place to start" caption) when total allies ≤ 2. **E. Getting Unstuck v5.3 → v5.4 (MAJOR) + FollowUp v1.0 → v1.1 (coupled):** shared appraisals truth-rating scale shifted **0-5 → 0-4** (anchors 0 Not At All / 2 Somewhat / 4 Definitely) in `src/lib/appraisals.js`, cascading to both the intervention and the survey; Pick threshold stays ≥2 (now exactly the middle anchor); new "I need help" button per thought opening a panel of alternative-thought suggestions (PLACEHOLDER content — Stephanie producing real lists; tap to pre-fill the response). exportFlatten value-range comments + demoDataset truth_rating regen updated (0..4). **F. Growing Your Roots:** preamble before Stage 0 ("Every time you complete an activity, your tree and roots will grow. Let's see how big it gets.") + revised Stage 0 caption ("Here's your tree." / "Right now it's a seed…"). Verified via preview: GU renders 5 scale buttons (0-4) with correct anchors; "I need help" panel works. **Out of scope (tracked in the non-code todos section):** new tree-progress icons (Josh), Stephanie's real "I need help" content, ElevenLabs voice work, female/nonbinary Sam assets, 9:16 video direction.
 - **`edc439a` · 2026-06-04** — Draft 25: tree-progress preview. New parametric **`<TreeProgress />`** component (`src/components/TreeProgress.jsx`) rendering the "Ready for Roots" growth metaphor across six stages (Seed → Blooming) + a new **"Growing your roots"** click-through section on `/demo` (between Meet the cast and Data export) with stage dots, Previous/Next/Reset controls, and per-stage encouragement copy (Part C). Geometry is **machine-extracted** from Claude Design's six locked reference SVGs (`Activity ideas/tree-stage-*.svg`) via `scripts/extract-tree-stages.mjs` → `src/lib/treeStages.js`, so the component matches the references exactly rather than shipping them (same "rebuild parametrically" approach as the trampoline net). The references are per-stage full redraws (the whole tree scales each stage), so the component swaps the complete element set per stage. Forward stage changes animate growth-in (roots + branches draw on via `stroke-dashoffset` with `pathLength=1`; trunk/leaves/blossoms fade, staggered ~700ms); backward/jumps snap instantly; `prefers-reduced-motion` disables it. Verified against the references via DOM inspection — stage 5 = 13 roots, 6 branches, 14 leaves, 10 blossoms (60 petals). **Preview-only:** not wired into real activity completion or per-PID persistence (deferred until the activities are stitched into a continuous flow). No activity-version bump; INFRASTRUCTURE.md updated.
@@ -501,6 +502,119 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
+
+---
+
+<!-- Draft 27 shipped 2026-06-09 — archived (commented out). -->
+
+<!--
+
+### Draft 27 — Getting Unstuck "I need help" alternative-thought content (Stephanie's content swap + strategy-aware help panel)
+
+Follow-up to Draft 26 Part E.3. The Getting Unstuck "I need help" button was built in Draft 26 with placeholder alternative-thought content. Stephanie has now delivered the real content (per the Cleanup queue todo, 2026-06-09). This draft swaps the placeholders for real values **and** expands the data shape slightly because Stephanie's content is **strategy-aware** — she wrote distinct alternative thoughts for the **Challenge it** strategy versus the **Both/And** strategy.
+
+The original Draft 26 placeholder used a single `help_suggestions` array per appraisal item. Stephanie's content is more useful if the help panel only shows alternatives matching the strategy the kid is currently working on (showing Both/And suggestions while the kid is doing Challenge would be confusing). So the data structure expands to two keyed arrays, and the panel reads the one matching `currentStrategy`.
+
+**Files:**
+- `src/lib/appraisals.js` — content swap + new shape
+- `src/activities/GettingUnstuck.jsx` — small read-path change in the "I need help" panel
+
+#### Change 1 — Reshape `help_suggestions` per appraisal item
+
+In `src/lib/appraisals.js`, replace the placeholder single `help_suggestions: [...]` array with a strategy-keyed object:
+
+```js
+help_suggestions: {
+  challenge: ["...", "..."],
+  both_and: ["...", "..."],
+}
+```
+
+Two suggestions per strategy, per item, per Stephanie's list (24 total alternative thoughts across the six items).
+
+#### Change 2 — Locked content for each appraisal item
+
+##### `a1` — *"I will never really feel like I belong."*
+
+- **Challenge:**
+  - "It is possible for me to feel like I belong."
+  - "There are people out there who will understand me and who I am."
+- **Both/And:**
+  - "I don't feel like I belong, right now, AND there are things I can do to change that."
+  - "I don't feel like I belong, right now, AND I won't always feel that way."
+
+##### `a2` — *"Everyone will eventually leave me or give up on me."*
+
+- **Challenge:**
+  - "Just because people have left me in the past, doesn't mean everyone will leave me."
+  - "Everyone is not the same, and there are people that won't leave or give up on me."
+- **Both/And:**
+  - "People have left me in the past AND that doesn't mean everyone will leave me in the future."
+  - "People have left me in the past AND there are people out there who won't leave or give up on me."
+
+##### `a3` — *"I am not lovable."*
+
+- **Challenge:**
+  - "Everyone is worthy of love, including me."
+  - "I may not love everything about myself right now, but that doesn't make me unlovable."
+- **Both/And:**
+  - "I do not feel like I am lovable AND there are people out there who can and do love me."
+  - "I do not feel like I am lovable AND I am capable of being loved if I accept it and let others in."
+
+##### `a4` — *"No one would want me to be a part of their family."*
+
+- **Challenge:**
+  - "Even if I haven't found a forever family yet, I am worthy of this and can find a chosen family one day."
+  - "There are people that care about me and may want to include me in their family, if I let them."
+- **Both/And:**
+  - "I feel that no one would want me to be a part of their family AND I am worth choosing and being included."
+  - "I feel that no one would want me to be a part of their family AND that feeling might not be true — there may be people that want me to be a part of their family."
+
+##### `a5` — *"I can't trust anyone."*
+
+- **Challenge:**
+  - "There are people I can trust."
+  - "Other people have betrayed me, but that doesn't mean everyone will."
+- **Both/And:**
+  - "I feel like I can't trust anyone AND not everyone will betray me."
+  - "I feel like I can't trust anyone AND there are people out there that are trustworthy."
+
+##### `a6` — *"My real family will be mad if I like my foster or adoptive family."*
+
+- **Challenge:**
+  - "People that love me want me to be safe and happy, even if it is with a different family."
+  - "It is okay to like my birth family and my foster and adoptive family."
+- **Both/And:**
+  - "My family might get mad if I like my foster or adoptive family AND it's okay to let myself feel safe and cared for."
+  - "My family might get mad if I like my foster or adoptive family AND I can care about lots of different people in my life."
+
+**Note on a6:** Stephanie's source doc uses *"My family"* in the alternatives where the locked appraisal item itself reads *"My real family"* — that's intentional (the alternatives mirror the kid's likely natural phrasing rather than the formal item). Keep the locked item text exactly as `src/lib/appraisals.js` has it (*"My real family will be mad if I like my foster or adoptive family."*) and use Stephanie's text **verbatim** in the help suggestions.
+
+#### Change 3 — Strategy-aware help panel in GettingUnstuck.jsx
+
+The "I need help" panel currently reads `appraisal.help_suggestions` as a flat array. Update the read path so it reads `appraisal.help_suggestions[currentStrategy]` instead, where `currentStrategy` is either `"challenge"` or `"both_and"` based on which strategy the kid is working on for that thought.
+
+If `currentStrategy` is not yet set (edge case — the help button shouldn't be available before strategy selection, but defensively), fall back to the Challenge array as the default.
+
+The panel UI doesn't need other changes — same "tap a suggestion to pre-fill the response field" behavior; same "close without using any" affordance.
+
+#### Change 4 — Optional but recommended: order randomization
+
+Within each strategy's array, the two suggestions can be rendered in either fixed order or randomized per session. Recommend **fixed order as written** (matches what Stephanie reviewed and signed off on; consistent across kids for evaluation purposes). If a future round wants A/B-tested randomization, we can revisit.
+
+#### Data shape, export pipeline, version bump
+
+No save-payload change. The free-text response the kid types still saves the same way. The `help_suggestions` content only surfaces in the help panel UI, not in any saved record.
+
+Export pipeline: no change.
+
+Version bump: `getting-unstuck` v5.4 → **v5.5 (MINOR)** — content swap from placeholders to real content, plus a small read-path refactor in the help panel. Prepend changelog: *"v5.5 — Replaced placeholder 'I need help' alternative-thought content with Stephanie's real content (Alternative Thoughts list, 2026-06-09); restructured `help_suggestions` as a strategy-keyed object so the panel surfaces Challenge-vs-Both/And-appropriate alternatives based on the kid's currently-selected strategy."*
+
+**Approved by:** Josh, 2026-06-09, after receiving Stephanie's content.
+
+*End of Draft 27.*
+
+-->
 
 ---
 
@@ -1770,7 +1884,7 @@ After the new doc lands, leave the four old `RSD_Flow_*.docx` files in place as 
 
 - **Video format = 9:16 vertical.** Confirmed at the 2026-06-08 meeting. Production direction for Adrian's eventual video work — vertical mobile-first format (1080×1920 target resolution). Not a current code change; informs the eventual video container styling when real video drops in.
 
-- **Stephanie's "I need help" alternative-thought content for Getting Unstuck.** Stephanie is producing the per-appraisal-item alternative thought suggestions that the new "I need help" button will surface (per Draft 26 Part E.3). Expected end of week (2026-06-08 → ~2026-06-13). When delivered, follow-up commit swaps the placeholder strings in `src/lib/appraisals.js` for real content. No UI change needed.
+- ~~**Stephanie's "I need help" alternative-thought content for Getting Unstuck.** Stephanie is producing the per-appraisal-item alternative thought suggestions that the new "I need help" button will surface (per Draft 26 Part E.3). Expected end of week (2026-06-08 → ~2026-06-13). When delivered, follow-up commit swaps the placeholder strings in `src/lib/appraisals.js` for real content. No UI change needed.~~ **DELIVERED 2026-06-09** — Stephanie's `Alternative Thoughts list.docx` provided 2 Challenge + 2 Both/And alternatives per appraisal item (24 total). Live as **Draft 27** above with the strategy-aware data-shape expansion (`help_suggestions` becomes a strategy-keyed object so the panel only surfaces alternatives matching the kid's current strategy).
 
 *End of cleanup queue.*
 

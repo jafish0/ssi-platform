@@ -640,9 +640,16 @@ export default function GettingUnstuck({ onSave = console.log }) {
     const isLastThought = thoughtIdx === selectedItems.length - 1
     const valid = currentResponseValid(item.id)
     // Alternative-thought suggestions for the "I need help" panel. Only
-    // the locked appraisal items carry these; a_other has none.
-    const helpSuggestions =
-      APPRAISAL_ITEMS.find((it) => it.id === item.id)?.help_suggestions || []
+    // the locked appraisal items carry these; a_other has none. As of
+    // v5.5 (Draft 27) the content is strategy-keyed — surface the set
+    // matching the kid's current strategy (default to Challenge if a
+    // strategy isn't chosen yet, which shouldn't happen since the help
+    // button only shows after selection).
+    const helpByStrategy =
+      APPRAISAL_ITEMS.find((it) => it.id === item.id)?.help_suggestions || null
+    const helpSuggestions = helpByStrategy
+      ? helpByStrategy[r.strategy === 'both_and' ? 'both_and' : 'challenge'] || []
+      : []
     return (
       <div>
         <div className="flex justify-center gap-2 mb-4" aria-hidden="true">
