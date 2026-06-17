@@ -14,6 +14,118 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`160db0f` · 2026-06-17** — Draft 31: Meet-the-cast — added **three Sam Line 3 videos** to the Sam 16 card (the wince/regret beat across three framings) alongside the existing Line 1, all self-hosted. Copied the three new mp4s into `public/cast/video/` as `sam-16-line-3-shot-{1,2,3}.mp4` (~18.4 MB) and renamed `sam-16-opening.mp4` → `sam-16-line-1.mp4` for naming consistency. **castData.js:** migrated the Sam 16 entry from the singular `video: {}` to a `videos: []` array — four entries, each `{ src, caption, label? }` where `caption` is the spoken line verbatim (as-aired text: Line 1 "different homes" synonym swap; Line 3 grade-school swap + comma pacing) and `label` heads each logical group ("Line 1 — Opening narration", "Line 3 — After the rejection"). **DemoPage CastCard:** iterates `videos[]` (optional label → 9:16 player → caption, stacked, mt-6 between entries); precedence `videos` > `lines` > `description`; dropped the legacy singular `video` branch (Sam 16 was its only consumer). Native `<video>` for `src`, YouTube iframe fallback for `youtubeId`. Verified via preview: Sam 16 card = 4 native `<video>` players, 0 iframes, all four mp4s serve 200 `video/mp4`, both labels + 4 captions present. DemoPage section, no version bump.
+
+  <details>
+  <summary>Draft 31 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 31 — Meet-the-cast: add three Sam Line 3 videos to the Sam 16 card (temp self-hosted)
+
+  Three more rendered Sam's Story shots landed today (Sam Line 3, 2026-06-17) — the wince/regret beat across three framings (medium close-up → wider ¾ → tight close-up). Source mp4s sit at `SSI Platform A/Video Content/World Building/`. Add them to the Sam 16 cast card alongside Line 1, using the same self-hosted pattern as the existing `sam-16-opening.mp4` (per commit `516a330`).
+
+  Josh's framing for the team: each video paired with its spoken line as caption, so the team sees *what's being said* alongside *what's been animated*.
+
+  #### Change 1 — Copy mp4s into `public/cast/video/`
+
+  Source paths (drop these in via `git mv` or `cp`, treating the public folder as authoritative):
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/World Building/Yeah that was a low blow.mp4` | `public/cast/video/sam-16-line-3-shot-1.mp4` |
+  | `Video Content/World Building/going from grade school to middle school.mp4` | `public/cast/video/sam-16-line-3-shot-2.mp4` |
+  | `Video Content/World Building/who could keep up.mp4` | `public/cast/video/sam-16-line-3-shot-3.mp4` |
+
+  Three new files, ~18.4 MB total. Combined with the existing Line 1 mp4, Sam 16's card carries ~27 MB of media — fine for temp hosting since `preload="metadata"` keeps the up-front fetch tiny, and the full mp4 only loads on play.
+
+  **Optional rename for naming consistency:** `public/cast/video/sam-16-opening.mp4` → `public/cast/video/sam-16-line-1.mp4`. Tiny churn for cleaner naming — drops the inconsistent "opening" suffix in favor of the line-numbered scheme the new files use. If renamed, update the corresponding `src` in `castData.js` (Change 2 below). Skip the rename and the `src` keeps pointing at `sam-16-opening.mp4` — both are fine. *Recommend renaming* since this is a tiny diff and the consistency helps when more shots land.
+
+  #### Change 2 — `src/lib/castData.js`: migrate Sam 16 to a `videos: []` array
+
+  Current Sam 16 entry has `video: { src, caption }` — single-video object. Migrate to `videos: [ { src, caption, label? }, ... ]` so the card can carry multiple shots. Each entry has:
+
+  - `src` (string, required) — absolute URL to the self-hosted mp4 in `/cast/video/`.
+  - `caption` (string, required) — the spoken line for this shot, verbatim. This is what the team sees under each video.
+  - `label` (string, optional) — section header rendered above this video. Use it for the *first* video in a logical group (Line 1, then Line 3); leave it off subsequent videos in the same group so they stack as continuations.
+  - `youtubeId` (string, optional) — kept as a fallback shape so a future card can use a YouTube Short instead of self-hosted. Renderer should keep treating `src` and `youtubeId` as mutually exclusive within one entry.
+
+  **New Sam 16 entry:**
+
+  ```js
+  {
+    id: 'sam-16',
+    name: 'Sam (16 years old)',
+    image: '/cast/images/sam-16.png',
+    alt: 'Sam at 16 — the narrator, two years later',
+    role: 'Our narrator — Sam two years later.',
+    videos: [
+      {
+        label: 'Line 1 — Opening narration',
+        src: '/cast/video/sam-16-line-1.mp4',  // or '/cast/video/sam-16-opening.mp4' if not renamed
+        caption:
+          "I remember this moment like it was yesterday. I was removed from my real mom when I was 10 and lived with my foster family after bouncing around different homes for a couple of years.",
+      },
+      {
+        label: 'Line 3 — After the rejection',
+        src: '/cast/video/sam-16-line-3-shot-1.mp4',
+        caption:
+          "Yeah, that was a low blow. But at the time, I really couldn't picture myself belonging to their family. I had been through a lot.",
+      },
+      {
+        src: '/cast/video/sam-16-line-3-shot-2.mp4',
+        caption:
+          "Going from grade school to middle school to high school isn't easy for anyone, but it was even harder for me because I was changing schools and houses all the time.",
+      },
+      {
+        src: '/cast/video/sam-16-line-3-shot-3.mp4',
+        caption:
+          "Who could keep up with friends or teams during all of that? It was tough, but I was used to doing everything by myself my whole life.",
+      },
+    ],
+  },
+  ```
+
+  **Captions are the spoken lines verbatim** — what the voice model actually said in each clip. Note the Line 1 caption uses "different homes" (the aired version, per the synonym-swap fix) — not the original "placements" text that was in the old `lines` array. Line 3 captions match the as-aired text including the grade-school synonym swap from shot 2 and the comma-after-"tough" pacing cue from shot 3.
+
+  **Update the top-of-file comment block** to reflect the new shape:
+  - The "A card can carry one of three content shapes" block: change the first bullet from `` `video`: { src | youtubeId, caption } `` to `` `videos`: [{ src | youtubeId, caption, label? }, ...] `` — array, with the per-entry shape spelled out.
+  - The paragraph noting "Sam 16's card now previews the first rendered Sam's Story shot": rewrite to reference *"four rendered Sam's Story shots — Line 1 (opening) plus Line 3 across three framings (medium close-up → wider ¾ → tight close-up)"* and update the file path mention if the rename happens.
+
+  Other cast cards (Sam 14, Foster Mom, Foster Dad, Mrs. Johnson, Family Photo) — no changes. None of them currently use `video`, so the migration from `video: {}` to `videos: []` is Sam-16-only.
+
+  #### Change 3 — `src/pages/DemoPage.jsx`: iterate `videos[]` in CastCard
+
+  Current CastCard renders Sam 16's single `card.video` in a 9:16 mp4 player + caption. Update to handle a `card.videos` array: iterate, render each entry's optional `label` (section header), then the video player, then the caption. Stack vertically with reasonable spacing between entries.
+
+  **Render order per entry (top to bottom):**
+
+  1. **Label**, if present. Small heading style — e.g., `text-sm font-semibold text-slate-700 mt-4 mb-2` (first label can drop the `mt-4`). Stays above the video so it groups visually with the videos beneath it.
+  2. **Video player**. Same `max-w-[320px]` 9:16 player as today: native `<video controls playsInline preload="metadata">` when `entry.src` is set, falling back to the YouTube iframe when `entry.youtubeId` is set instead.
+  3. **Caption**. Italic small text — same styling as the existing single-video caption (`mt-2 text-center text-sm text-slate-600 italic`).
+
+  **Spacing between entries:** mt-6 or similar — give each video room to breathe so the four don't read as a single dense block. Within a labeled group (e.g., the three Line 3 shots), the lack of a label between entries 2 and 3 naturally groups them; spacing can stay equal.
+
+  **Precedence order in CastCard stays as before** — `videos` (new) > `lines` > `description`. If a card has both `video` (legacy singular) and `videos` (new), prefer `videos`; if the codebase wants to keep `video` as a one-off shape for backwards compat, fine — but since Sam 16 is the only card with video right now, full migration is cleanest. **Recommend dropping legacy `video` support entirely** in this draft (delete the `video` branch from the renderer), since there's no other consumer.
+
+  #### What does NOT change
+
+  - The Meet-the-cast section heading, the Script 2.0 download link (Draft 24), the Family Photo closer, and the surrounding /demo page structure all stay as today.
+  - The other cast cards' line / description handling — Sam 14 keeps lines with the "Voice model coming soon" notes, Foster Mom keeps her audio line, Foster Dad + Mrs. Johnson keep description paragraphs.
+  - No `activityVersions.js` bump — Meet-the-cast is a DemoPage section, not an activity.
+  - No feedback-category change — the existing `video` feedback category already covers feedback on these clips.
+  - The seven legacy `sam-16-line-*.mp3` files at `/public/cast/audio/` stay in place (still unreferenced from Draft 29's cleanup decision).
+
+  #### Out of scope (queued for future drafts)
+
+  - Embedding the rest of the Sam 16 narrator beats as they're rendered (Line 2 — adoption-offer reflection, Line 6 — drive-home recognition, Line 7 — transition to metaphor, Line 5 — metaphor closing). When those land, just extend the `videos[]` array.
+  - Other characters' video shots (Sam 14, Foster Mom, etc.) — when their Character Builder + voice work is done, they pick up the same `videos[]` shape.
+  - Replacing the temp self-hosted mp4s with a CDN or proper video host — fine for now; revisit if the demo's storage footprint becomes a concern.
+
+  **Approved by:** Josh, 2026-06-17 — after the three Sam Line 3 shots landed and were saved to `Video Content/World Building/`.
+
+  *End of Draft 31.*
+
+  </details>
+
 - **`6038d1c` · 2026-06-12** — Draft 30: Allies / Safety Net **v5.3 → v5.4 (MINOR)**. Two fixes from Josh's 2026-06-12 walkthrough. **(1)** Support-type percentage labels gated to post-selection surfaces only — removed from the three transition screens and the per-type selection question (where they shifted live mid-flow, e.g. "Practical 100% / Emotional 0%" before the kid was asked about Emotional); still shown on the net reveal, Inspect, Review, and saved confirmation (pills + ally-list headers). **(2)** Low-ally geometry: when total allies ≤ 2, TrampolineNet now uses equal 120° thirds instead of proportional wedges (new `equalThirds` prop, same ≤2 threshold as the 60%-opacity demotion), so a single ally no longer expands to ~330° / reads as "this area is full"; filled wedge keeps pattern + icon, empty wedges keep greyed fill + "No X yet" pill (now with room not to overlap). Added a second caption line: "Lots of room to grow your safety net in the greyed-out areas." Display-only; no data-shape/export/save change. Verified via preview: selection screens show no %, reveal shows "Practical 100%" + both captions + three equal-120° wedges (all large-arc flags 0).
 
   <details>
