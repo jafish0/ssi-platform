@@ -583,14 +583,16 @@ function ExportFileBlock({
 //
 // Image on the left (~40%) + text on the right (~60%) on desktop; stacks
 // on mobile. A card's right column branches on one of three optional
-// fields, in precedence order: `video` (embedded YouTube Short of a
-// rendered Sam's Story shot), `lines` (per-line scene cue + quoted text;
-// each line shows a native <audio> player if it has an `audio` clip, else
-// a "Voice model coming soon" note), or `description` (a paragraph for
-// cast who don't speak in Script 2.0 yet). See src/lib/castData.js.
+// fields, in precedence order: `videos` (one or more rendered Sam's
+// Story shots — each an optional label + a 9:16 player [native <video>
+// for `src`, YouTube iframe for `youtubeId`] + spoken-line caption),
+// `lines` (per-line scene cue + quoted text; each line shows a native
+// <audio> player if it has an `audio` clip, else a "Voice model coming
+// soon" note), or `description` (a paragraph for cast who don't speak in
+// Script 2.0 yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
-  const { name, image, alt, role, lines, description, landscape, video } = character
+  const { name, image, alt, role, lines, description, landscape, videos } = character
   return (
     <article
       tabIndex={0}
@@ -617,35 +619,49 @@ function CastCard({ character }) {
         <h3 className="text-2xl font-bold text-slate-700 mb-1">{name}</h3>
         <p className="text-sm italic text-slate-500 mb-4">{role}</p>
 
-        {video ? (
+        {videos && videos.length > 0 ? (
           <div className="mx-auto w-full max-w-[320px]">
-            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-              {video.src ? (
-                // Self-hosted clip — native player, no overlay chrome
-                // blocking the frame (unlike the YouTube Short embed).
-                <video
-                  src={video.src}
-                  title={`${name} — Sam's Story video`}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200 bg-black object-cover"
-                />
-              ) : (
-                <iframe
-                  src={`https://www.youtube.com/embed/${video.youtubeId}`}
-                  title={`${name} — Sam's Story video`}
-                  className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              )}
-            </div>
-            {video.caption && (
-              <p className="mt-2 text-center text-sm text-slate-600 italic">
-                {video.caption}
-              </p>
-            )}
+            {videos.map((v, i) => (
+              <div key={i}>
+                {v.label && (
+                  <p
+                    className={
+                      'text-sm font-semibold text-slate-700 mb-2 ' +
+                      (i === 0 ? '' : 'mt-6')
+                    }
+                  >
+                    {v.label}
+                  </p>
+                )}
+                <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+                  {v.src ? (
+                    // Self-hosted clip — native player, no overlay chrome
+                    // blocking the frame (unlike the YouTube Short embed).
+                    <video
+                      src={v.src}
+                      title={`${name} — Sam's Story video`}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200 bg-black object-cover"
+                    />
+                  ) : (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${v.youtubeId}`}
+                      title={`${name} — Sam's Story video`}
+                      className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  )}
+                </div>
+                {v.caption && (
+                  <p className="mt-2 text-center text-sm text-slate-600 italic">
+                    {v.caption}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         ) : lines && lines.length > 0 ? (
           <div className="space-y-7">

@@ -14,21 +14,24 @@
 // Scene cues are the per-line stage directions from the same doc.
 //
 // A card can carry one of three content shapes, in precedence order:
-//   - `video`: { src | youtubeId, caption } — a rendered Sam's Story
-//     shot (Sam 16). `src` = self-hosted mp4 (native <video>, no overlay
-//     chrome); `youtubeId` = YouTube Short embed fallback.
+//   - `videos`: [{ src | youtubeId, caption, label? }, ...] — one or
+//     more rendered Sam's Story shots (Sam 16). Per entry: `src` =
+//     self-hosted mp4 (native <video>, no overlay chrome) OR `youtubeId`
+//     = YouTube Short embed (mutually exclusive); `caption` = the spoken
+//     line verbatim; `label` = optional section heading for the first
+//     shot in a group.
 //   - `lines`: [{ scene, text, audio? }] — scripted lines. `audio` is
 //     optional: a line with an ElevenLabs sample renders an <audio>
 //     player (Foster Mom); a line without one renders a "Voice model
 //     coming soon" note (Sam 14, since 2026-06-12).
 //   - `description`: a paragraph for characters who don't speak in
 //     Script 2.0 yet (Foster Dad, Mrs. Johnson).
-// Sam 16's card now previews the first rendered Sam's Story shot (the
-// bedroom opening-narration beat) via a self-hosted mp4 at
-// /cast/video/sam-16-opening.mp4 (temporary — replaced the YouTube
-// Short, whose player chrome blocked the first ~5s of the frame). Its
-// seven audio scratch clips at /cast/audio/sam-16-line-*.mp3 are left
-// in place but no longer referenced.
+// Sam 16's card now previews four rendered Sam's Story shots — Line 1
+// (opening narration) plus Line 3 across three framings (medium
+// close-up → wider ¾ → tight close-up) — as self-hosted mp4s under
+// /cast/video/ (temporary hosting; native <video>, no YouTube chrome).
+// Its seven audio scratch clips at /cast/audio/sam-16-line-*.mp3 are
+// left in place but no longer referenced.
 
 export const CAST = [
   {
@@ -37,15 +40,35 @@ export const CAST = [
     image: '/cast/images/sam-16.png',
     alt: 'Sam at 16 — the narrator, two years later',
     role: 'Our narrator — Sam two years later.',
-    video: {
-      // Self-hosted (temporary) — the YouTube Short's player chrome
-      // (title + controls) blocked the first ~5s of the frame. A native
-      // <video> shows only a centered play button, then auto-hides
-      // controls during playback. Falls back to `youtubeId` if a card
-      // ever provides that instead of `src`.
-      src: '/cast/video/sam-16-opening.mp4',
-      caption: "Opening narration — the first scene of Sam's Story.",
-    },
+    // Self-hosted (temporary) Sam's Story shots. Each entry: a native
+    // <video> (no YouTube chrome blocking the frame) + the spoken line
+    // verbatim as caption, with an optional `label` heading for the
+    // first shot in a logical group. `youtubeId` is supported as a
+    // mutually-exclusive fallback to `src` for a future card.
+    videos: [
+      {
+        label: 'Line 1 — Opening narration',
+        src: '/cast/video/sam-16-line-1.mp4',
+        caption:
+          'I remember this moment like it was yesterday. I was removed from my real mom when I was 10 and lived with my foster family after bouncing around different homes for a couple of years.',
+      },
+      {
+        label: 'Line 3 — After the rejection',
+        src: '/cast/video/sam-16-line-3-shot-1.mp4',
+        caption:
+          "Yeah, that was a low blow. But at the time, I really couldn't picture myself belonging to their family. I had been through a lot.",
+      },
+      {
+        src: '/cast/video/sam-16-line-3-shot-2.mp4',
+        caption:
+          "Going from grade school to middle school to high school isn't easy for anyone, but it was even harder for me because I was changing schools and houses all the time.",
+      },
+      {
+        src: '/cast/video/sam-16-line-3-shot-3.mp4',
+        caption:
+          'Who could keep up with friends or teams during all of that? It was tough, but I was used to doing everything by myself my whole life.',
+      },
+    ],
   },
   {
     id: 'sam-14',
