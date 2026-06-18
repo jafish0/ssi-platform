@@ -14,6 +14,188 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`a240bda` · 2026-06-18** — Draft 32: Round 5 feedback bundle, five activities in one commit. **Self-Reflection v1.3 → v1.4:** deleted the "Hold onto what came up" closing (Ginny + Holly); moved the example thought/feeling text out of the textarea placeholder into persistent help text so it stays visible while typing. **Letter v2.2 → v2.3:** closing rewritten to "You can save or print this letter and look back on it…" (Holly) — and since the done screen had no save affordance (the draft assumed one existed), it now shows the letter back in a keepsake card + a Save-as-image button (reuses `downloadSvgStringAsPng`). **Belonging Skills Sort v3.1 → v3.2:** snapshot closing "it's yours to keep" → "Think about when you could try out one of these skills." (Holly); action-plan pull-forward deferred to flow integration. **Getting Unstuck v5.6 → v5.7:** dropped the "Need an example?" disclosure (Stephanie's "pick one"; Josh kept "I need help"); renamed the button → "I need help creating a new thought" (Holly); restyled it bigger/bolder as a secondary CTA; confirmed on both Challenge + Both/And; removed the now-unused `BOTH_AND_EXAMPLES`. **Allies / Safety Net v5.4 → v5.5:** per-type Strengthen "e.g." examples now match the type (Practical "takes me to practice", Emotional "someone to talk to when I am feeling down", Social unchanged); reveal copy "show up" → "may show up"; empty-wedge "No {type} yet" pills made bigger + near-solid and a new color-coded "No one named for: {types}" callout renders below the net whenever any type has zero allies (Stephanie's gap-visibility ask). All copy/styling/behavior — no data-shape/export/save change. Verified via preview across all five. Added two Round 5 Cleanup-queue items.
+
+  <details>
+  <summary>Draft 32 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 32 — Round 5 feedback bundle (Self-Reflection v1.4 + Letter v2.3 + BSS v3.2 + Getting Unstuck v5.7 + Allies v5.5)
+
+  Bundle of small-to-medium fixes from the 2026-06-18 review round (feedback CSV at `Meeting Notes and Feedback/6 18 Feedback.csv`). Five activities touched, ship as one commit so the demo flips in lockstep — same batched-stopping-point pattern as Draft 7b7046e (2026-05-11) and Draft 26 (2026-06-08).
+
+  **Approved by:** Josh, 2026-06-18.
+
+  ---
+
+  #### Part A — Self-Reflection v1.3 → v1.4 (MINOR)
+
+  Two changes from Ginny + Holly's overlapping feedback.
+
+  ##### A.1 — Delete the "hold onto what came up" closing message
+
+  Both Ginny and Holly independently flagged the closing line as inappropriate / unclear. Ginny also reported "no direction on how to proceed" on the same screen.
+
+  **File:** `src/activities/SelfReflection.jsx`.
+
+  **Change:** Delete the *"Hold onto what came up"* closing message entirely. No replacement copy. The kid moves straight to the next-step affordance (Continue button → next section, or save-and-done if the activity is being run in isolation). Same logic as the Draft 26 Part A change that removed the false *"we'll come back to it"* line — don't promise things we don't do.
+
+  ##### A.2 — Move example placeholders out of the textarea
+
+  Holly flagged that the example placeholders disappear when the kid starts typing. Currently they live as `placeholder=` attributes on the textarea, which is why. Examples should stay visible while the kid types.
+
+  **Change:** Render the examples as small, persistent help text *above or alongside* the textarea (not inside it). Keep the wording exactly as locked in Draft 26 Part A — for the inclusion prompt: *"e.g., People like me"* / *"e.g., Happy"*; for the exclusion prompt: *"e.g., Nobody likes me"* / *"e.g., I felt sad."* Style as muted slate-500 italic small text so they read as guidance, not as content. The textarea's own `placeholder` can be empty or use a generic *"Type your response here…"*
+
+  **Version bump:** v1.3 → v1.4 (MINOR). Prepend changelog: *"v1.4 — Deleted the 'hold onto what came up' closing message per Ginny + Holly's 2026-06-18 feedback; moved example placeholders out of the textarea so they remain visible while the kid types (Holly's ask)."* Update `updated`.
+
+  ---
+
+  #### Part B — Letter to Another Youth v2.2 → v2.3 (MINOR copy change)
+
+  Holly flagged the *"That letter is yours"* closing message as passive — wants something more action-oriented.
+
+  **File:** `src/activities/LetterBuilder.jsx`.
+
+  **Change:** Replace the closing message with Josh's locked copy:
+
+  > *"You can save or print this letter and look back on it whenever you need a reminder or some encouragement."*
+
+  The existing save-as-PNG button (commit `92bfff9`) stays exactly as today — the new copy explicitly references "save," so the affordance needs to be visible.
+
+  **Version bump:** v2.2 → v2.3 (MINOR). Prepend changelog: *"v2.3 — Closing message rewritten per Holly's 2026-06-18 feedback ('That letter is yours' → 'You can save or print this letter and look back on it whenever you need a reminder or some encouragement.')."* Update `updated`.
+
+  ---
+
+  #### Part C — Belonging Skills Sort v3.1 → v3.2 (MINOR copy change)
+
+  Holly flagged the *"it's yours to keep"* closing message as too passive. Wants action-oriented.
+
+  **File:** `src/activities/BelongingSkillsSort.jsx`.
+
+  **Change:** Replace the closing message with:
+
+  > *"Think about when you could try out one of these skills."*
+
+  (Adapts Holly's suggested phrasing.) **Do not include** a "we'll come back to this in your action plan" callback yet — Josh's admin note flagged the pull-forward intent, but the action plan integration isn't built. Re-introducing a forward-referencing callback before the integration exists would repeat the false-callback anti-pattern Draft 26 Part A specifically removed. Add the pull-forward to the Cleanup queue (see end of this draft) for when the flow integration lands.
+
+  **Version bump:** v3.1 → v3.2 (MINOR). Prepend changelog: *"v3.2 — Closing message rewritten per Holly's 2026-06-18 feedback ('it's yours to keep' → 'Think about when you could try out one of these skills'). Action-plan pull-forward deferred to the flow-integration draft."* Update `updated`.
+
+  ---
+
+  #### Part D — Getting Unstuck v5.6 → v5.7 (MINOR; "I need help" consolidation + restyle)
+
+  Three pieces of feedback from Jessica, Stephanie, and Holly converge on the help-affordance UI. Resolution: drop the *"Need an example?"* button entirely, keep only *"I need help"* (Stephanie's "pick one" resolved in favor of "I need help" per Josh's 2026-06-18 call), rename it, restyle it, and ensure it appears on both Challenge and Both/And strategies.
+
+  **File:** `src/activities/GettingUnstuck.jsx`.
+
+  ##### D.1 — Drop the "Need an example?" button entirely
+
+  Currently the *"Need an example?"* button appears on the Both/And strategy screens (Holly: *"the both/and pages have 'need an example?' buttons but the challenge it pages do not"*). Stephanie's instinct was that *"Need an example?"* and *"I need help"* are redundant — kids only need one help affordance per screen. Josh's resolution: keep *"I need help"* (the strategy-aware alternative-thoughts panel from Draft 27), drop *"Need an example?"* entirely.
+
+  **Change:** Remove the *"Need an example?"* button and any associated example-content surfaces from the Both/And screens. Any state, data, or content tied specifically to that button (e.g., example-thought lists if those were separate from the help_suggestions content) can be removed — `help_suggestions` from `src/lib/appraisals.js` is now the single help-content source.
+
+  ##### D.2 — Rename "I need help" to "I need help creating a new thought"
+
+  Holly: *"Can the 'I need help' be a bit bigger and can it maybe say 'I need help creating a new thought' just so they don't see it and think it means technical help or something."*
+
+  **Change:** The button label string becomes *"I need help creating a new thought."* Same behavior, same panel content, just renamed so kids understand it's about generating a new thought, not requesting tech support.
+
+  ##### D.3 — Restyle "I need help creating a new thought" — bigger + bolder
+
+  Jessica + Holly both flagged that the current button is too subtle.
+
+  **Change:** Bump the button styling up a tier in prominence. Suggested target: from current size (probably `text-sm`) → `text-base font-semibold`, plus a clearer color tint — e.g., amber-100 background with amber-300 border, or whatever the platform's "secondary CTA" treatment is. Goal: the button reads as a clear, usable affordance, not as a subtle link. Don't push it all the way to a primary CTA (it shouldn't compete with the main Continue / Save buttons) — just visible.
+
+  ##### D.4 — Ensure "I need help creating a new thought" appears on both Challenge and Both/And screens
+
+  Per Draft 27, the help panel is strategy-aware (different alternative thoughts surface depending on the kid's current strategy). The button itself should already appear on both Challenge and Both/And per that design, but worth verifying — Josh's 2026-06-18 call is explicit: *"those should be on both Challenge it and the Both/And section."* If the button is currently only on one (or if there's any conditional rendering tied to the dropped *"Need an example?"* logic that gates *"I need help"* too), make sure it's unconditionally present on both strategy screens.
+
+  **Version bump:** `getting-unstuck` v5.6 → **v5.7 (MINOR)**. Prepend changelog: *"v5.7 — Dropped the 'Need an example?' button per Stephanie's 2026-06-18 'pick one' feedback (Josh resolved in favor of keeping 'I need help'); renamed 'I need help' → 'I need help creating a new thought' (Holly's clarification ask); restyled the button bigger + bolder (Jessica + Holly); ensured the button appears on both Challenge and Both/And strategy screens."* Update `updated`.
+
+  ---
+
+  #### Part E — Allies / Safety Net v5.4 → v5.5 (MINOR; per-type Strengthen copy + reveal copy edit + empty-wedge prominence)
+
+  Three pieces of feedback. Jessica positive on the percentages (no action). Holly flagged a mismatch on the Strengthen step's Practical example + a "doesn't apply to my net" issue on the post-save reveal. Stephanie asked for the empty wedges to read more visibly as gaps.
+
+  **Files:**
+  - `src/activities/AlliesSafetyNet.jsx`
+  - `src/components/TrampolineNet.jsx`
+
+  ##### E.1 — Per-type Strengthen examples should match each support type
+
+  Holly: *"the 'e.g.' in the strengthen your practical support box is about hanging out during the weekend, but I think that's more social support."* Josh's admin note locks the replacement copy:
+
+  **Change:** Update the per-type example text on each Strengthen screen so the example actually matches the support type:
+
+  | Support type | Replacement example |
+  |---|---|
+  | Practical | *"e.g., takes me to practice"* |
+  | Emotional | *"e.g., someone to talk to when I am feeling down"* |
+  | Social | unchanged — keep the existing "hanging out during the weekend" wording (or whatever Social currently uses); Josh's note: *"Keep social"* |
+
+  Find the current `e.g.` strings (likely in the Strengthen-screen sub-components or in a per-type config object) and swap Practical + Emotional. Don't touch Social.
+
+  ##### E.2 — Post-save reveal: soften "show up" to "may show up"
+
+  Holly: *"This says 'Some allies show up in more than one place — that's the strongest kind.' but that doesn't apply to the one I made so maybe rephrase?"* The line assumes multi-placement is happening, which isn't always true.
+
+  **Change:** On the post-save reveal screen (the "Your safety net" view shown after the kid finishes selecting), change the line:
+
+  - **From:** *"Some allies show up in more than one place — that's the strongest kind."*
+  - **To:** *"Some allies may show up in more than one place — that's the strongest kind."*
+
+  Single-word edit ("show" → "may show"). Conditional framing reads as accurate for kids whose allies are all single-placed AND kids who have multi-placed allies.
+
+  ##### E.3 — Empty-wedge prominence
+
+  Stephanie: *"If they report no one is an ally in one of the three areas, can the 'no support yet' area look bigger — so that it is a more visible hole or gap in their safety net?"*
+
+  This is in tension with Draft 30's equal-120° thirds geometry (already shipping for total allies ≤ 2). Keep that geometry — don't break the cleanly-equal wedges. Stephanie's "look bigger" is read as "more visible as a gap," not literally bigger geometrically. Address with two coordinated visual moves:
+
+  **Change E.3.a — Boost the "No {type} yet" pill prominence.** Currently the pill uses small text in a faded color. Bump the text size up (e.g., `text-sm` → `text-base font-medium`) and increase contrast — keep the per-type color (rose for emotional, sky for social) but darker / less faded. The pill should read as a definite label, not a quiet placeholder.
+
+  **Change E.3.b — Add an explicit "Missing: {types}" callout below the net** when one or more support types have zero allies. Renders as a short line directly under the net visual (or the captions, if those are present). Format suggestion:
+
+  > *No one named for: **emotional support**, **social support***
+
+  Per-type words color-coded with the existing per-type colors (rose / sky). Singular vs plural handled per gap count. Doesn't render when all three types have at least one ally.
+
+  This makes the gap explicit by name, which is harder for a kid to overlook than empty space alone.
+
+  **Both changes apply at all ally counts** (not just ≤ 2), since a kid could have e.g. 3 practical + 0 emotional + 0 social and still need the gap call-out. The Draft 30 equal-thirds geometry only kicks in when total allies ≤ 2; the empty-pill restyling and Missing callout apply whenever any support type has zero allies.
+
+  **Version bump:** `allies-safety-net` v5.4 → **v5.5 (MINOR)**. Prepend changelog: *"v5.5 — Strengthen per-type 'e.g.' examples rewritten so each actually matches its support type (Holly's 2026-06-18 feedback: 'hanging out on weekends' is social, not practical); softened post-save reveal copy ('show up' → 'may show up') so it doesn't read as wrong for kids without multi-placed allies; boosted empty-wedge 'No {type} yet' pill prominence + added explicit 'No one named for: {types}' callout below the net (Stephanie's gap-visibility ask)."* Update `updated`.
+
+  ---
+
+  #### Cleanup queue additions
+
+  Add two items to the Cleanup queue (manual housekeeping section):
+
+  1. **BSS sorted skills should pull forward to an action plan when that's built.** Josh's admin note on Holly's 2026-06-18 feedback expressed intent to reference the action plan in the BSS closing message; deferred this round because the action plan doesn't exist yet and we don't want to repeat the false-callback anti-pattern from Draft 26. Revisit when the flow integration draft lands (the same draft that wires Draft 21's tree-progress into the participant flow).
+
+  2. **Re-check the *"I need help" / "Need an example?"* simplification with Stephanie at the next meeting.** Stephanie's "pick one" feedback was resolved in favor of "I need help" per Josh's 2026-06-18 call. Worth confirming with her at the next review whether the consolidated affordance reads right after seeing it in action — and whether the alternatives content from Draft 27 still feels sufficient as the sole help surface.
+
+  ---
+
+  #### What does NOT change
+
+  - Pretest, Posttest, FollowUp Survey, Who I Am Poem — no feedback this round, untouched.
+  - TrampolineNet's equal-120° thirds geometry from Draft 30 — preserved.
+  - The Draft 27 strategy-aware `help_suggestions` content — unchanged (Stephanie's content stays as the panel content for "I need help creating a new thought").
+  - Data shapes, export pipeline, demoDataset — no data changes across any of the five parts; all changes are copy / styling / behavior.
+
+  #### Out of scope (queued)
+
+  - Flow integration (Draft 21) — still deferred.
+  - Action-plan pull-forward for BSS — Cleanup queue item.
+  - Continuation of Sam's Story per-shot video work — independent of this draft.
+  - Sam 14 / Female / Nonbinary variants — independent.
+
+  *End of Draft 32.*
+
+  </details>
+
 - **`160db0f` · 2026-06-17** — Draft 31: Meet-the-cast — added **three Sam Line 3 videos** to the Sam 16 card (the wince/regret beat across three framings) alongside the existing Line 1, all self-hosted. Copied the three new mp4s into `public/cast/video/` as `sam-16-line-3-shot-{1,2,3}.mp4` (~18.4 MB) and renamed `sam-16-opening.mp4` → `sam-16-line-1.mp4` for naming consistency. **castData.js:** migrated the Sam 16 entry from the singular `video: {}` to a `videos: []` array — four entries, each `{ src, caption, label? }` where `caption` is the spoken line verbatim (as-aired text: Line 1 "different homes" synonym swap; Line 3 grade-school swap + comma pacing) and `label` heads each logical group ("Line 1 — Opening narration", "Line 3 — After the rejection"). **DemoPage CastCard:** iterates `videos[]` (optional label → 9:16 player → caption, stacked, mt-6 between entries); precedence `videos` > `lines` > `description`; dropped the legacy singular `video` branch (Sam 16 was its only consumer). Native `<video>` for `src`, YouTube iframe fallback for `youtubeId`. Verified via preview: Sam 16 card = 4 native `<video>` players, 0 iframes, all four mp4s serve 200 `video/mp4`, both labels + 4 captions present. DemoPage section, no version bump.
 
   <details>
@@ -843,183 +1025,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 32 — Round 5 feedback bundle (Self-Reflection v1.4 + Letter v2.3 + BSS v3.2 + Getting Unstuck v5.7 + Allies v5.5)
-
-Bundle of small-to-medium fixes from the 2026-06-18 review round (feedback CSV at `Meeting Notes and Feedback/6 18 Feedback.csv`). Five activities touched, ship as one commit so the demo flips in lockstep — same batched-stopping-point pattern as Draft 7b7046e (2026-05-11) and Draft 26 (2026-06-08).
-
-**Approved by:** Josh, 2026-06-18.
-
----
-
-#### Part A — Self-Reflection v1.3 → v1.4 (MINOR)
-
-Two changes from Ginny + Holly's overlapping feedback.
-
-##### A.1 — Delete the "hold onto what came up" closing message
-
-Both Ginny and Holly independently flagged the closing line as inappropriate / unclear. Ginny also reported "no direction on how to proceed" on the same screen.
-
-**File:** `src/activities/SelfReflection.jsx`.
-
-**Change:** Delete the *"Hold onto what came up"* closing message entirely. No replacement copy. The kid moves straight to the next-step affordance (Continue button → next section, or save-and-done if the activity is being run in isolation). Same logic as the Draft 26 Part A change that removed the false *"we'll come back to it"* line — don't promise things we don't do.
-
-##### A.2 — Move example placeholders out of the textarea
-
-Holly flagged that the example placeholders disappear when the kid starts typing. Currently they live as `placeholder=` attributes on the textarea, which is why. Examples should stay visible while the kid types.
-
-**Change:** Render the examples as small, persistent help text *above or alongside* the textarea (not inside it). Keep the wording exactly as locked in Draft 26 Part A — for the inclusion prompt: *"e.g., People like me"* / *"e.g., Happy"*; for the exclusion prompt: *"e.g., Nobody likes me"* / *"e.g., I felt sad."* Style as muted slate-500 italic small text so they read as guidance, not as content. The textarea's own `placeholder` can be empty or use a generic *"Type your response here…"*
-
-**Version bump:** v1.3 → v1.4 (MINOR). Prepend changelog: *"v1.4 — Deleted the 'hold onto what came up' closing message per Ginny + Holly's 2026-06-18 feedback; moved example placeholders out of the textarea so they remain visible while the kid types (Holly's ask)."* Update `updated`.
-
----
-
-#### Part B — Letter to Another Youth v2.2 → v2.3 (MINOR copy change)
-
-Holly flagged the *"That letter is yours"* closing message as passive — wants something more action-oriented.
-
-**File:** `src/activities/LetterBuilder.jsx`.
-
-**Change:** Replace the closing message with Josh's locked copy:
-
-> *"You can save or print this letter and look back on it whenever you need a reminder or some encouragement."*
-
-The existing save-as-PNG button (commit `92bfff9`) stays exactly as today — the new copy explicitly references "save," so the affordance needs to be visible.
-
-**Version bump:** v2.2 → v2.3 (MINOR). Prepend changelog: *"v2.3 — Closing message rewritten per Holly's 2026-06-18 feedback ('That letter is yours' → 'You can save or print this letter and look back on it whenever you need a reminder or some encouragement.')."* Update `updated`.
-
----
-
-#### Part C — Belonging Skills Sort v3.1 → v3.2 (MINOR copy change)
-
-Holly flagged the *"it's yours to keep"* closing message as too passive. Wants action-oriented.
-
-**File:** `src/activities/BelongingSkillsSort.jsx`.
-
-**Change:** Replace the closing message with:
-
-> *"Think about when you could try out one of these skills."*
-
-(Adapts Holly's suggested phrasing.) **Do not include** a "we'll come back to this in your action plan" callback yet — Josh's admin note flagged the pull-forward intent, but the action plan integration isn't built. Re-introducing a forward-referencing callback before the integration exists would repeat the false-callback anti-pattern Draft 26 Part A specifically removed. Add the pull-forward to the Cleanup queue (see end of this draft) for when the flow integration lands.
-
-**Version bump:** v3.1 → v3.2 (MINOR). Prepend changelog: *"v3.2 — Closing message rewritten per Holly's 2026-06-18 feedback ('it's yours to keep' → 'Think about when you could try out one of these skills'). Action-plan pull-forward deferred to the flow-integration draft."* Update `updated`.
-
----
-
-#### Part D — Getting Unstuck v5.6 → v5.7 (MINOR; "I need help" consolidation + restyle)
-
-Three pieces of feedback from Jessica, Stephanie, and Holly converge on the help-affordance UI. Resolution: drop the *"Need an example?"* button entirely, keep only *"I need help"* (Stephanie's "pick one" resolved in favor of "I need help" per Josh's 2026-06-18 call), rename it, restyle it, and ensure it appears on both Challenge and Both/And strategies.
-
-**File:** `src/activities/GettingUnstuck.jsx`.
-
-##### D.1 — Drop the "Need an example?" button entirely
-
-Currently the *"Need an example?"* button appears on the Both/And strategy screens (Holly: *"the both/and pages have 'need an example?' buttons but the challenge it pages do not"*). Stephanie's instinct was that *"Need an example?"* and *"I need help"* are redundant — kids only need one help affordance per screen. Josh's resolution: keep *"I need help"* (the strategy-aware alternative-thoughts panel from Draft 27), drop *"Need an example?"* entirely.
-
-**Change:** Remove the *"Need an example?"* button and any associated example-content surfaces from the Both/And screens. Any state, data, or content tied specifically to that button (e.g., example-thought lists if those were separate from the help_suggestions content) can be removed — `help_suggestions` from `src/lib/appraisals.js` is now the single help-content source.
-
-##### D.2 — Rename "I need help" to "I need help creating a new thought"
-
-Holly: *"Can the 'I need help' be a bit bigger and can it maybe say 'I need help creating a new thought' just so they don't see it and think it means technical help or something."*
-
-**Change:** The button label string becomes *"I need help creating a new thought."* Same behavior, same panel content, just renamed so kids understand it's about generating a new thought, not requesting tech support.
-
-##### D.3 — Restyle "I need help creating a new thought" — bigger + bolder
-
-Jessica + Holly both flagged that the current button is too subtle.
-
-**Change:** Bump the button styling up a tier in prominence. Suggested target: from current size (probably `text-sm`) → `text-base font-semibold`, plus a clearer color tint — e.g., amber-100 background with amber-300 border, or whatever the platform's "secondary CTA" treatment is. Goal: the button reads as a clear, usable affordance, not as a subtle link. Don't push it all the way to a primary CTA (it shouldn't compete with the main Continue / Save buttons) — just visible.
-
-##### D.4 — Ensure "I need help creating a new thought" appears on both Challenge and Both/And screens
-
-Per Draft 27, the help panel is strategy-aware (different alternative thoughts surface depending on the kid's current strategy). The button itself should already appear on both Challenge and Both/And per that design, but worth verifying — Josh's 2026-06-18 call is explicit: *"those should be on both Challenge it and the Both/And section."* If the button is currently only on one (or if there's any conditional rendering tied to the dropped *"Need an example?"* logic that gates *"I need help"* too), make sure it's unconditionally present on both strategy screens.
-
-**Version bump:** `getting-unstuck` v5.6 → **v5.7 (MINOR)**. Prepend changelog: *"v5.7 — Dropped the 'Need an example?' button per Stephanie's 2026-06-18 'pick one' feedback (Josh resolved in favor of keeping 'I need help'); renamed 'I need help' → 'I need help creating a new thought' (Holly's clarification ask); restyled the button bigger + bolder (Jessica + Holly); ensured the button appears on both Challenge and Both/And strategy screens."* Update `updated`.
-
----
-
-#### Part E — Allies / Safety Net v5.4 → v5.5 (MINOR; per-type Strengthen copy + reveal copy edit + empty-wedge prominence)
-
-Three pieces of feedback. Jessica positive on the percentages (no action). Holly flagged a mismatch on the Strengthen step's Practical example + a "doesn't apply to my net" issue on the post-save reveal. Stephanie asked for the empty wedges to read more visibly as gaps.
-
-**Files:**
-- `src/activities/AlliesSafetyNet.jsx`
-- `src/components/TrampolineNet.jsx`
-
-##### E.1 — Per-type Strengthen examples should match each support type
-
-Holly: *"the 'e.g.' in the strengthen your practical support box is about hanging out during the weekend, but I think that's more social support."* Josh's admin note locks the replacement copy:
-
-**Change:** Update the per-type example text on each Strengthen screen so the example actually matches the support type:
-
-| Support type | Replacement example |
-|---|---|
-| Practical | *"e.g., takes me to practice"* |
-| Emotional | *"e.g., someone to talk to when I am feeling down"* |
-| Social | unchanged — keep the existing "hanging out during the weekend" wording (or whatever Social currently uses); Josh's note: *"Keep social"* |
-
-Find the current `e.g.` strings (likely in the Strengthen-screen sub-components or in a per-type config object) and swap Practical + Emotional. Don't touch Social.
-
-##### E.2 — Post-save reveal: soften "show up" to "may show up"
-
-Holly: *"This says 'Some allies show up in more than one place — that's the strongest kind.' but that doesn't apply to the one I made so maybe rephrase?"* The line assumes multi-placement is happening, which isn't always true.
-
-**Change:** On the post-save reveal screen (the "Your safety net" view shown after the kid finishes selecting), change the line:
-
-- **From:** *"Some allies show up in more than one place — that's the strongest kind."*
-- **To:** *"Some allies may show up in more than one place — that's the strongest kind."*
-
-Single-word edit ("show" → "may show"). Conditional framing reads as accurate for kids whose allies are all single-placed AND kids who have multi-placed allies.
-
-##### E.3 — Empty-wedge prominence
-
-Stephanie: *"If they report no one is an ally in one of the three areas, can the 'no support yet' area look bigger — so that it is a more visible hole or gap in their safety net?"*
-
-This is in tension with Draft 30's equal-120° thirds geometry (already shipping for total allies ≤ 2). Keep that geometry — don't break the cleanly-equal wedges. Stephanie's "look bigger" is read as "more visible as a gap," not literally bigger geometrically. Address with two coordinated visual moves:
-
-**Change E.3.a — Boost the "No {type} yet" pill prominence.** Currently the pill uses small text in a faded color. Bump the text size up (e.g., `text-sm` → `text-base font-medium`) and increase contrast — keep the per-type color (rose for emotional, sky for social) but darker / less faded. The pill should read as a definite label, not a quiet placeholder.
-
-**Change E.3.b — Add an explicit "Missing: {types}" callout below the net** when one or more support types have zero allies. Renders as a short line directly under the net visual (or the captions, if those are present). Format suggestion:
-
-> *No one named for: **emotional support**, **social support***
-
-Per-type words color-coded with the existing per-type colors (rose / sky). Singular vs plural handled per gap count. Doesn't render when all three types have at least one ally.
-
-This makes the gap explicit by name, which is harder for a kid to overlook than empty space alone.
-
-**Both changes apply at all ally counts** (not just ≤ 2), since a kid could have e.g. 3 practical + 0 emotional + 0 social and still need the gap call-out. The Draft 30 equal-thirds geometry only kicks in when total allies ≤ 2; the empty-pill restyling and Missing callout apply whenever any support type has zero allies.
-
-**Version bump:** `allies-safety-net` v5.4 → **v5.5 (MINOR)**. Prepend changelog: *"v5.5 — Strengthen per-type 'e.g.' examples rewritten so each actually matches its support type (Holly's 2026-06-18 feedback: 'hanging out on weekends' is social, not practical); softened post-save reveal copy ('show up' → 'may show up') so it doesn't read as wrong for kids without multi-placed allies; boosted empty-wedge 'No {type} yet' pill prominence + added explicit 'No one named for: {types}' callout below the net (Stephanie's gap-visibility ask)."* Update `updated`.
-
----
-
-#### Cleanup queue additions
-
-Add two items to the Cleanup queue (manual housekeeping section):
-
-1. **BSS sorted skills should pull forward to an action plan when that's built.** Josh's admin note on Holly's 2026-06-18 feedback expressed intent to reference the action plan in the BSS closing message; deferred this round because the action plan doesn't exist yet and we don't want to repeat the false-callback anti-pattern from Draft 26. Revisit when the flow integration draft lands (the same draft that wires Draft 21's tree-progress into the participant flow).
-
-2. **Re-check the *"I need help" / "Need an example?"* simplification with Stephanie at the next meeting.** Stephanie's "pick one" feedback was resolved in favor of "I need help" per Josh's 2026-06-18 call. Worth confirming with her at the next review whether the consolidated affordance reads right after seeing it in action — and whether the alternatives content from Draft 27 still feels sufficient as the sole help surface.
-
----
-
-#### What does NOT change
-
-- Pretest, Posttest, FollowUp Survey, Who I Am Poem — no feedback this round, untouched.
-- TrampolineNet's equal-120° thirds geometry from Draft 30 — preserved.
-- The Draft 27 strategy-aware `help_suggestions` content — unchanged (Stephanie's content stays as the panel content for "I need help creating a new thought").
-- Data shapes, export pipeline, demoDataset — no data changes across any of the five parts; all changes are copy / styling / behavior.
-
-#### Out of scope (queued)
-
-- Flow integration (Draft 21) — still deferred.
-- Action-plan pull-forward for BSS — Cleanup queue item.
-- Continuation of Sam's Story per-shot video work — independent of this draft.
-- Sam 14 / Female / Nonbinary variants — independent.
-
-*End of Draft 32.*
 
 ---
 
