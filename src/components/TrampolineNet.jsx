@@ -544,8 +544,11 @@ export default function TrampolineNet({
           : pct
             ? `${s.label} ${pct}`
             : s.label
-        const pillWidth = w.isEmpty ? 130 : pct ? 104 : 76
-        const pillHeight = 22
+        // Empty-wedge pills (the "No X yet" gaps) are made more prominent
+        // in v5.5 (Draft 32 E.3.a) — near-solid fill + bigger text so the
+        // gap reads as a definite label, not a quiet placeholder.
+        const pillWidth = w.isEmpty ? 138 : pct ? 104 : 76
+        const pillHeight = w.isEmpty ? 26 : 22
         return (
           <g
             key={`label-${w.typeId}`}
@@ -556,7 +559,7 @@ export default function TrampolineNet({
               height={pillHeight}
               rx={pillHeight / 2}
               fill={s.pill}
-              opacity={w.isEmpty ? 0.6 : 1}
+              opacity={w.isEmpty ? 0.95 : 1}
             />
             <text
               x={pillWidth / 2}
@@ -564,7 +567,7 @@ export default function TrampolineNet({
               textAnchor="middle"
               dominantBaseline="middle"
               fontFamily="ui-sans-serif, system-ui, sans-serif"
-              fontSize={w.isEmpty ? 10 : 11}
+              fontSize={w.isEmpty ? 12 : 11}
               fontWeight="700"
               fill="#FFFDF7"
               letterSpacing="0.02em"

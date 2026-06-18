@@ -846,6 +846,183 @@ Parked for a follow-up draft once the activities are joined.
 
 ---
 
+### Draft 32 — Round 5 feedback bundle (Self-Reflection v1.4 + Letter v2.3 + BSS v3.2 + Getting Unstuck v5.7 + Allies v5.5)
+
+Bundle of small-to-medium fixes from the 2026-06-18 review round (feedback CSV at `Meeting Notes and Feedback/6 18 Feedback.csv`). Five activities touched, ship as one commit so the demo flips in lockstep — same batched-stopping-point pattern as Draft 7b7046e (2026-05-11) and Draft 26 (2026-06-08).
+
+**Approved by:** Josh, 2026-06-18.
+
+---
+
+#### Part A — Self-Reflection v1.3 → v1.4 (MINOR)
+
+Two changes from Ginny + Holly's overlapping feedback.
+
+##### A.1 — Delete the "hold onto what came up" closing message
+
+Both Ginny and Holly independently flagged the closing line as inappropriate / unclear. Ginny also reported "no direction on how to proceed" on the same screen.
+
+**File:** `src/activities/SelfReflection.jsx`.
+
+**Change:** Delete the *"Hold onto what came up"* closing message entirely. No replacement copy. The kid moves straight to the next-step affordance (Continue button → next section, or save-and-done if the activity is being run in isolation). Same logic as the Draft 26 Part A change that removed the false *"we'll come back to it"* line — don't promise things we don't do.
+
+##### A.2 — Move example placeholders out of the textarea
+
+Holly flagged that the example placeholders disappear when the kid starts typing. Currently they live as `placeholder=` attributes on the textarea, which is why. Examples should stay visible while the kid types.
+
+**Change:** Render the examples as small, persistent help text *above or alongside* the textarea (not inside it). Keep the wording exactly as locked in Draft 26 Part A — for the inclusion prompt: *"e.g., People like me"* / *"e.g., Happy"*; for the exclusion prompt: *"e.g., Nobody likes me"* / *"e.g., I felt sad."* Style as muted slate-500 italic small text so they read as guidance, not as content. The textarea's own `placeholder` can be empty or use a generic *"Type your response here…"*
+
+**Version bump:** v1.3 → v1.4 (MINOR). Prepend changelog: *"v1.4 — Deleted the 'hold onto what came up' closing message per Ginny + Holly's 2026-06-18 feedback; moved example placeholders out of the textarea so they remain visible while the kid types (Holly's ask)."* Update `updated`.
+
+---
+
+#### Part B — Letter to Another Youth v2.2 → v2.3 (MINOR copy change)
+
+Holly flagged the *"That letter is yours"* closing message as passive — wants something more action-oriented.
+
+**File:** `src/activities/LetterBuilder.jsx`.
+
+**Change:** Replace the closing message with Josh's locked copy:
+
+> *"You can save or print this letter and look back on it whenever you need a reminder or some encouragement."*
+
+The existing save-as-PNG button (commit `92bfff9`) stays exactly as today — the new copy explicitly references "save," so the affordance needs to be visible.
+
+**Version bump:** v2.2 → v2.3 (MINOR). Prepend changelog: *"v2.3 — Closing message rewritten per Holly's 2026-06-18 feedback ('That letter is yours' → 'You can save or print this letter and look back on it whenever you need a reminder or some encouragement.')."* Update `updated`.
+
+---
+
+#### Part C — Belonging Skills Sort v3.1 → v3.2 (MINOR copy change)
+
+Holly flagged the *"it's yours to keep"* closing message as too passive. Wants action-oriented.
+
+**File:** `src/activities/BelongingSkillsSort.jsx`.
+
+**Change:** Replace the closing message with:
+
+> *"Think about when you could try out one of these skills."*
+
+(Adapts Holly's suggested phrasing.) **Do not include** a "we'll come back to this in your action plan" callback yet — Josh's admin note flagged the pull-forward intent, but the action plan integration isn't built. Re-introducing a forward-referencing callback before the integration exists would repeat the false-callback anti-pattern Draft 26 Part A specifically removed. Add the pull-forward to the Cleanup queue (see end of this draft) for when the flow integration lands.
+
+**Version bump:** v3.1 → v3.2 (MINOR). Prepend changelog: *"v3.2 — Closing message rewritten per Holly's 2026-06-18 feedback ('it's yours to keep' → 'Think about when you could try out one of these skills'). Action-plan pull-forward deferred to the flow-integration draft."* Update `updated`.
+
+---
+
+#### Part D — Getting Unstuck v5.6 → v5.7 (MINOR; "I need help" consolidation + restyle)
+
+Three pieces of feedback from Jessica, Stephanie, and Holly converge on the help-affordance UI. Resolution: drop the *"Need an example?"* button entirely, keep only *"I need help"* (Stephanie's "pick one" resolved in favor of "I need help" per Josh's 2026-06-18 call), rename it, restyle it, and ensure it appears on both Challenge and Both/And strategies.
+
+**File:** `src/activities/GettingUnstuck.jsx`.
+
+##### D.1 — Drop the "Need an example?" button entirely
+
+Currently the *"Need an example?"* button appears on the Both/And strategy screens (Holly: *"the both/and pages have 'need an example?' buttons but the challenge it pages do not"*). Stephanie's instinct was that *"Need an example?"* and *"I need help"* are redundant — kids only need one help affordance per screen. Josh's resolution: keep *"I need help"* (the strategy-aware alternative-thoughts panel from Draft 27), drop *"Need an example?"* entirely.
+
+**Change:** Remove the *"Need an example?"* button and any associated example-content surfaces from the Both/And screens. Any state, data, or content tied specifically to that button (e.g., example-thought lists if those were separate from the help_suggestions content) can be removed — `help_suggestions` from `src/lib/appraisals.js` is now the single help-content source.
+
+##### D.2 — Rename "I need help" to "I need help creating a new thought"
+
+Holly: *"Can the 'I need help' be a bit bigger and can it maybe say 'I need help creating a new thought' just so they don't see it and think it means technical help or something."*
+
+**Change:** The button label string becomes *"I need help creating a new thought."* Same behavior, same panel content, just renamed so kids understand it's about generating a new thought, not requesting tech support.
+
+##### D.3 — Restyle "I need help creating a new thought" — bigger + bolder
+
+Jessica + Holly both flagged that the current button is too subtle.
+
+**Change:** Bump the button styling up a tier in prominence. Suggested target: from current size (probably `text-sm`) → `text-base font-semibold`, plus a clearer color tint — e.g., amber-100 background with amber-300 border, or whatever the platform's "secondary CTA" treatment is. Goal: the button reads as a clear, usable affordance, not as a subtle link. Don't push it all the way to a primary CTA (it shouldn't compete with the main Continue / Save buttons) — just visible.
+
+##### D.4 — Ensure "I need help creating a new thought" appears on both Challenge and Both/And screens
+
+Per Draft 27, the help panel is strategy-aware (different alternative thoughts surface depending on the kid's current strategy). The button itself should already appear on both Challenge and Both/And per that design, but worth verifying — Josh's 2026-06-18 call is explicit: *"those should be on both Challenge it and the Both/And section."* If the button is currently only on one (or if there's any conditional rendering tied to the dropped *"Need an example?"* logic that gates *"I need help"* too), make sure it's unconditionally present on both strategy screens.
+
+**Version bump:** `getting-unstuck` v5.6 → **v5.7 (MINOR)**. Prepend changelog: *"v5.7 — Dropped the 'Need an example?' button per Stephanie's 2026-06-18 'pick one' feedback (Josh resolved in favor of keeping 'I need help'); renamed 'I need help' → 'I need help creating a new thought' (Holly's clarification ask); restyled the button bigger + bolder (Jessica + Holly); ensured the button appears on both Challenge and Both/And strategy screens."* Update `updated`.
+
+---
+
+#### Part E — Allies / Safety Net v5.4 → v5.5 (MINOR; per-type Strengthen copy + reveal copy edit + empty-wedge prominence)
+
+Three pieces of feedback. Jessica positive on the percentages (no action). Holly flagged a mismatch on the Strengthen step's Practical example + a "doesn't apply to my net" issue on the post-save reveal. Stephanie asked for the empty wedges to read more visibly as gaps.
+
+**Files:**
+- `src/activities/AlliesSafetyNet.jsx`
+- `src/components/TrampolineNet.jsx`
+
+##### E.1 — Per-type Strengthen examples should match each support type
+
+Holly: *"the 'e.g.' in the strengthen your practical support box is about hanging out during the weekend, but I think that's more social support."* Josh's admin note locks the replacement copy:
+
+**Change:** Update the per-type example text on each Strengthen screen so the example actually matches the support type:
+
+| Support type | Replacement example |
+|---|---|
+| Practical | *"e.g., takes me to practice"* |
+| Emotional | *"e.g., someone to talk to when I am feeling down"* |
+| Social | unchanged — keep the existing "hanging out during the weekend" wording (or whatever Social currently uses); Josh's note: *"Keep social"* |
+
+Find the current `e.g.` strings (likely in the Strengthen-screen sub-components or in a per-type config object) and swap Practical + Emotional. Don't touch Social.
+
+##### E.2 — Post-save reveal: soften "show up" to "may show up"
+
+Holly: *"This says 'Some allies show up in more than one place — that's the strongest kind.' but that doesn't apply to the one I made so maybe rephrase?"* The line assumes multi-placement is happening, which isn't always true.
+
+**Change:** On the post-save reveal screen (the "Your safety net" view shown after the kid finishes selecting), change the line:
+
+- **From:** *"Some allies show up in more than one place — that's the strongest kind."*
+- **To:** *"Some allies may show up in more than one place — that's the strongest kind."*
+
+Single-word edit ("show" → "may show"). Conditional framing reads as accurate for kids whose allies are all single-placed AND kids who have multi-placed allies.
+
+##### E.3 — Empty-wedge prominence
+
+Stephanie: *"If they report no one is an ally in one of the three areas, can the 'no support yet' area look bigger — so that it is a more visible hole or gap in their safety net?"*
+
+This is in tension with Draft 30's equal-120° thirds geometry (already shipping for total allies ≤ 2). Keep that geometry — don't break the cleanly-equal wedges. Stephanie's "look bigger" is read as "more visible as a gap," not literally bigger geometrically. Address with two coordinated visual moves:
+
+**Change E.3.a — Boost the "No {type} yet" pill prominence.** Currently the pill uses small text in a faded color. Bump the text size up (e.g., `text-sm` → `text-base font-medium`) and increase contrast — keep the per-type color (rose for emotional, sky for social) but darker / less faded. The pill should read as a definite label, not a quiet placeholder.
+
+**Change E.3.b — Add an explicit "Missing: {types}" callout below the net** when one or more support types have zero allies. Renders as a short line directly under the net visual (or the captions, if those are present). Format suggestion:
+
+> *No one named for: **emotional support**, **social support***
+
+Per-type words color-coded with the existing per-type colors (rose / sky). Singular vs plural handled per gap count. Doesn't render when all three types have at least one ally.
+
+This makes the gap explicit by name, which is harder for a kid to overlook than empty space alone.
+
+**Both changes apply at all ally counts** (not just ≤ 2), since a kid could have e.g. 3 practical + 0 emotional + 0 social and still need the gap call-out. The Draft 30 equal-thirds geometry only kicks in when total allies ≤ 2; the empty-pill restyling and Missing callout apply whenever any support type has zero allies.
+
+**Version bump:** `allies-safety-net` v5.4 → **v5.5 (MINOR)**. Prepend changelog: *"v5.5 — Strengthen per-type 'e.g.' examples rewritten so each actually matches its support type (Holly's 2026-06-18 feedback: 'hanging out on weekends' is social, not practical); softened post-save reveal copy ('show up' → 'may show up') so it doesn't read as wrong for kids without multi-placed allies; boosted empty-wedge 'No {type} yet' pill prominence + added explicit 'No one named for: {types}' callout below the net (Stephanie's gap-visibility ask)."* Update `updated`.
+
+---
+
+#### Cleanup queue additions
+
+Add two items to the Cleanup queue (manual housekeeping section):
+
+1. **BSS sorted skills should pull forward to an action plan when that's built.** Josh's admin note on Holly's 2026-06-18 feedback expressed intent to reference the action plan in the BSS closing message; deferred this round because the action plan doesn't exist yet and we don't want to repeat the false-callback anti-pattern from Draft 26. Revisit when the flow integration draft lands (the same draft that wires Draft 21's tree-progress into the participant flow).
+
+2. **Re-check the *"I need help" / "Need an example?"* simplification with Stephanie at the next meeting.** Stephanie's "pick one" feedback was resolved in favor of "I need help" per Josh's 2026-06-18 call. Worth confirming with her at the next review whether the consolidated affordance reads right after seeing it in action — and whether the alternatives content from Draft 27 still feels sufficient as the sole help surface.
+
+---
+
+#### What does NOT change
+
+- Pretest, Posttest, FollowUp Survey, Who I Am Poem — no feedback this round, untouched.
+- TrampolineNet's equal-120° thirds geometry from Draft 30 — preserved.
+- The Draft 27 strategy-aware `help_suggestions` content — unchanged (Stephanie's content stays as the panel content for "I need help creating a new thought").
+- Data shapes, export pipeline, demoDataset — no data changes across any of the five parts; all changes are copy / styling / behavior.
+
+#### Out of scope (queued)
+
+- Flow integration (Draft 21) — still deferred.
+- Action-plan pull-forward for BSS — Cleanup queue item.
+- Continuation of Sam's Story per-shot video work — independent of this draft.
+- Sam 14 / Female / Nonbinary variants — independent.
+
+*End of Draft 32.*
+
+---
+
 <!-- Draft 27 shipped 2026-06-09 — archived (commented out). -->
 
 <!--
@@ -2209,6 +2386,13 @@ After the new doc lands, leave the four old `RSD_Flow_*.docx` files in place as 
 
 ---
 
+**Round 5 follow-ups (2026-06-18, from Draft 32).**
+
+- **BSS sorted skills should pull forward to an action plan when that's built.** Josh's admin note on Holly's 2026-06-18 feedback expressed intent to reference the action plan in the Belonging Skills Sort closing message; deferred in Draft 32 Part C because the action plan doesn't exist yet and we don't want to repeat the false-callback anti-pattern from Draft 26. Revisit when the flow-integration draft lands (the same draft that wires Draft 21's tree-progress into the participant flow).
+- **Re-check the "I need help" / "Need an example?" simplification with Stephanie at the next meeting.** Stephanie's "pick one" feedback was resolved in favor of "I need help" per Josh's 2026-06-18 call (Draft 32 Part D dropped "Need an example?"). Worth confirming with her at the next review whether the consolidated affordance reads right in action — and whether the Draft 27 alternatives content still feels sufficient as the sole help surface.
+
+---
+
 **Round 4 non-code todos (2026-06-08).** Items from the 2026-06-08 review meeting that are non-code, asset-production, or content-creation work — captured here so they don't fall off the radar while Draft 26 ships.
 
 - **ElevenLabs voice re-passes (Josh).** Specific notes from the team:
@@ -2309,6 +2493,70 @@ When drafting per-shot prompts, Cowork will automatically surface the right ligh
 - W2 (cafeteria), W5 (stage with spotlight), W6 (family car interior at dusk) — generated ad-hoc per shot, not locked in World Builder (Open Arts 4-world cap).
 
 *End of Sam's Story per-shot video recipe.*
+
+---
+
+### Sam's Story — voice + workflow pivot (planning, week of 2026-06-22)
+
+> Captured from the 2026-06-18 team review. Team's verdict on the new videos: **animation lands, voices don't.** Voice quality is the #1 thing blocking the next round of Sam's Story production. Recipe in the section above stays valid for visuals/microexpressions/cinematography; what changes is the audio path and the order of operations between audio and video gen.
+
+#### The voice problem
+
+ElevenLabs explicitly blocks generating children's voices for child-safety reasons (per Josh's note in the 2026-06-04 team email — confirmed by direct attempts during Sam Line 1 production). The current Sam 16 voice model is the same one being used for Sam 14, which is the mismatch the team flagged. **Dr. Sprang's specific ask:** find a woman's voice in ElevenLabs that could pass for 14yo Sam. Adult women's voices that read as adolescent boys are a known workaround in voiceover work.
+
+#### Three voice-sourcing approaches to test next week
+
+In rough order of expected control / quality:
+
+1. **Adult-voice that passes as younger (Sprang's ask).** Browse the ElevenLabs voice library for adult women with voices that read as 13-15 years old. Test a few candidates against Sam 14's lines. Cheapest path — uses ElevenLabs library directly, no custom voice cloning needed. Risk: even the best candidates may carry adult cadence the kid-as-character can't sell.
+
+2. **Custom voice model from existing clips of Ella and Lilly (from prior projects).** ElevenLabs voice cloning from real recordings. Consent paths are in hand — **Ella** is a research assistant (adult, just sounds young) who can consent directly; **Lilly** is Adrienne's daughter, and Adrienne can give consent as her parent. Worth a quick check with the IRB whether voice cloning of a minor for a downstream product needs separate review beyond the original recording consent, but the people side is unblocked. Likely the most authentic option since the source audio is actual young voices — and the team-internal personal connection (Adrienne's daughter, our own RA) avoids the "we cloned a stranger's kid" surface that more arms-length cloning would have.
+
+3. **Josh's own voice + ElevenLabs voice changer (Josh's preferred read).** Josh records his own performance of Sam's lines, then ElevenLabs voice changer transforms the timbre to a target voice model. Most controllable approach: the *performance* (cadence, emotional inflection, pacing, breath) comes from Josh, who knows exactly how the lines should be read; the *timbre* comes from the model. Can be applied to all characters (Sam 14, Sam 16, Foster Mom, Foster Dad, Mrs. Johnson) using the same pipeline. Recording in optimal conditions in Josh's office eliminates the "voice model decided to fumble" failure mode entirely. **My read: this is the strongest of the three.** Tradeoff is that finding a target timbre that reads as 14yo is still constrained by ElevenLabs' library (back to problem 1), but the *performance* is locked the way Josh wants it.
+
+These aren't mutually exclusive. A reasonable test plan: spend a morning on (1) — fast screening of library voices — and if nothing in the library lands, pivot to (3) for the most controllable workaround.
+
+#### Workflow pivot — speech-first, then animate
+
+Current workflow (Lines 1 + 3): visual prompt + uploaded voice model → Open Arts generates video and voice together. Voice fumbles ("placements," "elementary") forced full video re-renders, which burned credits.
+
+**Proposed pivot:** lock the audio first, then animate to it.
+
+1. **Step 1 — Audio.** Generate the spoken line in ElevenLabs (whichever voice approach from above), iterate until it lands exactly as wanted (pacing, emphasis, no fumbles). Audio is then locked.
+2. **Step 2 — Video.** Use Open Arts' audio-driven video generation (the "use recorded speech first" option) — upload the finalized audio + the visual prompt, Open Arts generates a video that lip-syncs to the audio.
+
+**Why this is likely the right pivot:**
+
+- **Decouples voice and animation.** Voice can be iterated freely in ElevenLabs without burning Open Arts credits. Animation only renders once the audio is final.
+- **Likely cheaper per video.** Open Arts isn't generating audio anymore — just visual + lip-sync. Should consume fewer credits per render, though we'll need to confirm empirically on the first test.
+- **Faster iteration.** Audio fumbles happen in a tool that's cheap to re-run; only locked audio reaches the video step.
+- **Performance locked in.** No more voice-model surprises. What's in the audio file is what the video will speak.
+- **Plays naturally with Josh's voice-changer plan.** If Josh records himself + transforms to a target voice (option 3 above), the audio is already going to be pre-recorded and exported. Speech-first video is the natural next step from that pipeline.
+
+**Tradeoffs to watch:**
+
+- **Lip-sync quality.** Open Arts' lip-sync to imported audio may not match the all-in-one model's audio-visual coherence. Worth A/B testing on one shot — generate the same line via current workflow and via speech-first to compare lip-sync fidelity.
+- **Two-tool workflow.** Adds an explicit handoff between ElevenLabs and Open Arts. Not a real cost since Josh was using both anyway, but worth being deliberate about file management (audio output → consistent location → uploaded into Open Arts).
+- **Microexpressions stay in the visual prompt.** Performance language for non-mouth motion (gaze, head tilts, blinks, restraint) still belongs in the Open Arts prompt — that part of the recipe doesn't change. Only the mouth/voice handoff moves.
+
+#### Next-week task list (for the week of 2026-06-22)
+
+In suggested order:
+
+1. **Screen ElevenLabs voice library for a 14yo-passing voice.** Sprang's ask. Should take less than an hour. If a strong candidate emerges, lock it as Sam 14's voice and move on. If not, escalate to option (3).
+2. **Set up the voice-changer pipeline.** If option (3) is in play: pick a target voice model in ElevenLabs, record Josh delivering one test line (probably the Sam 14 inner-monologue line: *"How do I feel about that? I have literally no idea."*), transform, and compare to the library candidates from step 1.
+3. **A/B test speech-first vs all-in-one video gen.** Take one already-rendered Sam 16 shot (Line 1 is a good candidate since the team has reactions to compare against) and re-generate it via speech-first using a pre-locked audio file. Compare lip-sync quality, render credit cost, and overall feel. If speech-first holds up, all subsequent shots use it.
+4. **Set up the Ella + Lilly voice clone pipeline if option (2) is in play.** Get explicit consent from Ella directly + from Adrienne for Lilly. Confirm with the IRB whether voice cloning for the deployed product needs separate review beyond the original recording consent (likely yes, given the use case is different from the original project). If clear, upload representative clips to ElevenLabs voice cloning and test against Sam 14's lines.
+5. **Update the per-shot video recipe section above** with the new speech-first workflow once it's been validated. The visual prompt structure (camera / composition / performance / mood / duration) stays valid; the "voice model is already uploaded" line becomes "audio file is pre-generated and uploaded as the lip-sync target."
+
+#### Open questions for the team meeting
+
+- Does Sprang have a specific ElevenLabs library voice in mind already, or is she trusting Josh to screen and pick?
+- Permissions/consent path for using Ella + Lilly's audio as voice-cloning training data.
+- Budget for the voice-changer subscription tier if option (3) becomes the standard pipeline (ElevenLabs pricing differs by feature access).
+- Whether the FollowUp video work (further Sam Line 4 — Mrs. Johnson backstage; Line 5 — metaphor closing) should wait for the voice pivot to land, or proceed in parallel with the current voice as scratch and re-voice later. *My recommendation: wait. Re-rendering the visual a second time to swap voices costs credits we should avoid.*
+
+*End of voice + workflow pivot planning notes.*
 
 ---
 

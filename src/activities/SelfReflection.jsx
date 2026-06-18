@@ -101,12 +101,12 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
   }
 
   if (done) {
+    // No closing message — Ginny + Holly (2026-06-18) flagged the
+    // "Hold onto what came up" line as unclear; removed with no
+    // replacement (same call as Draft 26's "we'll come back to it").
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-3">Thanks for sharing</h2>
-        <p className="text-[16px] leading-relaxed text-slate-700">
-          Hold onto what came up.
-        </p>
       </div>
     )
   }
@@ -137,26 +137,34 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
       {screen.twoCol ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[14px] font-medium text-slate-700 mb-2">
+            <label className="block text-[14px] font-medium text-slate-700 mb-1">
               Thoughts
             </label>
+            {/* Example as persistent help text (not a placeholder) so it
+                stays visible while the kid types — Holly's 2026-06-18 ask. */}
+            <p className="text-[13px] italic text-slate-500 mb-2">
+              {TF_EXAMPLES[screen.section].thoughts}
+            </p>
             <textarea
               rows={5}
               value={data[screen.section].thoughts}
               onChange={(e) => update(screen.section, 'thoughts', e.target.value)}
-              placeholder={TF_EXAMPLES[screen.section].thoughts}
+              placeholder="Type your response here…"
               className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
           </div>
           <div>
-            <label className="block text-[14px] font-medium text-slate-700 mb-2">
+            <label className="block text-[14px] font-medium text-slate-700 mb-1">
               Feelings
             </label>
+            <p className="text-[13px] italic text-slate-500 mb-2">
+              {TF_EXAMPLES[screen.section].feelings}
+            </p>
             <textarea
               rows={5}
               value={data[screen.section].feelings}
               onChange={(e) => update(screen.section, 'feelings', e.target.value)}
-              placeholder={TF_EXAMPLES[screen.section].feelings}
+              placeholder="Type your response here…"
               className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
           </div>

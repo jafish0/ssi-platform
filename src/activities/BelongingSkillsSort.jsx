@@ -873,7 +873,7 @@ function SortSnapshotScreen({ placement, lookup }) {
     <div className="text-center">
       <h2 className="text-[22px] font-semibold mb-2">Nice work!</h2>
       <p className="text-[15px] text-slate-700 mb-5">
-        Here&apos;s where you landed. It&apos;s yours to keep.
+        Think about when you could try out one of these skills.
       </p>
       <div ref={wrapRef} className="mb-4 mx-auto w-full max-w-[560px]">
         <SortSnapshotSvg placement={placement} lookup={lookup} />

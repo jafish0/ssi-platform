@@ -80,11 +80,6 @@ const CHALLENGE_PROMPTS = [
   'Is this thought helping me, and if not, what is a thought that might be more helpful?',
 ]
 
-const BOTH_AND_EXAMPLES = [
-  '"My foster family isn\'t my real family AND there can still be a place for them in my life"',
-  '"I feel like no one understands me AND there are ways I can help people get to know me more"',
-  '"A lot of people have given up on me in the past AND it doesn\'t mean everyone will"',
-]
 
 const OTHER_ID = 'a_other'
 
@@ -752,14 +747,9 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
               />
             </div>
-            <details className="mt-3 text-[13px] text-slate-600">
-              <summary className="cursor-pointer text-amber-700">Need an example?</summary>
-              <ul className="mt-2 space-y-1">
-                {BOTH_AND_EXAMPLES.map((ex, i) => (
-                  <li key={i} className="italic">{ex}</li>
-                ))}
-              </ul>
-            </details>
+            {/* The "Need an example?" disclosure was dropped in v5.7
+                (Draft 32 Part D) — "I need help creating a new thought"
+                below is now the single help affordance on both strategies. */}
           </div>
         )}
 
@@ -769,13 +759,18 @@ export default function GettingUnstuck({ onSave = console.log }) {
             Tapping a suggestion pre-fills the active response field. */}
         {r.strategy && helpSuggestions.length > 0 && (
           <div className="mb-5">
+            {/* Secondary-CTA styling (v5.7) — bigger + bolder than the
+                old text link so it reads as a usable affordance (Jessica
+                + Holly), without competing with the primary Continue/Save.
+                Renamed so kids know it's about generating a new thought,
+                not tech support (Holly). Appears on both strategies. */}
             <button
               type="button"
               onClick={() => setHelpOpenId((id) => (id === item.id ? null : item.id))}
               aria-expanded={helpOpenId === item.id}
-              className="text-[13px] font-medium text-amber-700 hover:text-amber-900 underline-offset-2 hover:underline"
+              className="inline-flex items-center text-[15px] font-semibold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-full px-4 py-2 min-h-[40px]"
             >
-              {helpOpenId === item.id ? 'Hide help' : 'I need help'}
+              {helpOpenId === item.id ? 'Hide help' : 'I need help creating a new thought'}
             </button>
             {helpOpenId === item.id && (
               <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-4">

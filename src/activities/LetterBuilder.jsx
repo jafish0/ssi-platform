@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { Download } from 'lucide-react'
 import { PrimaryButton } from '../components/items/shared.jsx'
+import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
 
 // "Letter to Another Youth" — single-screen free-write activity.
 //
@@ -54,12 +56,7 @@ export default function LetterBuilder({ onSave = console.log }) {
   }
 
   if (done) {
-    return (
-      <div>
-        <h2 className="text-[22px] font-semibold mb-3">Saved</h2>
-        <p className="text-[16px] text-slate-700">That letter is yours.</p>
-      </div>
-    )
+    return <LetterKeepsake letter={trimmed} />
   }
 
   return (
@@ -95,4 +92,123 @@ export default function LetterBuilder({ onSave = console.log }) {
       </div>
     </div>
   )
+}
+
+// ---------- Done state: letter keepsake + Save-as-image ----------
+//
+// Shows the kid's letter back to them so they can read / print it, plus a
+// Save-as-image button (rasterizes a self-contained SVG keepsake, same
+// downloadSvgStringAsPng path as Who I Am Poem). The closing copy
+// (Holly's 2026-06-18 ask) references "save or print," so the affordance
+// is visible here.
+function LetterKeepsake({ letter }) {
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleDownload() {
+    setError(null)
+    setDownloading(true)
+    try {
+      const stamp = new Date().toISOString().slice(0, 10)
+      const { svg, width, height } = buildLetterKeepsakeSvg(letter)
+      await downloadSvgStringAsPng(svg, width, height, `my-letter-${stamp}.png`)
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || 'Could not save the image.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-[22px] font-semibold mb-2 text-center">Saved</h2>
+      <p className="text-[15px] text-slate-700 text-center mb-5 max-w-[520px] mx-auto">
+        You can save or print this letter and look back on it whenever you
+        need a reminder or some encouragement.
+      </p>
+      <div className="bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-card p-8">
+        <div className="text-[16px] leading-relaxed text-slate-800 whitespace-pre-wrap">
+          {letter || '—'}
+        </div>
+      </div>
+      <div className="flex flex-col items-center gap-2 mt-5">
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={downloading || !letter}
+          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+        >
+          <Download size={14} strokeWidth={2} />
+          {downloading ? 'Saving image…' : 'Save as image'}
+        </button>
+        {error && <p role="alert" className="text-[12px] text-rose-600">{error}</p>}
+      </div>
+    </div>
+  )
+}
+
+// Build a self-contained SVG keepsake of the letter — cream/amber card
+// with a title + footer credit, matching the on-screen card and the Who
+// I Am Poem keepsake. Long prose is word-wrapped to a fixed width and the
+// canvas grows to fit; blank lines in the source are preserved as gaps.
+function buildLetterKeepsakeSvg(letter) {
+  const escapeXml = (s) =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;')
+
+  const WIDTH = 620
+  const PAD_X = 48
+  const LINE_H = 26
+  const WRAP = 64 // chars per line at 17px in the available width
+
+  // Wrap each source paragraph; keep blank lines as spacers.
+  const wrapped = []
+  for (const para of String(letter || '').split('\n')) {
+    if (!para.trim()) {
+      wrapped.push('')
+      continue
+    }
+    let cur = ''
+    for (const word of para.split(/\s+/)) {
+      const cand = cur ? `${cur} ${word}` : word
+      if (cand.length > WRAP && cur) {
+        wrapped.push(cur)
+        cur = word
+      } else {
+        cur = cand
+      }
+    }
+    if (cur) wrapped.push(cur)
+  }
+
+  const titleY = 56
+  const bodyStartY = titleY + 44
+  const height = Math.max(320, bodyStartY + wrapped.length * LINE_H + 60)
+  const cx = WIDTH / 2
+
+  const lineEls = wrapped
+    .map((line, i) => {
+      if (!line) return ''
+      const y = bodyStartY + i * LINE_H
+      return `<text x="${PAD_X}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="17" fill="#1F2937">${escapeXml(line)}</text>`
+    })
+    .filter(Boolean)
+    .join('\n  ')
+
+  const stamp = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  const footerY = height - 28
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${WIDTH} ${height}" width="${WIDTH}" height="${height}">
+  <rect x="6" y="6" width="${WIDTH - 12}" height="${height - 12}" rx="28" ry="28" fill="#FEF7E5" stroke="#F4D78F" stroke-width="3"/>
+  <text x="${cx}" y="${titleY}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="700" fill="#92400E" letter-spacing="0.16em">A LETTER TO ANOTHER TEEN</text>
+  ${lineEls}
+  <text x="${cx}" y="${footerY}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" fill="#A8773D">SSI Platform · ${escapeXml(stamp)}</text>
+</svg>`
+
+  return { svg, width: WIDTH, height }
 }
