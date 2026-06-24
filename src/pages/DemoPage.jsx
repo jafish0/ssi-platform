@@ -269,13 +269,14 @@ export default function DemoPage() {
           before animation: character cards + per-line ElevenLabs voice
           samples + a closing Family Photo. Sits between Tests and Data
           export so the reviewer flows sandbox → surveys → cast → export. */}
+      {/* Sam's Story — the narrative-video cast (Holly's Script 2.0). */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Meet the cast
+          Sam&apos;s Story
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
           Preview of the cast and voice samples for Holly&apos;s video script
-          (Script 2.0). Tap any line to hear it read.
+          (Script 2.0). Tap any sample to hear it.
         </p>
 
         {/* Full-script download — so reviewers can read along while they
@@ -295,7 +296,7 @@ export default function DemoPage() {
         </div>
 
         <div className="space-y-4">
-          {CAST.map((character) => (
+          {CAST.filter((c) => c.show === 'sams-story').map((character) => (
             <CastCard key={character.id} character={character} />
           ))}
         </div>
@@ -311,6 +312,24 @@ export default function DemoPage() {
             {FAMILY_PHOTO.caption}
           </figcaption>
         </figure>
+      </section>
+
+      {/* Learning Skills for Belonging — the psychoeducation track that
+          wraps the six activities (Adrienne's script; Kai narrates). */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Learning Skills for Belonging
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          The psychoeducation track that wraps the six activities. Kai narrates
+          eight scenes total; two recorded so far.
+        </p>
+
+        <div className="space-y-4">
+          {CAST.filter((c) => c.show === 'learning-skills').map((character) => (
+            <CastCard key={character.id} character={character} />
+          ))}
+        </div>
       </section>
 
       {/* Growing your roots — preview of the between-activity progress
@@ -581,39 +600,60 @@ function ExportFileBlock({
 
 // ---------- Reusable: cast character card ----------
 //
-// Image on the left (~40%) + text on the right (~60%) on desktop; stacks
-// on mobile. A card's right column branches on one of these optional
-// fields, in precedence order: `voiceSamples` (labeled audio-only
-// voice-model previews — native <audio> per entry; Sam 16's locked
-// Brayden voice), `videos` (one or more rendered Sam's Story shots —
-// each an optional label + a 9:16 player [native <video> for `src`,
-// YouTube iframe for `youtubeId`] + spoken-line caption), `lines`
-// (per-line scene cue + quoted text; each line shows a native <audio>
-// player if it has an `audio` clip, else a "Voice model coming soon"
-// note), or `description` (a paragraph for cast who don't speak in
-// Script 2.0 yet). See src/lib/castData.js.
+// Image column on the left (~40%): a variant gallery when the card has
+// an `images` array (Kai), else the single `image`. Text on the right
+// (~60%); stacks on mobile. `voiceSamples` (if present) render as their
+// own block above the main content. The main content branches on one of
+// these optional fields, in precedence order: `scenes` (longer-form
+// narrator audio by scene — label + optional description + <audio>; Kai),
+// `videos` (rendered Sam's Story shots — optional label + 9:16 player
+// [native <video> for `src`, YouTube iframe for `youtubeId`] + caption),
+// `lines` (per-line scene cue + quoted text; native <audio> if the line
+// has an `audio` clip, else a "Voice model coming soon" note — suppressed
+// when the card has `voiceSamples`), or `description` (a paragraph for
+// cast who don't speak yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
-  const { name, image, alt, role, lines, description, landscape, videos, voiceSamples } = character
+  const { name, image, images, alt, role, lines, description, landscape, videos, voiceSamples, scenes } = character
   return (
     <article
       tabIndex={0}
       className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row gap-6"
     >
-      {/* Image column */}
+      {/* Image column — a gallery of design variants when `images` is
+          present (Kai), else the single character image. */}
       <div className="w-full md:w-2/5 flex-shrink-0">
-        <img
-          src={image}
-          alt={alt}
-          className={
-            'w-full rounded-xl shadow-card ' +
-            // Sam 14 is landscape — crop to a gentle ~4:3 portrait so the
-            // faces stay centered. Portrait images render at natural ratio.
-            (landscape
-              ? 'object-cover aspect-[4/3] max-h-[320px] md:max-h-none'
-              : 'h-auto max-h-[280px] md:max-h-none object-cover md:object-contain')
-          }
-        />
+        {images && images.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {images.map((img, i) => (
+              <figure key={i}>
+                <img
+                  src={img.src}
+                  alt={img.alt || `${name} — ${img.label || `variant ${i + 1}`}`}
+                  className="w-full h-auto rounded-xl shadow-card"
+                />
+                {img.label && (
+                  <figcaption className="text-sm text-slate-600 italic mt-1 text-center">
+                    {img.label}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+        ) : (
+          <img
+            src={image}
+            alt={alt}
+            className={
+              'w-full rounded-xl shadow-card ' +
+              // Sam 14 is landscape — crop to a gentle ~4:3 portrait so the
+              // faces stay centered. Portrait images render at natural ratio.
+              (landscape
+                ? 'object-cover aspect-[4/3] max-h-[320px] md:max-h-none'
+                : 'h-auto max-h-[280px] md:max-h-none object-cover md:object-contain')
+            }
+          />
+        )}
       </div>
 
       {/* Text column */}
@@ -650,7 +690,25 @@ function CastCard({ character }) {
           </div>
         )}
 
-        {videos && videos.length > 0 ? (
+        {scenes && scenes.length > 0 ? (
+          <div className="space-y-1">
+            {scenes.map((sc, i) => (
+              <div key={i} className={i === 0 ? '' : 'mt-4'}>
+                <p className="text-sm font-semibold text-slate-700">{sc.label}</p>
+                {sc.description && (
+                  <p className="text-xs italic text-slate-500 mb-1">{sc.description}</p>
+                )}
+                <audio
+                  controls
+                  preload="metadata"
+                  src={sc.audio}
+                  aria-label={`Audio: ${name} — ${sc.label}`}
+                  className="w-full mt-1"
+                />
+              </div>
+            ))}
+          </div>
+        ) : videos && videos.length > 0 ? (
           <div className="mx-auto w-full max-w-[320px]">
             {videos.map((v, i) => (
               <div key={i}>
