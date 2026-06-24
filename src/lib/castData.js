@@ -24,14 +24,18 @@
 //     optional: a line with an ElevenLabs sample renders an <audio>
 //     player (Foster Mom); a line without one renders a "Voice model
 //     coming soon" note (Sam 14, since 2026-06-12).
+//   - `voiceSamples`: [{ label, src }] — labeled audio-only voice-model
+//     previews, rendered as native <audio> players. Sam 16 uses this to
+//     demo the locked Brayden voice across all narrator lines (Voice
+//     Changer pipeline locked 2026-06-24).
 //   - `description`: a paragraph for characters who don't speak in
 //     Script 2.0 yet (Foster Dad, Mrs. Johnson).
-// Sam 16's card now previews four rendered Sam's Story shots — Line 1
-// (opening narration) plus Line 3 across three framings (medium
-// close-up → wider ¾ → tight close-up) — as self-hosted mp4s under
-// /cast/video/ (temporary hosting; native <video>, no YouTube chrome).
-// Its seven audio scratch clips at /cast/audio/sam-16-line-*.mp3 are
-// left in place but no longer referenced.
+// Sam 16's card currently previews the locked Brayden voice across all
+// narrator lines via a single audio sample. The four Draft 31 mp4s
+// remain at /cast/video/sam-16-line-*.mp4 but are no longer referenced —
+// they'll return re-rendered with Brayden audio under the speech-first
+// pipeline. The seven older audio scratch clips at
+// /cast/audio/sam-16-line-*.mp3 are also still in place, unreferenced.
 
 export const CAST = [
   {
@@ -40,33 +44,17 @@ export const CAST = [
     image: '/cast/images/sam-16.png',
     alt: 'Sam at 16 — the narrator, two years later',
     role: 'Our narrator — Sam two years later.',
-    // Self-hosted (temporary) Sam's Story shots. Each entry: a native
-    // <video> (no YouTube chrome blocking the frame) + the spoken line
-    // verbatim as caption, with an optional `label` heading for the
-    // first shot in a logical group. `youtubeId` is supported as a
-    // mutually-exclusive fallback to `src` for a future card.
-    videos: [
+    // Brayden-voiced "Older Sam" voice-model demo (all narrator lines
+    // stitched). Voice pipeline locked 2026-06-24 (Josh records →
+    // ElevenLabs Voice Changer → Brayden = Sam). Replaced the four Draft
+    // 31 video clips (Line 1 + Line 3 shots) — the team's feedback was
+    // about the voices, so we surface only the new locked voice; the
+    // videos return later re-rendered with Brayden audio. The four mp4s
+    // remain at /cast/video/sam-16-line-*.mp4, unreferenced for now.
+    voiceSamples: [
       {
-        label: 'Line 1 — Opening narration',
-        src: '/cast/video/sam-16-line-1.mp4',
-        caption:
-          'I remember this moment like it was yesterday. I was removed from my real mom when I was 10 and lived with my foster family after bouncing around different homes for a couple of years.',
-      },
-      {
-        label: 'Line 3 — After the rejection',
-        src: '/cast/video/sam-16-line-3-shot-1.mp4',
-        caption:
-          "Yeah, that was a low blow. But at the time, I really couldn't picture myself belonging to their family. I had been through a lot.",
-      },
-      {
-        src: '/cast/video/sam-16-line-3-shot-2.mp4',
-        caption:
-          "Going from grade school to middle school to high school isn't easy for anyone, but it was even harder for me because I was changing schools and houses all the time.",
-      },
-      {
-        src: '/cast/video/sam-16-line-3-shot-3.mp4',
-        caption:
-          'Who could keep up with friends or teams during all of that? It was tough, but I was used to doing everything by myself my whole life.',
+        label: 'New Older Sam Voice Model — All Lines',
+        src: '/cast/audio/older-sam-narrator.mp3',
       },
     ],
   },

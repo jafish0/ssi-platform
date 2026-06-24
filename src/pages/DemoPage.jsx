@@ -582,17 +582,19 @@ function ExportFileBlock({
 // ---------- Reusable: cast character card ----------
 //
 // Image on the left (~40%) + text on the right (~60%) on desktop; stacks
-// on mobile. A card's right column branches on one of three optional
-// fields, in precedence order: `videos` (one or more rendered Sam's
-// Story shots — each an optional label + a 9:16 player [native <video>
-// for `src`, YouTube iframe for `youtubeId`] + spoken-line caption),
-// `lines` (per-line scene cue + quoted text; each line shows a native
-// <audio> player if it has an `audio` clip, else a "Voice model coming
-// soon" note), or `description` (a paragraph for cast who don't speak in
+// on mobile. A card's right column branches on one of these optional
+// fields, in precedence order: `voiceSamples` (labeled audio-only
+// voice-model previews — native <audio> per entry; Sam 16's locked
+// Brayden voice), `videos` (one or more rendered Sam's Story shots —
+// each an optional label + a 9:16 player [native <video> for `src`,
+// YouTube iframe for `youtubeId`] + spoken-line caption), `lines`
+// (per-line scene cue + quoted text; each line shows a native <audio>
+// player if it has an `audio` clip, else a "Voice model coming soon"
+// note), or `description` (a paragraph for cast who don't speak in
 // Script 2.0 yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
-  const { name, image, alt, role, lines, description, landscape, videos } = character
+  const { name, image, alt, role, lines, description, landscape, videos, voiceSamples } = character
   return (
     <article
       tabIndex={0}
@@ -619,7 +621,31 @@ function CastCard({ character }) {
         <h3 className="text-2xl font-bold text-slate-700 mb-1">{name}</h3>
         <p className="text-sm italic text-slate-500 mb-4">{role}</p>
 
-        {videos && videos.length > 0 ? (
+        {voiceSamples && voiceSamples.length > 0 ? (
+          <div className="mx-auto w-full max-w-[320px]">
+            {voiceSamples.map((vs, i) => (
+              <div key={i}>
+                {vs.label && (
+                  <p
+                    className={
+                      'text-sm font-semibold text-slate-700 mb-2 ' +
+                      (i === 0 ? '' : 'mt-4')
+                    }
+                  >
+                    {vs.label}
+                  </p>
+                )}
+                <audio
+                  controls
+                  preload="metadata"
+                  src={vs.src}
+                  aria-label={`Voice sample: ${name} — ${vs.label || 'voice model'}`}
+                  className="w-full"
+                />
+              </div>
+            ))}
+          </div>
+        ) : videos && videos.length > 0 ? (
           <div className="mx-auto w-full max-w-[320px]">
             {videos.map((v, i) => (
               <div key={i}>
