@@ -621,8 +621,11 @@ function CastCard({ character }) {
         <h3 className="text-2xl font-bold text-slate-700 mb-1">{name}</h3>
         <p className="text-sm italic text-slate-500 mb-4">{role}</p>
 
-        {voiceSamples && voiceSamples.length > 0 ? (
-          <div className="mx-auto w-full max-w-[320px]">
+        {/* Voice samples render as their own block ABOVE the
+            videos/lines/description content (Draft 34) — a card can have
+            both (Sam 14: voice sample + lines). */}
+        {voiceSamples && voiceSamples.length > 0 && (
+          <div className="mx-auto w-full max-w-[320px] mb-6">
             {voiceSamples.map((vs, i) => (
               <div key={i}>
                 {vs.label && (
@@ -645,7 +648,9 @@ function CastCard({ character }) {
               </div>
             ))}
           </div>
-        ) : videos && videos.length > 0 ? (
+        )}
+
+        {videos && videos.length > 0 ? (
           <div className="mx-auto w-full max-w-[320px]">
             {videos.map((v, i) => (
               <div key={i}>
@@ -707,6 +712,10 @@ function CastCard({ character }) {
                     aria-label={`Audio: ${name} — ${line.scene}`}
                     className="w-full mt-1"
                   />
+                ) : voiceSamples && voiceSamples.length > 0 ? (
+                  // Voice sample is shown above — suppress the stale
+                  // "coming soon" note for this card's lines (Draft 34).
+                  null
                 ) : (
                   <p className="mt-1 text-sm italic text-slate-400">
                     Voice model coming soon
@@ -715,11 +724,11 @@ function CastCard({ character }) {
               </div>
             ))}
           </div>
-        ) : (
+        ) : description ? (
           <p className="text-base text-slate-700 leading-relaxed">
             {description}
           </p>
-        )}
+        ) : null}
       </div>
     </article>
   )

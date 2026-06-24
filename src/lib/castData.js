@@ -67,8 +67,18 @@ export const CAST = [
     // Sam 14 image is landscape (2304×1296) — crop to a gentle ~4:3 so
     // faces stay centered (see `landscape` flag, handled in the view).
     landscape: true,
-    // Audio scratch clips removed 2026-06-12 — a line with no `audio`
-    // renders a "Voice model coming soon" note instead of a player.
+    // Brayden-voiced Sam 14 demo (both lines stitched), via the same
+    // Voice Changer pipeline as Sam 16 (locked 2026-06-24). Supersedes
+    // the per-line "Voice model coming soon" notes — the voice model is
+    // ready now. `lines` stays for scene-cue + verbatim context under the
+    // sample. Source is WAV (no ffmpeg on hand to convert; small + all
+    // browsers play it).
+    voiceSamples: [
+      {
+        label: 'New Sam 14 Voice Model — Both Lines',
+        src: '/cast/audio/sam-14-voice-sample.wav',
+      },
+    ],
     lines: [
       {
         scene: 'Inner monologue voice-over (the moment after the adoption question)',
