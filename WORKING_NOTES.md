@@ -14,6 +14,109 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`aa196c0` · 2026-06-24** — Draft 33: Meet-the-cast — swapped Sam 16's four video clips for the new **Brayden-voiced "Older Sam Narrator" audio sample** (all narrator lines stitched). Voice pipeline locked 2026-06-24 (Josh records → ElevenLabs Voice Changer → Brayden = Sam); the team's feedback was about the *voices*, so we surface only the new locked voice rather than show it beside the old-voice videos. Copied `Older Sam Narrator.mp3` (~3.5 MB) → `public/cast/audio/older-sam-narrator.mp3`. **castData.js:** Sam 16's `videos: [...]` → `voiceSamples: [{ label, src }]` (one all-lines sample); top-of-file comment updated. **DemoPage CastCard:** new `voiceSamples` branch (label + native `<audio controls preload="metadata">`), takes precedence over `videos`/`lines`/`description`; the `videos` branch is kept in the renderer for future re-introduction. The four `sam-16-line-*.mp4` files stay in `/public/cast/video/` unreferenced (return later re-rendered with Brayden audio under the speech-first pipeline). No version bump (DemoPage section). Verified via preview: Sam 16 card = 1 `<audio>` player, 0 videos/iframes, mp3 serves 200 `audio/mpeg`.
+
+  <details>
+  <summary>Draft 33 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 33 — Meet-the-cast: swap Sam 16's videos for the Brayden-voiced "Older Sam Narrator" audio sample
+
+  Following the 2026-06-24 voice pipeline lock (Josh records → ElevenLabs Voice Changer → Brayden model = Sam's voice), Josh produced a single all-lines voice-model demo for Sam 16. **Two coupled changes:** add the new audio sample to Sam 16's card, AND remove the four existing video clips (Line 1 + Line 3 shots 1/2/3) that shipped in Draft 31. Reason: the team's feedback on the existing videos was that the *voices* didn't land. Rather than show the team the new locked voice next to the old voice in the videos (which would invite confusion), surface only the new voice — the videos can come back later, re-rendered with Brayden audio under the speech-first pipeline.
+
+  **The file:** `SSI Platform A/Video Content/New Voiceover/Older Sam Narrator.mp3` (~3.5 MB). Brayden-voiced, all Sam 16 narrator lines stitched together.
+
+  #### Change 1 — Copy the mp3 into `public/cast/audio/`
+
+  Source path → destination:
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/New Voiceover/Older Sam Narrator.mp3` | `public/cast/audio/older-sam-narrator.mp3` |
+
+  Single new asset, ~3.5 MB. With `preload="metadata"` on the native `<audio>` element, up-front fetch is tiny and the full mp3 only loads on play.
+
+  #### Change 2 — `src/lib/castData.js`: replace `videos` with `voiceSamples` on Sam 16
+
+  Sam 16's card currently carries `videos: [...]` (from Draft 31) with four entries. Remove that field entirely. Add a new field, `voiceSamples: [...]`, in its place.
+
+  **Before (Sam 16 card):**
+
+  ```js
+  {
+    id: 'sam-16',
+    name: 'Sam (16 years old)',
+    image: '/cast/images/sam-16.png',
+    alt: 'Sam at 16 — the narrator, two years later',
+    role: 'Our narrator — Sam two years later.',
+    videos: [ /* four entries: Line 1 + Line 3 shots 1/2/3 */ ],
+  },
+  ```
+
+  **After:**
+
+  ```js
+  {
+    id: 'sam-16',
+    name: 'Sam (16 years old)',
+    image: '/cast/images/sam-16.png',
+    alt: 'Sam at 16 — the narrator, two years later',
+    role: 'Our narrator — Sam two years later.',
+    voiceSamples: [
+      {
+        label: 'New Older Sam Voice Model — All Lines',
+        src: '/cast/audio/older-sam-narrator.mp3',
+      },
+    ],
+  },
+  ```
+
+  Per `voiceSamples` entry shape:
+  - `label` (string, required) — the section heading rendered above the audio player.
+  - `src` (string, required) — absolute URL to the mp3 in `/cast/audio/`.
+
+  The array shape is used so future voice samples (Sam 14, other character voice demos) can extend without another refactor.
+
+  Other cast cards — no changes. `voiceSamples` is Sam-16-only for now.
+
+  **Update the top-of-file comment block:**
+
+  - Replace the current bullet describing `video` / `videos` as Sam 16's content shape with: `voiceSamples`: [{ label, src }] — labeled audio-only voice-model previews, rendered as native `<audio>` players. Sam 16's card uses this to demo the locked Brayden voice across all narrator lines (Voice Changer pipeline locked 2026-06-24).
+  - Update the paragraph mentioning "Sam 16's card now previews four rendered Sam's Story shots" — rewrite to say Sam 16's card currently previews the locked Brayden voice across all narrator lines via a single audio sample. The four mp4s remain at `public/cast/video/sam-16-line-*.mp4` but are no longer referenced; they'll come back when re-rendered with Brayden audio under the speech-first pipeline.
+
+  #### Change 3 — `src/pages/DemoPage.jsx`: render `voiceSamples` in CastCard; drop the `videos` branch for Sam 16
+
+  In the CastCard renderer:
+
+  1. **Add a `voiceSamples` render branch.** Iterate the array, render each entry's label as a small heading, then a native `<audio>` player below it.
+  2. **The existing `videos` render branch stays in the renderer** for backward compatibility with future cards that may use videos again — just don't pass `videos` for Sam 16 anymore (handled automatically once `videos` is removed from Sam 16's card data in Change 2).
+
+  **Render order for voice samples (top to bottom, per entry):**
+
+  1. **Label** — small heading, same styling pattern as the per-video `label` in Draft 31 (probably `text-sm font-semibold text-slate-700 mt-4 mb-2`). First voice-sample's label can drop the `mt-4` to sit closer to the image/role line.
+  2. **Audio player** — native `<audio controls preload="metadata">` with `src={entry.src}`. Centered or full-width within a sensible container (`max-w-[320px]` works to match the video sizing the team is used to, but full-width is also fine for audio). No styling chrome beyond the browser's default audio controls.
+
+  **Precedence on the card.** A card can have any combination of `voiceSamples`, `videos`, `lines`, `description` going forward. For now Sam 16 will only have `voiceSamples`; Sam 14 + Foster Mom keep `lines`; Foster Dad + Mrs. Johnson keep `description`. When rendering, render `voiceSamples` first (if present), then whichever of `videos` / `lines` / `description` the card has below it. Today only Sam 16 has voice samples and no other content shape — so the renderer just produces image + role + voice sample.
+
+  #### What does NOT change
+
+  - The four `sam-16-line-*.mp4` files at `/public/cast/video/` — **left in place** but no longer referenced. Same pattern as the legacy `sam-16-line-*.mp3` files from earlier (Draft 29 left those in place when the audio-line clips were dropped). When Sam 16's videos return (Brayden-voiced via the speech-first pipeline), the files in `/public/cast/video/` may or may not be the ones we reference — easier to keep them around now and decide later than to delete and re-copy. *Recommend leaving in place.*
+  - The Meet-the-cast section heading, the Script 2.0 download link, the Family Photo closer, and surrounding /demo page structure.
+  - Other cast cards (Sam 14, Foster Mom, Foster Dad, Mrs. Johnson) — no changes.
+  - No `activityVersions.js` bump — DemoPage section, not an activity.
+  - No feedback-category change — existing `video` category still covers voice/video feedback on this surface.
+
+  #### Out of scope (queued for future drafts)
+
+  - **Sam 14 voice sample.** There's a `Sam 14.mp3` file in the same `New Voiceover/` folder (~328 KB) — Josh hasn't asked to add it yet. When confirmed, extend the same `voiceSamples` shape on Sam 14's card with an entry like `{ label: 'New Sam 14 Voice Model — Both Lines', src: '/cast/audio/sam-14-voice-sample.mp3' }`.
+  - **Bring back the videos with Brayden voice.** Deferred pending the speech-first video gen A/B test (per the 2026-06-24 voice + workflow pivot planning notes above). When that lands and the workflow is validated, re-render Lines 1 + 3 with Brayden audio and re-introduce `videos: [...]` on Sam 16's card.
+  - **Other characters' voice samples** (Foster Mom / Foster Dad / Mrs. Johnson) — when those voice models are chosen and tested, same `voiceSamples` shape extends to their cards.
+
+  **Approved by:** Josh, 2026-06-24 — after the Brayden voice landed and Josh exported the all-lines stitched mp3.
+
+  *End of Draft 33.*
+
+  </details>
+
 - **`a240bda` · 2026-06-18** — Draft 32: Round 5 feedback bundle, five activities in one commit. **Self-Reflection v1.3 → v1.4:** deleted the "Hold onto what came up" closing (Ginny + Holly); moved the example thought/feeling text out of the textarea placeholder into persistent help text so it stays visible while typing. **Letter v2.2 → v2.3:** closing rewritten to "You can save or print this letter and look back on it…" (Holly) — and since the done screen had no save affordance (the draft assumed one existed), it now shows the letter back in a keepsake card + a Save-as-image button (reuses `downloadSvgStringAsPng`). **Belonging Skills Sort v3.1 → v3.2:** snapshot closing "it's yours to keep" → "Think about when you could try out one of these skills." (Holly); action-plan pull-forward deferred to flow integration. **Getting Unstuck v5.6 → v5.7:** dropped the "Need an example?" disclosure (Stephanie's "pick one"; Josh kept "I need help"); renamed the button → "I need help creating a new thought" (Holly); restyled it bigger/bolder as a secondary CTA; confirmed on both Challenge + Both/And; removed the now-unused `BOTH_AND_EXAMPLES`. **Allies / Safety Net v5.4 → v5.5:** per-type Strengthen "e.g." examples now match the type (Practical "takes me to practice", Emotional "someone to talk to when I am feeling down", Social unchanged); reveal copy "show up" → "may show up"; empty-wedge "No {type} yet" pills made bigger + near-solid and a new color-coded "No one named for: {types}" callout renders below the net whenever any type has zero allies (Stephanie's gap-visibility ask). All copy/styling/behavior — no data-shape/export/save change. Verified via preview across all five. Added two Round 5 Cleanup-queue items.
 
   <details>
@@ -2561,7 +2664,34 @@ In suggested order:
 - Budget for the voice-changer subscription tier if option (3) becomes the standard pipeline (ElevenLabs pricing differs by feature access).
 - Whether the FollowUp video work (further Sam Line 4 — Mrs. Johnson backstage; Line 5 — metaphor closing) should wait for the voice pivot to land, or proceed in parallel with the current voice as scratch and re-voice later. *My recommendation: wait. Re-rendering the visual a second time to swap voices costs credits we should avoid.*
 
-*End of voice + workflow pivot planning notes.*
+#### Update — 2026-06-24: option 3 lands. Brayden is the locked Sam voice.
+
+Josh tested the voice-changer pipeline first thing this week and it landed on the first real pass. He recorded himself reading Sam's lines (using the new `Sams_Story_Script.docx` as the recording script), then ran the audio through **ElevenLabs Voice Changer** with the **Brayden** voice model as the target. Brayden's timbre lightened Josh's voice into something that reads "just about perfect" for Sam — solving both the original voice-quality complaint AND the 14-passing-voice ask in one move (the lightening makes the result read younger than the previous voice).
+
+**What this means for the workflow going forward:**
+
+- **Brayden is locked as the target voice for Sam** (16, and presumably 14 — pending confirmation, but the same lightened output should work for both since the voice now reads younger).
+- **Option 1 (library screening for a 14-passing voice) is parked** — Brayden's lightening already does what Sprang asked for. Library screening only needs to come back if we want a *distinctly different* voice for one of the other variants (female / nonbinary Sam).
+- **Option 2 (Ella + Lilly cloning) deprioritized for the active production line** — not blocked, but no longer the most efficient path now that Brayden is working. Could still be useful for variants if Brayden's vibe doesn't fit a particular character.
+- **Speech-first video generation is the natural next step.** With audio now pre-recorded and finalized in ElevenLabs, we no longer need Open Arts to generate audio at all. The remaining piece is to confirm Open Arts' audio-driven video gen lip-syncs cleanly to imported audio — A/B against one already-rendered shot before committing the workflow.
+
+**Locked production pipeline (as of 2026-06-24):**
+
+1. Read the per-line text from `Sams_Story_Script.docx` (or per-shot subset).
+2. Record audio in Josh's office (optimal conditions, full performance direction).
+3. Run audio through ElevenLabs Voice Changer → Brayden model for Sam (other characters TBD as they come up).
+4. Open Arts audio-driven video gen: upload the finalized audio + the visual prompt from the per-shot recipe (camera, framing, performance microexpressions, mood, duration matched to the audio).
+5. Save the rendered mp4 to `Video Content/World Building/` and feed into the Meet-the-cast section via the same data shape as Draft 31.
+
+**Recipe update needed:** the "Sam's Story — per-shot video prompt recipe" section above still references the all-in-one workflow ("voice model is already attached per-character — no need to re-attach it in the prompt"). Next time we write a per-shot prompt, the recipe should be updated to reflect the new pipeline: audio is pre-generated and uploaded as the lip-sync target; the visual prompt still carries everything except the spoken-line generation. Will do that update inline with the next per-shot prompt we draft.
+
+**Open follow-ups:**
+
+- Confirm Brayden works for Sam 14 as cleanly as it works for Sam 16 (probably yes given the lightening effect, but worth a sanity check on the two locked Sam 14 lines).
+- A/B test speech-first vs the all-in-one workflow on one already-rendered shot to validate lip-sync quality before scaling.
+- Decide whether to re-render Lines 1 + 3 with the new Brayden voice (replacing the existing aired clips), or only apply Brayden going forward and leave the existing shots as historical scratch.
+
+*End of voice + workflow pivot planning notes (last updated 2026-06-24).*
 
 ---
 
