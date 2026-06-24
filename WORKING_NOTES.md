@@ -14,6 +14,133 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`c89c261` · 2026-06-24** — Draft 34: Meet-the-cast — added Sam 14's **Brayden-voiced "both lines" voice sample** (same Voice Changer pipeline as Sam 16, locked 2026-06-24), retiring the per-line "Voice model coming soon" notes. Copied `14 year old sam by josh.wav` (~1.36 MB) → `public/cast/audio/sam-14-voice-sample.wav` (WAV as-is — no ffmpeg on hand to convert; small + universally supported). **castData.js:** Sam 14 gains `voiceSamples: [{ label, src }]` alongside its existing `lines` (kept for scene-cue + verbatim context under the sample). **DemoPage CastCard:** `voiceSamples` now render as their own block ABOVE the videos/lines/description content (a card can have both — Sam 14 does); the "Voice model coming soon" line note is suppressed when a card has `voiceSamples`, and the final `description` fallback is null-safe. No version bump (DemoPage section). Verified via preview: Sam 14 shows the labeled voice player + both lines with no "coming soon"; Sam 16 + Foster Mom unchanged; wav serves 200 `audio/wav`.
+
+  <details>
+  <summary>Draft 34 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 34 — Meet-the-cast: add Sam 14's Brayden-voiced "14 year old sam by josh" audio sample
+
+  Parallel to Draft 33, on the Sam 14 card. Josh ran his recordings of Sam 14's two lines through the same ElevenLabs Voice Changer + Brayden pipeline locked 2026-06-24. The lightening effect that solved the older-Sam voice problem also works for Sam 14 — the result is one continuous audio file demoing both Sam 14 beats.
+
+  This makes the per-line *"Voice model coming soon"* notes that shipped in commit `4586532` (2026-06-12) stale — the voice model IS ready now. The card should reflect that.
+
+  **The file:** `SSI Platform A/Video Content/New Voiceover/14 year old sam by josh.wav` (~1.36 MB). Brayden-voiced, both Sam 14 lines.
+
+  #### Change 1 — Copy the audio into `public/cast/audio/`
+
+  Source → destination:
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/New Voiceover/14 year old sam by josh.wav` | `public/cast/audio/sam-14-voice-sample.{wav\|mp3}` |
+
+  **Format choice:** the source is WAV (~1.36 MB). Two paths:
+
+  - **Use the WAV as-is.** All modern browsers support `<audio>` playback of WAV; the file is small enough that the size isn't a real concern. Quickest path. Destination: `public/cast/audio/sam-14-voice-sample.wav`.
+  - **Convert to MP3.** Smaller file, matches the format pattern of the other audio assets (`older-sam-narrator.mp3`, the legacy line clips). One-line `ffmpeg -i input.wav -codec:a libmp3lame -qscale:a 4 output.mp3` if ffmpeg is available. Destination: `public/cast/audio/sam-14-voice-sample.mp3`.
+
+  *Recommend converting to MP3* for consistency with the rest of `/public/cast/audio/`, but either works. The `src` reference in castData.js follows whichever extension you pick.
+
+  #### Change 2 — `src/lib/castData.js`: add `voiceSamples` to Sam 14, suppress "coming soon" notes
+
+  Sam 14's card currently has `lines: [{ scene, text }, { scene, text }]` (audio fields removed in commit `4586532`, which made the renderer show *"Voice model coming soon"* for any `lines` entry without an `audio` field). Add a new `voiceSamples` field alongside `lines` — same shape as the Sam 16 entry from Draft 33.
+
+  **Before (Sam 14 card):**
+
+  ```js
+  {
+    id: 'sam-14',
+    name: 'Sam (14 years old)',
+    image: '/cast/images/sam-14.png',
+    alt: 'Sam at 14 — the 14-year-old version of the main character',
+    role: 'The 14-year-old version — at the heart of every flashback.',
+    landscape: true,
+    lines: [
+      { scene: '…', text: 'How do I feel about that? I have literally no idea.' },
+      { scene: '…', text: "You aren't my parents and you never will be." },
+    ],
+  },
+  ```
+
+  **After:**
+
+  ```js
+  {
+    id: 'sam-14',
+    name: 'Sam (14 years old)',
+    image: '/cast/images/sam-14.png',
+    alt: 'Sam at 14 — the 14-year-old version of the main character',
+    role: 'The 14-year-old version — at the heart of every flashback.',
+    landscape: true,
+    voiceSamples: [
+      {
+        label: 'New Sam 14 Voice Model — Both Lines',
+        src: '/cast/audio/sam-14-voice-sample.mp3',  // or .wav per Change 1
+      },
+    ],
+    lines: [
+      { scene: '…', text: 'How do I feel about that? I have literally no idea.' },
+      { scene: '…', text: "You aren't my parents and you never will be." },
+    ],
+  },
+  ```
+
+  `lines` stays on Sam 14 — the scene cues + verbatim line text are still useful context for what's being voiced in the sample above. The audio is just the bundled both-lines preview rather than per-line clips.
+
+  #### Change 3 — `src/pages/DemoPage.jsx`: suppress per-line "Voice model coming soon" notes when the card has a `voiceSamples` array
+
+  The CastCard currently renders a *"Voice model coming soon"* note inline for any `lines` entry that lacks an `audio` field (per commit `4586532`). That note is now stale on Sam 14 because the voice model IS ready — the bundled sample is in `voiceSamples` above.
+
+  **Update the renderer's line-block logic:** when the card has a non-empty `voiceSamples` array, suppress the *"Voice model coming soon"* fallback note for that card's lines. The line's scene cue + spoken-text still render; just drop the inline note.
+
+  Don't change the fallback note for Foster Mom or any other card — those cards don't have `voiceSamples`, so the existing behavior (audio clip shown when `audio` is present, *"coming soon"* otherwise) stays exactly as today.
+
+  Pseudocode:
+
+  ```jsx
+  {card.lines?.map(line => (
+    <div key={...}>
+      <span className="scene-cue">{line.scene}</span>
+      <p>{line.text}</p>
+      {line.audio && <audio src={line.audio} controls />}
+      {!line.audio && !card.voiceSamples?.length && (
+        <p className="italic text-slate-500">Voice model coming soon</p>
+      )}
+    </div>
+  ))}
+  ```
+
+  (Actual JSX structure follows the existing CastCard pattern — Code will know where the note renders today.)
+
+  #### Render order on Sam 14's card after this ships
+
+  Voice samples are rendered above the lines (same precedence as Draft 33 established):
+
+  1. Photo + role line (unchanged)
+  2. **Voice sample**: *"New Sam 14 Voice Model — Both Lines"* label + native `<audio>` player
+  3. Lines block: two scene-cue + line-text entries, no *"coming soon"* notes
+
+  #### What does NOT change
+
+  - The two Sam 14 lines themselves (scene cues + verbatim text) — preserved.
+  - The legacy `sam-14-line-*.mp3` files at `/public/cast/audio/` (if any remain) — unreferenced, leave in place.
+  - Sam 16's card (Draft 33 just shipped) — untouched.
+  - Other cast cards — untouched.
+  - No version bump — DemoPage section.
+
+  #### Out of scope (queued)
+
+  - Split the bundled Sam 14 voice sample into per-line clips and re-attach as `audio` fields on the `lines` entries. Possible later for per-line playback alongside the scene cues, but the bundled sample is enough surface area for the team to evaluate the voice. Leave for future iteration if the team wants finer-grained per-line listening.
+  - Other characters' voice samples (Foster Mom / Foster Dad / Mrs. Johnson) — same `voiceSamples` shape, queued when those voice models are picked.
+  - Re-rendering Sam 14 video shots with the new Brayden voice — there are no Sam 14 video shots yet; this is the first time Sam 14's voice has been on the demo.
+
+  **Approved by:** Josh, 2026-06-24 — after exporting `14 year old sam by josh.wav` from the Voice Changer.
+
+  *End of Draft 34.*
+
+  </details>
+
 - **`aa196c0` · 2026-06-24** — Draft 33: Meet-the-cast — swapped Sam 16's four video clips for the new **Brayden-voiced "Older Sam Narrator" audio sample** (all narrator lines stitched). Voice pipeline locked 2026-06-24 (Josh records → ElevenLabs Voice Changer → Brayden = Sam); the team's feedback was about the *voices*, so we surface only the new locked voice rather than show it beside the old-voice videos. Copied `Older Sam Narrator.mp3` (~3.5 MB) → `public/cast/audio/older-sam-narrator.mp3`. **castData.js:** Sam 16's `videos: [...]` → `voiceSamples: [{ label, src }]` (one all-lines sample); top-of-file comment updated. **DemoPage CastCard:** new `voiceSamples` branch (label + native `<audio controls preload="metadata">`), takes precedence over `videos`/`lines`/`description`; the `videos` branch is kept in the renderer for future re-introduction. The four `sam-16-line-*.mp4` files stay in `/public/cast/video/` unreferenced (return later re-rendered with Brayden audio under the speech-first pipeline). No version bump (DemoPage section). Verified via preview: Sam 16 card = 1 `<audio>` player, 0 videos/iframes, mp3 serves 200 `audio/mpeg`.
 
   <details>
