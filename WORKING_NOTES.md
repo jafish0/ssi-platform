@@ -14,6 +14,138 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`b1e719e` · 2026-06-24** — Draft 35: /demo cast restructure. Split the single **Meet the cast** section into two parallel named sections — **Sam's Story** (the narrative-video cast: Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson + Script 2.0 download + Family Photo) and **Learning Skills for Belonging** (the psychoeducation track that wraps the six activities) — and added **Kai**, that track's narrator. Four assets copied in (~11 MB): `kai-variant-{1,2}.png` + `kai-scene-{1-the-scan,2-the-why}.mp3`. **castData.js:** every card gains a `show` field (`'sams-story'` / `'learning-skills'`) for section grouping; two new optional shapes — `images: [{label,src,alt}]` (multi-variant design gallery) and `scenes: [{label,audio,description?}]` (scene-organized narrator audio). Kai card added with 2 image variants + 2 recorded scenes (8 locked total). **DemoPage:** renders the two sections filtered by `show`; CastCard gains an `images` gallery branch (side-by-side variants with captions) and a `scenes` branch (precedence scenes > videos > lines > description; `voiceSamples` still render above). No version bump (DemoPage section). Verified via preview: both sections present; Sam's Story = its 5 cards + Family Photo; Kai = 2 images + 2 scene players, both mp3s 200 `audio/mpeg`.
+
+  <details>
+  <summary>Draft 35 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 35 — /demo cast restructure: split into "Sam's Story" + "Learning Skills for Belonging" (add Kai)
+
+  Three changes in one commit. **(1)** Restructure the existing Meet-the-cast section so it reads as **two parallel named sections** instead of one umbrella — Sam's Story (existing cast) and Learning Skills for Belonging (new Kai). **(2)** Add a new Kai cast card with **two character-design image variants** and **two scene audio samples** from Adrienne's psychoeducation script. **(3)** Extend castData.js to support multi-image cards and scene-keyed audio (Kai's structural shape is different from Sam's because Kai is a longer-form narrator with whole scenes rather than discrete lines).
+
+  Source background: Kai is the gender-neutral peer-mentor narrator for the psychoeducation track wrapping the six activities — script is `Belonging Psychoeducation Script Parts I & II revisedAW with activities.docx` (Adrienne Whitt-Woosley, 2026-06-04). Voice pipeline same as Sam: Josh records → ElevenLabs Voice Changer → target voice model. Two images so far (Variant 1 + Variant 2), two scenes recorded so far (Scene 1 The Scan, Scene 2 The Why). The full eight-scene script is locked but the rest of the scenes aren't recorded yet.
+
+  #### Change 1 — Copy assets
+
+  Four files. Two images + two audio.
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/New Voiceover/Kai Script/Kai 1.png` | `public/cast/images/kai-variant-1.png` |
+  | `Video Content/New Voiceover/Kai Script/Kai 2.png` | `public/cast/images/kai-variant-2.png` |
+  | `Video Content/New Voiceover/Kai Script/Kai - The Scan 11.mp3` | `public/cast/audio/kai-scene-1-the-scan.mp3` |
+  | `Video Content/New Voiceover/Kai Script/Kai The Why 11.mp3` | `public/cast/audio/kai-scene-2-the-why.mp3` |
+
+  Combined size ~11 MB. `preload="metadata"` on the audio keeps up-front fetch tiny.
+
+  #### Change 2 — `src/lib/castData.js`: add `show` grouping + Kai card with multi-image + scenes shape
+
+  Two new structural concepts:
+
+  **(a) `show` field on every cast card.** Identifies which section a card belongs to. Allows the renderer to group cards under a heading.
+
+  - Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson, Family Photo: `show: 'sams-story'`
+  - Kai: `show: 'learning-skills'`
+
+  **(b) Two new optional fields for the Kai card** (or any future card with a similar shape):
+
+  - `images: [{ label, src, alt }, ...]` — for cards with multiple character design variants. Renders side-by-side (or stacked on mobile) with labels under each. When `images` is present, the existing single `image` field is ignored. Kai uses this; nobody else currently does.
+  - `scenes: [{ label, audio, description? }, ...]` — for cards whose audio content is organized into longer scenes rather than discrete lines with stage cues. Each scene renders as: label heading + optional one-line description + native `<audio>` player. Kai uses this; other cast cards keep their existing `lines` shape.
+
+  **Add the Kai card** at the end of the `CAST` array (or just before `FAMILY_PHOTO`):
+
+  ```js
+  {
+    id: 'kai',
+    name: 'Kai',
+    show: 'learning-skills',
+    alt: 'Kai — the narrator for Learning Skills for Belonging',
+    images: [
+      {
+        label: 'Variant 1',
+        src: '/cast/images/kai-variant-1.png',
+        alt: 'Kai, character design variant 1',
+      },
+      {
+        label: 'Variant 2',
+        src: '/cast/images/kai-variant-2.png',
+        alt: 'Kai, character design variant 2',
+      },
+    ],
+    role: 'Our narrator for the psychoeducation track — a gender-neutral young adult, foster-care alumni, now working as a peer mentor for kids in the system.',
+    scenes: [
+      {
+        label: 'Scene 1 — The Scan',
+        audio: '/cast/audio/kai-scene-1-the-scan.mp3',
+        description: '≈ 1:00. Opens the journey, hands off to Self-Reflection.',
+      },
+      {
+        label: 'Scene 2 — The Why (It\'s in Your DNA)',
+        audio: '/cast/audio/kai-scene-2-the-why.mp3',
+        description: '≈ 0:45. Why belonging matters. Hands off to Who I Am Poem.',
+      },
+    ],
+  },
+  ```
+
+  **Add a `show` field to the existing cast cards** — same string `'sams-story'` for all five (Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson). The `FAMILY_PHOTO` export at the bottom of the file is separate from the `CAST` array — it can also be implicitly part of Sam's Story (no change to it).
+
+  **Update the top-of-file comment block** to add:
+  - A `show` field bullet explaining that each card belongs to one of two shows (Sam's Story = the narrative-video script; Learning Skills for Belonging = Adrienne's psychoeducation script that introduces the six activities).
+  - A `images: [{ label, src, alt }, ...]` bullet for multi-variant cards.
+  - A `scenes: [{ label, audio, description? }, ...]` bullet for cards organized by scene rather than per-line.
+
+  #### Change 3 — `src/pages/DemoPage.jsx`: split Meet-the-cast into two named sections, render Kai's shape
+
+  **Section header restructure.** The current `## Meet the cast` heading becomes **two parallel `## Sam's Story` and `## Learning Skills for Belonging` headings**, in that order on the page. Each renders the cards filtered by `show` value.
+
+  **Order within each section:**
+
+  `## Sam's Story` (preserves today's content unchanged):
+  1. Script 2.0 download link (the existing Draft 24 affordance — stays under Sam's Story since it's Holly's script for that show).
+  2. Cast cards in current order: Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson.
+  3. Family Photo at the end.
+
+  `## Learning Skills for Belonging` (new):
+  1. Brief intro paragraph — *"The psychoeducation track that wraps the six activities. Kai narrates eight scenes total; two recorded so far."* (One sentence is enough; the heading does most of the work.)
+  2. Kai card (only card in this section for now).
+
+  **Render Kai's card.** New branch in the CastCard renderer to handle the new shapes:
+
+  - **`images` array** (multi-image variant gallery): render the images side-by-side in a 2-column grid on desktop, stacked vertically on mobile. Each image at a reasonable size (`max-w-[280px]` or similar — they're character design references, the team needs to see them clearly but they shouldn't dominate). Below each image, render the `label` as a small caption (`text-sm text-slate-600 italic mt-1`).
+  - **`role` line** below the images (same as other cards).
+  - **`scenes` array**: render each scene as a labeled block. Per scene: `label` as a small bold heading (`text-sm font-semibold text-slate-700`), optional `description` as a smaller italic line below, native `<audio controls preload="metadata">` underneath. Stack vertically with reasonable spacing (`mt-4` between scenes).
+
+  Precedence on the card (top to bottom):
+  1. `voiceSamples` (if present — not used by Kai currently)
+  2. `images` OR single `image` (whichever the card has)
+  3. `role` line
+  4. `scenes` OR `lines` OR `description` (whichever the card has)
+
+  #### What does NOT change
+
+  - The Activities section, Growing your roots section, Tests, Data export demo — all untouched.
+  - The existing Sam 16 voiceSamples + Sam 14 voiceSamples (from Drafts 33 + 34) — preserved.
+  - Existing Sam 14 / Foster Mom `lines` arrays — preserved.
+  - Foster Dad / Mrs. Johnson `description` paragraphs — preserved.
+  - Family Photo closer — preserved (renders under Sam's Story section).
+  - The Script 2.0 download — stays in Sam's Story section, unchanged URL + behavior.
+  - No `activityVersions.js` bump (DemoPage section).
+  - No feedback-category change.
+
+  #### Out of scope (queued for future drafts)
+
+  - **Kai's Lines docx download link.** Parallel to Script 2.0 in Sam's Story. The doc exists at `Video Content/Kais_Lines.docx` — easy to add as a download under the Learning Skills for Belonging heading later, once it's been through team review. Not in this draft.
+  - **Remaining Kai scenes** (Scenes 3, 4, Part II scenes, Conclusion). When recorded + voice-changed, extend the `scenes` array with new entries.
+  - **Additional Kai image variants** if more land — `images` array extends.
+  - **Kai voice-model sample** (parallel to Sam 16's `voiceSamples`). If a stitched all-scenes Kai voice demo is produced later, add `voiceSamples` to Kai's card the same way Sam 16 has it.
+
+  **Approved by:** Josh, 2026-06-24 — after the two Kai images, two Kai scene audios, and the Voice Changer pipeline for Kai all landed.
+
+  *End of Draft 35.*
+
+  </details>
+
 - **`c89c261` · 2026-06-24** — Draft 34: Meet-the-cast — added Sam 14's **Brayden-voiced "both lines" voice sample** (same Voice Changer pipeline as Sam 16, locked 2026-06-24), retiring the per-line "Voice model coming soon" notes. Copied `14 year old sam by josh.wav` (~1.36 MB) → `public/cast/audio/sam-14-voice-sample.wav` (WAV as-is — no ffmpeg on hand to convert; small + universally supported). **castData.js:** Sam 14 gains `voiceSamples: [{ label, src }]` alongside its existing `lines` (kept for scene-cue + verbatim context under the sample). **DemoPage CastCard:** `voiceSamples` now render as their own block ABOVE the videos/lines/description content (a card can have both — Sam 14 does); the "Voice model coming soon" line note is suppressed when a card has `voiceSamples`, and the final `description` fallback is null-safe. No version bump (DemoPage section). Verified via preview: Sam 14 shows the labeled voice player + both lines with no "coming soon"; Sam 16 + Foster Mom unchanged; wav serves 200 `audio/wav`.
 
   <details>
