@@ -25,11 +25,22 @@
 // "My family" where the locked item reads "My real family"; that's
 // intentional per Stephanie — the alternatives mirror the kid's
 // natural phrasing.)
+//
+// `both_and_root` (Draft 36, 2026-06-29) — a softened/conditional
+// version of the original absolute statement, used ONLY by the Getting
+// Unstuck Both/And path as the seed the kid AND-extends (the UI appends
+// " AND " + the kid's input). You can't coherently and-extend an
+// absolute ("I will never belong AND ___" reads as agreement), so the
+// Both/And seed needs this softened root. The original `text` is
+// unchanged and still drives the Pick rating screen, the Challenge path,
+// and the pretest / FollowUp Survey measures — `both_and_root` is
+// intervention-side only and never affects measurement comparability.
 export const APPRAISAL_ITEMS = [
   {
     id: 'a1',
     text: 'I will never really feel like I belong.',
     dimension: 'future',
+    both_and_root: 'I don’t feel like I belong right now',
     help_suggestions: {
       challenge: [
         'It is possible for me to feel like I belong.',
@@ -45,6 +56,7 @@ export const APPRAISAL_ITEMS = [
     id: 'a2',
     text: 'Everyone will eventually leave me or give up on me.',
     dimension: 'future',
+    both_and_root: 'People have left me in the past',
     help_suggestions: {
       challenge: [
         "Just because people have left me in the past, doesn't mean everyone will leave me.",
@@ -60,6 +72,7 @@ export const APPRAISAL_ITEMS = [
     id: 'a3',
     text: 'I am not lovable.',
     dimension: 'self',
+    both_and_root: 'I do not feel like I am lovable',
     help_suggestions: {
       challenge: [
         'Everyone is worthy of love, including me.',
@@ -75,6 +88,7 @@ export const APPRAISAL_ITEMS = [
     id: 'a4',
     text: 'No one would want me to be a part of their family.',
     dimension: 'self',
+    both_and_root: 'I feel that no one would want me to be a part of their family',
     help_suggestions: {
       challenge: [
         "Even if I haven't found a forever family yet, I am worthy of this and can find a chosen family one day.",
@@ -90,6 +104,7 @@ export const APPRAISAL_ITEMS = [
     id: 'a5',
     text: "I can't trust anyone.",
     dimension: 'others',
+    both_and_root: 'I feel like I can’t trust anyone',
     help_suggestions: {
       challenge: [
         'There are people I can trust, even just a little bit, and trust can grow.',
@@ -105,6 +120,7 @@ export const APPRAISAL_ITEMS = [
     id: 'a6',
     text: 'My real family will be mad if I like my foster or adoptive family.',
     dimension: 'others',
+    both_and_root: 'My family might get mad if I like my foster or adoptive family',
     help_suggestions: {
       challenge: [
         'People that love me want me to be safe and happy, even if it is with a different family.',

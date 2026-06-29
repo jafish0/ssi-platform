@@ -720,9 +720,10 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
 
       <h2 className="text-[22px] font-semibold mb-2">Belonging skills</h2>
       <p className="text-[15px] leading-relaxed text-slate-700 mb-1">
-        Drag each skill into a bucket. If a skill isn&apos;t for you right
-        now, drop it in <em>Not interested right now</em> — that&apos;s a
-        real answer, not a wrong one.
+        From the list of skills below, drag each one into a bucket. If a
+        skill isn&apos;t for you right now, drop it in{' '}
+        <em>Not interested right now</em> — that&apos;s a real answer, not a
+        wrong one.
       </p>
       <p className="text-[12px] text-slate-500 mb-5">
         Tap <span className="font-semibold">?</span> for a quick definition.

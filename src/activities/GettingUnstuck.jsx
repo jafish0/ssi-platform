@@ -718,7 +718,9 @@ export default function GettingUnstuck({ onSave = console.log }) {
               </ul>
             </div>
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
-              What comes up for you when you ask yourself those questions?
+              Now that you&apos;ve thought about your statement in different
+              ways, what is a more helpful or more accurate statement you could
+              tell yourself?
             </label>
             <textarea
               rows={5}
@@ -736,8 +738,12 @@ export default function GettingUnstuck({ onSave = console.log }) {
               Build the Both/And:
             </label>
             <div className="bg-white border border-slate-200 rounded-2xl p-4">
+              {/* Seed uses the softened `both_and_root` (v5.8) — you can't
+                  coherently AND-extend the absolute original. Falls back to
+                  `text` for the kid's custom "Other" thought (no root). */}
               <div className="text-[15px] text-slate-800 mb-2 italic">
-                {item.text} <span className="font-semibold not-italic">AND</span>
+                {item.both_and_root || item.text}{' '}
+                <span className="font-semibold not-italic">AND</span>
               </div>
               <textarea
                 rows={3}
@@ -886,7 +892,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
               )}
               {r.strategy === 'both_and' && (
                 <div className="text-[15px] text-slate-800 italic">
-                  {it.text} <span className="font-semibold not-italic">AND</span> {r.and_statement}
+                  {it.both_and_root || it.text} <span className="font-semibold not-italic">AND</span> {r.and_statement}
                 </div>
               )}
             </div>

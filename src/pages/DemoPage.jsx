@@ -47,12 +47,12 @@ const TREE_STAGE_COPY = [
   },
   {
     context: 'You finished Allies / Safety Net.',
-    heading: 'Wide and rooted.',
+    heading: 'Wide and rooted!',
     body: 'Almost there. Your roots are wide, your branches are full. You can feel the difference.',
   },
   {
     context: 'You finished the program.',
-    heading: 'Look what you grew.',
+    heading: 'Look what you grew!',
     body: 'Roots wide. Branches full. Even blossoms now. This is what belonging can look like.',
   },
 ]

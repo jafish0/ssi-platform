@@ -108,12 +108,14 @@ export default function WhoIAmPoem({ onSave = console.log }) {
               maxLength={120}
               className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
             />
-            {/* After line 5 and line 9, show the auto-mirrored line as a
-                read-only preview so the kid sees the structure. As of
-                v2.4 these render silently — no line numbers, no "same as
-                line 1" caption (Ginny: that was confusing). */}
-            {l.n === 5 && <MirroredLine value={vals.characteristics} />}
-            {l.n === 9 && <MirroredLine value={vals.characteristics} />}
+            {/* Lines 6 and 10 mirror line 1 — but only on the finished
+                keepsake. During input we show an empty "I am ___" slot
+                so the 10-line shape stays visible WITHOUT echoing line 1's
+                text as the kid types (Adrienne, 2026-06-29 — the live
+                repetition was confusing). v2.4 dropped the numbers/caption;
+                v2.5 stops the echo. */}
+            {l.n === 5 && <MirroredLine />}
+            {l.n === 9 && <MirroredLine />}
           </div>
         ))}
       </div>
@@ -127,12 +129,14 @@ export default function WhoIAmPoem({ onSave = console.log }) {
   )
 }
 
-function MirroredLine({ value }) {
-  const text = (value || '').trim()
+function MirroredLine() {
+  // Empty slot during input — keeps the poem's 10-line shape visible but
+  // doesn't echo line 1 (which confused kids mid-type). The mirroring
+  // happens on the finished keepsake (buildPoemText), not here.
   return (
     <div className="mt-3 pl-3 border-l-2 border-amber-200">
-      <p className="text-[15px] text-slate-700 font-serif italic">
-        {text ? `I am ${text}` : <span className="text-slate-400 not-italic">(fills in once you write line 1)</span>}
+      <p className="text-[15px] font-serif italic text-slate-400">
+        I am <span className="not-italic">______</span>
       </p>
     </div>
   )

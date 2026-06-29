@@ -107,11 +107,52 @@ function toneFor(typeId) {
   return TONE_TOKENS[t?.tone] || TONE_TOKENS.amber
 }
 
-// " (NN%)" suffix for a support-type label, or "" when no percentage is
-// available (zero total allies). Draft 26 Part D.2.
-function pctSuffix(percentByType, typeId) {
-  if (!percentByType || percentByType[typeId] == null) return ''
-  return ` (${percentByType[typeId]}%)`
+// Per-type example for the Strengthen "what could you do?" input. The
+// example now matches the support type (Holly's 2026-06-18 note: the
+// old "hang out this weekend" example is social, not practical). Social
+// keeps the original wording per Josh's note.
+const STRENGTHEN_ACTION_EG = {
+  practical: 'e.g., takes me to practice',
+  emotional: 'e.g., someone to talk to when I am feeling down',
+  social: 'e.g., text them and ask if we can hang out this weekend',
+}
+
+// Support types with zero (non-removed) allies in the given net. Draft
+// 32 E.3.b — drives the explicit "No one named for: {types}" gap callout.
+function typesWithNoAllies(allies) {
+  const counts = {}
+  for (const t of SUPPORT_TYPES) counts[t.id] = 0
+  for (const a of allies || []) {
+    if (a.removed || a.removed_via_inspect) continue
+    for (const tid of a.support_types || []) {
+      if (counts[tid] != null) counts[tid] += 1
+    }
+  }
+  return SUPPORT_TYPES.filter((t) => counts[t.id] === 0)
+}
+
+// Short line under the net naming the support types with no one in them,
+// so a gap is hard to overlook. Per-type words color-coded; renders
+// nothing when every type has at least one ally.
+function MissingTypesCallout({ allies }) {
+  const missing = typesWithNoAllies(allies)
+  if (missing.length === 0) return null
+  return (
+    <p className="text-[13px] text-slate-600 text-center mt-3">
+      No one named for:{' '}
+      {missing.map((t, i) => {
+        const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
+        return (
+          <span key={t.id}>
+            <span className={`font-semibold ${tones.word}`}>
+              {t.label.toLowerCase()} support
+            </span>
+            {i < missing.length - 1 ? ', ' : ''}
+          </span>
+        )
+      })}
+    </p>
+  )
 }
 
 // Join a list of names into readable prose with an Oxford comma:
@@ -242,25 +283,11 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
     [deduplicatedAllies],
   )
 
-  // Per-type percentage of the kid's total allies (Draft 26 Part D.2).
-  // Denominator = distinct allies; numerator = allies in that type, so a
-  // multi-type ally counts toward several numerators (percents may sum
-  // >100%). null when there are no allies (label shows no percentage).
+  // Support-type percentage labels were removed entirely in v5.6 (Draft
+  // 36) — they were misleading (one ally per type reading as "100%
+  // supported"). The `percentByType` prop still exists on TrampolineNet /
+  // AllyList (defaults off) but is no longer passed.
   const totalAllyCount = deduplicatedAllies.length
-  const percentByType = useMemo(() => {
-    const counts = {}
-    for (const t of SUPPORT_TYPES) counts[t.id] = 0
-    for (const a of deduplicatedAllies) {
-      for (const tid of a.support_types || []) {
-        if (counts[tid] != null) counts[tid] += 1
-      }
-    }
-    const out = {}
-    for (const t of SUPPORT_TYPES) {
-      out[t.id] = totalAllyCount > 0 ? Math.round((counts[t.id] / totalAllyCount) * 100) : null
-    }
-    return out
-  }, [deduplicatedAllies, totalAllyCount])
 
   // Visual demotion of the full net when total support is low (Draft 26
   // Part D.3): with ≤2 allies the wedges fill the space and read as
@@ -389,7 +416,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   }
 
   if (done) {
-    return <SavedConfirmation allies={reviewAllies} noneFor={noneFor} strengthened={strengthened} strengthenTypeIds={strengthenTypeIds} percentByType={percentByType} lowSupport={lowSupport} />
+    return <SavedConfirmation allies={reviewAllies} noneFor={noneFor} strengthened={strengthened} strengthenTypeIds={strengthenTypeIds} lowSupport={lowSupport} />
   }
 
   return (
@@ -438,7 +465,6 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         <BuildFinalScreen
           allies={deduplicatedAllies}
           noneFor={noneFor}
-          percentByType={percentByType}
           lowSupport={lowSupport}
         />
       )}
@@ -449,7 +475,6 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         <InspectXOutScreen
           allies={deduplicatedAllies}
           onToggleRemoved={toggleAllyRemoved}
-          percentByType={percentByType}
           lowSupport={lowSupport}
         />
       )}
@@ -470,7 +495,6 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
           noneFor={noneFor}
           strengthened={strengthened}
           strengthenTypeIds={strengthenTypeIds}
-          percentByType={percentByType}
           lowSupport={lowSupport}
         />
       )}
@@ -495,7 +519,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
 
 // ---------- Post-save confirmation (with downloadable keepsake) ----------
 
-function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds, percentByType, lowSupport }) {
+function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds, lowSupport }) {
   const wrapRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState(null)
@@ -526,7 +550,6 @@ function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds, p
         <NetWithListToggle
           allies={allies}
           noneFor={noneFor}
-          percentByType={percentByType}
           lowSupport={lowSupport}
         />
       </div>
@@ -831,7 +854,7 @@ function AllyTile({ tile, tones, selected, customName, isEditing, onToggle, onSt
 
 // ---------- Build final — TrampolineNet (non-interactive) ----------
 
-function BuildFinalScreen({ allies, noneFor, percentByType, lowSupport }) {
+function BuildFinalScreen({ allies, noneFor, lowSupport }) {
   const allEmpty =
     allies.length === 0 && Object.values(noneFor).some((v) => v)
   return (
@@ -840,12 +863,11 @@ function BuildFinalScreen({ allies, noneFor, percentByType, lowSupport }) {
       <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
         {allEmpty
           ? 'No allies yet — that\'s okay. We\'ll look at where support could grow.'
-          : 'Here\'s who you said is in your corner, grouped by the kind of support they give you. Some allies show up in more than one place — that\'s the strongest kind.'}
+          : 'Here\'s who you said is in your corner, grouped by the kind of support they give you. Some allies may show up in more than one place — that\'s the strongest kind.'}
       </p>
       <NetWithListToggle
         allies={allies}
         noneFor={noneFor}
-        percentByType={percentByType}
         lowSupport={lowSupport}
       />
     </div>
@@ -913,7 +935,7 @@ function InspectEducationScreen() {
 // take out. Visual: faded to 30%, big red X overlays the icon. Tap × in
 // the corner again to restore. No modals, no per-ally questions.
 
-function InspectXOutScreen({ allies, onToggleRemoved, percentByType, lowSupport }) {
+function InspectXOutScreen({ allies, onToggleRemoved, lowSupport }) {
   if (allies.length === 0) {
     return (
       <div className="text-center py-6">
@@ -944,10 +966,10 @@ function InspectXOutScreen({ allies, onToggleRemoved, percentByType, lowSupport 
           inspectMode={true}
           onAllyToggleRemoved={onToggleRemoved}
           showLabels={true}
-          percentByType={percentByType}
           equalThirds={lowSupport}
         />
       </div>
+      <MissingTypesCallout allies={allies} />
       {removedCount > 0 && (
         <p className="text-[13px] text-slate-600 italic text-center mt-3">
           {removedCount === 1
@@ -1031,7 +1053,7 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
           value={action}
           onChange={(e) => onChange({ action: e.target.value, skipped: false })}
           maxLength={300}
-          placeholder="e.g., text them and ask if we can hang out this weekend"
+          placeholder={STRENGTHEN_ACTION_EG[t.id] || STRENGTHEN_ACTION_EG.social}
           className="w-full text-[14px] leading-relaxed px-3 py-2 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
         />
         <p className="text-[12px] text-slate-500 italic mt-1">
@@ -1054,7 +1076,7 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
 
 // ---------- Review screen ----------
 
-function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds, percentByType, lowSupport }) {
+function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds, lowSupport }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">Your safety net is ready!</h2>
@@ -1065,7 +1087,6 @@ function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds, percen
       <NetWithListToggle
         allies={allies}
         noneFor={noneFor}
-        percentByType={percentByType}
         lowSupport={lowSupport}
       />
       <StrengthenSummary
@@ -1120,13 +1141,14 @@ function StrengthenSummary({ strengthened, strengthenTypeIds }) {
 // ---------- Reusable: low-support caption ----------
 
 function LowSupportCaption() {
+  // v5.6 (Draft 36): bolded + warm-colored so it reads as encouragement,
+  // not faint body text (Adrienne + Holly). The old second line ("Lots
+  // of room to grow … greyed-out areas") was dropped — it confused kids
+  // who had no empty wedges.
   return (
     <div className="text-center mb-3">
-      <p className="text-[13px] text-slate-600 italic">
+      <p className="text-[14px] font-bold text-amber-700">
         A small net is a place to start — let&apos;s keep building.
-      </p>
-      <p className="text-[13px] text-slate-600 italic">
-        Lots of room to grow your safety net in the greyed-out areas.
       </p>
     </div>
   )
@@ -1134,7 +1156,7 @@ function LowSupportCaption() {
 
 // ---------- Reusable: net + "Show me a list instead" toggle ----------
 
-function NetWithListToggle({ allies, noneFor, percentByType = null, lowSupport = false }) {
+function NetWithListToggle({ allies, noneFor, lowSupport = false }) {
   const [listOpen, setListOpen] = useState(false)
   return (
     <div>
@@ -1146,10 +1168,10 @@ function NetWithListToggle({ allies, noneFor, percentByType = null, lowSupport =
           allies={allies}
           interactive={false}
           showLabels={true}
-          percentByType={percentByType}
           equalThirds={lowSupport}
         />
       </div>
+      <MissingTypesCallout allies={allies} />
       <div className="flex justify-center mt-3">
         <button
           type="button"
@@ -1161,7 +1183,7 @@ function NetWithListToggle({ allies, noneFor, percentByType = null, lowSupport =
       </div>
       {listOpen && (
         <div className="mt-4 mx-auto w-full max-w-[640px]">
-          <AllyList allies={allies} noneFor={noneFor} percentByType={percentByType} />
+          <AllyList allies={allies} noneFor={noneFor} />
         </div>
       )}
     </div>
@@ -1170,7 +1192,7 @@ function NetWithListToggle({ allies, noneFor, percentByType = null, lowSupport =
 
 // ---------- Reusable: textual ally list, grouped by support type ----------
 
-function AllyList({ allies, noneFor, percentByType = null }) {
+function AllyList({ allies, noneFor }) {
   return (
     <div className="space-y-3">
       {SUPPORT_TYPES.map((type) => {
@@ -1188,7 +1210,7 @@ function AllyList({ allies, noneFor, percentByType = null }) {
             className={`border rounded-2xl p-3 ${tones.callout}`}
           >
             <h3 className={`text-[14px] font-semibold mb-2 ${tones.word}`}>
-              {type.label}{pctSuffix(percentByType, type.id)}
+              {type.label}
             </h3>
             {inGroup.length > 0 ? (
               <ul className="space-y-1.5">

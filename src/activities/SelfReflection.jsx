@@ -101,12 +101,15 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
   }
 
   if (done) {
-    // No closing message — Ginny + Holly (2026-06-18) flagged the
-    // "Hold onto what came up" line as unclear; removed with no
-    // replacement (same call as Draft 26's "we'll come back to it").
+    // Closing reworked v1.5 (Adrienne + Holly, 2026-06-29) — bare
+    // "Thanks for sharing" read abrupt / slightly sarcastic; the context
+    // line explains why we asked. The "!" is intentional warmth.
     return (
       <div>
-        <h2 className="text-[22px] font-semibold mb-3">Thanks for sharing</h2>
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
+          Our experiences can drive our thoughts and feelings about belonging.
+        </p>
+        <h2 className="text-[22px] font-semibold">Thanks for sharing!</h2>
       </div>
     )
   }

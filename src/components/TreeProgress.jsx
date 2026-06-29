@@ -74,7 +74,15 @@ export default function TreeProgress({ stage = 0, animated = true, className = '
       role="img"
       aria-label={STAGE_ARIA[safe]}
       className={className}
-      style={{ display: 'block', height: 'auto' }}
+      style={{
+        display: 'block',
+        height: 'auto',
+        // Stage 5 "wow" push (Draft 36 F.2): a small saturation/brightness
+        // lift so the bloom reads as more vivid than stage 4. Geometry
+        // amplification is a separate asset task.
+        filter: safe === 5 ? 'saturate(1.12) brightness(1.02)' : undefined,
+        transition: 'filter 600ms ease-in',
+      }}
     >
       <style>{TP_CSS}</style>
 
@@ -90,8 +98,13 @@ export default function TreeProgress({ stage = 0, animated = true, className = '
       />
 
       {/* Keyed by stage so the group remounts on each change, restarting
-          the CSS animation cleanly when `play` is on. */}
-      <g key={safe}>
+          the CSS animation cleanly when `play` is on. At stage 5 the whole
+          tree scales up slightly (anchored at the trunk base 200,420) so
+          the final state feels bigger/fuller (Draft 36 F.2). */}
+      <g
+        key={safe}
+        transform={safe === 5 ? 'translate(200 420) scale(1.05) translate(-200 -420)' : undefined}
+      >
         {/* Roots — draw in first */}
         {data.roots.map((r, i) => (
           <path
