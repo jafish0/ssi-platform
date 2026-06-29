@@ -14,6 +14,432 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`59ec7fd` + `98071b6` · 2026-06-29** — Draft 37: the CTAC brand makeover + end-of-session reveal — the biggest draft yet, shipped in two commits. **Commit 1 (palette + tree, `59ec7fd`):** added the CTAC palette as Tailwind tokens (`ctac-teal` primary #00A79D, `ctac-navy` display, `ctac-green/orange/purple`) and swapped the app's amber UI → CTAC teal across 48 .jsx files (CTAs, inputs, pills, borders, accents) per Ginny's "more blue green tones." Kept warm/clinical (per spec): the Allies Practical wedge (amber, pending Stephanie's sign-off), the Emotional/Social wedges, and the bold small-net caption; tree colors come from the SVGs. Replaced the six tree-stage SVGs with Claude Design's CTAC-refreshed set (greens #1B9445/#8BC53F/#147A38, blossom oranges #FDC030/#E0950F, amplified stage 4+5, stage 5 now 30 blossom clusters; sky/sun/cloud removed) and made extract-tree-stages.mjs write treeStages.js directly, then regenerated. **Commit 2 (reveal, `98071b6`):** new `TreeProgressMontage` — auto-plays the tree 0→5 on a non-linear timeline with synced fade captions ("This is where you started." → "Here's what you've built." → "Look how far you've come."), a CSS cream→peach background warm-shift, and a radial glow at the bloom; Skip + Watch again; reduced-motion safe. New `SessionSummary` ("This is what you built") — six cards (Self-Reflection, poem, a compact TrampolineNet + Strengthen commitments, Belonging Skills buckets, Getting Unstuck thoughts, the Letter), `demoMode` synthetic kid (original poem/letter per the published-poet lock), "Ready for The Plan?" CTA + print. New `/the-plan` placeholder route. New /demo "Final reveal preview" section (Play → montage → summary, + a "The Plan — coming soon" card), inserted between "Growing your roots" and "Data export." Fonts NOT swapped (out of scope). No data-shape/export change; no activity version bump (Part H.3). Verified via preview: /demo shows 0 amber / 15 teal CTAs, stage-5 tree = 180 CTAC-orange blossoms, full montage→summary→/the-plan flow, no console errors. Cleanup queue gained: The Plan activity build, real flow integration, Allies Practical color harmonization (loop in Stephanie), and fonts (Fira/Marselis).
+
+  <details>
+  <summary>Draft 37 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 37 — CTAC brand palette swap + new tree SVGs + final reveal montage + summary screen
+
+  The biggest draft we've shipped so far — eight parts, all visual, landing as one stopping point. Three coordinated layers of work:
+
+  1. **App-wide palette shift** to the CTAC brand colors (Adrienne's pitch in the 2026-06-29 meeting, Ginny's explicit call: *"I would prefer more blue green kind of tones"* — and the new SVGs already use these colors).
+  2. **Drop in the refreshed tree-stage SVGs** that Claude Design just delivered (significantly amplified stage 4 + 5, CTAC-aligned greens and oranges).
+  3. **Build the final reveal montage** — a growth-replay sequence with synced text overlays and atmospheric polish that plays at the end of the intervention, transitioning into the kid's final activity (The Plan, which doesn't exist yet — wires to a placeholder for now).
+
+  Big draft. Probably 1.5–2 days of work. Coupled because shipping any part standalone would leave the demo visually inconsistent (e.g., new palette without new tree, or new tree without the closing experience that ties the metaphor together).
+
+  **Out of scope (explicit):**
+  - **Fonts.** Fira Sans / Marselis Slab Pro from the CTAC brand doc are NOT being swapped in this draft. Color only.
+  - **The Plan activity itself.** The summary screen transitions to The Plan, but The Plan is a separate scope. This draft only adds a placeholder destination.
+  - **Real flow integration / cross-activity state persistence.** Still deferred per Draft 21. The summary screen uses hardcoded demo content for the /demo preview; real per-kid output pulling lands when the flow is stitched.
+
+  **Approved by:** Josh, 2026-06-29.
+
+  ---
+
+  #### Part A — CTAC brand palette swap
+
+  The lab's official color spec lives at `CTAC Colors and Fonts 2020.docx` (uploaded 2026-06-29). Key values for this swap:
+
+  | CTAC name | Hex | App role |
+  |---|---|---|
+  | Light Blue (actually teal in RGB) | `#00A79D` | **Primary CTAs** (was amber-500/600) |
+  | Dark Blue (navy) | `#0E1F56` | **Heading / display text** (was slate-900) |
+  | Light Green | `#8BC53F` | Tree leaf variety, accent |
+  | Dark Green | `#1B9445` | Tree leaf primary |
+  | Light Orange | `#FDC030` | Tree blossoms, warm accents (was amber-100/300) |
+  | Dark Orange | `#EC7424` | Strong warm accents (was amber-700) |
+  | Light Purple | `#614489` | Held for future accent variety (no current use) |
+  | Dark Purple | `#392055` | Held for future |
+
+  ##### A.1 — Define CTAC palette as Tailwind tokens
+
+  **File:** `tailwind.config.js`.
+
+  Add the CTAC palette as a custom theme extension. Use semantic names so the rest of the codebase reads cleanly:
+
+  ```js
+  theme: {
+    extend: {
+      colors: {
+        ctac: {
+          // Primary brand teal (CTAC "Light Blue" — labeled blue but visually teal)
+          teal: {
+            50: '#e6f7f6',   // computed light shades
+            100: '#ccefed',
+            200: '#99dfdb',
+            300: '#66cfc8',
+            400: '#33bfb6',
+            500: '#00A79D',  // CTAC spec exact value
+            600: '#008e85',  // computed darker
+            700: '#00756d',
+            800: '#005c55',
+            900: '#00433d',
+          },
+          // Display navy (CTAC "Dark Blue")
+          navy: {
+            DEFAULT: '#0E1F56',
+            // optional shade ramp if needed for surfaces:
+            50: '#e7e9ee',
+            100: '#cfd3dd',
+            // ... computed as needed
+            900: '#0E1F56',
+          },
+          // Tree-aligned greens (CTAC spec exact values)
+          green: {
+            light: '#8BC53F',
+            DEFAULT: '#1B9445',
+            dark: '#147A38',  // already present in the new SVGs as a third leaf tone
+          },
+          // Warm accents (CTAC spec exact values)
+          orange: {
+            light: '#FDC030',
+            DEFAULT: '#EC7424',
+            // optional darker shade for hover states:
+            dark: '#C25A1A',
+          },
+          // Held for future
+          purple: {
+            light: '#614489',
+            DEFAULT: '#392055',
+          },
+        },
+      },
+    },
+  },
+  ```
+
+  The computed shade ramps (50–900) for `ctac-teal` are approximate — Code can refine. The key is `ctac-teal-500` matches the CTAC spec exactly (`#00A79D`); the lighter/darker shades are derived.
+
+  ##### A.2 — Class swap across the codebase
+
+  Replace the amber palette with CTAC teal/navy/orange throughout. Mechanical search-and-replace, then a curated audit pass.
+
+  **Mechanical swaps:**
+
+  | Current | Replace with |
+  |---|---|
+  | `bg-amber-500 hover:bg-amber-600` (primary CTAs) | `bg-ctac-teal-500 hover:bg-ctac-teal-600` |
+  | `bg-amber-50` (input surfaces) | `bg-ctac-teal-50` |
+  | `border-amber-200` | `border-ctac-teal-200` |
+  | `border-amber-300` | `border-ctac-teal-300` |
+  | `text-amber-700` (strong amber text) | `text-ctac-teal-700` |
+  | `text-amber-600` | `text-ctac-teal-600` |
+  | `bg-amber-100` (soft surfaces / pills) | `bg-ctac-teal-100` |
+  | `text-slate-900` (headings/display only — not body) | `text-ctac-navy` |
+
+  **Curated exceptions** (DO NOT swap these — they should stay amber/warm):
+  - **Allies / Safety Net Practical wedge color.** Per Holly's clinical color-coding from Draft 19, Practical = amber. Keep as-is in this draft — harmonizing Practical with the new palette would require Stephanie's clinical sign-off. Flag in Cleanup queue if the team wants to revisit.
+  - **Tree visual** (`src/components/TreeProgress.jsx` and `src/lib/treeStages.js`). The tree's own colors come from the new SVGs in Part B; do not override with Tailwind classes.
+  - **Allies Emotional wedge (rose)** and **Social wedge (sky)** — also clinical color-coding, keep as-is.
+  - **Specifically warm-coded encouragement callouts** (the new bold "A small net is a place to start" caption from Draft 36) — should stay amber/warm so the warmth contrasts with the now-teal surrounding UI. Use `text-ctac-orange-dark` or similar warm color instead of teal, OR keep current amber.
+
+  **Audit pass:** after the mechanical swap, Code reviews every amber reference in the diff and reverts the exceptions above. Should be a focused review — most amber references are general UI surfaces that benefit from the swap.
+
+  ##### A.3 — Body text and slate references stay
+
+  Body text (slate-600, slate-700) is not part of this swap. Slate stays for readable body copy. Only display text (slate-900 → ctac-navy) shifts.
+
+  ##### A.4 — Brand consistency check after swap
+
+  After Code completes the swap, do a visual review at minimum on:
+  - /demo landing page (hero + activities + sections)
+  - Each of the six activity sandboxes
+  - Each test sandbox (Pretest / Posttest / FollowUp)
+  - Data export demo
+  - Meet-the-cast section (both Sam's Story and Learning Skills for Belonging)
+
+  Goal: nothing looks broken or off-brand. If something does, surface it as a fix-up before merging.
+
+  ---
+
+  #### Part B — Drop in the new tree-stage SVGs
+
+  Claude Design delivered refreshed tree SVGs in response to the 2026-06-29 feedback. Significantly amplified stage 4 + 5, CTAC palette baked in (greens `#1B9445` + `#8BC53F` + `#147A38`, oranges `#FDC030` + `#E0950F`). Stage 5 jumps from 14 → 30 blossom clusters and 56 → 81 paths — the "you arrived" feeling now lands geometrically.
+
+  **(Note: Josh removed the sky/sun/cloud elements from Claude Design's delivered files because they looked bad in execution. The atmospheric "wow" lives in the montage instead — see Parts E + F.)**
+
+  ##### B.1 — File replacement
+
+  Source: `Ready for Roots Tree/tree-stage-{0..5}.svg` (six files).
+
+  Destination: `src/assets/tree/tree-stage-{0..5}.svg` — replace the existing files in place.
+
+  Also update `src/assets/tree/NOTES.md` if it exists with a one-line note about the 2026-06-29 refresh (CTAC palette + amplified stage 4/5).
+
+  ##### B.2 — Regenerate `src/lib/treeStages.js`
+
+  The TreeProgress component is data-driven from the extracted path data. Re-run the extraction:
+
+  ```bash
+  node scripts/extract-tree-stages.mjs
+  ```
+
+  This regenerates `src/lib/treeStages.js` from the new SVGs. The TreeProgress component itself doesn't need code changes — it renders whatever the new geometry produces.
+
+  ##### B.3 — Verify visual + animation
+
+  Spot-check the demo's existing "Growing your roots" preview section. Stage 5 should look meaningfully more flourishing than before. Forward stage transitions should still animate (draw-in for roots/branches, fade-and-scale for leaves/blossoms).
+
+  If stage 5's 30 blossoms cause animation jank (too many simultaneous fade-ins), consider staggering the blossom appearance even more (50ms → 80ms between sibling fades). Minor tuning.
+
+  ---
+
+  #### Part C — Growth replay montage component
+
+  New component: `src/components/TreeProgressMontage.jsx`.
+
+  This is the cinematic playback of the kid's growth journey, designed to land at the end of the intervention as a "look how far you've come" moment. Auto-plays through stages 0→5 with deliberate timing, not user-controlled stepping.
+
+  ##### C.1 — Component shape
+
+  ```jsx
+  <TreeProgressMontage
+    onComplete={() => { /* transition to summary screen */ }}
+    autoPlay={true}      // default; can pass false for triggered playback
+    skippable={true}     // default; renders skip button after 1s
+  />
+  ```
+
+  Internally, the component uses the same TreeProgress rendering primitives but with an orchestrated playback timeline:
+
+  ##### C.2 — Timeline (~7 seconds total)
+
+  | Time (s) | Beat | What happens |
+  |---|---|---|
+  | 0.0 – 1.0 | Stage 0 hold | Show stage 0 (seed). Brief pause for the kid to register where they started. |
+  | 1.0 – 2.0 | Stages 0 → 2 | Quick growth — roots draw in via `stroke-dashoffset`, first leaves fade-and-scale in. ~500ms per stage advance. |
+  | 2.0 – 4.0 | Stages 2 → 4 | Continued growth — more roots, more branches, denser canopy. Same per-stage animation pattern. |
+  | 4.0 – 5.5 | Stage 5 arrival | Trunk reaches full thickness, branches extend to corners, leaves fill out. Blossoms held back (don't appear yet). |
+  | 5.5 – 6.5 | Blossoms appear | The 30 blossoms fade-and-scale in with a staggered cascade (~30ms between each). Most impactful single visual moment. |
+  | 6.5 – 7.0 | Final hold | Full stage 5 visible. Closing caption (Part D) lands here. |
+
+  Times are approximate — Code can tune. The shape of the curve matters: slow start, accelerate through middle, slow back down for the bloom. Don't pace it linearly.
+
+  ##### C.3 — Replay behavior
+
+  After playback ends, render a small "Watch again" button below or near the tree. Click resets the animation state (paths back to `stroke-dashoffset: 1`, leaves/blossoms back to `opacity: 0 scale(0.6)`) and replays from beat 0.
+
+  ##### C.4 — Reduced-motion respect
+
+  If `prefers-reduced-motion: reduce`, render the final stage 5 state immediately without animation. Skip the timeline entirely. Standard a11y move.
+
+  ##### C.5 — Skip behavior
+
+  After 1 second into playback (so the kid can't accidentally skip the opening), show a small "Skip" button. Click jumps directly to stage 5 final state and fires `onComplete`.
+
+  ##### C.6 — Animation reset is the fiddly part
+
+  `stroke-dashoffset`-based draw-in animation only plays the first time. To replay, the component needs to reset all path `stroke-dashoffset` values back to their starting state, then trigger forward animation again. Cleanest approach: bump a `playKey` state on each play that re-mounts the SVG content via React key, forcing a fresh render with paths in starting state.
+
+  ---
+
+  #### Part D — Synced text overlay layer
+
+  The text overlay sits above the SVG (z-indexed), fading captions in and out at specific beats. Provides the emotional spine of the montage.
+
+  ##### D.1 — Suggested captions (Josh — edit before shipping if needed)
+
+  | Time (s) | Caption | Style |
+  |---|---|---|
+  | 0.0 – 1.0 | *"This is where you started."* | Centered above the seed, ctac-navy text |
+  | 3.0 – 4.5 | *"Here's what you've built."* | Centered above the tree as it fills out |
+  | 6.0 – 7.0 | *"Look how far you've come."* | Centered above stage 5 — the closing line |
+
+  All captions fade in over ~400ms, hold, fade out over ~400ms before the next one appears. No overlap.
+
+  ##### D.2 — Styling
+
+  - Font: existing platform sans (not Fira — fonts out of scope this draft).
+  - Size: `text-2xl` or `text-3xl` on desktop, `text-xl` on mobile.
+  - Color: `text-ctac-navy` (display navy).
+  - Weight: `font-semibold` or `font-bold`.
+  - Background: text-shadow or a subtle soft white halo so the text reads against the leaf/sky/blossom backgrounds. Not a solid background fill.
+
+  ##### D.3 — Implementation
+
+  A React state machine inside the montage component tracks the current beat and renders the current caption (or null). Use CSS `transition: opacity 400ms ease` for the fade.
+
+  ---
+
+  #### Part E — CSS background warm-shift
+
+  The container that holds the montage (the section/page background, not the SVG itself) animates its background color from a muted neutral to a warm gradient over the course of the montage. Lives in CSS, not in the SVG.
+
+  ##### E.1 — Animation
+
+  ```css
+  .montage-container {
+    background: #fdfcf7; /* cream / off-white start */
+    transition: background 6s ease-in-out;
+  }
+
+  .montage-container.is-playing {
+    background: linear-gradient(180deg, #fff8ed 0%, #fdfcf7 100%);
+    /* warm gradient: pale peach top → cream bottom */
+  }
+  ```
+
+  Start state: solid cream. End state: warm gradient with a hint of peach at the top, fading to cream at the ground line. The kid feels sunlight without seeing a literal sun.
+
+  ##### E.2 — Trigger
+
+  Component adds the `.is-playing` class when playback starts; the CSS transition handles the 6-second warm-shift. Removes the class on replay reset.
+
+  ---
+
+  #### Part F — Radial glow at stage 5 arrival
+
+  A soft warm halo appears behind the tree at the moment stage 5 lands. Subtle — feels like the tree is lit from within.
+
+  ##### F.1 — Implementation
+
+  Option (a) — **CSS box-shadow on the SVG container** (simpler):
+
+  ```css
+  .tree-container.stage-5-arrived {
+    filter: drop-shadow(0 0 40px rgba(253, 192, 48, 0.4));
+    transition: filter 800ms ease-in;
+  }
+  ```
+
+  Where `rgba(253, 192, 48, 0.4)` is CTAC Light Orange at 40% alpha.
+
+  Option (b) — **Inline SVG circle with blur** (more controllable):
+
+  A separate `<circle>` element behind the tree's main `<g>` layers, with `filter: blur(40px)` and amber fill. Render conditional on `stage5Arrived === true`, with opacity transition.
+
+  Either works. Recommend (a) for simplicity.
+
+  ##### F.2 — Trigger
+
+  Component sets `stage5Arrived = true` at time = 5.5s (when blossoms start appearing). The 800ms ease-in feels in sync with the bloom cascade.
+
+  ---
+
+  #### Part G — Summary screen (new component, demo data for now)
+
+  New component: `src/components/SessionSummary.jsx`.
+
+  After the montage's `onComplete` fires, the kid sees a screen showing their actual outputs from all six activities. *"This is what you built."* The personal content is the real emotional payoff — the kid sees their own work reflected back.
+
+  ##### G.1 — Layout
+
+  Single page, card-style layout. Two columns on desktop, stacked on mobile. Each card shows one activity's output:
+
+  | Card | Content shown |
+  |---|---|
+  | **Self-Reflection** | The kid's inclusion + exclusion text, presented as quoted paragraphs |
+  | **Who I Am Poem** | The finished 10-line poem, formatted as the keepsake card |
+  | **Allies / Safety Net** | A compact TrampolineNet visualization with kept allies + the "I commit to" Strengthen actions |
+  | **Belonging Skills Sort** | The three sorted buckets summarized — "Doing now: …" / "Willing to try: …" / "Not interested: …" |
+  | **Getting Unstuck** | The kid's alternative thoughts they wrote (the Challenge or Both/And responses) |
+  | **Letter to Another Youth** | The kid's full letter text in a keepsake card |
+
+  Card style: rounded `bg-ctac-teal-50` with `border-ctac-teal-200`, padding, soft shadow. Card heading in `text-ctac-navy font-semibold`. Body content in slate-700.
+
+  ##### G.2 — Header copy
+
+  Above the cards:
+
+  > *"This is what you built."*
+
+  In `text-3xl font-bold text-ctac-navy`. Single sentence.
+
+  ##### G.3 — CTA at the bottom
+
+  Below the cards, a primary CTA button:
+
+  > *"Ready for The Plan?"*
+
+  Styled as `bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full px-8 py-4 text-lg`. Click navigates to `/the-plan` (or wherever The Plan ends up routing — Part H specifies the placeholder).
+
+  ##### G.4 — Demo data for /demo preview
+
+  In the current /demo preview (Part H), no real per-kid persisted data exists yet. The SessionSummary component should accept a `demoMode` prop that, when true, renders hardcoded synthetic outputs for one example kid. Suggested demo content:
+
+  - **Self-Reflection demo:** *"A time I felt I belonged: When my coach put me in the starting lineup my first game on the team."* / *"A time I felt I didn't belong: First day at my new school, everyone already had their groups."*
+  - **Who I Am Poem demo:** A 10-line example poem with simple lines (avoid published poet text per the locked rule).
+  - **Allies demo:** 4-5 allies across the three support types, with a couple of Strengthen action commitments.
+  - **BSS demo:** 4 doing-now / 2 willing-to-try / 1 not-interested distribution.
+  - **Getting Unstuck demo:** Two alternative thoughts — one Challenge, one Both/And.
+  - **Letter demo:** A 100-word example letter.
+
+  When the real flow integration lands, the `demoMode` prop drops; the component reads from the kid's persisted session state.
+
+  ##### G.5 — Print / save affordance
+
+  Below the summary cards, optionally surface a "Print or save your session" button (reusing the existing `downloadSvgStringAsPng` or print-friendly CSS). Lets the kid take their full session with them. Lower priority — could defer to a follow-up draft.
+
+  ---
+
+  #### Part H — /demo preview section + Plan placeholder
+
+  The montage + summary aren't wired into the live activity flow yet (Draft 21 deferred). But the team needs to see them. Add a new preview section on /demo.
+
+  ##### H.1 — New /demo section: "Final reveal preview"
+
+  Insert between the existing "Growing your roots" section and "Tests." Heading: `## Final reveal preview`.
+
+  Brief intro paragraph:
+
+  > *Preview of the end-of-session experience that plays after the last activity. The montage replays your growth from seed to bloom, then transitions to a summary of everything you built, then leads into The Plan (the kid's final reflective activity — coming soon).*
+
+  Below the intro, two stacked elements:
+
+  1. **Play button**: "Play the growth montage" — clicking it renders the `<TreeProgressMontage />` component in playback. After it completes, automatically renders the `<SessionSummary demoMode />` underneath.
+  2. **The Plan placeholder card**: a styled card explaining that The Plan is coming. Soft `bg-ctac-teal-50` background, ctac-navy heading: *"The Plan — coming soon"* with a one-line description about pulling forward the kid's BSS willing-to-try picks and Getting Unstuck responses into a structured action plan.
+
+  ##### H.2 — The Plan route placeholder
+
+  Add a placeholder route at `/the-plan` (or `/demo/the-plan` if you'd rather scope it under demo). Just a page with:
+
+  > *The Plan*
+  >
+  > *This is where your action plan will live. We're still building it — check back soon.*
+  >
+  > [Back to /demo button]
+
+  When the real Plan activity ships, this route gets replaced. The "Ready for The Plan?" button on SessionSummary points here.
+
+  ##### H.3 — No version bump
+
+  DemoPage section addition — not an activity. No `activityVersions.js` change.
+
+  ---
+
+  #### Cleanup queue additions
+
+  - **The Plan activity build.** Spec + implementation. Should pull forward: BSS willing-to-try items, Allies Strengthen commitments, Getting Unstuck alternative thoughts. Asks the kid to add "who I'm going to do it with and when" per the 2026-06-29 meeting discussion. Big piece of work — its own scope.
+  - **Real flow integration.** Wires the activities into a continuous flow, persists per-kid outputs across activities so SessionSummary can read real data (not demo data). Replaces the standalone `/demo/sandbox/*` pattern. Also covers the tree-progress visual triggering correctly between activities.
+  - **Allies Practical wedge color harmonization.** If the team wants Practical (currently amber) to fit the CTAC palette, loop Stephanie in on a clinical-content review and propose a CTAC-aligned color (probably orange family). Defer until raised.
+  - **Fonts.** Fira Sans / Marselis Slab Pro per the CTAC brand doc. Out of scope for Draft 37; revisit if visual brand consistency starts to feel incomplete.
+
+  ---
+
+  #### What does NOT change
+
+  - The intervention's six activities themselves (Self-Reflection, Who I Am Poem, BSS, Allies, Getting Unstuck, Letter) — their internal flows + data + UI logic stay exactly as today. Only their visual styling (palette) shifts.
+  - The Pretest / Posttest / FollowUp Survey sandboxes — palette only.
+  - Data shapes, save payloads, export pipeline, demoDataset — none of this changes.
+  - The Allies type colors (Practical = amber, Emotional = rose, Social = sky) — stay as-is per the clinical color-coding lock.
+  - Sound / audio. Platform stays silent.
+  - Particles, viewBox-zoom, animated SVG `<animate>` tags. None used.
+
+  #### Suggested commit order if shipping in pieces
+
+  Code may want to ship this in two sub-commits within the same session for easier review (since the diff will be huge):
+
+  1. **Commit 1**: Parts A + B (palette + SVG drop-in). Visually the whole app shifts to CTAC colors with the new tree. Reviewable as a focused visual change.
+  2. **Commit 2**: Parts C–H (montage + summary + Plan placeholder + /demo wiring). Builds on the palette foundation; introduces new components and the preview section.
+
+  Single commit also fine if Code prefers — Josh's call.
+
+  *End of Draft 37.*
+
+  </details>
+
 - **`a97807e` · 2026-06-29** — Draft 36: Round 6 feedback bundle, six activities in one commit. **Self-Reflection v1.4→v1.5:** fuller closing — "Our experiences can drive our thoughts and feelings about belonging. Thanks for sharing!" (Adrienne + Holly: the bare "Thanks for sharing" read abrupt/sarcastic). **Who I Am Poem v2.4→v2.5:** lines 6/10 show an empty "I am ___" slot during input instead of echoing line 1 as the kid types (Adrienne — the live repetition confused kids); the keepsake still mirrors. **Belonging Skills Sort v3.2→v3.3:** directions point at the list — "From the list of skills below, drag each one into a bucket." (Adrienne). **Getting Unstuck v5.7→v5.8 (MAJOR):** Challenge final prompt reworded to push for an alternative statement, not journaling (Adrienne); new per-appraisal `both_and_root` softened seed for the Both/And path (e.g. "I will never really feel like I belong" → "I don't feel like I belong right now") so the kid can coherently AND-extend it — input + review both use it; original `text` unchanged (Pick rating, Challenge, and pretest/FollowUp Survey still use it); a_other falls back to its text (Holly + Jessica + Stephanie). **Allies v5.5→v5.6:** removed the support-type percentage labels from every surface (misleading — one ally per type read as "100% supported"; also fixes the mobile "Social" clip); bolded + warm-colored the small-net caption so it reads as encouragement; dropped the confusing second "lots of room to grow" caption line. The Draft 32 "No one named for: {types}" callout is unchanged. **Growing your roots:** "!" on the stage 4/5 headings; stage-5 visual push (slight anchored scale-up + saturation/brightness lift). All copy/styling except D's additive `both_and_root` field — no breaking data/export change. Verified via preview (D + E). Added two Round 6 Cleanup-queue items (palette review — now superseded by Draft 37; single-ally visualization).
 
   <details>
@@ -1606,427 +2032,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 37 — CTAC brand palette swap + new tree SVGs + final reveal montage + summary screen
-
-The biggest draft we've shipped so far — eight parts, all visual, landing as one stopping point. Three coordinated layers of work:
-
-1. **App-wide palette shift** to the CTAC brand colors (Adrienne's pitch in the 2026-06-29 meeting, Ginny's explicit call: *"I would prefer more blue green kind of tones"* — and the new SVGs already use these colors).
-2. **Drop in the refreshed tree-stage SVGs** that Claude Design just delivered (significantly amplified stage 4 + 5, CTAC-aligned greens and oranges).
-3. **Build the final reveal montage** — a growth-replay sequence with synced text overlays and atmospheric polish that plays at the end of the intervention, transitioning into the kid's final activity (The Plan, which doesn't exist yet — wires to a placeholder for now).
-
-Big draft. Probably 1.5–2 days of work. Coupled because shipping any part standalone would leave the demo visually inconsistent (e.g., new palette without new tree, or new tree without the closing experience that ties the metaphor together).
-
-**Out of scope (explicit):**
-- **Fonts.** Fira Sans / Marselis Slab Pro from the CTAC brand doc are NOT being swapped in this draft. Color only.
-- **The Plan activity itself.** The summary screen transitions to The Plan, but The Plan is a separate scope. This draft only adds a placeholder destination.
-- **Real flow integration / cross-activity state persistence.** Still deferred per Draft 21. The summary screen uses hardcoded demo content for the /demo preview; real per-kid output pulling lands when the flow is stitched.
-
-**Approved by:** Josh, 2026-06-29.
-
----
-
-#### Part A — CTAC brand palette swap
-
-The lab's official color spec lives at `CTAC Colors and Fonts 2020.docx` (uploaded 2026-06-29). Key values for this swap:
-
-| CTAC name | Hex | App role |
-|---|---|---|
-| Light Blue (actually teal in RGB) | `#00A79D` | **Primary CTAs** (was amber-500/600) |
-| Dark Blue (navy) | `#0E1F56` | **Heading / display text** (was slate-900) |
-| Light Green | `#8BC53F` | Tree leaf variety, accent |
-| Dark Green | `#1B9445` | Tree leaf primary |
-| Light Orange | `#FDC030` | Tree blossoms, warm accents (was amber-100/300) |
-| Dark Orange | `#EC7424` | Strong warm accents (was amber-700) |
-| Light Purple | `#614489` | Held for future accent variety (no current use) |
-| Dark Purple | `#392055` | Held for future |
-
-##### A.1 — Define CTAC palette as Tailwind tokens
-
-**File:** `tailwind.config.js`.
-
-Add the CTAC palette as a custom theme extension. Use semantic names so the rest of the codebase reads cleanly:
-
-```js
-theme: {
-  extend: {
-    colors: {
-      ctac: {
-        // Primary brand teal (CTAC "Light Blue" — labeled blue but visually teal)
-        teal: {
-          50: '#e6f7f6',   // computed light shades
-          100: '#ccefed',
-          200: '#99dfdb',
-          300: '#66cfc8',
-          400: '#33bfb6',
-          500: '#00A79D',  // CTAC spec exact value
-          600: '#008e85',  // computed darker
-          700: '#00756d',
-          800: '#005c55',
-          900: '#00433d',
-        },
-        // Display navy (CTAC "Dark Blue")
-        navy: {
-          DEFAULT: '#0E1F56',
-          // optional shade ramp if needed for surfaces:
-          50: '#e7e9ee',
-          100: '#cfd3dd',
-          // ... computed as needed
-          900: '#0E1F56',
-        },
-        // Tree-aligned greens (CTAC spec exact values)
-        green: {
-          light: '#8BC53F',
-          DEFAULT: '#1B9445',
-          dark: '#147A38',  // already present in the new SVGs as a third leaf tone
-        },
-        // Warm accents (CTAC spec exact values)
-        orange: {
-          light: '#FDC030',
-          DEFAULT: '#EC7424',
-          // optional darker shade for hover states:
-          dark: '#C25A1A',
-        },
-        // Held for future
-        purple: {
-          light: '#614489',
-          DEFAULT: '#392055',
-        },
-      },
-    },
-  },
-},
-```
-
-The computed shade ramps (50–900) for `ctac-teal` are approximate — Code can refine. The key is `ctac-teal-500` matches the CTAC spec exactly (`#00A79D`); the lighter/darker shades are derived.
-
-##### A.2 — Class swap across the codebase
-
-Replace the amber palette with CTAC teal/navy/orange throughout. Mechanical search-and-replace, then a curated audit pass.
-
-**Mechanical swaps:**
-
-| Current | Replace with |
-|---|---|
-| `bg-amber-500 hover:bg-amber-600` (primary CTAs) | `bg-ctac-teal-500 hover:bg-ctac-teal-600` |
-| `bg-amber-50` (input surfaces) | `bg-ctac-teal-50` |
-| `border-amber-200` | `border-ctac-teal-200` |
-| `border-amber-300` | `border-ctac-teal-300` |
-| `text-amber-700` (strong amber text) | `text-ctac-teal-700` |
-| `text-amber-600` | `text-ctac-teal-600` |
-| `bg-amber-100` (soft surfaces / pills) | `bg-ctac-teal-100` |
-| `text-slate-900` (headings/display only — not body) | `text-ctac-navy` |
-
-**Curated exceptions** (DO NOT swap these — they should stay amber/warm):
-- **Allies / Safety Net Practical wedge color.** Per Holly's clinical color-coding from Draft 19, Practical = amber. Keep as-is in this draft — harmonizing Practical with the new palette would require Stephanie's clinical sign-off. Flag in Cleanup queue if the team wants to revisit.
-- **Tree visual** (`src/components/TreeProgress.jsx` and `src/lib/treeStages.js`). The tree's own colors come from the new SVGs in Part B; do not override with Tailwind classes.
-- **Allies Emotional wedge (rose)** and **Social wedge (sky)** — also clinical color-coding, keep as-is.
-- **Specifically warm-coded encouragement callouts** (the new bold "A small net is a place to start" caption from Draft 36) — should stay amber/warm so the warmth contrasts with the now-teal surrounding UI. Use `text-ctac-orange-dark` or similar warm color instead of teal, OR keep current amber.
-
-**Audit pass:** after the mechanical swap, Code reviews every amber reference in the diff and reverts the exceptions above. Should be a focused review — most amber references are general UI surfaces that benefit from the swap.
-
-##### A.3 — Body text and slate references stay
-
-Body text (slate-600, slate-700) is not part of this swap. Slate stays for readable body copy. Only display text (slate-900 → ctac-navy) shifts.
-
-##### A.4 — Brand consistency check after swap
-
-After Code completes the swap, do a visual review at minimum on:
-- /demo landing page (hero + activities + sections)
-- Each of the six activity sandboxes
-- Each test sandbox (Pretest / Posttest / FollowUp)
-- Data export demo
-- Meet-the-cast section (both Sam's Story and Learning Skills for Belonging)
-
-Goal: nothing looks broken or off-brand. If something does, surface it as a fix-up before merging.
-
----
-
-#### Part B — Drop in the new tree-stage SVGs
-
-Claude Design delivered refreshed tree SVGs in response to the 2026-06-29 feedback. Significantly amplified stage 4 + 5, CTAC palette baked in (greens `#1B9445` + `#8BC53F` + `#147A38`, oranges `#FDC030` + `#E0950F`). Stage 5 jumps from 14 → 30 blossom clusters and 56 → 81 paths — the "you arrived" feeling now lands geometrically.
-
-**(Note: Josh removed the sky/sun/cloud elements from Claude Design's delivered files because they looked bad in execution. The atmospheric "wow" lives in the montage instead — see Parts E + F.)**
-
-##### B.1 — File replacement
-
-Source: `Ready for Roots Tree/tree-stage-{0..5}.svg` (six files).
-
-Destination: `src/assets/tree/tree-stage-{0..5}.svg` — replace the existing files in place.
-
-Also update `src/assets/tree/NOTES.md` if it exists with a one-line note about the 2026-06-29 refresh (CTAC palette + amplified stage 4/5).
-
-##### B.2 — Regenerate `src/lib/treeStages.js`
-
-The TreeProgress component is data-driven from the extracted path data. Re-run the extraction:
-
-```bash
-node scripts/extract-tree-stages.mjs
-```
-
-This regenerates `src/lib/treeStages.js` from the new SVGs. The TreeProgress component itself doesn't need code changes — it renders whatever the new geometry produces.
-
-##### B.3 — Verify visual + animation
-
-Spot-check the demo's existing "Growing your roots" preview section. Stage 5 should look meaningfully more flourishing than before. Forward stage transitions should still animate (draw-in for roots/branches, fade-and-scale for leaves/blossoms).
-
-If stage 5's 30 blossoms cause animation jank (too many simultaneous fade-ins), consider staggering the blossom appearance even more (50ms → 80ms between sibling fades). Minor tuning.
-
----
-
-#### Part C — Growth replay montage component
-
-New component: `src/components/TreeProgressMontage.jsx`.
-
-This is the cinematic playback of the kid's growth journey, designed to land at the end of the intervention as a "look how far you've come" moment. Auto-plays through stages 0→5 with deliberate timing, not user-controlled stepping.
-
-##### C.1 — Component shape
-
-```jsx
-<TreeProgressMontage
-  onComplete={() => { /* transition to summary screen */ }}
-  autoPlay={true}      // default; can pass false for triggered playback
-  skippable={true}     // default; renders skip button after 1s
-/>
-```
-
-Internally, the component uses the same TreeProgress rendering primitives but with an orchestrated playback timeline:
-
-##### C.2 — Timeline (~7 seconds total)
-
-| Time (s) | Beat | What happens |
-|---|---|---|
-| 0.0 – 1.0 | Stage 0 hold | Show stage 0 (seed). Brief pause for the kid to register where they started. |
-| 1.0 – 2.0 | Stages 0 → 2 | Quick growth — roots draw in via `stroke-dashoffset`, first leaves fade-and-scale in. ~500ms per stage advance. |
-| 2.0 – 4.0 | Stages 2 → 4 | Continued growth — more roots, more branches, denser canopy. Same per-stage animation pattern. |
-| 4.0 – 5.5 | Stage 5 arrival | Trunk reaches full thickness, branches extend to corners, leaves fill out. Blossoms held back (don't appear yet). |
-| 5.5 – 6.5 | Blossoms appear | The 30 blossoms fade-and-scale in with a staggered cascade (~30ms between each). Most impactful single visual moment. |
-| 6.5 – 7.0 | Final hold | Full stage 5 visible. Closing caption (Part D) lands here. |
-
-Times are approximate — Code can tune. The shape of the curve matters: slow start, accelerate through middle, slow back down for the bloom. Don't pace it linearly.
-
-##### C.3 — Replay behavior
-
-After playback ends, render a small "Watch again" button below or near the tree. Click resets the animation state (paths back to `stroke-dashoffset: 1`, leaves/blossoms back to `opacity: 0 scale(0.6)`) and replays from beat 0.
-
-##### C.4 — Reduced-motion respect
-
-If `prefers-reduced-motion: reduce`, render the final stage 5 state immediately without animation. Skip the timeline entirely. Standard a11y move.
-
-##### C.5 — Skip behavior
-
-After 1 second into playback (so the kid can't accidentally skip the opening), show a small "Skip" button. Click jumps directly to stage 5 final state and fires `onComplete`.
-
-##### C.6 — Animation reset is the fiddly part
-
-`stroke-dashoffset`-based draw-in animation only plays the first time. To replay, the component needs to reset all path `stroke-dashoffset` values back to their starting state, then trigger forward animation again. Cleanest approach: bump a `playKey` state on each play that re-mounts the SVG content via React key, forcing a fresh render with paths in starting state.
-
----
-
-#### Part D — Synced text overlay layer
-
-The text overlay sits above the SVG (z-indexed), fading captions in and out at specific beats. Provides the emotional spine of the montage.
-
-##### D.1 — Suggested captions (Josh — edit before shipping if needed)
-
-| Time (s) | Caption | Style |
-|---|---|---|
-| 0.0 – 1.0 | *"This is where you started."* | Centered above the seed, ctac-navy text |
-| 3.0 – 4.5 | *"Here's what you've built."* | Centered above the tree as it fills out |
-| 6.0 – 7.0 | *"Look how far you've come."* | Centered above stage 5 — the closing line |
-
-All captions fade in over ~400ms, hold, fade out over ~400ms before the next one appears. No overlap.
-
-##### D.2 — Styling
-
-- Font: existing platform sans (not Fira — fonts out of scope this draft).
-- Size: `text-2xl` or `text-3xl` on desktop, `text-xl` on mobile.
-- Color: `text-ctac-navy` (display navy).
-- Weight: `font-semibold` or `font-bold`.
-- Background: text-shadow or a subtle soft white halo so the text reads against the leaf/sky/blossom backgrounds. Not a solid background fill.
-
-##### D.3 — Implementation
-
-A React state machine inside the montage component tracks the current beat and renders the current caption (or null). Use CSS `transition: opacity 400ms ease` for the fade.
-
----
-
-#### Part E — CSS background warm-shift
-
-The container that holds the montage (the section/page background, not the SVG itself) animates its background color from a muted neutral to a warm gradient over the course of the montage. Lives in CSS, not in the SVG.
-
-##### E.1 — Animation
-
-```css
-.montage-container {
-  background: #fdfcf7; /* cream / off-white start */
-  transition: background 6s ease-in-out;
-}
-
-.montage-container.is-playing {
-  background: linear-gradient(180deg, #fff8ed 0%, #fdfcf7 100%);
-  /* warm gradient: pale peach top → cream bottom */
-}
-```
-
-Start state: solid cream. End state: warm gradient with a hint of peach at the top, fading to cream at the ground line. The kid feels sunlight without seeing a literal sun.
-
-##### E.2 — Trigger
-
-Component adds the `.is-playing` class when playback starts; the CSS transition handles the 6-second warm-shift. Removes the class on replay reset.
-
----
-
-#### Part F — Radial glow at stage 5 arrival
-
-A soft warm halo appears behind the tree at the moment stage 5 lands. Subtle — feels like the tree is lit from within.
-
-##### F.1 — Implementation
-
-Option (a) — **CSS box-shadow on the SVG container** (simpler):
-
-```css
-.tree-container.stage-5-arrived {
-  filter: drop-shadow(0 0 40px rgba(253, 192, 48, 0.4));
-  transition: filter 800ms ease-in;
-}
-```
-
-Where `rgba(253, 192, 48, 0.4)` is CTAC Light Orange at 40% alpha.
-
-Option (b) — **Inline SVG circle with blur** (more controllable):
-
-A separate `<circle>` element behind the tree's main `<g>` layers, with `filter: blur(40px)` and amber fill. Render conditional on `stage5Arrived === true`, with opacity transition.
-
-Either works. Recommend (a) for simplicity.
-
-##### F.2 — Trigger
-
-Component sets `stage5Arrived = true` at time = 5.5s (when blossoms start appearing). The 800ms ease-in feels in sync with the bloom cascade.
-
----
-
-#### Part G — Summary screen (new component, demo data for now)
-
-New component: `src/components/SessionSummary.jsx`.
-
-After the montage's `onComplete` fires, the kid sees a screen showing their actual outputs from all six activities. *"This is what you built."* The personal content is the real emotional payoff — the kid sees their own work reflected back.
-
-##### G.1 — Layout
-
-Single page, card-style layout. Two columns on desktop, stacked on mobile. Each card shows one activity's output:
-
-| Card | Content shown |
-|---|---|
-| **Self-Reflection** | The kid's inclusion + exclusion text, presented as quoted paragraphs |
-| **Who I Am Poem** | The finished 10-line poem, formatted as the keepsake card |
-| **Allies / Safety Net** | A compact TrampolineNet visualization with kept allies + the "I commit to" Strengthen actions |
-| **Belonging Skills Sort** | The three sorted buckets summarized — "Doing now: …" / "Willing to try: …" / "Not interested: …" |
-| **Getting Unstuck** | The kid's alternative thoughts they wrote (the Challenge or Both/And responses) |
-| **Letter to Another Youth** | The kid's full letter text in a keepsake card |
-
-Card style: rounded `bg-ctac-teal-50` with `border-ctac-teal-200`, padding, soft shadow. Card heading in `text-ctac-navy font-semibold`. Body content in slate-700.
-
-##### G.2 — Header copy
-
-Above the cards:
-
-> *"This is what you built."*
-
-In `text-3xl font-bold text-ctac-navy`. Single sentence.
-
-##### G.3 — CTA at the bottom
-
-Below the cards, a primary CTA button:
-
-> *"Ready for The Plan?"*
-
-Styled as `bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full px-8 py-4 text-lg`. Click navigates to `/the-plan` (or wherever The Plan ends up routing — Part H specifies the placeholder).
-
-##### G.4 — Demo data for /demo preview
-
-In the current /demo preview (Part H), no real per-kid persisted data exists yet. The SessionSummary component should accept a `demoMode` prop that, when true, renders hardcoded synthetic outputs for one example kid. Suggested demo content:
-
-- **Self-Reflection demo:** *"A time I felt I belonged: When my coach put me in the starting lineup my first game on the team."* / *"A time I felt I didn't belong: First day at my new school, everyone already had their groups."*
-- **Who I Am Poem demo:** A 10-line example poem with simple lines (avoid published poet text per the locked rule).
-- **Allies demo:** 4-5 allies across the three support types, with a couple of Strengthen action commitments.
-- **BSS demo:** 4 doing-now / 2 willing-to-try / 1 not-interested distribution.
-- **Getting Unstuck demo:** Two alternative thoughts — one Challenge, one Both/And.
-- **Letter demo:** A 100-word example letter.
-
-When the real flow integration lands, the `demoMode` prop drops; the component reads from the kid's persisted session state.
-
-##### G.5 — Print / save affordance
-
-Below the summary cards, optionally surface a "Print or save your session" button (reusing the existing `downloadSvgStringAsPng` or print-friendly CSS). Lets the kid take their full session with them. Lower priority — could defer to a follow-up draft.
-
----
-
-#### Part H — /demo preview section + Plan placeholder
-
-The montage + summary aren't wired into the live activity flow yet (Draft 21 deferred). But the team needs to see them. Add a new preview section on /demo.
-
-##### H.1 — New /demo section: "Final reveal preview"
-
-Insert between the existing "Growing your roots" section and "Tests." Heading: `## Final reveal preview`.
-
-Brief intro paragraph:
-
-> *Preview of the end-of-session experience that plays after the last activity. The montage replays your growth from seed to bloom, then transitions to a summary of everything you built, then leads into The Plan (the kid's final reflective activity — coming soon).*
-
-Below the intro, two stacked elements:
-
-1. **Play button**: "Play the growth montage" — clicking it renders the `<TreeProgressMontage />` component in playback. After it completes, automatically renders the `<SessionSummary demoMode />` underneath.
-2. **The Plan placeholder card**: a styled card explaining that The Plan is coming. Soft `bg-ctac-teal-50` background, ctac-navy heading: *"The Plan — coming soon"* with a one-line description about pulling forward the kid's BSS willing-to-try picks and Getting Unstuck responses into a structured action plan.
-
-##### H.2 — The Plan route placeholder
-
-Add a placeholder route at `/the-plan` (or `/demo/the-plan` if you'd rather scope it under demo). Just a page with:
-
-> *The Plan*
->
-> *This is where your action plan will live. We're still building it — check back soon.*
->
-> [Back to /demo button]
-
-When the real Plan activity ships, this route gets replaced. The "Ready for The Plan?" button on SessionSummary points here.
-
-##### H.3 — No version bump
-
-DemoPage section addition — not an activity. No `activityVersions.js` change.
-
----
-
-#### Cleanup queue additions
-
-- **The Plan activity build.** Spec + implementation. Should pull forward: BSS willing-to-try items, Allies Strengthen commitments, Getting Unstuck alternative thoughts. Asks the kid to add "who I'm going to do it with and when" per the 2026-06-29 meeting discussion. Big piece of work — its own scope.
-- **Real flow integration.** Wires the activities into a continuous flow, persists per-kid outputs across activities so SessionSummary can read real data (not demo data). Replaces the standalone `/demo/sandbox/*` pattern. Also covers the tree-progress visual triggering correctly between activities.
-- **Allies Practical wedge color harmonization.** If the team wants Practical (currently amber) to fit the CTAC palette, loop Stephanie in on a clinical-content review and propose a CTAC-aligned color (probably orange family). Defer until raised.
-- **Fonts.** Fira Sans / Marselis Slab Pro per the CTAC brand doc. Out of scope for Draft 37; revisit if visual brand consistency starts to feel incomplete.
-
----
-
-#### What does NOT change
-
-- The intervention's six activities themselves (Self-Reflection, Who I Am Poem, BSS, Allies, Getting Unstuck, Letter) — their internal flows + data + UI logic stay exactly as today. Only their visual styling (palette) shifts.
-- The Pretest / Posttest / FollowUp Survey sandboxes — palette only.
-- Data shapes, save payloads, export pipeline, demoDataset — none of this changes.
-- The Allies type colors (Practical = amber, Emotional = rose, Social = sky) — stay as-is per the clinical color-coding lock.
-- Sound / audio. Platform stays silent.
-- Particles, viewBox-zoom, animated SVG `<animate>` tags. None used.
-
-#### Suggested commit order if shipping in pieces
-
-Code may want to ship this in two sub-commits within the same session for easier review (since the diff will be huge):
-
-1. **Commit 1**: Parts A + B (palette + SVG drop-in). Visually the whole app shifts to CTAC colors with the new tree. Reviewable as a focused visual change.
-2. **Commit 2**: Parts C–H (montage + summary + Plan placeholder + /demo wiring). Builds on the palette foundation; introduces new components and the preview section.
-
-Single commit also fine if Code prefers — Josh's call.
-
-*End of Draft 37.*
 
 ---
 
