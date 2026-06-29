@@ -20,6 +20,8 @@ import { buildSpssSyntax } from '../lib/spssSyntax.js'
 import { buildRsdDemoDataset } from '../lib/demoDataset.js'
 import { CAST, FAMILY_PHOTO } from '../lib/castData.js'
 import TreeProgress from '../components/TreeProgress.jsx'
+import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
+import SessionSummary from '../components/SessionSummary.jsx'
 
 // Per-stage encouragement copy for the "Growing your roots" preview
 // (Draft 25 Part C). Activity-name pairings are illustrative for the
@@ -69,6 +71,10 @@ export default function DemoPage() {
   const [exporting, setExporting] = useState(null)
   // "Growing your roots" preview — local-only stage cursor (0..5).
   const [treeStage, setTreeStage] = useState(0)
+  // "Final reveal preview" — montage starts on click; the summary screen
+  // appears once it completes (Draft 37, Part H).
+  const [montagePlaying, setMontagePlaying] = useState(false)
+  const [montageDone, setMontageDone] = useState(false)
 
   // Set the browser-tab title for /demo so it matches the visible H1.
   // Other routes keep the app-wide default ("Ready for Roots") from
@@ -421,6 +427,61 @@ export default function DemoPage() {
               Reset to start
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Final reveal preview — the end-of-session experience (Draft 37,
+          Part H): growth-replay montage → summary of everything built →
+          into The Plan. Not yet wired into the live flow (Draft 21
+          deferred); demo content only. */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Final reveal preview
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          Preview of the end-of-session experience that plays after the last
+          activity. The montage replays your growth from seed to bloom, then
+          transitions to a summary of everything you built, then leads into The
+          Plan (the kid’s final reflective activity — coming soon).
+        </p>
+
+        <div className="bg-white border border-ctac-teal-200 rounded-2xl p-6 max-w-[760px] mx-auto">
+          {!montagePlaying ? (
+            <div className="text-center py-8">
+              <button
+                type="button"
+                onClick={() => {
+                  setMontageDone(false)
+                  setMontagePlaying(true)
+                }}
+                className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full px-8 py-4 text-[16px] font-semibold transition-colors"
+              >
+                <Play size={18} strokeWidth={2} fill="currentColor" />
+                Play the growth montage
+              </button>
+            </div>
+          ) : (
+            <TreeProgressMontage onComplete={() => setMontageDone(true)} />
+          )}
+        </div>
+
+        {montageDone && (
+          <div className="mt-8 border-t border-ctac-teal-200 pt-8">
+            <SessionSummary demoMode />
+          </div>
+        )}
+
+        {/* The Plan placeholder card */}
+        <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-6 max-w-[760px] mx-auto mt-8">
+          <h3 className="text-[18px] font-bold text-ctac-navy mb-1">
+            The Plan — coming soon
+          </h3>
+          <p className="text-[14px] text-slate-700 leading-relaxed">
+            The kid’s final reflective activity. It will pull forward the skills
+            they’re willing to try (Belonging Skills) and the new thoughts they
+            wrote (Getting Unstuck) into a structured action plan — who they’ll
+            do it with, and when.
+          </p>
         </div>
       </section>
 

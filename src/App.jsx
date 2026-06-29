@@ -20,6 +20,7 @@ import AdminExportsPage from './pages/AdminExportsPage.jsx'
 import AdminFeedbackPage from './pages/AdminFeedbackPage.jsx'
 import DemoPage from './pages/DemoPage.jsx'
 import DemoSandboxPage from './pages/DemoSandboxPage.jsx'
+import ThePlanPage from './pages/ThePlanPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -113,9 +114,12 @@ export default function App() {
         <Route path="step" element={<DeliveryStepPage />} />
       </Route>
       <Route path="/set-password" element={<SetPasswordPage />} />
-      {/* TEMP public demo. Remove these two routes when no longer needed. */}
+      {/* TEMP public demo. Remove these routes when no longer needed. */}
       <Route path="/demo" element={<DemoPage />} />
       <Route path="/demo/sandbox/:activityId" element={<DemoSandboxPage />} />
+      {/* TEMP placeholder for The Plan (Draft 37). Replace when the real
+          Plan activity ships. */}
+      <Route path="/the-plan" element={<ThePlanPage />} />
       <Route path="/admin/*" element={<AdminRoutes />} />
       <Route
         path="/preview/:id"
