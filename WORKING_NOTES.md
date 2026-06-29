@@ -39,6 +39,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`70f2d41` · 2026-06-29** — Who I Am Poem **v2.5 → v2.6**. Removed the empty "I am ___" placeholder slots from the fill-in view entirely. Draft 36 (v2.5) had replaced the live line-1 echo with a blank "I am ___" slot to keep the 10-line shape visible — but Josh flagged that from the participant's side, before the poem is produced, those slots just read as broken/confusing. The mirror lines (6 + 10) still render on the finished keepsake card, where the repetition is the structural payoff. Dropped the now-unused `MirroredLine` component. Verified in preview: input view shows 0 placeholder slots, finished keepsake still repeats line 1. No data-shape change.
+
 - **`59ec7fd` + `98071b6` · 2026-06-29** — Draft 37: the CTAC brand makeover + end-of-session reveal — the biggest draft yet, shipped in two commits. **Commit 1 (palette + tree, `59ec7fd`):** added the CTAC palette as Tailwind tokens (`ctac-teal` primary #00A79D, `ctac-navy` display, `ctac-green/orange/purple`) and swapped the app's amber UI → CTAC teal across 48 .jsx files (CTAs, inputs, pills, borders, accents) per Ginny's "more blue green tones." Kept warm/clinical (per spec): the Allies Practical wedge (amber, pending Stephanie's sign-off), the Emotional/Social wedges, and the bold small-net caption; tree colors come from the SVGs. Replaced the six tree-stage SVGs with Claude Design's CTAC-refreshed set (greens #1B9445/#8BC53F/#147A38, blossom oranges #FDC030/#E0950F, amplified stage 4+5, stage 5 now 30 blossom clusters; sky/sun/cloud removed) and made extract-tree-stages.mjs write treeStages.js directly, then regenerated. **Commit 2 (reveal, `98071b6`):** new `TreeProgressMontage` — auto-plays the tree 0→5 on a non-linear timeline with synced fade captions ("This is where you started." → "Here's what you've built." → "Look how far you've come."), a CSS cream→peach background warm-shift, and a radial glow at the bloom; Skip + Watch again; reduced-motion safe. New `SessionSummary` ("This is what you built") — six cards (Self-Reflection, poem, a compact TrampolineNet + Strengthen commitments, Belonging Skills buckets, Getting Unstuck thoughts, the Letter), `demoMode` synthetic kid (original poem/letter per the published-poet lock), "Ready for The Plan?" CTA + print. New `/the-plan` placeholder route. New /demo "Final reveal preview" section (Play → montage → summary, + a "The Plan — coming soon" card), inserted between "Growing your roots" and "Data export." Fonts NOT swapped (out of scope). No data-shape/export change; no activity version bump (Part H.3). Verified via preview: /demo shows 0 amber / 15 teal CTAs, stage-5 tree = 180 CTAC-orange blossoms, full montage→summary→/the-plan flow, no console errors. Cleanup queue gained: The Plan activity build, real flow integration, Allies Practical color harmonization (loop in Stephanie), and fonts (Fira/Marselis).
 
   <details>
@@ -3628,6 +3630,41 @@ Josh tested the voice-changer pipeline first thing this week and it landed on th
 - Decide whether to re-render Lines 1 + 3 with the new Brayden voice (replacing the existing aired clips), or only apply Brayden going forward and leave the existing shots as historical scratch.
 
 *End of voice + workflow pivot planning notes (last updated 2026-06-24).*
+
+---
+
+### Cowork ↔ Code calibration — don't quote estimates in human-dev time (2026-06-29)
+
+> Process lesson captured after a near-miss where Claude Cowork's time estimate for Draft 37 almost scoped the work down.
+
+**What happened.** Draft 37 was the biggest single piece of work we'd bundled — eight parts including an app-wide palette swap, new tree SVG drop-in, new montage component, summary screen, route placeholder, and demo wiring. When Josh said *"whew that sounds like a ton of work,"* I quoted **"1.5–2 days"** as the effort estimate and suggested splitting the draft into three smaller drafts to de-risk.
+
+Claude Code shipped the whole thing in **32 minutes** across two commits. Two orders of magnitude off.
+
+Josh's catch: *"If I had believed you, I might not have tried to make the scope of changes happen."* That's the real cost of the miscalibration — not the inaccurate number, the **decision it almost drove.** A padded estimate that gets believed shrinks the scope of what gets attempted. Smaller drafts mean slower progress, more rounds of team review on smaller changes, and the visual brand shift would have landed across three separate commits over multiple weeks instead of in one coherent push.
+
+**Why I was off.** Two things:
+
+1. **Estimating in human-dev hours by default.** That's the convention from the pre-Code era of this project. Once Code became the implementer, the relevant constraint shifted — but my framing didn't update. The WORKING_NOTES Recently-shipped log makes the actual pace plain (Drafts 33 + 34 + 35 all shipped within hours on 2026-06-24; Draft 31 same-session; the pattern is unambiguous). I had the data in front of me and still anchored to a generic dev's rate.
+2. **Defensive padding.** A bigger draft = more places for something to surprise. Padding the estimate covered the "what if Code hits an edge case" risk. The downside is I wasn't actually quoting effort — I was quoting a worst-case I felt comfortable defending. That's not what the question was.
+
+**What to do going forward.** Estimates should be quoted in **Josh's constraint, not Code's.** What actually bounds the work landing isn't typing speed — it's:
+
+- **Review time.** How long Josh needs to look at the diff or preview before merging.
+- **Decision points.** Where Josh has to weigh in on a choice that wasn't pre-spec'd in the draft.
+- **Team check-ins.** Where Ginny / Stephanie / Holly / Adrienne need to weigh in before something ships.
+- **Architectural risk.** Is this load-bearing? Could it break the export pipeline or the locked measures? Risk maps to review time, not dev time.
+- **External dependencies.** Are we waiting on assets from Claude Design, recordings, or a team meeting?
+
+A useful estimate phrasing: *"Code should ship this fast — under an hour given the spec is precise. The thing that'll take time is your preview pass before merge, especially the audit of the curated exceptions in the palette swap."*
+
+**Pattern check before estimating.** Before quoting time on any draft, scan Recently-shipped for the most recent comparable draft (a Round-N bundle, a copy-only change, a new-component build) and use that turnaround as the prior. Only deviate when the new draft has materially different risk shape.
+
+**Don't dilute the draft to fit a padded estimate.** If a draft is bundled, it's bundled because the changes belong together. Suggesting a split should be driven by a real reason (independent dependencies, separate review surfaces, etc.) — not by anchoring to an inflated time estimate that suggested the bundle was risky.
+
+**How to apply (for me, going forward):** when Josh asks how long something will take, or expresses surprise at scope, answer in terms of his review burden and decision load, not Code's dev hours. When in doubt, undersell rather than oversell — the cost of a draft taking 2x longer than estimated is much smaller than the cost of Josh scoping down work because the estimate sounded daunting.
+
+*End of calibration note.*
 
 ---
 
