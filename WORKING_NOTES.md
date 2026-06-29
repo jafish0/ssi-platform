@@ -14,6 +14,225 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`a97807e` · 2026-06-29** — Draft 36: Round 6 feedback bundle, six activities in one commit. **Self-Reflection v1.4→v1.5:** fuller closing — "Our experiences can drive our thoughts and feelings about belonging. Thanks for sharing!" (Adrienne + Holly: the bare "Thanks for sharing" read abrupt/sarcastic). **Who I Am Poem v2.4→v2.5:** lines 6/10 show an empty "I am ___" slot during input instead of echoing line 1 as the kid types (Adrienne — the live repetition confused kids); the keepsake still mirrors. **Belonging Skills Sort v3.2→v3.3:** directions point at the list — "From the list of skills below, drag each one into a bucket." (Adrienne). **Getting Unstuck v5.7→v5.8 (MAJOR):** Challenge final prompt reworded to push for an alternative statement, not journaling (Adrienne); new per-appraisal `both_and_root` softened seed for the Both/And path (e.g. "I will never really feel like I belong" → "I don't feel like I belong right now") so the kid can coherently AND-extend it — input + review both use it; original `text` unchanged (Pick rating, Challenge, and pretest/FollowUp Survey still use it); a_other falls back to its text (Holly + Jessica + Stephanie). **Allies v5.5→v5.6:** removed the support-type percentage labels from every surface (misleading — one ally per type read as "100% supported"; also fixes the mobile "Social" clip); bolded + warm-colored the small-net caption so it reads as encouragement; dropped the confusing second "lots of room to grow" caption line. The Draft 32 "No one named for: {types}" callout is unchanged. **Growing your roots:** "!" on the stage 4/5 headings; stage-5 visual push (slight anchored scale-up + saturation/brightness lift). All copy/styling except D's additive `both_and_root` field — no breaking data/export change. Verified via preview (D + E). Added two Round 6 Cleanup-queue items (palette review — now superseded by Draft 37; single-ally visualization).
+
+  <details>
+  <summary>Draft 36 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 36 — Round 6 feedback bundle (Self-Reflection v1.5 + Who I Am Poem v2.5 + BSS v3.3 + Getting Unstuck v5.8 + Allies v5.6 + Growing your roots polish)
+
+  Bundle of small-to-medium fixes from the 2026-06-29 review meeting (feedback CSV at `Meeting Notes and Feedback/6 29 feedback with notes.csv`, transcript at `Meeting Notes and Feedback/Jun 29 at 11-06 AM.txt`). Six activities touched, ship as one commit — same batched-stopping-point pattern as Drafts 26 + 32.
+
+  Most changes are copy/styling. The only structural addition is Getting Unstuck's per-appraisal `both_and_root` field, which adds a softened seed prompt the Both/And path uses in place of the absolute original statement (the original `text` stays untouched so pretest/FollowUp Survey items don't change).
+
+  **Approved by:** Josh, 2026-06-29.
+
+  ---
+
+  #### Part A — Self-Reflection v1.4 → v1.5 (MINOR copy change)
+
+  Adrienne flagged the *"Thanks for sharing"* closing as too abrupt; Holly noted it reads slightly sarcastic. Team landed on a fuller closing that explains why we asked the kid to share.
+
+  **File:** `src/activities/SelfReflection.jsx`.
+
+  **Change:** Replace the closing message *"Thanks for sharing"* with:
+
+  > *Our experiences can drive our thoughts and feelings about belonging. Thanks for sharing!*
+
+  Two-sentence pattern — context line + the warm thanks with an exclamation point. The exclamation point is intentional (per Holly's note about a few warm punctuation marks across the activities being a positive direction).
+
+  **Version bump:** v1.4 → v1.5 (MINOR). Prepend changelog: *"v1.5 — Closing message reworked per Adrienne + Holly's 2026-06-29 feedback ('Thanks for sharing' was too abrupt / read sarcastic). New copy: 'Our experiences can drive our thoughts and feelings about belonging. Thanks for sharing!'"* Update `updated`.
+
+  ---
+
+  #### Part B — Who I Am Poem v2.4 → v2.5 (MINOR; hide mirrored lines during input)
+
+  Adrienne noted that lines 6 and 10 currently mirror line 1's text **as the kid types** in the fill-in view. The repetition during input is confusing (*"why does he keep saying that there?"*). Team agreed the mirroring is meaningful only on the final keepsake — that's where the structural repetition pays off — so hide it during input.
+
+  **File:** `src/activities/WhoIAmPoem.jsx`.
+
+  **Change:** During the fill-in input view, do not render the mirrored line 1 content at line 6 and line 10. The existing input fields and structural layout stay (8 input slots, with lines 6 and 10 as the silent display-only slots).
+
+  Two clean ways to render the empty mirror slots during input — Code's call:
+
+  1. **Render the slot as blank / empty** (just an empty "I am ___" with no value yet). Most literal interpretation of Adrienne's note.
+  2. **Hide the slot entirely** during input and only reveal it on the final keepsake card. Cleaner visually but a less explicit signal that those lines exist.
+
+  I'd lean **option 1** — keeps the 10-line structure visible (so the kid understands the poem's shape as they fill it in) but stops the "why is line 6 saying the same thing?" confusion. The mirroring kicks in only on the final saved card.
+
+  **Keepsake card / final view: unchanged.** Lines 6 and 10 still mirror line 1 there. The whole point of the structure is the repetition framing the rest of the poem.
+
+  **Data shape:** no change.
+
+  **Version bump:** v2.4 → v2.5 (MINOR). Prepend changelog: *"v2.5 — Hid the mirrored line-1 content from lines 6 and 10 during input per Adrienne's 2026-06-29 feedback (the repetition was confusing kids as they typed); mirroring still renders on the final keepsake card where the repetition is the structural payoff."* Update `updated`.
+
+  ---
+
+  #### Part C — Belonging Skills Sort v3.2 → v3.3 (MINOR copy change)
+
+  Adrienne: the kid lands on the bucket view first and the skill list scrolls into view below — current direction copy doesn't tell them where the skills are.
+
+  **File:** `src/activities/BelongingSkillsSort.jsx`.
+
+  **Change:** The current directions copy (something like *"Drag each skill into a bucket"*) becomes:
+
+  > *From the list of skills below, drag each one into a bucket.*
+
+  Adds the "below" pointer so the kid knows where to look. One-line copy edit.
+
+  **Out of scope (already in Cleanup queue from Round 5, re-confirmed at the 2026-06-29 meeting):** Adrienne's per-category reflection prompts ("are there times you could do this more?" / "can you think of situations you could try?" / "could these be helpful in the future?") AND Holly's edge-case messages for "I'm already doing all of these" and "I'm not willing to do any of these" — **all deferred to the future action plan** that pulls willing-to-try items forward. Jessica's call at the meeting; matches the BSC platform's existing pattern.
+
+  **Version bump:** v3.2 → v3.3 (MINOR). Prepend changelog: *"v3.3 — Directions copy updated to point the kid at the skill list below the buckets per Adrienne's 2026-06-29 feedback ('Drag each skill into a bucket' → 'From the list of skills below, drag each one into a bucket')."* Update `updated`.
+
+  ---
+
+  #### Part D — Getting Unstuck v5.7 → v5.8 (MAJOR — Both/And root softening; new `both_and_root` field per appraisal)
+
+  Two changes. The first is a small copy edit; the second is a structural addition to the appraisals data shape so the Both/And path has a workable seed prompt.
+
+  **Files:**
+  - `src/lib/appraisals.js`
+  - `src/activities/GettingUnstuck.jsx`
+
+  ##### D.1 — Challenge prompt reword (Adrienne)
+
+  Currently the Challenge path's final prompt to the kid is *"What comes up for you when you ask yourself those questions?"* — Adrienne flagged that this elicits journaling rather than producing an alternative thought. Reword to push toward crafting an actual alternative.
+
+  **Change in `GettingUnstuck.jsx`:** the Challenge final-prompt copy becomes:
+
+  > *Now that you've thought about your statement in different ways, what is a more helpful or more accurate statement you could tell yourself?*
+
+  Replaces the existing copy verbatim. No other change to the Challenge flow.
+
+  ##### D.2 — Both/And root softening: new `both_and_root` field per appraisal (Holly + Jessica + Stephanie)
+
+  **The problem.** Each appraisal currently uses its absolute original statement (e.g., *"I will never really feel like I belong"*) as the seed for both Challenge and Both/And. That works for Challenge — kids think their way through challenging an absolute. It breaks Both/And — you can't coherently and-extend an absolute statement ("I will never really feel like I belong AND ___" reads as agreement with the absolute, not as holding two truths). The I-need-help suggestions on the Both/And side already use a softened root (e.g., *"I don't feel like I belong, right now, AND..."*) — so the suggestions and the input UI are mismatched.
+
+  **The fix.** Add a new `both_and_root` field on each appraisal in `src/lib/appraisals.js`. The Both/And path in `GettingUnstuck.jsx` uses `both_and_root` as the seed prompt the kid sees; the kid completes the AND-extension. The original `text` field is **unchanged** and continues to be used for: the Pick rating screen, the Challenge path, and the pretest / FollowUp Survey measures.
+
+  **Per-appraisal values** (match the existing `help_suggestions.both_and` wording so the suggestions and the seed prompt are consistent):
+
+  | Item | Original `text` (unchanged) | New `both_and_root` |
+  |---|---|---|
+  | `a1` | *"I will never really feel like I belong."* | *"I don't feel like I belong right now"* |
+  | `a2` | *"Everyone will eventually leave me or give up on me."* | *"People have left me in the past"* |
+  | `a3` | *"I am not lovable."* | *"I do not feel like I am lovable"* |
+  | `a4` | *"No one would want me to be a part of their family."* | *"I feel that no one would want me to be a part of their family"* |
+  | `a5` | *"I can't trust anyone."* | *"I feel like I can't trust anyone"* |
+  | `a6` | *"My real family will be mad if I like my foster or adoptive family."* | *"My family might get mad if I like my foster or adoptive family"* |
+
+  Note: `both_and_root` is the root **without** the trailing *"AND..."* — the UI appends *" AND "* and the kid's input field. So the kid sees something like:
+
+  > *I don't feel like I belong right now AND* `[___ kid's input ___]`
+
+  **Change in `GettingUnstuck.jsx`:** the Both/And screen's seed-prompt rendering reads `appraisal.both_and_root` instead of `appraisal.text`, with *" AND "* appended before the input field. The `and_statement` save key stays the same (the kid's full completed thought, including the AND-extension, can be stored OR just the kid's input — Code's call to preserve the existing save shape; recommend storing the kid's completion only, since the root is derivable from the appraisal id).
+
+  **Save payload:** no change. The kid's typed response continues to save as today. The seed prompt is display-only.
+
+  **Pretest / FollowUp Survey:** **no change.** Those use `text` (the locked measures). `both_and_root` is intervention-side only.
+
+  **Update the `src/lib/appraisals.js` top-of-file comment block** to document the new `both_and_root` field — note it's used only by the Getting Unstuck Both/And path, that it's intentionally a softened/conditional version of the original statement, and that pretest/FollowUp Survey items keep using `text` for measurement comparability.
+
+  ##### D.3 — Version bump
+
+  `getting-unstuck` v5.7 → **v5.8 (MAJOR)**. Bumping MAJOR because the appraisals data shape grows by a new required field per item — not a breaking export change, but it's a structural addition to the shared source-of-truth used by both intervention and survey, which is worth signaling. Prepend changelog: *"v5.8 — Challenge prompt reworded to push for alternative statement rather than journaling (Adrienne, 2026-06-29); Both/And path now uses a per-appraisal softened seed prompt via new `both_and_root` field, resolving the mismatch where the I-need-help Both/And suggestions used a softened root but the input UI used the original absolute statement (Holly + Jessica + Stephanie, 2026-06-29). Pretest + FollowUp Survey items unchanged — they continue using the original `text`."* Update `updated`.
+
+  ---
+
+  #### Part E — Allies / Safety Net v5.5 → v5.6 (MINOR; remove percentages, bold caption, drop second caption line)
+
+  Three coupled changes from the longer meeting discussion. Big consensus: the percentage layer was misleading more than it was helping.
+
+  **Files:**
+  - `src/activities/AlliesSafetyNet.jsx`
+  - `src/components/TrampolineNet.jsx`
+
+  ##### E.1 — Remove the support-type percentage labels entirely
+
+  Currently (after Draft 30) percentages render on the post-selection reveal, Inspect, Strengthen, and Review screens — on TrampolineNet pills and ally-list headers. Holly flagged that picking one person per type shows "100% / 100% / 100%" which reads as "fully supported" when it's really "one person per slot." The whole team agreed at the meeting that the math layer adds confusion and the visual alone tells the story.
+
+  **Change:** Remove the percentage labels from every surface they currently appear on. That means:
+
+  - TrampolineNet's percent pills — gone (the per-type label stays as just *"Practical"* / *"Emotional"* / *"Social"*).
+  - Ally-list headers — gone.
+  - The `percentByType` prop on TrampolineNet — recommend keeping the prop in the component but never passing it (defaults to off). Cheap to leave in place; easier to re-introduce if the team revisits.
+  - The `showPercentages` gating prop from Draft 30 — also recommend keeping but never passing.
+
+  **Side benefit:** the cut-off label issue on mobile (Stephanie's screenshot of *"Social"* cut off) is solved automatically by removing the suffix.
+
+  ##### E.2 — Make the small-net caption bold and visually prominent
+
+  Currently the *"A small net is a place to start"* caption renders in faint slate-500 italic. Adrienne + Holly both flagged it gets lost on the page. Make it bold and brighter so it actually reads as encouragement.
+
+  **Change:** the existing small-net caption *"A small net is a place to start — let's keep building"* (or the variant currently in the code) becomes **bold** with a more prominent color — recommend `font-bold` plus `text-amber-700` or `text-rose-700` (whichever fits the platform amber palette best). Italic can stay or drop — Code's call. Goal: looks like encouragement, not body text.
+
+  ##### E.3 — Delete the second caption line entirely
+
+  The *"Lots of room to grow your safety net in the greyed-out areas."* line that Draft 30 added — delete it. Holly's note: it's confusing for kids who don't have greyed-out areas (e.g., one person per type, no empty wedges) but the message still rendered. Removing it leaves a cleaner single-caption state.
+
+  **Change:** drop the second caption entirely from the low-ally state. Only the bolded *"A small net is a place to start — let's keep building"* line remains.
+
+  ##### E.4 — Version bump
+
+  `allies-safety-net` v5.5 → **v5.6 (MINOR)**. Prepend changelog: *"v5.6 — Support-type percentage labels removed entirely from all surfaces (TrampolineNet pills + ally-list headers + heading suffixes) per the 2026-06-29 meeting consensus — the percentages were misleading (one ally per type reading as 100% supported); bolded the small-net 'A small net is a place to start' caption so it actually reads as encouragement (Adrienne + Holly); dropped the second 'lots of room to grow in the greyed-out areas' caption line that confused kids without empty wedges (Holly)."* Update `updated`.
+
+  ---
+
+  #### Part F — Growing your roots: ! on encouragement copy + push stage 5 visual fuller
+
+  **Files:**
+  - `src/pages/DemoPage.jsx` (or wherever the per-stage encouragement copy lives — possibly `src/lib/treeStages.js` or inline)
+  - `src/components/TreeProgress.jsx`
+
+  ##### F.1 — Add occasional exclamation points to the per-stage encouragement copy
+
+  Adrienne: *"adding in the occasional exclamation point to give the statements more feeling/encouragement! Not everywhere ... just a few."*
+
+  **Change:** review the six per-stage encouragement messages (the copy that surfaces when the kid advances through tree stages) and add `!` to one or two that read as natural celebrations (likely stages 4 and 5, where the visual is most flourishing — but Code's judgment call). Don't blanket-add `!` to every stage; only where it lands.
+
+  ##### F.2 — Push the stage 5 visual fuller / more dramatic
+
+  Adrienne + Holly: the final stage should feel like a bigger "wow" moment — more canopy, more flair, possibly birds / sky / sun. Josh flagged SVG limitations in the meeting (the tree is parametric from Claude Design's reference SVGs).
+
+  **Change:** attempt a visual push on stage 5 in `TreeProgress.jsx`. Practical options Code can try:
+
+  - **More blossoms / fuller canopy** by increasing per-stage leaf and blossom counts at stage 5.
+  - **Brighter color palette** at stage 5 (slight saturation lift on leaves + blossoms).
+  - **Slight scale-up** of the whole tree at stage 5 (a small `transform: scale(1.05)` on the SVG group).
+
+  **Out of scope:** new reference SVGs from Claude Design with sky / birds / sun. That'd be a separate ask. The closing video will carry the bigger "wow" moment per Josh's meeting note; stage 5 just needs to land as visibly more flourishing than stage 4, not as a complete scenic transformation.
+
+  No version-bump line for the tree (it's a demo-section surface, not an activity). Note the changes in INFRASTRUCTURE.md change log if Code keeps that habit.
+
+  ---
+
+  #### Cleanup queue additions
+
+  - **Color scheme review** — Adrienne would prefer the lab's usual blue/green palette over the current amber/brown. Josh's rationale (gender-neutral, less clinical, supports the tree metaphor) is sound. Not a Draft 36 change; flag for next meeting if the team wants to actually decide.
+  - **Allies single-ally visualization** — Stephanie's idea: split the empty grey area into separate visible wedges (one for social, one for emotional) so the kid sees the absence as two distinct holes rather than one continuous blank. The percentage removal probably fixes most of the confusion by itself; revisit if it doesn't.
+
+  ---
+
+  #### What does NOT change
+
+  - The Strengthen step's per-type example text (just fixed in Draft 32).
+  - The "I need help creating a new thought" button (just fixed in Draft 32).
+  - The empty-wedge *"No one named for: {types}"* callout from Draft 32 — unchanged. The percentages were the misleading layer, not the missing-type callout.
+  - Sam 14 voice — confirmed at the meeting to stay as-is (Holly: *"I don't think it's worth the pennies have changed... it sounds really good, move forward"*).
+  - Pretest / Posttest / FollowUp Survey items — unchanged. The Both/And softening is intervention-side only.
+  - Data shapes, export pipeline, demoDataset — no breaking changes across any part; the `both_and_root` field is additive on the existing items.
+
+  #### Out of scope (queued)
+
+  - **Kai image regeneration** (blonde + slightly older) — Josh's parallel work, not code.
+  - **Kai voice work continuation** — Josh's parallel work.
+  - **Flow integration / action plan build** — still deferred per Draft 21 + Cleanup queue.
+  - **Animation production for Sam's Story** — Josh's parallel work, next phase.
+
+  *End of Draft 36.*
+
+  </details>
+
 - **`b1e719e` · 2026-06-24** — Draft 35: /demo cast restructure. Split the single **Meet the cast** section into two parallel named sections — **Sam's Story** (the narrative-video cast: Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson + Script 2.0 download + Family Photo) and **Learning Skills for Belonging** (the psychoeducation track that wraps the six activities) — and added **Kai**, that track's narrator. Four assets copied in (~11 MB): `kai-variant-{1,2}.png` + `kai-scene-{1-the-scan,2-the-why}.mp3`. **castData.js:** every card gains a `show` field (`'sams-story'` / `'learning-skills'`) for section grouping; two new optional shapes — `images: [{label,src,alt}]` (multi-variant design gallery) and `scenes: [{label,audio,description?}]` (scene-organized narrator audio). Kai card added with 2 image variants + 2 recorded scenes (8 locked total). **DemoPage:** renders the two sections filtered by `show`; CastCard gains an `images` gallery branch (side-by-side variants with captions) and a `scenes` branch (precedence scenes > videos > lines > description; `voiceSamples` still render above). No version bump (DemoPage section). Verified via preview: both sections present; Sam's Story = its 5 cards + Family Photo; Kai = 2 images + 2 scene players, both mp3s 200 `audio/mpeg`.
 
   <details>
@@ -1387,220 +1606,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 36 — Round 6 feedback bundle (Self-Reflection v1.5 + Who I Am Poem v2.5 + BSS v3.3 + Getting Unstuck v5.8 + Allies v5.6 + Growing your roots polish)
-
-Bundle of small-to-medium fixes from the 2026-06-29 review meeting (feedback CSV at `Meeting Notes and Feedback/6 29 feedback with notes.csv`, transcript at `Meeting Notes and Feedback/Jun 29 at 11-06 AM.txt`). Six activities touched, ship as one commit — same batched-stopping-point pattern as Drafts 26 + 32.
-
-Most changes are copy/styling. The only structural addition is Getting Unstuck's per-appraisal `both_and_root` field, which adds a softened seed prompt the Both/And path uses in place of the absolute original statement (the original `text` stays untouched so pretest/FollowUp Survey items don't change).
-
-**Approved by:** Josh, 2026-06-29.
-
----
-
-#### Part A — Self-Reflection v1.4 → v1.5 (MINOR copy change)
-
-Adrienne flagged the *"Thanks for sharing"* closing as too abrupt; Holly noted it reads slightly sarcastic. Team landed on a fuller closing that explains why we asked the kid to share.
-
-**File:** `src/activities/SelfReflection.jsx`.
-
-**Change:** Replace the closing message *"Thanks for sharing"* with:
-
-> *Our experiences can drive our thoughts and feelings about belonging. Thanks for sharing!*
-
-Two-sentence pattern — context line + the warm thanks with an exclamation point. The exclamation point is intentional (per Holly's note about a few warm punctuation marks across the activities being a positive direction).
-
-**Version bump:** v1.4 → v1.5 (MINOR). Prepend changelog: *"v1.5 — Closing message reworked per Adrienne + Holly's 2026-06-29 feedback ('Thanks for sharing' was too abrupt / read sarcastic). New copy: 'Our experiences can drive our thoughts and feelings about belonging. Thanks for sharing!'"* Update `updated`.
-
----
-
-#### Part B — Who I Am Poem v2.4 → v2.5 (MINOR; hide mirrored lines during input)
-
-Adrienne noted that lines 6 and 10 currently mirror line 1's text **as the kid types** in the fill-in view. The repetition during input is confusing (*"why does he keep saying that there?"*). Team agreed the mirroring is meaningful only on the final keepsake — that's where the structural repetition pays off — so hide it during input.
-
-**File:** `src/activities/WhoIAmPoem.jsx`.
-
-**Change:** During the fill-in input view, do not render the mirrored line 1 content at line 6 and line 10. The existing input fields and structural layout stay (8 input slots, with lines 6 and 10 as the silent display-only slots).
-
-Two clean ways to render the empty mirror slots during input — Code's call:
-
-1. **Render the slot as blank / empty** (just an empty "I am ___" with no value yet). Most literal interpretation of Adrienne's note.
-2. **Hide the slot entirely** during input and only reveal it on the final keepsake card. Cleaner visually but a less explicit signal that those lines exist.
-
-I'd lean **option 1** — keeps the 10-line structure visible (so the kid understands the poem's shape as they fill it in) but stops the "why is line 6 saying the same thing?" confusion. The mirroring kicks in only on the final saved card.
-
-**Keepsake card / final view: unchanged.** Lines 6 and 10 still mirror line 1 there. The whole point of the structure is the repetition framing the rest of the poem.
-
-**Data shape:** no change.
-
-**Version bump:** v2.4 → v2.5 (MINOR). Prepend changelog: *"v2.5 — Hid the mirrored line-1 content from lines 6 and 10 during input per Adrienne's 2026-06-29 feedback (the repetition was confusing kids as they typed); mirroring still renders on the final keepsake card where the repetition is the structural payoff."* Update `updated`.
-
----
-
-#### Part C — Belonging Skills Sort v3.2 → v3.3 (MINOR copy change)
-
-Adrienne: the kid lands on the bucket view first and the skill list scrolls into view below — current direction copy doesn't tell them where the skills are.
-
-**File:** `src/activities/BelongingSkillsSort.jsx`.
-
-**Change:** The current directions copy (something like *"Drag each skill into a bucket"*) becomes:
-
-> *From the list of skills below, drag each one into a bucket.*
-
-Adds the "below" pointer so the kid knows where to look. One-line copy edit.
-
-**Out of scope (already in Cleanup queue from Round 5, re-confirmed at the 2026-06-29 meeting):** Adrienne's per-category reflection prompts ("are there times you could do this more?" / "can you think of situations you could try?" / "could these be helpful in the future?") AND Holly's edge-case messages for "I'm already doing all of these" and "I'm not willing to do any of these" — **all deferred to the future action plan** that pulls willing-to-try items forward. Jessica's call at the meeting; matches the BSC platform's existing pattern.
-
-**Version bump:** v3.2 → v3.3 (MINOR). Prepend changelog: *"v3.3 — Directions copy updated to point the kid at the skill list below the buckets per Adrienne's 2026-06-29 feedback ('Drag each skill into a bucket' → 'From the list of skills below, drag each one into a bucket')."* Update `updated`.
-
----
-
-#### Part D — Getting Unstuck v5.7 → v5.8 (MAJOR — Both/And root softening; new `both_and_root` field per appraisal)
-
-Two changes. The first is a small copy edit; the second is a structural addition to the appraisals data shape so the Both/And path has a workable seed prompt.
-
-**Files:**
-- `src/lib/appraisals.js`
-- `src/activities/GettingUnstuck.jsx`
-
-##### D.1 — Challenge prompt reword (Adrienne)
-
-Currently the Challenge path's final prompt to the kid is *"What comes up for you when you ask yourself those questions?"* — Adrienne flagged that this elicits journaling rather than producing an alternative thought. Reword to push toward crafting an actual alternative.
-
-**Change in `GettingUnstuck.jsx`:** the Challenge final-prompt copy becomes:
-
-> *Now that you've thought about your statement in different ways, what is a more helpful or more accurate statement you could tell yourself?*
-
-Replaces the existing copy verbatim. No other change to the Challenge flow.
-
-##### D.2 — Both/And root softening: new `both_and_root` field per appraisal (Holly + Jessica + Stephanie)
-
-**The problem.** Each appraisal currently uses its absolute original statement (e.g., *"I will never really feel like I belong"*) as the seed for both Challenge and Both/And. That works for Challenge — kids think their way through challenging an absolute. It breaks Both/And — you can't coherently and-extend an absolute statement ("I will never really feel like I belong AND ___" reads as agreement with the absolute, not as holding two truths). The I-need-help suggestions on the Both/And side already use a softened root (e.g., *"I don't feel like I belong, right now, AND..."*) — so the suggestions and the input UI are mismatched.
-
-**The fix.** Add a new `both_and_root` field on each appraisal in `src/lib/appraisals.js`. The Both/And path in `GettingUnstuck.jsx` uses `both_and_root` as the seed prompt the kid sees; the kid completes the AND-extension. The original `text` field is **unchanged** and continues to be used for: the Pick rating screen, the Challenge path, and the pretest / FollowUp Survey measures.
-
-**Per-appraisal values** (match the existing `help_suggestions.both_and` wording so the suggestions and the seed prompt are consistent):
-
-| Item | Original `text` (unchanged) | New `both_and_root` |
-|---|---|---|
-| `a1` | *"I will never really feel like I belong."* | *"I don't feel like I belong right now"* |
-| `a2` | *"Everyone will eventually leave me or give up on me."* | *"People have left me in the past"* |
-| `a3` | *"I am not lovable."* | *"I do not feel like I am lovable"* |
-| `a4` | *"No one would want me to be a part of their family."* | *"I feel that no one would want me to be a part of their family"* |
-| `a5` | *"I can't trust anyone."* | *"I feel like I can't trust anyone"* |
-| `a6` | *"My real family will be mad if I like my foster or adoptive family."* | *"My family might get mad if I like my foster or adoptive family"* |
-
-Note: `both_and_root` is the root **without** the trailing *"AND..."* — the UI appends *" AND "* and the kid's input field. So the kid sees something like:
-
-> *I don't feel like I belong right now AND* `[___ kid's input ___]`
-
-**Change in `GettingUnstuck.jsx`:** the Both/And screen's seed-prompt rendering reads `appraisal.both_and_root` instead of `appraisal.text`, with *" AND "* appended before the input field. The `and_statement` save key stays the same (the kid's full completed thought, including the AND-extension, can be stored OR just the kid's input — Code's call to preserve the existing save shape; recommend storing the kid's completion only, since the root is derivable from the appraisal id).
-
-**Save payload:** no change. The kid's typed response continues to save as today. The seed prompt is display-only.
-
-**Pretest / FollowUp Survey:** **no change.** Those use `text` (the locked measures). `both_and_root` is intervention-side only.
-
-**Update the `src/lib/appraisals.js` top-of-file comment block** to document the new `both_and_root` field — note it's used only by the Getting Unstuck Both/And path, that it's intentionally a softened/conditional version of the original statement, and that pretest/FollowUp Survey items keep using `text` for measurement comparability.
-
-##### D.3 — Version bump
-
-`getting-unstuck` v5.7 → **v5.8 (MAJOR)**. Bumping MAJOR because the appraisals data shape grows by a new required field per item — not a breaking export change, but it's a structural addition to the shared source-of-truth used by both intervention and survey, which is worth signaling. Prepend changelog: *"v5.8 — Challenge prompt reworded to push for alternative statement rather than journaling (Adrienne, 2026-06-29); Both/And path now uses a per-appraisal softened seed prompt via new `both_and_root` field, resolving the mismatch where the I-need-help Both/And suggestions used a softened root but the input UI used the original absolute statement (Holly + Jessica + Stephanie, 2026-06-29). Pretest + FollowUp Survey items unchanged — they continue using the original `text`."* Update `updated`.
-
----
-
-#### Part E — Allies / Safety Net v5.5 → v5.6 (MINOR; remove percentages, bold caption, drop second caption line)
-
-Three coupled changes from the longer meeting discussion. Big consensus: the percentage layer was misleading more than it was helping.
-
-**Files:**
-- `src/activities/AlliesSafetyNet.jsx`
-- `src/components/TrampolineNet.jsx`
-
-##### E.1 — Remove the support-type percentage labels entirely
-
-Currently (after Draft 30) percentages render on the post-selection reveal, Inspect, Strengthen, and Review screens — on TrampolineNet pills and ally-list headers. Holly flagged that picking one person per type shows "100% / 100% / 100%" which reads as "fully supported" when it's really "one person per slot." The whole team agreed at the meeting that the math layer adds confusion and the visual alone tells the story.
-
-**Change:** Remove the percentage labels from every surface they currently appear on. That means:
-
-- TrampolineNet's percent pills — gone (the per-type label stays as just *"Practical"* / *"Emotional"* / *"Social"*).
-- Ally-list headers — gone.
-- The `percentByType` prop on TrampolineNet — recommend keeping the prop in the component but never passing it (defaults to off). Cheap to leave in place; easier to re-introduce if the team revisits.
-- The `showPercentages` gating prop from Draft 30 — also recommend keeping but never passing.
-
-**Side benefit:** the cut-off label issue on mobile (Stephanie's screenshot of *"Social"* cut off) is solved automatically by removing the suffix.
-
-##### E.2 — Make the small-net caption bold and visually prominent
-
-Currently the *"A small net is a place to start"* caption renders in faint slate-500 italic. Adrienne + Holly both flagged it gets lost on the page. Make it bold and brighter so it actually reads as encouragement.
-
-**Change:** the existing small-net caption *"A small net is a place to start — let's keep building"* (or the variant currently in the code) becomes **bold** with a more prominent color — recommend `font-bold` plus `text-amber-700` or `text-rose-700` (whichever fits the platform amber palette best). Italic can stay or drop — Code's call. Goal: looks like encouragement, not body text.
-
-##### E.3 — Delete the second caption line entirely
-
-The *"Lots of room to grow your safety net in the greyed-out areas."* line that Draft 30 added — delete it. Holly's note: it's confusing for kids who don't have greyed-out areas (e.g., one person per type, no empty wedges) but the message still rendered. Removing it leaves a cleaner single-caption state.
-
-**Change:** drop the second caption entirely from the low-ally state. Only the bolded *"A small net is a place to start — let's keep building"* line remains.
-
-##### E.4 — Version bump
-
-`allies-safety-net` v5.5 → **v5.6 (MINOR)**. Prepend changelog: *"v5.6 — Support-type percentage labels removed entirely from all surfaces (TrampolineNet pills + ally-list headers + heading suffixes) per the 2026-06-29 meeting consensus — the percentages were misleading (one ally per type reading as 100% supported); bolded the small-net 'A small net is a place to start' caption so it actually reads as encouragement (Adrienne + Holly); dropped the second 'lots of room to grow in the greyed-out areas' caption line that confused kids without empty wedges (Holly)."* Update `updated`.
-
----
-
-#### Part F — Growing your roots: ! on encouragement copy + push stage 5 visual fuller
-
-**Files:**
-- `src/pages/DemoPage.jsx` (or wherever the per-stage encouragement copy lives — possibly `src/lib/treeStages.js` or inline)
-- `src/components/TreeProgress.jsx`
-
-##### F.1 — Add occasional exclamation points to the per-stage encouragement copy
-
-Adrienne: *"adding in the occasional exclamation point to give the statements more feeling/encouragement! Not everywhere ... just a few."*
-
-**Change:** review the six per-stage encouragement messages (the copy that surfaces when the kid advances through tree stages) and add `!` to one or two that read as natural celebrations (likely stages 4 and 5, where the visual is most flourishing — but Code's judgment call). Don't blanket-add `!` to every stage; only where it lands.
-
-##### F.2 — Push the stage 5 visual fuller / more dramatic
-
-Adrienne + Holly: the final stage should feel like a bigger "wow" moment — more canopy, more flair, possibly birds / sky / sun. Josh flagged SVG limitations in the meeting (the tree is parametric from Claude Design's reference SVGs).
-
-**Change:** attempt a visual push on stage 5 in `TreeProgress.jsx`. Practical options Code can try:
-
-- **More blossoms / fuller canopy** by increasing per-stage leaf and blossom counts at stage 5.
-- **Brighter color palette** at stage 5 (slight saturation lift on leaves + blossoms).
-- **Slight scale-up** of the whole tree at stage 5 (a small `transform: scale(1.05)` on the SVG group).
-
-**Out of scope:** new reference SVGs from Claude Design with sky / birds / sun. That'd be a separate ask. The closing video will carry the bigger "wow" moment per Josh's meeting note; stage 5 just needs to land as visibly more flourishing than stage 4, not as a complete scenic transformation.
-
-No version-bump line for the tree (it's a demo-section surface, not an activity). Note the changes in INFRASTRUCTURE.md change log if Code keeps that habit.
-
----
-
-#### Cleanup queue additions
-
-- **Color scheme review** — Adrienne would prefer the lab's usual blue/green palette over the current amber/brown. Josh's rationale (gender-neutral, less clinical, supports the tree metaphor) is sound. Not a Draft 36 change; flag for next meeting if the team wants to actually decide.
-- **Allies single-ally visualization** — Stephanie's idea: split the empty grey area into separate visible wedges (one for social, one for emotional) so the kid sees the absence as two distinct holes rather than one continuous blank. The percentage removal probably fixes most of the confusion by itself; revisit if it doesn't.
-
----
-
-#### What does NOT change
-
-- The Strengthen step's per-type example text (just fixed in Draft 32).
-- The "I need help creating a new thought" button (just fixed in Draft 32).
-- The empty-wedge *"No one named for: {types}"* callout from Draft 32 — unchanged. The percentages were the misleading layer, not the missing-type callout.
-- Sam 14 voice — confirmed at the meeting to stay as-is (Holly: *"I don't think it's worth the pennies have changed... it sounds really good, move forward"*).
-- Pretest / Posttest / FollowUp Survey items — unchanged. The Both/And softening is intervention-side only.
-- Data shapes, export pipeline, demoDataset — no breaking changes across any part; the `both_and_root` field is additive on the existing items.
-
-#### Out of scope (queued)
-
-- **Kai image regeneration** (blonde + slightly older) — Josh's parallel work, not code.
-- **Kai voice work continuation** — Josh's parallel work.
-- **Flow integration / action plan build** — still deferred per Draft 21 + Cleanup queue.
-- **Animation production for Sam's Story** — Josh's parallel work, next phase.
-
-*End of Draft 36.*
 
 ---
 
