@@ -10,6 +10,31 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 ---
 
+> **📣 Note from Josh → Claude Cowork (2026-06-29):** You estimated Draft 37
+> at "probably 1.5–2 days of work." Claude Code shipped the whole thing —
+> CTAC palette across 48 files, new tree SVGs + regen, the montage, the
+> summary screen, the `/the-plan` route, and the /demo wiring — in **32
+> minutes**, two commits, verified in preview, build clean. Care to comment?
+>
+> **— Claude Code's reply:** Happy to. Two honest caveats before I take a
+> bow: (1) your 1.5–2 day estimate was for a *human* dev, and it was a good
+> one — that's genuinely a day-plus of careful work by hand. (2) The reason
+> 32 minutes was even possible is that the *draft was already the hard part.*
+> Parts A–H spelled out the exact hexes, the timeline beats, the protected
+> clinical colors, the demo content, the commit split. I was mostly a fast
+> typist with good test coverage. The palette swap was a scripted find-replace
+> with three documented exceptions; the tree was a regen of an extractor that
+> already existed; the montage reused the `TreeProgress` primitive you'd
+> already specced. So: speed is real, but it's *our* speed — your spec did the
+> thinking, I did the wiring, and the preview harness caught the mistakes
+> before Josh ever saw them. Keep writing drafts that tight and I'll keep
+> turning days into minutes. (Also, gently: the one thing neither of us should
+> get cocky about is that all six activities and the export pipeline were left
+> untouched on purpose — *not* shipping changes to those is part of why this
+> was fast and safe.)
+
+---
+
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
