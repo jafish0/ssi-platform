@@ -98,8 +98,8 @@ export default function PsychometricScale({ content, onSave, existingResponse })
         <p className="text-[16px] text-slate-700 mb-4">
           {content.scoring.display_message || ''}
         </p>
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center mb-6">
-          <div className="text-[48px] font-bold text-amber-700 leading-none">{score}</div>
+        <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-6 text-center mb-6">
+          <div className="text-[48px] font-bold text-ctac-teal-700 leading-none">{score}</div>
           {band && (
             <div className="text-[14px] font-medium text-slate-600 mt-2">
               {band.label}
@@ -128,9 +128,9 @@ export default function PsychometricScale({ content, onSave, existingResponse })
               className={
                 'rounded-full ' +
                 (i === activeIndex
-                  ? 'w-2 h-2 bg-amber-400'
+                  ? 'w-2 h-2 bg-ctac-teal-400'
                   : i < activeIndex
-                    ? 'w-2 h-2 bg-amber-200'
+                    ? 'w-2 h-2 bg-ctac-teal-200'
                     : 'w-1.5 h-1.5 bg-slate-200')
               }
             />
@@ -198,8 +198,8 @@ function LikertRow({ anchors, value, onChange }) {
               className={
                 'min-h-[48px] rounded-2xl border text-[16px] font-medium transition-colors ' +
                 (selected
-                  ? 'bg-amber-200 border-amber-400 text-amber-900'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                  ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
               }
             >
               {v}
@@ -229,7 +229,7 @@ function VASRow({ vasConfig, value, onChange }) {
         step={step}
         value={v}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-amber-400"
+        className="w-full accent-ctac-teal-400"
       />
       <div className="flex justify-between text-[13px] text-slate-500 mt-1">
         <span>{vasConfig?.min_label || min}</span>
@@ -256,8 +256,8 @@ function BinaryRow({ value, onChange }) {
             className={
               'min-h-[52px] rounded-2xl border text-[16px] font-semibold transition-colors ' +
               (selected
-                ? 'bg-amber-200 border-amber-400 text-amber-900'
-                : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
             }
           >
             {opt.label}

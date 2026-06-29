@@ -97,7 +97,7 @@ export default function InterventionListPage() {
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+            className="flex items-center gap-1 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
           >
             <Plus size={16} strokeWidth={1.5} />
             Create new
@@ -115,7 +115,7 @@ export default function InterventionListPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[14px]">
               <thead>
-                <tr className="bg-amber-50 text-left text-[12px] uppercase tracking-wide text-amber-800">
+                <tr className="bg-ctac-teal-50 text-left text-[12px] uppercase tracking-wide text-ctac-teal-800">
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Slug</th>
                   <th className="px-4 py-3">Active</th>
@@ -127,7 +127,7 @@ export default function InterventionListPage() {
               </thead>
               <tbody>
                 {rows.map((iv) => (
-                  <tr key={iv.id} className="border-t border-slate-100 hover:bg-amber-50">
+                  <tr key={iv.id} className="border-t border-slate-100 hover:bg-ctac-teal-50">
                     <td className="px-4 py-3 text-slate-800 font-medium">{iv.name}</td>
                     <td className="px-4 py-3 font-mono text-[13px] text-slate-600">{iv.slug}</td>
                     <td className="px-4 py-3">
@@ -163,7 +163,7 @@ export default function InterventionListPage() {
                       <button
                         type="button"
                         onClick={() => navigate(`/admin/interventions/${iv.id}`)}
-                        className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-900 font-medium text-[13px]"
+                        className="inline-flex items-center gap-1 text-ctac-teal-700 hover:text-ctac-teal-900 font-medium text-[13px]"
                       >
                         <Pencil size={14} strokeWidth={1.5} />
                         Edit

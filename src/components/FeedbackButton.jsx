@@ -130,7 +130,7 @@ export default function FeedbackButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
+        className="inline-flex items-center gap-1.5 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
       >
         <MessageSquare size={14} strokeWidth={2} />
         Give feedback
@@ -158,7 +158,7 @@ export default function FeedbackButton() {
                 <button
                   type="button"
                   onClick={close}
-                  className="bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-6 py-2 min-h-[44px] text-[14px]"
+                  className="bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-6 py-2 min-h-[44px] text-[14px]"
                 >
                   Close
                 </button>
@@ -180,7 +180,7 @@ export default function FeedbackButton() {
                         <button
                           type="button"
                           onClick={() => setAreaEditing(true)}
-                          className="text-[12px] text-amber-700 hover:text-amber-900 underline"
+                          className="text-[12px] text-ctac-teal-700 hover:text-ctac-teal-900 underline"
                         >
                           Edit
                         </button>
@@ -191,7 +191,7 @@ export default function FeedbackButton() {
                         type="text"
                         value={area}
                         onChange={(e) => setArea(e.target.value)}
-                        className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                        className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                       />
                     ) : (
                       <div className="text-[14px] px-3 py-2 min-h-[40px] bg-slate-50 border border-slate-200 rounded-2xl text-slate-700">
@@ -206,7 +206,7 @@ export default function FeedbackButton() {
                       <select
                         value={submitter}
                         onChange={(e) => setSubmitter(e.target.value)}
-                        className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                        className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                       >
                         {SUBMITTERS.map((s) => (
                           <option key={s.value} value={s.value}>{s.label}</option>
@@ -220,7 +220,7 @@ export default function FeedbackButton() {
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                        className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                       >
                         {CATEGORIES.map((c) => (
                           <option key={c.value} value={c.value}>{c.label}</option>
@@ -239,7 +239,7 @@ export default function FeedbackButton() {
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="What worked, what didn't, what to change…"
                       maxLength={5000}
-                      className="w-full text-[14px] leading-relaxed px-3 py-2 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                      className="w-full text-[14px] leading-relaxed px-3 py-2 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                     />
                     <div className="text-[11px] text-slate-400 mt-1 text-right">
                       {message.length} / 5000
@@ -264,7 +264,7 @@ export default function FeedbackButton() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+                      className="bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
                     >
                       {submitting ? 'Sending…' : 'Send feedback'}
                     </button>

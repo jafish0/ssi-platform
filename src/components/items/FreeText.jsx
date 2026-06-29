@@ -94,7 +94,7 @@ export default function FreeText({ content, onSave, existingResponse, sessionDat
         onChange={(e) => setText(e.target.value)}
         placeholder={content?.placeholder || ''}
         maxLength={maxChars}
-        className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+        className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
       />
 
       {content?.show_char_count !== false && (

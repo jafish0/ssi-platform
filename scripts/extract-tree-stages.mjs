@@ -13,7 +13,7 @@
 // stage), so we capture the complete element set per stage rather than a
 // single additive overlay.
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const DIR = 'src/assets/tree'
 const stages = []
@@ -114,5 +114,26 @@ for (let s = 0; s <= 5; s++) {
   })
 }
 
-// Emit compact-ish JS.
-process.stdout.write('const STAGES = ' + JSON.stringify(stages, null, 2) + '\n')
+// Write `src/lib/treeStages.js` directly (header + named export, compact
+// single-line data so the auto-generated diff stays tidy).
+const header = `// AUTO-GENERATED from the six locked reference SVGs in
+// \`src/assets/tree/tree-stage-*.svg\` by \`scripts/extract-tree-stages.mjs\`.
+// Do NOT hand-edit — re-run the extractor if the references change.
+//
+// Source set: Claude Design's CTAC-refreshed "Ready for Roots Tree"
+// (Draft 37, 2026-06-29) — CTAC-palette greens/oranges baked in, with an
+// amplified stage 4 + 5 (stage 5 now 30 blossom clusters). Sky/sun/cloud
+// elements were removed by Josh; the atmospheric "wow" lives in the
+// montage instead. See src/assets/tree/NOTES.md.
+//
+// Each entry is one growth stage (0 Seed -> 5 Blooming), holding the
+// COMPLETE element set for that stage (per-stage full redraws — the whole
+// tree scales each stage).
+//   roots/branches: stroked <path> { d, stroke, sw }
+//   trunk:          [{ kind:"ellipse"|"path", ... }]
+//   leaves:         filled <path> { d, fill, transform? }
+//   blossoms:       array of flowers, each an array of petal circles { cx, cy, r, fill }
+
+`
+writeFileSync('src/lib/treeStages.js', header + 'export const TREE_STAGES = ' + JSON.stringify(stages) + '\n')
+process.stdout.write('Wrote src/lib/treeStages.js — ' + stages.length + ' stages, stage-5 blossoms: ' + stages[5].blossoms.length + '\n')

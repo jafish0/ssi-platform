@@ -30,7 +30,7 @@ export default function ProtectedRoute({ requiredRole = 'researcher', children }
         <div className="text-center max-w-[420px]">
           <p className="text-slate-500 text-[14px]">Loading…</p>
           {stuck && (
-            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-4 text-left">
+            <div className="mt-6 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl px-4 py-4 text-left">
               <p className="text-[13px] text-slate-700 mb-3">
                 Stuck on this screen for a while? This usually means a stale
                 browser session needs to be cleared. Click below to reset and
@@ -48,7 +48,7 @@ export default function ProtectedRoute({ requiredRole = 'researcher', children }
                     window.location.replace('/admin')
                   }
                 }}
-                className="inline-flex items-center bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
+                className="inline-flex items-center bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
               >
                 Reset session &amp; sign in
               </button>

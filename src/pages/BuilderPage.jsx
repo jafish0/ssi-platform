@@ -422,7 +422,7 @@ export default function BuilderPage() {
         <div className="bg-white rounded-2xl shadow-card p-6">
           <h2 className="text-[18px] font-semibold mb-2">Couldn't load intervention</h2>
           <p className="text-[14px] text-slate-700 mb-4">{error?.message || 'Not found.'}</p>
-          <Link to="/admin/interventions" className="text-amber-700 hover:text-amber-900 text-[14px]">← Back to interventions</Link>
+          <Link to="/admin/interventions" className="text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px]">← Back to interventions</Link>
         </div>
       </AdminLayout>
     )
@@ -444,7 +444,7 @@ export default function BuilderPage() {
       {/* Top toolbar */}
       <div className="bg-white rounded-2xl shadow-card px-4 py-3 mb-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <Link to="/admin/interventions" className="text-[13px] text-amber-700 hover:text-amber-900">← Back</Link>
+          <Link to="/admin/interventions" className="text-[13px] text-ctac-teal-700 hover:text-ctac-teal-900">← Back</Link>
           <div className="text-[13px] text-slate-500 font-mono truncate">{intervention.slug}</div>
           <SaveStatus state={saveState} />
         </div>
@@ -452,7 +452,7 @@ export default function BuilderPage() {
           <button
             type="button"
             onClick={() => window.open(`/preview/${interventionId}`, '_blank')}
-            className="inline-flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-full px-4 py-1.5 min-h-[40px] text-[13px]"
+            className="inline-flex items-center gap-1 bg-ctac-teal-100 hover:bg-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-4 py-1.5 min-h-[40px] text-[13px]"
           >
             <Eye size={14} strokeWidth={1.5} />
             Preview
@@ -470,7 +470,7 @@ export default function BuilderPage() {
               type="button"
               onClick={() => setShowPublish(true)}
               disabled={sections.length === 0}
-              className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-1.5 min-h-[40px] text-[13px]"
+              className="inline-flex items-center gap-1 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-1.5 min-h-[40px] text-[13px]"
             >
               <Send size={14} strokeWidth={1.5} />
               Publish
@@ -517,7 +517,7 @@ export default function BuilderPage() {
                     setSections((prev) => prev.map((s) => s.id === selectedSection.id ? { ...s, title: newTitle } : s))
                     queueSectionUpdate(selectedSection.id, { title: newTitle })
                   }}
-                  className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                  className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                 />
               </div>
               <div>
@@ -529,7 +529,7 @@ export default function BuilderPage() {
                     setSections((prev) => prev.map((s) => s.id === selectedSection.id ? { ...s, type: t } : s))
                     queueSectionUpdate(selectedSection.id, { type: t })
                   }}
-                  className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                  className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                 >
                   <option value="intro">intro</option>
                   <option value="psychometric">psychometric</option>

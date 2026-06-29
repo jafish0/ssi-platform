@@ -79,7 +79,7 @@ export default function LetterBuilder({ onSave = console.log }) {
         onChange={(e) => setLetter(e.target.value)}
         placeholder="Write as much or as little as you want. It can sound however you want."
         maxLength={5000}
-        className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+        className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
       />
       <div className="text-[12px] text-slate-400 mt-1 text-right">
         {letter.length} / 5000
@@ -127,7 +127,7 @@ function LetterKeepsake({ letter }) {
         You can save or print this letter and look back on it whenever you
         need a reminder or some encouragement.
       </p>
-      <div className="bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-card p-8">
+      <div className="bg-ctac-teal-50 rounded-3xl border-2 border-ctac-teal-200 shadow-card p-8">
         <div className="text-[16px] leading-relaxed text-slate-800 whitespace-pre-wrap">
           {letter || '—'}
         </div>
@@ -137,7 +137,7 @@ function LetterKeepsake({ letter }) {
           type="button"
           onClick={handleDownload}
           disabled={downloading || !letter}
-          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+          className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
         >
           <Download size={14} strokeWidth={2} />
           {downloading ? 'Saving image…' : 'Save as image'}

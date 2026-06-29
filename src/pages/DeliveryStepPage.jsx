@@ -8,7 +8,7 @@ import {
 
 function SectionTransition({ section, onContinue }) {
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-10 bg-amber-50">
+    <main className="min-h-screen flex items-center justify-center px-4 py-10 bg-ctac-teal-50">
       <div className="w-full max-w-[540px] text-center">
         <h1 className="text-[28px] font-bold leading-tight mb-4 text-slate-800">
           {section?.title || 'Next part'}

@@ -1,5 +1,13 @@
 # Ready for Roots — Tree Growth Stages · Build Notes
 
+> **2026-06-29 refresh (Draft 37):** these six files were replaced with Claude Design's
+> CTAC-palette set — leaf greens `#1B9445` / `#8BC53F` / `#147A38`, blossom oranges
+> `#FDC030` / `#E0950F` (was amber `#f59e0b` / rose `#fda4af`), and a significantly
+> amplified stage 4 + 5 (stage 5 now 30 blossom clusters). Sky/sun/cloud elements that
+> shipped in Claude Design's delivery were removed — the atmospheric "wow" lives in the
+> end-of-session montage (`TreeProgressMontage.jsx`) instead. Re-run
+> `node scripts/extract-tree-stages.mjs` after any SVG change to regenerate `src/lib/treeStages.js`.
+
 Six locked stage references for the between-activity progress reveal. Each is a pure-vector
 SVG on a shared `viewBox="0 0 400 600"`, transparent background, every file < 30kb.
 

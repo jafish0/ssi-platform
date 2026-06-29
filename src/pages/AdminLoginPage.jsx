@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={submitting}
-                  className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                  className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white disabled:opacity-60"
                 />
               </div>
 
@@ -148,7 +148,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={submitting}
-                  className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                  className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white disabled:opacity-60"
                 />
               </div>
 
@@ -164,7 +164,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
+                className="w-full bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
               >
                 {submitting ? 'Signing in…' : 'Sign in'}
               </button>
@@ -174,7 +174,7 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => switchMode('reset')}
-                className="text-amber-700 hover:text-amber-900 underline"
+                className="text-ctac-teal-700 hover:text-ctac-teal-900 underline"
               >
                 Forgot your password?
               </button>
@@ -201,7 +201,7 @@ export default function AdminLoginPage() {
                 <button
                   type="button"
                   onClick={() => switchMode('signin')}
-                  className="text-amber-700 hover:text-amber-900 underline text-[14px]"
+                  className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-[14px]"
                 >
                   ← Back to sign in
                 </button>
@@ -222,7 +222,7 @@ export default function AdminLoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={submitting}
-                    className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                    className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white disabled:opacity-60"
                   />
                 </div>
 
@@ -238,7 +238,7 @@ export default function AdminLoginPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
+                  className="w-full bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
                 >
                   {submitting ? 'Sending…' : 'Send reset link'}
                 </button>
@@ -247,7 +247,7 @@ export default function AdminLoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode('signin')}
-                    className="text-amber-700 hover:text-amber-900 underline"
+                    className="text-ctac-teal-700 hover:text-ctac-teal-900 underline"
                   >
                     ← Back to sign in
                   </button>

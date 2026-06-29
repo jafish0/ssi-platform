@@ -1,39 +1,51 @@
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
   <g id="ground">
-    <line x1="24" y1="420" x2="376" y2="420" stroke="#e2e8f0" stroke-width="2.5" stroke-linecap="round"></line>
+    <line x1="24" y1="420" x2="376" y2="420" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"></line>
   </g>
   <g id="roots">
-      <path id="root-tap" class="root" d="M 200 420 Q 200 444 200.5 457.0 Q 201 470 200.5 483.0 Q 200 496 200.5 506.0 T 201 516" fill="none" stroke="#5a3a1f" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-tap-sub-1" class="root" d="M 200 496 Q 190 508 188.0 515.0 T 186 522" fill="none" stroke="#5a3a1f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-lat-1" class="root" d="M 200 425 Q 172 433 161.0 440.0 Q 150 447 143.0 455.5 T 136 464" fill="none" stroke="#5a3a1f" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-lat-1-sub-1" class="root" d="M 152 446 Q 140 456 136.5 463.0 T 133 470" fill="none" stroke="#4a2d18" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-lat-2" class="root" d="M 200 425 Q 228 433 239.0 440.0 Q 250 447 257.0 455.5 T 264 464" fill="none" stroke="#5a3a1f" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-lat-2-sub-1" class="root" d="M 248 446 Q 260 456 263.5 463.0 T 267 470" fill="none" stroke="#4a2d18" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-lat-3" class="root" d="M 200 433 Q 181 451 175.5 461.0 Q 170 471 168.0 480.5 T 166 490" fill="none" stroke="#4a2d18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-lat-3-sub-1" class="root" d="M 170 471 Q 160 482 158.0 489.0 T 156 496" fill="none" stroke="#4a2d18" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-      <path id="root-lat-4" class="root" d="M 200 433 Q 219 451 224.5 461.0 Q 230 471 232.0 480.5 T 234 490" fill="none" stroke="#4a2d18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-tap" class="root" d="M 200 420 Q 200 445 200 457 Q 199 469 200 481 Q 202 494 200 506 T 199 518" fill="none" stroke="#5a3a1f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-tap-sub-1" class="root" d="M 200 457 Q 185 473 183 482 T 180 491" fill="none" stroke="#5a3a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-tap-sub-2" class="root" d="M 200 508 Q 214 524 217 533 T 219 542" fill="none" stroke="#5a3a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-1" class="root" d="M 200 426 Q 174 440 157 444 Q 139 448 121 454 T 104 460" fill="none" stroke="#5a3a1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-1-sub-1" class="root" d="M 142 446 Q 123 460 116 467 T 109 474" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-1-sub-2" class="root" d="M 125 453 Q 110 455 102 455 T 94 455" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-2" class="root" d="M 200 426 Q 224 441 242 446 Q 260 451 276 458 T 292 465" fill="none" stroke="#5a3a1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-2-sub-1" class="root" d="M 255 450 Q 270 464 278 471 T 286 478" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-2-sub-2" class="root" d="M 272 457 Q 287 460 294 461 T 301 461" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-3" class="root" d="M 200 432 Q 182 452 166 460 Q 151 468 139 479 T 127 490" fill="none" stroke="#5a3a1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-3-sub-1" class="root" d="M 156 467 Q 148 483 142 492 T 135 500" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-3-sub-2" class="root" d="M 143 477 Q 130 481 124 485 T 117 489" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-4" class="root" d="M 200 432 Q 219 451 233 459 Q 246 467 260 477 T 275 488" fill="none" stroke="#5a3a1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-4-sub-1" class="root" d="M 245 465 Q 257 482 261 490 T 266 498" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-4-sub-2" class="root" d="M 258 476 Q 271 480 278 483 T 284 486" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-5" class="root" d="M 200 433 Q 189 455 179 465 Q 169 475 160 487 T 150 499" fill="none" stroke="#4a2d18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-5-sub-1" class="root" d="M 170 472 Q 165 489 163 497 T 160 506" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-6" class="root" d="M 200 434 Q 210 456 220 465 Q 231 474 239 486 T 246 497" fill="none" stroke="#4a2d18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-6-sub-1" class="root" d="M 227 472 Q 233 488 235 496 T 237 503" fill="none" stroke="#4a2d18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-7" class="root" d="M 200 439 Q 196 461 189 468 Q 181 476 176 489 T 172 501" fill="none" stroke="#4a2d18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path id="root-lat-8" class="root" d="M 200 439 Q 204 461 210 470 Q 217 479 222 492 T 227 504" fill="none" stroke="#4a2d18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
   </g>
   <g id="trunk">
-      <path id="trunk-main" class="trunk" d="M 182.95 420 C 188 396, 196.5 345, 198.5 270 Q 204 263.95, 209.5 270 C 213 345, 212 396, 217.05 420 Z" fill="#8b5a2b"></path>
+      <path id="trunk-main" class="trunk" d="M 183 420 C 188 396, 197 345, 199 270 Q 204 264, 210 270 C 213 345, 212 396, 217 420 Z" fill="#8b5a2b"></path>
   </g>
   <g id="branches">
-      <path id="branch-1" class="branch" d="M 197 288 Q 164 274 138 268" fill="none" stroke="#7c4d24" stroke-width="3.2" stroke-linecap="round"></path>
-      <path id="branch-2" class="branch" d="M 203 280 Q 238 264 266 260" fill="none" stroke="#7c4d24" stroke-width="3.2" stroke-linecap="round"></path>
-      <path id="branch-3" class="branch" d="M 198 272 Q 178 252 170 234" fill="none" stroke="#7c4d24" stroke-width="2.8" stroke-linecap="round"></path>
-      <path id="branch-4" class="branch" d="M 204 266 Q 224 248 232 232" fill="none" stroke="#7c4d24" stroke-width="2.8" stroke-linecap="round"></path>
-      <path id="branch-5" class="branch" d="M 201 258 Q 201 238 203 224" fill="none" stroke="#7c4d24" stroke-width="2.6" stroke-linecap="round"></path>
+      <path id="branch-1" class="branch" d="M 197 288 Q 164 274 138 268" fill="none" stroke="#7c4d24" stroke-width="3" stroke-linecap="round"></path>
+      <path id="branch-2" class="branch" d="M 203 280 Q 238 264 266 260" fill="none" stroke="#7c4d24" stroke-width="3" stroke-linecap="round"></path>
+      <path id="branch-3" class="branch" d="M 198 272 Q 178 252 170 234" fill="none" stroke="#7c4d24" stroke-width="3" stroke-linecap="round"></path>
+      <path id="branch-4" class="branch" d="M 204 266 Q 224 248 232 232" fill="none" stroke="#7c4d24" stroke-width="3" stroke-linecap="round"></path>
+      <path id="branch-5" class="branch" d="M 201 258 Q 201 238 203 224" fill="none" stroke="#7c4d24" stroke-width="3" stroke-linecap="round"></path>
   </g>
   <g id="leaves">
-      <path id="clump-d1" class="clump" d="M 246.6 242.0 Q 262.0 262.6 242.0 270.7 Q 237.4 293.1 212.2 284.1 Q 194.0 298.4 182.3 275.8 Q 151.4 278.1 151.3 259.3 Q 135.9 243.5 157.9 226.9 Q 153.4 203.3 178.6 202.5 Q 192.0 181.7 212.7 197.7 Q 237.6 189.7 242.3 213.1 Q 262.1 221.2 246.6 242.0 Z" fill="#5e8460"></path>
-      <path id="clump-d2" class="clump" d="M 184.2 266.0 Q 191.3 278.5 176.7 282.9 Q 171.9 298.5 158.0 292.9 Q 141.9 299.9 135.7 286.1 Q 121.8 280.2 129.3 266.0 Q 123.4 253.7 139.2 249.1 Q 143.8 234.9 158.0 241.7 Q 174.6 233.3 180.7 245.6 Q 193.1 251.3 184.2 266.0 Z" fill="#5e8460"></path>
-      <path id="clump-d3" class="clump" d="M 276.2 260.0 Q 284.4 273.9 271.2 279.1 Q 265.0 296.2 250.0 292.1 Q 233.3 297.4 226.0 281.6 Q 210.0 274.8 215.7 260.0 Q 209.5 244.6 224.8 237.3 Q 232.6 222.4 250.0 228.4 Q 266.9 222.8 274.2 238.2 Q 285.8 244.5 276.2 260.0 Z" fill="#5e8460"></path>
-      <path id="clump-1" class="clump" d="M 237.7 224.0 Q 253.6 244.5 238.6 253.2 Q 232.4 270.7 207.2 261.0 Q 190.4 274.6 179.7 255.7 Q 153.9 256.8 155.1 238.7 Q 139.8 224.6 157.6 210.1 Q 154.9 190.8 178.9 191.1 Q 190.8 169.9 208.4 181.4 Q 231.6 174.8 236.9 196.2 Q 252.8 204.3 237.7 224.0 Z" fill="#7c9a76"></path>
-      <path id="clump-2" class="clump" d="M 185.0 254.0 Q 193.3 267.5 183.1 273.0 Q 176.7 286.4 162.0 281.6 Q 149.2 285.2 144.0 270.2 Q 130.1 265.5 135.3 254.0 Q 130.0 242.3 143.7 237.5 Q 148.6 224.9 162.0 230.6 Q 176.6 224.1 182.3 235.7 Q 192.9 240.9 185.0 254.0 Z" fill="#7c9a76"></path>
-      <path id="clump-3" class="clump" d="M 269.0 248.0 Q 277.7 262.0 268.0 267.8 Q 261.8 277.3 246.0 269.0 Q 232.6 275.7 227.9 264.3 Q 215.1 259.7 221.1 248.0 Q 214.2 235.3 226.2 230.2 Q 231.8 217.8 246.0 223.6 Q 261.5 216.9 268.1 228.2 Q 277.7 234.0 269.0 248.0 Z" fill="#7c9a76"></path>
-      <path id="clump-4" class="clump" d="M 227.0 200.0 Q 233.1 210.9 220.4 214.7 Q 216.4 227.2 204.0 221.4 Q 188.2 229.5 182.0 219.8 Q 170.1 213.7 176.9 200.0 Q 171.8 188.3 185.6 183.5 Q 190.9 168.8 204.0 172.8 Q 217.3 168.7 222.7 183.2 Q 234.2 187.8 227.0 200.0 Z" fill="#90ab8a"></path>
-      <path id="leaf-1" class="leaf" d="M0 0 C -6.4 -6.72, -3.5200000000000005 -13.76, 0 -16 C 3.5200000000000005 -13.76, 6.4 -6.72, 0 0 Z" fill="#5e8460" transform="translate(136.0 268.0) rotate(-58.0)"></path>
-      <path id="leaf-2" class="leaf" d="M0 0 C -6.4 -6.72, -3.5200000000000005 -13.76, 0 -16 C 3.5200000000000005 -13.76, 6.4 -6.72, 0 0 Z" fill="#5e8460" transform="translate(266.0 258.0) rotate(52.0)"></path>
+      <path id="clump-d1" class="clump" d="M 247 242 Q 262 263 242 271 Q 237 293 212 284 Q 194 298 182 276 Q 151 278 151 259 Q 136 244 158 227 Q 153 203 179 203 Q 192 182 213 198 Q 238 190 242 213 Q 262 221 247 242 Z" fill="#147A38"></path>
+      <path id="clump-d2" class="clump" d="M 184 266 Q 191 279 177 283 Q 172 299 158 293 Q 142 300 136 286 Q 122 280 129 266 Q 123 254 139 249 Q 144 235 158 242 Q 175 233 181 246 Q 193 251 184 266 Z" fill="#147A38"></path>
+      <path id="clump-d3" class="clump" d="M 276 260 Q 284 274 271 279 Q 265 296 250 292 Q 233 297 226 282 Q 210 275 216 260 Q 210 245 225 237 Q 233 222 250 228 Q 267 223 274 238 Q 286 245 276 260 Z" fill="#147A38"></path>
+      <path id="clump-1" class="clump" d="M 238 224 Q 254 245 239 253 Q 232 271 207 261 Q 190 275 180 256 Q 154 257 155 239 Q 140 225 158 210 Q 155 191 179 191 Q 191 170 208 181 Q 232 175 237 196 Q 253 204 238 224 Z" fill="#1B9445"></path>
+      <path id="clump-2" class="clump" d="M 185 254 Q 193 268 183 273 Q 177 286 162 282 Q 149 285 144 270 Q 130 266 135 254 Q 130 242 144 238 Q 149 225 162 231 Q 177 224 182 236 Q 193 241 185 254 Z" fill="#1B9445"></path>
+      <path id="clump-3" class="clump" d="M 269 248 Q 278 262 268 268 Q 262 277 246 269 Q 233 276 228 264 Q 215 260 221 248 Q 214 235 226 230 Q 232 218 246 224 Q 262 217 268 228 Q 278 234 269 248 Z" fill="#1B9445"></path>
+      <path id="clump-4" class="clump" d="M 227 200 Q 233 211 220 215 Q 216 227 204 221 Q 188 230 182 220 Q 170 214 177 200 Q 172 188 186 184 Q 191 169 204 173 Q 217 169 223 183 Q 234 188 227 200 Z" fill="#8BC53F"></path>
+      <path id="leaf-1" class="leaf" d="M0 0 C -6 -7, -4 -14, 0 -16 C 4 -14, 6 -7, 0 0 Z" fill="#147A38" transform="translate(136 268) rotate(-58)"></path>
+      <path id="leaf-2" class="leaf" d="M0 0 C -6 -7, -4 -14, 0 -16 C 4 -14, 6 -7, 0 0 Z" fill="#147A38" transform="translate(266 258) rotate(52)"></path>
   </g>
   <g id="blossoms">
 

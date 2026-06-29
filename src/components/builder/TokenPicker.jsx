@@ -44,7 +44,7 @@ export default function TokenPicker({ tokenItems = [], onInsert, label = 'Insert
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-full px-3 py-1 min-h-[32px]"
+        className="inline-flex items-center gap-1 text-[12px] font-medium text-ctac-teal-700 hover:text-ctac-teal-900 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 rounded-full px-3 py-1 min-h-[32px]"
         title="Insert a pull-forward token"
       >
         <Braces size={14} strokeWidth={1.5} />
@@ -60,7 +60,7 @@ export default function TokenPicker({ tokenItems = [], onInsert, label = 'Insert
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Search tokens…"
-              className="flex-1 text-[13px] px-2 py-1 bg-amber-50 border border-amber-200 rounded-xl focus:outline-none focus:border-amber-400"
+              className="flex-1 text-[13px] px-2 py-1 bg-ctac-teal-50 border border-ctac-teal-200 rounded-xl focus:outline-none focus:border-ctac-teal-400"
             />
             <button
               type="button"
@@ -84,9 +84,9 @@ export default function TokenPicker({ tokenItems = [], onInsert, label = 'Insert
                     <button
                       type="button"
                       onClick={() => handlePick(`{{response.${t.token_key}}}`)}
-                      className="w-full text-left px-3 py-2 hover:bg-amber-50"
+                      className="w-full text-left px-3 py-2 hover:bg-ctac-teal-50"
                     >
-                      <div className="font-mono text-[13px] text-amber-800">
+                      <div className="font-mono text-[13px] text-ctac-teal-800">
                         {`{{response.${t.token_key}}}`}
                       </div>
                       <div className="text-[12px] text-slate-500">
@@ -100,7 +100,7 @@ export default function TokenPicker({ tokenItems = [], onInsert, label = 'Insert
                         onClick={() =>
                           handlePick(`{{response.${t.token_key}.${sp.path}}}`)
                         }
-                        className="w-full text-left px-6 py-1.5 hover:bg-amber-50 text-[12px] text-slate-700"
+                        className="w-full text-left px-6 py-1.5 hover:bg-ctac-teal-50 text-[12px] text-slate-700"
                       >
                         <span className="text-slate-400">↳</span> {sp.label}{' '}
                         <span className="font-mono text-slate-500">.{sp.path}</span>

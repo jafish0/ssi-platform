@@ -126,7 +126,7 @@ export default function SetPasswordPage() {
               </p>
               <Link
                 to="/admin"
-                className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-full px-5 py-2 min-h-[44px]"
+                className="inline-flex items-center gap-2 bg-ctac-teal-100 hover:bg-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-5 py-2 min-h-[44px]"
               >
                 Go to sign in
               </Link>
@@ -134,7 +134,7 @@ export default function SetPasswordPage() {
           ) : stage === 'idle' ? (
             // Safe-Links-safe welcome screen. NO API calls until user clicks.
             <>
-              <div className="flex items-center gap-2 mb-3 text-amber-700">
+              <div className="flex items-center gap-2 mb-3 text-ctac-teal-700">
                 <KeyRound size={20} strokeWidth={1.5} />
                 <h1 className="text-[24px] font-bold leading-tight text-slate-800">
                   {linkType === 'recovery'
@@ -150,13 +150,13 @@ export default function SetPasswordPage() {
               <button
                 type="button"
                 onClick={handleContinue}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px]"
+                className="w-full bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px]"
               >
                 Continue
               </button>
               <p className="text-[12px] text-slate-500 mt-4 leading-relaxed">
                 Already have an account?{' '}
-                <Link to="/admin" className="text-amber-700 hover:text-amber-900 underline">
+                <Link to="/admin" className="text-ctac-teal-700 hover:text-ctac-teal-900 underline">
                   Sign in here
                 </Link>
                 .
@@ -206,7 +206,7 @@ export default function SetPasswordPage() {
                     onChange={(e) => setPw(e.target.value)}
                     disabled={stage === 'saving'}
                     minLength={PASSWORD_MIN}
-                    className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                    className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white disabled:opacity-60"
                   />
                 </div>
                 <div>
@@ -223,7 +223,7 @@ export default function SetPasswordPage() {
                     value={pw2}
                     onChange={(e) => setPw2(e.target.value)}
                     disabled={stage === 'saving'}
-                    className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+                    className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white disabled:opacity-60"
                   />
                 </div>
                 <p className="text-[13px] text-slate-500 leading-relaxed">
@@ -243,7 +243,7 @@ export default function SetPasswordPage() {
               <button
                 type="submit"
                 disabled={stage === 'saving'}
-                className="w-full mt-5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px]"
+                className="w-full mt-5 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-60 text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px]"
               >
                 {stage === 'saving' ? 'Saving…' : 'Save & sign in'}
               </button>

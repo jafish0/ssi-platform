@@ -217,7 +217,7 @@ export default function DemoPage() {
               </p>
               <Link
                 to={`/demo/sandbox/${entry.id}`}
-                className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+                className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
               >
                 <Play size={14} strokeWidth={2} />
                 Launch test
@@ -254,7 +254,7 @@ export default function DemoPage() {
                 </p>
                 <Link
                   to={`/demo/sandbox/${entry.id}`}
-                  className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+                  className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
                 >
                   <Play size={14} strokeWidth={2} />
                   Launch test
@@ -288,7 +288,7 @@ export default function DemoPage() {
           <a
             href="/cast/script/ready-for-roots-script-v2.docx"
             download="Ready for Roots — Script 2.0.docx"
-            className="inline-flex items-center gap-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 text-sm font-semibold"
+            className="inline-flex items-center gap-2 rounded-full bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white px-5 py-2 text-sm font-semibold"
           >
             <Download size={16} strokeWidth={2} />
             Download Script 2.0 (.docx)
@@ -344,7 +344,7 @@ export default function DemoPage() {
           see how the tree grows as a youth completes each activity.
         </p>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-[520px] mx-auto">
+        <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-8 max-w-[520px] mx-auto">
           {/* Preamble — only before the first activity (Stage 0), to set
               up the metaphor (Draft 26 Part F, locked copy 2026-06-08). */}
           {treeStage === 0 && (
@@ -387,7 +387,7 @@ export default function DemoPage() {
                 aria-current={i === treeStage}
                 className={
                   'w-2.5 h-2.5 rounded-full transition-colors ' +
-                  (i === treeStage ? 'bg-amber-500' : 'bg-slate-200 hover:bg-slate-300')
+                  (i === treeStage ? 'bg-ctac-teal-500' : 'bg-slate-200 hover:bg-slate-300')
                 }
               />
             ))}
@@ -399,7 +399,7 @@ export default function DemoPage() {
               type="button"
               onClick={() => setTreeStage((s) => Math.max(0, s - 1))}
               disabled={treeStage === 0}
-              className="bg-amber-50 hover:bg-amber-100 disabled:opacity-40 disabled:hover:bg-amber-50 border border-amber-300 rounded-full px-5 py-2 text-sm text-slate-700"
+              className="bg-ctac-teal-50 hover:bg-ctac-teal-100 disabled:opacity-40 disabled:hover:bg-ctac-teal-50 border border-ctac-teal-300 rounded-full px-5 py-2 text-sm text-slate-700"
             >
               Previous
             </button>
@@ -407,7 +407,7 @@ export default function DemoPage() {
               type="button"
               onClick={() => setTreeStage((s) => Math.min(TREE_MAX_STAGE, s + 1))}
               disabled={treeStage === TREE_MAX_STAGE}
-              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:hover:bg-amber-500 text-white rounded-full px-5 py-2 text-sm font-semibold"
+              className="bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-40 disabled:hover:bg-ctac-teal-500 text-white rounded-full px-5 py-2 text-sm font-semibold"
             >
               Next
             </button>
@@ -416,7 +416,7 @@ export default function DemoPage() {
             <button
               type="button"
               onClick={() => setTreeStage(0)}
-              className="text-amber-700 hover:text-amber-900 underline text-sm"
+              className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-sm"
             >
               Reset to start
             </button>
@@ -430,7 +430,7 @@ export default function DemoPage() {
           Data export demo
         </h2>
 
-        <div className="bg-amber-100 border border-amber-300 text-amber-900 rounded-2xl px-4 py-3 mb-4 flex items-start gap-2 text-[14px]">
+        <div className="bg-ctac-teal-100 border border-ctac-teal-300 text-ctac-teal-900 rounded-2xl px-4 py-3 mb-4 flex items-start gap-2 text-[14px]">
           <AlertCircle size={16} strokeWidth={2} className="mt-0.5 flex-shrink-0" />
           <div>
             The exports below run against a <strong>synthetic
@@ -500,8 +500,8 @@ export default function DemoPage() {
               busy={exporting === 'sps'}
               onClick={() => runExport('sps')}
             >
-              <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-3 mt-3">
-                <p className="text-[12px] uppercase tracking-wide text-amber-800 font-semibold mb-2">
+              <div className="bg-ctac-teal-50/60 border border-ctac-teal-100 rounded-2xl p-3 mt-3">
+                <p className="text-[12px] uppercase tracking-wide text-ctac-teal-800 font-semibold mb-2">
                   How to use it in SPSS
                 </p>
                 <ol className="list-decimal pl-5 text-[13px] text-slate-700 leading-relaxed space-y-1.5">
@@ -553,7 +553,7 @@ export default function DemoPage() {
 // Numbered card with a title + description on the left, a download
 // button on the right, and optional children (used by the .sps block
 // for the "How to use it in SPSS" instructions). Primary buttons use
-// amber-500; secondary use amber-100/text-amber-800 — matches the
+// ctac-teal-500; secondary use ctac-teal-100/text-ctac-teal-800 — matches the
 // project's CTA palette.
 
 function ExportFileBlock({
@@ -569,14 +569,14 @@ function ExportFileBlock({
   children,
 }) {
   const buttonClass = isPrimary
-    ? 'inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]'
-    : 'inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]'
+    ? 'inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]'
+    : 'inline-flex items-center gap-2 bg-ctac-teal-100 hover:bg-ctac-teal-200 disabled:opacity-50 text-ctac-teal-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]'
   return (
     <div className="border border-slate-200 rounded-2xl p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-[220px]">
           <h3 className="text-[15px] font-semibold text-slate-800 mb-1 flex items-baseline gap-2">
-            <span className="text-amber-700 font-bold">{number}.</span>
+            <span className="text-ctac-teal-700 font-bold">{number}.</span>
             <span>{title}</span>
           </h3>
           <p className="text-[13px] text-slate-600 leading-relaxed">
@@ -618,7 +618,7 @@ function CastCard({ character }) {
   return (
     <article
       tabIndex={0}
-      className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row gap-6"
+      className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-6 flex flex-col md:flex-row gap-6"
     >
       {/* Image column — a gallery of design variants when `images` is
           present (Kai), else the single character image. */}
@@ -732,13 +732,13 @@ function CastCard({ character }) {
                       controls
                       playsInline
                       preload="metadata"
-                      className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200 bg-black object-cover"
+                      className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200 bg-black object-cover"
                     />
                   ) : (
                     <iframe
                       src={`https://www.youtube.com/embed/${v.youtubeId}`}
                       title={`${name} — Sam's Story video`}
-                      className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                      className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200"
                       allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
                     />

@@ -6,8 +6,8 @@ export default function CustomActivity({ content, onSave, sessionData, resolveTo
 
   if (!Component) {
     return (
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-        <div className="text-[14px] font-medium text-amber-800 mb-2">
+      <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-5">
+        <div className="text-[14px] font-medium text-ctac-teal-800 mb-2">
           Activity not available
         </div>
         <p className="text-[14px] text-slate-700">

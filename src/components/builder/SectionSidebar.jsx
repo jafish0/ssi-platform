@@ -33,8 +33,8 @@ function SortableSection({ section, items, isSelected, onSelect, onDelete }) {
       className={
         'flex items-start gap-2 rounded-2xl p-3 cursor-pointer transition-colors ' +
         (isSelected
-          ? 'bg-amber-100 border border-amber-300'
-          : 'bg-white border border-slate-200 hover:border-amber-300')
+          ? 'bg-ctac-teal-100 border border-ctac-teal-300'
+          : 'bg-white border border-slate-200 hover:border-ctac-teal-300')
       }
     >
       <button
@@ -117,26 +117,26 @@ export default function SectionSidebar({
         <button
           type="button"
           onClick={() => setShowAdd((v) => !v)}
-          className="text-amber-700 hover:text-amber-900 text-[13px] flex items-center gap-1"
+          className="text-ctac-teal-700 hover:text-ctac-teal-900 text-[13px] flex items-center gap-1"
         >
           <Plus size={14} strokeWidth={1.5} /> Add
         </button>
       </div>
 
       {showAdd && (
-        <div className="px-3 py-3 border-b border-slate-200 bg-amber-50 space-y-2">
+        <div className="px-3 py-3 border-b border-slate-200 bg-ctac-teal-50 space-y-2">
           <input
             type="text"
             placeholder="Section title"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-white border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             autoFocus
           />
           <select
             value={newType}
             onChange={(e) => setNewType(e.target.value)}
-            className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-white border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
           >
             {SECTION_TYPES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
@@ -154,7 +154,7 @@ export default function SectionSidebar({
               type="button"
               onClick={handleAdd}
               disabled={!newTitle.trim()}
-              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-1.5 text-[13px]"
+              className="bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-1.5 text-[13px]"
             >
               Add section
             </button>

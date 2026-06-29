@@ -159,9 +159,9 @@ export default function GuidedCreative({ content, onSave, existingResponse }) {
               className={
                 'rounded-full ' +
                 (i === stanzaIndex
-                  ? 'w-2 h-2 bg-amber-400'
+                  ? 'w-2 h-2 bg-ctac-teal-400'
                   : i < stanzaIndex
-                    ? 'w-2 h-2 bg-amber-200'
+                    ? 'w-2 h-2 bg-ctac-teal-200'
                     : 'w-1.5 h-1.5 bg-slate-200')
               }
             />
@@ -187,7 +187,7 @@ export default function GuidedCreative({ content, onSave, existingResponse }) {
                 value={prompts[p.id] || ''}
                 onChange={(e) => setPrompt(p.id, e.target.value)}
                 maxLength={p.max_chars || 200}
-                className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+                className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
               />
               {chips.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">

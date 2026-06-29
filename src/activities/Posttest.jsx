@@ -378,7 +378,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
               onChange={(e) => setField('post_pf_open_like', e.target.value)}
               maxLength={OPEN_MAX}
               placeholder="Whatever comes to mind…"
-              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
           </div>
           <div>
@@ -392,7 +392,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
               onChange={(e) => setField('post_pf_open_change', e.target.value)}
               maxLength={OPEN_MAX}
               placeholder="Whatever comes to mind…"
-              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
           </div>
           <p className="text-[12px] text-slate-500 mt-2 italic">

@@ -123,9 +123,9 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
             className={
               'rounded-full ' +
               (i === stepIdx
-                ? 'w-2 h-2 bg-amber-400'
+                ? 'w-2 h-2 bg-ctac-teal-400'
                 : i < stepIdx
-                  ? 'w-2 h-2 bg-amber-200'
+                  ? 'w-2 h-2 bg-ctac-teal-200'
                   : 'w-1.5 h-1.5 bg-slate-200')
             }
           />
@@ -153,7 +153,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
               value={data[screen.section].thoughts}
               onChange={(e) => update(screen.section, 'thoughts', e.target.value)}
               placeholder="Type your response here…"
-              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
           </div>
           <div>
@@ -168,7 +168,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
               value={data[screen.section].feelings}
               onChange={(e) => update(screen.section, 'feelings', e.target.value)}
               placeholder="Type your response here…"
-              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
           </div>
         </div>
@@ -178,7 +178,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
           value={data[screen.section][screen.field]}
           onChange={(e) => update(screen.section, screen.field, e.target.value)}
           placeholder={screen.placeholder}
-          className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+          className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
         />
       )}
 

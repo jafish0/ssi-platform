@@ -7,7 +7,7 @@ import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 function StatusBadge({ status }) {
   const map = {
     completed: 'bg-emerald-100 text-emerald-800',
-    in_progress: 'bg-amber-100 text-amber-800',
+    in_progress: 'bg-ctac-teal-100 text-ctac-teal-800',
     abandoned: 'bg-slate-200 text-slate-700',
   }
   return (
@@ -391,12 +391,12 @@ export default function ResearcherDashboardPage() {
       {/* Export panel — moved to /admin/exports for filters, demo data, and SPSS-ready output */}
       <div className="bg-white rounded-2xl shadow-card p-5 mb-6 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Download size={18} strokeWidth={1.5} className="text-amber-700" />
+          <Download size={18} strokeWidth={1.5} className="text-ctac-teal-700" />
           <h2 className="text-[16px] font-semibold text-slate-800">Need to export?</h2>
         </div>
         <a
           href="/admin/exports"
-          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+          className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
         >
           Open Data export →
         </a>
@@ -409,7 +409,7 @@ export default function ResearcherDashboardPage() {
           <button
             type="button"
             onClick={() => setReload((r) => r + 1)}
-            className="flex items-center gap-1 text-[13px] text-amber-700 hover:text-amber-900"
+            className="flex items-center gap-1 text-[13px] text-ctac-teal-700 hover:text-ctac-teal-900"
             title="Reload"
           >
             <RefreshCw size={14} strokeWidth={1.5} />
@@ -420,7 +420,7 @@ export default function ResearcherDashboardPage() {
           <select
             value={interventionFilter}
             onChange={(e) => setInterventionFilter(e.target.value)}
-            className="text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
           >
             <option value="all">All interventions</option>
             {interventions.map((iv) => (
@@ -432,7 +432,7 @@ export default function ResearcherDashboardPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
           >
             <option value="all">All statuses</option>
             <option value="completed">Completed</option>
@@ -443,14 +443,14 @@ export default function ResearcherDashboardPage() {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             placeholder="From"
           />
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             placeholder="To"
           />
         </div>
@@ -472,7 +472,7 @@ export default function ResearcherDashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[14px]">
               <thead>
-                <tr className="bg-amber-50 text-left text-[12px] uppercase tracking-wide text-amber-800">
+                <tr className="bg-ctac-teal-50 text-left text-[12px] uppercase tracking-wide text-ctac-teal-800">
                   <SortableHeader label="Code" k="access_code" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortableHeader label="Intervention" k="intervention" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                   <SortableHeader label="Status" k="status" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
@@ -492,7 +492,7 @@ export default function ResearcherDashboardPage() {
                     <Fragment key={s.id}>
                       <tr
                         onClick={() => expandRow(s.id)}
-                        className="border-t border-slate-100 hover:bg-amber-50 cursor-pointer"
+                        className="border-t border-slate-100 hover:bg-ctac-teal-50 cursor-pointer"
                       >
                         <td className="px-4 py-3 font-mono text-[13px] text-slate-700">
                           {s.access_codes?.code || '—'}
@@ -504,7 +504,7 @@ export default function ResearcherDashboardPage() {
                         <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{fmtDate(s.completed_at)}</td>
                       </tr>
                       {isExpanded && (
-                        <tr className="border-t border-slate-100 bg-amber-50/40">
+                        <tr className="border-t border-slate-100 bg-ctac-teal-50/40">
                           <td colSpan={6} className="px-4 py-4">
                             <ResponsesPreview rows={expandedResponses[s.id]} />
                           </td>
@@ -553,7 +553,7 @@ function ResponsesPreview({ rows }) {
         const trimmed = value.length > 200 ? value.slice(0, 200) + '…' : value
         return (
           <div key={r.id} className="bg-white border border-slate-200 rounded-2xl p-3">
-            <div className="text-[12px] font-mono text-amber-800 mb-1">
+            <div className="text-[12px] font-mono text-ctac-teal-800 mb-1">
               {r.items?.token_key || `(no token, ${r.items?.type})`}
             </div>
             <div className="text-[12px] text-slate-700 break-all whitespace-pre-wrap font-mono">

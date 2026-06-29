@@ -30,7 +30,7 @@ function Input(props) {
     <input
       {...props}
       className={
-        'w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 ' +
+        'w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 ' +
         (props.className || '')
       }
     />
@@ -44,7 +44,7 @@ function Textarea({ refProp, ...props }) {
       rows={props.rows || 4}
       {...props}
       className={
-        'w-full text-[14px] leading-relaxed px-3 py-2 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 ' +
+        'w-full text-[14px] leading-relaxed px-3 py-2 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 ' +
         (props.className || '')
       }
     />
@@ -56,7 +56,7 @@ function Select({ children, ...props }) {
     <select
       {...props}
       className={
-        'w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 ' +
+        'w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 ' +
         (props.className || '')
       }
     >
@@ -72,7 +72,7 @@ function Toggle({ checked, onChange, label }) {
         type="checkbox"
         checked={!!checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 accent-amber-500"
+        className="w-4 h-4 accent-ctac-teal-500"
       />
       {label}
     </label>
@@ -102,7 +102,7 @@ function AddButton({ children, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 text-[13px] font-medium text-amber-700 hover:text-amber-900 border border-amber-200 hover:border-amber-400 rounded-full px-3 py-1.5 min-h-[36px]"
+      className="inline-flex items-center gap-1 text-[13px] font-medium text-ctac-teal-700 hover:text-ctac-teal-900 border border-ctac-teal-200 hover:border-ctac-teal-400 rounded-full px-3 py-1.5 min-h-[36px]"
     >
       <Plus size={14} strokeWidth={1.5} />
       {children}
@@ -271,8 +271,8 @@ function ScaleConfig({ content, onChange }) {
       )}
 
       {content.mode === 'display_score' && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-3">
-          <div className="text-[13px] font-medium text-amber-800">Score display</div>
+        <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-3 space-y-3">
+          <div className="text-[13px] font-medium text-ctac-teal-800">Score display</div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Method">
               <Select value={content.scoring?.method || 'sum'} onChange={(e) => patchScoring({ method: e.target.value })}>
@@ -353,7 +353,7 @@ function VideoConfig({ content, onChange }) {
               step={0.05}
               value={content.completion_threshold ?? 0.85}
               onChange={(e) => patch({ completion_threshold: Number(e.target.value) })}
-              className="w-full accent-amber-400"
+              className="w-full accent-ctac-teal-400"
             />
           </Field>
         )}
@@ -480,9 +480,9 @@ function FreeTextConfig({ content, onChange, tokenItems }) {
         </div>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-2">
+      <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-[13px] font-medium text-amber-800">Pull-forward</div>
+          <div className="text-[13px] font-medium text-ctac-teal-800">Pull-forward</div>
           {content.pull_forward ? (
             <button type="button" onClick={clearPullForward} className="text-[12px] text-rose-500 hover:text-rose-700">Remove</button>
           ) : (
@@ -713,9 +713,9 @@ function PullForwardEditor({ field, onChange, tokenItems }) {
     onChange(rest)
   }
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-2">
+    <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-2">
       <div className="flex items-center justify-between mb-1">
-        <div className="text-[12px] font-medium text-amber-800">Pull-forward</div>
+        <div className="text-[12px] font-medium text-ctac-teal-800">Pull-forward</div>
         {field.pull_forward ? (
           <button type="button" onClick={clear} className="text-[12px] text-rose-500 hover:text-rose-700">Remove</button>
         ) : (
@@ -876,8 +876,8 @@ function GuidedCreativeConfig({ content, onChange }) {
         </div>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-2">
-        <div className="text-[13px] font-medium text-amber-800">Word banks</div>
+      <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-3 space-y-2">
+        <div className="text-[13px] font-medium text-ctac-teal-800">Word banks</div>
         <BankEditor
           title="Global word bank"
           chips={content.word_banks?.__global__ || []}
@@ -886,7 +886,7 @@ function GuidedCreativeConfig({ content, onChange }) {
           onRemove={(idx) => removeBankChip('__global__', idx)}
         />
         <details>
-          <summary className="text-[13px] cursor-pointer text-amber-700">Per-prompt banks</summary>
+          <summary className="text-[13px] cursor-pointer text-ctac-teal-700">Per-prompt banks</summary>
           <div className="space-y-2 mt-2">
             {allPromptIds.map((pid) => (
               <BankEditor

@@ -12,13 +12,13 @@ const TAB_DEMO = 'demo'
 function HowExportsWork({ defaultOpen }) {
   const [open, setOpen] = useState(!!defaultOpen)
   return (
-    <section className="bg-amber-50 border border-amber-200 rounded-2xl mb-5 overflow-hidden">
+    <section className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl mb-5 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-3 px-5 py-3 text-left hover:bg-amber-100/50"
+        className="w-full flex items-center justify-between gap-3 px-5 py-3 text-left hover:bg-ctac-teal-100/50"
       >
-        <span className="inline-flex items-center gap-2 text-[14px] font-semibold text-amber-900">
+        <span className="inline-flex items-center gap-2 text-[14px] font-semibold text-ctac-teal-900">
           <Sparkles size={16} strokeWidth={1.5} />
           How exports work
         </span>
@@ -82,7 +82,7 @@ function fmtDate(iso) {
 function StatusBadge({ status }) {
   const map = {
     completed: 'bg-emerald-100 text-emerald-800',
-    in_progress: 'bg-amber-100 text-amber-800',
+    in_progress: 'bg-ctac-teal-100 text-ctac-teal-800',
     abandoned: 'bg-slate-200 text-slate-700',
   }
   return (
@@ -425,8 +425,8 @@ export default function AdminExportsPage() {
           className={
             'inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-[14px] font-medium transition-colors ' +
             (tab === TAB_REAL
-              ? 'bg-amber-500 text-white'
-              : 'text-slate-700 hover:bg-amber-50')
+              ? 'bg-ctac-teal-500 text-white'
+              : 'text-slate-700 hover:bg-ctac-teal-50')
           }
         >
           <Database size={16} strokeWidth={1.5} />
@@ -438,8 +438,8 @@ export default function AdminExportsPage() {
           className={
             'inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-[14px] font-medium transition-colors ' +
             (tab === TAB_DEMO
-              ? 'bg-amber-500 text-white'
-              : 'text-slate-700 hover:bg-amber-50')
+              ? 'bg-ctac-teal-500 text-white'
+              : 'text-slate-700 hover:bg-ctac-teal-50')
           }
         >
           <Sparkles size={16} strokeWidth={1.5} />
@@ -448,7 +448,7 @@ export default function AdminExportsPage() {
       </div>
 
       {tab === TAB_DEMO && (
-        <div className="bg-amber-100 border border-amber-300 text-amber-900 rounded-2xl px-4 py-3 mb-5 flex items-start gap-2 text-[14px]">
+        <div className="bg-ctac-teal-100 border border-ctac-teal-300 text-ctac-teal-900 rounded-2xl px-4 py-3 mb-5 flex items-start gap-2 text-[14px]">
           <AlertCircle size={16} strokeWidth={2} className="mt-0.5 flex-shrink-0" />
           <div>
             These rows are <strong>generated for demonstration</strong>. No
@@ -474,7 +474,7 @@ export default function AdminExportsPage() {
               value={tab === TAB_DEMO ? (interventions.find((i) => i.slug === 'ready-set-dedicate')?.id || '') : interventionId}
               onChange={(e) => setInterventionId(e.target.value)}
               disabled={tab === TAB_DEMO}
-              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 disabled:opacity-60"
+              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 disabled:opacity-60"
             >
               {interventions.map((iv) => (
                 <option key={iv.id} value={iv.id}>{iv.name}</option>
@@ -489,7 +489,7 @@ export default function AdminExportsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             >
               <option value="all">All statuses</option>
               <option value="completed">Completed only</option>
@@ -503,7 +503,7 @@ export default function AdminExportsPage() {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           <div>
@@ -512,7 +512,7 @@ export default function AdminExportsPage() {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
         </div>
@@ -522,7 +522,7 @@ export default function AdminExportsPage() {
             <select
               value={cohortFilter}
               onChange={(e) => setCohortFilter(e.target.value)}
-              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             >
               <option value="all">All cohorts</option>
               {cohortChoices.map((c) => (
@@ -555,7 +555,7 @@ export default function AdminExportsPage() {
             type="button"
             onClick={() => runExport('wide')}
             disabled={exporting !== null}
-            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+            className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
           >
             <Download size={14} strokeWidth={2} />
             {exporting === 'wide' ? 'Exporting…' : 'Wide / SPSS-ready'}
@@ -564,7 +564,7 @@ export default function AdminExportsPage() {
             type="button"
             onClick={() => runExport('codebook')}
             disabled={exporting !== null}
-            className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
+            className="inline-flex items-center gap-2 bg-ctac-teal-100 hover:bg-ctac-teal-200 disabled:opacity-50 text-ctac-teal-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[13px]"
           >
             <Download size={14} strokeWidth={2} />
             Codebook
@@ -593,7 +593,7 @@ export default function AdminExportsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="bg-amber-50 text-left text-[11px] uppercase tracking-wide text-amber-800">
+                  <tr className="bg-ctac-teal-50 text-left text-[11px] uppercase tracking-wide text-ctac-teal-800">
                     <th className="px-4 py-2">Access code</th>
                     <th className="px-4 py-2">Cohort</th>
                     <th className="px-4 py-2">Status</th>

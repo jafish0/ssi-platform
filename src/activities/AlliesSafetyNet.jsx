@@ -433,7 +433,7 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         </div>
         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-amber-500 transition-all"
+            className="h-full bg-ctac-teal-500 transition-all"
             style={{ width: `${((safeScreenIdx + 1) / screens.length) * 100}%` }}
           />
         </div>
@@ -562,7 +562,7 @@ function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds, l
           type="button"
           onClick={handleDownload}
           disabled={downloading}
-          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+          className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
         >
           <Download size={14} strokeWidth={2} />
           {downloading ? 'Saving image…' : 'Save as image'}
@@ -807,7 +807,7 @@ function AllyTile({ tile, tones, selected, customName, isEditing, onToggle, onSt
             onClick={(e) => e.stopPropagation()}
             placeholder="Their name"
             maxLength={40}
-            className="w-full text-[13px] px-2 py-1 bg-white border border-amber-200 rounded-full text-center focus:outline-none focus:border-amber-400"
+            className="w-full text-[13px] px-2 py-1 bg-white border border-ctac-teal-200 rounded-full text-center focus:outline-none focus:border-ctac-teal-400"
           />
         ) : (
           <span
@@ -1040,7 +1040,7 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
           onChange={(e) => onChange({ additional_person: e.target.value, skipped: false })}
           maxLength={60}
           placeholder="A name"
-          className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+          className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
         />
       </div>
 
@@ -1054,7 +1054,7 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
           onChange={(e) => onChange({ action: e.target.value, skipped: false })}
           maxLength={300}
           placeholder={STRENGTHEN_ACTION_EG[t.id] || STRENGTHEN_ACTION_EG.social}
-          className="w-full text-[14px] leading-relaxed px-3 py-2 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+          className="w-full text-[14px] leading-relaxed px-3 py-2 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
         />
         <p className="text-[12px] text-slate-500 italic mt-1">
           Stuck? You could ask another supportive person for a recommendation.
@@ -1176,7 +1176,7 @@ function NetWithListToggle({ allies, noneFor, lowSupport = false }) {
         <button
           type="button"
           onClick={() => setListOpen((v) => !v)}
-          className="inline-flex items-center gap-2 text-[13px] font-medium text-amber-700 hover:text-amber-900 underline-offset-2 hover:underline"
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-ctac-teal-700 hover:text-ctac-teal-900 underline-offset-2 hover:underline"
         >
           {listOpen ? 'Hide the list' : 'Show me a list of my allies instead'}
         </button>

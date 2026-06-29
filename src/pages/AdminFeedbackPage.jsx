@@ -12,7 +12,7 @@ import { supabase } from '../lib/supabase.js'
 import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 
 const STATUSES = [
-  { value: 'new', label: 'New', cls: 'bg-amber-100 text-amber-800' },
+  { value: 'new', label: 'New', cls: 'bg-ctac-teal-100 text-ctac-teal-800' },
   { value: 'acknowledged', label: 'Acknowledged', cls: 'bg-sky-100 text-sky-800' },
   { value: 'addressed', label: 'Addressed', cls: 'bg-emerald-100 text-emerald-800' },
   { value: 'declined', label: 'Declined', cls: 'bg-slate-200 text-slate-700' },
@@ -188,13 +188,13 @@ export default function AdminFeedbackPage() {
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h2 className="text-[18px] font-semibold text-slate-800 mb-1 flex items-center gap-2">
-              <MessageSquare size={18} strokeWidth={1.5} className="text-amber-600" />
+              <MessageSquare size={18} strokeWidth={1.5} className="text-ctac-teal-600" />
               IRF Team feedback
             </h2>
             <p className="text-[14px] text-slate-600">
               {counts.total} total
               {counts.new > 0 && (
-                <span className="ml-2 text-amber-700">· {counts.new} new</span>
+                <span className="ml-2 text-ctac-teal-700">· {counts.new} new</span>
               )}
             </p>
           </div>
@@ -208,7 +208,7 @@ export default function AdminFeedbackPage() {
                   ? 'No rows in the current view'
                   : `Download ${filtered.length} row${filtered.length === 1 ? '' : 's'} as CSV`
               }
-              className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:hover:bg-amber-500 text-white font-semibold rounded-full px-4 py-2 min-h-[36px] text-[13px]"
+              className="inline-flex items-center gap-1.5 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-40 disabled:hover:bg-ctac-teal-500 text-white font-semibold rounded-full px-4 py-2 min-h-[36px] text-[13px]"
             >
               <Download size={14} strokeWidth={2} />
               Download CSV
@@ -216,7 +216,7 @@ export default function AdminFeedbackPage() {
             <button
               type="button"
               onClick={refresh}
-              className="flex items-center gap-1 text-[13px] text-amber-700 hover:text-amber-900"
+              className="flex items-center gap-1 text-[13px] text-ctac-teal-700 hover:text-ctac-teal-900"
             >
               <RefreshCw size={14} strokeWidth={1.5} />
               Refresh
@@ -230,7 +230,7 @@ export default function AdminFeedbackPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             >
               <option value="all">All</option>
               {STATUSES.map((s) => (
@@ -243,7 +243,7 @@ export default function AdminFeedbackPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             >
               <option value="all">All</option>
               {CATEGORIES.map((c) => (
@@ -273,7 +273,7 @@ export default function AdminFeedbackPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[14px]">
               <thead>
-                <tr className="bg-amber-50 text-left text-[12px] uppercase tracking-wide text-amber-800">
+                <tr className="bg-ctac-teal-50 text-left text-[12px] uppercase tracking-wide text-ctac-teal-800">
                   <th className="px-3 py-3 w-8"></th>
                   <th className="px-3 py-3 whitespace-nowrap">Received</th>
                   <th className="px-3 py-3">From</th>
@@ -323,7 +323,7 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
   return (
     <>
       <tr
-        className="border-t border-slate-100 hover:bg-amber-50/40 cursor-pointer"
+        className="border-t border-slate-100 hover:bg-ctac-teal-50/40 cursor-pointer"
         onClick={onToggle}
       >
         <td className="px-3 py-3 text-slate-400">
@@ -338,7 +338,7 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
         <td className="px-3 py-3 text-slate-700">
           <span>{row.area || '—'}</span>
           {row.activity_version && (
-            <span className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-800 align-middle">
+            <span className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-ctac-teal-100 text-ctac-teal-800 align-middle">
               {row.activity_version}
             </span>
           )}
@@ -393,7 +393,7 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
                     value={row.status}
                     disabled={saving}
                     onChange={(e) => onUpdate({ status: e.target.value })}
-                    className="text-[14px] px-3 py-2 min-h-[40px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                    className="text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                   >
                     {STATUSES.map((s) => (
                       <option key={s.value} value={s.value}>{s.label}</option>
@@ -415,7 +415,7 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
                   onChange={(e) => setNotes(e.target.value)}
                   onBlur={handleNotesBlur}
                   placeholder="Triage notes, decisions, follow-up tasks…"
-                  className="w-full text-[14px] leading-relaxed px-3 py-2 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                  className="w-full text-[14px] leading-relaxed px-3 py-2 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
                 />
               </div>
             </div>

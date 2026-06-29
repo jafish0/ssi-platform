@@ -7,11 +7,11 @@ function ProgressBar() {
   const { progressFraction } = useSession()
   return (
     <div
-      className="fixed top-0 left-0 right-0 h-1 bg-amber-100 z-50"
+      className="fixed top-0 left-0 right-0 h-1 bg-ctac-teal-100 z-50"
       aria-hidden="true"
     >
       <div
-        className="h-full bg-amber-400 transition-all duration-[600ms] ease-out"
+        className="h-full bg-ctac-teal-400 transition-all duration-[600ms] ease-out"
         style={{ width: `${Math.round(progressFraction * 100)}%` }}
       />
     </div>
@@ -38,7 +38,7 @@ function CompletedScreen() {
         <button
           type="button"
           onClick={handleStart}
-          className="text-amber-700 hover:text-amber-900 underline text-[14px] min-h-[48px]"
+          className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-[14px] min-h-[48px]"
         >
           ← Back to start
         </button>
@@ -73,7 +73,7 @@ function ErrorScreen({ error }) {
             sessionStorage.removeItem('session_id')
             navigate('/', { replace: true })
           }}
-          className="text-amber-700 hover:text-amber-900 underline text-[14px] min-h-[48px]"
+          className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-[14px] min-h-[48px]"
         >
           ← Back to start
         </button>

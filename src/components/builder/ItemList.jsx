@@ -59,8 +59,8 @@ function SortableItem({ item, isSelected, onSelect, onDelete }) {
       className={
         'flex items-start gap-2 rounded-2xl p-3 cursor-pointer transition-colors ' +
         (isSelected
-          ? 'bg-amber-100 border border-amber-300'
-          : 'bg-white border border-slate-200 hover:border-amber-300')
+          ? 'bg-ctac-teal-100 border border-ctac-teal-300'
+          : 'bg-white border border-slate-200 hover:border-ctac-teal-300')
       }
     >
       <button
@@ -76,7 +76,7 @@ function SortableItem({ item, isSelected, onSelect, onDelete }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <div className="text-[11px] font-mono text-slate-400">{item.order_index + 1}</div>
-          <span className="text-[11px] uppercase tracking-wide font-semibold text-amber-800 bg-amber-50 rounded-full px-2 py-0.5">
+          <span className="text-[11px] uppercase tracking-wide font-semibold text-ctac-teal-800 bg-ctac-teal-50 rounded-full px-2 py-0.5">
             {item.type}
           </span>
           {item.token_key && (
@@ -141,7 +141,7 @@ export default function ItemList({
     <div className="bg-white rounded-2xl shadow-card flex flex-col overflow-hidden h-full">
       <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-wide text-amber-800 font-semibold">
+          <div className="text-[11px] uppercase tracking-wide text-ctac-teal-800 font-semibold">
             {section.type}
           </div>
           <div className="text-[15px] font-semibold text-slate-800 truncate">
@@ -151,18 +151,18 @@ export default function ItemList({
         <button
           type="button"
           onClick={() => setShowAdd((v) => !v)}
-          className="text-amber-700 hover:text-amber-900 text-[13px] flex items-center gap-1 whitespace-nowrap"
+          className="text-ctac-teal-700 hover:text-ctac-teal-900 text-[13px] flex items-center gap-1 whitespace-nowrap"
         >
           <Plus size={14} strokeWidth={1.5} /> Add item
         </button>
       </div>
 
       {showAdd && (
-        <div className="px-4 py-3 border-b border-slate-200 bg-amber-50 flex items-center gap-2">
+        <div className="px-4 py-3 border-b border-slate-200 bg-ctac-teal-50 flex items-center gap-2">
           <select
             value={newType}
             onChange={(e) => setNewType(e.target.value)}
-            className="flex-1 text-[14px] px-3 py-2 min-h-[40px] bg-white border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="flex-1 text-[14px] px-3 py-2 min-h-[40px] bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
           >
             {ITEM_TYPES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
@@ -171,7 +171,7 @@ export default function ItemList({
           <button
             type="button"
             onClick={() => { onAddItem(newType); setShowAdd(false) }}
-            className="bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-1.5 min-h-[40px] text-[13px]"
+            className="bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-1.5 min-h-[40px] text-[13px]"
           >
             Add
           </button>

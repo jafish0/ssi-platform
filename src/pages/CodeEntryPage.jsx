@@ -92,7 +92,7 @@ export default function CodeEntryPage() {
               onChange={(e) => setCode(e.target.value)}
               disabled={submitting}
               placeholder="e.g. TEST-RSD-001"
-              className="w-full text-[16px] font-mono tracking-wider px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white disabled:opacity-60"
+              className="w-full text-[16px] font-mono tracking-wider px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white disabled:opacity-60"
             />
           </div>
 
@@ -108,7 +108,7 @@ export default function CodeEntryPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
+            className="w-full bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-[16px] rounded-full px-8 py-4 min-h-[52px] transition-colors"
           >
             {submitting ? 'One moment…' : "Let's go"}
           </button>
@@ -118,7 +118,7 @@ export default function CodeEntryPage() {
           Researcher or admin?{' '}
           <a
             href="/admin"
-            className="text-amber-700 hover:text-amber-900 underline"
+            className="text-ctac-teal-700 hover:text-ctac-teal-900 underline"
           >
             Sign in here
           </a>

@@ -55,7 +55,7 @@ export default function DemoSandboxPage() {
 
   const containerClass =
     viewport === 'mobile'
-      ? 'mx-auto w-full max-w-[400px] border border-dashed border-amber-300 rounded-2xl p-2'
+      ? 'mx-auto w-full max-w-[400px] border border-dashed border-ctac-teal-300 rounded-2xl p-2'
       : ''
 
   return (
@@ -65,7 +65,7 @@ export default function DemoSandboxPage() {
         <div className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap">
           <Link
             to="/demo"
-            className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-900 text-[13px] font-medium"
+            className="inline-flex items-center gap-1 text-ctac-teal-700 hover:text-ctac-teal-900 text-[13px] font-medium"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             Back to demo
@@ -103,7 +103,7 @@ export default function DemoSandboxPage() {
           <span className="font-semibold text-slate-700">{entry.displayName}</span>
           {versionInfo && (
             <span
-              className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-800"
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-ctac-teal-100 text-ctac-teal-800"
               title={`Updated ${versionInfo.updated}`}
             >
               {versionInfo.version}

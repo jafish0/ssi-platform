@@ -5,7 +5,7 @@ export default function AdminStubLayout({ title, children }) {
   const { user, role, signOut } = useAuth()
   return (
     <StubLayout title={title}>
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 text-[14px] text-slate-700">
+      <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-4 mb-4 text-[14px] text-slate-700">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <div className="font-medium">Signed in</div>

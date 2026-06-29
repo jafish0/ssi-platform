@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase.js'
 
 function SectionTransition({ section, onContinue }) {
   return (
-    <main className="min-h-[calc(100vh-56px)] flex items-center justify-center px-4 py-10 bg-amber-50">
+    <main className="min-h-[calc(100vh-56px)] flex items-center justify-center px-4 py-10 bg-ctac-teal-50">
       <div className="w-full max-w-[540px] text-center">
         <h1 className="text-[28px] font-bold leading-tight mb-4 text-slate-800">
           {section?.title || 'Next part'}
@@ -169,7 +169,7 @@ export default function PreviewPage() {
             </p>
             <button
               onClick={() => { setSectionIdx(0); setItemIdx(0); setResponses({}); setResponsesByItemId({}); setCompleted(false) }}
-              className="text-amber-700 hover:text-amber-900 text-[14px]"
+              className="text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px]"
             >
               Restart preview
             </button>
@@ -186,9 +186,9 @@ export default function PreviewPage() {
   return (
     <>
       <PreviewBanner onClose={() => window.close()} />
-      <div className="fixed top-[40px] left-0 right-0 h-1 bg-amber-100 z-40" aria-hidden="true">
+      <div className="fixed top-[40px] left-0 right-0 h-1 bg-ctac-teal-100 z-40" aria-hidden="true">
         <div
-          className="h-full bg-amber-400 transition-all duration-[600ms] ease-out"
+          className="h-full bg-ctac-teal-400 transition-all duration-[600ms] ease-out"
           style={{ width: `${Math.round(progressFraction * 100)}%` }}
         />
       </div>
@@ -239,7 +239,7 @@ export default function PreviewPage() {
 
 function PreviewBanner({ onClose }) {
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 flex items-center justify-between shadow-card">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-ctac-teal-500 text-white px-4 py-2 flex items-center justify-between shadow-card">
       <div className="flex items-center gap-2 text-[13px] font-semibold">
         <Eye size={16} strokeWidth={2} />
         Preview mode — responses are not saved
@@ -247,7 +247,7 @@ function PreviewBanner({ onClose }) {
       <button
         type="button"
         onClick={onClose}
-        className="p-1 rounded hover:bg-amber-600"
+        className="p-1 rounded hover:bg-ctac-teal-600"
         title="Close preview"
       >
         <X size={16} strokeWidth={2} />

@@ -42,7 +42,7 @@ export default function StubLayout({ title, children }) {
                       'block text-[14px] py-1 transition-colors ' +
                       (isCurrent
                         ? 'text-slate-400 cursor-default pointer-events-none'
-                        : 'text-amber-700 hover:text-amber-900 hover:underline')
+                        : 'text-ctac-teal-700 hover:text-ctac-teal-900 hover:underline')
                     }
                     aria-current={isCurrent ? 'page' : undefined}
                   >

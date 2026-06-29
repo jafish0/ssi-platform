@@ -32,7 +32,7 @@ export default function TestingDashboardPage() {
     <AdminLayout title="Testing & QA">
       <div className="bg-white rounded-2xl shadow-card p-5 mb-6">
         <div className="flex items-start gap-3 mb-4">
-          <div className="p-2 bg-amber-100 text-amber-700 rounded-2xl">
+          <div className="p-2 bg-ctac-teal-100 text-ctac-teal-700 rounded-2xl">
             <FlaskConical size={20} strokeWidth={1.5} />
           </div>
           <div>
@@ -56,7 +56,7 @@ export default function TestingDashboardPage() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search by name, category, or description…"
-            className="w-full text-[14px] pl-9 pr-4 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+            className="w-full text-[14px] pl-9 pr-4 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
           />
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function TestingDashboardPage() {
                   </p>
                   <Link
                     to={`/admin/testing/${entry.id}`}
-                    className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+                    className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
                   >
                     <Play size={14} strokeWidth={2} />
                     Launch test

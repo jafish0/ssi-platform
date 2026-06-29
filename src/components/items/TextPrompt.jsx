@@ -34,9 +34,9 @@ export default function TextPrompt({ content, onSave, sessionData }) {
   let bodyClass = 'text-[16px] leading-relaxed text-slate-800 whitespace-pre-wrap'
   let wrapperClass = ''
   if (format === 'callout') {
-    wrapperClass = 'bg-amber-50 border-l-4 border-amber-300 rounded-2xl px-5 py-4 mb-6'
+    wrapperClass = 'bg-ctac-teal-50 border-l-4 border-ctac-teal-300 rounded-2xl px-5 py-4 mb-6'
   } else if (format === 'pull_forward_highlight') {
-    wrapperClass = 'bg-amber-50 border-l-4 border-amber-300 rounded-2xl px-5 py-4 mb-6'
+    wrapperClass = 'bg-ctac-teal-50 border-l-4 border-ctac-teal-300 rounded-2xl px-5 py-4 mb-6'
   } else {
     wrapperClass = 'mb-6'
   }
@@ -46,7 +46,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
       {heading && <h2 className="text-[22px] font-semibold mb-3">{heading}</h2>}
       <div className={wrapperClass}>
         {format === 'pull_forward_highlight' && (
-          <div className="text-[13px] font-medium text-amber-800 mb-1">
+          <div className="text-[13px] font-medium text-ctac-teal-800 mb-1">
             From earlier:
           </div>
         )}
@@ -58,7 +58,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
             <button
               type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-full px-6 py-3 min-h-[52px] transition-colors"
+              className="inline-flex items-center gap-2 bg-ctac-teal-100 hover:bg-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-6 py-3 min-h-[52px] transition-colors"
             >
               <Download size={18} strokeWidth={1.5} />
               {downloadCfg.label || 'Download'}

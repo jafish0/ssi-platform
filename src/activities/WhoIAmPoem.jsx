@@ -106,7 +106,7 @@ export default function WhoIAmPoem({ onSave = console.log }) {
               value={vals[l.id] || ''}
               onChange={(e) => update(l.id, e.target.value)}
               maxLength={120}
-              className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+              className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
             {/* Lines 6 and 10 mirror line 1 — but only on the finished
                 keepsake. During input we show an empty "I am ___" slot
@@ -134,7 +134,7 @@ function MirroredLine() {
   // doesn't echo line 1 (which confused kids mid-type). The mirroring
   // happens on the finished keepsake (buildPoemText), not here.
   return (
-    <div className="mt-3 pl-3 border-l-2 border-amber-200">
+    <div className="mt-3 pl-3 border-l-2 border-ctac-teal-200">
       <p className="text-[15px] font-serif italic text-slate-400">
         I am <span className="not-italic">______</span>
       </p>
@@ -167,7 +167,7 @@ function PoemKeepsake({ poem }) {
     <div>
       <h2 className="text-[22px] font-semibold mb-2 text-center">Who I Am</h2>
       <p className="text-[14px] text-slate-500 text-center mb-5">It&apos;s yours to keep.</p>
-      <div className="bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-card p-8 text-center">
+      <div className="bg-ctac-teal-50 rounded-3xl border-2 border-ctac-teal-200 shadow-card p-8 text-center">
         <div className="text-[17px] leading-loose text-slate-800 whitespace-pre-wrap font-serif italic">
           {poem || '—'}
         </div>
@@ -177,7 +177,7 @@ function PoemKeepsake({ poem }) {
           type="button"
           onClick={handleDownload}
           disabled={downloading || !poem}
-          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+          className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
         >
           <Download size={14} strokeWidth={2} />
           {downloading ? 'Saving image…' : 'Save as image'}

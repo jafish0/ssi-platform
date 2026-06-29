@@ -12,8 +12,8 @@ function NavItem({ to, icon: Icon, label, onNavigate }) {
       className={({ isActive }) =>
         'flex items-center gap-3 px-4 py-3 min-h-[48px] rounded-2xl text-[15px] font-medium transition-colors ' +
         (isActive
-          ? 'bg-amber-100 text-amber-900'
-          : 'text-slate-700 hover:bg-amber-50 hover:text-amber-900')
+          ? 'bg-ctac-teal-100 text-ctac-teal-900'
+          : 'text-slate-700 hover:bg-ctac-teal-50 hover:text-ctac-teal-900')
       }
     >
       <Icon size={20} strokeWidth={1.5} />
@@ -109,7 +109,7 @@ export default function AdminLayout({ children, title }) {
   )
 
   return (
-    <div className="min-h-screen bg-amber-50 flex">
+    <div className="min-h-screen bg-ctac-teal-50 flex">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-[240px] bg-white border-r border-slate-200 sticky top-0 h-screen">
         {sidebar}
@@ -145,7 +145,7 @@ export default function AdminLayout({ children, title }) {
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="md:hidden p-2 rounded-2xl text-slate-700 hover:bg-amber-50"
+                className="md:hidden p-2 rounded-2xl text-slate-700 hover:bg-ctac-teal-50"
                 aria-label="Open menu"
               >
                 <Menu size={22} strokeWidth={1.5} />
@@ -163,7 +163,7 @@ export default function AdminLayout({ children, title }) {
                 </div>
                 <div className="text-[12px] text-slate-500 capitalize">{role || '—'}</div>
               </div>
-              <div className="w-9 h-9 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center font-semibold text-[14px]">
+              <div className="w-9 h-9 rounded-full bg-ctac-teal-200 text-ctac-teal-900 flex items-center justify-center font-semibold text-[14px]">
                 {(user?.email || '?').slice(0, 1).toUpperCase()}
               </div>
             </div>

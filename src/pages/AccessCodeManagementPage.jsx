@@ -16,7 +16,7 @@ function StatusBadge({ status }) {
     active: 'bg-emerald-100 text-emerald-800',
     inactive: 'bg-slate-200 text-slate-700',
     expired: 'bg-rose-100 text-rose-800',
-    exhausted: 'bg-amber-100 text-amber-800',
+    exhausted: 'bg-ctac-teal-100 text-ctac-teal-800',
   }
   return (
     <span
@@ -193,7 +193,7 @@ export default function AccessCodeManagementPage() {
       {/* Generate */}
       <div className="bg-white rounded-2xl shadow-card p-5 mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Plus size={18} strokeWidth={1.5} className="text-amber-700" />
+          <Plus size={18} strokeWidth={1.5} className="text-ctac-teal-700" />
           <h2 className="text-[16px] font-semibold text-slate-800">Generate codes</h2>
         </div>
         <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -202,7 +202,7 @@ export default function AccessCodeManagementPage() {
             <select
               value={genIntv}
               onChange={(e) => setGenIntv(e.target.value)}
-              className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             >
               <option value="">Choose…</option>
               {interventions.map((iv) => (
@@ -227,8 +227,8 @@ export default function AccessCodeManagementPage() {
                   className={
                     'flex-1 min-h-[44px] rounded-2xl border text-[14px] font-medium transition-colors ' +
                     (genType === opt.v
-                      ? 'bg-amber-200 border-amber-400 text-amber-900'
-                      : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                      ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
                   }
                 >
                   {opt.label}
@@ -245,7 +245,7 @@ export default function AccessCodeManagementPage() {
                 max={100}
                 value={genCount}
                 onChange={(e) => setGenCount(e.target.value)}
-                className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
               />
             </div>
           )}
@@ -257,7 +257,7 @@ export default function AccessCodeManagementPage() {
               onChange={(e) => setGenCohort(e.target.value)}
               maxLength={80}
               placeholder="e.g. Spring 2026 Wave 1"
-              className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           <div>
@@ -266,7 +266,7 @@ export default function AccessCodeManagementPage() {
               type="date"
               value={genExpires}
               onChange={(e) => setGenExpires(e.target.value)}
-              className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[14px] px-3 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           {genError && (
@@ -278,7 +278,7 @@ export default function AccessCodeManagementPage() {
             <button
               type="submit"
               disabled={generating}
-              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-6 py-2 min-h-[48px] text-[15px]"
+              className="bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-6 py-2 min-h-[48px] text-[15px]"
             >
               {generating ? 'Generating…' : 'Generate'}
             </button>
@@ -286,15 +286,15 @@ export default function AccessCodeManagementPage() {
         </form>
 
         {recentlyGenerated.length > 0 && (
-          <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div className="mt-4 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[13px] font-medium text-amber-800">
+              <div className="text-[13px] font-medium text-ctac-teal-800">
                 {recentlyGenerated.length} new code{recentlyGenerated.length === 1 ? '' : 's'}:
               </div>
               <button
                 type="button"
                 onClick={copyAll}
-                className="flex items-center gap-1 text-[13px] text-amber-700 hover:text-amber-900"
+                className="flex items-center gap-1 text-[13px] text-ctac-teal-700 hover:text-ctac-teal-900"
               >
                 <Copy size={14} strokeWidth={1.5} />
                 Copy all
@@ -319,14 +319,14 @@ export default function AccessCodeManagementPage() {
                 type="checkbox"
                 checked={showInactive}
                 onChange={(e) => setShowInactive(e.target.checked)}
-                className="w-4 h-4 accent-amber-500"
+                className="w-4 h-4 accent-ctac-teal-500"
               />
               Show inactive / expired
             </label>
             <button
               type="button"
               onClick={() => setReload((r) => r + 1)}
-              className="flex items-center gap-1 text-[13px] text-amber-700 hover:text-amber-900"
+              className="flex items-center gap-1 text-[13px] text-ctac-teal-700 hover:text-ctac-teal-900"
             >
               <RefreshCw size={14} strokeWidth={1.5} />
               Refresh
@@ -345,7 +345,7 @@ export default function AccessCodeManagementPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[14px]">
               <thead>
-                <tr className="bg-amber-50 text-left text-[12px] uppercase tracking-wide text-amber-800">
+                <tr className="bg-ctac-teal-50 text-left text-[12px] uppercase tracking-wide text-ctac-teal-800">
                   <th className="px-4 py-3 whitespace-nowrap">Code</th>
                   <th className="px-4 py-3">Intervention</th>
                   <th className="px-4 py-3">Cohort</th>
@@ -366,7 +366,7 @@ export default function AccessCodeManagementPage() {
                         <button
                           type="button"
                           onClick={() => copyOne(c.code)}
-                          className="text-slate-800 hover:text-amber-700"
+                          className="text-slate-800 hover:text-ctac-teal-700"
                           title="Click to copy"
                         >
                           {c.code}

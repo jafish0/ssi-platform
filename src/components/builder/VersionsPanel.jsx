@@ -80,7 +80,7 @@ export default function VersionsPanel({
                           onRollback(v.id)
                         }
                       }}
-                      className="inline-flex items-center gap-1 text-[13px] font-medium text-amber-700 hover:text-amber-900"
+                      className="inline-flex items-center gap-1 text-[13px] font-medium text-ctac-teal-700 hover:text-ctac-teal-900"
                     >
                       <RotateCcw size={14} strokeWidth={1.5} />
                       Make current

@@ -107,8 +107,8 @@ function TruthRatingScale({ value, onChange, label }) {
               className={
                 'flex-1 min-h-[44px] rounded-full border text-[13px] font-semibold transition-colors ' +
                 (selected
-                  ? 'bg-amber-500 border-amber-500 text-white'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                  ? 'bg-ctac-teal-500 border-ctac-teal-500 text-white'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
               }
             >
               {n}
@@ -418,8 +418,8 @@ export default function GettingUnstuck({ onSave = console.log }) {
             className={
               'rounded-2xl border-2 px-4 py-3 min-h-[52px] text-[15px] font-semibold transition-colors ' +
               (otherChoice === 'no'
-                ? 'bg-amber-100 border-amber-500 text-amber-900'
-                : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                ? 'bg-ctac-teal-100 border-ctac-teal-500 text-ctac-teal-900'
+                : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
             }
           >
             No
@@ -431,8 +431,8 @@ export default function GettingUnstuck({ onSave = console.log }) {
             className={
               'rounded-2xl border-2 px-4 py-3 min-h-[52px] text-[15px] font-semibold transition-colors ' +
               (otherChoice === 'yes'
-                ? 'bg-amber-100 border-amber-500 text-amber-900'
-                : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                ? 'bg-ctac-teal-100 border-ctac-teal-500 text-ctac-teal-900'
+                : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
             }
           >
             Yes
@@ -450,7 +450,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
               onChange={(e) => setOtherText(e.target.value)}
               maxLength={280}
               placeholder="Whatever comes to mind…"
-              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white mb-4"
+              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white mb-4"
             />
             <TruthRatingScale
               label="How true does this feel for you?"
@@ -501,8 +501,8 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 className={
                   'w-full text-left rounded-2xl border-2 px-4 py-3 min-h-[60px] text-[15px] leading-relaxed transition-colors ' +
                   (selected
-                    ? 'bg-amber-100 border-amber-500 text-amber-900'
-                    : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                    ? 'bg-ctac-teal-100 border-ctac-teal-500 text-ctac-teal-900'
+                    : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
                 }
               >
                 <span className="flex items-start gap-3">
@@ -511,7 +511,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
                     className={
                       'inline-flex items-center justify-center rounded-full w-6 h-6 flex-shrink-0 mt-0.5 ' +
                       (selected
-                        ? 'bg-amber-500 text-white'
+                        ? 'bg-ctac-teal-500 text-white'
                         : 'border border-slate-300 text-transparent')
                     }
                   >
@@ -525,7 +525,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
         </div>
 
         {limitNudge && (
-          <p className="text-[13px] text-amber-700 italic mt-2">
+          <p className="text-[13px] text-ctac-teal-700 italic mt-2">
             Pick up to 2. Deselect one first if you want to swap it.
           </p>
         )}
@@ -654,17 +654,17 @@ export default function GettingUnstuck({ onSave = console.log }) {
               className={
                 'rounded-full ' +
                 (i === thoughtIdx
-                  ? 'w-2 h-2 bg-amber-400'
+                  ? 'w-2 h-2 bg-ctac-teal-400'
                   : i < thoughtIdx
-                    ? 'w-2 h-2 bg-amber-200'
+                    ? 'w-2 h-2 bg-ctac-teal-200'
                     : 'w-1.5 h-1.5 bg-slate-200')
               }
             />
           ))}
         </div>
 
-        <div className="bg-amber-50 border-l-4 border-amber-300 rounded-2xl px-5 py-4 mb-5">
-          <div className="text-[13px] font-medium text-amber-800 mb-1">
+        <div className="bg-ctac-teal-50 border-l-4 border-ctac-teal-300 rounded-2xl px-5 py-4 mb-5">
+          <div className="text-[13px] font-medium text-ctac-teal-800 mb-1">
             Stuck thought
           </div>
           <p className="text-[16px] text-slate-800">{item.text}</p>
@@ -678,8 +678,8 @@ export default function GettingUnstuck({ onSave = console.log }) {
             className={
               'text-left rounded-2xl border p-4 transition-colors ' +
               (r.strategy === 'challenge'
-                ? 'bg-amber-200 border-amber-400'
-                : 'bg-white border-slate-200 hover:border-amber-300')
+                ? 'bg-ctac-teal-200 border-ctac-teal-400'
+                : 'bg-white border-slate-200 hover:border-ctac-teal-300')
             }
           >
             <div className="font-semibold text-[16px] mb-1">Challenge it</div>
@@ -693,8 +693,8 @@ export default function GettingUnstuck({ onSave = console.log }) {
             className={
               'text-left rounded-2xl border p-4 transition-colors ' +
               (r.strategy === 'both_and'
-                ? 'bg-amber-200 border-amber-400'
-                : 'bg-white border-slate-200 hover:border-amber-300')
+                ? 'bg-ctac-teal-200 border-ctac-teal-400'
+                : 'bg-white border-slate-200 hover:border-ctac-teal-300')
             }
           >
             <div className="font-semibold text-[16px] mb-1">Both/And it</div>
@@ -727,7 +727,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
               value={r.response || ''}
               onChange={(e) => setField(item.id, 'response', e.target.value)}
               placeholder="Take any of the questions above and write what comes up."
-              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
           </div>
         )}
@@ -750,7 +750,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 value={r.and_statement || ''}
                 onChange={(e) => setField(item.id, 'and_statement', e.target.value)}
                 placeholder="…there can still be other truths"
-                className="w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+                className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
               />
             </div>
             {/* The "Need an example?" disclosure was dropped in v5.7
@@ -774,7 +774,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
               type="button"
               onClick={() => setHelpOpenId((id) => (id === item.id ? null : item.id))}
               aria-expanded={helpOpenId === item.id}
-              className="inline-flex items-center text-[15px] font-semibold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-full px-4 py-2 min-h-[40px]"
+              className="inline-flex items-center text-[15px] font-semibold text-ctac-teal-800 bg-ctac-teal-100 hover:bg-ctac-teal-200 border border-ctac-teal-300 rounded-full px-4 py-2 min-h-[40px]"
             >
               {helpOpenId === item.id ? 'Hide help' : 'I need help creating a new thought'}
             </button>
@@ -794,7 +794,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
                           setField(item.id, field, s)
                           setHelpOpenId(null)
                         }}
-                        className="w-full text-left text-[14px] leading-relaxed text-slate-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl px-3 py-2"
+                        className="w-full text-left text-[14px] leading-relaxed text-slate-800 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 rounded-2xl px-3 py-2"
                       >
                         {s}
                       </button>
@@ -882,7 +882,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
             <div key={it.id} className="bg-white border border-slate-200 rounded-2xl p-4">
               <div className="text-[13px] text-slate-500 mb-1">Stuck thought</div>
               <div className="text-[15px] text-slate-800 mb-3">{it.text}</div>
-              <div className="text-[13px] text-amber-800 font-medium mb-1">
+              <div className="text-[13px] text-ctac-teal-800 font-medium mb-1">
                 {r.strategy === 'challenge' ? 'Challenge it' : 'Both/And it'}
               </div>
               {r.strategy === 'challenge' && (

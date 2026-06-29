@@ -29,7 +29,7 @@ function SaveEntry({ entry }) {
     pretty = String(entry.value)
   }
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-2">
+    <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-3 mb-2">
       <div className="text-[12px] text-slate-500 mb-1">{entry.timestamp}</div>
       <pre className="text-[12px] font-mono text-slate-800 whitespace-pre-wrap break-all">
         {pretty}
@@ -78,7 +78,7 @@ export default function TestingSandboxPage() {
 
   const containerClass =
     viewport === 'mobile'
-      ? 'mx-auto w-full max-w-[400px] border border-dashed border-amber-300 rounded-2xl p-2'
+      ? 'mx-auto w-full max-w-[400px] border border-dashed border-ctac-teal-300 rounded-2xl p-2'
       : ''
 
   return (
@@ -88,7 +88,7 @@ export default function TestingSandboxPage() {
         <div className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap">
           <Link
             to="/admin/testing"
-            className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-900 text-[13px] font-medium"
+            className="inline-flex items-center gap-1 text-ctac-teal-700 hover:text-ctac-teal-900 text-[13px] font-medium"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             Back to dashboard

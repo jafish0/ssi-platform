@@ -110,7 +110,7 @@ export default function StructuredActivity({ content, onSave, existingResponse, 
       </div>
 
       {saved && content?.completion_message && (
-        <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-[15px] text-slate-700">
+        <div className="mt-6 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-4 text-[15px] text-slate-700">
           {content.completion_message}
         </div>
       )}
@@ -148,7 +148,7 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
         value.trim().length > 0 &&
         !EMAIL_RX.test(value.trim())
       const sharedCx =
-        'w-full text-[16px] leading-relaxed px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white'
+        'w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white'
       return (
         <div>
           {labelEl}
@@ -211,8 +211,8 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
                   className={
                     'w-full text-left rounded-2xl border min-h-[52px] px-5 py-3 text-[16px] transition-colors ' +
                     (sel
-                      ? 'bg-amber-200 border-amber-400 text-amber-900'
-                      : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                      ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
                   }
                 >
                   {opt.text}
@@ -247,8 +247,8 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
                   className={
                     'w-full text-left rounded-2xl border min-h-[52px] px-5 py-3 text-[16px] transition-colors ' +
                     (sel
-                      ? 'bg-amber-200 border-amber-400 text-amber-900'
-                      : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                      ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
                   }
                 >
                   {opt.text}
@@ -288,8 +288,8 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
                     className={
                       'min-h-[52px] rounded-2xl border text-[16px] font-semibold transition-colors ' +
                       (sel
-                        ? 'bg-amber-200 border-amber-400 text-amber-900'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                        ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                        : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
                     }
                   >
                     {v}
@@ -313,7 +313,7 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
               const n = e.target.value === '' ? '' : Number(e.target.value)
               onChange(n)
             }}
-            className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+            className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
           />
         </div>
       )
@@ -338,8 +338,8 @@ function FieldRenderer({ field, value, onChange, sessionData, pullIncluded, onPu
                   className={
                     'min-h-[48px] rounded-2xl border text-[16px] font-medium transition-colors ' +
                     (sel
-                      ? 'bg-amber-200 border-amber-400 text-amber-900'
-                      : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                      ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
                   }
                 >
                   {v}
@@ -450,7 +450,7 @@ function DragDropField({ field, value, onChange }) {
                 className={
                   'cursor-grab active:cursor-grabbing select-none rounded-xl px-4 py-3 min-h-[48px] text-[15px] transition-shadow ' +
                   (sel
-                    ? 'bg-amber-200 text-amber-900 shadow-card'
+                    ? 'bg-ctac-teal-200 text-ctac-teal-900 shadow-card'
                     : 'bg-white text-slate-800 shadow-card')
                 }
               >
@@ -475,11 +475,11 @@ function DragDropField({ field, value, onChange }) {
             className={
               'rounded-2xl border-2 border-dashed p-4 min-h-[120px] transition-colors ' +
               (placement[b.id]?.length > 0
-                ? 'bg-white border-amber-300'
-                : 'bg-amber-50 border-amber-200')
+                ? 'bg-white border-ctac-teal-300'
+                : 'bg-ctac-teal-50 border-ctac-teal-200')
             }
           >
-            <div className="text-[14px] font-semibold text-amber-800 mb-2">{b.label}</div>
+            <div className="text-[14px] font-semibold text-ctac-teal-800 mb-2">{b.label}</div>
             <div className="flex flex-wrap gap-2">
               {(placement[b.id] || []).map((id) => {
                 const it = items.find((x) => x.id === id)

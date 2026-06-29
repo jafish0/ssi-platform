@@ -37,15 +37,15 @@ export function LikertItem({ prompt, anchors, value, onChange }) {
               className={
                 'min-h-[56px] rounded-2xl border text-center px-1 py-2 transition-colors flex flex-col items-center justify-center ' +
                 (selected
-                  ? 'bg-amber-500 border-amber-500 text-white'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+                  ? 'bg-ctac-teal-500 border-ctac-teal-500 text-white'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
               }
             >
               <span className="text-[16px] font-semibold leading-none">{a.v}</span>
               <span
                 className={
                   'text-[10px] leading-tight mt-1 ' +
-                  (selected ? 'text-amber-50' : 'text-slate-500')
+                  (selected ? 'text-ctac-teal-50' : 'text-slate-500')
                 }
               >
                 {a.label}
@@ -78,7 +78,7 @@ export function SliderItem({ prompt, min, max, anchors, value, touched, onChange
         onChange={(e) => onChange(Number(e.target.value))}
         className={
           'w-full h-2 rounded-full appearance-none cursor-pointer ' +
-          (touched ? 'accent-amber-500' : 'accent-slate-300')
+          (touched ? 'accent-ctac-teal-500' : 'accent-slate-300')
         }
       />
       <div className="flex justify-between mt-1 text-[11px] text-slate-500">
@@ -88,7 +88,7 @@ export function SliderItem({ prompt, min, max, anchors, value, touched, onChange
       </div>
       <div className="text-center mt-3 text-[14px]">
         {touched ? (
-          <span className="font-semibold text-amber-800">{value}</span>
+          <span className="font-semibold text-ctac-teal-800">{value}</span>
         ) : (
           <span className="text-slate-400 italic">Drag the slider to choose.</span>
         )}
@@ -116,7 +116,7 @@ export function NumberInput({ prompt, value, onChange, min, max, hint }) {
         }}
         min={min}
         max={max}
-        className="w-full max-w-[140px] text-[16px] px-4 py-3 min-h-[48px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 focus:bg-white"
+        className="w-full max-w-[140px] text-[16px] px-4 py-3 min-h-[48px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
       />
       {hint && <p className="text-[12px] text-slate-500 mt-1">{hint}</p>}
     </div>
@@ -143,8 +143,8 @@ export function RadioGroup({ prompt, options, value, onChange }) {
               className={
                 'text-left rounded-2xl border min-h-[48px] px-4 py-2 text-[15px] transition-colors ' +
                 (selected
-                  ? 'bg-amber-200 border-amber-400 text-amber-900'
-                  : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                  ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
+                  : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
               }
             >
               {o.label}
@@ -177,14 +177,14 @@ export function CheckboxGroup({ prompt, options, values, onToggle }) {
               className={
                 'text-left rounded-2xl border min-h-[44px] px-4 py-2 text-[14px] flex items-center gap-3 transition-colors ' +
                 (checked
-                  ? 'bg-amber-100 border-amber-400 text-amber-900'
-                  : 'bg-white border-slate-200 text-slate-800 hover:border-amber-300')
+                  ? 'bg-ctac-teal-100 border-ctac-teal-400 text-ctac-teal-900'
+                  : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
               }
             >
               <span
                 className={
                   'inline-flex items-center justify-center rounded-md w-5 h-5 border-2 flex-shrink-0 ' +
-                  (checked ? 'bg-amber-500 border-amber-500 text-white' : 'border-slate-300')
+                  (checked ? 'bg-ctac-teal-500 border-ctac-teal-500 text-white' : 'border-slate-300')
                 }
               >
                 {checked ? '✓' : ''}
@@ -236,7 +236,7 @@ export function ProgressStrip({ stepIndex, totalSteps, screenLabel }) {
       </div>
       <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-amber-500 transition-all"
+          className="h-full bg-ctac-teal-500 transition-all"
           style={{ width: `${((stepIndex + 1) / totalSteps) * 100}%` }}
         />
       </div>

@@ -17,7 +17,7 @@ function fmtDate(iso) {
 function StatusBadge({ admin }) {
   if (admin.is_pending) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium bg-amber-100 text-amber-800">
+      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium bg-ctac-teal-100 text-ctac-teal-800">
         <Clock size={12} strokeWidth={2} />
         Pending
       </span>
@@ -112,13 +112,13 @@ export default function AdminTeamPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@uky.edu"
               disabled={submitting}
-              className="w-full text-[15px] px-4 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[15px] px-4 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+            className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
           >
             <Send size={14} strokeWidth={2} />
             {submitting ? 'Sending…' : 'Send invite'}
@@ -154,7 +154,7 @@ export default function AdminTeamPage() {
           <button
             type="button"
             onClick={refresh}
-            className="flex items-center gap-1 text-[13px] text-amber-700 hover:text-amber-900"
+            className="flex items-center gap-1 text-[13px] text-ctac-teal-700 hover:text-ctac-teal-900"
           >
             <RefreshCw size={14} strokeWidth={1.5} />
             Refresh
@@ -170,7 +170,7 @@ export default function AdminTeamPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[14px]">
               <thead>
-                <tr className="bg-amber-50 text-left text-[12px] uppercase tracking-wide text-amber-800">
+                <tr className="bg-ctac-teal-50 text-left text-[12px] uppercase tracking-wide text-ctac-teal-800">
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 whitespace-nowrap">Granted</th>

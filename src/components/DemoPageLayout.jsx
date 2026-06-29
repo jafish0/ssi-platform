@@ -13,11 +13,11 @@ import FeedbackButton from './FeedbackButton.jsx'
 
 export default function DemoPageLayout({ children, narrow = false, banner = true }) {
   return (
-    <div className="min-h-screen bg-amber-50 flex flex-col">
+    <div className="min-h-screen bg-ctac-teal-50 flex flex-col">
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-[1100px] mx-auto px-4 py-4 flex items-center justify-between gap-3 flex-wrap">
           <Link to="/demo" className="inline-flex items-center gap-2 text-slate-800">
-            <Sparkles size={18} strokeWidth={1.5} className="text-amber-600" />
+            <Sparkles size={18} strokeWidth={1.5} className="text-ctac-teal-600" />
             <span className="font-semibold text-[16px]">SSI Platform · Demo</span>
           </Link>
           <div className="flex-1" />
@@ -27,7 +27,7 @@ export default function DemoPageLayout({ children, narrow = false, banner = true
       </header>
 
       {banner && (
-        <div className="bg-amber-100 border-b border-amber-200 text-amber-900 text-[13px] text-center px-4 py-2">
+        <div className="bg-ctac-teal-100 border-b border-ctac-teal-200 text-ctac-teal-900 text-[13px] text-center px-4 py-2">
           This is a private demo for the IRF Team. No real participant data is
           involved.
         </div>

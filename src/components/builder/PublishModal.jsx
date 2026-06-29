@@ -51,8 +51,8 @@ export default function PublishModal({
           <span className="font-semibold">{itemCount} items</span>.
         </p>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-4 text-[13px] text-slate-700 flex items-start gap-2">
-          <AlertTriangle size={16} strokeWidth={1.5} className="text-amber-700 mt-0.5 flex-shrink-0" />
+        <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-3 mb-4 text-[13px] text-slate-700 flex items-start gap-2">
+          <AlertTriangle size={16} strokeWidth={1.5} className="text-ctac-teal-700 mt-0.5 flex-shrink-0" />
           <div>
             This creates an immutable version snapshot. Ongoing sessions keep
             using their existing version — only sessions started after this
@@ -66,7 +66,7 @@ export default function PublishModal({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="What changed in this version?"
-          className="w-full text-[14px] leading-relaxed px-4 py-2 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400 mb-4"
+          className="w-full text-[14px] leading-relaxed px-4 py-2 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 mb-4"
         />
 
         {error && (
@@ -88,7 +88,7 @@ export default function PublishModal({
             type="button"
             onClick={handlePublish}
             disabled={submitting}
-            className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px]"
+            className="bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px]"
           >
             {submitting ? 'Publishing…' : `Publish v${nextVersion}`}
           </button>

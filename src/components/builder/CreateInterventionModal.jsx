@@ -94,7 +94,7 @@ export default function CreateInterventionModal({ open, onClose, onCreated }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={120}
-              className="w-full text-[15px] px-4 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[15px] px-4 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           <div>
@@ -108,7 +108,7 @@ export default function CreateInterventionModal({ open, onClose, onCreated }) {
                 setSlug(slugify(e.target.value))
                 setSlugTouched(true)
               }}
-              className="w-full text-[15px] font-mono px-4 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[15px] font-mono px-4 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           <div>
@@ -117,7 +117,7 @@ export default function CreateInterventionModal({ open, onClose, onCreated }) {
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full text-[15px] leading-relaxed px-4 py-2 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[15px] leading-relaxed px-4 py-2 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           <div>
@@ -126,7 +126,7 @@ export default function CreateInterventionModal({ open, onClose, onCreated }) {
               type="text"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
-              className="w-full text-[15px] px-4 py-2 min-h-[44px] bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+              className="w-full text-[15px] px-4 py-2 min-h-[44px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
             />
           </div>
           {error && (
@@ -146,7 +146,7 @@ export default function CreateInterventionModal({ open, onClose, onCreated }) {
             <button
               type="submit"
               disabled={submitting}
-              className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px]"
+              className="bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px]"
             >
               {submitting ? 'Creating…' : 'Create & open Builder'}
             </button>

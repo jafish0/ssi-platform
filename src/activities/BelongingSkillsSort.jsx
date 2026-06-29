@@ -216,18 +216,18 @@ function SkillCard({
       className={
         'relative select-none rounded-2xl px-4 py-3 min-h-[52px] text-[14px] shadow-card transition-all ' +
         (isUnplaced
-          ? 'bg-white text-slate-800 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-amber-200 '
+          ? 'bg-white text-slate-800 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-ctac-teal-200 '
           : 'bg-white/95 text-slate-800 ') +
         (isBeingDragged ? ' opacity-40 ' : '') +
         (isKeyboardPicked
-          ? ' ring-2 ring-amber-500 shadow-lg scale-[1.02] '
+          ? ' ring-2 ring-ctac-teal-500 shadow-lg scale-[1.02] '
           : '')
       }
       style={{ touchAction: isUnplaced ? 'none' : undefined }}
     >
       <div className="flex items-start gap-2">
         {isUnplaced && index != null && (
-          <span className="flex-shrink-0 inline-flex items-center justify-center bg-amber-100 text-amber-800 rounded-full w-5 h-5 text-[11px] font-bold mt-0.5">
+          <span className="flex-shrink-0 inline-flex items-center justify-center bg-ctac-teal-100 text-ctac-teal-800 rounded-full w-5 h-5 text-[11px] font-bold mt-0.5">
             {index}
           </span>
         )}
@@ -244,15 +244,15 @@ function SkillCard({
           className={
             'flex-shrink-0 inline-flex items-center justify-center rounded-full w-6 h-6 text-[12px] font-bold border transition-colors ' +
             (defOpen
-              ? 'bg-amber-500 text-white border-amber-500'
-              : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100')
+              ? 'bg-ctac-teal-500 text-white border-ctac-teal-500'
+              : 'bg-ctac-teal-50 text-ctac-teal-700 border-ctac-teal-300 hover:bg-ctac-teal-100')
           }
         >
           ?
         </button>
       </div>
       {defOpen && (
-        <div className="mt-2 pt-2 border-t border-amber-200 text-[12px] leading-relaxed text-slate-600 italic">
+        <div className="mt-2 pt-2 border-t border-ctac-teal-200 text-[12px] leading-relaxed text-slate-600 italic">
           {behavior.definition}
         </div>
       )}
@@ -264,7 +264,7 @@ function SkillCard({
             onRemove(behavior.id)
           }}
           aria-label={`Remove ${behavior.text.slice(0, 40)} from this bucket`}
-          className="absolute top-1 right-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 hover:bg-amber-200 text-slate-600 text-[14px] font-semibold leading-none"
+          className="absolute top-1 right-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-ctac-teal-100 hover:bg-ctac-teal-200 text-slate-600 text-[14px] font-semibold leading-none"
           title="Remove from this bucket"
         >
           ×
@@ -289,7 +289,7 @@ function Bucket({
 }) {
   return (
     <div className="flex flex-col">
-      <div className="text-[13px] font-semibold text-amber-900 mb-2 text-center px-2">
+      <div className="text-[13px] font-semibold text-ctac-teal-900 mb-2 text-center px-2">
         {bucket.label}
       </div>
       <div
@@ -300,7 +300,7 @@ function Bucket({
           (isHovered
             ? 'scale-[1.03] drop-shadow-xl '
             : isKeyboardTarget
-              ? 'ring-4 ring-amber-300 ring-offset-2 rounded-3xl '
+              ? 'ring-4 ring-ctac-teal-300 ring-offset-2 rounded-3xl '
               : '')
         }
       >
@@ -322,7 +322,7 @@ function Bucket({
           style={{ left: '15%', right: '15%', top: '28%', bottom: '8%' }}
         >
           {placedBehaviors.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-[11px] text-amber-700/70 italic px-2 text-center">
+            <div className="flex-1 flex items-center justify-center text-[11px] text-ctac-teal-700/70 italic px-2 text-center">
               {isHovered ? 'Drop here' : 'empty'}
             </div>
           ) : (
@@ -372,9 +372,9 @@ function GhostChip({ behavior, x, y, dropMode, targetX, targetY }) {
         pointerEvents: 'none',
         zIndex: 1000,
       }}
-      className="bg-amber-500 text-white rounded-full px-3 py-2 shadow-2xl ring-2 ring-amber-200 font-semibold text-[13px] flex items-center gap-2 max-w-[200px]"
+      className="bg-ctac-teal-500 text-white rounded-full px-3 py-2 shadow-2xl ring-2 ring-ctac-teal-200 font-semibold text-[13px] flex items-center gap-2 max-w-[200px]"
     >
-      <span className="inline-flex items-center justify-center bg-white text-amber-700 rounded-full w-5 h-5 text-[11px] font-bold flex-shrink-0">
+      <span className="inline-flex items-center justify-center bg-white text-ctac-teal-700 rounded-full w-5 h-5 text-[11px] font-bold flex-shrink-0">
         {/* Number badge derived from id (bs1 → 1) */}
         {behavior.id.replace(/\D/g, '')}
       </span>
@@ -884,7 +884,7 @@ function SortSnapshotScreen({ placement, lookup }) {
           type="button"
           onClick={handleDownload}
           disabled={downloading}
-          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
+          className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
         >
           <Download size={14} strokeWidth={2} />
           {downloading ? 'Saving image…' : 'Save as image'}
