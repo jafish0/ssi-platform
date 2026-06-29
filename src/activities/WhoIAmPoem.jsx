@@ -108,14 +108,12 @@ export default function WhoIAmPoem({ onSave = console.log }) {
               maxLength={120}
               className="w-full text-[16px] px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
-            {/* Lines 6 and 10 mirror line 1 — but only on the finished
-                keepsake. During input we show an empty "I am ___" slot
-                so the 10-line shape stays visible WITHOUT echoing line 1's
-                text as the kid types (Adrienne, 2026-06-29 — the live
-                repetition was confusing). v2.4 dropped the numbers/caption;
-                v2.5 stops the echo. */}
-            {l.n === 5 && <MirroredLine />}
-            {l.n === 9 && <MirroredLine />}
+            {/* Lines 6 and 10 mirror line 1 ("I am …") — but only on the
+                finished keepsake (buildPoemText). They're intentionally NOT
+                shown in the input view: the placeholder slots read as broken
+                /confusing from the participant's side before the poem exists
+                (Josh, 2026-06-29). v2.5 stopped the live echo; v2.6 removes
+                the placeholder entirely. */}
           </div>
         ))}
       </div>
@@ -125,19 +123,6 @@ export default function WhoIAmPoem({ onSave = console.log }) {
           {submitting ? 'Saving…' : 'See your poem'}
         </PrimaryButton>
       </div>
-    </div>
-  )
-}
-
-function MirroredLine() {
-  // Empty slot during input — keeps the poem's 10-line shape visible but
-  // doesn't echo line 1 (which confused kids mid-type). The mirroring
-  // happens on the finished keepsake (buildPoemText), not here.
-  return (
-    <div className="mt-3 pl-3 border-l-2 border-ctac-teal-200">
-      <p className="text-[15px] font-serif italic text-slate-400">
-        I am <span className="not-italic">______</span>
-      </p>
     </div>
   )
 }

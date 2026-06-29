@@ -81,9 +81,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'who-i-am-poem': {
-    version: 'v2.5',
+    version: 'v2.6',
     updated: '2026-06-29',
     changelog: [
+      '2026-06-29 · v2.6 — Josh follow-up to v2.5. Removed the empty "I am ___" placeholder slots from the fill-in view entirely — from the participant\'s side, before the poem exists, the slots read as broken/confusing. Lines 6 and 10 still mirror line 1 on the finished keepsake card (buildPoemText), where the repetition is the payoff. Dropped the now-unused MirroredLine component. No data-shape change.',
       '2026-06-29 · v2.5 — Draft 36 Part B. During the fill-in view, lines 6 and 10 no longer echo line 1 as the kid types (Adrienne: the live repetition confused kids) — they now show an empty "I am ___" slot so the 10-line shape stays visible. The mirroring still renders on the finished keepsake card, where the repetition is the structural payoff. No data-shape change.',
       '2026-06-01 · v2.4 — Draft 20. Removed the visible line numbers (the small "1.", "2."… next to each input) and the "Line N — same as line 1" instructional caption that appeared next to the auto-mirrored lines 6 and 10 (Ginny\'s 2026-06-01 feedback — "having line 6 and line 10 written in like that might be confusing"). Lines 6 and 10 now render silently as the mirrored "I am ___" text. Poem structure, auto-mirroring logic, and keepsake output unchanged. No data-shape change.',
       '2026-05-13 · v2.3 — auto-titled the finished-poem card and keepsake-image PNG "Who I Am" (replacing "Your Poem"). Both surfaces match. Footer credit on the keepsake PNG unchanged. Per Stephanie 2026-05-15 + confirmed 2026-05-18 meeting.',
