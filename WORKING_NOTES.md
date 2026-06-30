@@ -39,6 +39,125 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`48719d1` · 2026-06-29** — Draft 38: post-launch polish, four fixes from Josh's walkthrough of the post-Draft-37 demo. **(A) Kai Variant 2 image** — swapped in the new blonde/lighter-complexion render so Kai reads as visually distinct from Sam (the "they look like relatives" note); Variant 1 (the locked pick) unchanged, no castData.js change. **(B) Tree canopy clipping** — the stage-5 canopy reaches y ≈ -22, which the "0 0 400 600" viewBox clipped at the top; fixed the actual render viewBox in `TreeProgress.jsx` to "0 -30 400 630" (TreeProgress is data-driven from treeStages.js, so the SVG files' viewBox doesn't drive the app — but updated all six reference SVGs to match for parity). Roots/ground/trunk anchor unchanged. **(C) Montage crossfade** — killed the blank flicker between stages: each advance renders a static "ghost" of the outgoing stage underneath that fades out (~320ms) while the new stage draws in on top (verified the ghost fires on all 5 transitions). **(D) Closer rework** — removed the SessionSummary block from the /demo final-reveal preview (kept the component file for reuse); the montage now owns its closer — on completion it shows "Ready for your plan?" + an "Open your plan" CTA → /the-plan, with Watch again secondary. No activityVersions bump. Verified in preview (canopy visible, Kai serves the new 16.3 MB file, crossfade on all 5 advances, summary gone, CTA lands on /the-plan, no console errors).
+
+  <details>
+  <summary>Draft 38 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 38 — Post-launch polish (Kai variant swap + tree canopy fix + montage crossfade + Plan close)
+
+  Four small-to-medium fixes from Josh's 2026-06-29 walkthrough of the post-Draft-37 demo. All coupled enough to ship together.
+
+  #### Part A — Kai images: swap Variant 2 for the new blonde version
+
+  Team picked Variant 1 at the 2026-06-29 meeting as the keeper (more fem-leaning, fits the voice better). The current Variant 2 is now stale. Josh produced a new Kai image with **blonde hair + lighter complexion** to visually distinguish Kai from Sam (who is dark-haired/dark-complected — the team's "they look like relatives" feedback).
+
+  **File copy:**
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/New Voiceover/Kai Script/New lighter whiter kai.png` | `public/cast/images/kai-variant-2.png` (overwrite the existing file) |
+
+  The existing `kai-variant-1.png` stays exactly as-is — that's the team's locked pick.
+
+  **No castData.js change** — the `images` array on Kai's card already references `kai-variant-1.png` and `kai-variant-2.png` (per Draft 35). Replacing the file in place is sufficient; the renderer picks up the new content automatically.
+
+  If Code wants to update Variant 2's `alt` text in castData.js for accuracy: change from *"Kai, character design variant 2"* to *"Kai, character design variant 2 (blonde / lighter complexion)"*. Optional polish.
+
+  #### Part B — Tree SVG canopy clipping fix
+
+  **The bug:** in the stage 5 SVG, the canopy's topmost paths extend to **y = -22**, but the viewBox is `0 0 400 600`. Everything above y = 0 gets clipped by the viewBox. Result: the canopy appears cut off at the top in both the demo "Growing your roots" preview and the montage. Not a CSS issue — it's the SVG itself.
+
+  **The fix:** extend the viewBox vertically by ~30 units on the top. The cleanest one-line change is to update each tree-stage SVG's viewBox from `0 0 400 600` to `0 -30 400 630`. That gives the canopy ~30 units of headroom while keeping the bottom (roots) unchanged and the trunk anchor at the same coordinate position.
+
+  **Files to update** (all six):
+
+  - `src/assets/tree/tree-stage-0.svg`
+  - `src/assets/tree/tree-stage-1.svg`
+  - `src/assets/tree/tree-stage-2.svg`
+  - `src/assets/tree/tree-stage-3.svg`
+  - `src/assets/tree/tree-stage-4.svg`
+  - `src/assets/tree/tree-stage-5.svg`
+
+  Each file: change the root `<svg>` element's `viewBox` attribute from `"0 0 400 600"` to `"0 -30 400 630"`. Two-character edit per file.
+
+  **Regenerate `src/lib/treeStages.js`** after the viewBox change. The extracted geometry doesn't change, but if `extract-tree-stages.mjs` happens to read viewBox into the output (depends on the script's internals), regenerating ensures consistency.
+
+  **Spot-check** the demo's Growing-your-roots preview at stage 5 and the montage at stage 5 to confirm the top of the canopy is visible. Should be a clear visual fix.
+
+  **Note on horizontal:** the SVG content extends near the left/right edges too. If Code finds horizontal clipping during the spot-check, extend the viewBox to `-10 -30 420 630` (adds 10 units on each side, recenters horizontally). Likely not needed but worth noting.
+
+  #### Part C — Growth montage: crossfade overlay between stages (eliminate the blank flicker)
+
+  **The bug:** in `TreeProgressMontage`, when the auto-play advances from stage N to stage N+1, the SVG re-renders with the new stage's paths. During React's reconciliation + the new paths starting from `opacity: 0 / stroke-dashoffset: 1`, there's a brief blank moment where the previous stage is gone but the new stage hasn't started fading in. Reads as flicker.
+
+  **The fix:** crossfade overlay during stage transitions. Both the previous stage and the new stage render simultaneously during the transition window; the previous stage fades out while the new stage fades in.
+
+  **File:** `src/components/TreeProgressMontage.jsx`.
+
+  **Implementation pattern:**
+
+  1. Add a `previousStage` state alongside the existing `stage` state.
+  2. When advancing stage (e.g., 2 → 3), set `previousStage = 2` and `stage = 3` simultaneously.
+  3. Render BOTH stage trees in the SVG output during the transition window:
+     - Previous stage's `<g>` rendered with `style={{ opacity: isTransitioning ? 0 : 1 }}` and a CSS `transition: opacity 300ms ease-out`.
+     - New stage's `<g>` rendered with its existing fade-and-scale-in animation, but at slightly higher z-index so the new content visually layers on top of the old.
+  4. After the new stage's animation completes (~600ms after stage change), clear `previousStage` from state so the old SVG content unmounts.
+  5. Timing: the previous stage's fade-out (~300ms) should overlap with the first half of the new stage's fade-in (~600ms total). The 300ms overlap is what eliminates the blank gap.
+
+  **Reduced-motion respect** stays the same — when `prefers-reduced-motion: reduce`, skip transitions and jump to the final stage state.
+
+  **Spot-check** by playing the montage end-to-end. Each stage advance should feel like a smooth growth-on-top rather than a blank-and-reappear. Stage 5 (which has 30 blossoms) is the highest-risk transition since the fade-out of stage 4 needs to land before the blossoms start cascading in.
+
+  #### Part D — Remove "This is what you built" summary section; replace montage closer
+
+  Two coupled copy + structure changes on the post-montage experience.
+
+  ##### D.1 — Remove the SessionSummary section from the /demo final-reveal preview
+
+  The "This is what you built" summary (Part G of Draft 37) was demo-mode-only and renders below the montage today. Pull it out of the /demo preview entirely for now. The summary's logical purpose was to bridge the montage to The Plan — but it duplicates what The Plan itself will surface (the kid's outputs pulled forward). Better to delete it and let The Plan be the destination.
+
+  **File:** `src/pages/DemoPage.jsx` (the Final reveal preview section).
+
+  **Change:** drop the SessionSummary component from the preview section. The `SessionSummary.jsx` component file itself can stay in the codebase (might be useful later) — just don't render it here.
+
+  ##### D.2 — Replace the montage closer with "Ready for your plan?" → /the-plan
+
+  After the montage finishes, instead of transitioning to the SessionSummary block, end the montage with a single closing CTA.
+
+  **File:** `src/components/TreeProgressMontage.jsx` (or wherever the post-montage end state renders).
+
+  **Change:** when the montage completes (after the final "Look how far you've come" caption + the bloom cascade + the radial glow), render below the tree:
+
+  > **Ready for your plan?**
+  >
+  > [Button: "Open your plan"] → routes to `/the-plan`
+
+  The heading in `text-2xl font-semibold text-ctac-navy`. The button as a primary CTA (`bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full px-8 py-4 text-lg`). The "Watch again" button (from Draft 37 Part C.3) can stay below this CTA or move next to it as a secondary affordance — Code's call.
+
+  The `/the-plan` route placeholder from Draft 37 Part H.2 stays in place; this just hooks the new closing CTA to it.
+
+  #### What does NOT change
+
+  - Kai Variant 1 image (kept exactly as today).
+  - All other cast cards (Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson, Family Photo).
+  - The growth montage timing/pacing (~7-second timeline), text overlays, CSS background warm-shift, radial glow — all stay as Draft 37 spec'd them.
+  - The CTAC palette swap, tree color choices, blossom counts — all Draft 37 work preserved.
+  - The six activities themselves, the export pipeline, data shapes — untouched.
+  - No `activityVersions.js` bump (DemoPage + components, not activities).
+
+  #### Out of scope (Part E candidates, deferred)
+
+  - **The Plan demo build itself.** Separate scope, larger build. See the design thinking below for what pulls forward.
+  - **SessionSummary component as a reusable building block.** The file is staying in the codebase for potential reuse if The Plan or some other surface ever wants to show the kid's outputs.
+  - **Polishing the Kai card layout** if the new blonde Variant 2 makes the two-variant grid feel uneven. Visual tweak if needed after the swap.
+
+  **Approved by:** Josh, 2026-06-29.
+
+  *End of Draft 38.*
+
+  </details>
+
 - **`70f2d41` · 2026-06-29** — Who I Am Poem **v2.5 → v2.6**. Removed the empty "I am ___" placeholder slots from the fill-in view entirely. Draft 36 (v2.5) had replaced the live line-1 echo with a blank "I am ___" slot to keep the 10-line shape visible — but Josh flagged that from the participant's side, before the poem is produced, those slots just read as broken/confusing. The mirror lines (6 + 10) still render on the finished keepsake card, where the repetition is the structural payoff. Dropped the now-unused `MirroredLine` component. Verified in preview: input view shows 0 placeholder slots, finished keepsake still repeats line 1. No data-shape change.
 
 - **`59ec7fd` + `98071b6` · 2026-06-29** — Draft 37: the CTAC brand makeover + end-of-session reveal — the biggest draft yet, shipped in two commits. **Commit 1 (palette + tree, `59ec7fd`):** added the CTAC palette as Tailwind tokens (`ctac-teal` primary #00A79D, `ctac-navy` display, `ctac-green/orange/purple`) and swapped the app's amber UI → CTAC teal across 48 .jsx files (CTAs, inputs, pills, borders, accents) per Ginny's "more blue green tones." Kept warm/clinical (per spec): the Allies Practical wedge (amber, pending Stephanie's sign-off), the Emotional/Social wedges, and the bold small-net caption; tree colors come from the SVGs. Replaced the six tree-stage SVGs with Claude Design's CTAC-refreshed set (greens #1B9445/#8BC53F/#147A38, blossom oranges #FDC030/#E0950F, amplified stage 4+5, stage 5 now 30 blossom clusters; sky/sun/cloud removed) and made extract-tree-stages.mjs write treeStages.js directly, then regenerated. **Commit 2 (reveal, `98071b6`):** new `TreeProgressMontage` — auto-plays the tree 0→5 on a non-linear timeline with synced fade captions ("This is where you started." → "Here's what you've built." → "Look how far you've come."), a CSS cream→peach background warm-shift, and a radial glow at the bloom; Skip + Watch again; reduced-motion safe. New `SessionSummary` ("This is what you built") — six cards (Self-Reflection, poem, a compact TrampolineNet + Strengthen commitments, Belonging Skills buckets, Getting Unstuck thoughts, the Letter), `demoMode` synthetic kid (original poem/letter per the published-poet lock), "Ready for The Plan?" CTA + print. New `/the-plan` placeholder route. New /demo "Final reveal preview" section (Play → montage → summary, + a "The Plan — coming soon" card), inserted between "Growing your roots" and "Data export." Fonts NOT swapped (out of scope). No data-shape/export change; no activity version bump (Part H.3). Verified via preview: /demo shows 0 amber / 15 teal CTAs, stage-5 tree = 180 CTAC-orange blossoms, full montage→summary→/the-plan flow, no console errors. Cleanup queue gained: The Plan activity build, real flow integration, Allies Practical color harmonization (loop in Stephanie), and fonts (Fira/Marselis).
@@ -2059,120 +2178,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 38 — Post-launch polish (Kai variant swap + tree canopy fix + montage crossfade + Plan close)
-
-Four small-to-medium fixes from Josh's 2026-06-29 walkthrough of the post-Draft-37 demo. All coupled enough to ship together.
-
-#### Part A — Kai images: swap Variant 2 for the new blonde version
-
-Team picked Variant 1 at the 2026-06-29 meeting as the keeper (more fem-leaning, fits the voice better). The current Variant 2 is now stale. Josh produced a new Kai image with **blonde hair + lighter complexion** to visually distinguish Kai from Sam (who is dark-haired/dark-complected — the team's "they look like relatives" feedback).
-
-**File copy:**
-
-| Source | Destination |
-|---|---|
-| `Video Content/New Voiceover/Kai Script/New lighter whiter kai.png` | `public/cast/images/kai-variant-2.png` (overwrite the existing file) |
-
-The existing `kai-variant-1.png` stays exactly as-is — that's the team's locked pick.
-
-**No castData.js change** — the `images` array on Kai's card already references `kai-variant-1.png` and `kai-variant-2.png` (per Draft 35). Replacing the file in place is sufficient; the renderer picks up the new content automatically.
-
-If Code wants to update Variant 2's `alt` text in castData.js for accuracy: change from *"Kai, character design variant 2"* to *"Kai, character design variant 2 (blonde / lighter complexion)"*. Optional polish.
-
-#### Part B — Tree SVG canopy clipping fix
-
-**The bug:** in the stage 5 SVG, the canopy's topmost paths extend to **y = -22**, but the viewBox is `0 0 400 600`. Everything above y = 0 gets clipped by the viewBox. Result: the canopy appears cut off at the top in both the demo "Growing your roots" preview and the montage. Not a CSS issue — it's the SVG itself.
-
-**The fix:** extend the viewBox vertically by ~30 units on the top. The cleanest one-line change is to update each tree-stage SVG's viewBox from `0 0 400 600` to `0 -30 400 630`. That gives the canopy ~30 units of headroom while keeping the bottom (roots) unchanged and the trunk anchor at the same coordinate position.
-
-**Files to update** (all six):
-
-- `src/assets/tree/tree-stage-0.svg`
-- `src/assets/tree/tree-stage-1.svg`
-- `src/assets/tree/tree-stage-2.svg`
-- `src/assets/tree/tree-stage-3.svg`
-- `src/assets/tree/tree-stage-4.svg`
-- `src/assets/tree/tree-stage-5.svg`
-
-Each file: change the root `<svg>` element's `viewBox` attribute from `"0 0 400 600"` to `"0 -30 400 630"`. Two-character edit per file.
-
-**Regenerate `src/lib/treeStages.js`** after the viewBox change. The extracted geometry doesn't change, but if `extract-tree-stages.mjs` happens to read viewBox into the output (depends on the script's internals), regenerating ensures consistency.
-
-**Spot-check** the demo's Growing-your-roots preview at stage 5 and the montage at stage 5 to confirm the top of the canopy is visible. Should be a clear visual fix.
-
-**Note on horizontal:** the SVG content extends near the left/right edges too. If Code finds horizontal clipping during the spot-check, extend the viewBox to `-10 -30 420 630` (adds 10 units on each side, recenters horizontally). Likely not needed but worth noting.
-
-#### Part C — Growth montage: crossfade overlay between stages (eliminate the blank flicker)
-
-**The bug:** in `TreeProgressMontage`, when the auto-play advances from stage N to stage N+1, the SVG re-renders with the new stage's paths. During React's reconciliation + the new paths starting from `opacity: 0 / stroke-dashoffset: 1`, there's a brief blank moment where the previous stage is gone but the new stage hasn't started fading in. Reads as flicker.
-
-**The fix:** crossfade overlay during stage transitions. Both the previous stage and the new stage render simultaneously during the transition window; the previous stage fades out while the new stage fades in.
-
-**File:** `src/components/TreeProgressMontage.jsx`.
-
-**Implementation pattern:**
-
-1. Add a `previousStage` state alongside the existing `stage` state.
-2. When advancing stage (e.g., 2 → 3), set `previousStage = 2` and `stage = 3` simultaneously.
-3. Render BOTH stage trees in the SVG output during the transition window:
-   - Previous stage's `<g>` rendered with `style={{ opacity: isTransitioning ? 0 : 1 }}` and a CSS `transition: opacity 300ms ease-out`.
-   - New stage's `<g>` rendered with its existing fade-and-scale-in animation, but at slightly higher z-index so the new content visually layers on top of the old.
-4. After the new stage's animation completes (~600ms after stage change), clear `previousStage` from state so the old SVG content unmounts.
-5. Timing: the previous stage's fade-out (~300ms) should overlap with the first half of the new stage's fade-in (~600ms total). The 300ms overlap is what eliminates the blank gap.
-
-**Reduced-motion respect** stays the same — when `prefers-reduced-motion: reduce`, skip transitions and jump to the final stage state.
-
-**Spot-check** by playing the montage end-to-end. Each stage advance should feel like a smooth growth-on-top rather than a blank-and-reappear. Stage 5 (which has 30 blossoms) is the highest-risk transition since the fade-out of stage 4 needs to land before the blossoms start cascading in.
-
-#### Part D — Remove "This is what you built" summary section; replace montage closer
-
-Two coupled copy + structure changes on the post-montage experience.
-
-##### D.1 — Remove the SessionSummary section from the /demo final-reveal preview
-
-The "This is what you built" summary (Part G of Draft 37) was demo-mode-only and renders below the montage today. Pull it out of the /demo preview entirely for now. The summary's logical purpose was to bridge the montage to The Plan — but it duplicates what The Plan itself will surface (the kid's outputs pulled forward). Better to delete it and let The Plan be the destination.
-
-**File:** `src/pages/DemoPage.jsx` (the Final reveal preview section).
-
-**Change:** drop the SessionSummary component from the preview section. The `SessionSummary.jsx` component file itself can stay in the codebase (might be useful later) — just don't render it here.
-
-##### D.2 — Replace the montage closer with "Ready for your plan?" → /the-plan
-
-After the montage finishes, instead of transitioning to the SessionSummary block, end the montage with a single closing CTA.
-
-**File:** `src/components/TreeProgressMontage.jsx` (or wherever the post-montage end state renders).
-
-**Change:** when the montage completes (after the final "Look how far you've come" caption + the bloom cascade + the radial glow), render below the tree:
-
-> **Ready for your plan?**
->
-> [Button: "Open your plan"] → routes to `/the-plan`
-
-The heading in `text-2xl font-semibold text-ctac-navy`. The button as a primary CTA (`bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full px-8 py-4 text-lg`). The "Watch again" button (from Draft 37 Part C.3) can stay below this CTA or move next to it as a secondary affordance — Code's call.
-
-The `/the-plan` route placeholder from Draft 37 Part H.2 stays in place; this just hooks the new closing CTA to it.
-
-#### What does NOT change
-
-- Kai Variant 1 image (kept exactly as today).
-- All other cast cards (Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson, Family Photo).
-- The growth montage timing/pacing (~7-second timeline), text overlays, CSS background warm-shift, radial glow — all stay as Draft 37 spec'd them.
-- The CTAC palette swap, tree color choices, blossom counts — all Draft 37 work preserved.
-- The six activities themselves, the export pipeline, data shapes — untouched.
-- No `activityVersions.js` bump (DemoPage + components, not activities).
-
-#### Out of scope (Part E candidates, deferred)
-
-- **The Plan demo build itself.** Separate scope, larger build. See the design thinking below for what pulls forward.
-- **SessionSummary component as a reusable building block.** The file is staying in the codebase for potential reuse if The Plan or some other surface ever wants to show the kid's outputs.
-- **Polishing the Kai card layout** if the new blonde Variant 2 makes the two-variant grid feel uneven. Visual tweak if needed after the swap.
-
-**Approved by:** Josh, 2026-06-29.
-
-*End of Draft 38.*
 
 ---
 
