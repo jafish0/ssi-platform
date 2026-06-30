@@ -323,13 +323,9 @@ export default function DemoPage() {
       {/* Learning Skills for Belonging — the psychoeducation track that
           wraps the six activities (Adrienne's script; Kai narrates). */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-5">
           Learning Skills for Belonging
         </h2>
-        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          The psychoeducation track that wraps the six activities. Kai narrates
-          all eight scenes — 6:27 of voiceover, recorded and paired with the script below.
-        </p>
 
         <div className="space-y-4">
           {CAST.filter((c) => c.show === 'learning-skills').map((character) => (
@@ -762,10 +758,6 @@ function CastCard({ character }) {
                         <span className="font-semibold text-ctac-navy not-italic">{fmt(totalSecs)}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-slate-600 mb-2">
-                      Recorded through the Voice Changer pipeline (Josh records → ElevenLabs →
-                      Kai’s locked voice). Each scene introduces or follows one of the six activities.
-                    </p>
                   </div>
                 )}
                 <div className="divide-y divide-slate-100">

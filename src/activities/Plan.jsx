@@ -226,7 +226,7 @@ export default function Plan({ onSave = console.log, planData }) {
   if (screen === 2) {
     return (
       <ScreenShell
-        heading="Skills you said you’d try."
+        heading="New Skills to Try"
         sub="Pick who you’ll try each one with, and when."
       >
         <div className="space-y-4">
