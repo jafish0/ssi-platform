@@ -95,6 +95,7 @@ const ACTIVITY_PREFIXES = {
   WhoIAmPoem: 'poem',
   LetterBuilder: 'letter',
   SelfReflection: 'reflect',
+  Plan: 'plan',
 }
 
 // ---------- Column planning ----------
@@ -827,6 +828,108 @@ export function planWideColumns(snapshot) {
                 })
               }
             }
+          } else if (componentName === 'Plan') {
+            // Plan v1.0 (Draft 39). Payload:
+            //   { skills_to_try: [{ skill_id, skill_text, who, who_is_ally,
+            //       when, when_is_freetext }],
+            //     first_ally_outreach: { ally, when, when_is_freetext } | null,
+            //     letter_reflection: string | null }
+            // The variable-length skills list expands into fixed columns by
+            // the known Belonging Skills registry (bs1..bs7) — same pattern
+            // as BSS's per-item export. (These columns only populate once the
+            // Plan is part of a published intervention snapshot; the demo
+            // sandbox doesn't feed the export.)
+            const findSkill = (rv, sid) =>
+              (rv?.skills_to_try || []).find((s) => s.skill_id === sid) || null
+            cols.push(
+              {
+                name: sanitizeCol(`${prefix}_completed`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'completed',
+                prompt: 'Did the participant save the plan?',
+                allowed_values: '0 or 1',
+                notes: 'Plan v1.0',
+                extract: (rv) => (rv ? 1 : 0),
+              },
+              {
+                name: sanitizeCol(`${prefix}_n_skills`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'n_skills',
+                prompt: 'Count of skills the participant committed to (who + when filled).',
+                allowed_values: 'integer',
+                notes: 'Plan v1.0',
+                extract: (rv) => (rv?.skills_to_try || []).length,
+              },
+            )
+            for (let n = 1; n <= 7; n++) {
+              const sid = `bs${n}`
+              cols.push(
+                {
+                  name: sanitizeCol(`${prefix}_skill_${n}_text`),
+                  source_token_key: tk,
+                  item_type: 'custom_activity',
+                  sub_id: `skill_${sid}.text`,
+                  prompt: `Plan skill ${sid}: title (blank unless committed to).`,
+                  allowed_values: 'free text',
+                  notes: 'Plan v1.0',
+                  extract: (rv) => findSkill(rv, sid)?.skill_text || '',
+                },
+                {
+                  name: sanitizeCol(`${prefix}_skill_${n}_who`),
+                  source_token_key: tk,
+                  item_type: 'custom_activity',
+                  sub_id: `skill_${sid}.who`,
+                  prompt: `Plan skill ${sid}: who the kid will try it with.`,
+                  allowed_values: 'free text (ally name or own text)',
+                  notes: 'Plan v1.0',
+                  extract: (rv) => findSkill(rv, sid)?.who || '',
+                },
+                {
+                  name: sanitizeCol(`${prefix}_skill_${n}_when`),
+                  source_token_key: tk,
+                  item_type: 'custom_activity',
+                  sub_id: `skill_${sid}.when`,
+                  prompt: `Plan skill ${sid}: when the kid will try it.`,
+                  allowed_values: 'free text (chip value or own text)',
+                  notes: 'Plan v1.0',
+                  extract: (rv) => findSkill(rv, sid)?.when || '',
+                },
+              )
+            }
+            cols.push(
+              {
+                name: sanitizeCol(`${prefix}_first_ally`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'first_ally',
+                prompt: 'First person the kid will reach out to.',
+                allowed_values: 'free text (ally name)',
+                notes: 'Plan v1.0',
+                extract: (rv) => rv?.first_ally_outreach?.ally || '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_first_when`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'first_when',
+                prompt: 'When the kid will reach out to the first ally.',
+                allowed_values: 'free text',
+                notes: 'Plan v1.0',
+                extract: (rv) => rv?.first_ally_outreach?.when || '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_letter_reflection`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'letter_reflection',
+                prompt: 'Optional Screen 5 reflection ("What sticks out?").',
+                allowed_values: 'free text or blank',
+                notes: 'Plan v1.0',
+                extract: (rv) => rv?.letter_reflection || '',
+              },
+            )
           }
           // Always include a JSON fallback column so nothing is lost.
           cols.push({

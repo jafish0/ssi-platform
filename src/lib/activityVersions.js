@@ -105,6 +105,13 @@ export const ACTIVITY_VERSIONS = {
       '2026-05-11 · v1.0 — initial demo release.',
     ],
   },
+  plan: {
+    version: 'v1.0',
+    updated: '2026-06-30',
+    changelog: [
+      '2026-06-30 · v1.0 — Draft 39. Initial build of "Your Plan," the seventh Ready for Roots activity. 8-screen paginated flow: intro → skills to try (pulls Belonging Skills willing-to-try; kid picks who + when per skill) → thoughts to flip (read-only, from Getting Unstuck picks) → people in my corner (kept allies by type + Strengthen commitments; kid picks one ally + when to reach out first) → read your letter back (+ optional reflection) → who you are (full poem, read-only) → review → saved (PNG + jsPDF 5-page keepsake). Reads synthetic per-kid content from src/lib/planDemoData.js (real cross-activity pull-forward deferred per Draft 21). Save payload: { skills_to_try[], first_ally_outreach, letter_reflection, saved_at }. Replaces the /the-plan placeholder route (now redirects to /demo/sandbox/plan).',
+    ],
+  },
   posttest: {
     version: 'v1.0',
     updated: '2026-05-13',

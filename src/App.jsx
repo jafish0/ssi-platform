@@ -20,7 +20,6 @@ import AdminExportsPage from './pages/AdminExportsPage.jsx'
 import AdminFeedbackPage from './pages/AdminFeedbackPage.jsx'
 import DemoPage from './pages/DemoPage.jsx'
 import DemoSandboxPage from './pages/DemoSandboxPage.jsx'
-import ThePlanPage from './pages/ThePlanPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -117,9 +116,10 @@ export default function App() {
       {/* TEMP public demo. Remove these routes when no longer needed. */}
       <Route path="/demo" element={<DemoPage />} />
       <Route path="/demo/sandbox/:activityId" element={<DemoSandboxPage />} />
-      {/* TEMP placeholder for The Plan (Draft 37). Replace when the real
-          Plan activity ships. */}
-      <Route path="/the-plan" element={<ThePlanPage />} />
+      {/* The Plan now ships as the seventh activity (Draft 39). The
+          /the-plan entry point (montage closer CTA) redirects into the
+          sandbox-hosted activity. */}
+      <Route path="/the-plan" element={<Navigate to="/demo/sandbox/plan" replace />} />
       <Route path="/admin/*" element={<AdminRoutes />} />
       <Route
         path="/preview/:id"

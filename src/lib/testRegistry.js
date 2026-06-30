@@ -18,6 +18,7 @@ const SelfReflection = lazy(() => import('../activities/SelfReflection.jsx'))
 const BelongingSkillsSort = lazy(() => import('../activities/BelongingSkillsSort.jsx'))
 const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
+const Plan = lazy(() => import('../activities/Plan.jsx'))
 const Pretest = lazy(() => import('../activities/Pretest.jsx'))
 const Posttest = lazy(() => import('../activities/Posttest.jsx'))
 const FollowUp = lazy(() => import('../activities/FollowUp.jsx'))
@@ -70,6 +71,15 @@ export const TEST_REGISTRY = [
     category: 'Ready for Roots activity',
     description: 'Single-screen free write — no scaffolding, no pull-forward.',
     component: LetterBuilder,
+    mockProps: {},
+  },
+  {
+    id: 'plan',
+    displayName: 'Your Plan',
+    category: 'Ready for Roots activity',
+    description:
+      'The closing activity: turns the kid\'s work across the other six into a takeable action plan — skills to try (who + when), thoughts to flip, people in their corner, a letter callback + poem anchor, and a saveable PNG/PDF keepsake. Demo data for now (real pull-forward lands with flow integration).',
+    component: Plan,
     mockProps: {},
   },
   {
