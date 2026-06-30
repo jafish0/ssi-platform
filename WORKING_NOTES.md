@@ -39,6 +39,309 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`ba00403` · 2026-06-30** — Draft 39: built **“Your Plan”**, the seventh Ready for Roots activity (the action plan that’s been parked since Round 4). An 8-screen paginated activity that turns the kid’s work across the other six into a takeable commitment document: intro → **skills to try** (each willing-to-try skill gets a *who* dropdown from the kept allies + a *when* chip group) → **thoughts to flip** (read-only flip cards from the Getting Unstuck picks) → **people in my corner** (kept allies by support type + Strengthen commitments + pick-one-ally-to-reach-out-first) → **read your letter back** (+ optional “What sticks out?” reflection) → **who you are** (the full poem) → **review** → **saved**, with a **PNG** keepsake (cream keepsake SVG via the existing rasterizer) and a **5-page PDF** (jsPDF, lazy-loaded: title / commitments / mindset / letter / poem). Reads synthetic content from `src/lib/planDemoData.js` (real cross-activity pull-forward stays deferred per Draft 21 — when the flow is stitched, the demo reads swap for real per-kid reads and the component is unchanged). Save payload: `{ skills_to_try[], first_ally_outreach, letter_reflection, saved_at }`. Registered in testRegistry so it auto-lists on /demo (now **Activities (7)**) and serves at `/demo/sandbox/plan`; `activityVersions` gains plan v1.0; `exportFlatten` gains the `plan_*` columns (forward-looking — they populate once the Plan is in a published snapshot). `/the-plan` (the montage closer CTA from Draft 38) now redirects into the real activity; the placeholder page was removed. Fonts unchanged (out of scope). Verified end-to-end in preview: all 8 screens, Continue gating, chips/selects, the save payload matches spec, PNG download fires + jsPDF makes a valid multi-page blob, /the-plan redirects, cold-load console clean. **Cleanup queue:** the long-standing “BSS pull-forward to action plan” and “Allies Strengthen pull-forward” items are now addressed by the Plan.
+
+  <details>
+  <summary>Draft 39 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 39 — Build "Your Plan" (The Plan activity demo)
+
+  The seventh activity in the Ready for Roots arc — the one that's been parked as "the action plan, coming when the flow integrates" since Round 4. This draft builds it now as a standalone activity with hardcoded synthetic content, mirroring the same /demo/sandbox pattern as the other six. When real cross-activity flow integration eventually lands, the synthetic content reads get swapped for real persisted reads.
+
+  The Plan's job: turn the kid's work across the six activities into a single, takeable, action-oriented commitment document. *"You did the work — here's what you're going to do with it."*
+
+  **Three pulled-forward sections + a saveable keepsake.**
+
+  **Approved by:** Josh, 2026-06-29.
+
+  ---
+
+  #### Part A — New activity file: `src/activities/Plan.jsx`
+
+  Paginated activity following the same shape as the other six. **Eight screens:**
+
+  1. **Intro** — sets the frame.
+  2. **Skills to try** (pulls from BSS willing-to-try) — kid commits to who + when per skill.
+  3. **Thoughts to flip** (pulls from Getting Unstuck picks) — read-only, no inputs.
+  4. **People in my corner** (pulls from Allies / Safety Net) — kid picks one ally + when to reach out first.
+  5. **Read your letter back** (pulls from Letter to Another Youth) — read-only, with an optional reflection prompt.
+  6. **Who you are** (pulls from Who I Am Poem) — the kid's full poem as a grounding anchor, read-only.
+  7. **Your Plan** — review screen showing everything they committed to.
+  8. **Saved** — confirmation + save-as-image (PNG) + save-as-PDF affordances.
+
+  ##### Screen 1 — Intro
+
+  Heading: *"Your Plan."*
+
+  Body copy:
+  > *You worked through a lot. Now let's turn what you found into something you can carry with you. We're going to pull together the skills you wanted to try, the thoughts you've been working on, and the people in your corner — and you'll decide what you want to do first.*
+
+  Continue button → Screen 2.
+
+  ##### Screen 2 — Skills to try (the core action-generating section)
+
+  Heading: *"Skills you said you'd try."*
+
+  Sub-line: *"Pick who you'll try each one with, and when."*
+
+  For each willing-to-try skill (from BSS payload's `willing_to_try` array — or the demo synthetic equivalent), render a card containing:
+
+  - **Skill name** as the card title (e.g., *"Active Listening"*).
+  - A short helper line under the title — could be the skill's definition pulled from the BSS skill registry, or omitted if it makes the card too dense. (Code's call — recommend including for clarity.)
+  - **"Who could you try this with?"** — a `<select>` populated from the kid's kept allies (from Allies payload's `allies` filtered by `removed_via_inspect` exclusion). Options: each ally's display name, plus a final "Someone else…" option that reveals a text input.
+  - **"When could you try it?"** — a chip group with these options: `"This week"`, `"This month"`, `"When the moment shows up"`, `"Other…"`. Tapping "Other…" reveals a short text input.
+
+  Stack the cards vertically. If the demo synthetic data has 3 skills, that's 3 cards on this screen. If a real kid had 6 willing-to-try skills, that's 6 cards — still vertical.
+
+  **Skip / continue logic:** the kid doesn't have to fill in *every* card. Continue is enabled as soon as the kid completes one full (skill + who + when) commitment, OR they can tap a separate "Skip for now" button that advances without saving any plan commitments. (Same flexibility as Strengthen step in Allies — don't force completion.)
+
+  Continue button → Screen 3.
+
+  ##### Screen 3 — Thoughts to flip (read-only)
+
+  Heading: *"Thoughts you've been working on."*
+
+  Sub-line: *"When these show up next, here's what you can tell yourself."*
+
+  For each Getting Unstuck `selected: true` appraisal (the picked-and-worked thoughts), render a card:
+
+  - **"When this comes up:"** with the appraisal's `text` (the original absolute statement) below in italic-quoted style.
+  - **"Tell yourself:"** with the kid's own `response` (if `strategy === 'challenge'`) or `and_statement` (if `strategy === 'both_and'`), below in bold ctac-navy.
+  - Subtle visual distinction so it reads as a flippable pair, not just two paragraphs.
+
+  No inputs on this screen. The work was already done in Getting Unstuck; this surfaces it as a pocket-card reminder.
+
+  Continue button → Screen 4.
+
+  ##### Screen 4 — People in my corner
+
+  Heading: *"Your people."*
+
+  **Top block — kept allies grouped by support type:**
+
+  Three small sections (Practical / Emotional / Social), each listing the kid's kept allies from that support type with their existing per-type color coding (amber / rose / sky). Compact horizontal layout if there's space, vertical if mobile.
+
+  **Strengthen commitments callout:**
+
+  Below the allies, surface each Strengthen commitment the kid made in Allies as a quoted callout — e.g., *"For practical support: I'll ask Foster Mom to drive me to practice this week."* — color-coded by type. Same pattern as the Allies Final Review screen.
+
+  **The action prompt:**
+
+  Below the commitments, one prompt:
+
+  > *Pick one ally to reach out to first.*
+
+  - A `<select>` populated from all the kept allies (no support-type grouping — just a flat list).
+  - **"When will you reach out?"** — same chip group as Screen 2 (`"This week"` / `"This month"` / `"When the moment shows up"` / `"Other…"`).
+
+  Continue button → Screen 5.
+
+  ##### Screen 5 — Read your letter back
+
+  Heading: *"Read your letter back."*
+
+  Sub-line: *"You wrote this for another kid. Now read it as if you wrote it for yourself."*
+
+  Below the sub-line, the kid's letter text rendered in a quoted keepsake-card layout. **Reuse the existing keepsake-card styling from Letter v2.3** so the surface visually echoes where they originally saved it — cream background, soft border, italic-quote treatment.
+
+  Below the letter, a small **optional** reflection prompt:
+
+  > *What sticks out?*
+
+  A short text input (200-char max) below the prompt, clearly labeled as optional with a small *"Skip if you'd rather not"* helper text beside it. Saves to `plan_letter_reflection` if filled, null otherwise.
+
+  Continue button advances regardless of whether the kid fills the reflection.
+
+  Continue button → Screen 6.
+
+  ##### Screen 6 — Who you are (the full poem)
+
+  Heading: *"Who you are."*
+
+  Sub-line: *"When the work gets hard, come back to this. Take it with you."*
+
+  Below the sub-line, the kid's **full Who I Am Poem** rendered in the same keepsake-card layout the poem activity uses for its final save view (line-by-line, with the 10-line structure including the mirrored lines 6 and 10 showing line 1's text). Same warm cream background as the poem's keepsake.
+
+  No inputs. Read-only grounding moment.
+
+  Continue button → Screen 7.
+
+  ##### Screen 7 — Your Plan (review)
+
+  Heading: *"Here's your plan."*
+
+  Below the heading, a comprehensive summary card showing everything they committed to and everything they're carrying with them:
+
+  - **Skills you'll try** — list of the skill + who + when commitments from Screen 2.
+  - **Thoughts to flip** — abbreviated version of Screen 3, just the "Tell yourself" lines without the original-thought header.
+  - **First ally to reach out to** — the picked ally + when from Screen 4.
+  - **Letter to yourself** — short quoted excerpt from the letter (first sentence or first ~120 chars + "…" if longer; the full letter is saved separately in the export and surfaces in full on the PDF).
+  - **Who you are** — the kid's full poem rendered the same way as on Screen 6.
+
+  Styled as a single long keepsake-card with a subtle border, ctac-teal-50 background, soft shadow, generous vertical spacing between sections. This is the page the kid would save / print / hand to their case worker.
+
+  Below the keepsake card:
+
+  - A primary "Save my plan" button → triggers Screen 8.
+  - A secondary "Back" link to Screen 6 if they want to change something on an earlier screen.
+
+  ##### Screen 8 — Saved + keepsake (PNG and PDF)
+
+  Heading: *"Saved."*
+
+  Body: *"This is yours. Come back to it any time."*
+
+  Render:
+
+  - The same keepsake-card from Screen 7 (the kid's full plan).
+  - A **"Save as image (PNG)"** button — reuses `downloadSvgElementAsPng` or `downloadSvgStringAsPng` from `src/lib/imageDownload.js`. Generates a tall single-image PNG of the whole plan with footer *"Ready for Roots · {date}"*. Best for sharing on phone (text to a friend, save to camera roll).
+  - A **"Save as PDF"** button — generates a multi-page PDF using `jspdf` (already a transitive dependency in the project per Draft 11's `imageDownload.js`). Suggested PDF structure:
+    - **Page 1 (title page):** *"Your Plan"* heading, the kid's name placeholder (or generic *"Your Plan"* if no name is captured), today's date, the *"This is yours. Come back to it any time."* copy.
+    - **Page 2 (commitments):** Skills you'll try + First ally to reach out to.
+    - **Page 3 (mindset):** Thoughts to flip pairs.
+    - **Page 4 (letter):** The full letter text (not the excerpt — the whole thing).
+    - **Page 5 (poem):** The full 10-line poem.
+    - Footer on every page: *"Ready for Roots · {date} · Page N of 5"*.
+    - Use Arial / system sans throughout (font swap is out of scope per Draft 37).
+    - PDF filename: `ready-for-roots-plan-{YYYY-MM-DD}.pdf`.
+  - A **"Back to /demo"** link.
+
+  Both PNG and PDF render the same content, just optimized for different use cases:
+  - **PNG** = the kid's phone-shareable keepsake.
+  - **PDF** = the document a case worker, foster parent, or therapist can read or print.
+
+  #### Part B — Data shape
+
+  Save payload:
+
+  ```js
+  {
+    saved_at: "2026-06-29T...",
+    skills_to_try: [
+      {
+        skill_id: "active-listening",        // matches BSS skill registry
+        skill_text: "Active Listening",      // display copy at save time
+        who: "Foster Mom",                   // ally name OR text from "Someone else..."
+        who_is_ally: true,                   // false when "Someone else..." used
+        when: "This week",                   // one of the chip values OR text from "Other..."
+        when_is_freetext: false,
+      },
+      // ... one entry per skill the kid filled in
+    ],
+    first_ally_outreach: {
+      ally: "Mrs. Garcia",                   // ally name from the kept allies list
+      when: "This week",                     // same shape as above
+      when_is_freetext: false,
+    },
+    letter_reflection: null,                 // string OR null — Screen 5 optional input
+    // Note: thoughts-to-flip (Screen 3), letter callback (Screen 5 display), and
+    // identity anchor (Screen 6) are read-only views of other activities' outputs —
+    // nothing new saved for those beyond the optional letter_reflection.
+  }
+  ```
+
+  #### Part C — Export pipeline (`src/lib/exportFlatten.js`)
+
+  Add `plan_*` column mappings:
+
+  - `plan_completed` (bool: did the kid save the plan).
+  - `plan_n_skills` (int: count of skills the kid completed commitments for).
+  - `plan_skill_1_text` ... `plan_skill_8_text` (one per BSS item — only populated if that skill was in their willing-to-try AND they completed a commitment for it).
+  - `plan_skill_1_who` ... `plan_skill_8_who`.
+  - `plan_skill_1_when` ... `plan_skill_8_when`.
+  - `plan_first_ally`.
+  - `plan_first_when`.
+  - `plan_letter_reflection` (text or null — the optional Screen 5 reflection).
+
+  Pattern matches BSS's per-item export shape from commit `0415172` — the variable-length willing-to-try list expands cleanly into fixed-column form because BSS has a known 8-skill registry.
+
+  Add `plan: 'plan'` to the `SCALE_ABBREVIATIONS` constant in `exportFlatten.js`.
+
+  Add `plan: '_'` (or a sensible prefix) to `ACTIVITY_PREFIXES`.
+
+  #### Part D — Synthetic demo data (no real flow integration yet)
+
+  For the /demo/sandbox preview, the Plan needs to render with believable content. Since no real cross-activity persistence exists, hard-code a single synthetic kid's data in a new helper file: `src/lib/planDemoData.js`.
+
+  Suggested content:
+
+  **Willing-to-try skills (from BSS):**
+  1. *"Active Listening"*
+  2. *"Inclusive Language"*
+  3. *"Provide Support"*
+
+  **Picked thoughts (from Getting Unstuck):**
+  1. Original: *"I will never really feel like I belong."* / Tell yourself: *"I don't feel like I belong right now, AND I won't always feel this way."* (Both/And)
+  2. Original: *"I can't trust anyone."* / Tell yourself: *"There are people I can trust, even just a little bit, and trust can grow."* (Challenge)
+
+  **Kept allies:**
+  - Practical: Foster Mom, Coach Diaz
+  - Emotional: Foster Mom (multi-placed), Mrs. Garcia (favorite teacher)
+  - Social: Alex (best friend), Sam (cousin)
+
+  **Strengthen commitments:**
+  - Practical: *"I'll ask Coach Diaz for help with my homework this week."*
+  - Emotional: *"I'll text Mrs. Garcia when I'm having a rough day."*
+  - Social: *"I'll invite Alex to study with me on Friday."*
+
+  The Plan demo uses these as the source for Screens 2, 3, and 4. The kid's typed answers (Section A who/when, Section C first ally) save to localStorage in the sandbox for the duration of the demo session — same pattern as the other activities.
+
+  When real flow integration ships, this file gets replaced by a `useKidSession()` hook (or equivalent) that pulls real saved payloads from each activity. The components themselves don't change.
+
+  #### Part E — Activity registration
+
+  Register the Plan in `TEST_REGISTRY` (or wherever the activity registry lives — possibly `src/lib/activityVersions.js` + a route map):
+
+  - `id`: `'plan'`
+  - `display name`: `'Your Plan'`
+  - `category`: existing *'Ready for Roots activity'* category
+  - `route`: `/demo/sandbox/plan`
+  - `version`: `v1.0`
+
+  Add `plan` entry to `src/lib/activityVersions.js` at v1.0 with creation date and a one-line changelog (*"v1.0 — Initial Plan activity built (pulls forward from BSS willing-to-try, Getting Unstuck picks, Allies/Safety Net; saves who+when commitments per skill and first-ally outreach)."*)
+
+  Add to the /demo Activities section list so the team can find it.
+
+  #### Part F — Replace the /the-plan placeholder
+
+  The placeholder route from Draft 37 Part H.2 (and the closing CTA from Draft 38 Part D.2) currently goes to a "coming soon" page. Update the route handler so `/the-plan` redirects to (or wraps) `/demo/sandbox/plan` — the real activity is now the destination.
+
+  The "Open your plan" CTA at the end of the montage now lands the kid in the actual Plan activity.
+
+  #### Part G — Visual treatment
+
+  Match the rest of the platform per Draft 37's CTAC palette:
+
+  - Headings: `text-ctac-navy font-bold`.
+  - Primary CTAs: `bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full`.
+  - Soft surfaces: `bg-ctac-teal-50` with `border-ctac-teal-200`.
+  - Cards: rounded-2xl with soft drop-shadow.
+  - Per-type allies in their existing color coding (Practical amber, Emotional rose, Social sky).
+  - Keepsake card background: `bg-amber-50` or a cream color (warm, complements the teal) — gives it the "this is yours, take it" texture.
+
+  #### What does NOT change
+
+  - The six existing activities (Self-Reflection, Who I Am Poem, BSS, Allies, Getting Unstuck, Letter) — their flows + payloads + UIs untouched. The Plan reads from their saved outputs (or, for now, the synthetic demo data); it doesn't modify them.
+  - The Pretest / Posttest / FollowUp Survey items — unchanged.
+  - The growth montage + the /the-plan placeholder route from Drafts 37 + 38 — the placeholder gets replaced; the montage's closing CTA + transition stay as Draft 38 spec'd.
+  - The export pipeline structure — just gains the new `plan_*` columns.
+
+  #### Out of scope (deferred)
+
+  - **Real cross-activity flow integration.** Still deferred. This draft uses synthetic demo data. When the flow lands, the demo data file gets swapped for real `useKidSession()`-style reads.
+  - **Action-plan analytics** in the data export demo. Once real Plan submissions exist, the data export tab could surface "X% of kids completed at least one skill commitment" — but that needs real data first.
+  - **Cleanup queue updates.** The "BSS pull-forward to action plan" and "Allies Strengthen pull-forward" items from the Round 4 / Round 5 / Round 6 cleanup queues can now be marked as addressed (the Plan resolves both).
+
+  #### Now in scope (folded into v1.0 after the 2026-06-29 design discussion)
+
+  - **Letter callback screen (Screen 5)** with optional reflection prompt — surfaces the kid's full letter back to them for re-reading; the *"What sticks out?"* input is opt-in.
+  - **Identity anchor screen (Screen 6)** showing the kid's full Who I Am Poem as grounding before the review. Read-only, no inputs.
+  - **PNG + PDF export** on the saved screen — both ship Day 1. PNG for sharing on phone; PDF for case workers / foster parents. `jspdf` generates a 5-page document (title / commitments / mindset / letter / poem).
+
+  *End of Draft 39.*
+
+  </details>
+
 - **`48719d1` · 2026-06-29** — Draft 38: post-launch polish, four fixes from Josh's walkthrough of the post-Draft-37 demo. **(A) Kai Variant 2 image** — swapped in the new blonde/lighter-complexion render so Kai reads as visually distinct from Sam (the "they look like relatives" note); Variant 1 (the locked pick) unchanged, no castData.js change. **(B) Tree canopy clipping** — the stage-5 canopy reaches y ≈ -22, which the "0 0 400 600" viewBox clipped at the top; fixed the actual render viewBox in `TreeProgress.jsx` to "0 -30 400 630" (TreeProgress is data-driven from treeStages.js, so the SVG files' viewBox doesn't drive the app — but updated all six reference SVGs to match for parity). Roots/ground/trunk anchor unchanged. **(C) Montage crossfade** — killed the blank flicker between stages: each advance renders a static "ghost" of the outgoing stage underneath that fades out (~320ms) while the new stage draws in on top (verified the ghost fires on all 5 transitions). **(D) Closer rework** — removed the SessionSummary block from the /demo final-reveal preview (kept the component file for reuse); the montage now owns its closer — on completion it shows "Ready for your plan?" + an "Open your plan" CTA → /the-plan, with Watch again secondary. No activityVersions bump. Verified in preview (canopy visible, Kai serves the new 16.3 MB file, crossfade on all 5 advances, summary gone, CTA lands on /the-plan, no console errors).
 
   <details>
@@ -2178,304 +2481,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 39 — Build "Your Plan" (The Plan activity demo)
-
-The seventh activity in the Ready for Roots arc — the one that's been parked as "the action plan, coming when the flow integrates" since Round 4. This draft builds it now as a standalone activity with hardcoded synthetic content, mirroring the same /demo/sandbox pattern as the other six. When real cross-activity flow integration eventually lands, the synthetic content reads get swapped for real persisted reads.
-
-The Plan's job: turn the kid's work across the six activities into a single, takeable, action-oriented commitment document. *"You did the work — here's what you're going to do with it."*
-
-**Three pulled-forward sections + a saveable keepsake.**
-
-**Approved by:** Josh, 2026-06-29.
-
----
-
-#### Part A — New activity file: `src/activities/Plan.jsx`
-
-Paginated activity following the same shape as the other six. **Eight screens:**
-
-1. **Intro** — sets the frame.
-2. **Skills to try** (pulls from BSS willing-to-try) — kid commits to who + when per skill.
-3. **Thoughts to flip** (pulls from Getting Unstuck picks) — read-only, no inputs.
-4. **People in my corner** (pulls from Allies / Safety Net) — kid picks one ally + when to reach out first.
-5. **Read your letter back** (pulls from Letter to Another Youth) — read-only, with an optional reflection prompt.
-6. **Who you are** (pulls from Who I Am Poem) — the kid's full poem as a grounding anchor, read-only.
-7. **Your Plan** — review screen showing everything they committed to.
-8. **Saved** — confirmation + save-as-image (PNG) + save-as-PDF affordances.
-
-##### Screen 1 — Intro
-
-Heading: *"Your Plan."*
-
-Body copy:
-> *You worked through a lot. Now let's turn what you found into something you can carry with you. We're going to pull together the skills you wanted to try, the thoughts you've been working on, and the people in your corner — and you'll decide what you want to do first.*
-
-Continue button → Screen 2.
-
-##### Screen 2 — Skills to try (the core action-generating section)
-
-Heading: *"Skills you said you'd try."*
-
-Sub-line: *"Pick who you'll try each one with, and when."*
-
-For each willing-to-try skill (from BSS payload's `willing_to_try` array — or the demo synthetic equivalent), render a card containing:
-
-- **Skill name** as the card title (e.g., *"Active Listening"*).
-- A short helper line under the title — could be the skill's definition pulled from the BSS skill registry, or omitted if it makes the card too dense. (Code's call — recommend including for clarity.)
-- **"Who could you try this with?"** — a `<select>` populated from the kid's kept allies (from Allies payload's `allies` filtered by `removed_via_inspect` exclusion). Options: each ally's display name, plus a final "Someone else…" option that reveals a text input.
-- **"When could you try it?"** — a chip group with these options: `"This week"`, `"This month"`, `"When the moment shows up"`, `"Other…"`. Tapping "Other…" reveals a short text input.
-
-Stack the cards vertically. If the demo synthetic data has 3 skills, that's 3 cards on this screen. If a real kid had 6 willing-to-try skills, that's 6 cards — still vertical.
-
-**Skip / continue logic:** the kid doesn't have to fill in *every* card. Continue is enabled as soon as the kid completes one full (skill + who + when) commitment, OR they can tap a separate "Skip for now" button that advances without saving any plan commitments. (Same flexibility as Strengthen step in Allies — don't force completion.)
-
-Continue button → Screen 3.
-
-##### Screen 3 — Thoughts to flip (read-only)
-
-Heading: *"Thoughts you've been working on."*
-
-Sub-line: *"When these show up next, here's what you can tell yourself."*
-
-For each Getting Unstuck `selected: true` appraisal (the picked-and-worked thoughts), render a card:
-
-- **"When this comes up:"** with the appraisal's `text` (the original absolute statement) below in italic-quoted style.
-- **"Tell yourself:"** with the kid's own `response` (if `strategy === 'challenge'`) or `and_statement` (if `strategy === 'both_and'`), below in bold ctac-navy.
-- Subtle visual distinction so it reads as a flippable pair, not just two paragraphs.
-
-No inputs on this screen. The work was already done in Getting Unstuck; this surfaces it as a pocket-card reminder.
-
-Continue button → Screen 4.
-
-##### Screen 4 — People in my corner
-
-Heading: *"Your people."*
-
-**Top block — kept allies grouped by support type:**
-
-Three small sections (Practical / Emotional / Social), each listing the kid's kept allies from that support type with their existing per-type color coding (amber / rose / sky). Compact horizontal layout if there's space, vertical if mobile.
-
-**Strengthen commitments callout:**
-
-Below the allies, surface each Strengthen commitment the kid made in Allies as a quoted callout — e.g., *"For practical support: I'll ask Foster Mom to drive me to practice this week."* — color-coded by type. Same pattern as the Allies Final Review screen.
-
-**The action prompt:**
-
-Below the commitments, one prompt:
-
-> *Pick one ally to reach out to first.*
-
-- A `<select>` populated from all the kept allies (no support-type grouping — just a flat list).
-- **"When will you reach out?"** — same chip group as Screen 2 (`"This week"` / `"This month"` / `"When the moment shows up"` / `"Other…"`).
-
-Continue button → Screen 5.
-
-##### Screen 5 — Read your letter back
-
-Heading: *"Read your letter back."*
-
-Sub-line: *"You wrote this for another kid. Now read it as if you wrote it for yourself."*
-
-Below the sub-line, the kid's letter text rendered in a quoted keepsake-card layout. **Reuse the existing keepsake-card styling from Letter v2.3** so the surface visually echoes where they originally saved it — cream background, soft border, italic-quote treatment.
-
-Below the letter, a small **optional** reflection prompt:
-
-> *What sticks out?*
-
-A short text input (200-char max) below the prompt, clearly labeled as optional with a small *"Skip if you'd rather not"* helper text beside it. Saves to `plan_letter_reflection` if filled, null otherwise.
-
-Continue button advances regardless of whether the kid fills the reflection.
-
-Continue button → Screen 6.
-
-##### Screen 6 — Who you are (the full poem)
-
-Heading: *"Who you are."*
-
-Sub-line: *"When the work gets hard, come back to this. Take it with you."*
-
-Below the sub-line, the kid's **full Who I Am Poem** rendered in the same keepsake-card layout the poem activity uses for its final save view (line-by-line, with the 10-line structure including the mirrored lines 6 and 10 showing line 1's text). Same warm cream background as the poem's keepsake.
-
-No inputs. Read-only grounding moment.
-
-Continue button → Screen 7.
-
-##### Screen 7 — Your Plan (review)
-
-Heading: *"Here's your plan."*
-
-Below the heading, a comprehensive summary card showing everything they committed to and everything they're carrying with them:
-
-- **Skills you'll try** — list of the skill + who + when commitments from Screen 2.
-- **Thoughts to flip** — abbreviated version of Screen 3, just the "Tell yourself" lines without the original-thought header.
-- **First ally to reach out to** — the picked ally + when from Screen 4.
-- **Letter to yourself** — short quoted excerpt from the letter (first sentence or first ~120 chars + "…" if longer; the full letter is saved separately in the export and surfaces in full on the PDF).
-- **Who you are** — the kid's full poem rendered the same way as on Screen 6.
-
-Styled as a single long keepsake-card with a subtle border, ctac-teal-50 background, soft shadow, generous vertical spacing between sections. This is the page the kid would save / print / hand to their case worker.
-
-Below the keepsake card:
-
-- A primary "Save my plan" button → triggers Screen 8.
-- A secondary "Back" link to Screen 6 if they want to change something on an earlier screen.
-
-##### Screen 8 — Saved + keepsake (PNG and PDF)
-
-Heading: *"Saved."*
-
-Body: *"This is yours. Come back to it any time."*
-
-Render:
-
-- The same keepsake-card from Screen 7 (the kid's full plan).
-- A **"Save as image (PNG)"** button — reuses `downloadSvgElementAsPng` or `downloadSvgStringAsPng` from `src/lib/imageDownload.js`. Generates a tall single-image PNG of the whole plan with footer *"Ready for Roots · {date}"*. Best for sharing on phone (text to a friend, save to camera roll).
-- A **"Save as PDF"** button — generates a multi-page PDF using `jspdf` (already a transitive dependency in the project per Draft 11's `imageDownload.js`). Suggested PDF structure:
-  - **Page 1 (title page):** *"Your Plan"* heading, the kid's name placeholder (or generic *"Your Plan"* if no name is captured), today's date, the *"This is yours. Come back to it any time."* copy.
-  - **Page 2 (commitments):** Skills you'll try + First ally to reach out to.
-  - **Page 3 (mindset):** Thoughts to flip pairs.
-  - **Page 4 (letter):** The full letter text (not the excerpt — the whole thing).
-  - **Page 5 (poem):** The full 10-line poem.
-  - Footer on every page: *"Ready for Roots · {date} · Page N of 5"*.
-  - Use Arial / system sans throughout (font swap is out of scope per Draft 37).
-  - PDF filename: `ready-for-roots-plan-{YYYY-MM-DD}.pdf`.
-- A **"Back to /demo"** link.
-
-Both PNG and PDF render the same content, just optimized for different use cases:
-- **PNG** = the kid's phone-shareable keepsake.
-- **PDF** = the document a case worker, foster parent, or therapist can read or print.
-
-#### Part B — Data shape
-
-Save payload:
-
-```js
-{
-  saved_at: "2026-06-29T...",
-  skills_to_try: [
-    {
-      skill_id: "active-listening",        // matches BSS skill registry
-      skill_text: "Active Listening",      // display copy at save time
-      who: "Foster Mom",                   // ally name OR text from "Someone else..."
-      who_is_ally: true,                   // false when "Someone else..." used
-      when: "This week",                   // one of the chip values OR text from "Other..."
-      when_is_freetext: false,
-    },
-    // ... one entry per skill the kid filled in
-  ],
-  first_ally_outreach: {
-    ally: "Mrs. Garcia",                   // ally name from the kept allies list
-    when: "This week",                     // same shape as above
-    when_is_freetext: false,
-  },
-  letter_reflection: null,                 // string OR null — Screen 5 optional input
-  // Note: thoughts-to-flip (Screen 3), letter callback (Screen 5 display), and
-  // identity anchor (Screen 6) are read-only views of other activities' outputs —
-  // nothing new saved for those beyond the optional letter_reflection.
-}
-```
-
-#### Part C — Export pipeline (`src/lib/exportFlatten.js`)
-
-Add `plan_*` column mappings:
-
-- `plan_completed` (bool: did the kid save the plan).
-- `plan_n_skills` (int: count of skills the kid completed commitments for).
-- `plan_skill_1_text` ... `plan_skill_8_text` (one per BSS item — only populated if that skill was in their willing-to-try AND they completed a commitment for it).
-- `plan_skill_1_who` ... `plan_skill_8_who`.
-- `plan_skill_1_when` ... `plan_skill_8_when`.
-- `plan_first_ally`.
-- `plan_first_when`.
-- `plan_letter_reflection` (text or null — the optional Screen 5 reflection).
-
-Pattern matches BSS's per-item export shape from commit `0415172` — the variable-length willing-to-try list expands cleanly into fixed-column form because BSS has a known 8-skill registry.
-
-Add `plan: 'plan'` to the `SCALE_ABBREVIATIONS` constant in `exportFlatten.js`.
-
-Add `plan: '_'` (or a sensible prefix) to `ACTIVITY_PREFIXES`.
-
-#### Part D — Synthetic demo data (no real flow integration yet)
-
-For the /demo/sandbox preview, the Plan needs to render with believable content. Since no real cross-activity persistence exists, hard-code a single synthetic kid's data in a new helper file: `src/lib/planDemoData.js`.
-
-Suggested content:
-
-**Willing-to-try skills (from BSS):**
-1. *"Active Listening"*
-2. *"Inclusive Language"*
-3. *"Provide Support"*
-
-**Picked thoughts (from Getting Unstuck):**
-1. Original: *"I will never really feel like I belong."* / Tell yourself: *"I don't feel like I belong right now, AND I won't always feel this way."* (Both/And)
-2. Original: *"I can't trust anyone."* / Tell yourself: *"There are people I can trust, even just a little bit, and trust can grow."* (Challenge)
-
-**Kept allies:**
-- Practical: Foster Mom, Coach Diaz
-- Emotional: Foster Mom (multi-placed), Mrs. Garcia (favorite teacher)
-- Social: Alex (best friend), Sam (cousin)
-
-**Strengthen commitments:**
-- Practical: *"I'll ask Coach Diaz for help with my homework this week."*
-- Emotional: *"I'll text Mrs. Garcia when I'm having a rough day."*
-- Social: *"I'll invite Alex to study with me on Friday."*
-
-The Plan demo uses these as the source for Screens 2, 3, and 4. The kid's typed answers (Section A who/when, Section C first ally) save to localStorage in the sandbox for the duration of the demo session — same pattern as the other activities.
-
-When real flow integration ships, this file gets replaced by a `useKidSession()` hook (or equivalent) that pulls real saved payloads from each activity. The components themselves don't change.
-
-#### Part E — Activity registration
-
-Register the Plan in `TEST_REGISTRY` (or wherever the activity registry lives — possibly `src/lib/activityVersions.js` + a route map):
-
-- `id`: `'plan'`
-- `display name`: `'Your Plan'`
-- `category`: existing *'Ready for Roots activity'* category
-- `route`: `/demo/sandbox/plan`
-- `version`: `v1.0`
-
-Add `plan` entry to `src/lib/activityVersions.js` at v1.0 with creation date and a one-line changelog (*"v1.0 — Initial Plan activity built (pulls forward from BSS willing-to-try, Getting Unstuck picks, Allies/Safety Net; saves who+when commitments per skill and first-ally outreach)."*)
-
-Add to the /demo Activities section list so the team can find it.
-
-#### Part F — Replace the /the-plan placeholder
-
-The placeholder route from Draft 37 Part H.2 (and the closing CTA from Draft 38 Part D.2) currently goes to a "coming soon" page. Update the route handler so `/the-plan` redirects to (or wraps) `/demo/sandbox/plan` — the real activity is now the destination.
-
-The "Open your plan" CTA at the end of the montage now lands the kid in the actual Plan activity.
-
-#### Part G — Visual treatment
-
-Match the rest of the platform per Draft 37's CTAC palette:
-
-- Headings: `text-ctac-navy font-bold`.
-- Primary CTAs: `bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full`.
-- Soft surfaces: `bg-ctac-teal-50` with `border-ctac-teal-200`.
-- Cards: rounded-2xl with soft drop-shadow.
-- Per-type allies in their existing color coding (Practical amber, Emotional rose, Social sky).
-- Keepsake card background: `bg-amber-50` or a cream color (warm, complements the teal) — gives it the "this is yours, take it" texture.
-
-#### What does NOT change
-
-- The six existing activities (Self-Reflection, Who I Am Poem, BSS, Allies, Getting Unstuck, Letter) — their flows + payloads + UIs untouched. The Plan reads from their saved outputs (or, for now, the synthetic demo data); it doesn't modify them.
-- The Pretest / Posttest / FollowUp Survey items — unchanged.
-- The growth montage + the /the-plan placeholder route from Drafts 37 + 38 — the placeholder gets replaced; the montage's closing CTA + transition stay as Draft 38 spec'd.
-- The export pipeline structure — just gains the new `plan_*` columns.
-
-#### Out of scope (deferred)
-
-- **Real cross-activity flow integration.** Still deferred. This draft uses synthetic demo data. When the flow lands, the demo data file gets swapped for real `useKidSession()`-style reads.
-- **Action-plan analytics** in the data export demo. Once real Plan submissions exist, the data export tab could surface "X% of kids completed at least one skill commitment" — but that needs real data first.
-- **Cleanup queue updates.** The "BSS pull-forward to action plan" and "Allies Strengthen pull-forward" items from the Round 4 / Round 5 / Round 6 cleanup queues can now be marked as addressed (the Plan resolves both).
-
-#### Now in scope (folded into v1.0 after the 2026-06-29 design discussion)
-
-- **Letter callback screen (Screen 5)** with optional reflection prompt — surfaces the kid's full letter back to them for re-reading; the *"What sticks out?"* input is opt-in.
-- **Identity anchor screen (Screen 6)** showing the kid's full Who I Am Poem as grounding before the review. Read-only, no inputs.
-- **PNG + PDF export** on the saved screen — both ship Day 1. PNG for sharing on phone; PDF for case workers / foster parents. `jspdf` generates a 5-page document (title / commitments / mindset / letter / poem).
-
-*End of Draft 39.*
 
 ---
 
