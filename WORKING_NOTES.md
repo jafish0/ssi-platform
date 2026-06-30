@@ -39,6 +39,106 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`6562600` · 2026-06-30** — Draft 41: put the **first Kai animated clip** on the demo. Josh's first rendered Kai animation (`Kai Demo 1.mp4` — the opening of Scene 1, ~35s, vertical 9:16) — the parallel moment to Sam Line 1 landing, first animated proof-of-concept for the visual direction. Copied the mp4 into `public/cast/video/kai-demo-1.mp4` (~4.7 MB, `preload=metadata`); added a `videos` array to Kai's card (label/src/caption/durationSeconds). The CastCard now renders `videos` as a **featured bordered block above the main content** — so Kai shows the animation preview AND the Draft 40 voiceover scenes (previously scenes/videos/lines were mutually exclusive). Reused the existing video player (native mp4 via `src`, YouTube embed via `youtubeId`), relocated it out of the precedence chain, and updated the doc comment. No version bump. Verified in preview: featured "First animated scene preview" block renders the clip + caption with the 8 voiceover scenes still below it (single video element, no double-render); mp4 serves; no console errors.
+
+  <details>
+  <summary>Draft 41 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 41 — First Kai animated clip on the demo
+
+  First piece of Kai animation is rendered — Josh's `Kai Demo 1.mp4` covers the opening of Scene 1 ("Hi, I'm Kai…"). ~35 seconds of vertical 9:16, self-hosted (same pattern as Sam's mp4s from Drafts 31 and 33). Add it to the Kai card as a featured "First animated scene preview" block above the Draft 40 voiceover scenes block.
+
+  This is the parallel moment to Sam Line 1 landing — first animated proof-of-concept for the visual direction. The remaining scenes are still audio-only on the card; this clip gives the team something to react to on the animation side.
+
+  **Approved by:** Josh, 2026-06-30.
+
+  #### Part A — Copy the mp4 into `public/cast/video/`
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/Kai Demo 1.mp4` | `public/cast/video/kai-demo-1.mp4` |
+
+  ~4.7 MB. Native `<video controls preload="metadata">` keeps the up-front fetch tiny.
+
+  #### Part B — Add a `videos` array to Kai's card in `src/lib/castData.js`
+
+  Currently Kai has `images`, `scenes`, plus the `show: 'learning-skills'` grouping field. Add a new optional `videos` field — array shape (so future Kai animation clips extend the same shape without another refactor):
+
+  ```js
+  videos: [
+    {
+      label: 'First animated scene preview',
+      src: '/cast/video/kai-demo-1.mp4',
+      caption: "The opening of Scene 1 — The Scan. Covers the first ~35 seconds. The rest of the animation is in production.",
+      durationSeconds: 35,
+    },
+  ],
+  ```
+
+  Per-entry shape:
+  - `label` (string) — section heading
+  - `src` (string) — absolute URL to the mp4
+  - `caption` (string) — italic line beneath the player explaining what the clip is
+  - `durationSeconds` (number, optional) — for future use if a "Kai animation total runtime" footer ever makes sense; not displayed in this draft
+
+  #### Part C — Render `videos` in CastCard above the `scenes` block
+
+  The CastCard render order on Kai's card becomes:
+
+  1. Photo grid (Variant 1 + Variant 2) — existing
+  2. Role line — existing
+  3. **NEW: `videos[]` featured block** — renders each video entry as: label (small bold heading) → native vertical 9:16 video player (320px-capped, same pattern as Sam 16's mp4 render from commit `516a330`) → italic caption underneath
+  4. The Draft 40 "Kai's voiceover (all 8 scenes)" block — existing
+
+  For the per-video rendering, follow the Sam 16 video player pattern Code already implemented:
+
+  ```jsx
+  <div className="mt-6 first:mt-0">
+    <h4 className="text-base font-semibold text-ctac-navy mb-3">
+      {video.label}
+    </h4>
+    <div className="mx-auto w-full max-w-[320px]">
+      <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+        <video
+          controls
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200"
+        >
+          <source src={video.src} type="video/mp4" />
+        </video>
+      </div>
+      {video.caption && (
+        <p className="mt-2 text-center text-sm text-slate-600 italic">
+          {video.caption}
+        </p>
+      )}
+    </div>
+  </div>
+  ```
+
+  Wrap the videos block in a subtle visual separator (top + bottom border in `border-ctac-teal-200`, similar to how the Draft 40 voiceover block has its own bordered section).
+
+  If the CastCard already had a `videos` render branch in the renderer (from Sam 16's old Draft 31 implementation that got removed in Draft 33), reuse and adapt — don't reimplement. Per Draft 33's notes, the videos branch was "kept in the renderer for future re-introduction," so it should still be there.
+
+  #### What does NOT change
+
+  - Kai's image variants, role line, voiceover scenes block (from Draft 40) — all unchanged.
+  - The Sam's Story section, all other cast cards — unchanged.
+  - The CTAC palette, tree visuals, montage, summary screen — unchanged.
+  - The Plan activity — unchanged.
+  - No version bump (DemoPage section).
+
+  #### Out of scope (deferred)
+
+  - **Additional Kai animation clips.** As more scenes are animated, they extend the same `videos[]` array on Kai's card. When 4+ clips exist, worth considering a "show all animations" / collapsed-by-default layout to keep the card compact.
+  - **The remaining ~16s of Scene 1** that aren't in this first animated clip. The voiceover scene below still plays the full 51 seconds.
+  - **Stitching animations to the matching voiceover scene.** Currently the animated clip and the audio scene are presented separately (animation block on top, voiceover scenes below). Could be combined later — when a scene has a matching animated clip, swap the audio player for the video player inline. Defer until enough scenes are animated to make that worthwhile.
+
+  *End of Draft 41.*
+
+  </details>
+
 - **`176e242` · 2026-06-30** — Follow-up tweaks from Josh's review of Drafts 38/40. (1) **Kai Variant 2 reswapped** again — the Draft 38 render is replaced by `Light skinned blonde Kai.png` (the team's chosen version); Variant 1 still the locked primary. (2) Removed the "Recorded through the Voice Changer pipeline (Josh → ElevenLabs → Kai's locked voice)…" paragraph from Kai's voiceover header block. (3) Removed the "The psychoeducation track that wraps the six activities…" intro paragraph under the Learning Skills heading. (4) **Plan v1.0 → v1.1:** Screen 2 heading "Skills you said you'd try." → **"New Skills to Try"**. No data-shape change. Verified in preview.
 
 - **`5c6afb0` · 2026-06-30** — Draft 40: put **Kai's full 8-scene voiceover** on the demo. All 8 narration scenes are recorded through the Voice Changer pipeline (Josh → ElevenLabs → Kai's locked voice); this replaces the 2 stale Draft 35 preview clips with the complete set so Sprang + Holly + Adrienne can validate Kai end-to-end before animation. Copied the 8 final mp3s into `public/cast/audio/` (~6.5 MB; the 2 superseded previews left unreferenced per the cleanup pattern). Extended the castData `scenes` shape with `text` (full spoken script, verbatim from the demo doc), `duration`/`durationSeconds`, and an optional `handoff` (the activity each scene leads into), and replaced Kai's scenes array with all 8 in narrative order. The CastCard now renders a header ("Kai's voiceover (8 scenes)") with **total runtime computed from durationSeconds (6:27)**, then per scene: label + duration + "→ handoff" + the full italic script + an `<audio preload=metadata>` player, then a footer recap. No version bump (demo surface). Verified in preview: 8 scenes with scripts, 6 handoffs (scenes 4 + Conclusion correctly have none), runtime 6:27, mp3s serve, no console errors. Cleanup note: the 2 old preview clips (`kai-scene-1-the-scan.mp3`, `kai-scene-2-the-why.mp3`) are now unreferenced — deletable in a future cleanup commit.
