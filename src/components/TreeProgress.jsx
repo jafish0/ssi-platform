@@ -67,9 +67,16 @@ export default function TreeProgress({ stage = 0, animated = true, className = '
 
   const data = TREE_STAGES[safe]
 
+  // viewBox top extended to -30 (Draft 38 Part B): the stage-5 canopy
+  // reaches y ≈ -22, which the old "0 0 400 600" box clipped at the top.
+  // The extra 30 units of headroom keep the whole canopy visible; the
+  // bottom (roots; ground at y=420) and the trunk anchor are unchanged.
+  // The six reference SVGs carry the same viewBox for direct-viewing
+  // parity, but THIS is the box the app renders into — TreeProgress is
+  // data-driven from treeStages.js, not the SVG files.
   return (
     <svg
-      viewBox="0 0 400 600"
+      viewBox="0 -30 400 630"
       width="100%"
       role="img"
       aria-label={STAGE_ARIA[safe]}

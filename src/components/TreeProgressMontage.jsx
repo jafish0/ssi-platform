@@ -25,8 +25,20 @@
 // plays on a forward stage change, so resetting stage 5 → 0 (a backward
 // jump, rendered instantly by TreeProgress) and then advancing forward
 // again gives a clean re-draw without any manual dashoffset juggling.
+//
+// Draft 38 additions:
+//   - Part C: crossfade between stages. On each advance we render a static
+//     "ghost" of the OUTGOING stage underneath the incoming one and fade it
+//     out over ~320ms while the new stage draws in on top — so there's no
+//     blank frame during React's reconciliation. The ghost is a separate
+//     non-animated <TreeProgress> layer, keyed so its fade-out restarts each
+//     advance; it unmounts once faded.
+//   - Part D: the montage owns its closer. When playback completes it shows
+//     a "Ready for your plan?" CTA → /the-plan (the SessionSummary block was
+//     pulled out of the /demo preview).
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import TreeProgress from './TreeProgress.jsx'
 
 // Stage advances on a non-linear curve (ms from playback start). Slow
@@ -62,8 +74,11 @@ const MONTAGE_CSS = `
   transition: opacity 400ms ease;
   text-shadow: 0 1px 10px rgba(255, 255, 255, 0.9), 0 0 4px rgba(255, 255, 255, 0.9);
 }
+@keyframes tpmGhostOut { from { opacity: 1; } to { opacity: 0; } }
+.tpm-ghost { animation: tpmGhostOut 320ms ease-out forwards; }
 @media (prefers-reduced-motion: reduce) {
   .tpm-container, .tpm-tree, .tpm-caption { transition: none !important; }
+  .tpm-ghost { animation: none !important; opacity: 0; }
 }
 `
 
@@ -75,7 +90,12 @@ export default function TreeProgressMontage({
   skippable = true,
   className = '',
 }) {
+  const navigate = useNavigate()
   const [stage, setStage] = useState(0)
+  // Crossfade (Draft 38 C): the outgoing stage rendered underneath while it
+  // fades out. `ghostKey` remounts the ghost so its CSS fade restarts.
+  const [prevStage, setPrevStage] = useState(null)
+  const [ghostKey, setGhostKey] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [glowing, setGlowing] = useState(false)
   const [caption, setCaption] = useState({ text: 'This is where you started.', visible: false })
@@ -106,6 +126,7 @@ export default function TreeProgressMontage({
 
   const skip = useCallback(() => {
     clearTimers()
+    setPrevStage(null)
     setStage(5)
     setGlowing(true)
     setCaption({ text: CLOSING_CAPTION, visible: true })
@@ -125,6 +146,8 @@ export default function TreeProgressMontage({
       typeof window !== 'undefined' &&
       window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    setPrevStage(null)
 
     // At-rest (no autoplay, first mount) or reduced motion: jump to the
     // final stage-5 state and report complete without animating.
@@ -147,7 +170,20 @@ export default function TreeProgressMontage({
     setCaption({ text: 'This is where you started.', visible: true })
 
     const push = (ms, fn) => timers.current.push(setTimeout(fn, ms))
-    STAGE_SCHEDULE.forEach(({ t, stage: s }) => push(t, () => setStage(s)))
+    // Each advance crossfades: stamp the outgoing stage as a ghost (which
+    // fades out via CSS) the instant the new stage mounts and draws in.
+    STAGE_SCHEDULE.forEach(({ t, stage: s }, i) => {
+      const from = i > 0 ? STAGE_SCHEDULE[i - 1].stage : null
+      push(t, () => {
+        if (from != null) {
+          setPrevStage(from)
+          setGhostKey((k) => k + 1)
+        }
+        setStage(s)
+      })
+      // Drop the ghost once its 320ms fade-out has finished.
+      if (from != null) push(t + 360, () => setPrevStage(null))
+    })
     push(GLOW_AT, () => setGlowing(true))
     if (skippable) push(SKIP_AT, () => setShowSkip(true))
     // Caption beats — fade out before the next one fades in (no overlap).
@@ -176,30 +212,53 @@ export default function TreeProgressMontage({
         </p>
       </div>
 
-      {/* Tree */}
-      <div className={`tpm-tree mx-auto w-full max-w-[300px] ${glowing ? 'is-glowing' : ''}`}>
-        <TreeProgress stage={stage} animated />
+      {/* Tree — the incoming stage (top, draws in) sits above a fading
+          ghost of the outgoing stage (Draft 38 C crossfade). */}
+      <div className="relative mx-auto w-full max-w-[300px]">
+        {prevStage != null && (
+          <div key={ghostKey} className="tpm-ghost absolute inset-0 z-0" aria-hidden="true">
+            <TreeProgress stage={prevStage} animated={false} />
+          </div>
+        )}
+        <div className={`tpm-tree relative z-10 ${glowing ? 'is-glowing' : ''}`}>
+          <TreeProgress stage={stage} animated />
+        </div>
       </div>
 
-      {/* Controls — Skip during playback, Watch again once complete. */}
-      <div className="flex items-center justify-center gap-3 mt-6 min-h-[40px]">
+      {/* Controls — Skip during playback; "Ready for your plan?" closer once
+          complete (Draft 38 D), with Watch again as a secondary affordance. */}
+      <div className="mt-6">
         {showSkip && !done && (
-          <button
-            type="button"
-            onClick={skip}
-            className="text-slate-500 hover:text-slate-700 underline text-sm"
-          >
-            Skip
-          </button>
+          <div className="flex items-center justify-center min-h-[40px]">
+            <button
+              type="button"
+              onClick={skip}
+              className="text-slate-500 hover:text-slate-700 underline text-sm"
+            >
+              Skip
+            </button>
+          </div>
         )}
         {done && (
-          <button
-            type="button"
-            onClick={replay}
-            className="bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-300 rounded-full px-5 py-2 text-sm font-semibold text-ctac-teal-700"
-          >
-            Watch again
-          </button>
+          <div className="text-center">
+            <h3 className="text-2xl font-semibold text-ctac-navy mb-4">Ready for your plan?</h3>
+            <button
+              type="button"
+              onClick={() => navigate('/the-plan')}
+              className="bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white rounded-full px-8 py-4 text-lg font-semibold transition-colors"
+            >
+              Open your plan
+            </button>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={replay}
+                className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-sm"
+              >
+                Watch again
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
