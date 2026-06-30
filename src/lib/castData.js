@@ -174,6 +174,19 @@ export const CAST = [
       },
     ],
     role: 'Our narrator for the psychoeducation track — a gender-neutral young adult, foster-care alumni, now working as a peer mentor for kids in the system.',
+    // First animated clip (Draft 41, 2026-06-30). Self-hosted 9:16 mp4,
+    // same pattern as Sam's Story shots. Renders as a featured block above
+    // the voiceover scenes. As more scenes are animated they extend this
+    // array.
+    videos: [
+      {
+        label: 'First animated scene preview',
+        src: '/cast/video/kai-demo-1.mp4',
+        caption:
+          'The opening of Scene 1 — The Scan. Covers the first ~35 seconds. The rest of the animation is in production.',
+        durationSeconds: 35,
+      },
+    ],
     scenes: [
       {
         label: 'Part I, Scene 1 — The Scan',

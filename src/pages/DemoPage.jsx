@@ -650,16 +650,18 @@ function ExportFileBlock({
 //
 // Image column on the left (~40%): a variant gallery when the card has
 // an `images` array (Kai), else the single `image`. Text on the right
-// (~60%); stacks on mobile. `voiceSamples` (if present) render as their
-// own block above the main content. The main content branches on one of
-// these optional fields, in precedence order: `scenes` (longer-form
-// narrator audio by scene — label + optional description + <audio>; Kai),
-// `videos` (rendered Sam's Story shots — optional label + 9:16 player
-// [native <video> for `src`, YouTube iframe for `youtubeId`] + caption),
-// `lines` (per-line scene cue + quoted text; native <audio> if the line
-// has an `audio` clip, else a "Voice model coming soon" note — suppressed
-// when the card has `voiceSamples`), or `description` (a paragraph for
-// cast who don't speak yet). See src/lib/castData.js.
+// (~60%); stacks on mobile. Two optional fields render as their own
+// blocks ABOVE the main content (so a card can combine them with the main
+// content — e.g. Kai shows an animation clip + voiceover scenes):
+// `voiceSamples` (labeled audio players) and `videos` (9:16 animation
+// previews — optional label + native <video> for `src` or YouTube iframe
+// for `youtubeId` + caption; Draft 41). The main content then branches on
+// one of these, in precedence order: `scenes` (longer-form narrator audio
+// by scene — label + duration/handoff + script + <audio>; Kai), `lines`
+// (per-line scene cue + quoted text; native <audio> if the line has an
+// `audio` clip, else a "Voice model coming soon" note — suppressed when
+// the card has `voiceSamples`), or `description` (a paragraph for cast who
+// don't speak yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
   const { name, image, images, alt, role, lines, description, landscape, videos, voiceSamples, scenes } = character
@@ -738,6 +740,47 @@ function CastCard({ character }) {
           </div>
         )}
 
+        {/* Featured animation clips (Draft 41) — rendered as their own
+            bordered block ABOVE the main content so a card can show both
+            animation previews AND its voiceover scenes (Kai). Supports
+            self-hosted mp4 (`src`) or a YouTube embed (`youtubeId`). */}
+        {videos && videos.length > 0 && (
+          <div className="border-t border-b border-ctac-teal-200 py-5 mb-2">
+            {videos.map((v, i) => (
+              <div key={i} className={i === 0 ? '' : 'mt-6'}>
+                {v.label && (
+                  <h4 className="text-base font-semibold text-ctac-navy mb-3">{v.label}</h4>
+                )}
+                <div className="mx-auto w-full max-w-[320px]">
+                  <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+                    {v.src ? (
+                      <video
+                        src={v.src}
+                        title={`${name} — animation preview`}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200 bg-black object-cover"
+                      />
+                    ) : (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${v.youtubeId}`}
+                        title={`${name} — animation preview`}
+                        className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200"
+                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    )}
+                  </div>
+                  {v.caption && (
+                    <p className="mt-2 text-center text-sm text-slate-600 italic">{v.caption}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {scenes && scenes.length > 0 ? (
           (() => {
             // Total runtime computed from the per-scene durationSeconds so
@@ -797,50 +840,6 @@ function CastCard({ character }) {
               </div>
             )
           })()
-        ) : videos && videos.length > 0 ? (
-          <div className="mx-auto w-full max-w-[320px]">
-            {videos.map((v, i) => (
-              <div key={i}>
-                {v.label && (
-                  <p
-                    className={
-                      'text-sm font-semibold text-slate-700 mb-2 ' +
-                      (i === 0 ? '' : 'mt-6')
-                    }
-                  >
-                    {v.label}
-                  </p>
-                )}
-                <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-                  {v.src ? (
-                    // Self-hosted clip — native player, no overlay chrome
-                    // blocking the frame (unlike the YouTube Short embed).
-                    <video
-                      src={v.src}
-                      title={`${name} — Sam's Story video`}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200 bg-black object-cover"
-                    />
-                  ) : (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${v.youtubeId}`}
-                      title={`${name} — Sam's Story video`}
-                      className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200"
-                      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
-                  )}
-                </div>
-                {v.caption && (
-                  <p className="mt-2 text-center text-sm text-slate-600 italic">
-                    {v.caption}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
         ) : lines && lines.length > 0 ? (
           <div className="space-y-7">
             {lines.map((line, i) => (
