@@ -39,6 +39,236 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`5c6afb0` · 2026-06-30** — Draft 40: put **Kai's full 8-scene voiceover** on the demo. All 8 narration scenes are recorded through the Voice Changer pipeline (Josh → ElevenLabs → Kai's locked voice); this replaces the 2 stale Draft 35 preview clips with the complete set so Sprang + Holly + Adrienne can validate Kai end-to-end before animation. Copied the 8 final mp3s into `public/cast/audio/` (~6.5 MB; the 2 superseded previews left unreferenced per the cleanup pattern). Extended the castData `scenes` shape with `text` (full spoken script, verbatim from the demo doc), `duration`/`durationSeconds`, and an optional `handoff` (the activity each scene leads into), and replaced Kai's scenes array with all 8 in narrative order. The CastCard now renders a header ("Kai's voiceover (8 scenes)") with **total runtime computed from durationSeconds (6:27)**, then per scene: label + duration + "→ handoff" + the full italic script + an `<audio preload=metadata>` player, then a footer recap. No version bump (demo surface). Verified in preview: 8 scenes with scripts, 6 handoffs (scenes 4 + Conclusion correctly have none), runtime 6:27, mp3s serve, no console errors. Cleanup note: the 2 old preview clips (`kai-scene-1-the-scan.mp3`, `kai-scene-2-the-why.mp3`) are now unreferenced — deletable in a future cleanup commit.
+
+  <details>
+  <summary>Draft 40 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 40 — Kai's full voiceover set on the demo (all 8 scenes, with scripts + durations + total runtime)
+
+  All 8 Kai scenes are recorded and processed through the voice pipeline (Josh records → ElevenLabs Voice Changer → Kai's target voice). The 2 preview scenes on Kai's card (from Draft 35) are stale — final versions are now in `Video Content/New Voiceover/Kai Script/Final VoiceOver/`. Expand Kai's card to show **all 8 scenes** with the **full spoken text printed alongside each clip**, each scene's **duration**, and **total runtime (6:27)** displayed at the top and bottom of the scene list.
+
+  Goal of this expansion: let the team experience Kai's narration end-to-end (script + voice paired), see how each scene hands off to its activity, and understand the runtime footprint of the psychoeducation track. This is the demo surface that lets Sprang + Holly + Adrienne validate Kai's voice work in full before the animation production starts.
+
+  **Approved by:** Josh, 2026-06-30.
+
+  ---
+
+  #### Part A — Copy the 8 mp3s into `public/cast/audio/`
+
+  | Source | Destination | Duration |
+  |---|---|---|
+  | `Final VoiceOver/Kai - The Scan Scene 1.mp3` | `public/cast/audio/kai-pt1-scene-1-the-scan.mp3` | 0:51 |
+  | `Final VoiceOver/Scene 2 the Why.mp3` | `public/cast/audio/kai-pt1-scene-2-the-why.mp3` | 0:35 |
+  | `Final VoiceOver/Scene 3 Building a Safety Net.mp3` | `public/cast/audio/kai-pt1-scene-3-safety-net.mp3` | 1:19 |
+  | `Final VoiceOver/Scene 4 the foster care extra level.mp3` | `public/cast/audio/kai-pt1-scene-4-extra-level.mp3` | 0:40 |
+  | `Final VoiceOver/Part 2 Scene 1 Building skills.mp3` | `public/cast/audio/kai-pt2-scene-1-building-skills.mp3` | 1:09 |
+  | `Final VoiceOver/Part 2 scene 2 The roadblocks.mp3` | `public/cast/audio/kai-pt2-scene-2-roadblocks.mp3` | 0:31 |
+  | `Final VoiceOver/Part 2 scene 3 putting it all together.mp3` | `public/cast/audio/kai-pt2-scene-3-putting-it-all-together.mp3` | 1:06 |
+  | `Final VoiceOver/Conclusion.mp3` | `public/cast/audio/kai-conclusion.mp3` | 0:16 |
+
+  Combined size ~6.5 MB. Total runtime **6:27** (387 seconds).
+
+  The two preview mp3s from Draft 35 (`kai-scene-1-the-scan.mp3` and `kai-scene-2-the-why.mp3`) are superseded by the final versions. Leave the old files in place (unreferenced) per the established cleanup pattern, OR delete them — Code's call.
+
+  #### Part B — Extend the `scenes` shape in `src/lib/castData.js`
+
+  The current scenes shape (from Draft 35) is `{ label, audio, description }`. Extend to support:
+
+  - `label` (string, existing) — the scene title, e.g., *"Part I, Scene 1 — The Scan"*
+  - `audio` (string, existing) — absolute URL to the mp3
+  - `text` (string, **new**) — the full spoken script for this scene, verbatim from `Script for Demo.docx`. Displays below the label so the team can read along while listening.
+  - `duration` (string, **new**) — formatted duration string, e.g., *"0:51"*. Displays in the label row.
+  - `durationSeconds` (number, **new**) — numeric duration for summing the total runtime. Same value as duration, just in seconds.
+  - `handoff` (string, **new** optional) — the activity this scene hands off to, e.g., *"Self-Reflection"*. Displays alongside the duration in the label row. Omit for the bridge scene and the conclusion.
+  - `description` (existing, **deprecated for Kai**) — was the duration-summary line; now unused on Kai's scenes since duration + handoff display directly. Other cards can keep using `description` if helpful.
+
+  #### Part C — Replace Kai's `scenes` array with all 8 final scenes
+
+  Update the Kai card's `scenes: [...]` array with the 8 final scene entries. Use the spoken text from `Final VoiceOver/Script for Demo.docx` verbatim. Quick reference for each:
+
+  ##### Scene 1 — Part I: The Scan
+
+  ```js
+  {
+    label: 'Part I, Scene 1 — The Scan',
+    audio: '/cast/audio/kai-pt1-scene-1-the-scan.mp3',
+    duration: '0:51',
+    durationSeconds: 51,
+    handoff: 'Self-Reflection',
+    text: "Hey. I'm Kai. I spent time in foster care too, so I know the drill. Now, I get to help other kids in the system and share some of the life hacks I've picked up. I'm glad you're here, because we're talking about something we all deal with 24/7: Belonging. Think about that moment when you walk into a crowded cafeteria or a new class. You're scanning the room, right? Your brain is doing a million calculations per second: Who looks cool? Who looks mean? Where's my spot? That \"scan\" isn't you being awkward — it's actually your brain trying to protect you. It's looking for safety, connection, and a place to land. Because let's be real: feeling like you don't fit in is more than just a bummer. It actually hurts. It can be confusing, lonely, and make it hard to know who you even are. Let's take a minute to think about this some more.",
+  },
+  ```
+
+  ##### Scene 2 — Part I: The Why (It's in Your DNA)
+
+  ```js
+  {
+    label: "Part I, Scene 2 — The Why (It's in Your DNA)",
+    audio: '/cast/audio/kai-pt1-scene-2-the-why.mp3',
+    duration: '0:35',
+    durationSeconds: 35,
+    handoff: 'Who I Am Poem',
+    text: "So, why are our brains so obsessed with fitting in? Basically, belonging isn't just a \"nice to have\" type of thing — it's a survival requirement, right up there with food, sleep, and having a roof over your head. Back in the day, being part of a group meant you didn't go hungry or get eaten by a saber-toothed tiger. Today, it's still wired into our biology. We need to feel accepted, respected, and \"seen\" for who we actually are — including our culture, our history, and where we come from. This activity can help you think about some of these things.",
+  },
+  ```
+
+  ##### Scene 3 — Part I: Building a Safety Net
+
+  ```js
+  {
+    label: 'Part I, Scene 3 — Building a Safety Net',
+    audio: '/cast/audio/kai-pt1-scene-3-safety-net.mp3',
+    duration: '1:19',
+    durationSeconds: 79,
+    handoff: 'Allies / Safety Net',
+    text: "We know belonging is a basic need, but here's the secret: you don't just need one place to belong. You need a few. Think of it like a safety net. If one string snaps — like after a fight with a friend — the other strings catch you. We need this safety net because it provides different types of support for us to change and grow, providing the \"green light\" to try new things. It's a lot easier to take risks, like joining a team or trying out for a play, when you know you've got a crew behind you — both in and outside of your home. One thing that can really help is having an adult that you can talk to or trust for advice. In high school, I had this one teacher who actually \"got\" me, and it changed the whole vibe of a really tough year because I could count on her for emotional and practical support. Social support is important too. You've probably noticed that your friend group matters way more these days. When building your crew, think of it like a GPS. If you hang with a group that's constantly in trouble or giving up on school, it's easy to get redirected down that same path. But if you find people who are hyped about your goals? They become your literal social support system, helping you figure it out along the way. It's good to think about who you are and what kind of safety net you might need. This next activity will help you do that.",
+  },
+  ```
+
+  ##### Scene 4 — Part I: The Foster Care "Extra Level"
+
+  ```js
+  {
+    label: 'Part I, Scene 4 — The Foster Care "Extra Level"',
+    audio: '/cast/audio/kai-pt1-scene-4-extra-level.mp3',
+    duration: '0:40',
+    durationSeconds: 40,
+    // no handoff — this is the bridge to Part II
+    text: "Look, everyone struggles with figuring out where they belong at times, but for those of us growing up in foster or relative care? It's like playing the Belonging Game on \"Hard Mode.\" While other kids are just worried about where to sit in the cafeteria, we're dealing with moving houses, switching schools, or leaving our siblings and old neighborhoods behind. It's stressful. Sometimes you feel guilty for liking a new placement — like you're being disloyal to your family. Or you feel like you can't fully trust anyone because you've had to move so many times. I know it's tough, but these strategies we're learning can help you find your people and begin to feel more at home — no matter where you're living.",
+  },
+  ```
+
+  ##### Scene 5 — Part II: Building Skills for Belonging
+
+  ```js
+  {
+    label: 'Part II, Scene 1 — Building Skills for Belonging',
+    audio: '/cast/audio/kai-pt2-scene-1-building-skills.mp3',
+    duration: '1:09',
+    durationSeconds: 69,
+    handoff: 'Belonging Skills Sort',
+    text: "Belonging isn't just a place you land; it's something you build, brick by brick, with the people around you — whether that's a foster family, friends, teammates or others. Here are a few skills that help. When others talk, try Active Listening. Don't just wait for your turn to speak; actually try to catch what they're saying. It makes people feel understood and safe. When things get tense, aim for Conflict Resolution. It's not about winning; it's about solving the problem in a way that the relationship survives the argument. Try to use Inclusive Language like we, us, and our group, and include others in conversations and activities. Take a risk and invite others to join you, and chances are they will want to return the favor! Finally, Provide Support by being the person who shows up when a friend or family member needs help, and being brave enough to Express Gratitude can build emotional bridges between you and your friends and family. I know, it might feel cringe at first, but these efforts reinforce that others matter to you and can deepen our bonds. This next activity can help you think about how to use these skills.",
+  },
+  ```
+
+  ##### Scene 6 — Part II: The Roadblocks
+
+  ```js
+  {
+    label: 'Part II, Scene 2 — The Roadblocks',
+    audio: '/cast/audio/kai-pt2-scene-2-roadblocks.mp3',
+    duration: '0:31',
+    durationSeconds: 31,
+    handoff: 'Getting Unstuck',
+    text: "Sometimes belonging feels impossible because of things you can't control, like switching schools mid-year. When you hit those roadblocks, your brain might try to protect you with some unhelpful thoughts. For example: All-or-Nothing Thinking — having thoughts like \"I'll never fit in here\" that keep you from trying to connect to others. Or Holding onto the Past — staying so focused on thinking about who we lost that we can't let anyone new in. This next activity will help you learn to challenge unhelpful thoughts like these.",
+  },
+  ```
+
+  ##### Scene 7 — Part II: Putting It All Together
+
+  ```js
+  {
+    label: 'Part II, Scene 3 — Putting It All Together',
+    audio: '/cast/audio/kai-pt2-scene-3-putting-it-all-together.mp3',
+    duration: '1:06',
+    durationSeconds: 66,
+    handoff: 'Letter to Another Youth',
+    text: "And another potential roadblock? Self-Regulation or Self-Control. The challenge is to be able to feel that sting of \"maybe they don't like me\" and being able to breathe through it so you don't just bail or shut down when things get awkward or scary. My friend Ash used to go silent every time she moved homes because she thought, \"they're just going to move me again anyway.\" Her silence was like a shield that's too heavy — it kept her safe from getting hurt, but it also kept her totally alone. Do you have some good strategies to keep calm at these moments? We can give you a list of skills to practice if you need ideas. And finally, it helps to realize that a lot of belonging happens in our own heads. Instead of a fixed mindset, try a growth mindset. Making friends and connections is a skill you practice, not something you're just born with. If one placement or social situation doesn't work out, it's not a permanent fail — it's just one data point and we can keep working on it. Now that you've learned more about this, what might you tell another kid worried about whether they belong?",
+  },
+  ```
+
+  ##### Scene 8 — Conclusion
+
+  ```js
+  {
+    label: 'Conclusion',
+    audio: '/cast/audio/kai-conclusion.mp3',
+    duration: '0:16',
+    durationSeconds: 16,
+    // no handoff — this is the end
+    text: "Finding that sense of belonging can be tough for everyone, and it's even harder when you are in foster or relative care. But remember: your story isn't over just because the current chapter has been a little chaotic. You've got new skills now — give them a try!",
+  },
+  ```
+
+  **Order:** the array order above is the playback / narrative order. Render the scenes in this order, top to bottom.
+
+  **Update the top-of-file comment block** in castData.js to note the new `scenes` shape fields (`text`, `duration`, `durationSeconds`, `handoff`) and to mention the 8-scene Kai voiceover landed 2026-06-30.
+
+  #### Part D — Update CastCard rendering in `src/pages/DemoPage.jsx`
+
+  The CastCard already renders `scenes[]` per Draft 35 (per-scene label + audio + optional description). Extend the renderer for Kai's expanded shape.
+
+  **Block structure above the scenes list** (rendered once, just below Kai's image grid + role line):
+
+  ```jsx
+  <div className="mt-6 border-t border-ctac-teal-200 pt-6">
+    <div className="flex items-baseline justify-between mb-4">
+      <h4 className="text-lg font-semibold text-ctac-navy">Kai's voiceover (all 8 scenes)</h4>
+      <div className="text-sm text-slate-600 italic">
+        Total runtime: <span className="font-semibold text-ctac-navy">6:27</span>
+      </div>
+    </div>
+    <p className="text-sm text-slate-600 mb-4">
+      Recorded through the Voice Changer pipeline (Josh records → ElevenLabs → Kai's locked voice).
+      Each scene introduces or follows one of the six activities.
+    </p>
+    {/* scenes loop here */}
+  </div>
+  ```
+
+  **Per-scene rendering:**
+
+  ```jsx
+  <div className="mt-6 first:mt-0 pb-6 border-b border-slate-100 last:border-b-0">
+    <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
+      <h5 className="text-base font-semibold text-ctac-navy">{scene.label}</h5>
+      <div className="text-sm text-slate-600">
+        <span className="font-medium">{scene.duration}</span>
+        {scene.handoff && (
+          <span className="ml-3 text-slate-500">→ {scene.handoff}</span>
+        )}
+      </div>
+    </div>
+    <p className="text-sm text-slate-700 leading-relaxed italic mb-3">
+      "{scene.text}"
+    </p>
+    <audio controls preload="metadata" className="w-full max-w-md">
+      <source src={scene.audio} type="audio/mpeg" />
+    </audio>
+  </div>
+  ```
+
+  **Block below the scenes list** (footer recap):
+
+  ```jsx
+  <div className="mt-6 pt-4 border-t border-ctac-teal-200 text-sm text-slate-600 italic text-center">
+    Total runtime: <span className="font-semibold text-ctac-navy not-italic">6:27</span>
+     · 8 scenes wrapping the 6 activities.
+  </div>
+  ```
+
+  The total runtime (6:27) can be hardcoded **OR** computed from the sum of `durationSeconds` across the scenes array. Computing it dynamically is cleaner — when scenes are added/removed later (e.g., variant Kai recordings), the total updates automatically. Recommend computing: `Math.floor(total/60) + ':' + String(total%60).padStart(2,'0')`.
+
+  #### What does NOT change
+
+  - Kai's two image variants (Variant 1 + Variant 2 with the blonde update from Draft 38) — unchanged.
+  - Kai's `role` line and `show` grouping — unchanged.
+  - The Sam's Story section, all other cast cards, the rest of /demo — unchanged.
+  - Other cards' scenes / lines / description / voiceSamples shapes — unchanged (the new `text`, `duration`, `durationSeconds`, `handoff` fields are optional and only Kai uses them currently).
+  - No version bump — DemoPage section + castData expansion, not an activity.
+
+  #### Out of scope (deferred)
+
+  - **Removing the two superseded preview mp3s** (`kai-scene-1-the-scan.mp3` + `kai-scene-2-the-why.mp3`) from `/public/cast/audio/`. They're now unreferenced. Leave in place per the established cleanup-decision pattern, OR delete in a separate cleanup commit later.
+  - **Kai variant voicings.** If female / nonbinary Kai variants get separate voice recordings later, they'd extend the same shape (new `voiceSamples`-style field, or a `variants` array on each scene).
+  - **Continuous playback** (play all 8 scenes in sequence). Each scene plays independently for now. A "play all" affordance could be a follow-up if reviewers want it.
+  - **Scene-to-activity deep links.** The `handoff` field is display-only — not a hyperlink. Could become a clickable shortcut to that activity's sandbox in a follow-up.
+
+  *End of Draft 40.*
+
+  </details>
+
 - **`ba00403` · 2026-06-30** — Draft 39: built **“Your Plan”**, the seventh Ready for Roots activity (the action plan that’s been parked since Round 4). An 8-screen paginated activity that turns the kid’s work across the other six into a takeable commitment document: intro → **skills to try** (each willing-to-try skill gets a *who* dropdown from the kept allies + a *when* chip group) → **thoughts to flip** (read-only flip cards from the Getting Unstuck picks) → **people in my corner** (kept allies by support type + Strengthen commitments + pick-one-ally-to-reach-out-first) → **read your letter back** (+ optional “What sticks out?” reflection) → **who you are** (the full poem) → **review** → **saved**, with a **PNG** keepsake (cream keepsake SVG via the existing rasterizer) and a **5-page PDF** (jsPDF, lazy-loaded: title / commitments / mindset / letter / poem). Reads synthetic content from `src/lib/planDemoData.js` (real cross-activity pull-forward stays deferred per Draft 21 — when the flow is stitched, the demo reads swap for real per-kid reads and the component is unchanged). Save payload: `{ skills_to_try[], first_ally_outreach, letter_reflection, saved_at }`. Registered in testRegistry so it auto-lists on /demo (now **Activities (7)**) and serves at `/demo/sandbox/plan`; `activityVersions` gains plan v1.0; `exportFlatten` gains the `plan_*` columns (forward-looking — they populate once the Plan is in a published snapshot). `/the-plan` (the montage closer CTA from Draft 38) now redirects into the real activity; the placeholder page was removed. Fonts unchanged (out of scope). Verified end-to-end in preview: all 8 screens, Continue gating, chips/selects, the save payload matches spec, PNG download fires + jsPDF makes a valid multi-page blob, /the-plan redirects, cold-load console clean. **Cleanup queue:** the long-standing “BSS pull-forward to action plan” and “Allies Strengthen pull-forward” items are now addressed by the Plan.
 
   <details>
