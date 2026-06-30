@@ -1,10 +1,10 @@
 {
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|long-light/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
-      "source": "/((?!assets/|logos/).*)",
+      "source": "/((?!assets/|logos/|long-light/).*)",
       "headers": [
         {
           "key": "Cache-Control",

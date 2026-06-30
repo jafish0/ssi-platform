@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Long Light — GAINS for Teens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --p: 0;                       /* scroll progress 0..1, set by JS */
+    --serif: "Cormorant Garamond","Iowan Old Style",Palatino,Georgia,serif;
+    --sans: "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --ink: #f4eee4;
+    --muted: rgba(244,238,228,.72);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    background:#06090f;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- fixed atmosphere ---------- */
+  .layer{ position:fixed; inset:0; z-index:-5; pointer-events:none; }
+  .sky-dark{
+    background:linear-gradient(165deg,#05070e 0%,#0a1326 42%,#102a44 100%);
+  }
+  .sky-bright{
+    z-index:-4;
+    opacity:var(--p);
+    background:linear-gradient(165deg,#f7dcab 0%,#f2c6a1 38%,#e7ad8a 72%,#d7b58f 100%);
+  }
+  .beacon{
+    z-index:-3;
+    opacity:calc(.10 + var(--p)*.9);
+    background:
+      radial-gradient(120px 120px at 50% 11%, rgba(255,247,222,.95), rgba(255,232,176,.5) 40%, transparent 72%),
+      radial-gradient(60vw 40vh at 50% 6%, rgba(255,228,170,.45), transparent 70%);
+    transform:scale(calc(.85 + var(--p)*.5));
+    transform-origin:50% 8%;
+    transition:transform .2s linear;
+  }
+  .rays{ z-index:-2; opacity:calc(.05 + var(--p)*.6); mix-blend-mode:screen; }
+  .rays span{
+    position:absolute; top:-10%; left:50%; width:14vw; height:130vh;
+    background:linear-gradient(to bottom, rgba(255,244,214,.55), transparent 70%);
+    transform-origin:top center; filter:blur(6px);
+  }
+  .rays span:nth-child(1){ transform:translateX(-50%) rotate(8deg); }
+  .rays span:nth-child(2){ transform:translateX(-180%) rotate(16deg); width:8vw; opacity:.7; }
+  .rays span:nth-child(3){ transform:translateX(120%) rotate(-14deg); width:10vw; opacity:.8; }
+
+  .motes{ z-index:-1; }
+  .mote{
+    position:absolute; border-radius:50%;
+    background:rgba(255,238,200,.9);
+    box-shadow:0 0 8px 2px rgba(255,228,170,.7);
+    animation:drift linear infinite;
+    opacity:.0;
+  }
+  @keyframes drift{
+    0%{ transform:translateY(20px) scale(.8); opacity:0; }
+    15%{ opacity:.9; }
+    85%{ opacity:.7; }
+    100%{ transform:translateY(-120px) scale(1.1); opacity:0; }
+  }
+
+  /* ---------- altitude meter ---------- */
+  .alt{ position:fixed; right:18px; top:50%; transform:translateY(-50%); z-index:20;
+        height:46vh; width:2px; background:rgba(255,255,255,.18); border-radius:2px; }
+  .alt::before{ content:""; position:absolute; left:50%; transform:translateX(-50%);
+        top:calc(var(--p)*100% - 6px); width:9px; height:9px; border-radius:50%;
+        background:#fff; box-shadow:0 0 10px 3px rgba(255,233,180,.9); transition:top .15s linear; }
+  .alt span{ position:absolute; right:14px; top:-6px; font-size:10px; letter-spacing:.18em;
+        color:var(--muted); white-space:nowrap; writing-mode:vertical-rl; }
+  @media (max-width:640px){ .alt{ display:none; } }
+
+  /* ---------- sections ---------- */
+  main{ position:relative; z-index:1; }
+  section{ min-height:100vh; display:flex; flex-direction:column; align-items:center;
+           justify-content:center; padding:10vh 24px; position:relative; }
+
+  .reveal{ opacity:0; transform:translateY(34px); transition:opacity 1s ease, transform 1s ease; }
+  .reveal.in{ opacity:1; transform:none; }
+
+  .eyebrow{ font-family:var(--sans); font-weight:600; font-size:12px; letter-spacing:.32em;
+            text-transform:uppercase; color:rgba(255,226,170,.85); margin-bottom:14px; }
+  h1{ font-family:var(--serif); font-weight:600; line-height:1.02;
+      font-size:clamp(52px,12vw,128px); letter-spacing:.01em; }
+  h2{ font-family:var(--serif); font-weight:600; font-size:clamp(30px,5vw,56px); line-height:1.05; }
+  .lede{ font-family:var(--serif); font-style:italic; font-size:clamp(20px,3.2vw,30px);
+         color:var(--muted); max-width:34ch; margin-top:18px; line-height:1.35; }
+  p.body{ font-size:clamp(15px,2.1vw,18px); line-height:1.7; color:var(--muted); max-width:52ch; }
+  .center{ text-align:center; }
+
+  /* hero */
+  .hero .spark{ width:10px; height:10px; border-radius:50%; background:#fff;
+      box-shadow:0 0 24px 8px rgba(255,224,160,.9); margin:0 auto 30px;
+      animation:pulse 4s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:.55; transform:scale(.9);} 50%{ opacity:1; transform:scale(1.25);} }
+  .scrollcue{ position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+      font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); text-align:center; }
+  .scrollcue .chev{ display:block; margin:10px auto 0; width:14px; height:14px;
+      border-right:1.5px solid var(--muted); border-bottom:1.5px solid var(--muted);
+      transform:rotate(45deg); animation:bob 1.8s infinite; }
+  @keyframes bob{ 0%,100%{ transform:rotate(45deg) translate(0,0); opacity:.4;}
+                  50%{ transform:rotate(45deg) translate(4px,4px); opacity:1;} }
+
+  /* zone layout: framed 9:16 plate + caption */
+  .zone .wrap{ display:flex; gap:clamp(24px,5vw,64px); align-items:center;
+      max-width:1080px; width:100%; }
+  .zone:nth-child(even) .wrap{ flex-direction:row-reverse; }
+  .frame{ flex:0 0 auto; width:min(40vw,300px); aspect-ratio:9/16; border-radius:22px;
+      background-size:cover; background-position:center; background-repeat:no-repeat;
+      box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08),
+                 0 0 60px rgba(255,210,140,.12);
+      position:relative; overflow:hidden; }
+  .frame::after{ content:""; position:absolute; inset:0; border-radius:22px;
+      box-shadow:inset 0 0 60px rgba(0,0,0,.35); }
+  .caption{ flex:1 1 0; min-width:0; }
+  .caption .num{ font-family:var(--serif); font-size:14px; letter-spacing:.3em;
+      color:rgba(255,226,170,.8); text-transform:uppercase; margin-bottom:8px; }
+  .caption h2{ margin-bottom:14px; }
+  .mech{ margin-top:18px; font-size:13px; line-height:1.5; color:rgba(244,238,228,.62);
+      border-left:2px solid rgba(255,210,150,.5); padding-left:14px; max-width:46ch; }
+  .mech b{ color:rgba(255,232,190,.95); font-weight:600; }
+  @media (max-width:760px){
+    .zone .wrap, .zone:nth-child(even) .wrap{ flex-direction:column; text-align:center; }
+    .frame{ width:min(74vw,300px); }
+    .mech{ margin-left:auto; margin-right:auto; }
+    .caption .num{ }
+  }
+
+  /* fallback gradients per zone (show until / unless the PNG is present) */
+  .z1{ background-image:url("zone1.png"),
+        radial-gradient(60% 18% at 50% 8%, rgba(255,228,170,.5), transparent 60%),
+        linear-gradient(#05070e,#0e2138); }
+  .z2{ background-image:url("zone2.png"),
+        radial-gradient(60% 22% at 50% 10%, rgba(255,210,150,.45), transparent 62%),
+        linear-gradient(#101a38,#3a2d52); }
+  .z3{ background-image:url("zone3.png"),
+        linear-gradient(#2a4a5f,#9fae9a 55%,#e7c79a); }
+  .z4{ background-image:url("zone4.png"),
+        linear-gradient(#9cc6d6,#f0c98f); }
+  .z5{ background-image:url("zone5.png"),
+        radial-gradient(70% 30% at 50% 16%, rgba(255,255,235,.95), transparent 60%),
+        linear-gradient(#f4d59c,#fff7e6); }
+
+  /* wake / payoff */
+  .wake .card{ max-width:620px; text-align:center; }
+  .stats{ display:flex; gap:28px; justify-content:center; flex-wrap:wrap; margin-top:40px; }
+  .stat{ min-width:120px; }
+  .stat .big{ font-family:var(--serif); font-size:clamp(28px,5vw,44px); color:#3a2a12; }
+  .stat .lbl{ font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(58,42,18,.7); margin-top:4px; }
+  .wake.bright h2,.wake.bright .lede,.wake.bright p,.wake.bright .eyebrow{ color:#3a2a12; }
+  .wake.bright .lede{ color:rgba(58,42,18,.78); }
+  .wake.bright .eyebrow{ color:#9a5a18; }
+
+  footer{ text-align:center; padding:40px 24px 60px; color:rgba(58,42,18,.62);
+      font-size:12px; letter-spacing:.04em; }
+  .fineprint{ max-width:60ch; margin:0 auto; line-height:1.6; }
+</style>
+</head>
+<body>
+  <!-- fixed atmosphere -->
+  <div class="layer sky-dark"></div>
+  <div class="layer sky-bright"></div>
+  <div class="layer beacon"></div>
+  <div class="layer rays"><span></span><span></span><span></span></div>
+  <div class="layer motes" id="motes"></div>
+  <div class="alt" aria-hidden="true"><span>TO THE BEACON</span></div>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero center">
+      <div class="spark"></div>
+      <div class="eyebrow reveal in">GAINS for Teens · A Single-Session Intervention</div>
+      <h1 class="reveal in">The Long Light</h1>
+      <div class="lede reveal in" style="margin-left:auto;margin-right:auto">A dream that rehearses the bravest thing you’ll do tomorrow.</div>
+      <div class="scrollcue">Scroll to enter the dream<span class="chev"></span></div>
+    </section>
+
+    <!-- PREMISE -->
+    <section class="center">
+      <div class="eyebrow reveal">The frame</div>
+      <h2 class="reveal" style="max-width:18ch">Tonight, a teen can’t sleep.</h2>
+      <p class="body reveal" style="margin:22px auto 0">
+        In the morning they meet a new therapist for the very first time — and they’re scared.
+        To quiet their mind, they open a book and drift into its world. Everything that follows is a dream.
+        And the dream is the intervention.
+      </p>
+      <p class="body reveal" style="margin:22px auto 0;color:rgba(255,226,170,.8)">
+        You never see their face. You see through their eyes — until the world hands you a new one.
+      </p>
+    </section>
+
+    <!-- ZONE 1 -->
+    <section class="zone">
+      <div class="wrap">
+        <div class="frame z1 reveal" role="img" aria-label="The Hollow — a dark valley with a single lantern and a faraway beacon"></div>
+        <div class="caption reveal">
+          <div class="num">Zone I</div>
+          <h2>The Hollow</h2>
+          <p class="body">You wake in the dark with a single light in your hand. Far above — almost too far to believe — a warm beacon. That’s where you’re going.</p>
+          <div class="mech"><b>Start.</b> The phone you fell asleep holding is now the light you carry. The whole journey points upward, toward the Beacon.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE 2 -->
+    <section class="zone">
+      <div class="wrap">
+        <div class="frame z2 reveal" role="img" aria-label="The Lantern Path — a winding trail of lanterns climbing the slopes"></div>
+        <div class="caption reveal">
+          <div class="num">Zone II</div>
+          <h2>The Lantern Path</h2>
+          <p class="body">A carved stone glows as you near it — a message left by someone who once stood exactly here, and made it through.</p>
+          <div class="mech"><b>Psychoeducation</b>, delivered as a short message from someone who’s been in your shoes — discovered, not lectured.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE 3 -->
+    <section class="zone">
+      <div class="wrap">
+        <div class="frame z3 reveal" role="img" aria-label="The Mistfields — a stone bridge over a cloud chasm, beacon glowing above"></div>
+        <div class="caption reveal">
+          <div class="num">Zone III</div>
+          <h2>The Mistfields</h2>
+          <p class="body">Higher now, above the first clouds. The path is harder — but you’re not the first to walk it. Lanterns and stones light the way.</p>
+          <div class="mech"><b>An activity</b> to make the lesson yours — then a brief, playful crossing to the next light.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE 4 -->
+    <section class="zone">
+      <div class="wrap">
+        <div class="frame z4 reveal" role="img" aria-label="The Bright Reaches — open sunlit highland above the clouds"></div>
+        <div class="caption reveal">
+          <div class="num">Zone IV</div>
+          <h2>The Bright Reaches</h2>
+          <p class="body">You break above the clouds. The light you’ve gathered along the way is paying off — and the world is warm now.</p>
+          <div class="mech"><b>Gear up.</b> Everything you’ve collected makes the last climb easier. Progress you can see.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE 5 -->
+    <section class="zone">
+      <div class="wrap">
+        <div class="frame z5 reveal" role="img" aria-label="The Threshold — the great lighthouse beacon, its door opening into light"></div>
+        <div class="caption reveal">
+          <div class="num">Zone V</div>
+          <h2>The Threshold</h2>
+          <p class="body">The Beacon. You climb the last steps, and the door opens into pure light.</p>
+          <div class="mech">The lighthouse was the <b>therapist’s door</b> all along.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WAKE -->
+    <section class="wake bright center">
+      <div class="card">
+        <div class="eyebrow reveal">And then — morning</div>
+        <h2 class="reveal">You wake. You’re ready to go.</h2>
+        <div class="lede reveal" style="margin-left:auto;margin-right:auto">
+          “Come on — time to get ready for our appointment.” The dream rehearsed the real thing.
+        </div>
+        <div class="stats reveal">
+          <div class="stat"><div class="big">~25–30</div><div class="lbl">minutes</div></div>
+          <div class="stat"><div class="big">1</div><div class="lbl">session</div></div>
+          <div class="stat"><div class="big">5</div><div class="lbl">zones of the climb</div></div>
+        </div>
+        <p class="body reveal" style="margin:34px auto 0;color:rgba(58,42,18,.78)">
+          A single-session intervention for a teen about to start trauma therapy — psychoeducation and
+          practice, carried by a game you ascend rather than a lesson you sit through. Built on the SSI Platform.
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      <div class="fineprint">
+        The Long Light — concept pitch for GAINS for Teens. Environment art generated to establish the
+        visual language; avatar, video, activities, and traversal interactions are in development.
+      </div>
+    </footer>
+  </main>
+
+<script>
+  // light motes
+  (function(){
+    const host = document.getElementById('motes');
+    const N = 26;
+    for(let i=0;i<N;i++){
+      const m = document.createElement('div');
+      m.className = 'mote';
+      const s = 1 + Math.random()*3;
+      m.style.width = s+'px'; m.style.height = s+'px';
+      m.style.left = Math.random()*100+'vw';
+      m.style.top = (60 + Math.random()*40)+'vh';
+      m.style.animationDuration = (7 + Math.random()*10)+'s';
+      m.style.animationDelay = (-Math.random()*12)+'s';
+      host.appendChild(m);
+    }
+  })();
+
+  // scroll progress -> --p
+  const root = document.documentElement;
+  let ticking = false;
+  function onScroll(){
+    if(ticking) return; ticking = true;
+    requestAnimationFrame(()=>{
+      const max = document.body.scrollHeight - window.innerHeight;
+      const p = max>0 ? Math.min(1, Math.max(0, window.scrollY/max)) : 0;
+      root.style.setProperty('--p', p.toFixed(4));
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  // reveal on scroll
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  }, {threshold:0.18});
+  document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
