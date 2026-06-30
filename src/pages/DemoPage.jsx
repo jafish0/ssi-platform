@@ -328,7 +328,7 @@ export default function DemoPage() {
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
           The psychoeducation track that wraps the six activities. Kai narrates
-          eight scenes total; two recorded so far.
+          all eight scenes — 6:27 of voiceover, recorded and paired with the script below.
         </p>
 
         <div className="space-y-4">
@@ -743,23 +743,68 @@ function CastCard({ character }) {
         )}
 
         {scenes && scenes.length > 0 ? (
-          <div className="space-y-1">
-            {scenes.map((sc, i) => (
-              <div key={i} className={i === 0 ? '' : 'mt-4'}>
-                <p className="text-sm font-semibold text-slate-700">{sc.label}</p>
-                {sc.description && (
-                  <p className="text-xs italic text-slate-500 mb-1">{sc.description}</p>
+          (() => {
+            // Total runtime computed from the per-scene durationSeconds so
+            // it stays correct if scenes are added/removed (Draft 40 D).
+            const totalSecs = scenes.reduce((s, sc) => s + (sc.durationSeconds || 0), 0)
+            const fmt = (t) => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0')
+            const hasMeta = totalSecs > 0
+            return (
+              <div>
+                {hasMeta && (
+                  <div className="border-t border-ctac-teal-200 pt-5 mb-1">
+                    <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+                      <h4 className="text-lg font-semibold text-ctac-navy">
+                        {name}’s voiceover ({scenes.length} scenes)
+                      </h4>
+                      <div className="text-sm text-slate-600 italic">
+                        Total runtime:{' '}
+                        <span className="font-semibold text-ctac-navy not-italic">{fmt(totalSecs)}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-600 mb-2">
+                      Recorded through the Voice Changer pipeline (Josh records → ElevenLabs →
+                      Kai’s locked voice). Each scene introduces or follows one of the six activities.
+                    </p>
+                  </div>
                 )}
-                <audio
-                  controls
-                  preload="metadata"
-                  src={sc.audio}
-                  aria-label={`Audio: ${name} — ${sc.label}`}
-                  className="w-full mt-1"
-                />
+                <div className="divide-y divide-slate-100">
+                  {scenes.map((sc, i) => (
+                    <div key={i} className="py-4 first:pt-2">
+                      <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
+                        <p className="text-base font-semibold text-ctac-navy">{sc.label}</p>
+                        <div className="text-sm text-slate-600">
+                          {sc.duration && <span className="font-medium">{sc.duration}</span>}
+                          {sc.handoff && <span className="ml-3 text-slate-500">→ {sc.handoff}</span>}
+                        </div>
+                      </div>
+                      {sc.text ? (
+                        <p className="text-sm text-slate-700 leading-relaxed italic mb-3">“{sc.text}”</p>
+                      ) : (
+                        sc.description && (
+                          <p className="text-xs italic text-slate-500 mb-1">{sc.description}</p>
+                        )
+                      )}
+                      <audio
+                        controls
+                        preload="metadata"
+                        src={sc.audio}
+                        aria-label={`Audio: ${name} — ${sc.label}`}
+                        className="w-full max-w-md mt-1"
+                      />
+                    </div>
+                  ))}
+                </div>
+                {hasMeta && (
+                  <div className="mt-4 pt-4 border-t border-ctac-teal-200 text-sm text-slate-600 italic text-center">
+                    Total runtime:{' '}
+                    <span className="font-semibold text-ctac-navy not-italic">{fmt(totalSecs)}</span>
+                    {' '}· {scenes.length} scenes wrapping the 6 activities.
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            )
+          })()
         ) : videos && videos.length > 0 ? (
           <div className="mx-auto w-full max-w-[320px]">
             {videos.map((v, i) => (
