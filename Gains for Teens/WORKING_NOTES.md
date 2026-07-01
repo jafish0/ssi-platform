@@ -36,7 +36,13 @@ Claude Code (CLI — implementation).
 - **Concept brief:** `Gains for Teens/GAINS for Teens - Concept Brief.docx` (internal
   reference — not for the team yet).
 - **Pitch site:** `Gains for Teens/The Long Light - Concept Pitch.html` (deploy-ready
-  copy staged at `Gains for Teens/long-light-site/`).
+  copy staged at `Gains for Teens/long-light-site/`). **Live at
+  https://ssi.ctac.app/long-light/** (unlisted).
+- **Deploy domain — important:** the SSI app (Vercel project `ctac-ssi`, this repo)
+  serves at **`ssi.ctac.app`**, NOT the bare `ctac.app`. The bare `ctac.app` domain is
+  attached to a *different* Vercel project (`sts-bsc-manager`) and shows "STS-BSC
+  Manager" — it will bounce you to `ctac.app/`. Always test SSI/GAINS URLs against the
+  `ssi.` subdomain.
 - **Meetings:** kicked off 2026-06-29; next 2026-07-06, 9am.
 
 ---
@@ -44,13 +50,18 @@ Claude Code (CLI — implementation).
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
 - **c8b0369** (2026-06-30) — Draft 1: hosted "The Long Light" concept pitch as a
-  static page at `public/long-light/` (serves at **ctac.app/long-light/**). Copied
-  the staged scroll-to-ascend `index.html` + 5 zone PNGs in verbatim; excluded
-  `/long-light/` from the vercel.json SPA rewrite (so the static files serve, not the
-  SPA fallback) and from the global no-cache header (so the ~18 MB of PNGs cache).
-  Verified in preview: all 5 plates load in order, dark→gold brighten on scroll, no
-  404s. Unlisted — not linked from app nav or `/demo`. (PNGs left unoptimized; see
-  note below.)
+  static page at `public/long-light/`. **Live at https://ssi.ctac.app/long-light/**
+  (verified serving on the domain: `/long-light/` → 200, 15,963-byte pitch page, all
+  5 zone PNGs → 200). Copied the staged scroll-to-ascend `index.html` + 5 zone PNGs in
+  verbatim; excluded `/long-light/` from the vercel.json SPA rewrite (so the static
+  files serve, not the SPA fallback) and from the global no-cache header (so the ~18 MB
+  of PNGs cache). Verified in preview: all 5 plates load in order, dark→gold brighten
+  on scroll, no 404s. Unlisted — not linked from app nav or `/demo`. (PNGs left
+  unoptimized; see note below.)
+  **Domain gotcha:** Draft 1 said the target was `ctac.app/long-light/`, but the SSI
+  app actually serves at the **`ssi.ctac.app`** subdomain — the bare `ctac.app` is a
+  different Vercel project (`sts-bsc-manager`). Use `ssi.ctac.app` for all SSI/GAINS
+  URLs (see Project anchors).
 
 > **Follow-up (optional):** the 5 zone PNGs total ~18 MB. No image-optimization tool
 > (sharp / cwebp / ImageMagick) was available in this environment, so they shipped
