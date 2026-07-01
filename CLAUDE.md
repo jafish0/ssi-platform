@@ -30,6 +30,12 @@ been shipped recently and what's queued.
 
 If `WORKING_NOTES.md` is missing, bootstrap it before doing other work.
 
+**Second program — GAINS for Teens.** A second single-session intervention
+(“The Long Light”) is in development on this same app. Its planning and history
+live in their own file, `Gains for Teens/WORKING_NOTES.md`, with independent draft
+numbering. When working on GAINS, read that file; the root `WORKING_NOTES.md` stays
+Ready for Roots plus any shared-platform / SessionEngine work that affects both.
+
 ## After every push (Claude Code only)
 
 1. If the change came from a draft in "Ideas / drafts," move that draft
