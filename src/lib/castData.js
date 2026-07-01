@@ -13,18 +13,30 @@
 // Line text is verbatim from `Video Content/Character_Profiles.docx`.
 // Scene cues are the per-line stage directions from the same doc.
 //
-// Every card carries a `show` field placing it in one of two parallel
-// /demo sections (Draft 35):
-//   - `show: 'sams-story'` — the narrative-video cast (Holly's Script
-//     2.0): Sam 16, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson.
-//   - `show: 'learning-skills'` — the psychoeducation track that wraps
-//     the six activities (Adrienne's script): Kai.
+// Every card carries a `shows` array placing it in one or more parallel
+// /demo sections (Draft 35; array form since Draft 42 so a card can
+// appear in multiple sections — Sam 18 + Sam 14 render in both their
+// home section and the proposed-alternative section):
+//   - `'sams-story'` — the narrative-video cast (Holly's Script 2.0):
+//     Sam 18 (formerly presented as 16), Sam 14, Foster Mom, Foster Dad,
+//     Mrs. Johnson.
+//   - `'learning-skills'` — the psychoeducation track that wraps the six
+//     activities (Adrienne's script): Kai.
+//   - `'proposed-alternative'` — Draft 42's "Proposed Alternative Cast"
+//     section, for team review only (not shipping). Reuses Sam 18 + Sam
+//     14, plus four new-or-repurposed cards: a nonbinary Sam variant
+//     (reusing Kai's current Variant 1 image), a female Sam placeholder
+//     (`placeholder: true`, no build yet), and two proposed peer-mentor
+//     Kai identities (male / female, early-20s Black young adult).
 //
 // Image shape (one of):
 //   - `image` (string) — single character image (most cards).
 //   - `images`: [{ label, src, alt }, ...] — multiple design variants
 //     rendered side-by-side with captions (Kai). When present, `image`
 //     is ignored.
+//   - `placeholder: true` — no image yet; the image column renders a
+//     dashed-outline "Coming soon" silhouette instead (Draft 42, Sam —
+//     Female). Takes precedence over `image`/`images` when set.
 //
 // A card can carry one content shape, in precedence order:
 //   - `videos`: [{ src | youtubeId, caption, label? }, ...] — one or
@@ -62,12 +74,17 @@
 
 export const CAST = [
   {
+    // id + asset filenames stay `sam-16` — internal identifiers, not
+    // user-visible. Only the display strings age the character up to 18
+    // (Draft 42, 2026-07-01): a design decision to read as a young adult
+    // with more distance from adolescence. Holly's Script 2.0 still
+    // narratively references "16-year-old Sam" internally — unchanged.
     id: 'sam-16',
-    show: 'sams-story',
-    name: 'Sam (16 years old)',
+    shows: ['sams-story', 'proposed-alternative'],
+    name: 'Sam (18 years old)',
     image: '/cast/images/sam-16.png',
-    alt: 'Sam at 16 — the narrator, two years later',
-    role: 'Our narrator — Sam two years later.',
+    alt: 'Sam at 18 — the narrator, four years later',
+    role: 'Our narrator — Sam four years later.',
     // Brayden-voiced "Older Sam" voice-model demo (all narrator lines
     // stitched). Voice pipeline locked 2026-06-24 (Josh records →
     // ElevenLabs Voice Changer → Brayden = Sam). Replaced the four Draft
@@ -84,7 +101,7 @@ export const CAST = [
   },
   {
     id: 'sam-14',
-    show: 'sams-story',
+    shows: ['sams-story', 'proposed-alternative'],
     name: 'Sam (14 years old)',
     image: '/cast/images/sam-14.png',
     alt: 'Sam at 14 — the 14-year-old version of the main character',
@@ -117,7 +134,7 @@ export const CAST = [
   },
   {
     id: 'foster-mom',
-    show: 'sams-story',
+    shows: ['sams-story'],
     name: 'Foster Mom',
     image: '/cast/images/foster-mom.png',
     alt: 'Foster Mom — the spark in the foster home',
@@ -133,7 +150,7 @@ export const CAST = [
   },
   {
     id: 'foster-dad',
-    show: 'sams-story',
+    shows: ['sams-story'],
     name: 'Foster Dad',
     image: '/cast/images/foster-dad.png',
     alt: 'Foster Dad — the anchor to Foster Mom’s spark',
@@ -143,7 +160,7 @@ export const CAST = [
   },
   {
     id: 'mrs-johnson',
-    show: 'sams-story',
+    shows: ['sams-story'],
     name: 'Mrs. Johnson',
     image: '/cast/images/mrs-johnson.png',
     alt: 'Mrs. Johnson — Sam’s teacher and the catalyst for change',
@@ -158,7 +175,7 @@ export const CAST = [
     // audio (longer-form than Sam's per-line shape). Two scenes recorded
     // so far of eight; same Voice Changer pipeline as Sam.
     id: 'kai',
-    show: 'learning-skills',
+    shows: ['learning-skills'],
     name: 'Kai',
     alt: 'Kai — the narrator for Learning Skills for Belonging',
     images: [
@@ -249,6 +266,58 @@ export const CAST = [
         duration: '0:16',
         durationSeconds: 16,
         text: "Finding that sense of belonging can be tough for everyone, and it's even harder when you are in foster or relative care. But remember: your story isn't over just because the current chapter has been a little chaotic. You've got new skills now — give them a try!",
+      },
+    ],
+  },
+
+  // ---------- Proposed Alternative Cast (Draft 42, 2026-07-01) ----------
+  // For team review only — not shipping yet. Reimagines Kai's identity
+  // design: the current Kai V1 image gets repositioned as a nonbinary Sam
+  // variant, and two new peer-mentor Kai concepts are proposed with more
+  // specific identities. Sam 18 + Sam 14 (above) also carry
+  // 'proposed-alternative' in their `shows` so they render here again for
+  // side-by-side comparison.
+  {
+    id: 'sam-nonbinary',
+    shows: ['proposed-alternative'],
+    name: 'Sam — Gender Neutral',
+    image: '/cast/images/kai-variant-1.png',
+    alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai',
+    role: "Sam's nonbinary variant. Uses the character design currently in the Kai role — the gender-neutral design fits precisely here.",
+  },
+  {
+    id: 'sam-female-placeholder',
+    shows: ['proposed-alternative'],
+    name: 'Sam — Female',
+    placeholder: true,
+    alt: 'Sam, female variant — coming soon placeholder',
+    role: 'The female Sam variant. Character build not yet started.',
+  },
+  {
+    id: 'kai-man-alternative',
+    shows: ['proposed-alternative'],
+    name: 'Kai — Male (proposed)',
+    image: '/cast/images/kai-man.png',
+    alt: 'Kai, proposed male variant — early-20s Black young man peer mentor',
+    role: 'Proposed peer-mentor Kai — an early-20s Black young man. Foster-care alumni, now working with kids in the system.',
+    voiceSamples: [
+      {
+        label: 'Voice sample',
+        src: '/cast/audio/kai-man-voice-sample.mp3',
+      },
+    ],
+  },
+  {
+    id: 'kai-woman-alternative',
+    shows: ['proposed-alternative'],
+    name: 'Kai — Female (proposed)',
+    image: '/cast/images/kai-woman.png',
+    alt: 'Kai, proposed female variant — early-20s Black young woman peer mentor',
+    role: 'Proposed peer-mentor Kai — an early-20s Black young woman. Foster-care alumni, now working with kids in the system.',
+    voiceSamples: [
+      {
+        label: 'Voice sample',
+        src: '/cast/audio/kai-woman-voice-sample.mp3',
       },
     ],
   },

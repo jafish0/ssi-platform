@@ -302,7 +302,7 @@ export default function DemoPage() {
         </div>
 
         <div className="space-y-4">
-          {CAST.filter((c) => c.show === 'sams-story').map((character) => (
+          {CAST.filter((c) => c.shows.includes('sams-story')).map((character) => (
             <CastCard key={character.id} character={character} />
           ))}
         </div>
@@ -328,7 +328,35 @@ export default function DemoPage() {
         </h2>
 
         <div className="space-y-4">
-          {CAST.filter((c) => c.show === 'learning-skills').map((character) => (
+          {CAST.filter((c) => c.shows.includes('learning-skills')).map((character) => (
+            <CastCard key={character.id} character={character} />
+          ))}
+        </div>
+      </section>
+
+      {/* Proposed Alternative Cast — Draft 42, 2026-07-01. For team review
+          only, not shipping. Visually distinct (teal wash + top border) so
+          it reads as "a new consideration area," not just another cast
+          section. The current Learning Skills Kai above is untouched;
+          this section proposes reworking Kai's identity design and
+          repurposes the current Kai V1 image as a nonbinary Sam variant. */}
+      <section className="mb-10 bg-ctac-teal-50/30 border-t-2 border-ctac-teal-200 pt-8 -mx-4 px-4 sm:mx-0 sm:px-6 sm:rounded-2xl">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Proposed Alternative Cast
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          An alternative direction for the cast, for team consideration. Sam
+          gains the female + nonbinary variants we&apos;ve been planning — the
+          current Kai character-design is a natural fit for Sam — Gender
+          Neutral (using the same locked visual). Kai&apos;s peer-mentor role is
+          filled by two new options here, both early-20s Black young adults,
+          to test whether more specific representation lands better with the
+          target audience of foster youth in Kentucky. Curious what the team
+          thinks.
+        </p>
+
+        <div className="space-y-4">
+          {CAST.filter((c) => c.shows.includes('proposed-alternative')).map((character) => (
             <CastCard key={character.id} character={character} />
           ))}
         </div>
@@ -664,16 +692,30 @@ function ExportFileBlock({
 // don't speak yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
-  const { name, image, images, alt, role, lines, description, landscape, videos, voiceSamples, scenes } = character
+  const { name, image, images, alt, role, lines, description, landscape, videos, voiceSamples, scenes, placeholder } =
+    character
   return (
     <article
       tabIndex={0}
       className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-6 flex flex-col md:flex-row gap-6"
     >
-      {/* Image column — a gallery of design variants when `images` is
-          present (Kai), else the single character image. */}
+      {/* Image column — a "coming soon" placeholder when `placeholder` is
+          set (Draft 42, Sam — Female), a gallery of design variants when
+          `images` is present (Kai), else the single character image. */}
       <div className="w-full md:w-2/5 flex-shrink-0">
-        {images && images.length > 0 ? (
+        {placeholder ? (
+          <div
+            role="img"
+            aria-label={alt || `${name} — character not yet built`}
+            className="w-full aspect-[3/4] max-h-[280px] bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500"
+          >
+            <svg viewBox="0 0 40 40" className="w-16 h-16 mb-2 opacity-40">
+              <circle cx="20" cy="14" r="6" fill="currentColor" />
+              <path d="M 8 36 Q 8 24, 20 24 Q 32 24, 32 36 Z" fill="currentColor" />
+            </svg>
+            <span className="text-sm italic">Coming soon</span>
+          </div>
+        ) : images && images.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {images.map((img, i) => (
               <figure key={i}>
