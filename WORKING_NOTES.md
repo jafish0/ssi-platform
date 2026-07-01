@@ -46,6 +46,209 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`27177c0` · 2026-07-01** — Draft 42: added a **"Proposed Alternative Cast"** section to /demo (team review only, not shipping) + renamed Sam 16 to **Sam 18** everywhere on-screen. The alternative reimagines Kai's identity design: the current Kai V1 image is repositioned as a nonbinary Sam variant, and two new peer-mentor Kai concepts are proposed with more specific identities (early-20s Black man / woman) — both current and proposed stay visible side-by-side. **Sam 16 → 18:** display strings only (name/alt/role) on the sam-16 card; id, asset filenames, and the underlying script/video/audio are untouched. **`show` → `shows` array:** migrated every cast card off the singular `show` string so a card can appear in multiple sections (Sam 18 + Sam 14 now render in both Sam's Story and the new section); updated DemoPage's filters to `.shows.includes(...)`. **4 new assets** (kai-man.png, kai-woman.png, and two ~35s voice-sample mp3s) + **4 new cards**: Sam — Gender Neutral (reuses the existing kai-variant-1.png), Sam — Female (`placeholder: true` — dashed-outline "Coming soon" silhouette, no build yet), and Kai — Male / Kai — Female (proposed), each with an image + voice sample. New section renders after Learning Skills, before Growing your roots, with a teal-wash visual treatment and a neutral feedback-inviting intro. The current Learning Skills Kai (8 voiceover scenes, animated clip, both images) is completely untouched. No activityVersions bump. Verified in preview: Sam 18 renders twice (old "16" string gone), the new section + intro render, all 6 proposed cards show correctly, the placeholder renders exactly once, both new Kai images load, both new voice samples serve, no console errors. **Note:** shipping this draft surfaced that WORKING_NOTES.md had picked up unrelated data loss from an external edit (a truncated archived section) sitting uncommitted on disk — fixed separately in `1c8459b` by reconstructing from the last known-good commit.
+
+  <details>
+  <summary>Draft 42 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 42 — "Proposed Alternative Cast" section on /demo + Sam 16 → Sam 18 rename
+
+  New section at the bottom of the character sections on /demo, presenting an alternative direction for the cast for team review. Also globally renames the current Sam 16 character to Sam 18 (in both the existing Sam's Story section AND the new proposed alternative section).
+
+  The alternative direction — for team consideration, not for shipping yet — reimagines Kai's identity design. The current Kai character-design gets repositioned as the nonbinary Sam variant we've been planning, and two new Kai concepts are proposed as peer mentors with more specific identities (early-20s Black man and early-20s Black woman). Both current and proposed sections are visible side-by-side so the team can compare.
+
+  **Approved by:** Josh, 2026-07-01.
+
+  ---
+
+  #### Part A — Global rename: Sam 16 → Sam 18
+
+  Age up the current Sam narrator character from 16 to 18. Same person, same imagery, same voice, same script — just presented as older. Reflects a design decision to have the narrator read as a young adult with more distance from adolescence.
+
+  **File:** `src/lib/castData.js`.
+
+  **Changes to the existing Sam narrator card (currently `id: 'sam-16'`):**
+
+  - `name`: *"Sam (16 years old)"* → *"Sam (18 years old)"*
+  - `alt`: *"Sam at 16 — the narrator, two years later"* → *"Sam at 18 — the narrator, four years later"*
+  - `role`: *"Our narrator — Sam two years later."* → *"Our narrator — Sam four years later."*
+
+  **Do NOT change the `id` (`'sam-16'`).** The id is an internal identifier used by voiceSamples/videos references and by any test data. Renaming the id would cascade breakage. Just update the human-facing strings.
+
+  **Do NOT change filenames.** `sam-16.png`, `sam-16-line-*.mp4`, etc. keep their current names — they're internal asset identifiers, not user-visible.
+
+  **Do NOT modify the script.** Holly's Script 2.0 references "16-year-old Sam" narratively; that's fine to preserve internally. The user-facing character presentation is what's shifting.
+
+  **Voice sample labels** on the Sam narrator card: any label currently referencing "Older Sam" (from Draft 33) can stay as-is — "Older Sam Narrator" reads correctly for an 18-year-old. If a label explicitly says "16," update to "18".
+
+  #### Part B — Extend the `show` field to support multiple sections
+
+  The current cast card shape from Draft 35 has a single `show: 'sams-story' | 'learning-skills'` string. For this draft, cards need to appear in **multiple sections** (Sam-18 and Sam-14 appear in both Sam's Story AND the Proposed Alternative Cast).
+
+  **Change:** rename `show` to `shows` and make it a string array. Update all existing cards:
+
+  - Sam-18 (was sam-16): `shows: ['sams-story', 'proposed-alternative']`
+  - Sam-14: `shows: ['sams-story', 'proposed-alternative']`
+  - Foster Mom, Foster Dad, Mrs. Johnson: `shows: ['sams-story']`
+  - Family Photo: `shows: ['sams-story']`
+  - Kai (current, from Draft 35/40/41): `shows: ['learning-skills']`
+
+  For backward compatibility, the CastCard renderer can accept EITHER `shows: [...]` OR the legacy `show: '...'` — but since we're updating every card in this draft anyway, cleanest is to migrate fully to `shows` and delete the singular-form fallback logic.
+
+  **Update the top-of-file comment** in castData.js to document the new `shows` array shape.
+
+  #### Part C — Copy new assets
+
+  Four new files.
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/Kai - Man.png` | `public/cast/images/kai-man.png` |
+  | `Video Content/Kai - Woman.png` | `public/cast/images/kai-woman.png` |
+  | `Video Content/Kai Male Alternative.mp3` | `public/cast/audio/kai-man-voice-sample.mp3` |
+  | `Video Content/Kai - Female Voice.mp3` | `public/cast/audio/kai-woman-voice-sample.mp3` |
+
+  Both mp3s are ~35 seconds each — voice samples of the two proposed alternative Kai voices reading a shared opening line.
+
+  #### Part D — Add four new cards to `src/lib/castData.js`
+
+  All four cards go under `shows: ['proposed-alternative']`. Order them in this sequence in the CAST array (or grouped at the end):
+
+  ##### Card 1 — Sam - Gender Neutral (repurposed current Kai V1)
+
+  ```js
+  {
+    id: 'sam-nonbinary',
+    name: 'Sam — Gender Neutral',
+    shows: ['proposed-alternative'],
+    image: '/cast/images/kai-variant-1.png',  // reuse the existing locked Kai V1 image
+    alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai',
+    role: "Sam's nonbinary variant. Uses the character design currently in the Kai role — the gender-neutral design fits precisely here.",
+  },
+  ```
+
+  Same image file as Kai's current Variant 1 (no new file needed). The label and role reframe it as the nonbinary Sam variant.
+
+  ##### Card 2 — Sam - Female (coming soon placeholder)
+
+  ```js
+  {
+    id: 'sam-female-placeholder',
+    name: 'Sam — Female',
+    shows: ['proposed-alternative'],
+    placeholder: true,  // NEW flag — see rendering note below
+    alt: 'Sam, female variant — coming soon placeholder',
+    role: 'The female Sam variant. Character build not yet started.',
+  },
+  ```
+
+  **Placeholder rendering:** the CastCard renderer needs a new `placeholder: true` branch. When set, render an outlined-person-silhouette SVG (or a neutral grey rectangle) in the image slot, with a small overlay label reading *"Coming soon."* No `image` field on this card; the renderer generates the placeholder visual inline.
+
+  Simple placeholder SVG for the image slot (Code can adapt):
+
+  ```jsx
+  <div className="w-full aspect-[3/4] bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500">
+    <svg viewBox="0 0 40 40" className="w-16 h-16 mb-2 opacity-40">
+      {/* simple person silhouette */}
+      <circle cx="20" cy="14" r="6" fill="currentColor" />
+      <path d="M 8 36 Q 8 24, 20 24 Q 32 24, 32 36 Z" fill="currentColor" />
+    </svg>
+    <span className="text-sm italic">Coming soon</span>
+  </div>
+  ```
+
+  ##### Card 3 — Kai (Male) — proposed alternative
+
+  ```js
+  {
+    id: 'kai-man-alternative',
+    name: 'Kai — Male (proposed)',
+    shows: ['proposed-alternative'],
+    image: '/cast/images/kai-man.png',
+    alt: 'Kai, proposed male variant — early-20s Black young man peer mentor',
+    role: "Proposed peer-mentor Kai — an early-20s Black young man. Foster-care alumni, now working with kids in the system.",
+    voiceSamples: [
+      {
+        label: 'Voice sample',
+        src: '/cast/audio/kai-man-voice-sample.mp3',
+      },
+    ],
+  },
+  ```
+
+  ##### Card 4 — Kai (Female) — proposed alternative
+
+  ```js
+  {
+    id: 'kai-woman-alternative',
+    name: 'Kai — Female (proposed)',
+    shows: ['proposed-alternative'],
+    image: '/cast/images/kai-woman.png',
+    alt: 'Kai, proposed female variant — early-20s Black young woman peer mentor',
+    role: "Proposed peer-mentor Kai — an early-20s Black young woman. Foster-care alumni, now working with kids in the system.",
+    voiceSamples: [
+      {
+        label: 'Voice sample',
+        src: '/cast/audio/kai-woman-voice-sample.mp3',
+      },
+    ],
+  },
+  ```
+
+  #### Part E — Render the new "Proposed Alternative Cast" section on `/demo`
+
+  **Location:** at the bottom of the character sections on /demo. That's:
+
+  - After the existing `## Sam's Story` section (from Draft 35)
+  - After the existing `## Learning Skills for Belonging` section (Draft 35 + Draft 40 + Draft 41)
+  - BEFORE the "Growing your roots" section and the Tests / Data export sections
+
+  **File:** `src/pages/DemoPage.jsx`.
+
+  **Section heading:**
+
+  > **## Proposed Alternative Cast**
+
+  Make it visually distinct so people notice it's different from the current cast — recommend a subtle background wash (`bg-slate-50` or `bg-ctac-teal-50/30`), a top border, and slightly larger heading spacing. It should feel like "we've entered a new consideration area," not just another cast section.
+
+  **Intro paragraph** below the heading:
+
+  > *An alternative direction for the cast, for team consideration. Sam gains the female + nonbinary variants we've been planning — the current Kai character-design is a natural fit for Sam — Gender Neutral (using the same locked visual). Kai's peer-mentor role is filled by two new options here, both early-20s Black young adults, to test whether more specific representation lands better with the target audience of foster youth in Kentucky. Curious what the team thinks.*
+
+  Copy is intentionally neutral and invites feedback rather than declaring the alternative better. Josh can edit before shipping if the tone needs adjusting.
+
+  **Card render order** (filter by `shows.includes('proposed-alternative')`):
+
+  1. Sam (18 years old) — same card as in Sam's Story, rendered here again
+  2. Sam (14 years old) — same card as in Sam's Story, rendered here again
+  3. Sam — Gender Neutral (repurposed Kai V1 image)
+  4. Sam — Female (coming soon placeholder)
+  5. Kai — Male (proposed) — image + voice sample
+  6. Kai — Female (proposed) — image + voice sample
+
+  Same CastCard component handles all six — the renderer just filters the CAST array by `shows.includes('proposed-alternative')` and iterates.
+
+  #### What does NOT change
+
+  - **The current Kai in the Learning Skills for Belonging section stays exactly as today.** All 8 voiceover scenes, the animated clip, both Kai image variants — untouched. This draft ADDS a proposed alternative section for review; it does not remove or modify the current state.
+  - **All other cast cards** — untouched apart from the Sam-16 → Sam-18 display rename.
+  - **Sam's Story section** — same cards render there as today (with Sam-18's new display strings).
+  - **Voice pipeline, tree, montage, summary, Plan, palette** — unchanged.
+  - **No `activityVersions.js` bump** — DemoPage section addition.
+  - **No changes to the underlying Sam narrator video clips or audio** — they still contain Sam at 16 narratively; only the display presentation shifts to "18."
+
+  #### Out of scope (deferred pending team feedback)
+
+  - **The full character-build production for the new Kai variants** — image generation is the pre-work Josh is doing outside the code. Once locked, the Character Builder session on Open Arts will produce the reference set.
+  - **Building the actual Sam-Female character** — this draft ships a "coming soon" placeholder; the real build happens IF the alternative direction is approved by the team.
+  - **The full voiceover sets for the proposed Kai variants** — this draft ships one ~35s voice sample per variant so the team can hear each voice. Full 8-scene voiceover sets happen after the team picks a direction.
+  - **Removing the current Learning Skills Kai** — explicitly NOT part of this draft. The current Kai stays intact so the team can compare side-by-side. If the alternative is approved by the team, a follow-up draft would migrate the Learning Skills section over.
+  - **Renaming the Sam narrator video clips / audio files** — filenames stay `sam-16-*.mp4` and `sam-16-*.mp3` etc. Internal identifiers; not user-visible.
+
+  *End of Draft 42.*
+
+  </details>
+
 - **`6562600` · 2026-06-30** — Draft 41: put the **first Kai animated clip** on the demo. Josh's first rendered Kai animation (`Kai Demo 1.mp4` — the opening of Scene 1, ~35s, vertical 9:16) — the parallel moment to Sam Line 1 landing, first animated proof-of-concept for the visual direction. Copied the mp4 into `public/cast/video/kai-demo-1.mp4` (~4.7 MB, `preload=metadata`); added a `videos` array to Kai's card (label/src/caption/durationSeconds). The CastCard now renders `videos` as a **featured bordered block above the main content** — so Kai shows the animation preview AND the Draft 40 voiceover scenes (previously scenes/videos/lines were mutually exclusive). Reused the existing video player (native mp4 via `src`, YouTube embed via `youtubeId`), relocated it out of the precedence chain, and updated the doc comment. No version bump. Verified in preview: featured "First animated scene preview" block renders the clip + caption with the 8 voiceover scenes still below it (single video element, no double-render); mp4 serves; no console errors.
 
   <details>
@@ -2820,204 +3023,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 42 — "Proposed Alternative Cast" section on /demo + Sam 16 → Sam 18 rename
-
-New section at the bottom of the character sections on /demo, presenting an alternative direction for the cast for team review. Also globally renames the current Sam 16 character to Sam 18 (in both the existing Sam's Story section AND the new proposed alternative section).
-
-The alternative direction — for team consideration, not for shipping yet — reimagines Kai's identity design. The current Kai character-design gets repositioned as the nonbinary Sam variant we've been planning, and two new Kai concepts are proposed as peer mentors with more specific identities (early-20s Black man and early-20s Black woman). Both current and proposed sections are visible side-by-side so the team can compare.
-
-**Approved by:** Josh, 2026-07-01.
-
----
-
-#### Part A — Global rename: Sam 16 → Sam 18
-
-Age up the current Sam narrator character from 16 to 18. Same person, same imagery, same voice, same script — just presented as older. Reflects a design decision to have the narrator read as a young adult with more distance from adolescence.
-
-**File:** `src/lib/castData.js`.
-
-**Changes to the existing Sam narrator card (currently `id: 'sam-16'`):**
-
-- `name`: *"Sam (16 years old)"* → *"Sam (18 years old)"*
-- `alt`: *"Sam at 16 — the narrator, two years later"* → *"Sam at 18 — the narrator, four years later"*
-- `role`: *"Our narrator — Sam two years later."* → *"Our narrator — Sam four years later."*
-
-**Do NOT change the `id` (`'sam-16'`).** The id is an internal identifier used by voiceSamples/videos references and by any test data. Renaming the id would cascade breakage. Just update the human-facing strings.
-
-**Do NOT change filenames.** `sam-16.png`, `sam-16-line-*.mp4`, etc. keep their current names — they're internal asset identifiers, not user-visible.
-
-**Do NOT modify the script.** Holly's Script 2.0 references "16-year-old Sam" narratively; that's fine to preserve internally. The user-facing character presentation is what's shifting.
-
-**Voice sample labels** on the Sam narrator card: any label currently referencing "Older Sam" (from Draft 33) can stay as-is — "Older Sam Narrator" reads correctly for an 18-year-old. If a label explicitly says "16," update to "18".
-
-#### Part B — Extend the `show` field to support multiple sections
-
-The current cast card shape from Draft 35 has a single `show: 'sams-story' | 'learning-skills'` string. For this draft, cards need to appear in **multiple sections** (Sam-18 and Sam-14 appear in both Sam's Story AND the Proposed Alternative Cast).
-
-**Change:** rename `show` to `shows` and make it a string array. Update all existing cards:
-
-- Sam-18 (was sam-16): `shows: ['sams-story', 'proposed-alternative']`
-- Sam-14: `shows: ['sams-story', 'proposed-alternative']`
-- Foster Mom, Foster Dad, Mrs. Johnson: `shows: ['sams-story']`
-- Family Photo: `shows: ['sams-story']`
-- Kai (current, from Draft 35/40/41): `shows: ['learning-skills']`
-
-For backward compatibility, the CastCard renderer can accept EITHER `shows: [...]` OR the legacy `show: '...'` — but since we're updating every card in this draft anyway, cleanest is to migrate fully to `shows` and delete the singular-form fallback logic.
-
-**Update the top-of-file comment** in castData.js to document the new `shows` array shape.
-
-#### Part C — Copy new assets
-
-Four new files.
-
-| Source | Destination |
-|---|---|
-| `Video Content/Kai - Man.png` | `public/cast/images/kai-man.png` |
-| `Video Content/Kai - Woman.png` | `public/cast/images/kai-woman.png` |
-| `Video Content/Kai Male Alternative.mp3` | `public/cast/audio/kai-man-voice-sample.mp3` |
-| `Video Content/Kai - Female Voice.mp3` | `public/cast/audio/kai-woman-voice-sample.mp3` |
-
-Both mp3s are ~35 seconds each — voice samples of the two proposed alternative Kai voices reading a shared opening line.
-
-#### Part D — Add four new cards to `src/lib/castData.js`
-
-All four cards go under `shows: ['proposed-alternative']`. Order them in this sequence in the CAST array (or grouped at the end):
-
-##### Card 1 — Sam - Gender Neutral (repurposed current Kai V1)
-
-```js
-{
-  id: 'sam-nonbinary',
-  name: 'Sam — Gender Neutral',
-  shows: ['proposed-alternative'],
-  image: '/cast/images/kai-variant-1.png',  // reuse the existing locked Kai V1 image
-  alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai',
-  role: "Sam's nonbinary variant. Uses the character design currently in the Kai role — the gender-neutral design fits precisely here.",
-},
-```
-
-Same image file as Kai's current Variant 1 (no new file needed). The label and role reframe it as the nonbinary Sam variant.
-
-##### Card 2 — Sam - Female (coming soon placeholder)
-
-```js
-{
-  id: 'sam-female-placeholder',
-  name: 'Sam — Female',
-  shows: ['proposed-alternative'],
-  placeholder: true,  // NEW flag — see rendering note below
-  alt: 'Sam, female variant — coming soon placeholder',
-  role: 'The female Sam variant. Character build not yet started.',
-},
-```
-
-**Placeholder rendering:** the CastCard renderer needs a new `placeholder: true` branch. When set, render an outlined-person-silhouette SVG (or a neutral grey rectangle) in the image slot, with a small overlay label reading *"Coming soon."* No `image` field on this card; the renderer generates the placeholder visual inline.
-
-Simple placeholder SVG for the image slot (Code can adapt):
-
-```jsx
-<div className="w-full aspect-[3/4] bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500">
-  <svg viewBox="0 0 40 40" className="w-16 h-16 mb-2 opacity-40">
-    {/* simple person silhouette */}
-    <circle cx="20" cy="14" r="6" fill="currentColor" />
-    <path d="M 8 36 Q 8 24, 20 24 Q 32 24, 32 36 Z" fill="currentColor" />
-  </svg>
-  <span className="text-sm italic">Coming soon</span>
-</div>
-```
-
-##### Card 3 — Kai (Male) — proposed alternative
-
-```js
-{
-  id: 'kai-man-alternative',
-  name: 'Kai — Male (proposed)',
-  shows: ['proposed-alternative'],
-  image: '/cast/images/kai-man.png',
-  alt: 'Kai, proposed male variant — early-20s Black young man peer mentor',
-  role: "Proposed peer-mentor Kai — an early-20s Black young man. Foster-care alumni, now working with kids in the system.",
-  voiceSamples: [
-    {
-      label: 'Voice sample',
-      src: '/cast/audio/kai-man-voice-sample.mp3',
-    },
-  ],
-},
-```
-
-##### Card 4 — Kai (Female) — proposed alternative
-
-```js
-{
-  id: 'kai-woman-alternative',
-  name: 'Kai — Female (proposed)',
-  shows: ['proposed-alternative'],
-  image: '/cast/images/kai-woman.png',
-  alt: 'Kai, proposed female variant — early-20s Black young woman peer mentor',
-  role: "Proposed peer-mentor Kai — an early-20s Black young woman. Foster-care alumni, now working with kids in the system.",
-  voiceSamples: [
-    {
-      label: 'Voice sample',
-      src: '/cast/audio/kai-woman-voice-sample.mp3',
-    },
-  ],
-},
-```
-
-#### Part E — Render the new "Proposed Alternative Cast" section on `/demo`
-
-**Location:** at the bottom of the character sections on /demo. That's:
-
-- After the existing `## Sam's Story` section (from Draft 35)
-- After the existing `## Learning Skills for Belonging` section (Draft 35 + Draft 40 + Draft 41)
-- BEFORE the "Growing your roots" section and the Tests / Data export sections
-
-**File:** `src/pages/DemoPage.jsx`.
-
-**Section heading:**
-
-> **## Proposed Alternative Cast**
-
-Make it visually distinct so people notice it's different from the current cast — recommend a subtle background wash (`bg-slate-50` or `bg-ctac-teal-50/30`), a top border, and slightly larger heading spacing. It should feel like "we've entered a new consideration area," not just another cast section.
-
-**Intro paragraph** below the heading:
-
-> *An alternative direction for the cast, for team consideration. Sam gains the female + nonbinary variants we've been planning — the current Kai character-design is a natural fit for Sam — Gender Neutral (using the same locked visual). Kai's peer-mentor role is filled by two new options here, both early-20s Black young adults, to test whether more specific representation lands better with the target audience of foster youth in Kentucky. Curious what the team thinks.*
-
-Copy is intentionally neutral and invites feedback rather than declaring the alternative better. Josh can edit before shipping if the tone needs adjusting.
-
-**Card render order** (filter by `shows.includes('proposed-alternative')`):
-
-1. Sam (18 years old) — same card as in Sam's Story, rendered here again
-2. Sam (14 years old) — same card as in Sam's Story, rendered here again
-3. Sam — Gender Neutral (repurposed Kai V1 image)
-4. Sam — Female (coming soon placeholder)
-5. Kai — Male (proposed) — image + voice sample
-6. Kai — Female (proposed) — image + voice sample
-
-Same CastCard component handles all six — the renderer just filters the CAST array by `shows.includes('proposed-alternative')` and iterates.
-
-#### What does NOT change
-
-- **The current Kai in the Learning Skills for Belonging section stays exactly as today.** All 8 voiceover scenes, the animated clip, both Kai image variants — untouched. This draft ADDS a proposed alternative section for review; it does not remove or modify the current state.
-- **All other cast cards** — untouched apart from the Sam-16 → Sam-18 display rename.
-- **Sam's Story section** — same cards render there as today (with Sam-18's new display strings).
-- **Voice pipeline, tree, montage, summary, Plan, palette** — unchanged.
-- **No `activityVersions.js` bump** — DemoPage section addition.
-- **No changes to the underlying Sam narrator video clips or audio** — they still contain Sam at 16 narratively; only the display presentation shifts to "18."
-
-#### Out of scope (deferred pending team feedback)
-
-- **The full character-build production for the new Kai variants** — image generation is the pre-work Josh is doing outside the code. Once locked, the Character Builder session on Open Arts will produce the reference set.
-- **Building the actual Sam-Female character** — this draft ships a "coming soon" placeholder; the real build happens IF the alternative direction is approved by the team.
-- **The full voiceover sets for the proposed Kai variants** — this draft ships one ~35s voice sample per variant so the team can hear each voice. Full 8-scene voiceover sets happen after the team picks a direction.
-- **Removing the current Learning Skills Kai** — explicitly NOT part of this draft. The current Kai stays intact so the team can compare side-by-side. If the alternative is approved by the team, a follow-up draft would migrate the Learning Skills section over.
-- **Renaming the Sam narrator video clips / audio files** — filenames stay `sam-16-*.mp4` and `sam-16-*.mp3` etc. Internal identifiers; not user-visible.
-
-*End of Draft 42.*
 
 ---
 
