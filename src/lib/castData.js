@@ -281,8 +281,8 @@ export const CAST = [
     id: 'sam-nonbinary',
     shows: ['proposed-alternative'],
     name: 'Sam — Gender Neutral',
-    image: '/cast/images/kai-variant-1.png',
-    alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai',
+    image: '/cast/images/kai-variant-2.png',
+    alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai (Variant 2, blonde)',
     role: "Sam's nonbinary variant. Uses the character design currently in the Kai role — the gender-neutral design fits precisely here.",
   },
   {
