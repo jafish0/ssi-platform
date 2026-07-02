@@ -199,6 +199,28 @@
   .spec td .zscene{ display:block; font-size:12px; color:rgba(58,42,18,.55); }
   .spec .tablenote{ font-size:13px; font-style:italic; color:rgba(58,42,18,.6); margin-top:12px; }
 
+  /* travelers / concept-art gallery (bright end of the scroll — dark ink) */
+  .travelers{ min-height:auto; padding:6vh 24px 8vh; }
+  .travelers .inner{ max-width:980px; width:100%; margin:0 auto; display:flex;
+      flex-direction:column; align-items:center; }
+  .travelers .eyebrow{ color:#9a5a18; }
+  .travelers h2{ color:#3a2a12; text-align:center; }
+  .travelers .tlede{ font-family:var(--serif); font-style:italic; text-align:center;
+      font-size:clamp(17px,2.6vw,22px); color:rgba(58,42,18,.75); margin-top:10px; }
+  .art{ display:flex; flex-direction:column; align-items:center; }
+  .art img{ display:block; width:100%; height:auto; border-radius:22px;
+      box-shadow:0 30px 80px rgba(58,42,18,.35), 0 0 0 1px rgba(58,42,18,.08); }
+  .art figcaption{ font-size:14px; line-height:1.6; color:rgba(58,42,18,.8);
+      margin-top:14px; max-width:52ch; text-align:center; }
+  .art figcaption b{ color:#3a2a12; }
+  .art.world{ width:min(86vw,500px); margin-top:48px; }
+  .art.hero{ width:min(86vw,560px); margin-top:72px; }
+  .creatures{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:44px 28px; max-width:680px; width:100%; margin-top:72px; }
+  @media (max-width:640px){ .creatures{ grid-template-columns:1fr; } }
+  .artnote{ font-size:12.5px; font-style:italic; color:rgba(58,42,18,.55);
+      margin-top:44px; text-align:center; max-width:60ch; }
+
   footer{ text-align:center; padding:40px 24px 60px; color:rgba(58,42,18,.62);
       font-size:12px; letter-spacing:.04em; }
   .fineprint{ max-width:60ch; margin:0 auto; line-height:1.6; }
@@ -442,6 +464,46 @@
           </table>
         </div>
         <p class="tablenote">Note: Video 3 is a message-only beat (the hopeful pivot), so Zone 3 carries no discrete drill — it hands off from “understanding trauma” (Part 1) to “getting help” (Part 2).</p>
+      </div>
+    </section>
+
+    <!-- CONCEPT ART — THE WORLD & ITS TRAVELERS -->
+    <section class="travelers">
+      <div class="inner">
+        <div class="eyebrow reveal">Concept art</div>
+        <h2 class="reveal">The World &amp; Its Travelers</h2>
+        <p class="tlede reveal">The world of The Long Light, and the ones who walk it.</p>
+
+        <figure class="art world reveal">
+          <img src="art/map-and-world.webp" alt="The world of The Long Light — a winding lantern-and-glyph path climbing from a dark valley up to the Beacon" loading="lazy">
+          <figcaption><b>The World (the map).</b> One climb, five regions. The path winds up from the dark valley where you wake — past the glyph-stones and lanterns left by those who came before, over the mist bridge, and into the light — to the Beacon at the summit. It is the map you are told to follow and the world you will cross.</figcaption>
+        </figure>
+
+        <figure class="art hero reveal">
+          <img src="art/main-character.webp" alt="The Traveler — a hooded, fully covered figure with glowing eyes, holding a phone as a light" loading="lazy">
+          <figcaption><b>The Traveler (you).</b> Every inch covered for a cold, unfamiliar country — so anyone can be the one inside the hood. The phone you fell asleep holding is now the light you carry. This is who you become the moment the dream begins.</figcaption>
+        </figure>
+
+        <div class="creatures">
+          <figure class="art reveal">
+            <img src="art/emberwick.webp" alt="The Emberwick — a creature with oversized ears and a flaring lantern" loading="lazy">
+            <figcaption><b>The Emberwick — reactivity / hypervigilance.</b> Huge ears catch every sound and its lantern flares at the smallest one; it never sleeps. It learned, from someone who’d walked this path before, to tell true danger from its echoes — and its flame finally learned to rest.</figcaption>
+          </figure>
+          <figure class="art reveal">
+            <img src="art/mirefly.webp" alt="The Mirefly — a moth trailed by fading after-images, circling a flame" loading="lazy">
+            <figcaption><b>The Mirefly — intrusion.</b> It circles the same flame, trailed by fading images of itself, reliving one moment on a loop. With help it saw the memories for what they were — echoes, not the thing returning — and the circle opened.</figcaption>
+          </figure>
+          <figure class="art reveal">
+            <img src="art/hollowshell.webp" alt="The Hollowshell — a creature curled inside a sealed shell, light leaking from one crack" loading="lazy">
+            <figcaption><b>The Hollowshell — avoidance.</b> It sealed itself inside a shell to feel safe, until nothing warm could reach it. Opening a single seam, a little at a time and with support, is what let the light back in.</figcaption>
+          </figure>
+          <figure class="art reveal">
+            <img src="art/dimmet.webp" alt="The Dimmet — a hunched creature carrying a heavy stone, its glow turned low" loading="lazy">
+            <figcaption><b>The Dimmet — negative mood / thoughts.</b> It walks bent under its own dark cloud, its glow turned low, sure the weight is its alone to carry. It learned those heavy thoughts weren’t facts, set the stone down, and turned its light back up.</figcaption>
+          </figure>
+        </div>
+
+        <p class="artnote reveal">Note: the creatures’ recovery lines are concept copy; final clinical wording is pending CTAC review.</p>
       </div>
     </section>
 
