@@ -47,7 +47,66 @@ Claude Code (CLI — implementation).
 
 ---
 
+## Visual style (canonical) — "Long Light" vector-silhouette
+
+The GAINS environment-art style, locked 2026-07-02. **Minimalist atmospheric
+vector-silhouette landscape**, in the visual language of Alto-style endless-runner
+games. Applies to all zones and future GAINS environment/asset art. (Supersedes the
+Jun 30 painterly plates.)
+
+Core traits:
+- **Layered silhouette depth** — near-black foreground shapes, softer purple/blue mid
+  layers, hazy distant mountains/architecture; typically 4-7 depth planes.
+- **Large glowing celestial focal point** — a low sun/moon/crescent/comet as the center
+  of gravity; clean circle with soft radial glow.
+- **Dreamy gradient sky** — smooth teal → indigo → violet → pink → coral; the sky carries
+  most of the emotional color.
+- **Simple geometric scenery** — castles, towers, bridges, trees, arches reduced to
+  angular silhouettes, not detailed illustration.
+- **High-contrast foreground** — closest layer very dark navy/plum/black-purple so the sky
+  reads brighter.
+- **Atmospheric particles** — small stars, dust, sparkles, soft fog for depth.
+- **Tiny narrative detail** — a small traveler, lantern, bird, balloon, or string lights at
+  very small scale.
+- **Soft cinematic light** — warm window/lantern glow; gentle bloom through mist.
+- **Mood** — peaceful, good-lonely, adventurous, meditative, nostalgic.
+
+Design language: flat vector environment art with atmospheric gradient compositing, layered
+parallax silhouettes, soft bloom lighting, simplified geometric architecture, dreamy twilight
+palette. Detail comes from composition, color, depth, and lighting — NOT texture or linework.
+Not watercolor/painterly.
+
+Palette: deep navy / black-purple foregrounds · dusty mauve & violet midgrounds · coral, blush,
+peach, lavender skies · teal/cyan night gradients · warm pale-yellow lantern/window glow · white
+sun/moon with pink or blue bloom.
+
+Prompt-ready (reuse for new zones/assets):
+> Minimalist atmospheric vector landscape, layered parallax silhouettes of mountains, castles,
+> bridges, trees, and distant architecture, deep near-black navy foreground, hazy purple and
+> mauve midground layers, smooth twilight gradient sky shifting from teal and indigo to lavender,
+> coral, and soft pink, enormous glowing sun or moon near the horizon, tiny stars and drifting
+> particles, warm glowing lanterns and windows, simple angular geometric forms, cinematic depth,
+> peaceful dreamlike adventure-game environment, clean flat shapes, soft bloom lighting, no
+> outlines, no photorealism, no painterly texture.
+
+**Key instruction:** keep objects simple, dark, and graphic; put the visual richness in the sky
+gradients and layered depth.
+
+---
+
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **8f1d90f** (2026-07-02) — Draft 2: refreshed the live pitch (`public/long-light/`,
+  https://ssi.ctac.app/long-light/) for the July 6 team pitch. Swapped the five
+  painterly PNGs (~18 MB) for the new vector-silhouette WebP plates (~282 KB total —
+  this also closes the Draft 1 image-optimization follow-up). Each zone card now has a
+  short description + labeled **Video / Challenge / Clinical goal** fields (pending
+  items muted italic; no gear on cards). Appended sections 1–5 of the Gameplay Loop &
+  Zone Map spec as a cream reading panel before the footer — zone-map `<table>`
+  (horizontal-scroll on narrow screens, **Gear earned column kept**) + the Video 3
+  note; section 6 (open questions) omitted. Scroll engine untouched. No
+  `src/activities` changes → no version bumps. vercel.json rules are path-based, so
+  they cover `.webp` with no edit.
 
 - **c8b0369** (2026-06-30) — Draft 1: hosted "The Long Light" concept pitch as a
   static page at `public/long-light/`. **Live at https://ssi.ctac.app/long-light/**
@@ -110,3 +169,49 @@ dark→gold on scroll, no image 404s in console/network. No `src/activities` cha
 **no activity version bumps**. Append the usual Recently-shipped bullet after push.
 
 *End of Draft 1.*
+
+### Draft 2 — Update "The Long Light" pitch page: new vector art + per-zone detail + concept spec appendix — ✅ SHIPPED 8f1d90f (2026-07-02)
+
+**Context.** Refresh the live pitch (`public/long-light/`, https://ssi.ctac.app/long-light/) for the July 6 team pitch: (a) swap in the new vector-silhouette art, (b) give each zone concrete detail, and (c) append the written concept as a readable spec at the end.
+
+**Assets (already staged).** `Gains for Teens/long-light-site/` holds `zone1.webp … zone5.webp` (~28–69 KB each) and `index.html` (image refs already point to the `.webp`). Treat `long-light-site/` as the source of truth; sync it to `public/long-light/` at the end.
+
+**Deploy mechanics.**
+- Sync `public/long-light/` to the source: updated `index.html` + `zone1–5.webp`; **delete the old `zone1–5.png`** (~18 MB painterly plates from Draft 1) so only the `.webp` remain. Copy only `index.html` + `zone*.webp` (ignore any locked source PNGs left in the staging folder).
+- Keep the Draft 1 `vercel.json` handling for `/long-light/` (SPA-rewrite bypass + caching); confirm it applies to `.webp`.
+
+**Keep untouched** the existing scroll engine: the dark→gold scroll-driven background, beacon glow, drifting motes, and reveal-on-scroll. Only the content below changes.
+
+**Change 1 — per-zone cards.** Each of the five zone cards keeps its image + name, and adds a short description plus three labeled fields — **Video, Challenge, Clinical goal**. **Do NOT show a "gear earned" field on the cards.** Render "pending" text muted/italic. Copy:
+
+- **Zone I — The Hollow**
+  - Description: The dark valley floor. A single candle in hand, and a warm beacon impossibly far above — the first glimpse of where you're headed.
+  - Video: What trauma is — a definition and examples, and how the body reacts and can't seem to relax afterward.
+  - Challenge: Body Mapping — reveal how five areas of the body react, then tap the reactions you've felt.
+  - Clinical goal: Understand what trauma is; normalize the body's responses.
+- **Zone II — The Lantern Path**
+  - Description: Waking slopes, and a winding trail of lanterns to relight as you climb up out of the dark.
+  - Video: The four reaction types — reactivity, intrusion, avoidance, and negative mood or thoughts.
+  - Challenge: Character Examples — meet the four messenger creatures and recognize each one's symptom type.
+  - Clinical goal: Recognize and name common trauma reactions.
+- **Zone III — The Mistfields**
+  - Description: Above the first clouds, where light finally breaks through the mist.
+  - Video: These reactions are normal — trauma doesn't define you, recovery happens with support, and therapy is part of that support.
+  - Challenge (pending): A light, reflective bridge beat (TBD) — a message, not a drill.
+  - Clinical goal: Normalize and instill hope; bridge toward getting help.
+- **Zone IV — The Bright Reaches**
+  - Description: Over the cloudline into open, warm, sunlit highland.
+  - Video (pending): Part 2 — pending. What to expect from therapy.
+  - Challenge (pending): To be designed with CTAC.
+  - Clinical goal: Demystify therapy; reduce fear of the unknown.
+- **Zone V — The Threshold**
+  - Description: The summit and the Beacon — the door that opens into light.
+  - Video (pending): Part 2 — pending. Shame and reluctance to reach out; hope; then arrival.
+  - Challenge (pending): To be designed with CTAC.
+  - Clinical goal: Address shame; end on readiness to go.
+
+**Change 2 — spec appendix.** After the "morning / You wake" section and before the footer, add a new section presenting the full written concept, styled as a **readable light/cream panel with dark text** (it sits at the bright, high-scroll end, so it needs its own light background for contrast — don't rely on the gold gradient). Content = **sections 1–5 of `Gains for Teens/GAINS for Teens - Gameplay Loop and Zone Map.docx`, verbatim**: (1) The gameplay loop, (2) Design principles, (3) The frame story, (4) The messengers, (5) Zone map. Include the doc's title / subtitle / opening italic lede at the top of the panel. **OMIT section 6 (Open questions / needs from CTAC) — internal only.** Render the Zone map as an HTML `<table>` that scrolls horizontally on narrow screens; **keep the "Gear earned" column in this table** (gear is hidden only on the cards, not in the spec). Keep the closing "Note: Video 3 is a message-only beat…" line under the table.
+
+**Verify:** load https://ssi.ctac.app/long-light/ — the new vector plates load in order; each zone shows Description + Video + Challenge + Clinical goal and **no gear**; the spec panel renders at the very end, readable, with the zone-map table (Gear column present); the dark→gold scroll still works; no image 404s; old `zone*.png` now 404. No `src/activities` changes → **no activity version bumps.** Add a Recently-shipped bullet in `Gains for Teens/WORKING_NOTES.md` and mark this draft shipped.
+
+*End of Draft 2.*
