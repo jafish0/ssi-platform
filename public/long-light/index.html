@@ -129,25 +129,35 @@
   .mech{ margin-top:18px; font-size:13px; line-height:1.5; color:rgba(244,238,228,.62);
       border-left:2px solid rgba(255,210,150,.5); padding-left:14px; max-width:46ch; }
   .mech b{ color:rgba(255,232,190,.95); font-weight:600; }
+
+  /* per-zone labeled fields (Video / Challenge / Clinical goal) */
+  .fields{ margin-top:18px; display:flex; flex-direction:column; gap:12px;
+      border-left:2px solid rgba(255,210,150,.5); padding-left:14px; max-width:46ch; }
+  .field dt{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:600;
+      color:rgba(255,232,190,.95); margin-bottom:2px; }
+  .field dd{ font-size:13px; line-height:1.5; color:rgba(244,238,228,.62); }
+  .field dd.pending{ font-style:italic; color:rgba(244,238,228,.42); }
+
   @media (max-width:760px){
     .zone .wrap, .zone:nth-child(even) .wrap{ flex-direction:column; text-align:center; }
     .frame{ width:min(74vw,300px); }
     .mech{ margin-left:auto; margin-right:auto; }
+    .fields{ margin-left:auto; margin-right:auto; text-align:left; }
     .caption .num{ }
   }
 
   /* fallback gradients per zone (show until / unless the PNG is present) */
-  .z1{ background-image:url("zone1.png"),
+  .z1{ background-image:url("zone1.webp"),
         radial-gradient(60% 18% at 50% 8%, rgba(255,228,170,.5), transparent 60%),
         linear-gradient(#05070e,#0e2138); }
-  .z2{ background-image:url("zone2.png"),
+  .z2{ background-image:url("zone2.webp"),
         radial-gradient(60% 22% at 50% 10%, rgba(255,210,150,.45), transparent 62%),
         linear-gradient(#101a38,#3a2d52); }
-  .z3{ background-image:url("zone3.png"),
+  .z3{ background-image:url("zone3.webp"),
         linear-gradient(#2a4a5f,#9fae9a 55%,#e7c79a); }
-  .z4{ background-image:url("zone4.png"),
+  .z4{ background-image:url("zone4.webp"),
         linear-gradient(#9cc6d6,#f0c98f); }
-  .z5{ background-image:url("zone5.png"),
+  .z5{ background-image:url("zone5.webp"),
         radial-gradient(70% 30% at 50% 16%, rgba(255,255,235,.95), transparent 60%),
         linear-gradient(#f4d59c,#fff7e6); }
 
@@ -160,6 +170,34 @@
   .wake.bright h2,.wake.bright .lede,.wake.bright p,.wake.bright .eyebrow{ color:#3a2a12; }
   .wake.bright .lede{ color:rgba(58,42,18,.78); }
   .wake.bright .eyebrow{ color:#9a5a18; }
+
+  /* concept spec appendix — light panel for the bright end of the scroll */
+  .spec{ min-height:auto; padding:8vh 24px 6vh; }
+  .spec .panel{ max-width:880px; width:100%; margin:0 auto; background:#fbf5e8;
+      color:#3a2a12; border-radius:26px; padding:clamp(28px,5vw,56px);
+      box-shadow:0 30px 80px rgba(58,42,18,.25), 0 0 0 1px rgba(58,42,18,.06); }
+  .spec .doc-title{ font-family:var(--serif); font-weight:600; line-height:1.1;
+      font-size:clamp(26px,4.4vw,40px); }
+  .spec .doc-sub{ font-family:var(--serif); font-size:clamp(18px,2.8vw,24px); margin-top:4px;
+      color:rgba(58,42,18,.85); }
+  .spec .doc-meta{ font-size:12px; letter-spacing:.08em; color:rgba(58,42,18,.55); margin-top:10px; }
+  .spec .doc-lede{ font-family:var(--serif); font-style:italic; line-height:1.45;
+      font-size:clamp(17px,2.4vw,21px); color:rgba(58,42,18,.8); margin-top:18px; }
+  .spec h3{ font-family:var(--serif); font-weight:600; font-size:clamp(20px,3vw,27px); margin:34px 0 10px; }
+  .spec p{ font-size:15px; line-height:1.65; color:rgba(58,42,18,.85); max-width:none; }
+  .spec ul{ margin-top:10px; padding-left:20px; display:flex; flex-direction:column; gap:10px; }
+  .spec li{ font-size:15px; line-height:1.6; color:rgba(58,42,18,.85); }
+  .spec b{ color:#3a2a12; }
+  .spec .tablewrap{ overflow-x:auto; margin-top:14px; -webkit-overflow-scrolling:touch; }
+  .spec table{ border-collapse:collapse; width:100%; min-width:760px; font-size:13.5px; line-height:1.5; }
+  .spec th{ text-align:left; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(58,42,18,.6); padding:10px 12px; border-bottom:2px solid rgba(58,42,18,.25);
+      vertical-align:bottom; }
+  .spec td{ padding:10px 12px; border-bottom:1px solid rgba(58,42,18,.15); vertical-align:top;
+      color:rgba(58,42,18,.85); }
+  .spec td .zname{ font-weight:600; white-space:nowrap; }
+  .spec td .zscene{ display:block; font-size:12px; color:rgba(58,42,18,.55); }
+  .spec .tablenote{ font-size:13px; font-style:italic; color:rgba(58,42,18,.6); margin-top:12px; }
 
   footer{ text-align:center; padding:40px 24px 60px; color:rgba(58,42,18,.62);
       font-size:12px; letter-spacing:.04em; }
@@ -206,8 +244,12 @@
         <div class="caption reveal">
           <div class="num">Zone I</div>
           <h2>The Hollow</h2>
-          <p class="body">You wake in the dark with a single light in your hand. Far above — almost too far to believe — a warm beacon. That’s where you’re going.</p>
-          <div class="mech"><b>Start.</b> The phone you fell asleep holding is now the light you carry. The whole journey points upward, toward the Beacon.</div>
+          <p class="body">The dark valley floor. A single candle in hand, and a warm beacon impossibly far above — the first glimpse of where you’re headed.</p>
+          <dl class="fields">
+            <div class="field"><dt>Video</dt><dd>What trauma is — a definition and examples, and how the body reacts and can’t seem to relax afterward.</dd></div>
+            <div class="field"><dt>Challenge</dt><dd>Body Mapping — reveal how five areas of the body react, then tap the reactions you’ve felt.</dd></div>
+            <div class="field"><dt>Clinical goal</dt><dd>Understand what trauma is; normalize the body’s responses.</dd></div>
+          </dl>
         </div>
       </div>
     </section>
@@ -219,8 +261,12 @@
         <div class="caption reveal">
           <div class="num">Zone II</div>
           <h2>The Lantern Path</h2>
-          <p class="body">A carved stone glows as you near it — a message left by someone who once stood exactly here, and made it through.</p>
-          <div class="mech"><b>Psychoeducation</b>, delivered as a short message from someone who’s been in your shoes — discovered, not lectured.</div>
+          <p class="body">Waking slopes, and a winding trail of lanterns to relight as you climb up out of the dark.</p>
+          <dl class="fields">
+            <div class="field"><dt>Video</dt><dd>The four reaction types — reactivity, intrusion, avoidance, and negative mood or thoughts.</dd></div>
+            <div class="field"><dt>Challenge</dt><dd>Character Examples — meet the four messenger creatures and recognize each one’s symptom type.</dd></div>
+            <div class="field"><dt>Clinical goal</dt><dd>Recognize and name common trauma reactions.</dd></div>
+          </dl>
         </div>
       </div>
     </section>
@@ -232,8 +278,12 @@
         <div class="caption reveal">
           <div class="num">Zone III</div>
           <h2>The Mistfields</h2>
-          <p class="body">Higher now, above the first clouds. The path is harder — but you’re not the first to walk it. Lanterns and stones light the way.</p>
-          <div class="mech"><b>An activity</b> to make the lesson yours — then a brief, playful crossing to the next light.</div>
+          <p class="body">Above the first clouds, where light finally breaks through the mist.</p>
+          <dl class="fields">
+            <div class="field"><dt>Video</dt><dd>These reactions are normal — trauma doesn’t define you, recovery happens with support, and therapy is part of that support.</dd></div>
+            <div class="field"><dt>Challenge (pending)</dt><dd class="pending">A light, reflective bridge beat (TBD) — a message, not a drill.</dd></div>
+            <div class="field"><dt>Clinical goal</dt><dd>Normalize and instill hope; bridge toward getting help.</dd></div>
+          </dl>
         </div>
       </div>
     </section>
@@ -245,8 +295,12 @@
         <div class="caption reveal">
           <div class="num">Zone IV</div>
           <h2>The Bright Reaches</h2>
-          <p class="body">You break above the clouds. The light you’ve gathered along the way is paying off — and the world is warm now.</p>
-          <div class="mech"><b>Gear up.</b> Everything you’ve collected makes the last climb easier. Progress you can see.</div>
+          <p class="body">Over the cloudline into open, warm, sunlit highland.</p>
+          <dl class="fields">
+            <div class="field"><dt>Video (pending)</dt><dd class="pending">Part 2 — pending. What to expect from therapy.</dd></div>
+            <div class="field"><dt>Challenge (pending)</dt><dd class="pending">To be designed with CTAC.</dd></div>
+            <div class="field"><dt>Clinical goal</dt><dd>Demystify therapy; reduce fear of the unknown.</dd></div>
+          </dl>
         </div>
       </div>
     </section>
@@ -258,8 +312,12 @@
         <div class="caption reveal">
           <div class="num">Zone V</div>
           <h2>The Threshold</h2>
-          <p class="body">The Beacon. You climb the last steps, and the door opens into pure light.</p>
-          <div class="mech">The lighthouse was the <b>therapist’s door</b> all along.</div>
+          <p class="body">The summit and the Beacon — the door that opens into light.</p>
+          <dl class="fields">
+            <div class="field"><dt>Video (pending)</dt><dd class="pending">Part 2 — pending. Shame and reluctance to reach out; hope; then arrival.</dd></div>
+            <div class="field"><dt>Challenge (pending)</dt><dd class="pending">To be designed with CTAC.</dd></div>
+            <div class="field"><dt>Clinical goal</dt><dd>Address shame; end on readiness to go.</dd></div>
+          </dl>
         </div>
       </div>
     </section>
@@ -281,6 +339,109 @@
           A single-session intervention for a teen about to start trauma therapy — psychoeducation and
           practice, carried by a game you ascend rather than a lesson you sit through. Built on the SSI Platform.
         </p>
+      </div>
+    </section>
+
+    <!-- CONCEPT SPEC APPENDIX (sections 1–5 of the Gameplay Loop & Zone Map doc) -->
+    <section class="spec">
+      <div class="panel reveal">
+        <div class="doc-title">GAINS for Teens — The Long Light</div>
+        <div class="doc-sub">Gameplay Loop &amp; Zone Map</div>
+        <div class="doc-meta">Internal working spec · July 2026 · concept (Josh) mapped against CTAC Part 1 (Stephanie)</div>
+        <p class="doc-lede">A teen, scared of their first therapy appointment tomorrow, falls asleep over a story and dreams they must climb from darkness to a distant light. The climb is the intervention; they wake ready to go.</p>
+
+        <h3>1. The gameplay loop</h3>
+        <p>One loop repeats per zone as the creature ascends. Each turn:</p>
+        <ul>
+          <li><b>Discover a glyph → watch the message.</b> A carved glyph, scanned with the phone, plays a ~30-second psychoeducation clip left by a traveler who walked this path before.</li>
+          <li><b>Take on the challenge.</b> A short activity that reinforces what the message just taught.</li>
+          <li><b>Earn gear (loot).</b> Completing the challenge yields a piece of gear — ideally the coping idea made tangible — that helps with what’s ahead.</li>
+          <li><b>Traverse to the next zone.</b> A brief arcade crossing (~30–60s) that uses the gear and carries the creature into the next, brighter environment — where the next glyph waits.</li>
+        </ul>
+
+        <h3>2. Design principles</h3>
+        <ul>
+          <li><b>No-fail, always.</b> Challenges and traversals are forgiving and success-guaranteed — retry freely, no game-over, no score-shaming. A therapeutic dose can’t be gated behind dexterity, and “I failed at coping” is a message we must never send.</li>
+          <li><b>Gear is the skill.</b> Where possible each reward is the coping idea in physical form (a grounding “anchor,” a naming “lantern”). By the summit the creature is fully equipped — which reads as “you’ve built a toolkit for tomorrow.”</li>
+          <li><b>Understanding brightens the world.</b> The psychoeducation arc is lined up with the dark→light gradient: the confusing, frightening material sits in the low dark zones; understanding and hope arrive as the world lightens.</li>
+          <li><b>Alone → not alone.</b> The teen sets off resentful and alone; every glyph is proof others walked here first; by the top they’re accompanied — and the caregiver’s “I’ll meet you there” pays off at the summit.</li>
+          <li><b>The phone is the interface.</b> The real thing they fell asleep holding becomes the in-world tool: scanner, map, inventory (the toolkit), and where the caregiver’s check-ins arrive.</li>
+          <li><b>One reusable traversal.</b> A single arcade pattern reskinned per zone — low-twitch, one-handed — not five separate mini-games.</li>
+        </ul>
+
+        <h3>3. The frame story</h3>
+        <p>Real-world scenes play in first person — we see the teen’s hands, the book, the phone, the caregiver across the room, but never their face or body. The only character ever seen is the neutral creature they become in the dream, which keeps the whole thing free of gender, race, or body type.</p>
+        <ul>
+          <li><b>Setup (POV).</b> Something happened — kept vague — and the teen has trauma symptoms. The caregiver says there’s an appointment in the morning with a new therapist. The teen is nervous but agrees.</li>
+          <li><b>Drifting off (POV).</b> To settle their mind they read a favorite story; we see it in their hands; they fall asleep into its world.</li>
+          <li><b>The call to start.</b> Darkness, a single candle. A text from the caregiver: “I’ll meet you there — just follow the map.” A map of distinct areas appears; irritated at going alone, the teen sets off.</li>
+          <li><b>The reveal.</b> The camera leaves first person: catching their reflection, the teen sees they’ve become a creature of the story — the first “themselves” they see is neutral. The phone came with them.</li>
+          <li><b>Messages from those before (the loop begins).</b> Glyphs left by travelers who were here first carry the psychoeducation — peer voices, not lectures.</li>
+          <li><b>Arrival and waking (POV).</b> At the summit the therapist’s door opens into brilliant light; we cut to first person as the teen wakes — “Time to get ready for our appointment” — ready to go.</li>
+        </ul>
+
+        <h3>4. The messengers</h3>
+        <p>Original creatures of the story’s world — no borrowed IP. Each embodies one of the four trauma-reaction categories, reads as a simple dark silhouette in the vector style, and recovered with support (the peer voice). They do double duty: the travelers you meet at glyphs and the cast of the Character Examples challenge. Clinical wording is Stephanie’s to own; these are the vessels.</p>
+        <ul>
+          <li><b>The Emberwick — reactivity / hypervigilance.</b> Oversized ears and a lantern that flares at every sound; never sleeps. Learned to tell real danger from echoes so its flame could rest.</li>
+          <li><b>The Mirefly — intrusion.</b> A moth trailed by fading after-images, circling the same flame. Learned the memories were echoes, not the event returning, and they loosened once faced with help.</li>
+          <li><b>The Hollowshell — avoidance.</b> Curled in a sealed shell, light leaking from one crack. Learned that opening a sliver at a time, with support, let the warmth back in.</li>
+          <li><b>The Dimmet — negative mood / thoughts.</b> Hunched under its own dark cloud, glow turned low. Learned those thoughts weren’t facts, set the weight down, and turned its light back up.</li>
+        </ul>
+
+        <h3>5. Zone map</h3>
+        <p>First-pass mapping of CTAC’s clinical content to the five zones. Part 1 (Trauma 101) is Stephanie’s current draft; Part 2 (what to expect from therapy; shame/reluctance) is not yet written, so Zones 4–5 are placeholders.</p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Zone &amp; scenery</th>
+                <th>Psychoeducation (glyph → video)</th>
+                <th>Challenge / activity</th>
+                <th>Gear earned</th>
+                <th>Clinical goal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="zname">1 · The Hollow</span><span class="zscene">darkest; candle, beacon far above</span></td>
+                <td>Video 1 — what trauma is (definition + examples; the body reacts and can’t relax).</td>
+                <td>Body Mapping — reveal how 5 body areas react, then tap the reactions you’ve felt.</td>
+                <td>An Anchor — your body’s alarm can be steadied.</td>
+                <td>Understand what trauma is; normalize bodily responses.</td>
+              </tr>
+              <tr>
+                <td><span class="zname">2 · The Lantern Path</span><span class="zscene">waking slopes; lanterns to relight</span></td>
+                <td>Video 2 — the four reaction types: reactivity, intrusion, avoidance, negative mood/thoughts.</td>
+                <td>Character Examples — meet the four messenger creatures; recognize each one’s symptom type.</td>
+                <td>A Lantern — naming what’s happening.</td>
+                <td>Recognize and name common trauma reactions.</td>
+              </tr>
+              <tr>
+                <td><span class="zname">3 · The Mistfields</span><span class="zscene">above first clouds; light breaks through</span></td>
+                <td>Video 3 — these are normal; trauma doesn’t define you; recovery happens with support; therapy is part of that.</td>
+                <td>Bridge beat — light/reflective (TBD). A message, not a drill.</td>
+                <td>Hope — you are not the first, and not alone.</td>
+                <td>Normalize + instill hope; bridge to getting help.</td>
+              </tr>
+              <tr>
+                <td><span class="zname">4 · The Bright Reaches</span><span class="zscene">above the clouds; warm, open</span></td>
+                <td>Part 2 — pending Stephanie. What to expect from therapy.</td>
+                <td>TBD (CTAC)</td>
+                <td>A skill-as-gear (Part 2)</td>
+                <td>Demystify therapy; reduce fear of the unknown.</td>
+              </tr>
+              <tr>
+                <td><span class="zname">5 · The Threshold</span><span class="zscene">the Beacon; door opens into light</span></td>
+                <td>Part 2 — pending Stephanie. Shame / reluctance to reach out; hope; then arrival.</td>
+                <td>TBD (CTAC)</td>
+                <td>Final gear / full toolkit</td>
+                <td>Address shame; end on readiness to go.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tablenote">Note: Video 3 is a message-only beat (the hopeful pivot), so Zone 3 carries no discrete drill — it hands off from “understanding trauma” (Part 1) to “getting help” (Part 2).</p>
       </div>
     </section>
 
