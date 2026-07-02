@@ -96,6 +96,13 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **3114867** (2026-07-02) — Spec panel copy scrub (in-conversation, no draft): removed
+  the "Clinical wording is Stephanie's to own; these are the vessels" line from §4,
+  changed §5 to just "pending" (intro + both Part 2 table cells — no Stephanie), and
+  removed both names from the spec header meta line ("concept mapped against CTAC
+  Part 1"). Also brought `Gains for Teens/long-light-site/index.html` (the staging
+  source of truth) into git.
+
 - **8f1d90f** (2026-07-02) — Draft 2: refreshed the live pitch (`public/long-light/`,
   https://ssi.ctac.app/long-light/) for the July 6 team pitch. Swapped the five
   painterly PNGs (~18 MB) for the new vector-silhouette WebP plates (~282 KB total —
