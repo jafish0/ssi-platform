@@ -96,6 +96,17 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **e70e070** (2026-07-02) — Draft 3: added "The World & Its Travelers" concept-art
+  section to the pitch page, after the spec appendix and before the footer. World map
+  as tall centerpiece (500px), the hooded Traveler featured larger (560px — clearly
+  the hero), then a 2×2 grid (1-wide mobile) of the four messenger creatures with
+  image + name + description. Six WebP assets (~325 KB) at `public/long-light/art/`;
+  dark-ink captions (section sits at the bright gold end of the scroll). **Deviation
+  from the draft:** the closing note says "final clinical wording is pending CTAC
+  review" instead of naming Stephanie — consistent with the 3114867 name scrub. Also
+  brought the full `long-light-site/` staging folder (incl. Concept Art source PNGs)
+  into git.
+
 - **3114867** (2026-07-02) — Spec panel copy scrub (in-conversation, no draft): removed
   the "Clinical wording is Stephanie's to own; these are the vessels" line from §4,
   changed §5 to just "pending" (intro + both Part 2 table cells — no Stephanie), and
@@ -217,8 +228,41 @@ dark→gold on scroll, no image 404s in console/network. No `src/activities` cha
   - Challenge (pending): To be designed with CTAC.
   - Clinical goal: Address shame; end on readiness to go.
 
-**Change 2 — spec appendix.** After the "morning / You wake" section and before the footer, add a new section presenting the full written concept, styled as a **readable light/cream panel with dark text** (it sits at the bright, high-scroll end, so it needs its own light background for contrast — don't rely on the gold gradient). Content = **sections 1–5 of `Gains for Teens/GAINS for Teens - Gameplay Loop and Zone Map.docx`, verbatim**: (1) The gameplay loop, (2) Design principles, (3) The frame story, (4) The messengers, (5) Zone map. Include the doc's title / subtitle / opening italic lede at the top of the panel. **OMIT section 6 (Open questions / needs from CTAC) — internal only.** Render the Zone map as an HTML `<table>` that scrolls horizontally on narrow screens; **keep the "Gear earned" column in this table** (gear is hidden only on the cards, not in the spec). Keep the closing "Note: Video 3 is a message-only beat…" line under the table.
+**Change 2 — spec appendix.** After the "morning / You wake" section and before the footer, add a new section presenting the f
+### Draft 3 — Add a "The Travelers" concept-art section to the pitch page — ✅ SHIPPED e70e070 (2026-07-02)
 
-**Verify:** load https://ssi.ctac.app/long-light/ — the new vector plates load in order; each zone shows Description + Video + Challenge + Clinical goal and **no gear**; the spec panel renders at the very end, readable, with the zone-map table (Gear column present); the dark→gold scroll still works; no image 404s; old `zone*.png` now 404. No `src/activities` changes → **no activity version bumps.** Add a Recently-shipped bullet in `Gains for Teens/WORKING_NOTES.md` and mark this draft shipped.
+**Depends on Draft 2** (adds a section to the same `public/long-light/index.html`). Can ship together with Draft 2 or right after.
 
-*End of Draft 2.*
+**Context.** Add a concept-art gallery to the pitch page so the team can see the world's characters. The **main character (the covered traveler) should be featured noticeably LARGER than the four creatures** — it's the hero.
+
+**Assets (already staged, web-optimized WebP).** In `Gains for Teens/long-light-site/art/`:
+- `map-and-world.webp` (the full journey map + world overview — the winding lantern-and-glyph path from the dark valley up to the Beacon; doubles as the “follow the map” object and the world establishing shot)
+- `main-character.webp` (the hooded, fully-covered traveler, glowing eyes, holding the phone)
+- `emberwick.webp`, `mirefly.webp`, `hollowshell.webp`
+- `dimmet.webp` (hunched creature carrying a heavy stone, its glow turned low)
+
+**Deploy note:** sync the whole `art/` subfolder into `public/long-light/art/` (in addition to the Draft 2 files). Same vercel.json static handling applies.
+
+**Placement.** A new section titled **"The World & Its Travelers"** AFTER the spec appendix panel (from Draft 2) and before the footer.
+
+**Layout.**
+- Intro line under the title: *"The world of The Long Light, and the ones who walk it."*
+- **Open with the world:** feature `map-and-world.webp` as a tall centerpiece at the top of the section (it is a vertical 9:16 epic — let it be large and striking), with the world caption beside or below it.
+- **Featured:** the main character image, large (roughly the width of two creature cards / a hero row), centered, with its caption beside or below it.
+- **Below:** a responsive grid (2×2 on desktop, 1-wide on mobile) of the four creature cards — image + name + description.
+- The concept art already has its own dark backgrounds, so cards can sit on the page's atmospheric background; put captions in a legible light color (add a subtle translucent dark scrim behind caption text if contrast needs it). Keep the existing scroll engine untouched.
+
+**Copy.**
+
+- **The World (the map).** One climb, five regions. The path winds up from the dark valley where you wake — past the glyph-stones and lanterns left by those who came before, over the mist bridge, and into the light — to the Beacon at the summit. It is the map you are told to follow and the world you will cross.
+- **The Traveler (you).** Every inch covered for a cold, unfamiliar country — so anyone can be the one inside the hood. The phone you fell asleep holding is now the light you carry. This is who you become the moment the dream begins.
+- **The Emberwick — reactivity / hypervigilance.** Huge ears catch every sound and its lantern flares at the smallest one; it never sleeps. It learned, from someone who'd walked this path before, to tell true danger from its echoes — and its flame finally learned to rest.
+- **The Mirefly — intrusion.** It circles the same flame, trailed by fading images of itself, reliving one moment on a loop. With help it saw the memories for what they were — echoes, not the thing returning — and the circle opened.
+- **The Hollowshell — avoidance.** It sealed itself inside a shell to feel safe, until nothing warm could reach it. Opening a single seam, a little at a time and with support, is what let the light back in.
+- **The Dimmet — negative mood / thoughts.** It walks bent under its own dark cloud, its glow turned low, sure the weight is its alone to carry. It learned those heavy thoughts weren't facts, set the stone down, and turned its light back up.
+
+*Note: the creatures' recovery lines are concept copy; Stephanie owns the final clinical wording.*
+
+**Verify:** load `/long-light/` — "The Travelers" section renders after the spec panel; main character is clearly the largest; four creature cards show image + name + description; art loads from `/long-light/art/`; no 404s; scroll/brighten still works. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 3.*
