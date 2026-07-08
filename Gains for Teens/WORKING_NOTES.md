@@ -96,6 +96,12 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **d3cf367** (2026-07-08) — Spec §3 "The frame" copy replaced (in-conversation, no
+  draft): now the participant-focused framing — "an adventure the participant plays,"
+  quest to understand what trauma is / how it shows up / how people find their way to
+  help; ends at the Beacon as "proof that help is real and within reach." Drops the
+  "game, not a dream / no falling asleep" negation line from Draft 5.
+
 - **2df2b73** (2026-07-08) — Premise copy trim (in-conversation, no draft): removed the
   second premise line ("It's built for any teen heading toward trauma therapy — turning
   it over, referred, or just starting — and it never hangs on a specific appointment.").
