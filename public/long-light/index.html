@@ -95,6 +95,8 @@
   h2{ font-family:var(--serif); font-weight:600; font-size:clamp(30px,5vw,56px); line-height:1.05; }
   .lede{ font-family:var(--serif); font-style:italic; font-size:clamp(20px,3.2vw,30px);
          color:var(--muted); max-width:34ch; margin-top:18px; line-height:1.35; }
+  .lede2{ font-size:clamp(14px,2vw,17px); color:var(--muted); margin-top:16px;
+         letter-spacing:.02em; max-width:44ch; margin-left:auto; margin-right:auto; }
   p.body{ font-size:clamp(15px,2.1vw,18px); line-height:1.7; color:var(--muted); max-width:52ch; }
   .center{ text-align:center; }
 
@@ -214,9 +216,15 @@
       margin-top:14px; max-width:52ch; text-align:center; }
   .art figcaption b{ color:#3a2a12; }
   .art.world{ width:min(86vw,500px); margin-top:48px; }
-  .art.hero{ width:min(86vw,560px); margin-top:72px; }
+  .subhead{ font-family:var(--serif); font-weight:600; font-size:clamp(22px,3.4vw,32px);
+      color:#3a2a12; margin-top:84px; text-align:center; }
+  .subintro{ font-size:14px; color:rgba(58,42,18,.7); margin-top:8px; text-align:center; }
+  .avatars{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:28px 20px; max-width:920px; width:100%; margin-top:36px; }
+  @media (max-width:900px){ .avatars{ grid-template-columns:repeat(2,minmax(0,1fr)); max-width:560px; } }
+  @media (max-width:480px){ .avatars{ grid-template-columns:1fr; } }
   .creatures{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:44px 28px; max-width:680px; width:100%; margin-top:72px; }
+      gap:44px 28px; max-width:680px; width:100%; margin-top:36px; }
   @media (max-width:640px){ .creatures{ grid-template-columns:1fr; } }
   .artnote{ font-size:12.5px; font-style:italic; color:rgba(58,42,18,.55);
       margin-top:44px; text-align:center; max-width:60ch; }
@@ -241,21 +249,25 @@
       <div class="spark"></div>
       <div class="eyebrow reveal in">GAINS for Teens · A Single-Session Intervention</div>
       <h1 class="reveal in">The Long Light</h1>
-      <div class="lede reveal in" style="margin-left:auto;margin-right:auto">A dream that rehearses the bravest thing you’ll do tomorrow.</div>
-      <div class="scrollcue">Scroll to enter the dream<span class="chev"></span></div>
+      <div class="lede reveal in" style="margin-left:auto;margin-right:auto">A journey to understand what happened — and to find the way forward.</div>
+      <div class="lede2 reveal in">Climb out of the dark. You’re not the first, and you’re not alone.</div>
+      <div class="scrollcue">Scroll to begin<span class="chev"></span></div>
     </section>
 
     <!-- PREMISE -->
     <section class="center">
       <div class="eyebrow reveal">The frame</div>
-      <h2 class="reveal" style="max-width:18ch">Tonight, a teen can’t sleep.</h2>
+      <h2 class="reveal" style="max-width:18ch">It starts with a light in the distance.</h2>
       <p class="body reveal" style="margin:22px auto 0">
-        In the morning they meet a new therapist for the very first time — and they’re scared.
-        To quiet their mind, they open a book and drift into its world. Everything that follows is a dream.
-        And the dream is the intervention.
+        The Long Light is a single-session adventure — a game, not a lesson. You choose a traveler
+        and set out across a dark land toward a distant beacon. Something happened to them, kept
+        deliberately vague, and the journey is about coming to understand it, and yourself, one step
+        at a time. Along the path you find messages left by others who made the same climb, and what
+        they learned about healing. The climb is the intervention; the light is where help is real.
       </p>
       <p class="body reveal" style="margin:22px auto 0;color:rgba(255,226,170,.8)">
-        You never see their face. You see through their eyes — until the world hands you a new one.
+        It’s built for any teen heading toward trauma therapy — turning it over, referred, or just
+        starting — and it never hangs on a specific appointment.
       </p>
     </section>
 
@@ -283,7 +295,7 @@
         <div class="caption reveal">
           <div class="num">Zone II</div>
           <h2>The Lantern Path</h2>
-          <p class="body">Waking slopes, and a winding trail of lanterns to relight as you climb up out of the dark.</p>
+          <p class="body">Brightening slopes, and a winding trail of lanterns to relight as you climb up out of the dark.</p>
           <dl class="fields">
             <div class="field"><dt>Video</dt><dd>The four reaction types — reactivity, intrusion, avoidance, and negative mood or thoughts.</dd></div>
             <div class="field"><dt>Challenge</dt><dd>Character Examples — meet the four messenger creatures and recognize each one’s symptom type.</dd></div>
@@ -347,10 +359,12 @@
     <!-- WAKE -->
     <section class="wake bright center">
       <div class="card">
-        <div class="eyebrow reveal">And then — morning</div>
-        <h2 class="reveal">You wake. You’re ready to go.</h2>
+        <div class="eyebrow reveal">The Beacon</div>
+        <h2 class="reveal">You reach the light.</h2>
         <div class="lede reveal" style="margin-left:auto;margin-right:auto">
-          “Come on — time to get ready for our appointment.” The dream rehearsed the real thing.
+          You climb the last steps and the door opens. You didn’t make it alone — everyone who left
+          a glyph walked this same path. The adventure ends here; the real one is yours to begin,
+          and now you know the way.
         </div>
         <div class="stats reveal">
           <div class="stat"><div class="big">~25–30</div><div class="lbl">minutes</div></div>
@@ -358,7 +372,7 @@
           <div class="stat"><div class="big">5</div><div class="lbl">zones of the climb</div></div>
         </div>
         <p class="body reveal" style="margin:34px auto 0;color:rgba(58,42,18,.78)">
-          A single-session intervention for a teen about to start trauma therapy — psychoeducation and
+          A single-session intervention for any teen heading toward trauma therapy — psychoeducation and
           practice, carried by a game you ascend rather than a lesson you sit through. Built on the SSI Platform.
         </p>
       </div>
@@ -370,37 +384,30 @@
         <div class="doc-title">GAINS for Teens — The Long Light</div>
         <div class="doc-sub">Gameplay Loop &amp; Zone Map</div>
         <div class="doc-meta">Internal working spec · July 2026 · concept mapped against CTAC Part 1</div>
-        <p class="doc-lede">A teen, scared of their first therapy appointment tomorrow, falls asleep over a story and dreams they must climb from darkness to a distant light. The climb is the intervention; they wake ready to go.</p>
+        <p class="doc-lede">A teen anxious about trauma therapy chooses a traveler and sets out to climb from darkness to a distant light. The climb is the intervention; reaching the Beacon is proof that help is real and reachable.</p>
 
         <h3>1. The gameplay loop</h3>
-        <p>One loop repeats per zone as the creature ascends. Each turn:</p>
+        <p>One loop repeats per zone as the traveler climbs. Each turn:</p>
         <ul>
-          <li><b>Discover a glyph → watch the message.</b> A carved glyph, scanned with the phone, plays a ~30-second psychoeducation clip left by a traveler who walked this path before.</li>
+          <li><b>Discover a glyph → watch the message.</b> A carved glyph, read with the phone, plays a ~30-second psychoeducation clip left by someone who walked this path before.</li>
           <li><b>Take on the challenge.</b> A short activity that reinforces what the message just taught.</li>
-          <li><b>Earn gear (loot).</b> Completing the challenge yields a piece of gear — ideally the coping idea made tangible — that helps with what’s ahead.</li>
-          <li><b>Traverse to the next zone.</b> A brief arcade crossing (~30–60s) that uses the gear and carries the creature into the next, brighter environment — where the next glyph waits.</li>
+          <li><b>Earn gear.</b> Completing the challenge yields a piece of gear — the coping idea made tangible — that helps with what’s ahead.</li>
+          <li><b>Clear an obstacle.</b> <i>(Needs to be developed.)</i> Somewhere on the path stands a barrier: an unhelpful thought or misconception about therapy (for example, “therapy won’t work”). You get past it — going over or around it, never destroying it — by answering with what you’ve learned (for example, “therapy is effective, and it can help me put this behind me”).</li>
+          <li><b>Travel to the next zone.</b> A brief, fun, arcade-style traversal — you pilot your traveler across to the next, brighter environment, where the next glyph waits.</li>
         </ul>
 
         <h3>2. Design principles</h3>
         <ul>
           <li><b>No-fail, always.</b> Challenges and traversals are forgiving and success-guaranteed — retry freely, no game-over, no score-shaming. A therapeutic dose can’t be gated behind dexterity, and “I failed at coping” is a message we must never send.</li>
-          <li><b>Gear is the skill.</b> Where possible each reward is the coping idea in physical form (a grounding “anchor,” a naming “lantern”). By the summit the creature is fully equipped — which reads as “you’ve built a toolkit for tomorrow.”</li>
+          <li><b>Gear is the skill.</b> Where possible each reward is the coping idea in physical form (a grounding “anchor,” a naming “lantern”). By the summit the traveler is fully equipped — which reads as “you’ve built a toolkit for what’s next.”</li>
           <li><b>Understanding brightens the world.</b> The psychoeducation arc is lined up with the dark→light gradient: the confusing, frightening material sits in the low dark zones; understanding and hope arrive as the world lightens.</li>
           <li><b>Alone → not alone.</b> The teen sets off resentful and alone; every glyph is proof others walked here first; by the top they’re accompanied — and the caregiver’s “I’ll meet you there” pays off at the summit.</li>
-          <li><b>The phone is the interface.</b> The real thing they fell asleep holding becomes the in-world tool: scanner, map, inventory (the toolkit), and where the caregiver’s check-ins arrive.</li>
+          <li><b>The phone is the interface.</b> The teen’s own phone becomes the in-world tool: scanner, map, inventory (the toolkit), and where the caregiver’s check-ins arrive.</li>
           <li><b>One reusable traversal.</b> A single arcade pattern reskinned per zone — low-twitch, one-handed — not five separate mini-games.</li>
         </ul>
 
-        <h3>3. The frame story</h3>
-        <p>Real-world scenes play in first person — we see the teen’s hands, the book, the phone, the caregiver across the room, but never their face or body. The only character ever seen is the neutral creature they become in the dream, which keeps the whole thing free of gender, race, or body type.</p>
-        <ul>
-          <li><b>Setup (POV).</b> Something happened — kept vague — and the teen has trauma symptoms. The caregiver says there’s an appointment in the morning with a new therapist. The teen is nervous but agrees.</li>
-          <li><b>Drifting off (POV).</b> To settle their mind they read a favorite story; we see it in their hands; they fall asleep into its world.</li>
-          <li><b>The call to start.</b> Darkness, a single candle. A text from the caregiver: “I’ll meet you there — just follow the map.” A map of distinct areas appears; irritated at going alone, the teen sets off.</li>
-          <li><b>The reveal.</b> The camera leaves first person: catching their reflection, the teen sees they’ve become a creature of the story — the first “themselves” they see is neutral. The phone came with them.</li>
-          <li><b>Messages from those before (the loop begins).</b> Glyphs left by travelers who were here first carry the psychoeducation — peer voices, not lectures.</li>
-          <li><b>Arrival and waking (POV).</b> At the summit the therapist’s door opens into brilliant light; we cut to first person as the teen wakes — “Time to get ready for our appointment” — ready to go.</li>
-        </ul>
+        <h3>3. The frame</h3>
+        <p>The Long Light is a game the teen plays, not a dream they have — there’s no falling asleep and no waking up. A teen anxious about trauma therapy (considering it, referred, or just beginning) picks up the adventure and chooses a traveler to become. Something happened to that traveler, kept deliberately vague, and the quest is to understand it, and themselves. The player is only ever the traveler — a covered figure or a creature, never a specific face — which keeps the experience free of gender, race, and body type. They meet others who made the same climb and learned what helped, and the journey ends not by waking but by reaching the Beacon: proof that help is real and reachable.</p>
 
         <h3>4. The messengers</h3>
         <p>Original creatures of the story’s world — no borrowed IP. Each embodies one of the four trauma-reaction categories, reads as a simple dark silhouette in the vector style, and recovered with support (the peer voice). They do double duty: the travelers you meet at glyphs and the cast of the Character Examples challenge.</p>
@@ -433,7 +440,7 @@
                 <td>Understand what trauma is; normalize bodily responses.</td>
               </tr>
               <tr>
-                <td><span class="zname">2 · The Lantern Path</span><span class="zscene">waking slopes; lanterns to relight</span></td>
+                <td><span class="zname">2 · The Lantern Path</span><span class="zscene">brightening slopes; lanterns to relight</span></td>
                 <td>Video 2 — the four reaction types: reactivity, intrusion, avoidance, negative mood/thoughts.</td>
                 <td>Character Examples — meet the four messenger creatures; recognize each one’s symptom type.</td>
                 <td>A Lantern — naming what’s happening.</td>
@@ -476,14 +483,32 @@
 
         <figure class="art world reveal">
           <img src="art/map-and-world.webp" alt="The world of The Long Light — a winding lantern-and-glyph path climbing from a dark valley up to the Beacon" loading="lazy">
-          <figcaption><b>The World (the map).</b> One climb, five regions. The path winds up from the dark valley where you wake — past the glyph-stones and lanterns left by those who came before, over the mist bridge, and into the light — to the Beacon at the summit. It is the map you are told to follow and the world you will cross.</figcaption>
+          <figcaption><b>The World (the map).</b> One climb, five regions. The path winds up from the dark valley where you begin — past the glyph-stones and lanterns left by those who came before, over the mist bridge, and into the light — to the Beacon at the summit. It is the map you are told to follow and the world you will cross.</figcaption>
         </figure>
 
-        <figure class="art hero reveal">
-          <img src="art/main-character.webp" alt="The Traveler — a hooded, fully covered figure with glowing eyes, holding a phone as a light" loading="lazy">
-          <figcaption><b>The Traveler (you).</b> Every inch covered for a cold, unfamiliar country — so anyone can be the one inside the hood. The phone you fell asleep holding is now the light you carry. This is who you become the moment the dream begins.</figcaption>
-        </figure>
+        <h3 class="subhead reveal">Choose your traveler</h3>
+        <p class="subintro reveal">You’ll play as one of these — pick who you become.</p>
+        <div class="avatars">
+          <figure class="art reveal">
+            <img src="art/avatar-traveler-1.webp" alt="The Traveler — a hooded, fully wrapped figure holding a small light" loading="lazy">
+            <figcaption><b>The Traveler.</b> Hooded and wrapped, a small light in hand.</figcaption>
+          </figure>
+          <figure class="art reveal">
+            <img src="art/avatar-creature.webp" alt="The Creature — a small curious creature with a lantern for a tail" loading="lazy">
+            <figcaption><b>The Creature.</b> Small and curious, with a lantern for a tail.</figcaption>
+          </figure>
+          <figure class="art reveal">
+            <img src="art/avatar-traveler-2.webp" alt="The Wayfarer — a veiled figure lighting the path with a lantern-staff" loading="lazy">
+            <figcaption><b>The Wayfarer.</b> Veiled, lighting the path with a lantern-staff.</figcaption>
+          </figure>
+          <figure class="art reveal">
+            <img src="art/avatar-construct.webp" alt="The Construct — a figure of stone and warm light" loading="lazy">
+            <figcaption><b>The Construct.</b> Stone and warm light, quietly unstoppable.</figcaption>
+          </figure>
+        </div>
 
+        <h3 class="subhead reveal">Those who walked before you</h3>
+        <p class="subintro reveal">The four messengers you meet at the glyphs — each recovered with support.</p>
         <div class="creatures">
           <figure class="art reveal">
             <img src="art/emberwick.webp" alt="The Emberwick — a creature with oversized ears and a flaring lantern" loading="lazy">
