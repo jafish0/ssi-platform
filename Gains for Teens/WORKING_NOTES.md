@@ -96,6 +96,12 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **2df2b73** (2026-07-08) — Premise copy trim (in-conversation, no draft): removed the
+  second premise line ("It's built for any teen heading toward trauma therapy — turning
+  it over, referred, or just starting — and it never hangs on a specific appointment.").
+  The premise now ends on "The climb is the intervention; the light is where help is
+  real."
+
 - **7a743a0** (2026-07-08) — Draft 5: adventure reframe of the pitch page (game, not
   dream; no "therapy is tomorrow"). Hero has both stacked taglines + "Scroll to begin";
   premise is "It starts with a light in the distance" (any teen heading toward trauma
