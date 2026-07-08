@@ -96,6 +96,26 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **7a743a0** (2026-07-08) — Draft 5: adventure reframe of the pitch page (game, not
+  dream; no "therapy is tomorrow"). Hero has both stacked taglines + "Scroll to begin";
+  premise is "It starts with a light in the distance" (any teen heading toward trauma
+  therapy, no specific appointment); ending is arrival at the Beacon ("You reach the
+  light"), stats kept. Spec panel: 5-beat loop incl. the pending non-violent "Clear an
+  obstacle" beat; §3 renamed "The frame" with the adventure framing; global scrub on
+  kept sections ("traveler" not "creature", "toolkit for what's next", "brightening
+  slopes" in Zone II card + §5 table). Gallery: new "Choose your traveler"
+  character-select (Traveler / Creature / Wayfarer / Construct, equal size, 4-across
+  desktop → 2×2 → 1-wide); messengers regrouped under "Those who walked before you".
+  Four avatar WebP added to `public/long-light/art/`. Scroll engine untouched; no
+  version bumps. Remaining "dream/asleep/appointment" words on the page are only the
+  approved copy that negates the old frame.
+
+- **fb7e3c4** (2026-07-08) — Draft 4: split /long-light/ caching in vercel.json — HTML
+  (bare path, trailing slash, *.html) gets `no-cache, must-revalidate`; *.webp gets
+  `public, max-age=31536000, immutable`. Fixes the stale-HTML risk from Draft 1's
+  blanket cache exclusion so the plain URL always revalidates the document while art
+  stays long-cached.
+
 - **e70e070** (2026-07-02) — Draft 3: added "The World & Its Travelers" concept-art
   section to the pitch page, after the spec appendix and before the footer. World map
   as tall centerpiece (500px), the hooded Traveler featured larger (560px — clearly
@@ -258,11 +278,70 @@ dark→gold on scroll, no image 404s in console/network. No `src/activities` cha
 - **The Traveler (you).** Every inch covered for a cold, unfamiliar country — so anyone can be the one inside the hood. The phone you fell asleep holding is now the light you carry. This is who you become the moment the dream begins.
 - **The Emberwick — reactivity / hypervigilance.** Huge ears catch every sound and its lantern flares at the smallest one; it never sleeps. It learned, from someone who'd walked this path before, to tell true danger from its echoes — and its flame finally learned to rest.
 - **The Mirefly — intrusion.** It circles the same flame, trailed by fading images of itself, reliving one moment on a loop. With help it saw the memories for what they were — echoes, not the thing returning — and the circle opened.
-- **The Hollowshell — avoidance.** It sealed itself inside a shell to feel safe, until nothing warm could reach it. Opening a single seam, a little at a time and with support, is what let the light back in.
-- **The Dimmet — negative mood / thoughts.** It walks bent under its own dark cloud, its glow turned low, sure the weight is its alone to carry. It learned those heavy thoughts weren't facts, set the stone down, and turned its light back up.
+- **The Hollowshell — avoidance.** It sealed itself inside a shell to feel safe, until nothing war
+### Draft 4 — Fix caching so /long-light/ serves fresh HTML (currently stale) — ✅ SHIPPED fb7e3c4 (2026-07-08)
 
-*Note: the creatures' recovery lines are concept copy; Stephanie owns the final clinical wording.*
+**Problem.** After Drafts 2–3 shipped, the new page is live and correct — confirmed by fetching `https://ssi.ctac.app/long-light/index.html?v=TEST`, which returns the vector art, per-zone Video/Challenge/Clinical-goal fields, the spec panel, and the "The World & Its Travelers" gallery. **But the plain URL `https://ssi.ctac.app/long-light/` still serves the STALE Draft-1 HTML** (old zone captions, no spec panel, no gallery). This matters: the team is about to be emailed the plain link and must see the current page.
 
-**Verify:** load `/long-light/` — "The Travelers" section renders after the spec panel; main character is clearly the largest; four creature cards show image + name + description; art loads from `/long-light/art/`; no 404s; scroll/brighten still works. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+**Root cause.** Draft 1 excluded `/long-light/` from the app's global no-cache header so the images would cache — which also lets `index.html` get cached (CDN/browser) and served stale.
 
-*End of Draft 3.*
+**Fix.** Split caching by type for `/long-light/` (in `vercel.json` headers, or wherever Draft 1 set the exclusion):
+- **HTML** (`/long-light/`, `/long-light/index.html`, any `.html`): `Cache-Control: no-cache, must-revalidate` (always revalidate, so document is fresh).
+- **Static assets** (`.webp` and any images): keep long cache, e.g. `Cache-Control: public, max-age=31536000, immutable` (safe — content is stable, filenames are the version).
+
+Then redeploy (purges the Vercel edge cache for the path).
+
+**Verify.** Fetch the **plain** URL `https://ssi.ctac.app/long-light/` (NO query string), fresh, and confirm it now returns the NEW content: per-zone Video/Challenge/Clinical-goal, the "Gameplay Loop & Zone Map" spec panel, and "The World & Its Travelers" gallery with all six art pieces. Confirm the HTML response carries a `no-cache`/`must-revalidate` `Cache-Control`, and that the `.webp` still return 200 (cached). No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 4.*
+
+### Draft 5 — Rebuild "The Long Light" pitch page for the adventure reframe (replaces current content) — ✅ SHIPPED 7a743a0 (2026-07-08)
+
+**Context.** Sprang's feedback: reframe from a *dream* to an *adventure game*, drop the "therapy is tomorrow" timeline, add the obstacle beat, keep all metaphors non-violent. This rewrites the page Drafts 2–3 built. **Keep the scroll engine exactly as-is** (dark→gold scroll background, beacon glow, drifting motes, reveal-on-scroll) — only content/copy and the gallery change. Make sure the Draft 4 caching fix is in place so the new page serves fresh.
+
+**New assets (staged).** Four player-avatar WebP in `long-light-site/art/`: `avatar-traveler-1.webp`, `avatar-creature.webp`, `avatar-traveler-2.webp`, `avatar-construct.webp`. (Existing zone, messenger, and map WebP stay.)
+
+**Global scrub (whole page).** Remove all dream/sleep language ("dream," "falls asleep," "drifts off," "wake/wakes up," "the dream is the intervention") and all appointment-timing language ("tomorrow," "in the morning," "time to get ready for our appointment"). Where the playable character is referenced use **"traveler,"** not "creature" (the avatar may be a creature OR a covered figure). Keep every metaphor non-violent (no fight/beat/destroy; no armor-as-combat).
+
+**1. Hero.** Replace the tagline "A dream that rehearses the bravest thing you'll do tomorrow" with both approved lines, stacked:
+- Primary (large): *A journey to understand what happened — and to find the way forward.*
+- Secondary (smaller, beneath): *Climb out of the dark. You're not the first, and you're not alone.*
+Keep the eyebrow "GAINS for Teens · A Single-Session Intervention" and the "Scroll to begin" cue.
+
+**2. Premise section.** Replace the "Tonight, a teen can't sleep…" section with:
+- Heading: **It starts with a light in the distance.**
+- Body: *The Long Light is a single-session adventure — a game, not a lesson. You choose a traveler and set out across a dark land toward a distant beacon. Something happened to them, kept deliberately vague, and the journey is about coming to understand it, and yourself, one step at a time. Along the path you find messages left by others who made the same climb, and what they learned about healing. The climb is the intervention; the light is where help is real.*
+- Second line: *It's built for any teen heading toward trauma therapy — turning it over, referred, or just starting — and it never hangs on a specific appointment.*
+
+**3. Zone cards (I–V).** Keep the Description / Video / Challenge / Clinical goal fields as-is (content-accurate); just apply the global scrub if any dream/tomorrow words appear.
+
+**4. Ending section.** Replace "And then — morning / You wake. You're ready to go / 'time to get ready for our appointment'" with an arrival, not a waking:
+- Eyebrow: **The Beacon**
+- Heading: *You reach the light.*
+- Line: *You climb the last steps and the door opens. You didn't make it alone — everyone who left a glyph walked this same path. The adventure ends here; the real one is yours to begin, and now you know the way.*
+- Keep the three stats (~25–30 minutes / 1 session / 5 zones of the climb).
+- In the closing summary line, change "a teen about to start trauma therapy" → "any teen heading toward trauma therapy."
+
+**5. Spec panel.**
+- **§1 The gameplay loop** — replace with the new **5-beat** loop (change intro "as the creature ascends" → "as the traveler climbs"):
+  1. **Discover a glyph → watch the message.** A carved glyph, read with the phone, plays a ~30-second psychoeducation clip left by someone who walked this path before.
+  2. **Take on the challenge.** A short activity that reinforces what the message just taught.
+  3. **Earn gear.** Completing the challenge yields a piece of gear — the coping idea made tangible — that helps with what's ahead.
+  4. **Clear an obstacle.** *(Needs to be developed.)* Somewhere on the path stands a barrier: an unhelpful thought or misconception about therapy (for example, "therapy won't work"). You get past it — going over or around it, never destroying it — by answering with what you've learned (for example, "therapy is effective, and it can help me put this behind me").
+  5. **Travel to the next zone.** A brief, fun, arcade-style traversal — you pilot your traveler across to the next, brighter environment, where the next glyph waits.
+- **§3 The frame** (rename from "The frame story") — replace the dream/POV-bookend beats with the adventure framing:
+  *The Long Light is a game the teen plays, not a dream they have — there's no falling asleep and no waking up. A teen anxious about trauma therapy (considering it, referred, or just beginning) picks up the adventure and chooses a traveler to become. Something happened to that traveler, kept deliberately vague, and the quest is to understand it, and themselves. The player is only ever the traveler — a covered figure or a creature, never a specific face — which keeps the experience free of gender, race, and body type. They meet others who made the same climb and learned what helped, and the journey ends not by waking but by reaching the Beacon: proof that help is real and reachable.*
+- **§2 Design principles, §4 The messengers, §5 Zone map** — keep as-is (apply the global scrub; keep the Gear-earned column in the §5 table).
+
+**6. "The World & Its Travelers" gallery.** Reorganize into three parts:
+- **The World** — keep `map-and-world.webp` as the centerpiece + caption.
+- **Choose your traveler** (NEW) — replace the single "The Traveler (you)" feature with the four player avatars as a character-select set (row/grid, equal size). Intro: *"You'll play as one of these — pick who you become."* Labels:
+  - `avatar-traveler-1.webp` — **The Traveler.** Hooded and wrapped, a small light in hand.
+  - `avatar-creature.webp` — **The Creature.** Small and curious, with a lantern for a tail.
+  - `avatar-traveler-2.webp` — **The Wayfarer.** Veiled, lighting the path with a lantern-staff.
+  - `avatar-construct.webp` — **The Construct.** Stone and warm light, quietly unstoppable.
+- **Those who walked before you** — keep the four messenger cards (Emberwick, Mirefly, Hollowshell, Dimmet) + descriptions; retitle this sub-group so it's clearly distinct from the player avatars.
+
+**Deploy + verify.** Ensure the Draft 4 caching fix is applied (HTML no-cache) so the plain URL serves fresh. Verify at https://ssi.ctac.app/long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premise + ending are the new copy; loop shows 5 beats incl. the pending obstacle; gallery shows World + 4 selectable travelers + 4 messengers; all art loads; scroll dark→gold intact. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 5.*
