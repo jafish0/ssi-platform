@@ -18,16 +18,19 @@
 // appear in multiple sections — Sam 18 + Sam 14 render in both their
 // home section and the proposed-alternative section):
 //   - `'sams-story'` — the narrative-video cast (Holly's Script 2.0):
-//     Sam 18 (formerly presented as 16), Sam 14, Foster Mom, Foster Dad,
+//     three Sam variants — Sam (18 years old) with the Brayden male
+//     voice, Sam (Gender Neutral) with the Amara gender-neutral voice
+//     (promoted from Proposed Alt in Draft 46), and Sam (14 years old)
+//     with its own voice model — plus Foster Mom, Foster Dad,
 //     Mrs. Johnson.
 //   - `'learning-skills'` — the psychoeducation track that wraps the six
-//     activities (Adrienne's script): Kai.
-//   - `'proposed-alternative'` — Draft 42's "Proposed Alternative Cast"
-//     section, for team review only (not shipping). Reuses Sam 18 + Sam
-//     14, plus four new-or-repurposed cards: a nonbinary Sam variant
-//     (reusing Kai's current Variant 1 image), a female Sam placeholder
-//     (`placeholder: true`, no build yet), and two proposed peer-mentor
-//     Kai identities (male / female, early-20s Black young adult).
+//     activities (Adrienne's script): the Male Alternative Kai + the
+//     current Kai, side by side for voice comparison (Draft 45).
+//   - `'proposed-alternative'` — the "Proposed Alternative Cast"
+//     exploration section (Draft 42, reconfigured Draft 44). Now
+//     placeholder-only after the Draft 45/46 promotions: a female Sam
+//     placeholder and a younger female alt Kai placeholder
+//     (`placeholder: true`, builds pending).
 //
 // Image shape (one of):
 //   - `image` (string) — single character image (most cards).
@@ -96,6 +99,26 @@ export const CAST = [
       {
         label: 'New Older Sam Voice Model — All Lines',
         src: '/cast/audio/older-sam-narrator.mp3',
+      },
+    ],
+  },
+  {
+    // Sam (Gender Neutral) — promoted out of Proposed Alternative Cast
+    // (Draft 46, 2026-07-10) now that Josh recorded the full all-Sam-18-
+    // lines script through the Amara gender-neutral voice model (the
+    // current Kai's voice). Same 3:38 all-lines narration as
+    // older-sam-narrator.mp3, different voice. Design reuses the blonde
+    // Kai Variant 2 visual, differentiating from dark-haired Sam Male.
+    id: 'sam-nonbinary',
+    shows: ['sams-story'],
+    name: 'Sam (Gender Neutral)',
+    image: '/cast/images/kai-variant-2.png',
+    alt: 'Sam, gender-neutral variant — voiced through the Amara gender-neutral voice model',
+    role: 'The gender-neutral variant of Sam — same character, different presentation. Character design reuses the current Kai visual (blonde); voice uses the Amara gender-neutral model reading the same all-lines narration script.',
+    voiceSamples: [
+      {
+        label: 'New Sam Gender-Neutral Voice Model — All Lines',
+        src: '/cast/audio/sam-nonbinary-narrator.mp3',
       },
     ],
   },
@@ -370,20 +393,10 @@ export const CAST = [
   // the /demo section renders as two labeled groups. Sam 18 + Sam 14 no
   // longer duplicate into this section (Draft 44 A) — they're referenced
   // verbally in the intro instead.
-  {
-    // Prepped for voiceSamples[] (Draft 44 D): when Josh records the
-    // current Kai voice on the two Sam-NB lines from Holly's script, the
-    // audio lands here (suggested: sam-nb-kai-voice-inner-monologue.mp3 +
-    // sam-nb-kai-voice-rejection.mp3, or one bundled file). Field omitted
-    // until then — the renderer skips it.
-    id: 'sam-nonbinary',
-    shows: ['proposed-alternative'],
-    subgroup: 'sam-variants',
-    name: 'Sam — Gender Neutral',
-    image: '/cast/images/kai-variant-2.png',
-    alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai (Variant 2, blonde)',
-    role: "Sam's nonbinary variant. Uses the character design currently in the Kai role — the gender-neutral design fits precisely here.",
-  },
+  // (Draft 46: the sam-nonbinary card graduated out of this section into
+  // Sam's Story with the full Amara all-lines voice sample — see the card
+  // right after sam-16 above. That supersedes Draft 44 D's plan for
+  // per-line Kai-voice recordings.)
   {
     id: 'sam-female-placeholder',
     shows: ['proposed-alternative'],
