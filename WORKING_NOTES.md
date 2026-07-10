@@ -4065,6 +4065,168 @@ Parked for a follow-up draft once the activities are joined.
 
 ---
 
+### Draft 49 — Plan Screen 2: add BSS pull-forward caveat note
+
+Small clarification to Plan v2.0's Screen 2 (Skills to Try). The design intent from the 2026-07-07 meeting is that this screen pulls forward the participant's willing-to-try skills from Belonging Skills Sort. In the current demo, Screen 2 renders three hardcoded synthetic skills (Active Listening, Inclusive Language, Helping Out — chosen because they're the three Kai highlights in Part II Scene 1). Cross-activity flow integration (the read from BSS → Plan) hasn't been implemented yet; it's still deferred per Draft 21.
+
+Right now a team member testing /demo who deliberately sorts specific skills into BSS willing-to-try will open the Plan and see the same three synthetic skills regardless of what they did. Not a bug in shipping behavior, but easy to misread as one.
+
+**Add a caveat note** on Plan Screen 2 explaining what the participant is looking at.
+
+**Approved by:** Josh, 2026-07-10.
+
+---
+
+#### Part A — Add the caveat note on Plan Screen 2
+
+**File:** `src/activities/Plan.jsx`.
+
+**Where it renders:** at the top of Screen 2 (Skills to Try), just below the heading *"New Skills to Try"* and its sub-line, and ABOVE the first skill card.
+
+**Suggested copy** (Josh may tune before shipping):
+
+> *In the real session, these are the skills you put in the "willing to try" bucket in Belonging Skills Sort. This preview shows sample skills for demonstration.*
+
+**Styling:** small italic explanatory text, `text-sm italic text-slate-500` or similar muted treatment. Not a warning callout, not a heading — reads as a quiet aside so it doesn't distract from the actual task on Screen 2.
+
+Alternative slightly more concise phrasing if the above feels too long:
+
+> *Preview note: in a real session, these are your willing-to-try picks from Belonging Skills Sort.*
+
+Either works. Code's judgment on which reads better in the layout.
+
+#### Part B — Align `planDemoData.js` skill text to match BSS's real skill text
+
+The demo data currently uses SHORT LABELS (*"Active listening"* / *"Inclusive language"* / *"Helping out"*), but BSS's actual `BEHAVIORS` array in `src/activities/BelongingSkillsSort.jsx` uses FULL SENTENCES (e.g., *"Pay close attention when someone is talking to you (without checking your phone or getting distracted)"*). When a team member sorts skills in BSS and then opens the Plan, they see the short-label version of the same content — which doesn't visually read as "this came from what you just did."
+
+**Change:** update `ALL_BELONGING_SKILLS` and the `willingToTrySkills` demo array in `src/lib/planDemoData.js` to use the exact same `text` and `definition` values as BSS's `BEHAVIORS` array.
+
+**Field-name alignment:** BSS uses `text` for the sentence and `definition` for the helper. `planDemoData.js` currently uses `title` for the label. Rename `title` → `text` so the data shape matches BSS exactly. This means Plan.jsx's rendering also needs updating (`s.title` → `s.text`), which is a mechanical find-and-replace within the Plan activity.
+
+**Updated `ALL_BELONGING_SKILLS` (verbatim from BSS `BEHAVIORS`):**
+
+```js
+export const ALL_BELONGING_SKILLS = [
+  {
+    id: 'bs1',
+    text: 'Pay close attention when someone is talking to you (without checking your phone or getting distracted)',
+    definition: "Giving someone your full attention when they're speaking — eyes on them, no phone, no looking around.",
+  },
+  {
+    id: 'bs2',
+    text: 'Use words like "we," "us," or "our group" to make people feel included',
+    definition: 'Saying things that signal everyone belongs in the group — "we" instead of "you guys," "our team" instead of "the group."',
+  },
+  {
+    id: 'bs3',
+    text: 'Say thank you or tell others when they do something you appreciate',
+    definition: 'Telling someone you noticed and appreciated what they did, instead of just thinking it.',
+  },
+  {
+    id: 'bs4',
+    text: 'Help someone out when they need it',
+    definition: 'Offering help when you see someone needs it, without waiting to be asked.',
+  },
+  {
+    id: 'bs5',
+    text: 'Invite others to spend time with you',
+    definition: 'Reaching out to bring someone into your plans or your day, instead of waiting for them to ask.',
+  },
+  {
+    id: 'bs6',
+    text: 'Include others in conversations and activities (like watching a movie, going for a walk, or playing a game)',
+    definition: "Making space for others in what you're already doing — looping them into the conversation, the game, the show.",
+  },
+  {
+    id: 'bs7',
+    text: 'Talk through a disagreement with someone until you find an answer that works for everyone',
+    definition: 'Staying with a disagreement until you find something that works for everyone, instead of walking away or giving up.',
+  },
+]
+```
+
+**Updated `willingToTrySkills` demo array** (the three Kai-video skills, now with sentence text + a `howExample` tuned to the sentence form):
+
+```js
+willingToTrySkills: [
+  {
+    id: 'bs1',
+    text: 'Pay close attention when someone is talking to you (without checking your phone or getting distracted)',
+    definition: "Giving someone your full attention when they're speaking — eyes on them, no phone, no looking around.",
+    howExample: 'e.g., putting my phone down when my sister is telling me about her day',
+  },
+  {
+    id: 'bs2',
+    text: 'Use words like "we," "us," or "our group" to make people feel included',
+    definition: 'Saying things that signal everyone belongs in the group — "we" instead of "you guys," "our team" instead of "the group."',
+    howExample: 'e.g., saying "we" and "us" when I\'m making plans with friends',
+  },
+  {
+    id: 'bs4',
+    text: 'Help someone out when they need it',
+    definition: 'Offering help when you see someone needs it, without waiting to be asked.',
+    howExample: 'e.g., offering to help before someone has to ask',
+  },
+],
+```
+
+**Consideration:** the sentence-form text is much longer than the short labels. The card headings on Screen 2 will visibly wrap on smaller viewports. That's fine — matches what BSS renders — but worth spot-checking that the layout still reads cleanly.
+
+##### B.1 — Update Plan.jsx to render `s.text` instead of `s.title`
+
+**File:** `src/activities/Plan.jsx`.
+
+Find-and-replace `s.title` → `s.text` for all references to willing-to-try skill entries. Should be a small handful of spots based on the earlier grep — Screen 2 card rendering, review screen summary, PDF export.
+
+Alternatively — accept both `s.text` and `s.title` in the renderer (`s.text ?? s.title`) for defensive backward-compatibility if any consumer somewhere is still passing `title`. Code's judgment.
+
+#### Part C — Add a comment in `src/lib/planDemoData.js` documenting the origin of the three skills
+
+**File:** `src/lib/planDemoData.js`.
+
+Above the `willingToTrySkills` array, add a comment block explaining what these three specific skills represent and their intended lifecycle:
+
+```js
+// The three skills below (Active Listening, Inclusive Language, Helping Out)
+// are the three skills Kai highlights in Part II, Scene 1 of the psychoeducation
+// video. They're used here as demo synthetic content because cross-activity
+// flow integration (real reads from BSS's willing-to-try output) is still
+// deferred per Draft 21.
+//
+// When flow integration lands, this hardcoded array is replaced by a real
+// read from the participant's BSS save payload — filtered to willing_to_try,
+// looked up in ALL_BELONGING_SKILLS for the title/definition, and paired
+// with per-skill howExample values. The kid's actual sorting drives the
+// content, not this static trio.
+//
+// Kept as a fallback for when BSS hasn't been completed in the session.
+willingToTrySkills: [
+  // ... existing entries ...
+]
+```
+
+No structural change — same array, same data. Just a comment explaining the intent and the deferred work.
+
+#### What does NOT change
+
+- The three hardcoded skills themselves — they stay in the array as demo content.
+- The rest of Plan Screen 2 — the "how" text input, allies dropdown, when chip group, Continue gating — all unchanged.
+- Other Plan screens (Words of Wisdom, inclusion reflection, review, save/PDF) — unchanged.
+- All other activities — unchanged.
+- `planDemoData.js`'s other fields (inclusionText, notTriedYetIds, etc.) — unchanged.
+- Cross-activity flow integration — still deferred. Real BSS→Plan read is a bigger separate piece of work.
+- No `activityVersions.js` bump (copy-only + comment).
+
+#### Out of scope (still deferred)
+
+- **Real BSS→Plan pull-forward.** The clean solution the team wants: participant does BSS, sorts skills into willing-to-try, opens Plan, sees their real sorts. Requires cross-activity persistence (localStorage read from BSS save payload). Larger scope; not this draft.
+- **Removing or migrating the hardcoded three skills.** They stay as-is. When real pull-forward lands, they become a fallback for the empty-state case (BSS not completed in this session).
+- **`howExample` data for all 7 BSS skills.** The current synthetic array covers 3 skills with `howExample`; when real BSS→Plan lands, every one of the 7 BSS skills needs a `howExample` entry so any subset can be surfaced. Doable as part of the future flow-integration draft.
+
+*End of Draft 49.*
+
+---
+
 <!-- Draft 27 shipped 2026-06-09 — archived (commented out). -->
 
 <!--
