@@ -3642,6 +3642,127 @@ Parked for a follow-up draft once the activities are joined.
 
 ---
 
+### Draft 46 — Promote Sam Nonbinary into Sam's Story with the Amara voice sample
+
+Josh recorded the full all-Sam-18-lines script (the same script Sam Male uses) through the Amara voice model — the current Kai's gender-neutral voice. Promote the existing `sam-nonbinary` card out of the Proposed Alternative Cast section and into **Sam's Story** section, positioned directly below Sam 18 (Sam Male). Add the new voice sample using the same `voiceSamples` shape Sam 18 uses (from Draft 33).
+
+Parallel to Draft 45's Male Kai promotion: same pattern of "a variant graduates from Proposed Alt to a shipped section" because Josh has recorded enough material to make it a peer card rather than a proof-of-concept.
+
+**Approved by:** Josh, 2026-07-10.
+
+---
+
+#### Part A — Copy the Amara audio into `public/cast/audio/`
+
+**Source folder:** `Video Content/New Voiceover/Non Binary Sam/`
+
+| Source | Destination | Duration |
+|---|---|---|
+| `Non Binary Sam Amara.mp3` | `public/cast/audio/sam-nonbinary-narrator.mp3` | 3:38 (218s) |
+
+~3.5 MB. Duration matches the shipped `older-sam-narrator.mp3` exactly — same all-lines script, just voiced through Amara (gender-neutral) instead of Brayden (Sam Male).
+
+Naming convention mirrors `older-sam-narrator.mp3` for the male Sam narrator, keeping the Sam-* prefix in `public/cast/audio/` consistent.
+
+#### Part B — Update the sam-nonbinary card in `src/lib/castData.js`
+
+Locate the current `sam-nonbinary` card (from Draft 42, currently in Proposed Alternative Cast). Update it in place:
+
+**Before (current shipped state):**
+
+```js
+{
+  id: 'sam-nonbinary',
+  shows: ['proposed-alternative'],
+  subgroup: 'sam-variants',
+  name: 'Sam — Gender Neutral',
+  image: '/cast/images/kai-variant-2.png',
+  alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai (Variant 2, blonde)',
+  role: '...',
+  // no voiceSamples
+},
+```
+
+**After:**
+
+```js
+{
+  id: 'sam-nonbinary',
+  shows: ['sams-story'],                    // ← promoted from proposed-alternative
+  // remove `subgroup` field entirely (not needed in Sam's Story)
+  name: 'Sam (Gender Neutral)',             // ← align with "Sam (18 years old)" / "Sam (14 years old)" parenthetical style
+  image: '/cast/images/kai-variant-2.png',  // ← unchanged, keeps the blonde variant that differentiates from dark-haired Sam Male
+  alt: 'Sam, gender-neutral variant — voiced through the Amara gender-neutral voice model',
+  role: 'The gender-neutral variant of Sam — same character, different presentation. Character design reuses the current Kai visual (blonde); voice uses the Amara gender-neutral model reading the same all-lines narration script.',
+  voiceSamples: [
+    {
+      label: 'New Sam Gender-Neutral Voice Model — All Lines',
+      src: '/cast/audio/sam-nonbinary-narrator.mp3',
+    },
+  ],
+},
+```
+
+##### B.1 — Placement in the CAST array
+
+Move the card so it appears **directly after the `sam-16` card** (Sam Male / Sam 18) in the array. Render order in Sam's Story then becomes:
+
+1. Sam (18 years old) — Sam Male, existing
+2. **Sam (Gender Neutral) — NEW here, promoted from Proposed Alt**
+3. Sam (14 years old) — existing
+4. Foster Mom — existing
+5. Foster Dad — existing
+6. Mrs. Johnson — existing
+7. Family Photo — existing (rendered separately)
+
+Josh's ask: *"add a card for them under the Sam Male version"* → directly below Sam 18.
+
+##### B.2 — Naming change rationale
+
+The current display name *"Sam — Gender Neutral"* uses a long dash that breaks the parenthetical convention used by *"Sam (18 years old)"* / *"Sam (14 years old)"*. Renaming to *"Sam (Gender Neutral)"* aligns with the sibling Sam entries. Non-invasive rename — Josh can revert if he prefers the em-dash.
+
+#### Part C — Update the top-of-file comment block
+
+The comment block in `castData.js` from Draft 42 describes the sam-nonbinary card as belonging to the Proposed Alternative section. Update to reflect its move into Sam's Story:
+
+- Any reference to sam-nonbinary being "proposed" or "for team review" — remove.
+- Add a note that Sam's Story now includes three Sam variants: Sam (18 years old) with the Brayden male voice, Sam (Gender Neutral) with the Amara gender-neutral voice, and Sam (14 years old) with the still-in-progress voice model.
+
+#### Part D — Downstream effect on the Proposed Alternative Cast section
+
+With sam-nonbinary promoted out, the Proposed Alternative section (after Draft 45 also removed Male Kai) is now down to placeholder-only cards:
+
+- `sam-female-placeholder` (Sam Female — coming soon)
+- `kai-woman-alt-placeholder` (Female alt Kai younger version — coming soon)
+
+Two placeholders and no "real" content. **Not blocking this draft** — but worth flagging that the section is thinning out, and at some point the placeholders can either:
+- **Get real content** (when the female Sam and younger female Kai are generated)
+- **Get pulled** entirely if the team's direction has fully shifted
+
+I'd not touch the section in this draft. Just note it for a future decision.
+
+#### What does NOT change
+
+- Sam 18 (sam-16 id) — unchanged; still uses `older-sam-narrator.mp3` in `voiceSamples`.
+- Sam 14 — unchanged.
+- Foster Mom, Foster Dad, Mrs. Johnson, Family Photo — unchanged.
+- Kai in Learning Skills for Belonging (both current Kai + Male Kai from Draft 45) — unchanged.
+- The Plan, activities, tree, montage — untouched.
+- All Sam Story video clips + Sam 14 voice sample — untouched.
+- No `activityVersions.js` bump (DemoPage section addition).
+
+#### Out of scope (deferred)
+
+- **Rename the display label back to em-dash version** if Josh prefers *"Sam — Gender Neutral"* over *"Sam (Gender Neutral)"* — small `name` field revert.
+- **Update the CastCard renderer to show the Amara voice sample stitched into scenes** — the current voiceSamples shape shows as a single stitched-lines player (same as Sam Male). No per-line breakdown yet.
+- **Clean up the Proposed Alternative Cast section** now that it's placeholder-only. Separate cleanup decision.
+- **Female Sam variant** — still awaited; would slot into Sam's Story between Sam (Gender Neutral) and Sam (14) once built.
+- **Consider retiring the Sam-Female placeholder** in Proposed Alt now that the section is meant for exploration and Sam Female's home would properly be Sam's Story once real. Follow-up.
+
+*End of Draft 46.*
+
+---
+
 <!-- Draft 27 shipped 2026-06-09 — archived (commented out). -->
 
 <!--
