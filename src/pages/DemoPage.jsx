@@ -345,21 +345,40 @@ export default function DemoPage() {
           Proposed Alternative Cast
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          An alternative direction for the cast, for team consideration. Sam
-          gains the female + nonbinary variants we&apos;ve been planning — the
-          current Kai character-design is a natural fit for Sam — Gender
-          Neutral (using the same locked visual). Kai&apos;s peer-mentor role is
-          filled by two new options here, both early-20s Black young adults,
-          to test whether more specific representation lands better with the
-          target audience of foster youth in Kentucky. Curious what the team
-          thinks.
+          An exploration space for character-design alternatives, following up
+          on the 2026-07-07 meeting discussion. The team is currently split on
+          whether Kai&apos;s design should shift — one direction is to keep the
+          current Kai and use its design for the Sam-Nonbinary variant we still
+          need to build; another is to keep the current Kai as-is
+          (Adrienne&apos;s preference) and build entirely separate Sam
+          variants. This section shows the &ldquo;in-between&rdquo; material
+          Josh is producing so we can compare side-by-side. Sam-18 and Sam-14
+          stay unchanged in either direction (see them in the Sam&apos;s Story
+          section above). Nothing is committed yet.
         </p>
 
-        <div className="space-y-4">
-          {CAST.filter((c) => c.shows.includes('proposed-alternative')).map((character) => (
-            <CastCard key={character.id} character={character} />
-          ))}
-        </div>
+        {/* Two labeled sub-groups (Draft 44 B): what the proposal would do
+            with the existing Kai design vs. the proposed new peer-mentor
+            Kai identities. Two-column grid on desktop, stacked on mobile. */}
+        {[
+          { key: 'sam-variants', label: 'Sam variants' },
+          { key: 'kai-concepts', label: 'Alternative Kai concepts' },
+        ].map((group) => {
+          const cards = CAST.filter(
+            (c) => c.shows.includes('proposed-alternative') && c.subgroup === group.key,
+          )
+          if (!cards.length) return null
+          return (
+            <div key={group.key} className="mb-8 last:mb-0">
+              <h3 className="text-lg font-semibold text-ctac-navy mb-3">{group.label}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cards.map((character) => (
+                  <CastCard key={character.id} character={character} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </section>
 
       {/* Growing your roots — preview of the between-activity progress

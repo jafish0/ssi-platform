@@ -80,7 +80,7 @@ export const CAST = [
     // with more distance from adolescence. Holly's Script 2.0 still
     // narratively references "16-year-old Sam" internally — unchanged.
     id: 'sam-16',
-    shows: ['sams-story', 'proposed-alternative'],
+    shows: ['sams-story'],
     name: 'Sam (18 years old)',
     image: '/cast/images/sam-16.png',
     alt: 'Sam at 18 — the narrator, four years later',
@@ -101,7 +101,7 @@ export const CAST = [
   },
   {
     id: 'sam-14',
-    shows: ['sams-story', 'proposed-alternative'],
+    shows: ['sams-story'],
     name: 'Sam (14 years old)',
     image: '/cast/images/sam-14.png',
     alt: 'Sam at 14 — the 14-year-old version of the main character',
@@ -270,16 +270,22 @@ export const CAST = [
     ],
   },
 
-  // ---------- Proposed Alternative Cast (Draft 42, 2026-07-01) ----------
-  // For team review only — not shipping yet. Reimagines Kai's identity
-  // design: the current Kai V1 image gets repositioned as a nonbinary Sam
-  // variant, and two new peer-mentor Kai concepts are proposed with more
-  // specific identities. Sam 18 + Sam 14 (above) also carry
-  // 'proposed-alternative' in their `shows` so they render here again for
-  // side-by-side comparison.
+  // ---------- Proposed Alternative Cast (Draft 42; reconfigured Draft 44,
+  // 2026-07-07 meeting) ----------
+  // An exploration space, not a committed direction — the team is split.
+  // Cards here carry a `subgroup` ('sam-variants' | 'kai-concepts') that
+  // the /demo section renders as two labeled groups. Sam 18 + Sam 14 no
+  // longer duplicate into this section (Draft 44 A) — they're referenced
+  // verbally in the intro instead.
   {
+    // Prepped for voiceSamples[] (Draft 44 D): when Josh records the
+    // current Kai voice on the two Sam-NB lines from Holly's script, the
+    // audio lands here (suggested: sam-nb-kai-voice-inner-monologue.mp3 +
+    // sam-nb-kai-voice-rejection.mp3, or one bundled file). Field omitted
+    // until then — the renderer skips it.
     id: 'sam-nonbinary',
     shows: ['proposed-alternative'],
+    subgroup: 'sam-variants',
     name: 'Sam — Gender Neutral',
     image: '/cast/images/kai-variant-2.png',
     alt: 'Sam, nonbinary variant — proposed character-design reuse of the current Kai (Variant 2, blonde)',
@@ -288,6 +294,7 @@ export const CAST = [
   {
     id: 'sam-female-placeholder',
     shows: ['proposed-alternative'],
+    subgroup: 'sam-variants',
     name: 'Sam — Female',
     placeholder: true,
     alt: 'Sam, female variant — coming soon placeholder',
@@ -296,6 +303,7 @@ export const CAST = [
   {
     id: 'kai-man-alternative',
     shows: ['proposed-alternative'],
+    subgroup: 'kai-concepts',
     name: 'Kai — Male (proposed)',
     image: '/cast/images/kai-man.png',
     alt: 'Kai, proposed male variant — early-20s Black young man peer mentor',
@@ -308,18 +316,19 @@ export const CAST = [
     ],
   },
   {
-    id: 'kai-woman-alternative',
+    // Draft 44 F: the original early-20s (22-24) female alt Kai is retired
+    // per the 2026-07-07 compromise; a younger version (new image + voice)
+    // is coming from Josh. Placeholder keeps the sub-group balanced;
+    // kai-woman.png + kai-woman-voice-sample.mp3 stay on disk for
+    // reference, unreferenced. Suggested incoming filenames:
+    // kai-woman-younger.png + kai-woman-younger-voice-sample.mp3.
+    id: 'kai-woman-alt-placeholder',
     shows: ['proposed-alternative'],
-    name: 'Kai — Female (proposed)',
-    image: '/cast/images/kai-woman.png',
-    alt: 'Kai, proposed female variant — early-20s Black young woman peer mentor',
-    role: 'Proposed peer-mentor Kai — an early-20s Black young woman. Foster-care alumni, now working with kids in the system.',
-    voiceSamples: [
-      {
-        label: 'Voice sample',
-        src: '/cast/audio/kai-woman-voice-sample.mp3',
-      },
-    ],
+    subgroup: 'kai-concepts',
+    name: 'Kai — Female (proposed, younger version)',
+    placeholder: true,
+    alt: 'Female alt Kai — younger version coming soon',
+    role: 'Younger female alt Kai — image and voice sample coming soon per the 2026-07-07 meeting compromise.',
   },
 ]
 
