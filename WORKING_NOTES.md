@@ -3936,6 +3936,130 @@ Parked for a follow-up draft once the activities are joined.
 
 ---
 
+### Draft 48 — Add Sam (Female) card to Sam's Story
+
+Josh generated the female Sam image (in two variants — full body + close-up) and recorded the full all-lines narration through a young-adult female voice model. Add a new **Sam (Female)** card to the **Sam's Story** section, completing the three-variant set (Male, Female, Nonbinary) of Sam 18. This also promotes the Sam-Female-placeholder concept from Draft 42's Proposed Alternative Cast into an actual shipped card.
+
+Parallel to Draft 46 (Sam Nonbinary promotion) and Draft 47 (Female Kai): variant graduates from placeholder to full card once Josh has real image + voice assets.
+
+**Approved by:** Josh, 2026-07-10.
+
+---
+
+#### Part A — Copy assets into `public/cast/`
+
+**Images (2):**
+
+| Source | Destination |
+|---|---|
+| `Video Content/New Voiceover/Female Sam/Female Sam Variant 1.png` | `public/cast/images/sam-female-variant-1.png` |
+| `Video Content/New Voiceover/Female Sam/Female Sam Variant 1 Close Up.png` | `public/cast/images/sam-female-variant-1-closeup.png` |
+
+Combined ~8 MB. Two image variants matching Josh's naming — full body ("Variant 1") + close-up.
+
+**Audio (1):**
+
+| Source | Destination | Duration |
+|---|---|---|
+| `Video Content/New Voiceover/Female Sam/Female Sam All lines.mp3` | `public/cast/audio/sam-female-narrator.mp3` | 3:38 (218s) |
+
+Duration matches the shipped `older-sam-narrator.mp3` and `sam-nonbinary-narrator.mp3` exactly — same all-lines script, in the female Sam voice.
+
+#### Part B — Add a new `sam-female` card in `src/lib/castData.js`
+
+Position: **BEFORE `sam-nonbinary`** in the CAST array so the three Sam 18 variants render as sibling grouping: Male → Female → Nonbinary → Sam 14.
+
+Uses `images: []` array with two entries (matching the pattern Kai's card uses from Draft 35) rather than a single `image` field, so both Full + Close-Up variants render side-by-side for the team to react to.
+
+```js
+{
+  id: 'sam-female',
+  shows: ['sams-story'],
+  name: 'Sam (Female)',
+  alt: 'Sam, female variant — 18-year-old young woman narrator, same character as Sam Male',
+  images: [
+    {
+      label: 'Variant 1 — Full',
+      src: '/cast/images/sam-female-variant-1.png',
+      alt: 'Sam Female, full-body character portrait',
+    },
+    {
+      label: 'Variant 1 — Close Up',
+      src: '/cast/images/sam-female-variant-1-closeup.png',
+      alt: 'Sam Female, close-up character portrait',
+    },
+  ],
+  role: 'The female variant of Sam — same character, different body. Voiced through a young-adult female voice model reading the same all-lines narration script as Sam Male and Sam (Gender Neutral).',
+  voiceSamples: [
+    {
+      label: 'New Sam Female Voice Model — All Lines',
+      src: '/cast/audio/sam-female-narrator.mp3',
+    },
+  ],
+},
+```
+
+**Naming rationale:** *"Sam (Female)"* matches the parenthetical style of *"Sam (18 years old)"* / *"Sam (Gender Neutral)"* / *"Sam (14 years old)"*. Consistent with the sibling cards.
+
+**Image variants labels** — *"Variant 1 — Full"* and *"Variant 1 — Close Up"* keep Josh's original filename framing. If a future *Variant 2* image gets generated, it slots in as another array entry cleanly.
+
+##### B.1 — Final Sam's Story card order after this ships
+
+1. Sam (18 years old) — Male
+2. **Sam (Female) — NEW here**
+3. Sam (Gender Neutral) — Nonbinary
+4. Sam (14 years old)
+5. Foster Mom
+6. Foster Dad
+7. Mrs. Johnson
+8. Family Photo (rendered separately)
+
+All three Sam 18 variants adjacent for direct visual comparison. Sam 14 sits below the three siblings as the next age.
+
+#### Part C — Remove the Sam-Female-placeholder from Proposed Alt
+
+The `sam-female-placeholder` card in Proposed Alternative Cast (from Draft 42) is now stale — the real Sam Female is landing in Sam's Story. Delete the placeholder card entry entirely from castData.js.
+
+##### C.1 — Downstream: the Proposed Alternative Cast section is now empty
+
+After removing `sam-female-placeholder`, no cards will have `shows: ['proposed-alternative']`. The section renders empty.
+
+**Recommend:** in the DemoPage render logic, conditionally omit the Proposed Alternative Cast section (heading + intro paragraph + empty card grid) when no cards carry that show value. Cleanest handling — the section just disappears from /demo rather than rendering as an empty heading.
+
+If Code prefers, keep the section rendering with an explicit "coming soon" or "exploration space empty for now" line — but that's noisier than just dropping the section. Empty-state omission is cleaner.
+
+**Follow-up cleanup consideration** (not blocking): with the section gone, the `shows` array's *proposed-alternative* value is now unused. The `subgroup` field (from Draft 44) is also unused. Both can be removed from the top-of-file comment block and the type documentation for a clean-up pass — or leave them in as hooks for future proposal sections. Josh's call.
+
+#### Part D — Update the top-of-file comment block
+
+The comment block in castData.js documents which cards belong to which `shows` sections. Update to reflect:
+
+- Sam's Story now includes **four** Sam variants (Sam 18 Male, Sam 18 Female, Sam 18 Nonbinary/Gender Neutral, Sam 14) plus the three adults + Family Photo.
+- Proposed Alternative Cast section is now empty and conditionally hidden.
+- Note that Sam Female was promoted from placeholder here, parallel to Sam Nonbinary's promotion in Draft 46 and Male Kai + Female Kai promotions in Drafts 45 + 47.
+
+#### What does NOT change
+
+- Sam (18 years old) — Male — unchanged; still uses `older-sam-narrator.mp3` in `voiceSamples`.
+- Sam (Gender Neutral) — Nonbinary — unchanged; still uses `sam-nonbinary-narrator.mp3`.
+- Sam (14 years old) — unchanged.
+- Foster Mom, Foster Dad, Mrs. Johnson, Family Photo — unchanged.
+- Learning Skills for Belonging section (three Kai cards from Drafts 45 + 47 + current) — untouched.
+- All other /demo sections — untouched.
+- Data shapes, activityVersions, export pipeline — no changes.
+- No `activityVersions.js` bump.
+
+#### Out of scope (deferred)
+
+- **Additional Sam Female image variants** — Variant 2, side profiles, expression variants, etc. Slot into the `images` array as they land.
+- **Per-line breakdown of Sam Female narration** — currently the voice is presented as a single all-lines file (`voiceSamples` shape). If per-line breakdown is wanted (parallel to how Kai has per-scene entries), that's a follow-up.
+- **Sam Female animation** — no animated Sam Female clips exist yet.
+- **Fully retiring the `shows: 'proposed-alternative'` taxonomy** if the section stays gone permanently. Cleanup task for later.
+
+*End of Draft 48.*
+
+---
+
 <!-- Draft 27 shipped 2026-06-09 — archived (commented out). -->
 
 <!--
