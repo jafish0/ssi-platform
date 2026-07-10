@@ -46,6 +46,172 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`ba0982e` · 2026-07-10** — Draft 47: **Female Alternative Kai card added above Male Kai** in Learning Skills for Belonging — the younger version replacing the retired 22-24 female alt Kai per the 2026-07-07 compromise. The section now shows three Kai cards for side-by-side comparison: **Female Alternative → Male Alternative → current Kai**. Copied `kai-woman-younger.png` (~14 MB) + 7 mp3s (`kai-female-alt-*`, ~6 MB; verified genuinely distinct from the male set — the identical byte sizes are just the ElevenLabs pipeline producing same-duration CBR files from the same script). New `kai-female-alt` card with image, role, scenesIntro ("7 of 8 scenes recorded so far — Conclusion still to be recorded"), and the 7 recorded scenes verbatim (Scene 3 uses the updated "maps app" script, same as Male Kai); a commented Conclusion template sits in scenes[] and the computed runtime (**6:11**) updates automatically when it lands. **Correction to the draft:** its out-of-scope note says the `kai-woman-alt-placeholder` "was never implemented" — it was (Draft 44, `c0937c7`) — and this card fulfills it, so the stale "coming soon" placeholder was removed; Proposed Alt is down to the lone Sam — Female placeholder (keep-or-pull stays flagged). Skipped the optional Part D "NEW" badge (the scenesIntro already flags the fresh addition). No version bump. Verified in preview: card order, "(7 scenes)" header + 6:11 runtime, 7 players + no conclusion entry, image loads, one Coming soon remaining, mp3s serve, no console errors.
+
+  <details>
+  <summary>Draft 47 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 47 — Add Female Alternative Kai card above Male Kai in Learning Skills for Belonging
+
+  Josh generated a younger version of the female alt Kai (image + voice) per the 2026-07-07 meeting compromise. The prior 22-24 female alt Kai read "too old" for the peer-mentor role; this new version is younger and more youthful in both look and sound. Add a new card in **Learning Skills for Belonging**, positioned ABOVE the Male Kai card from Draft 45. Same treatment as Male Kai — full card with image + role + scenes[] pulled through the same script.
+
+  Final card order in Learning Skills becomes:
+
+  1. **Female Alternative Kai (NEW)** — top
+  2. Male Alternative Kai (from Draft 45)
+  3. Current Kai (nonbinary, from Drafts 35/40/41)
+
+  Three peer cards side-by-side for team comparison across visual + voice options.
+
+  **Approved by:** Josh, 2026-07-10.
+
+  ---
+
+  #### Part A — Copy assets into `public/cast/`
+
+  **Image:**
+
+  | Source | Destination |
+  |---|---|
+  | `Video Content/New Voiceover/Female Kai Alernate/New Kai Woman.png` | `public/cast/images/kai-woman-younger.png` |
+
+  (~14 MB image. Filename `kai-woman-younger` follows Draft 44's naming convention for the younger version replacing the retired 22-24 female alt Kai.)
+
+  **Audio — 7 mp3s** from `Video Content/New Voiceover/Female Kai Alernate/`:
+
+  | Source | Destination | Duration |
+  |---|---|---|
+  | `Female Part 1 The Scan Scene 1.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-1-the-scan.mp3` | 0:51 |
+  | `Female Scene 2 the Why.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-2-the-why.mp3` | 0:35 |
+  | `Female Scene 3 Building a Safety Net.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-3-safety-net.mp3` | 1:19 |
+  | `Female Scene 4 the foster care extra level.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-4-extra-level.mp3` | 0:40 |
+  | `Female Part 2 Scene 1 Building skills.mp3` | `public/cast/audio/kai-female-alt-pt2-scene-1-building-skills.mp3` | 1:09 |
+  | `Female Part 2 scene 2 The roadblocks.mp3` | `public/cast/audio/kai-female-alt-pt2-scene-2-roadblocks.mp3` | 0:31 |
+  | `Female Part 2 scene 3 putting it all together.mp3` | `public/cast/audio/kai-female-alt-pt2-scene-3-putting-it-all-together.mp3` | 1:06 |
+
+  Combined ~6 MB. Total runtime **6:11 across 7 of 8 scenes** — Conclusion (~0:16) is not yet recorded. When Josh adds it, total will hit ~6:27 matching the current Kai's runtime.
+
+  Naming convention mirrors the Male Kai's audio (`kai-male-alt-*`) with `-female-` swapped in, keeping the two alt Kai audio sets visually distinct in `public/cast/audio/` and consistent in structure.
+
+  #### Part B — Add a new `kai-female-alt` card in `src/lib/castData.js`
+
+  Insert BEFORE the `kai-male-alt` card (so the array order = Female Kai, then Male Kai, then current Kai). Uses same shape as `kai-male-alt` from Draft 45 — image, role, scenesIntro, scenes[].
+
+  ```js
+  {
+    id: 'kai-female-alt',
+    shows: ['learning-skills'],
+    name: 'Kai (Female Alternative)',
+    alt: 'Kai — female alternative variant — proposed peer-mentor narrator, younger version',
+    image: '/cast/images/kai-woman-younger.png',
+    role: 'Proposed female alternative Kai — a young Black woman peer mentor, foster-care alumni. Younger, more youthful and enthusiastic than the 22-24 version retired per the 2026-07-07 meeting compromise. Reading the same 8-scene psychoeducation script as the current Kai; 7 of 8 scenes recorded so far.',
+    scenesIntro:
+      'Same 8-scene psychoeducation script as the current Kai below, in the female alternative voice. 7 of 8 scenes recorded so far — Conclusion still to be recorded.',
+    scenes: [
+      {
+        label: 'Part I, Scene 1 — The Scan',
+        audio: '/cast/audio/kai-female-alt-pt1-scene-1-the-scan.mp3',
+        duration: '0:51',
+        durationSeconds: 51,
+        handoff: 'Self-Reflection',
+        text: "Hey. I'm Kai. I spent time in foster care too, so I know the drill. Now, I get to help other kids in the system and share some of the life hacks I've picked up. I'm glad you're here, because we're talking about something we all deal with 24/7: Belonging. Think about that moment when you walk into a crowded cafeteria or a new class. You're scanning the room, right? Your brain is doing a million calculations per second: Who looks cool? Who looks mean? Where's my spot? That \"scan\" isn't you being awkward — it's actually your brain trying to protect you. It's looking for safety, connection, and a place to land. Because let's be real: feeling like you don't fit in is more than just a bummer. It actually hurts. It can be confusing, lonely, and make it hard to know who you even are. Let's take a minute to think about this some more.",
+      },
+      {
+        label: "Part I, Scene 2 — The Why (It's in Your DNA)",
+        audio: '/cast/audio/kai-female-alt-pt1-scene-2-the-why.mp3',
+        duration: '0:35',
+        durationSeconds: 35,
+        handoff: 'Who I Am Poem',
+        text: "So, why are our brains so obsessed with fitting in? Basically, belonging isn't just a \"nice to have\" type of thing — it's a survival requirement, right up there with food, sleep, and having a roof over your head. Back in the day, being part of a group meant you didn't go hungry or get eaten by a saber-toothed tiger. Today, it's still wired into our biology. We need to feel accepted, respected, and \"seen\" for who we actually are — including our culture, our history, and where we come from. This activity can help you think about some of these things.",
+      },
+      {
+        label: 'Part I, Scene 3 — Building a Safety Net',
+        audio: '/cast/audio/kai-female-alt-pt1-scene-3-safety-net.mp3',
+        duration: '1:19',
+        durationSeconds: 79,
+        handoff: 'Allies / Safety Net',
+        // NOTE: uses the UPDATED script — "maps app on your phone" instead of "GPS"
+        // (per Adrienne + Holly's 2026-07-07 note). Same as Male Kai's Scene 3 text.
+        text: "We know belonging is a basic need, but here's the secret: you don't just need one place to belong. You need a few. Think of it like a safety net. If one string snaps — like after a fight with a friend — the other strings catch you. We need this safety net because it provides different types of support for us to change and grow, providing the \"green light\" to try new things. It's a lot easier to take risks, like joining a team or trying out for a play, when you know you've got a crew behind you — both in and outside of your home. One thing that can really help is having an adult that you can talk to or trust for advice. In high school, I had this one teacher who actually \"got\" me, and it changed the whole vibe of a really tough year because I could count on her for emotional and practical support. Social support is important too. You've probably noticed that your friend group matters way more these days. When building your crew, think of it like the maps app on your phone. If you hang with a group that's constantly in trouble or giving up on school, it's easy to get redirected down that same path. But if you find people who are hyped about your goals? They become your literal social support system, helping you figure it out along the way. It's good to think about who you are and what kind of safety net you might need. This next activity will help you do that.",
+      },
+      {
+        label: 'Part I, Scene 4 — The Foster Care "Extra Level"',
+        audio: '/cast/audio/kai-female-alt-pt1-scene-4-extra-level.mp3',
+        duration: '0:40',
+        durationSeconds: 40,
+        text: "Look, everyone struggles with figuring out where they belong at times, but for those of us growing up in foster or relative care? It's like playing the Belonging Game on \"Hard Mode.\" While other kids are just worried about where to sit in the cafeteria, we're dealing with moving houses, switching schools, or leaving our siblings and old neighborhoods behind. It's stressful. Sometimes you feel guilty for liking a new placement — like you're being disloyal to your family. Or you feel like you can't fully trust anyone because you've had to move so many times. I know it's tough, but these strategies we're learning can help you find your people and begin to feel more at home — no matter where you're living.",
+      },
+      {
+        label: 'Part II, Scene 1 — Building Skills for Belonging',
+        audio: '/cast/audio/kai-female-alt-pt2-scene-1-building-skills.mp3',
+        duration: '1:09',
+        durationSeconds: 69,
+        handoff: 'Belonging Skills Sort',
+        text: "Belonging isn't just a place you land; it's something you build, brick by brick, with the people around you — whether that's a foster family, friends, teammates or others. Here are a few skills that help. When others talk, try Active Listening. Don't just wait for your turn to speak; actually try to catch what they're saying. It makes people feel understood and safe. When things get tense, aim for Conflict Resolution. It's not about winning; it's about solving the problem in a way that the relationship survives the argument. Try to use Inclusive Language like we, us, and our group, and include others in conversations and activities. Take a risk and invite others to join you, and chances are they will want to return the favor! Finally, Provide Support by being the person who shows up when a friend or family member needs help, and being brave enough to Express Gratitude can build emotional bridges between you and your friends and family. I know, it might feel cringe at first, but these efforts reinforce that others matter to you and can deepen our bonds. This next activity can help you think about how to use these skills.",
+      },
+      {
+        label: 'Part II, Scene 2 — The Roadblocks',
+        audio: '/cast/audio/kai-female-alt-pt2-scene-2-roadblocks.mp3',
+        duration: '0:31',
+        durationSeconds: 31,
+        handoff: 'Getting Unstuck',
+        text: "Sometimes belonging feels impossible because of things you can't control, like switching schools mid-year. When you hit those roadblocks, your brain might try to protect you with some unhelpful thoughts. For example: All-or-Nothing Thinking — having thoughts like \"I'll never fit in here\" that keep you from trying to connect to others. Or Holding onto the Past — staying so focused on thinking about who we lost that we can't let anyone new in. This next activity will help you learn to challenge unhelpful thoughts like these.",
+      },
+      {
+        label: 'Part II, Scene 3 — Putting It All Together',
+        audio: '/cast/audio/kai-female-alt-pt2-scene-3-putting-it-all-together.mp3',
+        duration: '1:06',
+        durationSeconds: 66,
+        handoff: 'Letter to Another Youth',
+        text: "And another potential roadblock? Self-Regulation or Self-Control. The challenge is to be able to feel that sting of \"maybe they don't like me\" and being able to breathe through it so you don't just bail or shut down when things get awkward or scary. My friend Ash used to go silent every time she moved homes because she thought, \"they're just going to move me again anyway.\" Her silence was like a shield that's too heavy — it kept her safe from getting hurt, but it also kept her totally alone. Do you have some good strategies to keep calm at these moments? We can give you a list of skills to practice if you need ideas. And finally, it helps to realize that a lot of belonging happens in our own heads. Instead of a fixed mindset, try a growth mindset. Making friends and connections is a skill you practice, not something you're just born with. If one placement or social situation doesn't work out, it's not a permanent fail — it's just one data point and we can keep working on it. Now that you've learned more about this, what might you tell another kid worried about whether they belong?",
+      },
+      // NO Conclusion entry yet — Conclusion (~0:16) is missing from the source folder.
+      // When Josh drops it in, add here:
+      // {
+      //   label: 'Conclusion',
+      //   audio: '/cast/audio/kai-female-alt-conclusion.mp3',
+      //   duration: '0:16',
+      //   durationSeconds: 16,
+      //   text: "Finding that sense of belonging can be tough for everyone, and it's even harder when you are in foster or relative care. But remember: your story isn't over just because the current chapter has been a little chaotic. You've got new skills now — give them a try!",
+      // },
+    ],
+  },
+  ```
+
+  #### Part C — Positioning + runtime footer
+
+  **Card position:** insert `kai-female-alt` BEFORE `kai-male-alt` in the CAST array. Renders top-to-bottom in Learning Skills for Belonging as: **Female Kai → Male Kai → current Kai**.
+
+  **Runtime display:**
+
+  - Header: *"Female Alternative Kai's voiceover (7 of 8 scenes)"* — right-aligned: *"Total runtime: 6:11"*
+  - Footer recap: *"Total runtime: 6:11 · 7 of 8 scenes."*
+
+  Computed dynamically from `durationSeconds` so when the Conclusion lands, the totals update automatically.
+
+  #### Part D — Small "New" indicator (optional)
+
+  Since this is the third Kai card added to Learning Skills in quick succession, worth considering a small "New" badge or note next to the Female Kai card's heading to signal this is the freshest addition. Something like a small amber pill saying *"NEW"* next to the card's name. Optional polish — skip if it clutters.
+
+  #### What does NOT change
+
+  - Male Kai card (from Draft 45) — unchanged; still renders in its existing position.
+  - Current Kai card (voice, animated clip, both image variants) — unchanged.
+  - Sam's Story section (Sam 18, Sam Nonbinary, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson) — untouched.
+  - All other /demo sections — untouched.
+  - No `activityVersions.js` bump (DemoPage section addition).
+
+  #### Out of scope (deferred)
+
+  - **Conclusion recording for Female Kai** — Josh to record and drop; small follow-up commit fills in the entry using the commented-out template.
+  - **Female Kai animation** — no animated clips for Female Kai yet.
+  - **Full retirement of Proposed Alternative Cast section** — with Male Kai promoted (Draft 45), Sam Nonbinary promoted (Draft 46), and Female Kai now promoted here, the Proposed Alt section has just `sam-female-placeholder` left. Worth considering whether to pull the section entirely or hold it for the eventual Sam Female build. Separate cleanup decision.
+  - **The "younger female Kai placeholder"** never actually materialized in castData.js per the shipped state (`kai-woman-alt-placeholder` was in Draft 44's spec but not implemented). Nothing to remove; this draft just adds the real card.
+
+  *End of Draft 47.*
+
+  </details>
+
 - **`7abcc45` · 2026-07-10** — Draft 46: **Sam Nonbinary promoted into Sam's Story** with the Amara voice sample — same graduation pattern as Draft 45's Male Kai. Josh recorded the full all-Sam-18-lines script through the Amara gender-neutral voice model (the current Kai's voice); copied to `public/cast/audio/sam-nonbinary-narrator.mp3` (~3.5 MB, 3:38 — mirrors `older-sam-narrator.mp3` naming). The card moved in the CAST array to sit directly after sam-16, so Sam's Story renders **Sam (18) → Sam (Gender Neutral) → Sam (14)**; updated in place — `shows: ['sams-story']`, `subgroup` dropped, renamed *"Sam — Gender Neutral"* → **"Sam (Gender Neutral)"** to match the sibling parenthetical style, new alt/role, and a `voiceSamples` entry (*"New Sam Gender-Neutral Voice Model — All Lines"*). Keeps the blonde Kai Variant 2 image. Supersedes Draft 44 D's per-line recording prep. Top-of-file comment updated (Sam's Story = three Sam variants; Proposed Alt now placeholder-only after the 45/46 promotions — flagged for a future keep-or-pull decision, untouched here per the draft). No version bump. Verified in preview: card order, renamed label, voice player renders + mp3 serves, GN card uses kai-variant-2.png, Proposed Alt down to its two placeholders, no console errors.
 
   <details>
@@ -3765,167 +3931,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 47 — Add Female Alternative Kai card above Male Kai in Learning Skills for Belonging
-
-Josh generated a younger version of the female alt Kai (image + voice) per the 2026-07-07 meeting compromise. The prior 22-24 female alt Kai read "too old" for the peer-mentor role; this new version is younger and more youthful in both look and sound. Add a new card in **Learning Skills for Belonging**, positioned ABOVE the Male Kai card from Draft 45. Same treatment as Male Kai — full card with image + role + scenes[] pulled through the same script.
-
-Final card order in Learning Skills becomes:
-
-1. **Female Alternative Kai (NEW)** — top
-2. Male Alternative Kai (from Draft 45)
-3. Current Kai (nonbinary, from Drafts 35/40/41)
-
-Three peer cards side-by-side for team comparison across visual + voice options.
-
-**Approved by:** Josh, 2026-07-10.
-
----
-
-#### Part A — Copy assets into `public/cast/`
-
-**Image:**
-
-| Source | Destination |
-|---|---|
-| `Video Content/New Voiceover/Female Kai Alernate/New Kai Woman.png` | `public/cast/images/kai-woman-younger.png` |
-
-(~14 MB image. Filename `kai-woman-younger` follows Draft 44's naming convention for the younger version replacing the retired 22-24 female alt Kai.)
-
-**Audio — 7 mp3s** from `Video Content/New Voiceover/Female Kai Alernate/`:
-
-| Source | Destination | Duration |
-|---|---|---|
-| `Female Part 1 The Scan Scene 1.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-1-the-scan.mp3` | 0:51 |
-| `Female Scene 2 the Why.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-2-the-why.mp3` | 0:35 |
-| `Female Scene 3 Building a Safety Net.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-3-safety-net.mp3` | 1:19 |
-| `Female Scene 4 the foster care extra level.mp3` | `public/cast/audio/kai-female-alt-pt1-scene-4-extra-level.mp3` | 0:40 |
-| `Female Part 2 Scene 1 Building skills.mp3` | `public/cast/audio/kai-female-alt-pt2-scene-1-building-skills.mp3` | 1:09 |
-| `Female Part 2 scene 2 The roadblocks.mp3` | `public/cast/audio/kai-female-alt-pt2-scene-2-roadblocks.mp3` | 0:31 |
-| `Female Part 2 scene 3 putting it all together.mp3` | `public/cast/audio/kai-female-alt-pt2-scene-3-putting-it-all-together.mp3` | 1:06 |
-
-Combined ~6 MB. Total runtime **6:11 across 7 of 8 scenes** — Conclusion (~0:16) is not yet recorded. When Josh adds it, total will hit ~6:27 matching the current Kai's runtime.
-
-Naming convention mirrors the Male Kai's audio (`kai-male-alt-*`) with `-female-` swapped in, keeping the two alt Kai audio sets visually distinct in `public/cast/audio/` and consistent in structure.
-
-#### Part B — Add a new `kai-female-alt` card in `src/lib/castData.js`
-
-Insert BEFORE the `kai-male-alt` card (so the array order = Female Kai, then Male Kai, then current Kai). Uses same shape as `kai-male-alt` from Draft 45 — image, role, scenesIntro, scenes[].
-
-```js
-{
-  id: 'kai-female-alt',
-  shows: ['learning-skills'],
-  name: 'Kai (Female Alternative)',
-  alt: 'Kai — female alternative variant — proposed peer-mentor narrator, younger version',
-  image: '/cast/images/kai-woman-younger.png',
-  role: 'Proposed female alternative Kai — a young Black woman peer mentor, foster-care alumni. Younger, more youthful and enthusiastic than the 22-24 version retired per the 2026-07-07 meeting compromise. Reading the same 8-scene psychoeducation script as the current Kai; 7 of 8 scenes recorded so far.',
-  scenesIntro:
-    'Same 8-scene psychoeducation script as the current Kai below, in the female alternative voice. 7 of 8 scenes recorded so far — Conclusion still to be recorded.',
-  scenes: [
-    {
-      label: 'Part I, Scene 1 — The Scan',
-      audio: '/cast/audio/kai-female-alt-pt1-scene-1-the-scan.mp3',
-      duration: '0:51',
-      durationSeconds: 51,
-      handoff: 'Self-Reflection',
-      text: "Hey. I'm Kai. I spent time in foster care too, so I know the drill. Now, I get to help other kids in the system and share some of the life hacks I've picked up. I'm glad you're here, because we're talking about something we all deal with 24/7: Belonging. Think about that moment when you walk into a crowded cafeteria or a new class. You're scanning the room, right? Your brain is doing a million calculations per second: Who looks cool? Who looks mean? Where's my spot? That \"scan\" isn't you being awkward — it's actually your brain trying to protect you. It's looking for safety, connection, and a place to land. Because let's be real: feeling like you don't fit in is more than just a bummer. It actually hurts. It can be confusing, lonely, and make it hard to know who you even are. Let's take a minute to think about this some more.",
-    },
-    {
-      label: "Part I, Scene 2 — The Why (It's in Your DNA)",
-      audio: '/cast/audio/kai-female-alt-pt1-scene-2-the-why.mp3',
-      duration: '0:35',
-      durationSeconds: 35,
-      handoff: 'Who I Am Poem',
-      text: "So, why are our brains so obsessed with fitting in? Basically, belonging isn't just a \"nice to have\" type of thing — it's a survival requirement, right up there with food, sleep, and having a roof over your head. Back in the day, being part of a group meant you didn't go hungry or get eaten by a saber-toothed tiger. Today, it's still wired into our biology. We need to feel accepted, respected, and \"seen\" for who we actually are — including our culture, our history, and where we come from. This activity can help you think about some of these things.",
-    },
-    {
-      label: 'Part I, Scene 3 — Building a Safety Net',
-      audio: '/cast/audio/kai-female-alt-pt1-scene-3-safety-net.mp3',
-      duration: '1:19',
-      durationSeconds: 79,
-      handoff: 'Allies / Safety Net',
-      // NOTE: uses the UPDATED script — "maps app on your phone" instead of "GPS"
-      // (per Adrienne + Holly's 2026-07-07 note). Same as Male Kai's Scene 3 text.
-      text: "We know belonging is a basic need, but here's the secret: you don't just need one place to belong. You need a few. Think of it like a safety net. If one string snaps — like after a fight with a friend — the other strings catch you. We need this safety net because it provides different types of support for us to change and grow, providing the \"green light\" to try new things. It's a lot easier to take risks, like joining a team or trying out for a play, when you know you've got a crew behind you — both in and outside of your home. One thing that can really help is having an adult that you can talk to or trust for advice. In high school, I had this one teacher who actually \"got\" me, and it changed the whole vibe of a really tough year because I could count on her for emotional and practical support. Social support is important too. You've probably noticed that your friend group matters way more these days. When building your crew, think of it like the maps app on your phone. If you hang with a group that's constantly in trouble or giving up on school, it's easy to get redirected down that same path. But if you find people who are hyped about your goals? They become your literal social support system, helping you figure it out along the way. It's good to think about who you are and what kind of safety net you might need. This next activity will help you do that.",
-    },
-    {
-      label: 'Part I, Scene 4 — The Foster Care "Extra Level"',
-      audio: '/cast/audio/kai-female-alt-pt1-scene-4-extra-level.mp3',
-      duration: '0:40',
-      durationSeconds: 40,
-      text: "Look, everyone struggles with figuring out where they belong at times, but for those of us growing up in foster or relative care? It's like playing the Belonging Game on \"Hard Mode.\" While other kids are just worried about where to sit in the cafeteria, we're dealing with moving houses, switching schools, or leaving our siblings and old neighborhoods behind. It's stressful. Sometimes you feel guilty for liking a new placement — like you're being disloyal to your family. Or you feel like you can't fully trust anyone because you've had to move so many times. I know it's tough, but these strategies we're learning can help you find your people and begin to feel more at home — no matter where you're living.",
-    },
-    {
-      label: 'Part II, Scene 1 — Building Skills for Belonging',
-      audio: '/cast/audio/kai-female-alt-pt2-scene-1-building-skills.mp3',
-      duration: '1:09',
-      durationSeconds: 69,
-      handoff: 'Belonging Skills Sort',
-      text: "Belonging isn't just a place you land; it's something you build, brick by brick, with the people around you — whether that's a foster family, friends, teammates or others. Here are a few skills that help. When others talk, try Active Listening. Don't just wait for your turn to speak; actually try to catch what they're saying. It makes people feel understood and safe. When things get tense, aim for Conflict Resolution. It's not about winning; it's about solving the problem in a way that the relationship survives the argument. Try to use Inclusive Language like we, us, and our group, and include others in conversations and activities. Take a risk and invite others to join you, and chances are they will want to return the favor! Finally, Provide Support by being the person who shows up when a friend or family member needs help, and being brave enough to Express Gratitude can build emotional bridges between you and your friends and family. I know, it might feel cringe at first, but these efforts reinforce that others matter to you and can deepen our bonds. This next activity can help you think about how to use these skills.",
-    },
-    {
-      label: 'Part II, Scene 2 — The Roadblocks',
-      audio: '/cast/audio/kai-female-alt-pt2-scene-2-roadblocks.mp3',
-      duration: '0:31',
-      durationSeconds: 31,
-      handoff: 'Getting Unstuck',
-      text: "Sometimes belonging feels impossible because of things you can't control, like switching schools mid-year. When you hit those roadblocks, your brain might try to protect you with some unhelpful thoughts. For example: All-or-Nothing Thinking — having thoughts like \"I'll never fit in here\" that keep you from trying to connect to others. Or Holding onto the Past — staying so focused on thinking about who we lost that we can't let anyone new in. This next activity will help you learn to challenge unhelpful thoughts like these.",
-    },
-    {
-      label: 'Part II, Scene 3 — Putting It All Together',
-      audio: '/cast/audio/kai-female-alt-pt2-scene-3-putting-it-all-together.mp3',
-      duration: '1:06',
-      durationSeconds: 66,
-      handoff: 'Letter to Another Youth',
-      text: "And another potential roadblock? Self-Regulation or Self-Control. The challenge is to be able to feel that sting of \"maybe they don't like me\" and being able to breathe through it so you don't just bail or shut down when things get awkward or scary. My friend Ash used to go silent every time she moved homes because she thought, \"they're just going to move me again anyway.\" Her silence was like a shield that's too heavy — it kept her safe from getting hurt, but it also kept her totally alone. Do you have some good strategies to keep calm at these moments? We can give you a list of skills to practice if you need ideas. And finally, it helps to realize that a lot of belonging happens in our own heads. Instead of a fixed mindset, try a growth mindset. Making friends and connections is a skill you practice, not something you're just born with. If one placement or social situation doesn't work out, it's not a permanent fail — it's just one data point and we can keep working on it. Now that you've learned more about this, what might you tell another kid worried about whether they belong?",
-    },
-    // NO Conclusion entry yet — Conclusion (~0:16) is missing from the source folder.
-    // When Josh drops it in, add here:
-    // {
-    //   label: 'Conclusion',
-    //   audio: '/cast/audio/kai-female-alt-conclusion.mp3',
-    //   duration: '0:16',
-    //   durationSeconds: 16,
-    //   text: "Finding that sense of belonging can be tough for everyone, and it's even harder when you are in foster or relative care. But remember: your story isn't over just because the current chapter has been a little chaotic. You've got new skills now — give them a try!",
-    // },
-  ],
-},
-```
-
-#### Part C — Positioning + runtime footer
-
-**Card position:** insert `kai-female-alt` BEFORE `kai-male-alt` in the CAST array. Renders top-to-bottom in Learning Skills for Belonging as: **Female Kai → Male Kai → current Kai**.
-
-**Runtime display:**
-
-- Header: *"Female Alternative Kai's voiceover (7 of 8 scenes)"* — right-aligned: *"Total runtime: 6:11"*
-- Footer recap: *"Total runtime: 6:11 · 7 of 8 scenes."*
-
-Computed dynamically from `durationSeconds` so when the Conclusion lands, the totals update automatically.
-
-#### Part D — Small "New" indicator (optional)
-
-Since this is the third Kai card added to Learning Skills in quick succession, worth considering a small "New" badge or note next to the Female Kai card's heading to signal this is the freshest addition. Something like a small amber pill saying *"NEW"* next to the card's name. Optional polish — skip if it clutters.
-
-#### What does NOT change
-
-- Male Kai card (from Draft 45) — unchanged; still renders in its existing position.
-- Current Kai card (voice, animated clip, both image variants) — unchanged.
-- Sam's Story section (Sam 18, Sam Nonbinary, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson) — untouched.
-- All other /demo sections — untouched.
-- No `activityVersions.js` bump (DemoPage section addition).
-
-#### Out of scope (deferred)
-
-- **Conclusion recording for Female Kai** — Josh to record and drop; small follow-up commit fills in the entry using the commented-out template.
-- **Female Kai animation** — no animated clips for Female Kai yet.
-- **Full retirement of Proposed Alternative Cast section** — with Male Kai promoted (Draft 45), Sam Nonbinary promoted (Draft 46), and Female Kai now promoted here, the Proposed Alt section has just `sam-female-placeholder` left. Worth considering whether to pull the section entirely or hold it for the eventual Sam Female build. Separate cleanup decision.
-- **The "younger female Kai placeholder"** never actually materialized in castData.js per the shipped state (`kai-woman-alt-placeholder` was in Draft 44's spec but not implemented). Nothing to remove; this draft just adds the real card.
-
-*End of Draft 47.*
 
 ---
 
