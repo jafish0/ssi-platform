@@ -27,11 +27,9 @@
 //     activities (Adrienne's script): three Kai cards side by side for
 //     visual + voice comparison — Female Alternative (Draft 47, 7 of 8
 //     scenes), Male Alternative (Draft 45), and the current Kai.
-//   - `'proposed-alternative'` — the "Proposed Alternative Cast"
-//     exploration section (Draft 42, reconfigured Draft 44). Down to the
-//     lone Sam — Female placeholder after the Draft 45/46/47 promotions
-//     (`placeholder: true`, build pending); keep-or-pull is a flagged
-//     future decision.
+//   (The `'proposed-alternative'` exploration section from Drafts 42/44
+//   was retired 2026-07-10 after its cards graduated into the two
+//   sections above — see the note at the bottom of CAST.)
 //
 // Image shape (one of):
 //   - `image` (string) — single character image (most cards).
@@ -470,35 +468,12 @@ export const CAST = [
     ],
   },
 
-  // ---------- Proposed Alternative Cast (Draft 42; reconfigured Draft 44,
-  // 2026-07-07 meeting) ----------
-  // An exploration space, not a committed direction — the team is split.
-  // Cards here carry a `subgroup` ('sam-variants' | 'kai-concepts') that
-  // the /demo section renders as two labeled groups. Sam 18 + Sam 14 no
-  // longer duplicate into this section (Draft 44 A) — they're referenced
-  // verbally in the intro instead.
-  // (Draft 46: the sam-nonbinary card graduated out of this section into
-  // Sam's Story with the full Amara all-lines voice sample — see the card
-  // right after sam-16 above. That supersedes Draft 44 D's plan for
-  // per-line Kai-voice recordings.)
-  {
-    id: 'sam-female-placeholder',
-    shows: ['proposed-alternative'],
-    subgroup: 'sam-variants',
-    name: 'Sam — Female',
-    placeholder: true,
-    alt: 'Sam, female variant — coming soon placeholder',
-    role: 'The female Sam variant. Character build not yet started.',
-  },
-  // (Draft 45: the male alt Kai card graduated out of this section into
-  // Learning Skills for Belonging with a full 8-scene voiceover — see the
-  // `kai-male-alt` card above the current `kai` card. Proposed Alt keeps
-  // just the Sam variants + the younger female Kai placeholder.)
-  // (Draft 47: the "younger female alt Kai coming soon" placeholder from
-  // Draft 44 F is fulfilled — the real Kai (Female Alternative) card now
-  // lives in Learning Skills above the Male Kai. Proposed Alt is down to
-  // the lone Sam — Female placeholder; whether to keep or pull the whole
-  // section is a flagged future decision.)
+  // (2026-07-10: the Proposed Alternative Cast section — Drafts 42/44 —
+  // was retired. Every real card graduated into Sam's Story or Learning
+  // Skills across Drafts 45/46/47, and Josh pulled the section once only
+  // the Sam — Female placeholder remained. When the female Sam build
+  // lands, add it directly to Sam's Story between Sam (Gender Neutral)
+  // and Sam (14).)
 ]
 
 export const FAMILY_PHOTO = {

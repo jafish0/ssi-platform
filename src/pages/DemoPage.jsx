@@ -334,52 +334,11 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* Proposed Alternative Cast — Draft 42, 2026-07-01. For team review
-          only, not shipping. Visually distinct (teal wash + top border) so
-          it reads as "a new consideration area," not just another cast
-          section. The current Learning Skills Kai above is untouched;
-          this section proposes reworking Kai's identity design and
-          repurposes the current Kai V1 image as a nonbinary Sam variant. */}
-      <section className="mb-10 bg-ctac-teal-50/30 border-t-2 border-ctac-teal-200 pt-8 -mx-4 px-4 sm:mx-0 sm:px-6 sm:rounded-2xl">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Proposed Alternative Cast
-        </h2>
-        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          An exploration space for character-design alternatives, following up
-          on the 2026-07-07 meeting discussion. The team is currently split on
-          whether Kai&apos;s design should shift — one direction is to keep the
-          current Kai and use its design for the Sam-Nonbinary variant we still
-          need to build; another is to keep the current Kai as-is
-          (Adrienne&apos;s preference) and build entirely separate Sam
-          variants. This section shows the &ldquo;in-between&rdquo; material
-          Josh is producing so we can compare side-by-side. Sam-18 and Sam-14
-          stay unchanged in either direction (see them in the Sam&apos;s Story
-          section above). Nothing is committed yet.
-        </p>
-
-        {/* Two labeled sub-groups (Draft 44 B): what the proposal would do
-            with the existing Kai design vs. the proposed new peer-mentor
-            Kai identities. Two-column grid on desktop, stacked on mobile. */}
-        {[
-          { key: 'sam-variants', label: 'Sam variants' },
-          { key: 'kai-concepts', label: 'Alternative Kai concepts' },
-        ].map((group) => {
-          const cards = CAST.filter(
-            (c) => c.shows.includes('proposed-alternative') && c.subgroup === group.key,
-          )
-          if (!cards.length) return null
-          return (
-            <div key={group.key} className="mb-8 last:mb-0">
-              <h3 className="text-lg font-semibold text-ctac-navy mb-3">{group.label}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {cards.map((character) => (
-                  <CastCard key={character.id} character={character} />
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </section>
+      {/* The Proposed Alternative Cast section (Drafts 42/44) was retired
+          2026-07-10 — everything real graduated into Sam's Story or
+          Learning Skills (Drafts 45/46/47), and Josh pulled the section
+          once only the Sam — Female placeholder remained. When the female
+          Sam build lands, it goes straight into Sam's Story. */}
 
       {/* Growing your roots — preview of the between-activity progress
           visual (Draft 25). Click-through, local state only; not yet
