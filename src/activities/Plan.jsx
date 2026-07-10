@@ -206,7 +206,7 @@ export default function Plan({ onSave = console.log, planData }) {
         const c = skillCommits[s.id]
         return {
           skill_id: s.id,
-          skill_text: s.title,
+          skill_text: s.text,
           how: (c.how || '').trim(),
           who: resolveWho(c),
           who_is_ally: c.who !== '__other__',
@@ -263,12 +263,19 @@ export default function Plan({ onSave = console.log, planData }) {
         heading="New Skills to Try"
         sub="Pick who you’ll try each one with, and when."
       >
+        {/* Draft 49 A: quiet preview caveat — the demo shows synthetic
+            skills; the real BSS→Plan pull-forward is deferred (Draft 21). */}
+        <p className="text-sm italic text-slate-500 mb-4">
+          In the real session, these are the skills you put in the &ldquo;willing
+          to try&rdquo; bucket in Belonging Skills Sort. This preview shows sample
+          skills for demonstration.
+        </p>
         <div className="space-y-4">
           {d.willingToTrySkills.map((s) => {
             const c = skillCommits[s.id] || {}
             return (
               <div key={s.id} className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-5">
-                <h3 className="text-[17px] font-semibold text-ctac-navy">{s.title}</h3>
+                <h3 className="text-[17px] font-semibold text-ctac-navy">{s.text}</h3>
                 {s.definition && (
                   <p className="text-[13px] text-slate-500 mb-3">{s.definition}</p>
                 )}
@@ -521,7 +528,7 @@ export default function Plan({ onSave = console.log, planData }) {
                   onChange={() => toggleBehavior(s.id)}
                   className="w-4 h-4 accent-ctac-teal-500"
                 />
-                <span className="text-[15px] text-slate-700">{s.title}</span>
+                <span className="text-[15px] text-slate-700">{s.text}</span>
               </label>
             )
           })}
@@ -622,7 +629,7 @@ function PlanReview({
               const c = skillCommits[s.id]
               return (
                 <li key={s.id} className="text-[15px] text-slate-700">
-                  <span className="font-semibold text-ctac-navy">{s.title}</span> — with{' '}
+                  <span className="font-semibold text-ctac-navy">{s.text}</span> — with{' '}
                   {resolveWho(c)}, {resolveWhen(c).toLowerCase()}
                   <span className="block text-[14px] italic text-slate-600">
                     How: {(c.how || '').trim()}
@@ -667,7 +674,7 @@ function PlanReview({
               </p>
               <ul className="list-disc pl-5 space-y-0.5 mb-3">
                 {behaviorsUsed.map((s) => (
-                  <li key={s.id} className="text-[15px] text-slate-700">{s.title}</li>
+                  <li key={s.id} className="text-[15px] text-slate-700">{s.text}</li>
                 ))}
               </ul>
             </>
@@ -679,7 +686,7 @@ function PlanReview({
               </p>
               <ul className="list-disc pl-5 space-y-0.5">
                 {notTried.map((s) => (
-                  <li key={s.id} className="text-[15px] text-slate-700">{s.title}</li>
+                  <li key={s.id} className="text-[15px] text-slate-700">{s.text}</li>
                 ))}
               </ul>
             </>
@@ -816,7 +823,9 @@ function buildPlanModel({
     skills: committed.map((s) => {
       const c = skillCommits[s.id]
       return {
-        title: s.title,
+        // internal exporter key stays `title`; the source field is BSS's
+        // `text` (Draft 49 B field-name alignment)
+        title: s.text,
         how: (c.how || '').trim(),
         who: resolveWho(c),
         when: resolveWhen(c),
@@ -828,10 +837,10 @@ function buildPlanModel({
     thoughts: d.pickedThoughts.map((t) => t.tellYourself),
     inclusionText: hasInclusion ? d.inclusionText : null,
     behaviorsUsed: hasInclusion
-      ? ALL_BELONGING_SKILLS.filter((s) => inclusionBehaviors.includes(s.id)).map((s) => s.title)
+      ? ALL_BELONGING_SKILLS.filter((s) => inclusionBehaviors.includes(s.id)).map((s) => s.text)
       : [],
     notTried: ALL_BELONGING_SKILLS.filter((s) => (d.notTriedYetIds || []).includes(s.id)).map(
-      (s) => s.title,
+      (s) => s.text,
     ),
     letter: d.letter,
     poemLines: d.poemLines,

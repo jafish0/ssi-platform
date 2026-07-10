@@ -12,42 +12,91 @@
 // columns line up. Ally ids match ALLY_TILES. The poem + letter are
 // original text (the published-poet lock applies to the poem).
 
-// The full belonging-promoting-behavior set, mirroring the BSS registry
-// (`BEHAVIORS` in BelongingSkillsSort.jsx — 7 skills, bs1–bs7). Used by
-// Plan v2.0's Screen 7 checklist ("Which belonging-promoting behaviors
-// were you using?") and the not-tried-yet radar callout on the review.
+// The full belonging-promoting-behavior set — `text` + `definition` are
+// VERBATIM from the BSS registry (`BEHAVIORS` in BelongingSkillsSort.jsx,
+// 7 skills, bs1–bs7; field names match too, per Draft 49 B) so what the
+// Plan surfaces visually reads as the same content the kid just sorted.
+// Used by Plan v2.0's Screen 7 checklist ("Which belonging-promoting
+// behaviors were you using?") and the not-tried-yet radar callout.
 export const ALL_BELONGING_SKILLS = [
-  { id: 'bs1', title: 'Active listening' },
-  { id: 'bs2', title: 'Inclusive language' },
-  { id: 'bs3', title: 'Expressing gratitude' },
-  { id: 'bs4', title: 'Helping out' },
-  { id: 'bs5', title: 'Inviting others' },
-  { id: 'bs6', title: 'Including others in activities' },
-  { id: 'bs7', title: 'Working through disagreements' },
+  {
+    id: 'bs1',
+    text: 'Pay close attention when someone is talking to you (without checking your phone or getting distracted)',
+    definition:
+      "Giving someone your full attention when they're speaking — eyes on them, no phone, no looking around.",
+  },
+  {
+    id: 'bs2',
+    text: 'Use words like "we," "us," or "our group" to make people feel included',
+    definition:
+      'Saying things that signal everyone belongs in the group — "we" instead of "you guys," "our team" instead of "the group."',
+  },
+  {
+    id: 'bs3',
+    text: 'Say thank you or tell others when they do something you appreciate',
+    definition:
+      'Telling someone you noticed and appreciated what they did, instead of just thinking it.',
+  },
+  {
+    id: 'bs4',
+    text: 'Help someone out when they need it',
+    definition: 'Offering help when you see someone needs it, without waiting to be asked.',
+  },
+  {
+    id: 'bs5',
+    text: 'Invite others to spend time with you',
+    definition:
+      'Reaching out to bring someone into your plans or your day, instead of waiting for them to ask.',
+  },
+  {
+    id: 'bs6',
+    text: 'Include others in conversations and activities (like watching a movie, going for a walk, or playing a game)',
+    definition:
+      "Making space for others in what you're already doing — looping them into the conversation, the game, the show.",
+  },
+  {
+    id: 'bs7',
+    text: 'Talk through a disagreement with someone until you find an answer that works for everyone',
+    definition:
+      'Staying with a disagreement until you find something that works for everyone, instead of walking away or giving up.',
+  },
 ]
 
 export const PLAN_DEMO_DATA = {
-  // From Belonging Skills Sort → willing_to_try. `howExample` seeds the
-  // v2.0 "How could you demonstrate this skill?" placeholder per skill.
+  // The three skills below (bs1 Active Listening, bs2 Inclusive Language,
+  // bs4 Helping Out) are the three skills Kai highlights in Part II,
+  // Scene 1 of the psychoeducation video. They're used here as demo
+  // synthetic content because cross-activity flow integration (real reads
+  // from BSS's willing-to-try output) is still deferred per Draft 21.
+  //
+  // When flow integration lands, this hardcoded array is replaced by a
+  // real read from the participant's BSS save payload — filtered to
+  // willing_to_try, looked up in ALL_BELONGING_SKILLS for text/definition,
+  // and paired with per-skill howExample values (all 7 will need one so
+  // any subset can surface). The kid's actual sorting drives the content,
+  // not this static trio. Kept as a fallback for when BSS hasn't been
+  // completed in the session.
+  //
+  // `howExample` seeds the v2.0 "How could you demonstrate this skill?"
+  // placeholder per skill.
   willingToTrySkills: [
     {
       id: 'bs1',
-      title: 'Active listening',
+      text: 'Pay close attention when someone is talking to you (without checking your phone or getting distracted)',
       definition:
-        "Giving someone your full attention when they're talking — eyes on them, no phone.",
-      howExample:
-        'e.g., giving someone your full attention when they’re talking — eyes on them, no phone',
+        "Giving someone your full attention when they're speaking — eyes on them, no phone, no looking around.",
+      howExample: 'e.g., putting my phone down when my sister is telling me about her day',
     },
     {
       id: 'bs2',
-      title: 'Inclusive language',
+      text: 'Use words like "we," "us," or "our group" to make people feel included',
       definition:
-        'Using words like “we” and “us” so people feel like they belong in the group.',
-      howExample: 'e.g., saying “we” and “us” when you’re making plans with the group',
+        'Saying things that signal everyone belongs in the group — "we" instead of "you guys," "our team" instead of "the group."',
+      howExample: 'e.g., saying "we" and "us" when I\'m making plans with friends',
     },
     {
       id: 'bs4',
-      title: 'Helping out',
+      text: 'Help someone out when they need it',
       definition: 'Offering help when you see someone needs it, without waiting to be asked.',
       howExample: 'e.g., offering to help before someone has to ask',
     },
