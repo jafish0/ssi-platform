@@ -12,27 +12,55 @@
 // columns line up. Ally ids match ALLY_TILES. The poem + letter are
 // original text (the published-poet lock applies to the poem).
 
+// The full belonging-promoting-behavior set, mirroring the BSS registry
+// (`BEHAVIORS` in BelongingSkillsSort.jsx — 7 skills, bs1–bs7). Used by
+// Plan v2.0's Screen 7 checklist ("Which belonging-promoting behaviors
+// were you using?") and the not-tried-yet radar callout on the review.
+export const ALL_BELONGING_SKILLS = [
+  { id: 'bs1', title: 'Active listening' },
+  { id: 'bs2', title: 'Inclusive language' },
+  { id: 'bs3', title: 'Expressing gratitude' },
+  { id: 'bs4', title: 'Helping out' },
+  { id: 'bs5', title: 'Inviting others' },
+  { id: 'bs6', title: 'Including others in activities' },
+  { id: 'bs7', title: 'Working through disagreements' },
+]
+
 export const PLAN_DEMO_DATA = {
-  // From Belonging Skills Sort → willing_to_try
+  // From Belonging Skills Sort → willing_to_try. `howExample` seeds the
+  // v2.0 "How could you demonstrate this skill?" placeholder per skill.
   willingToTrySkills: [
     {
       id: 'bs1',
       title: 'Active listening',
       definition:
         "Giving someone your full attention when they're talking — eyes on them, no phone.",
+      howExample:
+        'e.g., giving someone your full attention when they’re talking — eyes on them, no phone',
     },
     {
       id: 'bs2',
       title: 'Inclusive language',
       definition:
         'Using words like “we” and “us” so people feel like they belong in the group.',
+      howExample: 'e.g., saying “we” and “us” when you’re making plans with the group',
     },
     {
       id: 'bs4',
       title: 'Helping out',
       definition: 'Offering help when you see someone needs it, without waiting to be asked.',
+      howExample: 'e.g., offering to help before someone has to ask',
     },
   ],
+
+  // From Self-Reflection → the "time I felt I belonged" text. Drives the
+  // v2.0 Screen 7 inclusion reflection; if empty, that screen is skipped.
+  inclusionText:
+    'When my coach put me in the starting lineup my first game on the team.',
+
+  // BSS skills the demo kid put in "not now" (or never placed) — feeds
+  // the read-only "keep on your radar" reminder on the review screen.
+  notTriedYetIds: ['bs6', 'bs7'],
 
   // From Getting Unstuck → selected appraisals (the picked-and-worked thoughts)
   pickedThoughts: [

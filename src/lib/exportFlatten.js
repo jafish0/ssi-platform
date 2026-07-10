@@ -877,6 +877,16 @@ export function planWideColumns(snapshot) {
                   extract: (rv) => findSkill(rv, sid)?.skill_text || '',
                 },
                 {
+                  name: sanitizeCol(`${prefix}_skill_${n}_how`),
+                  source_token_key: tk,
+                  item_type: 'custom_activity',
+                  sub_id: `skill_${sid}.how`,
+                  prompt: `Plan skill ${sid}: how the kid would demonstrate it (own words).`,
+                  allowed_values: 'free text',
+                  notes: 'Plan v2.0 — Draft 43 higher-order "how" input',
+                  extract: (rv) => findSkill(rv, sid)?.how || '',
+                },
+                {
                   name: sanitizeCol(`${prefix}_skill_${n}_who`),
                   source_token_key: tk,
                   item_type: 'custom_activity',
@@ -897,6 +907,24 @@ export function planWideColumns(snapshot) {
                   extract: (rv) => findSkill(rv, sid)?.when || '',
                 },
               )
+            }
+            // v2.0 inclusion reflection (Draft 43 C): one binary column per
+            // BSS skill — was the kid using this behavior in their
+            // Self-Reflection inclusion moment? Blank-safe: 0 when the
+            // screen was skipped (no inclusion text) or unchecked.
+            for (let n = 1; n <= 7; n++) {
+              const sid = `bs${n}`
+              cols.push({
+                name: sanitizeCol(`${prefix}_inclusion_behavior_${sid}`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: `inclusion.${sid}`,
+                prompt: `Plan inclusion reflection: was BSS skill ${sid} in use during the kid's inclusion moment?`,
+                allowed_values: '0 or 1',
+                notes: 'Plan v2.0 — Draft 43 inclusion-reflection checklist',
+                extract: (rv) =>
+                  (rv?.inclusion_reflection?.behaviors_used || []).includes(sid) ? 1 : 0,
+              })
             }
             cols.push(
               {

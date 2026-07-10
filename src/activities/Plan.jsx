@@ -1,13 +1,18 @@
-// "Your Plan" — the seventh Ready for Roots activity (Draft 39). Turns the
-// kid's work across the other six activities into a single, takeable,
-// action-oriented commitment document: "You did the work — here's what
-// you're going to do with it."
+// "Your Plan" — the seventh Ready for Roots activity (Draft 39; v2.0
+// restructure per the 2026-07-07 meeting, Draft 43). Turns the kid's work
+// across the other six activities into a single, takeable, action-oriented
+// commitment document: "You did the work — here's what you're going to do
+// with it."
 //
-// Eight paginated screens:
-//   1 Intro · 2 Skills to try (who + when) · 3 Thoughts to flip (read-only)
-//   4 People in my corner (pick first ally + when) · 5 Read your letter back
-//   (+ optional reflection) · 6 Who you are (full poem) · 7 Review · 8 Saved
-//   (+ PNG / PDF keepsake)
+// Nine paginated screens (v2.0):
+//   1 Intro · 2 Skills to try (how + who + when) · 3 Thoughts to flip
+//   (read-only) · 4 People in my corner (pick first ally + when) ·
+//   5 Words of Wisdom (the letter surfaced back as the kid's own words,
+//   + optional reflection) · 6 Who you are (full poem) · 7 When you felt
+//   included (Self-Reflection inclusion moment + belonging-behaviors
+//   checklist + safety qualifier; skipped when no inclusion text exists) ·
+//   8 Review (adds behaviors-used + not-tried-yet radar + qualifier) ·
+//   9 Saved (+ PNG / 6-page PDF keepsake)
 //
 // Real cross-activity persistence is deferred (Draft 21). For the
 // /demo/sandbox preview this reads synthetic content from
@@ -21,9 +26,16 @@ import { Link } from 'react-router-dom'
 import { Download, FileText, ArrowLeft } from 'lucide-react'
 import { PrimaryButton } from '../components/items/shared.jsx'
 import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
-import { PLAN_DEMO_DATA } from '../lib/planDemoData.js'
+import { PLAN_DEMO_DATA, ALL_BELONGING_SKILLS } from '../lib/planDemoData.js'
 
 const WHEN_OPTIONS = ['This week', 'This month', 'When the moment shows up', 'Other…']
+
+// Safety qualifier (Draft 43 Part E — Sprang, 2026-07-07): shown wherever
+// belonging-promoting behaviors surface on the plan, so the plan never
+// inadvertently reinforces dangerous connections. Same text on Screen 7,
+// the review card, and the PDF.
+const BPB_QUALIFIER =
+  'A note: we don’t want to use these belonging-promoting behaviors with people who get us in trouble or make us feel bad. Save them for the people who make you feel safe.'
 
 // Per-type clinical color coding (Practical amber / Emotional rose / Social
 // sky), matching Allies / Safety Net. Kept warm/distinct on purpose.
@@ -126,6 +138,15 @@ function Keepsake({ children, className = '' }) {
   )
 }
 
+// The safety qualifier as a subtle "important note" callout.
+function QualifierNote({ className = '' }) {
+  return (
+    <div className={`border-l-4 border-amber-300 bg-amber-50 rounded-r-2xl px-4 py-3 ${className}`}>
+      <p className="text-sm italic text-slate-600">{BPB_QUALIFIER}</p>
+    </div>
+  )
+}
+
 // ---------- Value resolution ----------
 
 function resolveWho(c) {
@@ -136,8 +157,11 @@ function resolveWhen(c) {
   if (!c) return ''
   return c.when === 'Other…' ? (c.whenOther || '').trim() : c.when || ''
 }
+// v2.0: a full commitment is skill + HOW + who + when — the "how" text is
+// the higher-order-learning piece (Sprang: "now, how would I actually do
+// that"), so it's part of the completeness gate.
 function isComplete(c) {
-  return !!resolveWho(c) && !!resolveWhen(c)
+  return !!(c && (c.how || '').trim()) && !!resolveWho(c) && !!resolveWhen(c)
 }
 
 // ---------- Component ----------
@@ -145,10 +169,17 @@ function isComplete(c) {
 export default function Plan({ onSave = console.log, planData }) {
   const d = planData || PLAN_DEMO_DATA
   const [screen, setScreen] = useState(1)
-  const [skillCommits, setSkillCommits] = useState({}) // skillId -> {who,whoOther,when,whenOther}
+  const [skillCommits, setSkillCommits] = useState({}) // skillId -> {how,who,whoOther,when,whenOther}
   const [firstAlly, setFirstAlly] = useState({ ally: '', when: '', whenOther: '' })
   const [letterReflection, setLetterReflection] = useState('')
+  // v2.0 Screen 7 — which belonging-promoting behaviors the kid was using
+  // in their Self-Reflection inclusion moment (multi-select, unlimited).
+  const [inclusionBehaviors, setInclusionBehaviors] = useState([])
   const [saving, setSaving] = useState(false)
+
+  // Screen 7 only exists when the kid actually wrote an inclusion memory
+  // in Self-Reflection (Draft 43 C.4 — never reflect on an empty callout).
+  const hasInclusion = !!(d.inclusionText || '').trim()
 
   const allyNames = useMemo(() => d.keptAllies.map((a) => a.name), [d])
   const alliesByType = useMemo(() => {
@@ -176,6 +207,7 @@ export default function Plan({ onSave = console.log, planData }) {
         return {
           skill_id: s.id,
           skill_text: s.title,
+          how: (c.how || '').trim(),
           who: resolveWho(c),
           who_is_ally: c.who !== '__other__',
           when: resolveWhen(c),
@@ -193,6 +225,8 @@ export default function Plan({ onSave = console.log, planData }) {
           }
         : null,
       letter_reflection: letterReflection.trim() || null,
+      // v2.0 — null when Screen 7 was skipped (no inclusion text).
+      inclusion_reflection: hasInclusion ? { behaviors_used: inclusionBehaviors } : null,
       saved_at: new Date().toISOString(),
     }
   }
@@ -201,7 +235,7 @@ export default function Plan({ onSave = console.log, planData }) {
     setSaving(true)
     try {
       await onSave(buildPayload())
-      go(8)
+      go(9)
     } finally {
       setSaving(false)
     }
@@ -238,6 +272,21 @@ export default function Plan({ onSave = console.log, planData }) {
                 {s.definition && (
                   <p className="text-[13px] text-slate-500 mb-3">{s.definition}</p>
                 )}
+
+                {/* v2.0 (Draft 43 A): the higher-order "how" — required per
+                    commitment so the kid thinks through actually doing it,
+                    not just who/when. Placeholder is a per-skill example. */}
+                <label className="block text-[14px] font-medium text-slate-700 mb-1">
+                  How could you demonstrate this skill?
+                </label>
+                <input
+                  type="text"
+                  value={c.how || ''}
+                  onChange={(e) => updateSkill(s.id, { how: e.target.value })}
+                  maxLength={160}
+                  placeholder={s.howExample || ''}
+                  className="w-full text-[15px] px-4 py-2.5 bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 mb-3 placeholder:text-slate-400 placeholder:italic"
+                />
 
                 <label className="block text-[14px] font-medium text-slate-700 mb-1">
                   Who could you try this with?
@@ -386,10 +435,13 @@ export default function Plan({ onSave = console.log, planData }) {
   }
 
   if (screen === 5) {
+    // v2.0 (Draft 43 B): Sprang's "goosebump moment" reframe — the letter
+    // the kid wrote for another youth, surfaced back as their own words of
+    // wisdom to themselves.
     return (
       <ScreenShell
-        heading="Read your letter back."
-        sub="You wrote this for another kid. Now read it as if you wrote it for yourself."
+        heading="Words of Wisdom."
+        sub="You wrote this for another kid. But these are the things you might need to hear too — your own words of wisdom, coming from you."
       >
         <Keepsake>
           <p className="text-[16px] leading-relaxed text-slate-800 font-serif italic whitespace-pre-line">
@@ -398,7 +450,7 @@ export default function Plan({ onSave = console.log, planData }) {
         </Keepsake>
         <div className="mt-5">
           <label className="block text-[15px] font-medium text-slate-700 mb-1">
-            What sticks out?{' '}
+            Any words of wisdom that stand out to you here?{' '}
             <span className="text-slate-400 font-normal text-[13px]">— skip if you’d rather not</span>
           </label>
           <textarea
@@ -427,12 +479,60 @@ export default function Plan({ onSave = console.log, planData }) {
             ))}
           </div>
         </Keepsake>
-        <NavFooter onBack={() => go(5)} onNext={() => go(7)} />
+        <NavFooter onBack={() => go(5)} onNext={() => go(hasInclusion ? 7 : 8)} />
       </ScreenShell>
     )
   }
 
-  if (screen === 7) {
+  if (screen === 7 && hasInclusion) {
+    // v2.0 (Draft 43 C): surface the kid's Self-Reflection inclusion moment
+    // and let them check which belonging-promoting behaviors they were
+    // already using — "keep doing what already works," not just new things.
+    const toggleBehavior = (id) =>
+      setInclusionBehaviors((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+      )
+    return (
+      <ScreenShell heading="When you felt included." sub="Think back to what you wrote earlier.">
+        <Keepsake>
+          <p className="text-[16px] leading-relaxed text-slate-800 font-serif italic">
+            “{d.inclusionText}”
+          </p>
+        </Keepsake>
+        <p className="text-[16px] font-semibold text-ctac-navy mt-6 mb-3">
+          Which belonging-promoting behaviors were you using?
+        </p>
+        <div className="space-y-2">
+          {ALL_BELONGING_SKILLS.map((s) => {
+            const checked = inclusionBehaviors.includes(s.id)
+            return (
+              <label
+                key={s.id}
+                className={
+                  'flex items-center gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition-colors ' +
+                  (checked
+                    ? 'bg-ctac-teal-50 border-ctac-teal-400'
+                    : 'bg-white border-ctac-teal-200 hover:bg-ctac-teal-50')
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleBehavior(s.id)}
+                  className="w-4 h-4 accent-ctac-teal-500"
+                />
+                <span className="text-[15px] text-slate-700">{s.title}</span>
+              </label>
+            )
+          })}
+        </div>
+        <QualifierNote className="mt-5" />
+        <NavFooter onBack={() => go(6)} onNext={() => go(8)} />
+      </ScreenShell>
+    )
+  }
+
+  if (screen === 8 || (screen === 7 && !hasInclusion)) {
     const committed = d.willingToTrySkills.filter((s) => isComplete(skillCommits[s.id]))
     return (
       <ScreenShell heading="Here’s your plan.">
@@ -443,12 +543,14 @@ export default function Plan({ onSave = console.log, planData }) {
             skillCommits={skillCommits}
             firstAlly={firstAlly}
             firstAllyComplete={firstAllyComplete}
+            inclusionBehaviors={inclusionBehaviors}
+            hasInclusion={hasInclusion}
           />
         </Keepsake>
         <div className="flex items-center justify-between mt-8 gap-3">
           <button
             type="button"
-            onClick={() => go(6)}
+            onClick={() => go(hasInclusion ? 7 : 6)}
             className="text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px] font-medium"
           >
             Back
@@ -461,7 +563,7 @@ export default function Plan({ onSave = console.log, planData }) {
     )
   }
 
-  // screen === 8 — Saved
+  // screen === 9 — Saved
   const committed = d.willingToTrySkills.filter((s) => isComplete(skillCommits[s.id]))
   return (
     <ScreenShell heading="Saved." sub="This is yours. Come back to it any time.">
@@ -472,9 +574,19 @@ export default function Plan({ onSave = console.log, planData }) {
           skillCommits={skillCommits}
           firstAlly={firstAlly}
           firstAllyComplete={firstAllyComplete}
+          inclusionBehaviors={inclusionBehaviors}
+          hasInclusion={hasInclusion}
         />
       </Keepsake>
-      <PlanDownloads d={d} committed={committed} skillCommits={skillCommits} firstAlly={firstAlly} firstAllyComplete={firstAllyComplete} />
+      <PlanDownloads
+        d={d}
+        committed={committed}
+        skillCommits={skillCommits}
+        firstAlly={firstAlly}
+        firstAllyComplete={firstAllyComplete}
+        inclusionBehaviors={inclusionBehaviors}
+        hasInclusion={hasInclusion}
+      />
       <div className="text-center mt-5">
         <Link to="/demo" className="inline-flex items-center gap-1 text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px] font-medium">
           <ArrowLeft size={14} strokeWidth={1.5} />
@@ -487,20 +599,34 @@ export default function Plan({ onSave = console.log, planData }) {
 
 // ---------- Review summary (Screens 7 + 8) ----------
 
-function PlanReview({ d, committed, skillCommits, firstAlly, firstAllyComplete }) {
+function PlanReview({
+  d,
+  committed,
+  skillCommits,
+  firstAlly,
+  firstAllyComplete,
+  inclusionBehaviors = [],
+  hasInclusion = false,
+}) {
   const letterExcerpt =
     d.letter.length > 120 ? d.letter.slice(0, 120).trim() + '…' : d.letter
+  const behaviorsUsed = ALL_BELONGING_SKILLS.filter((s) => inclusionBehaviors.includes(s.id))
+  const notTried = ALL_BELONGING_SKILLS.filter((s) => (d.notTriedYetIds || []).includes(s.id))
+  const showBpbSection = (hasInclusion && behaviorsUsed.length > 0) || notTried.length > 0
   return (
     <div className="space-y-5 text-left">
       <Section title="Skills you’ll try">
         {committed.length ? (
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {committed.map((s) => {
               const c = skillCommits[s.id]
               return (
                 <li key={s.id} className="text-[15px] text-slate-700">
                   <span className="font-semibold text-ctac-navy">{s.title}</span> — with{' '}
                   {resolveWho(c)}, {resolveWhen(c).toLowerCase()}
+                  <span className="block text-[14px] italic text-slate-600">
+                    How: {(c.how || '').trim()}
+                  </span>
                 </li>
               )
             })}
@@ -529,7 +655,39 @@ function PlanReview({ d, committed, skillCommits, firstAlly, firstAllyComplete }
         </ul>
       </Section>
 
-      <Section title="Letter to yourself">
+      {/* v2.0 (Draft 43 C/D/E): what already worked + what's still on the
+          radar, with the safety qualifier leading the section. */}
+      {showBpbSection && (
+        <Section title="Belonging-promoting behaviors">
+          <QualifierNote className="mb-3" />
+          {hasInclusion && behaviorsUsed.length > 0 && (
+            <>
+              <p className="text-[14px] font-medium text-slate-500 mb-1">
+                Already working for you — keep doing these:
+              </p>
+              <ul className="list-disc pl-5 space-y-0.5 mb-3">
+                {behaviorsUsed.map((s) => (
+                  <li key={s.id} className="text-[15px] text-slate-700">{s.title}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {notTried.length > 0 && (
+            <>
+              <p className="text-[14px] font-medium text-slate-500 mb-1">
+                Some other belonging-promoting behaviors to keep on your radar:
+              </p>
+              <ul className="list-disc pl-5 space-y-0.5">
+                {notTried.map((s) => (
+                  <li key={s.id} className="text-[15px] text-slate-700">{s.title}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </Section>
+      )}
+
+      <Section title="Words of Wisdom">
         <p className="text-[15px] italic text-slate-600">“{letterExcerpt}”</p>
       </Section>
 
@@ -557,14 +715,30 @@ function Section({ title, children }) {
 
 // ---------- Downloads (PNG + PDF) ----------
 
-function PlanDownloads({ d, committed, skillCommits, firstAlly, firstAllyComplete }) {
+function PlanDownloads({
+  d,
+  committed,
+  skillCommits,
+  firstAlly,
+  firstAllyComplete,
+  inclusionBehaviors = [],
+  hasInclusion = false,
+}) {
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState(null)
 
   const model = useMemo(
     () =>
-      buildPlanModel({ d, committed, skillCommits, firstAlly, firstAllyComplete }),
-    [d, committed, skillCommits, firstAlly, firstAllyComplete],
+      buildPlanModel({
+        d,
+        committed,
+        skillCommits,
+        firstAlly,
+        firstAllyComplete,
+        inclusionBehaviors,
+        hasInclusion,
+      }),
+    [d, committed, skillCommits, firstAlly, firstAllyComplete, inclusionBehaviors, hasInclusion],
   )
 
   async function savePng() {
@@ -629,16 +803,36 @@ function PlanDownloads({ d, committed, skillCommits, firstAlly, firstAllyComplet
 }
 
 // Normalize the plan into a flat model both exporters read from.
-function buildPlanModel({ d, committed, skillCommits, firstAlly, firstAllyComplete }) {
+function buildPlanModel({
+  d,
+  committed,
+  skillCommits,
+  firstAlly,
+  firstAllyComplete,
+  inclusionBehaviors = [],
+  hasInclusion = false,
+}) {
   return {
     skills: committed.map((s) => {
       const c = skillCommits[s.id]
-      return { title: s.title, who: resolveWho(c), when: resolveWhen(c) }
+      return {
+        title: s.title,
+        how: (c.how || '').trim(),
+        who: resolveWho(c),
+        when: resolveWhen(c),
+      }
     }),
     firstAlly: firstAllyComplete
       ? { ally: firstAlly.ally, when: resolveWhen(firstAlly) }
       : null,
     thoughts: d.pickedThoughts.map((t) => t.tellYourself),
+    inclusionText: hasInclusion ? d.inclusionText : null,
+    behaviorsUsed: hasInclusion
+      ? ALL_BELONGING_SKILLS.filter((s) => inclusionBehaviors.includes(s.id)).map((s) => s.title)
+      : [],
+    notTried: ALL_BELONGING_SKILLS.filter((s) => (d.notTriedYetIds || []).includes(s.id)).map(
+      (s) => s.title,
+    ),
     letter: d.letter,
     poemLines: d.poemLines,
   }
@@ -701,7 +895,10 @@ function buildPlanKeepsakeSvg(model) {
 
   heading('Skills you’ll try')
   if (model.skills.length) {
-    for (const s of model.skills) body(`• ${s.title} — with ${s.who}, ${s.when.toLowerCase()}`)
+    for (const s of model.skills) {
+      body(`• ${s.title} — with ${s.who}, ${s.when.toLowerCase()}`)
+      body(`How: ${s.how}`, { italic: true, indent: 14 })
+    }
   } else body('—')
 
   heading('First person to reach out to')
@@ -710,7 +907,20 @@ function buildPlanKeepsakeSvg(model) {
   heading('Thoughts to flip')
   for (const t of model.thoughts) body(`• ${t}`)
 
-  heading('A letter to yourself')
+  if (model.behaviorsUsed.length || model.notTried.length) {
+    heading('Belonging-promoting behaviors')
+    body(BPB_QUALIFIER, { italic: true })
+    if (model.behaviorsUsed.length) {
+      body('Already working for you — keep doing these:')
+      for (const b of model.behaviorsUsed) body(`• ${b}`, { indent: 14 })
+    }
+    if (model.notTried.length) {
+      body('Keep on your radar:')
+      for (const b of model.notTried) body(`• ${b}`, { indent: 14 })
+    }
+  }
+
+  heading('Words of Wisdom')
   body(model.letter, { italic: true })
 
   heading('Who you are')
@@ -728,14 +938,15 @@ function buildPlanKeepsakeSvg(model) {
   return { svg, width, height }
 }
 
-// Build + save a 5-page PDF (title / commitments / mindset / letter / poem).
+// Build + save a 6-page PDF (title / commitments / mindset / inclusion
+// reflection + belonging behaviors / Words of Wisdom / poem) — Draft 43 F.
 function buildPlanPdf(jsPDF, model) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' })
   const W = doc.internal.pageSize.getWidth()
   const H = doc.internal.pageSize.getHeight()
   const M = 56
   const stamp = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-  const TOTAL = 5
+  const TOTAL = 6
 
   const footer = (pageNum) => {
     doc.setFont('helvetica', 'normal')
@@ -777,12 +988,15 @@ function buildPlanPdf(jsPDF, model) {
   doc.setTextColor(40)
   footer(1)
 
-  // Page 2 — commitments
+  // Page 2 — commitments (skills now include the "how")
   doc.addPage()
   let y = M + 10
   y = heading('Skills you’ll try', y)
   if (model.skills.length) {
-    for (const s of model.skills) y = para(`•  ${s.title} — with ${s.who}, ${s.when.toLowerCase()}`, y)
+    for (const s of model.skills) {
+      y = para(`•  ${s.title} — with ${s.who}, ${s.when.toLowerCase()}`, y)
+      y = para(`How: ${s.how}`, y, { italic: true, indent: 16 })
+    }
   } else y = para('—', y)
   y += 14
   y = heading('First person to reach out to', y)
@@ -796,19 +1010,41 @@ function buildPlanPdf(jsPDF, model) {
   for (const t of model.thoughts) y = para(`•  ${t}`, y)
   footer(3)
 
-  // Page 4 — letter
+  // Page 4 — inclusion reflection + belonging behaviors + qualifier
+  // (Draft 43 C/D/E). Also carries the not-tried-yet radar list.
   doc.addPage()
   y = M + 10
-  y = heading('A letter to yourself', y)
-  y = para(model.letter, y, { italic: true, gap: 20 })
+  y = heading('When you felt included', y)
+  if (model.inclusionText) {
+    y = para(`“${model.inclusionText}”`, y, { italic: true, gap: 20 })
+    y += 8
+  }
+  if (model.behaviorsUsed.length) {
+    y = para('Belonging-promoting behaviors already working for you — keep doing these:', y)
+    for (const b of model.behaviorsUsed) y = para(`•  ${b}`, y, { indent: 16 })
+    y += 8
+  }
+  if (model.notTried.length) {
+    y = para('Some other belonging-promoting behaviors to keep on your radar:', y)
+    for (const b of model.notTried) y = para(`•  ${b}`, y, { indent: 16 })
+    y += 8
+  }
+  y = para(BPB_QUALIFIER, y, { italic: true, size: 11, gap: 16 })
   footer(4)
 
-  // Page 5 — poem
+  // Page 5 — Words of Wisdom (the letter, reframed — Draft 43 B)
+  doc.addPage()
+  y = M + 10
+  y = heading('Words of Wisdom', y)
+  y = para(model.letter, y, { italic: true, gap: 20 })
+  footer(5)
+
+  // Page 6 — poem
   doc.addPage()
   y = M + 10
   y = heading('Who you are', y)
   for (const line of model.poemLines) y = para(line, y, { italic: true })
-  footer(5)
+  footer(6)
 
   const fileStamp = new Date().toISOString().slice(0, 10)
   doc.save(`ready-for-roots-plan-${fileStamp}.pdf`)

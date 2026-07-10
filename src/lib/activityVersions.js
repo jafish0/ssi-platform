@@ -106,9 +106,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   plan: {
-    version: 'v1.1',
-    updated: '2026-06-30',
+    version: 'v2.0',
+    updated: '2026-07-10',
     changelog: [
+      '2026-07-10 · v2.0 — Round 7 (2026-07-07 meeting) restructure, Draft 43. Added per-skill "How could you demonstrate this skill?" required text input on Skills to try (with per-skill example placeholders; commitment = skill + how + who + when); renamed "Read your letter back" → "Words of Wisdom" per Sprang\'s aha reframe (screen heading, review-card label, PDF page, reflection prompt now "Any words of wisdom that stand out to you here?"); new Screen 7 surfacing the participant\'s Self-Reflection inclusion moment with a belonging-promoting-behaviors checklist (which behaviors they were already using; screen skipped when no inclusion text); safety qualifier text on all BPB surfaces per Sprang\'s dangerous-connection concern; read-only reminder of not-tried-yet BPBs on the review; PDF export grows to 6 pages with an inclusion-reflection page. Save payload grows: skills_to_try[].how + inclusion_reflection.behaviors_used[]. Export gains plan_skill_N_how + plan_inclusion_behavior_bsN columns. Now 9 screens. (Note: the BSS registry has 7 skills, bs1–bs7 — the draft\'s "8" references are corrected to 7 throughout.)',
       '2026-06-30 · v1.1 — Josh copy tweak. Screen 2 heading relabeled "Skills you said you\'d try." → "New Skills to Try". No data-shape change.',
       '2026-06-30 · v1.0 — Draft 39. Initial build of "Your Plan," the seventh Ready for Roots activity. 8-screen paginated flow: intro → skills to try (pulls Belonging Skills willing-to-try; kid picks who + when per skill) → thoughts to flip (read-only, from Getting Unstuck picks) → people in my corner (kept allies by type + Strengthen commitments; kid picks one ally + when to reach out first) → read your letter back (+ optional reflection) → who you are (full poem, read-only) → review → saved (PNG + jsPDF 5-page keepsake). Reads synthetic per-kid content from src/lib/planDemoData.js (real cross-activity pull-forward deferred per Draft 21). Save payload: { skills_to_try[], first_ally_outreach, letter_reflection, saved_at }. Replaces the /the-plan placeholder route (now redirects to /demo/sandbox/plan).',
     ],
