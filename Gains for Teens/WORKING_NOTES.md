@@ -342,18 +342,23 @@ Keep the eyebrow "GAINS for Teens · A Single-Session Intervention" and the "Scr
   4. **Clear an obstacle.** *(Needs to be developed.)* Somewhere on the path stands a barrier: an unhelpful thought or misconception about therapy (for example, "therapy won't work"). You get past it — going over or around it, never destroying it — by answering with what you've learned (for example, "therapy is effective, and it can help me put this behind me").
   5. **Travel to the next zone.** A brief, fun, arcade-style traversal — you pilot your traveler across to the next, brighter environment, where the next glyph waits.
 - **§3 The frame** (rename from "The frame story") — replace the dream/POV-bookend beats with the adventure framing:
-  *The Long Light is a game the teen plays, not a dream they have — there's no falling asleep and no waking up. A teen anxious about trauma therapy (considering it, referred, or just beginning) picks up the adventure and chooses a traveler to become. Something happened to that traveler, kept deliberately vague, and the quest is to understand it, and themselves. The player is only ever the traveler — a covered figure or a creature, never a specific face — which keeps the experience free of gender, race, and body type. They meet others who made the same climb and learned what helped, and the journey ends not by waking but by reaching the Beacon: proof that help is real and reachable.*
-- **§2 Design principles, §4 The messengers, §5 Zone map** — keep as-is (apply the global scrub; keep the Gear-earned column in the §5 table).
+  *The Long Light is a game the tee
 
-**6. "The World & Its Travelers" gallery.** Reorganize into three parts:
-- **The World** — keep `map-and-world.webp` as the centerpiece + caption.
-- **Choose your traveler** (NEW) — replace the single "The Traveler (you)" feature with the four player avatars as a character-select set (row/grid, equal size). Intro: *"You'll play as one of these — pick who you become."* Labels:
-  - `avatar-traveler-1.webp` — **The Traveler.** Hooded and wrapped, a small light in hand.
-  - `avatar-creature.webp` — **The Creature.** Small and curious, with a lantern for a tail.
-  - `avatar-traveler-2.webp` — **The Wayfarer.** Veiled, lighting the path with a lantern-staff.
-  - `avatar-construct.webp` — **The Construct.** Stone and warm light, quietly unstoppable.
-- **Those who walked before you** — keep the four messenger cards (Emberwick, Mirefly, Hollowshell, Dimmet) + descriptions; retitle this sub-group so it's clearly distinct from the player avatars.
+> [Note: the archived Draft 5 text just above was cut off by a write error; the full shipped text is in git commit 7a743a0.]
 
-**Deploy + verify.** Ensure the Draft 4 caching fix is applied (HTML no-cache) so the plain URL serves fresh. Verify at https://ssi.ctac.app/long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premise + ending are the new copy; loop shows 5 beats incl. the pending obstacle; gallery shows World + 4 selectable travelers + 4 messengers; all art loads; scroll dark→gold intact. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+### Draft 6 — Fix relative asset paths so the pitch images don't 404 without a trailing slash
+
+**Problem (live now).** `public/long-light/index.html` references images with **relative** paths (`url("zone1.webp")`, `art/…​.webp`). The files live at `public/long-light/` and `public/long-light/art/`. Those resolve correctly only when the page URL ends in a trailing slash (`/long-light/`). But the server redirects `https://ssi.ctac.app/long-light/` → `https://ssi.ctac.app/long-light` (drops the slash), so the browser resolves the relative paths against `/` and requests `/art/…​.webp` and `/zone1.webp`, which 404. Net effect: **every image on the pitch page is broken.** Confirmed by fetching the page (image src URLs resolve to `ssi.ctac.app/art/…`, not `…/long-light/art/…`).
+
+**Fix (either works; `<base>` is one line).**
+1. Add `<base href="/long-light/">` to the `<head>` of `public/long-light/index.html`, so all relative assets resolve against `/long-light/` no matter the trailing slash. Confirm it doesn't break any in-page behavior (there are no meaningful internal `#` anchors, but check the scroll cue).
+2. OR make every asset path absolute: `url("/long-light/zone1.webp")` for the five zone backgrounds and `/long-light/art/…​.webp` for all gallery images.
+
+Optionally also set `trailingSlash`/redirect config so `/long-light/` is canonical, but the `<base>`/absolute fix is what actually resolves it.
+
+**Verify.** Load BOTH `https://ssi.ctac.app/long-light` (no slash) and `https://ssi.ctac.app/long-light/` (with slash); confirm all images load on both — the 5 zone plates, the world map, the 4 travelers, and the 4 messengers — with no 404s. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 6.*
+long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premise + ending are the new copy; loop shows 5 beats incl. the pending obstacle; gallery shows World + 4 selectable travelers + 4 messengers; all art loads; scroll dark→gold intact. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 5.*

@@ -3028,6 +3028,605 @@ Parked for a follow-up draft once the activities are joined.
 
 ---
 
+### Draft 43 — The Plan v1.0 → v2.0 (2026-07-07 team meeting bundle)
+
+Substantial revision to The Plan activity based on the 2026-07-07 meeting. Five coordinated changes plus one small bug fix. The intent is to (a) push participants toward higher-order learning (how they'd actually use skills, not just picking them), (b) add a clinically-important safety qualifier so the plan doesn't inadvertently reinforce dangerous connections, (c) surface the kid's Self-Reflection work as a positive reinforcement moment, and (d) sharpen the framing of the letter callback with Sprang's *"Words of Wisdom"* aha reframe.
+
+**MAJOR bump:** `plan` v1.0 → v2.0. Data shape grows (new save fields for skill-level "how" text, inclusion-behavior selections). Adds one new screen. Renames one section. Ship as one commit.
+
+**Approved by:** Josh + team, 2026-07-07.
+
+---
+
+#### Part A — Skills to try: add a "How could you demonstrate this?" text input per skill
+
+**Current behavior (Draft 39):** Screen 2 shows one card per willing-to-try BSS skill with a *who* dropdown (kept allies) and a *when* chip group. Kid picks a name + timing per skill.
+
+**Feedback (Stephanie + Sprang, 2026-07-07):** the current format is directionally right but "clicking who and when" isn't producing enough clinical work. Sprang framed it as *"a higher-order learning scale to then start to think 'now, how would I actually do that.'"* Adding a small text box for the kid's own strategy pushes them into thinking about the *how*, not just the *who* and *when*.
+
+**Change:** Add a **new required text input** per skill card:
+
+> *"How could you demonstrate this skill?"*
+
+With a per-skill example placeholder pulled from the BSS skill registry — e.g., for Active Listening: *"e.g., giving someone your full attention when they're talking, eyes on them, no phone."* For Provide Support: *"e.g., checking in on a friend when they seem down."* Etc. The placeholder disappears when the kid types.
+
+Per Sprang's meeting language: *"kids are going to be doing a little bit, because otherwise they won't read their action plan."* Making this input required (not skippable) keeps the kid actively engaged rather than passively clicking through.
+
+**Card structure per willing-to-try skill:**
+
+1. Skill name (bold, ctac-navy)
+2. Skill description (small helper text from BSS registry)
+3. **NEW: *"How could you demonstrate this skill?"* text input with per-skill example placeholder**
+4. *Who could you try this with?* — allies dropdown (existing)
+5. *When could you try it?* — chip group (existing)
+
+**Continue gating:** the kid must complete at least one full commitment (skill + how + who + when) to advance, OR tap an explicit "Skip for now" (same as today's fallback).
+
+##### A.1 — Data shape addition
+
+`plan_payload.skills_to_try[]` gains a `how` string per entry:
+
+```js
+skills_to_try: [
+  {
+    skill_id: 'active-listening',
+    skill_text: 'Active Listening',
+    how: "I'll put my phone down when my sister is talking about her day",  // NEW
+    who: 'Foster Mom',
+    who_is_ally: true,
+    when: 'This week',
+    when_is_freetext: false,
+  },
+  // ...
+],
+```
+
+**Export pipeline:** add `plan_skill_N_how` columns (up to 8, matching the existing per-BSS-skill pattern). Same expansion rules as the existing `plan_skill_N_text` / `_who` / `_when` columns.
+
+---
+
+#### Part B — Rename "Letter to yourself" / "Read your letter back" → "Words of Wisdom"
+
+Sprang framed this as the *"goosebump moment"* — the participant wrote the letter to another kid, but on the action plan we surface it back as *their own words of wisdom to themselves*. Same content, different framing. Adrienne agreed: *"I think that would be a real kind of like goosebump type of aha moment when they read it and they're like, oh, I wrote that."*
+
+**Files touched:** `src/activities/Plan.jsx` (screen label + review card reference) plus wherever the letter-callback string appears.
+
+##### B.1 — Screen 5 heading
+
+Current: *"Read your letter back."*
+Sub-line: *"You wrote this for another kid. Now read it as if you wrote it for yourself."*
+
+**New heading:** *"Words of Wisdom."*
+**New sub-line:** *"You wrote this for another kid. But these are the things you might need to hear too — your own words of wisdom, coming from you."*
+
+##### B.2 — Screen 7 review card label
+
+Current label on the review keepsake card: *"Letter to yourself"* (or "Letter to another" per Josh's transcript note — there's some label drift). Per Josh in the meeting: *"I saw your note, too — Adrian, I'll fix that label. I know it says a plan… A letter to yourself, yeah, uh, yeah, just in that one spot."*
+
+**Fix:** relabel the section on the review card to *"Words of Wisdom"* consistently. Same content underneath.
+
+##### B.3 — PDF export label
+
+The 5-page PDF from Draft 39 has a page for the letter. Rename that page's title from *"Letter"* (or similar) to *"Words of Wisdom"* to match.
+
+##### B.4 — Reflection prompt on Screen 5 — keep, but note the tension
+
+The *"What sticks out?"* optional text input was added in Draft 39 v1.0. Sprang expressed some concern that it might "lengthen the intervention" and be "duplicative" of the letter itself. Adrienne pushed back that the phrasing (words of wisdom reframe) is the payoff.
+
+**Change:** keep the optional prompt as-is for now, but rename it to match the new framing:
+
+- **Current:** *"What sticks out?"*
+- **New:** *"Any words of wisdom that stand out to you here?"* (or shorter: *"Anything that stands out?"* — Code's call)
+
+If the team wants it removed at the next review, easy to drop then.
+
+---
+
+#### Part C — NEW Screen 7: "When you felt included" reflection + belonging-behaviors checklist
+
+Insert a new screen between the current Screen 6 (Who you are — poem) and the current Screen 7 (Your Plan review). This becomes the new **Screen 7**, and the existing review + save screens become Screens 8 + 9.
+
+##### C.1 — Screen purpose
+
+Pull forward the participant's Self-Reflection *"time I felt included"* text, then let them CHECK the belonging-promoting behaviors they were using in that moment. Frames the action plan as *"keep doing what already works,"* not just *"try new things."*
+
+Sprang's framing from the meeting: *"belonging promoting behaviors you've used in the past that worked for you — to keep doing these. So the action plan isn't just about new things you're going to do; it's continuing to do the old things that were working for you."*
+
+##### C.2 — Screen layout
+
+Heading: *"When you felt included."*
+
+Sub-line: *"Think back to what you wrote earlier."*
+
+Below the sub-line, a quoted callout showing the participant's inclusion text from Self-Reflection:
+
+> *"[participant's inclusion_text from Self-Reflection save payload]"*
+
+Below the callout, the prompt:
+
+> *Which belonging-promoting behaviors were you using?*
+
+Then a checklist of all belonging-promoting behaviors from the BSS skill registry (the same set as the BSS activity's 8 skills). Multi-select checkboxes, unlimited. Kid checks any that apply.
+
+Below the checklist, the safety qualifier (see Part E below).
+
+##### C.3 — Data shape
+
+Save payload gains a new field:
+
+```js
+inclusion_reflection: {
+  behaviors_used: ['active-listening', 'provide-support'],  // array of skill_ids
+},
+```
+
+**Export pipeline:** add per-skill `plan_inclusion_behavior_{skill_id}` binary columns (0/1 for each of the 8 BSS skills). Same pattern as BSS's per-skill export.
+
+##### C.4 — Empty-state handling
+
+If the participant didn't complete Self-Reflection (or the inclusion text is empty), skip this screen entirely. Don't force the participant to reflect on an empty callout.
+
+---
+
+#### Part D — Read-only reminder: "Belonging-promoting behaviors you haven't tried yet"
+
+**On the review screen (new Screen 8),** add a small read-only callout listing the BSS skills the kid put in the "not now" bucket (or hasn't picked at all — filter based on what data is available):
+
+> *Some other belonging-promoting behaviors to keep on your radar:*
+>
+> - [not-now skill 1]
+> - [not-now skill 2]
+> - …
+
+Framing: not asking them to commit to anything; just keeping the unused skills visible so they don't fall off the mental map.
+
+Sprang's meeting language: *"instead of them having to do another thing, maybe in the action plan it says: remember, here's some other belonging promoting behaviors you haven't tried yet, but it goes on the action plan so they can see it."*
+
+##### D.1 — Empty-state
+
+If all BSS skills are in "doing now" or "willing to try," skip the callout entirely (don't render an empty section).
+
+##### D.2 — Rendering location
+
+Renders as a small subsection at the bottom of the review keepsake card on Screen 8, below the main commitments. Also appears in the PDF export (Part F below).
+
+---
+
+#### Part E — Safety qualifier text on belonging-promoting-behavior surfaces
+
+**Sprang was firm about this in the meeting**: whenever belonging-promoting behaviors are surfaced on the action plan, include an explicit qualifier reminder that these skills aren't universal.
+
+**Qualifier text (draft — Josh may want to tune):**
+
+> *A note: we don't want to use these belonging-promoting behaviors with people who get us in trouble or make us feel bad. Save them for the people who make you feel safe.*
+
+##### E.1 — Where the qualifier appears
+
+Renders on:
+- **Screen 7** (the inclusion reflection screen from Part C) — below the checklist, above the Continue button.
+- **Screen 8** (review) — near the top of the "belonging-promoting behaviors" section of the keepsake card, before either the used behaviors (from Part C) or the not-tried-yet list (from Part D).
+- **PDF export** — same qualifier appears on the belonging-behaviors page.
+
+The qualifier text is the SAME on all three surfaces. Style: small, italic, muted (`text-sm italic text-slate-600`), possibly with a subtle amber-border callout box to signal "important note."
+
+##### E.2 — Why this matters clinically
+
+Sprang's meeting quote: *"I don't want to reinforce any dangerous behavior… if the example they used was a time I felt included was with this gang of thieves because I was the most violent of the group, you know, that's not necessarily something we want to reinforce."* The qualifier keeps the intervention safe for the edge cases.
+
+---
+
+#### Part F — PDF export: incorporate the new content
+
+The current 5-page PDF from Draft 39:
+1. Title page
+2. Commitments (skills + first ally)
+3. Mindset (thoughts to flip)
+4. Letter → **renamed to Words of Wisdom** (Part B)
+5. Poem
+
+**New page structure (6 pages):**
+1. Title page
+2. Commitments (skills + how + who + when)
+3. Mindset (thoughts to flip)
+4. **NEW: Inclusion reflection + belonging behaviors used** (Part C) + qualifier (Part E)
+5. Words of Wisdom (relabeled letter)
+6. Poem
+
+Add the not-tried-yet reminder (Part D) as a small callout on either the new Page 4 or in the footer of the Commitments page (Page 2) — Code's judgment based on layout fit.
+
+Filename convention stays `ready-for-roots-plan-{YYYY-MM-DD}.pdf`.
+
+---
+
+#### Part G — Fix Screen 7 label typo
+
+Per Josh in the meeting: the review keepsake card has a label bug. It says *"letter to another"* somewhere it shouldn't, or the labeling is inconsistent between the letter section header and the callback framing.
+
+**Change:** audit all labels on the Plan review card (Screen 8 after renumbering) and make sure they consistently say *"Words of Wisdom"* (per Part B) rather than any mix of "letter," "letter to another," "letter to yourself." One canonical label everywhere.
+
+---
+
+#### Updated screen count and flow (Plan v2.0)
+
+**Nine screens total (up from eight):**
+
+1. Intro
+2. Skills to try (with new "how" text input per skill)
+3. Thoughts to flip (read-only, unchanged)
+4. People in my corner (unchanged)
+5. Words of Wisdom (renamed from "Read your letter back")
+6. Who you are — full poem (unchanged)
+7. **NEW: When you felt included + behaviors checklist + safety qualifier**
+8. Your Plan (review — now includes inclusion behaviors + not-tried-yet reminder + qualifier)
+9. Saved (PNG + PDF — PDF now 6 pages)
+
+---
+
+#### Version bump + changelog
+
+`plan` v1.0 → **v2.0 (MAJOR)**. Save payload grows by `skills_to_try[].how` + `inclusion_reflection.behaviors_used[]`. New required input on Screen 2. New screen (Screen 7). Renamed section (Words of Wisdom). Export columns grow.
+
+Prepend changelog: *"v2.0 — Round 7 (2026-07-07 meeting) restructure. Added per-skill 'How could you demonstrate this?' text input on Skills to try; renamed 'Letter to yourself' → 'Words of Wisdom' per Sprang's aha reframe; new screen surfacing the participant's Self-Reflection inclusion moment with a BPB checklist (which behaviors they were already using); safety qualifier text on all BPB surfaces per Sprang's dangerous-connection concern; read-only reminder of not-tried-yet BPBs on the review; PDF export gains a page for the inclusion reflection."*
+
+---
+
+#### What does NOT change
+
+- The six upstream activities themselves (Self-Reflection, Poem, BSS, Allies, Getting Unstuck, Letter) — all unchanged.
+- Voice / video / cast section work — unchanged.
+- Pretest / Posttest / FollowUp Survey — unchanged.
+- Palette, tree, montage, summary screen — all unchanged.
+- The Plan's synthetic demo data (`src/lib/planDemoData.js`) does need updates to include: sample inclusion_text (for Screen 7 to render), sample "how" text per willing-to-try skill (Screen 2), sample inclusion behaviors selection.
+- The `/the-plan` route (from Draft 37) still resolves to the Plan activity; no routing change.
+
+#### Out of scope (still deferred)
+
+- **Real cross-activity flow integration.** Still deferred per Draft 21. The Plan reads synthetic demo data; real reads land when flow is stitched.
+- **Sending the plan to caregivers via email.** Discussed at the meeting; privacy concern flagged (participants might feel their confidentiality was breached). Not part of this draft.
+- **Print-off of psychoeducation summary material** (Ginny's idea). Also discussed; team landed on "not for this draft." Could revisit as an appendix / handout for foster parents in a future scope.
+- **Reflecting on exclusion moments** (was considered alongside the inclusion reflection). Team decided too much for one activity; inclusion-only is the scope.
+
+*End of Draft 43.*
+
+---
+
+### Draft 44 — Reconfigure the Proposed Alternative Cast section (compromise + clarity)
+
+Follow-up to Draft 42. The 2026-07-07 meeting resulted in a compromise on the Kai / character-design discussion rather than a clean decision: the team is torn, and Josh proposed producing more comparison material rather than committing to a change. This draft cleans up the Proposed Alternative Cast section on /demo so it reads as a coherent "exploration space" rather than a bunch of competing variants stacked together.
+
+The core problems with the current Draft 42 rendering:
+- Sam-18 and Sam-14 cards appear twice (once in Sam's Story, once in Proposed Alternative) which felt duplicative rather than illustrative.
+- No visual grouping between "Sam variants under the proposal" vs "Alternative Kai concepts" — six cards in a flat row without structure.
+- The current 22-24 female alt Kai is being retired for a younger version (per the compromise), so that image needs to leave the section.
+
+**Approved by:** Josh, 2026-07-07.
+
+---
+
+#### Part A — Remove the duplicate Sam-18 + Sam-14 cards from the Proposed Alternative section
+
+**Change:** update the `shows` array on Sam-18 (id `sam-16`) and Sam-14 to just `['sams-story']`. They no longer appear in Proposed Alternative.
+
+**Why:** the duplication was intended to show "the full alternative cast lineup" but it read as noise. Team members clicked back and forth wondering if these were different Sams. Removing the duplication clarifies: the Proposed Alternative section only shows what's DIFFERENT from the current setup, not the full lineup.
+
+The intro paragraph will explain that Sam-18 and Sam-14 remain unchanged in the proposed direction — just referenced verbally rather than re-rendered.
+
+---
+
+#### Part B — Regroup the remaining cards into two visual sub-groups
+
+**Change:** within the Proposed Alternative Cast section, render two clearly-labeled sub-groups instead of a flat card list.
+
+**Sub-group 1 — "Sam variants"** (what the proposal would do with the existing Kai design):
+- **Sam — Nonbinary** (repurposed current Kai V1 image + eventually current Kai voice on Sam-NB lines — see Part D below)
+- **Sam — Female** (coming soon placeholder — same as today)
+
+**Sub-group 2 — "Alternative Kai concepts"** (proposed new peer-mentor Kais):
+- **Kai — Male (proposed)** (existing card from Draft 42 — image + short voice sample, eventually full voiceover — see Part E below)
+- **Kai — Female (proposed)** (**REPLACE** the current 22-24 version with a younger version once Josh generates it — see Part F below)
+
+Sub-group headings in `text-lg font-semibold text-ctac-navy`. Cards within each sub-group render in a two-column grid on desktop, stacked on mobile.
+
+##### B.1 — Data-shape update
+
+Extend the `shows` array's semantic: allow a second value indicating the sub-group. Options:
+
+- **(a) Add a `subgroup` field on each card** (`subgroup: 'sam-variants' | 'kai-concepts'`) — cleaner, easier to render.
+- **(b) Use additional show values** (`shows: ['proposed-alternative-sam']` vs `shows: ['proposed-alternative-kai']`) — reuses existing filter mechanism but bloats the show taxonomy.
+
+**Recommend option (a)** — cleaner. Only cards in the Proposed Alternative section need the subgroup field; other cards ignore it.
+
+---
+
+#### Part C — Update the section intro paragraph
+
+The current intro paragraph (from Draft 42) frames this as "here's a proposal, react to it." After the 2026-07-07 meeting, the framing needs to reflect (a) the team's mixed reaction, (b) the compromise to produce more material, and (c) that this is still exploration rather than a committed direction.
+
+**New intro paragraph** (Josh may edit before shipping):
+
+> *An exploration space for character-design alternatives, following up on the 2026-07-07 meeting discussion. The team is currently split on whether Kai's design should shift — one direction is to keep the current Kai and use its design for the Sam-Nonbinary variant we still need to build; another is to keep the current Kai as-is (Adrienne's preference) and build entirely separate Sam variants. This section shows the "in-between" material Josh is producing so we can compare side-by-side. Sam-18 and Sam-14 stay unchanged in either direction (see them in the Sam's Story section above). Nothing is committed yet.*
+
+Keep it neutral. Names Adrienne's preference briefly so it doesn't feel like the alternative is being pushed. Explicitly says nothing is committed.
+
+---
+
+#### Part D — Prep: Sam-Nonbinary card gains a voiceSamples slot
+
+Once Josh records the current Kai voice on the Sam-Nonbinary lines (from Holly's script — the two Sam-14/Sam-NB lines: *"How do I feel about that? I have literally no idea."* and *"You aren't my parents and you never will be."*), that audio drops into the Sam-Nonbinary card as a voiceSamples entry.
+
+**Change now:** wire up the card's data shape to accept `voiceSamples[]` (same shape as Sam 16 uses from Draft 33). No asset file exists yet; add a placeholder empty array OR omit the field so the renderer skips it. When Josh has the audio, the file drops in a follow-up commit.
+
+**Suggested filename convention** for when the audio lands: `public/cast/audio/sam-nb-kai-voice-inner-monologue.mp3` and `sam-nb-kai-voice-rejection.mp3` (or bundled as one file — Josh's call at recording time).
+
+---
+
+#### Part E — Prep: Kai Male (proposed) card upgrades to full voiceover
+
+Currently the male alt Kai card has ONE `voiceSamples` entry (~35s from Draft 42). Per the 2026-07-07 compromise, Josh will produce a full 8-scene voiceover set using the male alt Kai's voice — same 8 scenes as the current Kai's voiceover, just in the male alt voice.
+
+**Change now:** extend the male alt Kai card's data shape to accept a `scenes[]` array (same shape as the current Kai card uses from Draft 40 — `label`, `audio`, `duration`, `durationSeconds`, `handoff`, `text`). Empty array or omitted field for now.
+
+When Josh has recorded all 8 male-alt-Kai scenes, they land as a follow-up commit that populates the `scenes[]` array with the same script text (verbatim from Adrienne's script, matching the current Kai `scenes[]`).
+
+**Suggested filename convention:** `public/cast/audio/kai-man-alt-pt1-scene-1-the-scan.mp3` etc. — mirrors the current Kai audio naming with a `-man-alt-` infix.
+
+The card's rendering when populated will look identical to the current Kai card (from Draft 40) — same script text, same duration display, same total runtime footer.
+
+---
+
+#### Part F — Retire the current female alt Kai; wait for the younger version
+
+Per the meeting compromise, the current female alt Kai (early-20s, 22-24 range) is being retired in favor of a younger female alt Kai (younger visual + younger voice). Josh will generate the new image and record a new voice sample.
+
+**Change now:** on the current female alt Kai card in castData.js, either:
+
+- **(a) Delete the card entirely** — cleanest; nothing renders for female alt Kai until the new version lands.
+- **(b) Convert to a placeholder** — same treatment as the Sam-Female placeholder (blank silhouette + "coming soon"). Signals that a female alt Kai is planned but isn't ready.
+
+**Recommend (b)** — placeholder — so the sub-group structure ("Sam variants" and "Alternative Kai concepts") stays balanced visually. The kai-woman.png file can stay in `/public/cast/images/` for reference; the card just doesn't reference it.
+
+**Suggested placeholder card:**
+
+```js
+{
+  id: 'kai-woman-alt-placeholder',
+  shows: ['proposed-alternative'],
+  subgroup: 'kai-concepts',
+  name: 'Kai — Female (proposed, younger version)',
+  placeholder: true,
+  alt: 'Female alt Kai — younger version coming soon',
+  role: 'Younger female alt Kai — image and voice sample coming soon per 2026-07-07 meeting compromise.',
+},
+```
+
+When Josh has the new younger version generated, it drops in a follow-up commit that swaps the placeholder for a real card with image + voiceSamples.
+
+**Suggested filename convention:** `public/cast/images/kai-woman-younger.png` and `public/cast/audio/kai-woman-younger-voice-sample.mp3`.
+
+---
+
+#### Part G — Update the "current" Kai card's intro copy (small note)
+
+The current Kai in the Learning Skills for Belonging section (from Draft 35 + updated through Draft 41) stays as the shipped voice of the intervention. But given the ongoing discussion, add a small note near its section heading so team members know both the current AND the alternative direction exist to look at.
+
+**Change:** below the Learning Skills for Belonging heading (or as a small footer at the end of the Kai card), add a subtle italic line:
+
+> *A proposed alternative direction is also being explored — see the Proposed Alternative Cast section at the bottom of the page.*
+
+Small, non-competitive framing. Just a pointer.
+
+---
+
+#### What does NOT change
+
+- The current Kai in Learning Skills for Belonging — image variants, all 8 voiceover scenes, animated clip, role line — untouched.
+- Sam's Story section (Sam-18, Sam-14, Foster Mom, Foster Dad, Mrs. Johnson, Family Photo) — untouched apart from `shows` array cleanup on Sam-18/Sam-14.
+- All other sections of /demo — untouched.
+- No `activityVersions.js` bump (DemoPage section).
+
+#### Out of scope (will land as follow-up commits when Josh has the assets)
+
+- **Male alt Kai full voiceover set** — 8 mp3s + `scenes[]` array populated.
+- **Sam-Nonbinary voice lines** — audio using current Kai voice on the two Sam-NB lines.
+- **Younger female alt Kai** — new image + voice sample replacing the placeholder from Part F.
+- **Team review outcome** — if the team ultimately picks one direction at a future meeting, that decision drives a decisive commit: either the alternative Kais migrate into Learning Skills (retiring current Kai) OR the section gets torn down entirely.
+
+*End of Draft 44.*
+
+---
+
+### Draft 45 — Add Male Alternative Kai as a peer card above the current Kai on /demo
+
+Josh finished recording all Kai lines through ElevenLabs with the Male Alternative Kai voice. Promote the male alt Kai from the "Proposed Alternative Cast" section (where Draft 42 initially placed it as a proof-of-concept card) to a peer position in the **Learning Skills for Belonging** section, ABOVE the current Kai card. Same card shape as the current Kai (image + role + all 8 scenes with script text + audio + duration + handoff + total runtime footer).
+
+Team can now compare both Kais on the same section of the demo — top card is the male alt, bottom card is the current Kai — reading the same scripts, hearing the different voice options side by side.
+
+**Approved by:** Josh, 2026-07-08.
+
+**Supersedes Draft 44 Part E** (which had planned to populate the male alt Kai's `scenes[]` slot inside the Proposed Alternative Cast section). The male alt Kai is being promoted out of Proposed Alt and into Learning Skills for Belonging. Draft 44's other parts still stand.
+
+---
+
+#### Part A — Copy 7 new male alt Kai mp3s into `public/cast/audio/` (Scene 2 is already in place from Draft 42)
+
+**Source folder:** `Video Content/New Voiceover/Male Kai Alternate/`
+
+**Scene 2 (The Why) is already in the repo** — the `kai-man-voice-sample.mp3` file that Draft 42 added to `public/cast/audio/` (originally labeled as a "Voice sample" on the Male Kai card in Proposed Alt) is actually Male Kai's Scene 2 (The Why) recording. 35s duration matches. Reuse that file in place for Scene 2; **do not copy a new one for Scene 2.** The scenes[] entry references `/cast/audio/kai-man-voice-sample.mp3` directly.
+
+Copy the 7 new files:
+
+| Source | Destination | Duration |
+|---|---|---|
+| `Male Kai Part 1.mp3` | `public/cast/audio/kai-male-alt-pt1-scene-1-the-scan.mp3` | 0:51 |
+| *(Scene 2 already at `public/cast/audio/kai-man-voice-sample.mp3` from Draft 42)* | *(reuse in place)* | *0:35* |
+| `Male Kai Scene 3 Building a Safety Net.mp3` | `public/cast/audio/kai-male-alt-pt1-scene-3-safety-net.mp3` | 1:19 |
+| `Male Kai Scene 4 the foster care extra level.mp3` | `public/cast/audio/kai-male-alt-pt1-scene-4-extra-level.mp3` | 0:40 |
+| `Male Kai Part 2 Scene 1 Building skills.mp3` | `public/cast/audio/kai-male-alt-pt2-scene-1-building-skills.mp3` | 1:09 |
+| `Male Kai Part 2 Scene 2 The roadblocks.mp3` | `public/cast/audio/kai-male-alt-pt2-scene-2-roadblocks.mp3` | 0:31 |
+| `Male Kai Part 2 scene 3 putting it all together.mp3` | `public/cast/audio/kai-male-alt-pt2-scene-3-putting-it-all-together.mp3` | 1:06 |
+| `Male Kai Concludion.mp3` (typo in source filename) | `public/cast/audio/kai-male-alt-conclusion.mp3` | 0:16 |
+
+Combined new copies ~4.8 MB. **Total runtime 6:26 across all 8 scenes** (matching the current Kai's 6:27 within a second of rounding).
+
+Note: the "Male Kai Part 1.mp3" source filename is misleading — the duration (51s) confirms it's just Scene 1 (The Scan), not the whole Part I. Renaming to the scene-specific destination filename clarifies this.
+
+**Optional cleanup — rename `kai-man-voice-sample.mp3` for naming convention consistency:** could rename to `kai-male-alt-pt1-scene-2-the-why.mp3` to match the other Male Kai audio filenames. If renamed, update the scenes[] entry's `src` accordingly. Recommend **skipping the rename** — the current filename works, no need for churn, and this way the file's history from Draft 42 stays traceable.
+
+#### Part B — Reuse the existing `kai-man.png` image
+
+The male alt Kai image is already in the repo from Draft 42 at `public/cast/images/kai-man.png`. Reuse it for the new card — no new image copy needed.
+
+Whether the image stays referenced from the Proposed Alternative Cast card as well: Code's call. Two options:
+- **(a) Both cards reference the same image file.** Cleanest — one file, two cards, each in its section.
+- **(b) Remove the male alt Kai from Proposed Alternative Cast now that it's promoted.** Cleaner data hierarchy — one card per character.
+
+**Recommend (b)** — with Draft 44's regrouping of Proposed Alt into "Sam variants" + "Kai concepts," moving the male alt Kai out of that section leaves the Proposed Alt section with just Sam variants + the female Kai placeholder (awaiting the younger version). That's a cleaner mental model: Proposed Alt = "still exploring," Learning Skills = "here in the intervention." Male alt Kai has graduated to Learning Skills.
+
+If Code goes with (b), delete the `kai-man-alternative` card entry from castData.js. The image file stays in place (still referenced by the new card in Learning Skills).
+
+#### Part C — Add a new "Male Alternative Kai" card in `src/lib/castData.js`
+
+Add BEFORE the current Kai card in the CAST array (renders above it in the Learning Skills for Belonging section). Same shape as the current Kai card from Drafts 35, 40, 41 — image, role, scenes[]. No videos yet (animation hasn't been done for male alt Kai), no voiceSamples featured block.
+
+```js
+{
+  id: 'kai-male-alt',
+  shows: ['learning-skills'],
+  name: 'Kai (Male Alternative)',
+  alt: 'Kai — male alternative variant — proposed peer-mentor narrator',
+  image: '/cast/images/kai-man.png',
+  role: 'Proposed male alternative Kai — an early-20s Black young man peer mentor, foster-care alumni. Reading the same 8-scene psychoeducation script as the current Kai.',
+  scenes: [
+    {
+      label: 'Part I, Scene 1 — The Scan',
+      audio: '/cast/audio/kai-male-alt-pt1-scene-1-the-scan.mp3',
+      duration: '0:51',
+      durationSeconds: 51,
+      handoff: 'Self-Reflection',
+      text: "Hey. I'm Kai. I spent time in foster care too, so I know the drill. Now, I get to help other kids in the system and share some of the life hacks I've picked up. I'm glad you're here, because we're talking about something we all deal with 24/7: Belonging. Think about that moment when you walk into a crowded cafeteria or a new class. You're scanning the room, right? Your brain is doing a million calculations per second: Who looks cool? Who looks mean? Where's my spot? That \"scan\" isn't you being awkward — it's actually your brain trying to protect you. It's looking for safety, connection, and a place to land. Because let's be real: feeling like you don't fit in is more than just a bummer. It actually hurts. It can be confusing, lonely, and make it hard to know who you even are. Let's take a minute to think about this some more.",
+    },
+    {
+      label: "Part I, Scene 2 — The Why (It's in Your DNA)",
+      // Reuses the file added in Draft 42 (originally labeled as a "Voice sample" on the
+      // Male Kai card in Proposed Alt). 35s duration matches the current Kai's Scene 2 exactly —
+      // this is the same script line in the male alt voice. Not copied fresh in Part A.
+      audio: '/cast/audio/kai-man-voice-sample.mp3',
+      duration: '0:35',
+      durationSeconds: 35,
+      handoff: 'Who I Am Poem',
+      text: "So, why are our brains so obsessed with fitting in? Basically, belonging isn't just a \"nice to have\" type of thing — it's a survival requirement, right up there with food, sleep, and having a roof over your head. Back in the day, being part of a group meant you didn't go hungry or get eaten by a saber-toothed tiger. Today, it's still wired into our biology. We need to feel accepted, respected, and \"seen\" for who we actually are — including our culture, our history, and where we come from. This activity can help you think about some of these things.",
+    },
+    {
+      label: 'Part I, Scene 3 — Building a Safety Net',
+      audio: '/cast/audio/kai-male-alt-pt1-scene-3-safety-net.mp3',
+      duration: '1:19',
+      durationSeconds: 79,
+      handoff: 'Allies / Safety Net',
+      // NOTE: this scene uses the UPDATED script — "maps app on your phone" instead of "GPS"
+      // (per Adrienne + Holly's 2026-07-07 note). Current Kai's Scene 3 text may still say
+      // "GPS" and needs the same update in a follow-up if we want script parity.
+      text: "We know belonging is a basic need, but here's the secret: you don't just need one place to belong. You need a few. Think of it like a safety net. If one string snaps — like after a fight with a friend — the other strings catch you. We need this safety net because it provides different types of support for us to change and grow, providing the \"green light\" to try new things. It's a lot easier to take risks, like joining a team or trying out for a play, when you know you've got a crew behind you — both in and outside of your home. One thing that can really help is having an adult that you can talk to or trust for advice. In high school, I had this one teacher who actually \"got\" me, and it changed the whole vibe of a really tough year because I could count on her for emotional and practical support. Social support is important too. You've probably noticed that your friend group matters way more these days. When building your crew, think of it like the maps app on your phone. If you hang with a group that's constantly in trouble or giving up on school, it's easy to get redirected down that same path. But if you find people who are hyped about your goals? They become your literal social support system, helping you figure it out along the way. It's good to think about who you are and what kind of safety net you might need. This next activity will help you do that.",
+    },
+    {
+      label: 'Part I, Scene 4 — The Foster Care "Extra Level"',
+      audio: '/cast/audio/kai-male-alt-pt1-scene-4-extra-level.mp3',
+      duration: '0:40',
+      durationSeconds: 40,
+      text: "Look, everyone struggles with figuring out where they belong at times, but for those of us growing up in foster or relative care? It's like playing the Belonging Game on \"Hard Mode.\" While other kids are just worried about where to sit in the cafeteria, we're dealing with moving houses, switching schools, or leaving our siblings and old neighborhoods behind. It's stressful. Sometimes you feel guilty for liking a new placement — like you're being disloyal to your family. Or you feel like you can't fully trust anyone because you've had to move so many times. I know it's tough, but these strategies we're learning can help you find your people and begin to feel more at home — no matter where you're living.",
+    },
+    {
+      label: 'Part II, Scene 1 — Building Skills for Belonging',
+      audio: '/cast/audio/kai-male-alt-pt2-scene-1-building-skills.mp3',
+      duration: '1:09',
+      durationSeconds: 69,
+      handoff: 'Belonging Skills Sort',
+      text: "Belonging isn't just a place you land; it's something you build, brick by brick, with the people around you — whether that's a foster family, friends, teammates or others. Here are a few skills that help. When others talk, try Active Listening. Don't just wait for your turn to speak; actually try to catch what they're saying. It makes people feel understood and safe. When things get tense, aim for Conflict Resolution. It's not about winning; it's about solving the problem in a way that the relationship survives the argument. Try to use Inclusive Language like we, us, and our group, and include others in conversations and activities. Take a risk and invite others to join you, and chances are they will want to return the favor! Finally, Provide Support by being the person who shows up when a friend or family member needs help, and being brave enough to Express Gratitude can build emotional bridges between you and your friends and family. I know, it might feel cringe at first, but these efforts reinforce that others matter to you and can deepen our bonds. This next activity can help you think about how to use these skills.",
+    },
+    {
+      label: 'Part II, Scene 2 — The Roadblocks',
+      audio: '/cast/audio/kai-male-alt-pt2-scene-2-roadblocks.mp3',
+      duration: '0:31',
+      durationSeconds: 31,
+      handoff: 'Getting Unstuck',
+      text: "Sometimes belonging feels impossible because of things you can't control, like switching schools mid-year. When you hit those roadblocks, your brain might try to protect you with some unhelpful thoughts. For example: All-or-Nothing Thinking — having thoughts like \"I'll never fit in here\" that keep you from trying to connect to others. Or Holding onto the Past — staying so focused on thinking about who we lost that we can't let anyone new in. This next activity will help you learn to challenge unhelpful thoughts like these.",
+    },
+    {
+      label: 'Part II, Scene 3 — Putting It All Together',
+      audio: '/cast/audio/kai-male-alt-pt2-scene-3-putting-it-all-together.mp3',
+      duration: '1:06',
+      durationSeconds: 66,
+      handoff: 'Letter to Another Youth',
+      text: "And another potential roadblock? Self-Regulation or Self-Control. The challenge is to be able to feel that sting of \"maybe they don't like me\" and being able to breathe through it so you don't just bail or shut down when things get awkward or scary. My friend Ash used to go silent every time she moved homes because she thought, \"they're just going to move me again anyway.\" Her silence was like a shield that's too heavy — it kept her safe from getting hurt, but it also kept her totally alone. Do you have some good strategies to keep calm at these moments? We can give you a list of skills to practice if you need ideas. And finally, it helps to realize that a lot of belonging happens in our own heads. Instead of a fixed mindset, try a growth mindset. Making friends and connections is a skill you practice, not something you're just born with. If one placement or social situation doesn't work out, it's not a permanent fail — it's just one data point and we can keep working on it. Now that you've learned more about this, what might you tell another kid worried about whether they belong?",
+    },
+    {
+      label: 'Conclusion',
+      audio: '/cast/audio/kai-male-alt-conclusion.mp3',
+      duration: '0:16',
+      durationSeconds: 16,
+      text: "Finding that sense of belonging can be tough for everyone, and it's even harder when you are in foster or relative care. But remember: your story isn't over just because the current chapter has been a little chaotic. You've got new skills now — give them a try!",
+    },
+  ],
+},
+```
+
+#### Part D — Card positioning
+
+**Render the Male Kai card FIRST** in the Learning Skills for Belonging section, ABOVE the current Kai card. Two ways to achieve this:
+
+- **(a) Array order:** put the new `kai-male-alt` card BEFORE the current `kai` card in the CAST array. If the DemoPage filter for `shows: 'learning-skills'` renders in array order, this positioning is automatic.
+- **(b) Explicit sort:** if the filter uses some other ordering, add a `sortOrder` field or an explicit id-based sort.
+
+Recommend (a) — simpler. Just make sure the CAST array ordering has `kai-male-alt` before `kai`.
+
+#### Part E — Runtime footer
+
+Compute dynamically from `durationSeconds` per Draft 40's approach so the total stays accurate if scenes are ever added or swapped.
+
+Suggested wording for the header AND footer of the Male Kai voiceover section (parallel to the current Kai card):
+
+- **Header:** *"Male Alternative Kai's voiceover (all 8 scenes)"* — right-aligned duration: *"Total runtime: 6:26"*
+- **Intro paragraph** (below the header): *"Same 8-scene psychoeducation script as the current Kai below, in the male alternative voice."*
+- **Footer recap:** *"Total runtime: 6:26 · 8 scenes wrapping the 6 activities."*
+
+#### Part F — Small pointer note under the current Kai card
+
+Now that the two Kais sit side by side in Learning Skills, the current Kai's role line or intro could get a subtle pointer to help team members orient. Below the current Kai's role text (or as a small italic line above its voiceover section):
+
+> *A male alternative voice is also being explored — see the card above.*
+
+Non-competitive, just orienting. If Draft 44 Part G already added this pointer, this satisfies that instead of adding another one.
+
+#### Script text notes
+
+- **Scene 3 uses the UPDATED text** ("maps app on your phone" instead of "GPS"), per Adrienne + Holly's 2026-07-07 note. When the Male Kai audio plays, this is what he's saying.
+- **The current Kai card's Scene 3 text still says "GPS"** because the current Kai's audio was recorded before the script update. Options for the current Kai:
+  - **Leave as-is** — the current Kai's audio hasn't been re-recorded with the new script, so the displayed text should match what plays.
+  - **Update the current Kai's Scene 3 text to "maps app" too** — makes the on-screen script match Male Kai's script, but then the current Kai's audio would say "GPS" while the on-screen text says "maps app" — mismatch.
+
+  **Recommend leaving current Kai as-is** — script text should match what the audio says. If the current Kai gets re-recorded with the new script later, update the text then.
+
+- **Scene 1 "life hacks" — kept as written.** No confirmation Josh made that swap during recording. If the male alt Kai's audio says something different from what's above (e.g., "what I've learned along the way"), tell me and I'll adjust.
+
+#### What does NOT change
+
+- The current Kai card in Learning Skills — all 8 scenes with the current voice, the first animated clip from Draft 41, both image variants — untouched.
+- The current Kai's Scene 3 text stays "GPS" (matching what the current audio says).
+- Sam's Story section, all other cast cards, /demo layout above and below Learning Skills — untouched.
+- No `activityVersions.js` bump (DemoPage section addition).
+- All previous Kai work (Drafts 35, 40, 41) stays intact.
+- Draft 44's other parts (Sam-18/Sam-14 duplication removal, sub-group regrouping in Proposed Alt, retiring the current 22-24 female alt Kai, Sam-NB voiceSamples slot prep) still stand independently.
+
+#### Out of scope (deferred)
+
+- **Male Kai animation** — first animated clip for the current Kai exists (Draft 41). No animation for Male Kai yet.
+- **Female alt Kai younger version** — still awaited per Draft 44 Part F.
+- **Current-Kai voice on Sam-NB lines** — still awaited per Draft 44 Part D.
+- **Re-recording the current Kai's Scene 3 with the "maps app" script update** — could be done later if the team wants script parity across both Kais. Not part of this draft.
+
+*End of Draft 45.*
+
+---
+
 <!-- Draft 27 shipped 2026-06-09 — archived (commented out). -->
 
 <!--
