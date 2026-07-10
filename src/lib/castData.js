@@ -18,11 +18,12 @@
 // appear in multiple sections — Sam 18 + Sam 14 render in both their
 // home section and the proposed-alternative section):
 //   - `'sams-story'` — the narrative-video cast (Holly's Script 2.0):
-//     three Sam variants — Sam (18 years old) with the Brayden male
-//     voice, Sam (Gender Neutral) with the Amara gender-neutral voice
-//     (promoted from Proposed Alt in Draft 46), and Sam (14 years old)
-//     with its own voice model — plus Foster Mom, Foster Dad,
-//     Mrs. Johnson.
+//     four Sam variants — Sam (18 years old) with the Brayden male
+//     voice, Sam (Female) with a young-adult female voice (Draft 48,
+//     fulfilling the Draft 42 placeholder concept), Sam (Gender Neutral)
+//     with the Amara gender-neutral voice (promoted in Draft 46), and
+//     Sam (14 years old) with its own voice model — plus Foster Mom,
+//     Foster Dad, Mrs. Johnson.
 //   - `'learning-skills'` — the psychoeducation track that wraps the six
 //     activities (Adrienne's script): three Kai cards side by side for
 //     visual + voice comparison — Female Alternative (Draft 47, 7 of 8
@@ -98,6 +99,39 @@ export const CAST = [
       {
         label: 'New Older Sam Voice Model — All Lines',
         src: '/cast/audio/older-sam-narrator.mp3',
+      },
+    ],
+  },
+  {
+    // Sam (Female) — Draft 48, 2026-07-10. Completes the three-variant
+    // Sam 18 set (Male / Female / Gender Neutral). Two image variants
+    // (full + close-up) render as a gallery via `images[]`, same pattern
+    // as Kai's card; voice is the same 3:38 all-lines narration script in
+    // a young-adult female voice model. Fulfils the Sam-Female
+    // placeholder concept from Draft 42 (the placeholder itself was
+    // already removed with the Proposed Alt section retirement,
+    // a386488).
+    id: 'sam-female',
+    shows: ['sams-story'],
+    name: 'Sam (Female)',
+    alt: 'Sam, female variant — 18-year-old young woman narrator, same character as Sam Male',
+    images: [
+      {
+        label: 'Variant 1 — Full',
+        src: '/cast/images/sam-female-variant-1.png',
+        alt: 'Sam Female, full-body character portrait',
+      },
+      {
+        label: 'Variant 1 — Close Up',
+        src: '/cast/images/sam-female-variant-1-closeup.png',
+        alt: 'Sam Female, close-up character portrait',
+      },
+    ],
+    role: 'The female variant of Sam — same character, different body. Voiced through a young-adult female voice model reading the same all-lines narration script as Sam Male and Sam (Gender Neutral).',
+    voiceSamples: [
+      {
+        label: 'New Sam Female Voice Model — All Lines',
+        src: '/cast/audio/sam-female-narrator.mp3',
       },
     ],
   },
