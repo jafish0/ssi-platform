@@ -711,8 +711,22 @@ function ExportFileBlock({
 // don't speak yet). See src/lib/castData.js.
 
 function CastCard({ character }) {
-  const { name, image, images, alt, role, lines, description, landscape, videos, voiceSamples, scenes, placeholder } =
-    character
+  const {
+    name,
+    image,
+    images,
+    alt,
+    role,
+    roleNote,
+    lines,
+    description,
+    landscape,
+    videos,
+    voiceSamples,
+    scenes,
+    scenesIntro,
+    placeholder,
+  } = character
   return (
     <article
       tabIndex={0}
@@ -770,7 +784,8 @@ function CastCard({ character }) {
       {/* Text column */}
       <div className="w-full md:w-3/5">
         <h3 className="text-2xl font-bold text-slate-700 mb-1">{name}</h3>
-        <p className="text-sm italic text-slate-500 mb-4">{role}</p>
+        <p className={'text-sm italic text-slate-500 ' + (roleNote ? 'mb-1' : 'mb-4')}>{role}</p>
+        {roleNote && <p className="text-xs italic text-slate-400 mb-4">{roleNote}</p>}
 
         {/* Voice samples render as their own block ABOVE the
             videos/lines/description content (Draft 34) — a card can have
@@ -862,6 +877,9 @@ function CastCard({ character }) {
                         <span className="font-semibold text-ctac-navy not-italic">{fmt(totalSecs)}</span>
                       </div>
                     </div>
+                    {scenesIntro && (
+                      <p className="text-sm text-slate-600 mb-2">{scenesIntro}</p>
+                    )}
                   </div>
                 )}
                 <div className="divide-y divide-slate-100">
