@@ -463,19 +463,10 @@ export default function DemoPage() {
             <TreeProgressMontage />
           )}
         </div>
-
-        {/* The Plan placeholder card */}
-        <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-6 max-w-[760px] mx-auto mt-8">
-          <h3 className="text-[18px] font-bold text-ctac-navy mb-1">
-            The Plan — coming soon
-          </h3>
-          <p className="text-[14px] text-slate-700 leading-relaxed">
-            The kid’s final reflective activity. It will pull forward the skills
-            they’re willing to try (Belonging Skills) and the new thoughts they
-            wrote (Getting Unstuck) into a structured action plan — who they’ll
-            do it with, and when.
-          </p>
-        </div>
+        {/* The "The Plan — coming soon" placeholder card was removed
+            2026-07-13 — The Plan now ships as the seventh activity (its
+            card is in the Activities section; the montage's "Open your
+            plan" CTA routes to it). */}
       </section>
 
       {/* Data export demo */}
