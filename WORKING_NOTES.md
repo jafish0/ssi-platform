@@ -4232,6 +4232,422 @@ Parked for a follow-up draft once the activities are joined.
 
 ---
 
+### Draft 50 — Cast decision cleanup: Male Alt Kai locks in + Sam Female refresh (2026-07-13 team decisions)
+
+Two coordinated changes from the 2026-07-13 team meeting. Both close cast decisions that were open.
+
+**(1) Kai decision made.** Team consensus: Male Alternative Kai is the pick. Female Alternative Kai and current Kai are set aside as archived alternates ("keep them for possible Part 2 or future use"). The demo's Learning Skills for Belonging section collapses from three peer-mentor cards down to one — just Kai (the artist formerly known as Male Alt).
+
+**(2) Sam Female needs a new image set.** The current Sam Female look was flagged as reading "a little masculine" and looking like Sam Male's sibling. Josh generated two new variants for the team to pick between. Both replace the current Sam Female images on the demo; the team's next-meeting job is to pick one.
+
+**Approved by:** Josh, 2026-07-13.
+
+---
+
+#### Part A — Collapse Learning Skills for Belonging to just Kai
+
+**Files:** `src/lib/castData.js`, `src/pages/DemoPage.jsx` (for any Learning Skills section framing text).
+
+##### A.1 — Data changes in `castData.js`
+
+- **Delete** the `kai-female-alt` card entry (from Draft 47). Its image + audio files stay in `public/cast/images/` and `public/cast/audio/` unreferenced — same cleanup pattern as prior retired assets. Nothing lost; nothing shipped.
+- **Delete** the `kai` card entry (the current gender-neutral Kai, from Drafts 35, 40, 41). Its assets — both image variants, all 8 voiceover mp3s, the animated preview mp4 — stay in place unreferenced.
+- **Rename `kai-male-alt` → `kai`** (id, filename references, all internal spots). This is the Kai now, not an alternative. Recommend a repo-wide grep for `kai-male-alt` to catch every touchpoint (data file, DemoPage, any test files).
+- **Update the renamed card's `name`** from *"Kai (Male Alternative)"* to just *"Kai"*.
+- **Update its `role` text.** Drop the "male alternative" framing. Suggested new role text:
+
+  > *Our narrator for the psychoeducation track — a young adult peer mentor, foster-care alumni, now working with kids in the system. Reading all 8 scenes of Adrienne's script through the Voice Changer pipeline.*
+
+- **Audio file references stay as-is** (`kai-male-alt-*.mp3`). Filenames are internal; not worth churning the audio paths.
+
+##### A.2 — Update Learning Skills for Belonging section framing
+
+The section intro on /demo needs to lose the "three peer-mentor options for comparison" framing that Draft 47 established. Now it's just "Kai, our narrator."
+
+Suggested intro paragraph:
+
+> *Kai narrates the psychoeducation track that wraps the six activities. His 8-scene voiceover script by Adrienne, recorded through Josh's Voice Changer pipeline.*
+
+Or drop the section intro entirely and let the Kai card carry the framing on its own. Code's judgment based on layout.
+
+##### A.3 — What NOT to touch
+
+- The retained file assets in `public/cast/` — they stay on disk. If the team wants to revive an alternate for Part 2 or a variant reference, the files are ready.
+- The current Kai's animated clip (`kai-demo-1.mp4` from Draft 41) — stays on disk unreferenced. Not part of the animation path going forward (Male Kai now needs his own animation work), but keep the file.
+
+---
+
+#### Part B — Sam Female image refresh
+
+Josh generated two new Sam Female variants post-meeting to address the "reads a little masculine" concern. Team's next-meeting task: pick between them.
+
+##### B.1 — Copy the new images
+
+| Source | Destination |
+|---|---|
+| `Video Content/New female Sam Vairant image VERSION 1.png` | `public/cast/images/sam-female-v2-version-1.png` |
+| `Video Content/New female Sam Vairant image VERSION 2.png` | `public/cast/images/sam-female-v2-version-2.png` |
+
+(*"Vairant"* is a typo in Josh's source filenames — cleaned to *"variant"* isn't necessary since the destination names don't inherit it, but keep the source names as-is to preserve his files.)
+
+The `v2-` prefix in the destination distinguishes these from the earlier Sam Female Variant 1 / Close-Up files from Draft 48 (`sam-female-variant-1.png` and `sam-female-variant-1-closeup.png`). Those get replaced but stay on disk unreferenced.
+
+##### B.2 — Update the sam-female card in `castData.js`
+
+**Before (current shipped state — Draft 48):**
+
+```js
+{
+  id: 'sam-female',
+  shows: ['sams-story'],
+  name: 'Sam (Female)',
+  alt: 'Sam, female variant — 18-year-old young woman narrator, same character as Sam Male',
+  images: [
+    {
+      label: 'Variant 1 — Full',
+      src: '/cast/images/sam-female-variant-1.png',
+      alt: 'Sam Female, full-body character portrait',
+    },
+    {
+      label: 'Variant 1 — Close Up',
+      src: '/cast/images/sam-female-variant-1-closeup.png',
+      alt: 'Sam Female, close-up character portrait',
+    },
+  ],
+  role: '...',
+  voiceSamples: [...],
+},
+```
+
+**After — replace the images array with the two new versions:**
+
+```js
+{
+  id: 'sam-female',
+  shows: ['sams-story'],
+  name: 'Sam (Female)',
+  alt: 'Sam, female variant — 18-year-old young woman narrator, same character as Sam Male',
+  images: [
+    {
+      label: 'Version 1',
+      src: '/cast/images/sam-female-v2-version-1.png',
+      alt: 'Sam Female, version 1 — pick this or version 2',
+    },
+    {
+      label: 'Version 2',
+      src: '/cast/images/sam-female-v2-version-2.png',
+      alt: 'Sam Female, version 2 — pick this or version 1',
+    },
+  ],
+  role: 'The female variant of Sam. Two versions here for the team to pick between at the next meeting. Same all-lines narration script and voice as Sam Male and Sam (Gender Neutral).',
+  voiceSamples: [ /* unchanged */ ],
+},
+```
+
+**Rationale:** the previous "Variant 1 — Full / Close Up" pattern was showing multiple angles of the same character. The new setup is different — these are two DIFFERENT candidate characters, both to be evaluated as "here are the choices, pick one." The `role` text explicitly names that as the ask.
+
+##### B.3 — Update the top-of-file comment block
+
+Note the Sam Female refresh: previous image assets retired to disk-only, two new "choose between" versions live on the card, decision expected at the next team meeting.
+
+---
+
+#### What does NOT change
+
+- Sam 18 (Sam Male), Sam Gender Neutral, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson — unchanged.
+- The Plan activity, tree, montage, summary screen, palette — untouched.
+- The six activities themselves + Pretest/Posttest/FollowUp Survey — untouched.
+- The Sam Female voice sample (`sam-female-narrator.mp3`) — unchanged. Voice work landed; only the image is being re-evaluated.
+- No `activityVersions.js` bump.
+
+#### Out of scope (deferred)
+
+- **Final Sam Female pick.** Team decides at the 2026-07-27 meeting between Version 1 and Version 2. When they pick, a small follow-up commit removes the loser + refreshes labels.
+- **Male Kai animation.** Not a code change — Josh's parallel production work.
+- **Sam Male animation.** Also parallel work; Josh's aiming for substantial video progress by 2026-07-27.
+- **Removing the retired Kai + Sam Female files from disk.** Standard cleanup pattern — they stay unreferenced but on disk. Can be pulled in a future dedicated cleanup commit if disk footprint becomes a concern.
+
+*End of Draft 50.*
+
+---
+
+### Draft 51 — The Plan v2.0 → v3.0: streamline based on 2026-07-13 meeting
+
+Substantial restructure of The Plan activity. The 2026-07-13 meeting opened on Stephanie's feedback (*"I really like the plan, but I think we should brainstorm ways to streamline it. It feels really long."*) and the whole team converged on a set of changes that reduce the plan-creation flow's screen count while making the final plan display richer. Several sections migrate from "participant walks through and clicks Continue" to "participant just reads on their final plan" — reducing click-through fatigue.
+
+Plan **v2.0 → v3.0 (MAJOR)** because the screen count changes, several sections move out of creation into display-only, save-payload shape changes on Skills to Try (pick-one instead of all willing-to-try), and the PDF layout gets overhauled.
+
+**Screen count drops from 9 to 6:**
+
+Old (v2.0):
+1. Intro
+2. Skills to Try
+3. Thoughts to Flip
+4. People in My Corner
+5. Words of Wisdom
+6. Who You Are (poem)
+7. When You Felt Included
+8. Review
+9. Saved
+
+New (v3.0):
+1. Intro
+2. Skills to Try (pick-one)
+3. Words of Wisdom (unchanged)
+4. When You Felt Included (reworded question + Other)
+5. Review (now much richer — pulls forward everything moved out of creation)
+6. Saved (PDF + PNG + screenshot guidance)
+
+**Approved by:** Josh + team, 2026-07-13.
+
+---
+
+#### Part A — Skills to Try: pick-one flow
+
+**File:** `src/activities/Plan.jsx`.
+
+**Change:** instead of rendering every willing-to-try skill from BSS as an editable commitment card, render them as a **picker** — the participant sees their full willing-to-try list, then picks ONE to walk through in detail. That one skill's card expands with the how/who/when inputs. The rest stay visible as "your other willing-to-try skills" (read-only, no inputs).
+
+**Rationale (Holly + Stephanie, in the meeting):** if a participant put many skills into willing-to-try in BSS, walking through the how/who/when for all of them makes the Plan feel endless. Picking one to focus on is more actionable and doesn't feel like a chore.
+
+##### A.1 — Screen 2 layout
+
+Heading unchanged: *"New Skills to Try"*.
+
+Add a new sub-line under the heading:
+
+> *Pick one skill to focus on. You can come back to the others later.*
+
+Below the sub-line, list the participant's willing-to-try skills (pulled from BSS via `willingToTrySkills` in the demo data — this is the sentence-form list from Draft 49). Each skill renders as a selectable option:
+
+- Skill name (sentence-form, from BSS)
+- Radio-button-style selector on the left (or click-to-select on the whole card)
+- Skill definition below the name
+
+The participant taps one to select it. On selection, the picked skill's card expands to show:
+
+- *"How could you demonstrate this skill?"* text input (existing)
+- *"Who could you try this with?"* dropdown (existing)
+- *"When could you try it?"* chips (existing)
+
+The other willing-to-try skills stay visible but collapsed — still selectable if they change their mind, but not expanded. Only the actively selected skill has the how/who/when inputs.
+
+##### A.2 — Continue gating
+
+Continue enables when the participant has selected one skill AND filled its how + who + when. Same gating as v2.0 but for a single commitment instead of any commitment across multiple cards.
+
+##### A.3 — Data shape
+
+`plan_payload.skills_to_try` becomes a single-object commitment (or a one-element array — Code's judgment):
+
+```js
+skill_commitment: {
+  skill_id: 'bs2',
+  skill_text: 'Use words like "we," "us," or "our group" to make people feel included',
+  how: 'saying "we" and "us" when I make plans with friends',
+  who: 'Foster Mom',
+  who_is_ally: true,
+  when: 'This week',
+  when_is_freetext: false,
+},
+```
+
+**Export pipeline:** `plan_skill_pick_id`, `plan_skill_pick_text`, `plan_skill_pick_how`, `plan_skill_pick_who`, `plan_skill_pick_when`. The old `plan_skill_1..N_*` columns get replaced. Update `exportFlatten` accordingly.
+
+The participant's FULL willing_to_try list (all of it, not just the picked one) still surfaces on the plan display + PDF (see Part E) so nothing is lost — the plan shows "here's what you're focusing on" plus "here's your broader list for later."
+
+---
+
+#### Part B — Thoughts to Flip → Thoughts to Practice + move to plan-display only
+
+**Change 1:** rename Thoughts to Flip → **Thoughts to Practice** everywhere (screen heading, review card label, PDF page). Holly's rationale: the thoughts shown here are the *alternatives* the participant crafted in Getting Unstuck — the good ones. "Flip" implies they need changing; "practice" implies they need reinforcing.
+
+**Change 2:** remove Thoughts to Practice as a plan-creation screen. It's read-only content the participant already worked through in Getting Unstuck — no reason to click a Continue button through it during plan creation. Move it entirely to the final plan display (review + PDF).
+
+##### B.1 — Screen deletion
+
+**File:** `src/activities/Plan.jsx`. Delete the Screen 3 (Thoughts to Flip) rendering entirely. Plan now advances from Screen 2 (Skills to Try) directly to Screen 3 (Words of Wisdom).
+
+##### B.2 — Plan display
+
+Add a "Thoughts to Practice" section to the review screen (new Screen 5) and to the PDF, rendering each Getting Unstuck pick as: original thought → the participant's alternative thought (Challenge response OR Both/And statement). Same content as v2.0's Screen 3 rendered, just now on the plan itself instead of a walkthrough.
+
+---
+
+#### Part C — Words of Wisdom: instructional line placement
+
+**File:** `src/activities/Plan.jsx`, Words of Wisdom screen.
+
+**Current:** the instructional line (*"You wrote this for another kid. But these are the things you might need to hear too — your own words of wisdom, coming from you."*) sits at the top of the screen, below the heading.
+
+**Change (Stephanie):** move the instructional line DOWN so it sits directly above the text box, providing context near the input.
+
+New layout:
+- Heading: *"Words of Wisdom."*
+- Sub-line (short): *"Your letter, read back to you."*
+- Letter text in keepsake-card style
+- **Instructional line HERE, right above the text input:** *"You wrote this for another kid. But these are the things you might need to hear too — your own words of wisdom, coming from you."*
+- Optional reflection prompt: *"Any words of wisdom that stand out to you here?"* — text input
+- Continue
+
+Everything else on the screen stays. Just re-position the instructional line.
+
+---
+
+#### Part D — Your People: reshape + move to plan-display only
+
+**Change:** remove the "pick an ally + when to reach out" screen entirely from plan creation. Instead, pull forward the participant's Allies/Safety Net **Strengthening entries** for all three support types (Practical / Emotional / Social) directly onto the plan display and PDF.
+
+**Rationale (Sprang + team):** the Strengthening step in Allies is where the participant already wrote *"who could strengthen this support"* + *"what's one thing I could do to make that happen"* for each support type. That IS the action content. Duplicating it into another interaction on the Plan is redundant. Just surface it on the final plan.
+
+##### D.1 — Screen deletion
+
+Delete Screen 4 (People in My Corner) as a plan-creation screen. Plan advances from Words of Wisdom directly to When You Felt Included.
+
+##### D.2 — Plan display
+
+On the review screen + PDF, add a *"Your People"* section that renders per support type (Practical / Emotional / Social), each showing:
+
+- **Support type label** (color-coded per Allies convention: Practical amber, Emotional rose, Social sky)
+- **"How could that be?"** followed by the ally name the participant wrote in Allies Strengthening
+- **"What's one thing you could do to make that happen?"** followed by the specific action the participant wrote
+- **Example hint** (small italic, right-aligned or under the action text): *"e.g., takes me to practice"* — same as the Allies Strengthening example
+- **Optional stuck-prompt** below all three types (once, not per type): *"Stuck? You could ask another supportive person for a recommendation."*
+
+##### D.3 — Empty-state
+
+If the participant didn't complete Allies Strengthening (or the Strengthening entries are empty), the section on the plan gracefully hides those types. If all three are empty, hide the whole section.
+
+##### D.4 — Data shape
+
+No new plan payload fields — pulling from the Allies save payload (via the same demo-data pattern as Draft 49). Export columns for the Strengthening pull-forward stay on the Allies side, not duplicated in the plan.
+
+---
+
+#### Part E — Who You Are (poem) — move to plan-display only
+
+**Change:** remove the standalone Who You Are (poem) screen from plan creation. Add the poem to the plan display + PDF instead.
+
+Same logic as B and D: nothing for the participant to DO on that screen except read; a Continue click is friction without value. Just put the poem on their final plan.
+
+##### E.1 — Screen deletion
+
+Delete Screen 6 (Who You Are — poem) as a plan-creation screen.
+
+##### E.2 — Plan display
+
+Poem renders in the review screen + PDF as a keepsake-card-styled block, same visual treatment as the current Who I Am Poem activity's final keepsake.
+
+---
+
+#### Part F — When You Felt Included: reworded question + Other option
+
+**File:** `src/activities/Plan.jsx`, Screen 4 in the new numbering (was Screen 7 in v2.0).
+
+**Change 1 — Reword the question:**
+
+- **Current:** *"Which belonging-promoting behaviors were you using?"*
+- **New:** *"Which belonging-promoting behaviors were you using before, during, or after this happened?"*
+
+**Rationale (Sprang + Holly, in the meeting):** the previous phrasing implies the participant DID something *at the moment* of feeling included. But many inclusion experiences are things done TO you (e.g., "coach put me in the lineup"). Broadening to "before, during, or after" lets participants find behaviors they used adjacent to the moment — which better fits the meta-message that belonging involves agency, not just being a passive recipient.
+
+**Change 2 — Add an "Other" option to the checklist:**
+
+Below the 7 preset belonging-promoting behaviors, add an "Other" checkbox with an accompanying text input that reveals when the box is checked. Lets participants describe a behavior that doesn't fit the 7 preset options.
+
+##### F.1 — Data shape
+
+Extend `inclusion_reflection.behaviors_used` with an optional `other_text` string:
+
+```js
+inclusion_reflection: {
+  behaviors_used: ['bs3', 'bs4'],  // any of bs1..bs7
+  other_used: true,                 // NEW — did the participant check "Other"
+  other_text: 'I brought snacks to share', // NEW — their custom description
+}
+```
+
+**Export pipeline:** existing `plan_inclusion_behavior_bs1..bs7` columns unchanged. Add new columns `plan_inclusion_behavior_other` (0/1) and `plan_inclusion_behavior_other_text` (string).
+
+---
+
+#### Part G — PDF: match the PNG single-page style
+
+**File:** wherever the PDF generation happens in Plan.jsx (jsPDF calls from Draft 39 Part G).
+
+**Change:** the current PDF is multi-page. Team wants it to look like the PNG — a single continuous long page rather than split into title/commitments/mindset/etc pages.
+
+##### G.1 — Layout target
+
+Match the PNG keepsake card's visual layout: a single long styled page with all sections (Skill Commitment, Thoughts to Practice, Your People, When You Felt Included, Words of Wisdom, Poem, etc.) flowing top-to-bottom in one continuous canvas. Same styling as the PNG.
+
+If the content overflows a single physical PDF page (which it will), the PDF should handle overflow gracefully — but visually the sections should read as one continuous document, not distinct pages with titles.
+
+**Implementation hint:** the simplest path may be to rasterize the PNG-styled review card as the PDF's single "image page" (letter-size or A4, tall). If the content is too tall for one page, either scale down or spill onto a second page keeping visual continuity.
+
+##### G.2 — Filename convention unchanged
+
+`ready-for-roots-plan-{YYYY-MM-DD}.pdf` stays.
+
+---
+
+#### Part H — Save/screenshot guidance on the Saved screen
+
+**File:** `src/activities/Plan.jsx`, Screen 6 (Saved) in the new numbering.
+
+**Change:** add explicit user-facing text acknowledging that most teens will screenshot rather than download. Something like:
+
+> *You can save your plan as an image (PNG) or PDF — or just take a screenshot of this page. Whatever's easiest for keeping it with you.*
+
+Placement: below the *"Saved."* heading + *"This is yours. Come back to it any time."* copy, above the save buttons.
+
+Small copy addition. No structural change to the screen.
+
+---
+
+#### Screen count summary — v3.0 flow
+
+1. **Intro** (unchanged)
+2. **Skills to Try** — pick-one flow (Part A)
+3. **Words of Wisdom** — instructional line moved down (Part C)
+4. **When You Felt Included** — new question + Other (Part F)
+5. **Review** — plan display now includes Thoughts to Practice (Part B) + Your People (Part D) + Who You Are poem (Part E)
+6. **Saved** — with screenshot guidance (Part H) + PDF matching PNG style (Part G)
+
+Six screens instead of nine. Streamlined per the meeting's explicit ask.
+
+---
+
+#### Version bump + changelog
+
+`plan` v2.0 → **v3.0 (MAJOR)**. Save payload changes on Skills to Try (single commitment vs. multi). Three screens deleted from creation flow. New question wording on When You Felt Included. PDF layout overhauled.
+
+Prepend changelog: *"v3.0 — 2026-07-13 meeting streamline. Skills to Try now pick-one (participant chooses one willing-to-try skill to work through in detail; full list still on final plan); Thoughts to Flip renamed to Thoughts to Practice and moved to plan-display only; Your People (Allies Strengthening pull-forward) moved to plan-display only; Who You Are poem moved to plan-display only; When You Felt Included question reworded to 'before, during, or after' with new Other option; Words of Wisdom instructional line moved to sit above the text box; PDF layout reworked to match PNG single-page style; save/screenshot guidance added. Screen count dropped 9 → 6."*
+
+---
+
+#### What does NOT change
+
+- The six upstream activities (Self-Reflection, Poem, BSS, Allies, Getting Unstuck, Letter) — all unchanged.
+- Pretest / Posttest / FollowUp Survey — unchanged.
+- Cast, palette, tree, montage — unchanged.
+- BSS→Plan pull-forward status — still deferred; the pick-one flow still reads from `planDemoData.js` in demo mode. Real BSS→Plan flow integration is unchanged from v2.0's status.
+- `activityVersions.js` gets the v3.0 bump but no other structural changes.
+
+#### Out of scope (still deferred)
+
+- **Real BSS→Plan flow integration.** The pick-one screen operates on synthetic data in demo mode. Real per-kid reads land when flow integration ships.
+- **Real Allies→Plan flow integration.** Same story for the Your People pull-forward.
+- **Real Self-Reflection→Plan flow integration.** When You Felt Included still uses synthetic inclusion text in demo.
+- **Real Getting Unstuck→Plan flow integration** for Thoughts to Practice pull-forward.
+- **Real Who I Am Poem→Plan integration** for the poem on the plan.
+
+All five of these are the same "cross-activity persistence" work that's been deferred since Draft 21. This draft doesn't change any of that status — it just restructures the Plan's own screens.
+
+*End of Draft 51.*
+
+---
+
 <!-- Draft 27 shipped 2026-06-09 — archived (commented out). -->
 
 <!--
