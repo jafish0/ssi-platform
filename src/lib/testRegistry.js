@@ -78,7 +78,7 @@ export const TEST_REGISTRY = [
     displayName: 'Your Plan',
     category: 'Ready for Roots activity',
     description:
-      'The closing activity: turns the kid\'s work across the other six into a takeable action plan — skills to try (who + when), thoughts to flip, people in their corner, a letter callback + poem anchor, and a saveable PNG/PDF keepsake. Demo data for now (real pull-forward lands with flow integration).',
+      'The closing activity: turns the kid\'s work across the other six into a takeable action plan — pick a skill to try (how + who + when), thoughts to practice, people in their corner, words of wisdom, and a saveable PNG/PDF keepsake. Demo data for now (real pull-forward lands with flow integration).',
     component: Plan,
     mockProps: {},
   },

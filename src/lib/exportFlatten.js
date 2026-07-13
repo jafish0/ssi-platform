@@ -829,18 +829,17 @@ export function planWideColumns(snapshot) {
               }
             }
           } else if (componentName === 'Plan') {
-            // Plan v1.0 (Draft 39). Payload:
-            //   { skills_to_try: [{ skill_id, skill_text, who, who_is_ally,
-            //       when, when_is_freetext }],
-            //     first_ally_outreach: { ally, when, when_is_freetext } | null,
-            //     letter_reflection: string | null }
-            // The variable-length skills list expands into fixed columns by
-            // the known Belonging Skills registry (bs1..bs7) — same pattern
-            // as BSS's per-item export. (These columns only populate once the
-            // Plan is part of a published intervention snapshot; the demo
-            // sandbox doesn't feed the export.)
-            const findSkill = (rv, sid) =>
-              (rv?.skills_to_try || []).find((s) => s.skill_id === sid) || null
+            // Plan v3.0 (Draft 51). Payload:
+            //   { skill_commitment: { skill_id, skill_text, how, who,
+            //       who_is_ally, when, when_is_freetext } | null,
+            //     letter_reflection: string | null,
+            //     inclusion_reflection: { behaviors_used: [bs_id...],
+            //       other_used: bool, other_text: string | null } | null }
+            // v3.0 is pick-ONE: the multi-skill plan_skill_1..N_* columns
+            // (v2.0) are replaced by a single plan_skill_pick_* set;
+            // first_ally_outreach was removed with the People screen.
+            // (These columns only populate once the Plan is part of a
+            // published snapshot; the demo sandbox doesn't feed the export.)
             cols.push(
               {
                 name: sanitizeCol(`${prefix}_completed`),
@@ -853,65 +852,59 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => (rv ? 1 : 0),
               },
               {
-                name: sanitizeCol(`${prefix}_n_skills`),
+                name: sanitizeCol(`${prefix}_skill_pick_id`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'n_skills',
-                prompt: 'Count of skills the participant committed to (who + when filled).',
-                allowed_values: 'integer',
-                notes: 'Plan v1.0',
-                extract: (rv) => (rv?.skills_to_try || []).length,
+                sub_id: 'skill_pick.id',
+                prompt: 'Plan: BSS skill id the participant picked to focus on.',
+                allowed_values: 'bs1..bs7 (blank if none picked)',
+                notes: 'Plan v3.0 — Draft 51 pick-one',
+                extract: (rv) => rv?.skill_commitment?.skill_id || '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_skill_pick_text`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'skill_pick.text',
+                prompt: 'Plan: the picked skill (full BSS sentence).',
+                allowed_values: 'free text',
+                notes: 'Plan v3.0',
+                extract: (rv) => rv?.skill_commitment?.skill_text || '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_skill_pick_how`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'skill_pick.how',
+                prompt: 'Plan: how the participant would demonstrate the picked skill.',
+                allowed_values: 'free text',
+                notes: 'Plan v3.0',
+                extract: (rv) => rv?.skill_commitment?.how || '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_skill_pick_who`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'skill_pick.who',
+                prompt: 'Plan: who the participant will try the picked skill with.',
+                allowed_values: 'free text (ally name or own text)',
+                notes: 'Plan v3.0',
+                extract: (rv) => rv?.skill_commitment?.who || '',
+              },
+              {
+                name: sanitizeCol(`${prefix}_skill_pick_when`),
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'skill_pick.when',
+                prompt: 'Plan: when the participant will try the picked skill.',
+                allowed_values: 'free text (chip value or own text)',
+                notes: 'Plan v3.0',
+                extract: (rv) => rv?.skill_commitment?.when || '',
               },
             )
-            for (let n = 1; n <= 7; n++) {
-              const sid = `bs${n}`
-              cols.push(
-                {
-                  name: sanitizeCol(`${prefix}_skill_${n}_text`),
-                  source_token_key: tk,
-                  item_type: 'custom_activity',
-                  sub_id: `skill_${sid}.text`,
-                  prompt: `Plan skill ${sid}: title (blank unless committed to).`,
-                  allowed_values: 'free text',
-                  notes: 'Plan v1.0',
-                  extract: (rv) => findSkill(rv, sid)?.skill_text || '',
-                },
-                {
-                  name: sanitizeCol(`${prefix}_skill_${n}_how`),
-                  source_token_key: tk,
-                  item_type: 'custom_activity',
-                  sub_id: `skill_${sid}.how`,
-                  prompt: `Plan skill ${sid}: how the kid would demonstrate it (own words).`,
-                  allowed_values: 'free text',
-                  notes: 'Plan v2.0 — Draft 43 higher-order "how" input',
-                  extract: (rv) => findSkill(rv, sid)?.how || '',
-                },
-                {
-                  name: sanitizeCol(`${prefix}_skill_${n}_who`),
-                  source_token_key: tk,
-                  item_type: 'custom_activity',
-                  sub_id: `skill_${sid}.who`,
-                  prompt: `Plan skill ${sid}: who the kid will try it with.`,
-                  allowed_values: 'free text (ally name or own text)',
-                  notes: 'Plan v1.0',
-                  extract: (rv) => findSkill(rv, sid)?.who || '',
-                },
-                {
-                  name: sanitizeCol(`${prefix}_skill_${n}_when`),
-                  source_token_key: tk,
-                  item_type: 'custom_activity',
-                  sub_id: `skill_${sid}.when`,
-                  prompt: `Plan skill ${sid}: when the kid will try it.`,
-                  allowed_values: 'free text (chip value or own text)',
-                  notes: 'Plan v1.0',
-                  extract: (rv) => findSkill(rv, sid)?.when || '',
-                },
-              )
-            }
-            // v2.0 inclusion reflection (Draft 43 C): one binary column per
-            // BSS skill — was the kid using this behavior in their
-            // Self-Reflection inclusion moment? Blank-safe: 0 when the
-            // screen was skipped (no inclusion text) or unchecked.
+            // Inclusion reflection (Draft 43 C): one binary column per BSS
+            // skill — was the kid using this behavior before/during/after
+            // their inclusion moment? Blank-safe: 0 when skipped/unchecked.
             for (let n = 1; n <= 7; n++) {
               const sid = `bs${n}`
               cols.push({
@@ -919,7 +912,7 @@ export function planWideColumns(snapshot) {
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: `inclusion.${sid}`,
-                prompt: `Plan inclusion reflection: was BSS skill ${sid} in use during the kid's inclusion moment?`,
+                prompt: `Plan inclusion reflection: was BSS skill ${sid} in use around the kid's inclusion moment?`,
                 allowed_values: '0 or 1',
                 notes: 'Plan v2.0 — Draft 43 inclusion-reflection checklist',
                 extract: (rv) =>
@@ -928,31 +921,31 @@ export function planWideColumns(snapshot) {
             }
             cols.push(
               {
-                name: sanitizeCol(`${prefix}_first_ally`),
+                name: sanitizeCol(`${prefix}_inclusion_behavior_other`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'first_ally',
-                prompt: 'First person the kid will reach out to.',
-                allowed_values: 'free text (ally name)',
-                notes: 'Plan v1.0',
-                extract: (rv) => rv?.first_ally_outreach?.ally || '',
+                sub_id: 'inclusion.other',
+                prompt: 'Plan inclusion reflection: did the kid check "Something else"?',
+                allowed_values: '0 or 1',
+                notes: 'Plan v3.0 — Draft 51 Other option',
+                extract: (rv) => (rv?.inclusion_reflection?.other_used ? 1 : 0),
               },
               {
-                name: sanitizeCol(`${prefix}_first_when`),
+                name: sanitizeCol(`${prefix}_inclusion_behavior_other_text`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
-                sub_id: 'first_when',
-                prompt: 'When the kid will reach out to the first ally.',
-                allowed_values: 'free text',
-                notes: 'Plan v1.0',
-                extract: (rv) => rv?.first_ally_outreach?.when || '',
+                sub_id: 'inclusion.other_text',
+                prompt: 'Plan inclusion reflection: the kid\'s custom "Something else" behavior.',
+                allowed_values: 'free text or blank',
+                notes: 'Plan v3.0',
+                extract: (rv) => rv?.inclusion_reflection?.other_text || '',
               },
               {
                 name: sanitizeCol(`${prefix}_letter_reflection`),
                 source_token_key: tk,
                 item_type: 'custom_activity',
                 sub_id: 'letter_reflection',
-                prompt: 'Optional Screen 5 reflection ("What sticks out?").',
+                prompt: 'Optional Words of Wisdom reflection.',
                 allowed_values: 'free text or blank',
                 notes: 'Plan v1.0',
                 extract: (rv) => rv?.letter_reflection || '',

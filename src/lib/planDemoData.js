@@ -135,10 +135,17 @@ export const PLAN_DEMO_DATA = {
     { id: 'best-friend', name: 'Alex', types: ['social'] },
     { id: 'sibling', name: 'Sam', types: ['social'] },
   ],
-  strengthenCommitments: [
-    { type: 'practical', text: "I'll ask Coach Diaz for help with my homework this week." },
-    { type: 'emotional', text: "I'll text Mrs. Garcia when I'm having a rough day." },
-    { type: 'social', text: "I'll invite Alex to study with me on Friday." },
+  // From Allies / Safety Net → the Strengthening step. Per support type,
+  // the kid named a person who could strengthen that support (`person`,
+  // shown after "How could that be?") + one thing they could do to make
+  // it happen (`action`). Mirrors the Allies save shape
+  // (strengthened[type] = { additional_person, action }). Plan v3.0 (Draft
+  // 51 D) surfaces these read-only on the final plan instead of a
+  // separate "pick an ally" screen. Empty/absent types are hidden.
+  strengthening: [
+    { type: 'practical', person: 'Coach Diaz', action: 'Ask him for help with my homework this week' },
+    { type: 'emotional', person: 'Mrs. Garcia', action: 'Text her when I’m having a rough day' },
+    { type: 'social', person: 'Alex', action: 'Invite them to study with me on Friday' },
   ],
 
   // From Letter to Another Youth
