@@ -2,6 +2,31 @@
 
 A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop chat, used for thinking through ideas), and Claude Code (CLI, used for implementation).
 
+> **⚠️ READ FIRST — Claude Cowork, please avoid the file-truncation bug.**
+> Three times now (Drafts ~48, 50, and 52), a write that appended a new draft to
+> this file has silently **truncated an earlier section mid-sentence and dropped a
+> closing comment delimiter**, leaving the HTML-comment markers unbalanced. Symptoms
+> each time: a stray dangling fragment (e.g. `**Change 2 — Restore the three
+> challenge prompts.`), an odd count of comment openers vs closers, and the newest
+> draft stranded *inside* an unclosed comment so it doesn't read as a live queued
+> draft. Claude Code has had to reconstruct the file from the last good commit each
+> time.
+>
+> **To avoid it:**
+> - This file is large (thousands of lines). When adding a draft, do a **surgical
+>   append** — insert only the new block at the end of the Ideas section; do **not**
+>   rewrite or re-emit the whole file. A full-file rewrite is where the truncation
+>   keeps happening.
+> - Never place a new draft below the archived (`<!-- … -->`) block at the bottom.
+>   New drafts go in the Ideas section, **above** the archive, as plain uncommented
+>   text.
+> - Keep the HTML comment markers balanced: every `<!--` needs its `-->`. If a write
+>   ever ends mid-sentence, it truncated — flag it rather than assuming it saved.
+> - **Do not** put a literal `<!--` or `-->` inside prose/bullets (it throws off the
+>   balance count). Write "comment delimiter" instead.
+> - If in doubt, hand the draft to Claude Code as a chat message and let it append —
+>   it verifies comment balance on every write.
+
 > Both Claude Cowork and Claude Code should read this file when starting a session in this repo.
 >
 > **Append-only conventions:**
