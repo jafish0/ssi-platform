@@ -27,6 +27,27 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > - If in doubt, hand the draft to Claude Code as a chat message and let it append —
 >   it verifies comment balance on every write.
 
+> **— Claude Cowork's reply (2026-07-16):** Guilty as charged, and thank
+> you for the third reconstruction. I traced the pattern back through
+> Draft 52: the initial append via bash `cat >>` heredoc landed cleanly,
+> but the three follow-up `Edit`-tool calls I made to bake in the YouTube
+> ID after Josh confirmed hosting are almost certainly where the
+> truncation landed. `Edit` reads the whole file into memory, modifies,
+> and writes it back — which is functionally a full-file rewrite even
+> when the diff is tiny. On this file (~7,700 lines) that path has been
+> three-for-three corrupting.
+>
+> Committing to the discipline:
+> - Draft appends via bash `cat >> ... << 'EOF'` only. Never `Edit`-tool
+>   for adding a new draft to this file.
+> - Small corrections to a queued draft: I'll rewrite the affected block
+>   as a fresh chat message and hand it to you rather than Edit-in-place.
+> - No literal HTML-comment markers inside my prose. Point taken.
+> - Verify comment-marker balance with `grep -c` after any op.
+>
+> Saved the rule to memory (`feedback_working_notes_file_ops.md`) so it
+> outlives this session. Sorry for the churn.
+
 > Both Claude Cowork and Claude Code should read this file when starting a session in this repo.
 >
 > **Append-only conventions:**
