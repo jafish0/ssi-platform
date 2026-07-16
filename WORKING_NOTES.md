@@ -63,6 +63,55 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
+- **`8f611a4` · 2026-07-16** — Draft 52: **Sam's Story Draft 1 (Male Version)** featured video on /demo. Added the first full assembled Sam's Story cut (Male Sam variant, 4:07) as a featured section at the TOP of the Sam's Story area for end-to-end team review before the Female/Gender-Neutral variants proceed. DemoPage: amber-framed block above the cast grid — heading + "New draft" badge, intro, a 9:16 responsive **YouTube embed** (unlisted id `tsnVUlklYi8`; the ~233 MB master stays in `Video Content/`, no repo bloat), and a "Draft 1 · Male variant · Runtime 4:07 · 2026-07-16" caption. Script-download + the seven cast cards render below, unchanged. castData header comment notes the new preview (the section lives in DemoPage). No version bump. Verified in preview: featured section above the cast grid, embed present, cast cards intact, no console errors. **Note:** this draft arrived on disk with the same corruption pattern as before — a dropped closing comment delimiter left it stranded inside an unclosed comment + truncated an archived line; repaired separately in `1b1d778` (reconstructed from the last-good commit, zero archived content lost) before shipping.
+
+  <details>
+  <summary>Draft 52 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  ### Draft 52 — Sam's Story Draft 1 (Male Version) on /demo
+
+  Add the first full-length assembled Sam's Story video to `/demo` for team review — this is the Male Sam variant, Draft 1. The team will nitpick this build before the Female and Gender-Neutral variants proceed, so the video needs to be prominently placed so testers can watch it end-to-end and submit feedback via the existing feedback button.
+
+  **Source file (master):** `Video Content/Sams Story/Sam's Story Draft 1 Male Version.mp4` — 4:07 runtime, 704×1280 at 25fps, ~233 MB. Kept in the video-content folder as the master; not committed to the repo.
+
+  **Hosting: YouTube (unlisted).** The video is uploaded at **https://youtu.be/tsnVUlklYi8** — YouTube video ID **`tsnVUlklYi8`**. Use the existing `youtubeId` pattern already supported by the cast data / demo player (see the `castData.js` header comment: *"`youtubeId` = YouTube Short embed (mutually exclusive)"* with `src`). Zero repo bloat, adaptive-bitrate playback on any device, easy to swap for future drafts by updating the ID.
+
+  ---
+
+  #### Part A — New "Draft 1 Preview" section at the top of the Sam's Story area on /demo
+
+  Add a new prominent section to `DemoPage.jsx` (or wherever the Sam's Story area is composed) placed at the TOP of the Sam's Story area — above the existing character-cast card grid.
+
+  Structure:
+
+  - Section heading: **"Sam's Story — Draft 1 (Male Version)"**
+  - Subheading / intro paragraph (~2 sentences): *"This is the first full assembled cut of Sam's Story, using the Male Sam variant. Watch it end-to-end and use the feedback button below to share your notes. Female and Gender-Neutral variants will follow after this round of team feedback."*
+  - The video itself — YouTube embed using video ID `tsnVUlklYi8` (matching the existing `youtubeId` pattern in `castData.js`). Vertical 9:16 aspect. Render at a size that reads well on desktop but shrinks gracefully on mobile — existing responsive patterns from the cast video players should apply.
+  - Below the video, a small caption/metadata line in muted text: *"Draft 1 · Male variant · Runtime 4:07 · 2026-07-16"*
+  - The existing character-cast card grid renders BELOW this new section, unchanged.
+
+  Visually, this section should feel like the FEATURED item on the /demo page — larger than a card, with a clear "this is the main thing to watch" energy. A soft warm accent color from the palette (amber-adjacent) around the section frame would help distinguish it from the card grid. Or a subtle "New draft" badge next to the heading. Use your judgment on visual weight.
+
+  #### Part B — Update `castData.js` header comment
+
+  Add a note in the header comment block at the top of `src/lib/castData.js` mentioning that a full-assembly video preview section now renders at the top of the Sam's Story area (above the cast cards). Draft-context bookkeeping — future drafts will read this and know the section exists.
+
+  #### Part C — Verification
+
+  - Preview loads /demo without console errors
+  - New Draft 1 Preview section renders at the top of the Sam's Story area
+  - Video plays end-to-end (YouTube embed loads and plays)
+  - Existing Sam's Story cast cards (Sam 18, Sam Female, Sam Nonbinary, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson) render below the new section, unchanged
+  - All other /demo sections (Learning Skills for Belonging Kai card, the six activities, Data Export, etc.) render as before
+  - Feedback button still works and pre-fills the location field correctly for the new section
+  - Build clean
+
+  **Version bump:** none (this is /demo content, not a versioned activity).
+
+  *End of Draft 52.*
+
+  </details>
+
 - **`2e59af5` · 2026-07-13** — Removed the stale "The Plan — coming soon" placeholder card from the /demo Final reveal preview section (Josh's call). The Plan shipped as the seventh activity (Drafts 39–51), so the placeholder was obsolete — its card lives in the Activities section and the montage's "Open your plan" CTA routes to it. A comment marks where it was. Verified in preview: card + copy gone, Final reveal heading + montage play button intact, Plan still reachable from Activities, no console errors.
 
 - **`7abba0e` · 2026-07-13** — Draft 51: **The Plan v2.0 → v3.0 (MAJOR)** — 2026-07-13 meeting streamline (Stephanie: "it feels really long"). Creation flow cut **9 → 6 screens** by moving read-only sections onto the final plan. **(A)** Skills to Try is now **pick-ONE**: the kid selects a single willing-to-try skill (radio cards; only the selected one expands with how/who/when), full list still shown on the plan "for later"; payload `skills_to_try[]` → single `skill_commitment`. **(B)** Thoughts to Flip → **"Thoughts to practice"**, now display-only (screen removed). **(C)** Words of Wisdom instructional line moved to sit above the reflection input. **(D)** Your People — removed the pick-first-ally screen; the plan surfaces the **Allies Strengthening** entries per support type (person + action, color-coded) + a stuck-prompt; demo shape `strengthenCommitments` → `strengthening[]` ({type, person, action}). **(E)** Who You Are (poem) — display-only (screen removed). **(F)** When You Felt Included — question reworded to *"before, during, or after this happened?"* + a **"Something else" (Other)** checkbox/text; `inclusion_reflection` gains `other_used` + `other_text`. **(G)** PDF is now a **single continuous page** rasterized from the same keepsake SVG as the PNG (matches the PNG; no more per-section pages). **(H)** Saved screen adds screenshot guidance. Review + PNG + PDF all render from one `buildPlanModel()`. Export: `plan_skill_1..7_*` + `plan_first_ally/when` replaced by `plan_skill_pick_{id,text,how,who,when}`; added `plan_inclusion_behavior_other` + `_other_text`. plan v2.0 → v3.0. Verified end-to-end in preview: pick-one gating, line placement, reworded question + Other, all 6 review sections incl. Your People + other-skills-for-later + poem with no first-ally, payload matches spec, PNG + single-page PDF build clean, no console errors.
@@ -4674,50 +4723,6 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
-
----
-
-### Draft 52 — Sam's Story Draft 1 (Male Version) on /demo
-
-Add the first full-length assembled Sam's Story video to `/demo` for team review — this is the Male Sam variant, Draft 1. The team will nitpick this build before the Female and Gender-Neutral variants proceed, so the video needs to be prominently placed so testers can watch it end-to-end and submit feedback via the existing feedback button.
-
-**Source file (master):** `Video Content/Sams Story/Sam's Story Draft 1 Male Version.mp4` — 4:07 runtime, 704×1280 at 25fps, ~233 MB. Kept in the video-content folder as the master; not committed to the repo.
-
-**Hosting: YouTube (unlisted).** The video is uploaded at **https://youtu.be/tsnVUlklYi8** — YouTube video ID **`tsnVUlklYi8`**. Use the existing `youtubeId` pattern already supported by the cast data / demo player (see the `castData.js` header comment: *"`youtubeId` = YouTube Short embed (mutually exclusive)"* with `src`). Zero repo bloat, adaptive-bitrate playback on any device, easy to swap for future drafts by updating the ID.
-
----
-
-#### Part A — New "Draft 1 Preview" section at the top of the Sam's Story area on /demo
-
-Add a new prominent section to `DemoPage.jsx` (or wherever the Sam's Story area is composed) placed at the TOP of the Sam's Story area — above the existing character-cast card grid.
-
-Structure:
-
-- Section heading: **"Sam's Story — Draft 1 (Male Version)"**
-- Subheading / intro paragraph (~2 sentences): *"This is the first full assembled cut of Sam's Story, using the Male Sam variant. Watch it end-to-end and use the feedback button below to share your notes. Female and Gender-Neutral variants will follow after this round of team feedback."*
-- The video itself — YouTube embed using video ID `tsnVUlklYi8` (matching the existing `youtubeId` pattern in `castData.js`). Vertical 9:16 aspect. Render at a size that reads well on desktop but shrinks gracefully on mobile — existing responsive patterns from the cast video players should apply.
-- Below the video, a small caption/metadata line in muted text: *"Draft 1 · Male variant · Runtime 4:07 · 2026-07-16"*
-- The existing character-cast card grid renders BELOW this new section, unchanged.
-
-Visually, this section should feel like the FEATURED item on the /demo page — larger than a card, with a clear "this is the main thing to watch" energy. A soft warm accent color from the palette (amber-adjacent) around the section frame would help distinguish it from the card grid. Or a subtle "New draft" badge next to the heading. Use your judgment on visual weight.
-
-#### Part B — Update `castData.js` header comment
-
-Add a note in the header comment block at the top of `src/lib/castData.js` mentioning that a full-assembly video preview section now renders at the top of the Sam's Story area (above the cast cards). Draft-context bookkeeping — future drafts will read this and know the section exists.
-
-#### Part C — Verification
-
-- Preview loads /demo without console errors
-- New Draft 1 Preview section renders at the top of the Sam's Story area
-- Video plays end-to-end (YouTube embed loads and plays)
-- Existing Sam's Story cast cards (Sam 18, Sam Female, Sam Nonbinary, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson) render below the new section, unchanged
-- All other /demo sections (Learning Skills for Belonging Kai card, the six activities, Data Export, etc.) render as before
-- Feedback button still works and pre-fills the location field correctly for the new section
-- Build clean
-
-**Version bump:** none (this is /demo content, not a versioned activity).
-
-*End of Draft 52.*
 
 ---
 
