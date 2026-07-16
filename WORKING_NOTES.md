@@ -42,6 +42,23 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 
 ---
 
+> **🎬 Sam's Story production milestone (2026-07-15):** Full intro-through-metaphor production
+> session covering Male Sam variant. Assets generated: 4 opening shots (aerial, hallway,
+> kitchen establishing, through-the-gap), Foster Mom lip-sync (10.92s clip), Sam 14 rejection
+> (still + lip-sync 2.52s), Sam-14-inner-conflict Frame-to-Video prompt, Segment 1 b-roll (kitchen
+> separation, case worker, hallway with Mrs. Johnson), Segment 2 b-roll (celebration silhouettes,
+> polaroids), Segment 3 b-roll (family group photo, bio mom hands-holding, Sam reflective with
+> both photos), drive-home window reflection, Segment 4 b-roll (backstage lamp INSERT, actor in
+> spotlight, two-lights hero animation candidate). Plus Sam 16 narrator lip-sync prompts written
+> for Lines 3, 4-middle, 5, and 7. All prompts + reference-image mappings + variant workflow
+> captured in `Video Content/Sams Story/Sams_Story_Production_Prompts.docx` — organized so the
+> Female Sam and Gender-Neutral Sam variants can be built by swapping the Sam character reference
+> and regenerating only the Sam-forward shots (~15-17 shots regen, ~6-8 reusable including the
+> Foster Mom lip-sync). Team will likely nitpick the Male build before variants start — realistic
+> variant production timeline is a few weeks out.
+
+---
+
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
@@ -4657,6 +4674,50 @@ Parked for a follow-up draft once the activities are joined.
 - Variant trees (different art for different kid demographics, etc.) — not requested, not needed for MVP.
 
 *End of Draft 21.*
+
+---
+
+### Draft 52 — Sam's Story Draft 1 (Male Version) on /demo
+
+Add the first full-length assembled Sam's Story video to `/demo` for team review — this is the Male Sam variant, Draft 1. The team will nitpick this build before the Female and Gender-Neutral variants proceed, so the video needs to be prominently placed so testers can watch it end-to-end and submit feedback via the existing feedback button.
+
+**Source file (master):** `Video Content/Sams Story/Sam's Story Draft 1 Male Version.mp4` — 4:07 runtime, 704×1280 at 25fps, ~233 MB. Kept in the video-content folder as the master; not committed to the repo.
+
+**Hosting: YouTube (unlisted).** The video is uploaded at **https://youtu.be/tsnVUlklYi8** — YouTube video ID **`tsnVUlklYi8`**. Use the existing `youtubeId` pattern already supported by the cast data / demo player (see the `castData.js` header comment: *"`youtubeId` = YouTube Short embed (mutually exclusive)"* with `src`). Zero repo bloat, adaptive-bitrate playback on any device, easy to swap for future drafts by updating the ID.
+
+---
+
+#### Part A — New "Draft 1 Preview" section at the top of the Sam's Story area on /demo
+
+Add a new prominent section to `DemoPage.jsx` (or wherever the Sam's Story area is composed) placed at the TOP of the Sam's Story area — above the existing character-cast card grid.
+
+Structure:
+
+- Section heading: **"Sam's Story — Draft 1 (Male Version)"**
+- Subheading / intro paragraph (~2 sentences): *"This is the first full assembled cut of Sam's Story, using the Male Sam variant. Watch it end-to-end and use the feedback button below to share your notes. Female and Gender-Neutral variants will follow after this round of team feedback."*
+- The video itself — YouTube embed using video ID `tsnVUlklYi8` (matching the existing `youtubeId` pattern in `castData.js`). Vertical 9:16 aspect. Render at a size that reads well on desktop but shrinks gracefully on mobile — existing responsive patterns from the cast video players should apply.
+- Below the video, a small caption/metadata line in muted text: *"Draft 1 · Male variant · Runtime 4:07 · 2026-07-16"*
+- The existing character-cast card grid renders BELOW this new section, unchanged.
+
+Visually, this section should feel like the FEATURED item on the /demo page — larger than a card, with a clear "this is the main thing to watch" energy. A soft warm accent color from the palette (amber-adjacent) around the section frame would help distinguish it from the card grid. Or a subtle "New draft" badge next to the heading. Use your judgment on visual weight.
+
+#### Part B — Update `castData.js` header comment
+
+Add a note in the header comment block at the top of `src/lib/castData.js` mentioning that a full-assembly video preview section now renders at the top of the Sam's Story area (above the cast cards). Draft-context bookkeeping — future drafts will read this and know the section exists.
+
+#### Part C — Verification
+
+- Preview loads /demo without console errors
+- New Draft 1 Preview section renders at the top of the Sam's Story area
+- Video plays end-to-end (YouTube embed loads and plays)
+- Existing Sam's Story cast cards (Sam 18, Sam Female, Sam Nonbinary, Sam 14, Foster Mom, Foster Dad, Mrs. Johnson) render below the new section, unchanged
+- All other /demo sections (Learning Skills for Belonging Kai card, the six activities, Data Export, etc.) render as before
+- Feedback button still works and pre-fills the location field correctly for the new section
+- Build clean
+
+**Version bump:** none (this is /demo content, not a versioned activity).
+
+*End of Draft 52.*
 
 ---
 
