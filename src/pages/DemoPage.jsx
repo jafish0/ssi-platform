@@ -319,6 +319,24 @@ export default function DemoPage() {
               Draft 1 · Male variant · Runtime 4:07 · 2026-07-16
             </p>
           </div>
+
+          {/* Known issues — flagged so reviewers don't re-report the two
+              lines Josh already knows need regenerating (Draft 52 follow-up). */}
+          <div className="mt-5 max-w-[520px] mx-auto rounded-2xl border border-amber-300 bg-amber-100/60 px-4 py-3">
+            <p className="text-[13px] font-semibold text-amber-800 mb-1">Known issues</p>
+            <p className="text-[13px] text-slate-700 leading-relaxed mb-2">
+              A couple of lines still need to be regenerated and re-cut into the
+              video — waiting on rendering credits (back next week):
+            </p>
+            <ul className="list-disc pl-5 text-[13px] text-slate-700 space-y-0.5">
+              <li>
+                <span className="font-mono">2:39</span> — &ldquo;felt Dad for me&rdquo;
+              </li>
+              <li>
+                <span className="font-mono">2:52</span> — &ldquo;past placements hadn&apos;t stug&rdquo;
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Full-script download — so reviewers can read along while they
