@@ -285,6 +285,42 @@ export default function DemoPage() {
           (Script 2.0). Tap any sample to hear it.
         </p>
 
+        {/* Draft 1 Preview (Draft 52) — the first full assembled Sam's Story
+            cut (Male variant), featured at the top of the Sam's Story area
+            for end-to-end team review. YouTube unlisted embed (id
+            tsnVUlklYi8); no repo bloat. Female + Gender-Neutral variants
+            follow after this feedback round. */}
+        <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h3 className="text-[18px] font-bold text-ctac-navy">
+              Sam&apos;s Story — Draft 1 (Male Version)
+            </h3>
+            <span className="inline-flex items-center rounded-full bg-amber-500 text-white text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">
+              New draft
+            </span>
+          </div>
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-4">
+            This is the first full assembled cut of Sam&apos;s Story, using the
+            Male Sam variant. Watch it end-to-end and use the feedback button
+            below to share your notes. Female and Gender-Neutral variants will
+            follow after this round of team feedback.
+          </p>
+          <div className="mx-auto w-full max-w-[360px]">
+            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+              <iframe
+                src="https://www.youtube.com/embed/tsnVUlklYi8"
+                title="Sam's Story — Draft 1 (Male Version)"
+                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            <p className="mt-2 text-center text-[12px] text-slate-500">
+              Draft 1 · Male variant · Runtime 4:07 · 2026-07-16
+            </p>
+          </div>
+        </div>
+
         {/* Full-script download — so reviewers can read along while they
             listen. The `download` attr sets a clean saved filename. */}
         <div className="mb-6">

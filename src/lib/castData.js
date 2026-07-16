@@ -5,6 +5,12 @@
 // scripted lines with ElevenLabs voice samples, or a description
 // paragraph for characters who don't speak in Script 2.0 yet.
 //
+// Draft 52 (2026-07-16): a full-assembly video preview now renders at the
+// TOP of the Sam's Story area on /demo (above these cast cards) — the
+// first assembled Sam's Story cut (Male variant, YouTube embed). That
+// featured section lives in DemoPage.jsx, not here; this note is just
+// draft-context bookkeeping.
+//
 // Assets live in /public/cast/ (served as static files, referenced by
 // absolute URL — NOT imported through Vite, since there are a lot of
 // them and they're large media). Images: /cast/images/*.png. Audio:
