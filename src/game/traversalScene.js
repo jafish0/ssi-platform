@@ -175,7 +175,10 @@ export function makeTraversalScene(Phaser) {
         .setAlpha(0) // hidden until the flight begins
 
       // --- audio (created here; playback deferred to begin()) ---
-      if (this.cache.audio.exists('music')) {
+      // Global sounds survive scene.restart(), so create the music instance
+      // once and reuse it across replays — this also keeps the single
+      // already-unlocked AudioContext instead of minting a suspended one.
+      if (!this.music && this.cache.audio.exists('music')) {
         this.music = this.sound.add('music', { loop: true, volume: 0.35 })
       }
 
@@ -208,12 +211,18 @@ export function makeTraversalScene(Phaser) {
 
     startMusic() {
       if (!this.music) return
-      if (this.sound.locked) {
-        this.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
-          if (this.music && !this.arrived) this.music.play()
-        })
-      } else {
+      // Reset volume (arrive() fades it to 0) and restart from the top, so a
+      // replayed run isn't left silent or mid-track.
+      const go = () => {
+        if (!this.music || this.arrived) return
+        this.music.stop()
+        this.music.setVolume(0.35)
         this.music.play()
+      }
+      if (this.sound.locked) {
+        this.sound.once(Phaser.Sound.Events.UNLOCKED, go)
+      } else {
+        go()
       }
     }
 

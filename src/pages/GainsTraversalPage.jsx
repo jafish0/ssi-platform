@@ -19,7 +19,7 @@ import { GAINS_FEEDBACK_SECTIONS } from './GainsDemoPage.jsx'
 const GOAL = 50
 
 export default function GainsTraversalPage() {
-  const [runKey, setRunKey] = useState(0)
+  const [restartNonce, setRestartNonce] = useState(0)
   const [started, setStarted] = useState(false)
   const [muted, setMuted] = useState(false)
   const [result, setResult] = useState(null)
@@ -44,12 +44,12 @@ export default function GainsTraversalPage() {
     setStarted(true)
   }
 
-  // Fly again: keep instructions dismissed, remount the game (full teardown
-  // + fresh WebGL context), clear the result. The fresh game begins
+  // Fly again: clear the result and bump the restart signal — the wrapper
+  // restarts the scene in place (reusing the unlocked audio), and it begins
   // immediately because `started` is already true.
   function flyAgain() {
     setResult(null)
-    setRunKey((k) => k + 1)
+    setRestartNonce((n) => n + 1)
   }
 
   return (
@@ -91,11 +91,11 @@ export default function GainsTraversalPage() {
           style={{ aspectRatio: '9 / 16' }}
         >
           <TraversalGame
-            key={runKey}
             goal={GOAL}
             started={started}
             muted={muted}
             reducedMotion={reducedMotion}
+            restartSignal={restartNonce}
             onComplete={setResult}
           />
 
@@ -137,13 +137,11 @@ export default function GainsTraversalPage() {
           {result && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-gradient-to-b from-amber-100/10 to-[#05070e]/70 backdrop-blur-[2px]">
               <Sparkles size={30} strokeWidth={1.5} className="text-amber-200 mb-3" />
-              <h2 className="text-[22px] font-bold text-white mb-1">
-                You reached the light.
+              <h2 className="text-[22px] font-bold text-white mb-2">
+                You gathered {result.motesCollected} Connections!
               </h2>
               <p className="text-[15px] text-amber-100/90 mb-6">
-                You gathered{' '}
-                <span className="font-bold text-white">{result.motesCollected}</span>{' '}
-                {result.motesCollected === 1 ? 'connection' : 'connections'}.
+                You are ready for the next challenge.
               </p>
               <button
                 type="button"

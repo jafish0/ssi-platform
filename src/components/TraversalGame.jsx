@@ -11,9 +11,11 @@
 // `started` flips true (set from the instructions "Begin" tap) — that also
 // serves as the mobile audio-unlock gesture. `muted` toggles the sound.
 //
-// To replay, remount this component with a changed `key` from the parent —
-// that guarantees a full teardown + fresh game each run (no accumulating
-// WebGL contexts).
+// To replay, bump `restartSignal` — the wrapper calls scene.restart() in
+// place rather than remounting. This deliberately reuses the ONE Phaser.Game
+// (and its already-unlocked AudioContext): remounting would mint a fresh
+// context that WebKit starts suspended with no gesture left to unlock it, so
+// replayed audio would go silent (esp. in reduced motion, which has no touch).
 
 import { useEffect, useRef } from 'react'
 
@@ -30,6 +32,7 @@ export default function TraversalGame({
   started = false,
   muted = false,
   reducedMotion = false,
+  restartSignal = 0,
   onComplete,
 }) {
   const containerRef = useRef(null)
@@ -108,6 +111,21 @@ export default function TraversalGame({
       gameRef.current.registry.set('traversalStarted', true)
     }
   }, [started])
+
+  // Replay in place: restart the scene on the existing game (keeps the
+  // already-unlocked AudioContext). Skips the initial render.
+  const firstRestart = useRef(true)
+  useEffect(() => {
+    if (firstRestart.current) {
+      firstRestart.current = false
+      return
+    }
+    const game = gameRef.current
+    if (!game) return
+    game.registry.set('traversalStarted', true)
+    const scene = game.scene.getScene('Traversal')
+    if (scene && scene.scene) scene.scene.restart()
+  }, [restartSignal])
 
   // Live mute toggle.
   useEffect(() => {
