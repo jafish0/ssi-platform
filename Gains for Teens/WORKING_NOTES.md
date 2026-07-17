@@ -96,6 +96,27 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **fee9ff4** (2026-07-17) — Traversal replay-audio fix + arrival copy (in-conversation).
+  A 3-lens adversarial code-review workflow on the Draft 8 changes found one real bug:
+  replaying by remounting the game minted a fresh AudioContext outside the tap handler,
+  which WebKit/iOS starts suspended with no gesture left to unlock — so music + collect
+  SFX went silent on every "Fly again," and *permanently* in reduced motion (no steering
+  touch to unlock). Fix: replay now restarts the scene **in place** on the one
+  already-unlocked game (`scene.restart()` via a `restartSignal` prop) instead of
+  remounting; music is created once and reused, `startMusic()` resets volume (arrive
+  fades it out) and restarts cleanly. Also Josh's arrival copy: **"You gathered N
+  Connections! / You are ready for the next challenge."** (was "You reached the light.")
+  Josh confirmed the live prototype plays great on device.
+
+- **7552b51** (2026-07-17) — Traversal audio + goal + instructions (in-conversation).
+  Wired the two MP3s Josh made: a looping background track (`music-ascent-loop.mp3`,
+  starts on begin / mobile audio-unlock) and a collect beep (`sfx-collect.mp3`) on each
+  connection, plus a live mute toggle. Added the intro **instructions screen** (how to
+  play + the goal; "Begin the climb" gates the flight via the `traversalStarted`
+  registry flag) and made the win condition **gather 50 "connections"** — the ascent is
+  now collection-driven (each connection eases the climb dark→gold; 50 = arrival),
+  counter shows N/50. Still no-fail. (Superseded same day by fee9ff4's replay-audio fix.)
+
 - **ea493a4** (2026-07-17) — Traversal tweak (in-conversation, no draft): connection
   lights now **descend from the top** of the channel and drift down toward the bird as
   it climbs (was spawning below and rising) — reads as flying up to meet the lights
@@ -483,3 +504,31 @@ long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premis
 **Verify.** Plays on desktop + mobile viewport in portrait; one-thumb steering; motes collect; genuinely no-fail (can't lose, always arrives); arrival fires `onComplete`; replay works and disposes cleanly (no accumulating contexts); reduced-motion path works; feedback submits tagged. No `src/activities` changes → no activity version bumps. Note the new dependency + any structure in INFRASTRUCTURE.md if relevant. Log Recently-shipped + mark shipped.
 
 *End of Draft 8.*
+
+
+### Draft 9 — Add a "Videos" section to the GAINS demo page (psychoed video scripts)
+
+**Follow-up to Draft 7** (the GAINS demo page). Add a new **"Videos"** section that holds the psychoeducation video **scripts** we have so far. The videos aren't produced yet, so each card shows a **"Video in production"** placeholder + the script + duration + which zone/beat it maps to. Leave the card structured so the real video (reuse the Ready for Roots Vimeo `VideoPlayer` pattern) can be dropped in later. Source docs live in `Gains for Teens/` (`GAINS Teens Part 1 and 2 Activities and Script Integrated.docx`, `Growth Mindset Script to send.docx`); the exact copy is inline below — use it verbatim.
+
+**Placement.** New "Videos" section on the demo (suggest right after Activities, before Concept Art). Reuse the feedback system, tagged `program=gains-teens`, `section=videos`.
+
+**Scope.** The Videos section holds only the four video scripts below. The Character Examples belong to the Character Examples *activity* (not Videos), so don't put them here. (Note: Stephanie's current July 17 doc already casts our own creatures — Emberwick/Mirefly/Hollowshell/Dimmet — in that activity, so there's no IP concern anymore.)
+
+**Cards (in order):**
+
+**1. Trauma 101 — Video 1 · "What trauma is" (25 sec) → Zone 1 (The Hollow)**
+> A trauma is any frightening, dangerous, or violent event that harms or threatens to harm your life or well-being (for example, physical abuse, a serious car accident, or even a natural disaster). A trauma can also be something that happens to someone you love or something you witness (for example, seeing parents physically hurt one another, or having someone close suddenly die). Our minds and bodies automatically react to trauma in multiple ways, and even after the trauma is over our bodies have difficulty relaxing.
+
+**2. Trauma 101 — Video 2 · "The four reactions" (45 sec) → Zone 2 (The Lantern Path)**
+*(production note: show each category label on screen as it's described)*
+> Experiencing trauma can cause lots of reactions, in addition to our body's responses, and these are grouped into four main categories. Hypervigilance or reactivity: feeling more on edge or jumpy, on the lookout for danger — this can even make sleeping hard because your body and mind just won't calm down. Intrusion: not being able to stop thinking about the trauma, or feeling like it's happening all over again. Avoidance: trying hard not to think about it or staying away from reminders — it might feel okay at first, but pushing things down always causes more problems in the long term. And negative changes in mood and thoughts: more sadness, anger, or worry, and thoughts like "there's no one I can trust" or "what happened was my fault." Let's look at some examples to better understand what these reactions look like.
+
+**3. Trauma 101 — Video 3 · "These are normal; help works" (25 sec) → Zone 3 (The Mistfields)**
+> Even though it may not feel like it, these are all normal reactions to experiencing trauma — your brain and body's way of trying to keep you safe. But here's the most important thing: trauma is something that happened to you, but it doesn't define who you are. There are healthy ways to recover from even the worst things that happen to us. None of these characters healed alone — they recovered with the help of a good support system. Trauma therapy is one part of a good support system that can help people recover from very difficult things.
+
+**4. Growth Mindset (~55 sec) → Part 2 / getting-help (Zone 4–5 area)**
+> Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think of it like colored glasses — put on a blue-tinted pair and everything looks blue, but you can choose a green pair and turn everything green. We often talk about two mindsets people "wear": fixed and growth. With a fixed mindset on, you might think trauma therapy won't help you, because nothing can change how you feel or think about what happened. That's tricky: if you have that thought, you probably won't want to begin trauma therapy, or you won't really commit to it — and then things really don't change for you. But that's not because the thought was true; it's a result of the fixed mindset you're wearing. When you choose to put on your growth mindset, you recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy, and it will help you get the most benefit from treatment.
+
+**Verify.** The Videos section renders four cards, each with title + duration + "Video in production" placeholder + script + zone mapping; no IP character content present; feedback works tagged `section=videos`. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 9.*
