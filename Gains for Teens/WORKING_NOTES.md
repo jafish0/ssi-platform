@@ -96,6 +96,30 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **83f6757** (2026-07-17) — Draft 8: first Phaser traversal prototype + **reusable
+  Tier-2 game foundation**. Added Phaser 3 (`phaser@^3.90.0`), lazy-loaded via dynamic
+  `import('phaser')` so it code-splits into its own ~1.48 MB chunk — main bundle
+  unchanged. `src/game/traversalScene.js` (`makeTraversalScene(Phaser)` factory) is the
+  engine-agnostic vertical no-fail ascent: ravine plate pans dark→gold over ~35s,
+  one-thumb bird steering clamped to a channel (can't crash/fail), rising collectible
+  "connection" motes, parallax fg + ambient/trail particles, procedural glow+vignette
+  textures, arrival bloom → `onComplete({ motesCollected })`; config via the
+  `traversalConfig` registry key; `prefers-reduced-motion` → calm auto-centred path.
+  `src/components/TraversalGame.jsx` is the React wrapper (dynamic import, base
+  540×960 `Scale.FIT`, `destroy(true)` on unmount, replay via `key` remount — state in
+  React). Playable at **/gains-demo/traversal** (`GainsTraversalPage`) with a
+  Replay/Fly-again beat; linked from a new **Prototypes** card on `/gains-demo`. Not
+  wired into the real SessionEngine yet — but engine-agnostic so that refactor is
+  trivial (this is the reusable foundation, per the ambition note). Feedback reuses the
+  shared pipeline tagged `section=traversal-prototype` (new `defaultSection` prop
+  preselects it on the prototype page) — no schema/edge-fn change. Art static at
+  `public/gains/traversal/`. **Verify note:** the headless preview pane doesn't fire
+  `requestAnimationFrame`, so the timed loop/arrival couldn't be exercised there;
+  verified instead: WebGL canvas mounts, assets 200, no errors, clean disposal across
+  6 replays (canvas stays 1), feedback tag round-trip, prod build passes. Worth a live
+  play-through on a real phone before the next meeting. INFRASTRUCTURE.md change-log
+  entry added.
+
 - **94a66a4** (2026-07-17) — Draft 7: GAINS Teens demo page at **/gains-demo**
   (unlisted React route, `src/pages/GainsDemoPage.jsx`), mirroring the RfR `/demo`
   pattern with the RfR feedback system reused. Sections: Pre/Post Measures & Consent
@@ -413,3 +437,42 @@ long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premis
 **Verify.** Load the route; all sections render; Pre/Post + Activities show "in development"; concept art loads (4 avatars, 4 messengers, map, 5 zones) with no 404s; the written spec matches the pitch page; the feedback button submits and is tagged GAINS + section; it shows in the admin feedback view, distinguishable from RfR. Record any schema change in INFRASTRUCTURE.md. Log Recently-shipped + mark shipped.
 
 *End of Draft 7.*
+
+
+### Draft 8 — Bird traversal POC: first Phaser build (vertical no-fail flyer) + reusable Tier-2 game foundation — ✅ SHIPPED 83f6757 (2026-07-17)
+
+**Ambition note:** build this as the **reusable game foundation**, not a throwaway. Every future traversal (and the Tier-2 layer generally) should reskin this. Polish it — it's the first thing that proves the engine and the feel.
+
+**Context.** First real-time game build for GAINS Teens. Prove three things once: (1) a Phaser canvas mounts and disposes cleanly inside the React app on a phone, (2) a one-thumb, no-fail vertical flight *feels good*, (3) on completion it hands control back to React. Build as a **standalone playable demo first**; architect it so refactoring into a `traversal` SessionEngine item type later is trivial.
+
+**Whole experience is 9:16 portrait**, so this is a **vertical ascent** (rising toward the light), not a horizontal side-scroll.
+
+**Tech.**
+- Add **Phaser 3** as a dependency, **lazy-loaded via dynamic `import('phaser')`** and code-split so it never bloats the main app bundle.
+- React wrapper `<TraversalGame config={...} onComplete={...} />`: creates `Phaser.Game` into a container ref on mount; **`game.destroy(true)` on unmount** to free the WebGL context; handles resize; portrait scale (`Scale.FIT` or RESIZE), cap devicePixelRatio (~2). `touch-action: none` on the canvas so page scroll/gestures don't fight it.
+- Generic **`TraversalScene`** parameterized by `{ bgUrl, fgUrl, birdUrl, durationMs, palette, onComplete }` so future zones reskin by passing different art — this is the seed of the reusable `traversal` item type. **Keep all persistent state in React; the scene is disposable and reports results out via `onComplete` — no globals.**
+
+**Assets (staged, in `Gains for Teens/game-assets/traversal/`; copy into the app, e.g. `public/gains/traversal/`, referenced by absolute path):**
+- `bird.png` — transparent bird sprite, top/rear view (560×602), glowing eyes + tail accents. The player mounts this; leave room to composite a small rider later (not needed for the POC).
+- `ravine-bg.webp` — the tall vertical ravine plate (768×1376), **dark at the bottom → gold at the top**. This *is* the ascent arc.
+- `ravine-fg.png` — transparent near-black foreground cliffs layer for parallax.
+
+**Mechanic (vertical, no-fail).**
+- The world is the ravine. The **camera starts at the bottom of the plate and pans UP to the gold top over ~35s** (tunable const 30–45s). The bird sits lower-center, bobbing, as the world scrolls down past it.
+- **Parallax:** `ravine-bg` slowest (far), `ravine-fg` cliffs a bit faster (near), plus a rising **light-mote particle layer**. (Plate is a fixed composition, not tiling — implement as a vertical pan up the scaled plate, fg offset for depth.)
+- **Control:** one thumb. Touch/drag to set the bird's target x; it eases toward it and tilts slightly toward travel, leveling out on release. Support pointer + arrow keys for desktop testing. Reachable one-handed.
+- **Connection motes:** glowing motes drift up the channel; overlapping the bird collects them (shimmer + soft pop + counter + optional `navigator.vibrate(10)`). Purely additive — missing them costs nothing. (These are "the power of connections.")
+- **No-fail, hard rule:** the bird is gently kept in the open channel; nearing a cliff produces a soft wind-nudge back — **never a crash, death, restart, or score-shame.** It *always* reaches the top.
+- **Arrival:** when the camera reaches the gold top, play a warm white-gold bloom + gentle arrival beat, then call `onComplete({ motesCollected })`.
+
+**Juice (ambitious but tasteful).** Wing-flap via tween (subtle scaleY + y-bob + slight rotation toward steer), a soft sparkle trail behind the bird, drifting motes, gentle vignette, warm bloom at arrival. **Respect `prefers-reduced-motion`:** cut particles/bob, auto-center the steering, and play a calm auto-ascent that still arrives.
+
+**Standalone demo + wiring.**
+- Add a standalone route (e.g. `/gains-demo/traversal`) and/or a **"Play the traversal prototype"** entry in a Prototypes area of the GAINS demo page (Draft 7) so the team can play it and leave feedback (reuse the feedback system, tagged `program=gains-teens`, `section=traversal-prototype`). Include a **Replay** button and a short "You gathered N connections" completion beat.
+- Do **not** wire it into the real SessionEngine flow yet — but keep `TraversalScene`/`<TraversalGame>` engine-agnostic so that refactor is trivial.
+
+**Quality bar.** Target ~60fps on a mid phone; lazy-load Phaser; cap DPR; **dispose cleanly on unmount AND on repeated replays — verify no WebGL-context/canvas leak by replaying 5+ times**; no memory growth. Accessible: reduced-motion path, one-handed controls, no color-only cues.
+
+**Verify.** Plays on desktop + mobile viewport in portrait; one-thumb steering; motes collect; genuinely no-fail (can't lose, always arrives); arrival fires `onComplete`; replay works and disposes cleanly (no accumulating contexts); reduced-motion path works; feedback submits tagged. No `src/activities` changes → no activity version bumps. Note the new dependency + any structure in INFRASTRUCTURE.md if relevant. Log Recently-shipped + mark shipped.
+
+*End of Draft 8.*
