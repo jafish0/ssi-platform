@@ -11,18 +11,30 @@ import { Sparkles } from 'lucide-react'
 import LogoStrip from './LogoStrip.jsx'
 import FeedbackButton from './FeedbackButton.jsx'
 
-export default function DemoPageLayout({ children, narrow = false, banner = true }) {
+// `homeTo` / `homeLabel` / `footerPath` let the GAINS demo reuse this
+// layout with its own identity; `feedbackProgram` / `feedbackSections`
+// pass through to FeedbackButton. Defaults keep the RfR /demo unchanged.
+export default function DemoPageLayout({
+  children,
+  narrow = false,
+  banner = true,
+  homeTo = '/demo',
+  homeLabel = 'SSI Platform · Demo',
+  footerPath = '/demo',
+  feedbackProgram = 'ready-for-roots',
+  feedbackSections = null,
+}) {
   return (
     <div className="min-h-screen bg-ctac-teal-50 flex flex-col">
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-[1100px] mx-auto px-4 py-4 flex items-center justify-between gap-3 flex-wrap">
-          <Link to="/demo" className="inline-flex items-center gap-2 text-slate-800">
+          <Link to={homeTo} className="inline-flex items-center gap-2 text-slate-800">
             <Sparkles size={18} strokeWidth={1.5} className="text-ctac-teal-600" />
-            <span className="font-semibold text-[16px]">SSI Platform · Demo</span>
+            <span className="font-semibold text-[16px]">{homeLabel}</span>
           </Link>
           <div className="flex-1" />
           <LogoStrip variant="institutional" />
-          <FeedbackButton />
+          <FeedbackButton program={feedbackProgram} sections={feedbackSections} />
         </div>
       </header>
 
@@ -40,7 +52,7 @@ export default function DemoPageLayout({ children, narrow = false, banner = true
       <footer className="bg-white border-t border-slate-200 mt-8">
         <div className="max-w-[1100px] mx-auto px-4 py-4 text-[12px] text-slate-500 flex items-center justify-between gap-3 flex-wrap">
           <span>Center on Trauma and Children · University of Kentucky</span>
-          <span className="font-mono">/demo</span>
+          <span className="font-mono">{footerPath}</span>
         </div>
       </footer>
     </div>

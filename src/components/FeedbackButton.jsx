@@ -50,10 +50,18 @@ function deriveContext(pathname, params) {
   if (pathname === '/demo' || pathname === '/demo/') {
     return { area: 'Demo home', activity_id: null, activity_version: null }
   }
+  if (pathname === '/gains-demo' || pathname === '/gains-demo/') {
+    return { area: 'GAINS Teens demo', activity_id: null, activity_version: null }
+  }
   return { area: pathname, activity_id: null, activity_version: null }
 }
 
-export default function FeedbackButton() {
+// `program` tags submissions for admin triage ('ready-for-roots' by
+// default so the RfR demo is unchanged). `sections`, when provided, adds
+// a "Section" select to the modal (used by /gains-demo, which has no
+// versioned activities yet — the section is what makes GAINS comments
+// attributable).
+export default function FeedbackButton({ program = 'ready-for-roots', sections = null }) {
   const location = useLocation()
   const params = useParams()
   const [open, setOpen] = useState(false)
@@ -70,6 +78,7 @@ export default function FeedbackButton() {
   // flips.
   const [submitter, setSubmitter] = useState('ginny')
   const [category, setCategory] = useState('general')
+  const [section, setSection] = useState(sections?.[0]?.value ?? null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -87,6 +96,7 @@ export default function FeedbackButton() {
     setAreaEditing(false)
     setSubmitter('ginny')
     setCategory('general')
+    setSection(sections?.[0]?.value ?? null)
     setMessage('')
   }
 
@@ -114,6 +124,8 @@ export default function FeedbackButton() {
         activity_version: ctx.activity_version,
         category,
         submitter,
+        program,
+        section,
         message: trimmed,
       })
       setDone(true)
@@ -199,6 +211,23 @@ export default function FeedbackButton() {
                       </div>
                     )}
                   </div>
+
+                  {sections && sections.length > 0 && (
+                    <div>
+                      <label className="block text-[13px] font-medium text-slate-700 mb-1">
+                        Section
+                      </label>
+                      <select
+                        value={section ?? ''}
+                        onChange={(e) => setSection(e.target.value)}
+                        className="w-full text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
+                      >
+                        {sections.map((s) => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>

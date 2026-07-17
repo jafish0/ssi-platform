@@ -27,6 +27,20 @@ const CATEGORIES = [
   { value: 'general', label: 'General' },
 ]
 
+const PROGRAMS = [
+  { value: 'ready-for-roots', label: 'Ready for Roots', cls: 'bg-emerald-100 text-emerald-800' },
+  { value: 'gains-teens', label: 'GAINS Teens', cls: 'bg-amber-100 text-amber-800' },
+]
+
+// GAINS demo section slugs → readable labels (see GainsDemoPage).
+const SECTION_LABELS = {
+  'pre-post': 'Pre/Post Measures',
+  activities: 'Activities',
+  'concept-art': 'Concept Art',
+  pitch: 'The pitch (written)',
+  general: 'General',
+}
+
 const SUBMITTER_LABELS = {
   ginny: 'Ginny',
   adrienne: 'Adrienne',
@@ -58,6 +72,19 @@ function StatusBadge({ value }) {
   )
 }
 
+function ProgramBadge({ value }) {
+  // Old rows predate the program column and are all RfR (the migration
+  // backfilled them); render nothing for the default program to keep the
+  // table quiet, and a badge for anything else.
+  if (!value || value === 'ready-for-roots') return null
+  const meta = PROGRAMS.find((p) => p.value === value)
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold align-middle ${meta ? meta.cls : 'bg-slate-100 text-slate-700'}`}>
+      {meta ? meta.label : value}
+    </span>
+  )
+}
+
 function CategoryBadge({ value }) {
   const meta = CATEGORIES.find((c) => c.value === value)
   return (
@@ -81,6 +108,7 @@ export default function AdminFeedbackPage() {
 
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [programFilter, setProgramFilter] = useState('all')
   const [expandedId, setExpandedId] = useState(null)
 
   // Per-row optimistic state for status / notes saves
@@ -117,9 +145,11 @@ export default function AdminFeedbackPage() {
     return rows.filter((r) => {
       if (statusFilter !== 'all' && r.status !== statusFilter) return false
       if (categoryFilter !== 'all' && r.category !== categoryFilter) return false
+      // Rows from before the program column default to ready-for-roots.
+      if (programFilter !== 'all' && (r.program || 'ready-for-roots') !== programFilter) return false
       return true
     })
-  }, [rows, statusFilter, categoryFilter])
+  }, [rows, statusFilter, categoryFilter, programFilter])
 
   const counts = useMemo(() => {
     return {
@@ -139,6 +169,8 @@ export default function AdminFeedbackPage() {
     const headers = [
       'created_at',
       'submitter',
+      'program',
+      'section',
       'category',
       'status',
       'area',
@@ -153,14 +185,15 @@ export default function AdminFeedbackPage() {
     const stamp = todayStamp()
     const csv = rowsToCSV(headers, filtered)
     const filterTag =
-      statusFilter === 'all' && categoryFilter === 'all'
+      statusFilter === 'all' && categoryFilter === 'all' && programFilter === 'all'
         ? 'all'
         : [
             statusFilter !== 'all' ? statusFilter : null,
             categoryFilter !== 'all' ? categoryFilter : null,
+            programFilter !== 'all' ? programFilter : null,
           ].filter(Boolean).join('-')
     downloadCSV(`feedback-${filterTag}-${stamp}.csv`, csv)
-  }, [filtered, statusFilter, categoryFilter])
+  }, [filtered, statusFilter, categoryFilter, programFilter])
 
   async function updateRow(id, patch) {
     setSaveError(null)
@@ -251,6 +284,19 @@ export default function AdminFeedbackPage() {
               ))}
             </select>
           </div>
+          <div>
+            <label className="block text-[12px] text-slate-500 mb-1">Program</label>
+            <select
+              value={programFilter}
+              onChange={(e) => setProgramFilter(e.target.value)}
+              className="text-[14px] px-3 py-2 min-h-[40px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
+            >
+              <option value="all">All</option>
+              {PROGRAMS.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -336,7 +382,13 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
           {SUBMITTER_LABELS[row.submitter] || row.submitter}
         </td>
         <td className="px-3 py-3 text-slate-700">
-          <span>{row.area || '—'}</span>
+          <ProgramBadge value={row.program} />
+          <span className={row.program === 'gains-teens' ? 'ml-2' : ''}>{row.area || '—'}</span>
+          {row.section && (
+            <span className="ml-2 text-[12px] text-slate-500">
+              · {SECTION_LABELS[row.section] || row.section}
+            </span>
+          )}
           {row.activity_version && (
             <span className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-ctac-teal-100 text-ctac-teal-800 align-middle">
               {row.activity_version}
@@ -375,6 +427,14 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
                 <div>
                   <div className="text-[12px] uppercase tracking-wide text-slate-500">Activity ID</div>
                   <div className="text-slate-700 font-mono">{row.activity_id || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-[12px] uppercase tracking-wide text-slate-500">Program</div>
+                  <div className="text-slate-700">{row.program || 'ready-for-roots'}</div>
+                </div>
+                <div>
+                  <div className="text-[12px] uppercase tracking-wide text-slate-500">Section</div>
+                  <div className="text-slate-700">{row.section ? (SECTION_LABELS[row.section] || row.section) : '—'}</div>
                 </div>
                 <div>
                   <div className="text-[12px] uppercase tracking-wide text-slate-500">Activity version</div>
