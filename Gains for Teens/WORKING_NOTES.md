@@ -96,6 +96,21 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **38e6977** (2026-07-17) — Drafts 9 + 10: GAINS demo page additions (both edit
+  `/gains-demo`). **Draft 9 — Videos section** (after Activities): the four
+  psychoeducation scripts verbatim — Trauma 101 Videos 1–3 + the Growth Mindset script —
+  each card with track + duration + zone mapping, a "Video in production" pill, and the
+  script (Video 2 keeps its on-screen-label production note); structured so the real
+  Vimeo player drops in later. New feedback tag `section=videos`. **Draft 10A —
+  Activities:** replaced the empty state with two placeholder cards (Body Mapping,
+  Character Examples) marked "Interactive version in development," full descriptions from
+  Stephanie's July 17 doc. **Draft 10B — narrator slot:** now shows both options (The
+  Spark, The Lantern Keeper) with art + descriptions under "Narrator — two options (which
+  fits best?)," inviting a preference via feedback; 2 new WebP in `public/long-light/art/`.
+  Admin feedback gained the `videos` label. No `src/activities` changes → no version
+  bumps. Verified in dev: all cards render, both narrator images 200, feedback dropdown
+  has Videos, no errors, build passes.
+
 - **fee9ff4** (2026-07-17) — Traversal replay-audio fix + arrival copy (in-conversation).
   A 3-lens adversarial code-review workflow on the Draft 8 changes found one real bug:
   replaying by remounting the game minted a fresh AudioContext outside the tap handler,
@@ -506,7 +521,7 @@ long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premis
 *End of Draft 8.*
 
 
-### Draft 9 — Add a "Videos" section to the GAINS demo page (psychoed video scripts)
+### Draft 9 — Add a "Videos" section to the GAINS demo page (psychoed video scripts) — ✅ SHIPPED 38e6977 (2026-07-17)
 
 **Follow-up to Draft 7** (the GAINS demo page). Add a new **"Videos"** section that holds the psychoeducation video **scripts** we have so far. The videos aren't produced yet, so each card shows a **"Video in production"** placeholder + the script + duration + which zone/beat it maps to. Leave the card structured so the real video (reuse the Ready for Roots Vimeo `VideoPlayer` pattern) can be dropped in later. Source docs live in `Gains for Teens/` (`GAINS Teens Part 1 and 2 Activities and Script Integrated.docx`, `Growth Mindset Script to send.docx`); the exact copy is inline below — use it verbatim.
 
@@ -532,3 +547,23 @@ long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premis
 **Verify.** The Videos section renders four cards, each with title + duration + "Video in production" placeholder + script + zone mapping; no IP character content present; feedback works tagged `section=videos`. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 9.*
+
+
+### Draft 10 — GAINS demo: activity placeholder cards + narrator options — ✅ SHIPPED 38e6977 (2026-07-17)
+
+**Follow-up to Draft 7 (demo page).** Two additions.
+
+**A. Activities section — replace the empty state with placeholder cards for the two activities we now have content for** (from Stephanie's July 17 doc). Descriptions only for now (interactive versions built later); style them like the Videos cards, each marked **"Interactive version in development."**
+
+- **Body Mapping** — ~1 min · pairs with Video 1 · Zone 1 · goal: normalize the body's responses.
+  *Part 1:* tap to reveal how five parts of the body react during and after trauma — **Lungs** (breathe faster to take in more oxygen), **Head** (thoughts race, hard to think clearly, dizzy or detached/unreal), **Heart** (beats faster and harder), **Stomach** (upset or nauseous as blood moves to the arms and legs), **Body** (heats up and sweats, muscles tense, shaky or tingly) — then note these responses can linger after the danger passes or resurface when something reminds you of it. *Part 2:* tap each reaction you've felt recently.
+- **Character Examples** — ~1 min · pairs with Video 2 · Zone 2 · goal: recognize and name trauma reactions.
+  Meet the four messenger creatures — **Emberwick, Mirefly, Hollowshell, Dimmet** — and for each, hear a short script and choose which of the four symptom types it shows (reactivity, intrusion, avoidance, negative mood/thoughts). Ends with an animation of all four creatures' symptoms easing.
+
+**B. Concept Art section — fill the narrator slot with the TWO options** (staged: `art/narrator-spark.webp`, `art/narrator-keeper.webp`). Present as **"Narrator — two options (which fits best?)"** so the team can weigh in via feedback. The narrator narrates, gives instructions, and delivers much of the psychoeducation, accompanying the journey.
+- **Option 1 — The Spark.** A small companion spirit of living light, a piece of the Beacon's glow that travels beside you and lights the way. Best as an ever-present voice threaded through the whole journey.
+- **Option 2 — The Lantern Keeper.** A serene hooded guide whose lantern is its face; an ancient keeper of the path who has made the climb and now lights it for others. Best as a mentor who appears at key moments.
+
+**Verify.** Activities section shows the two placeholder cards (each "interactive version in development"); Concept Art narrator slot shows both options with images + descriptions and invites a preference; feedback works (tagged). No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 10.*
