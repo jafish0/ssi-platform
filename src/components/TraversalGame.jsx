@@ -7,6 +7,10 @@
 // free the WebGL context. Persistent state lives in React; the scene reports
 // results out through onComplete.
 //
+// The game mounts and idles immediately; the flight begins only when
+// `started` flips true (set from the instructions "Begin" tap) — that also
+// serves as the mobile audio-unlock gesture. `muted` toggles the sound.
+//
 // To replay, remount this component with a changed `key` from the parent —
 // that guarantees a full teardown + fresh game each run (no accumulating
 // WebGL contexts).
@@ -17,18 +21,26 @@ const ASSETS = {
   bgUrl: '/gains/traversal/ravine-bg.webp',
   fgUrl: '/gains/traversal/ravine-fg.png',
   birdUrl: '/gains/traversal/bird.png',
+  musicUrl: '/gains/traversal/audio/music-ascent-loop.mp3',
+  sfxCollectUrl: '/gains/traversal/audio/sfx-collect.mp3',
 }
 
 export default function TraversalGame({
-  durationMs = 35000,
+  goal = 50,
+  started = false,
+  muted = false,
   reducedMotion = false,
   onComplete,
 }) {
   const containerRef = useRef(null)
   const gameRef = useRef(null)
-  // Keep the latest onComplete without re-running the mount effect.
+  // Latest values without re-running the mount effect.
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
+  const startedRef = useRef(started)
+  startedRef.current = started
+  const mutedRef = useRef(muted)
+  mutedRef.current = muted
 
   useEffect(() => {
     let game = null
@@ -55,16 +67,18 @@ export default function TraversalGame({
           scene: [Scene],
         })
 
-        // Registry is available synchronously; the scene reads it in init()
-        // once the game boots on the next tick.
+        // Registry is available synchronously; the scene reads config in
+        // init() and polls 'traversalStarted' in update().
         game.registry.set('traversalConfig', {
           ...ASSETS,
-          durationMs,
+          goal,
           reducedMotion,
           onComplete: (result) => {
             if (onCompleteRef.current) onCompleteRef.current(result)
           },
         })
+        game.registry.set('traversalStarted', startedRef.current)
+        game.sound.mute = mutedRef.current
 
         gameRef.current = game
       })
@@ -86,7 +100,19 @@ export default function TraversalGame({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [durationMs, reducedMotion])
+  }, [goal, reducedMotion])
+
+  // Signal the flight to begin once the instructions are dismissed.
+  useEffect(() => {
+    if (gameRef.current && started) {
+      gameRef.current.registry.set('traversalStarted', true)
+    }
+  }, [started])
+
+  // Live mute toggle.
+  useEffect(() => {
+    if (gameRef.current) gameRef.current.sound.mute = muted
+  }, [muted])
 
   return (
     <div

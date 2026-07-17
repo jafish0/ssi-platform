@@ -1,7 +1,7 @@
 // Reusable Tier-2 traversal scene for GAINS for Teens (Draft 8).
 //
 // This is the SEED of the reusable `traversal` item type — every future
-// zone reskins it by passing different art/palette/duration. It is
+// zone reskins it by passing different art/palette/audio/goal. It is
 // engine-agnostic: it keeps NO globals, reads its config from the game
 // registry, and reports results out through `onComplete` so React owns all
 // persistent state.
@@ -10,16 +10,23 @@
 // in because it's dynamically imported (code-split) by <TraversalGame>, so
 // the class can't be declared at module top level.
 //
-// Vertical, no-fail ascent: the world (a fixed ravine plate, dark bottom →
-// gold top) pans upward past a lower-centre bird the player steers with one
-// thumb. "Connection" motes descend from the top of the channel (the lights
-// you're climbing toward) and are collected on overlap (purely additive —
-// missing them costs nothing). The bird is clamped to the open channel, so it
-// can never crash, stall, or fail — it always reaches the top, where a warm
-// bloom plays and `onComplete({ motesCollected })` fires.
+// Vertical, no-fail ascent driven by collection: the player steers a
+// lower-centre bird with one thumb and gathers "connection" orbs that
+// descend from the top of the channel. Each connection lifts the climb a
+// little (the world pans from dark bottom → gold top as connections are
+// gathered — understanding brightens the world). Reaching the GOAL count of
+// connections = arriving at the light: a warm bloom plays and
+// `onComplete({ motesCollected })` fires. Missing an orb costs nothing and
+// the bird is clamped to the open channel, so it can never crash, stall, or
+// fail — only take longer.
+//
+// The scene idles (bird bobs, ambient motes rise) until React flips the
+// registry flag `traversalStarted` — that gates the flight behind the
+// instructions screen and lets the "Begin" tap unlock mobile audio.
 //
 // Config (via registry key 'traversalConfig'):
-//   { bgUrl, fgUrl, birdUrl, durationMs, reducedMotion, palette, onComplete }
+//   { bgUrl, fgUrl, birdUrl, musicUrl, sfxCollectUrl, goal,
+//     reducedMotion, palette, onComplete }
 
 // Source art is 768×1376; the game renders at a fixed 540×960 (9:16) base
 // and Phaser's Scale.FIT handles the device — so all layout math below is
@@ -29,7 +36,7 @@ const GAME_H = 960
 const PLATE_RATIO = 1376 / 768 // height / width of the source plates
 
 const DEFAULTS = {
-  durationMs: 35000,
+  goal: 50,
   reducedMotion: false,
   palette: { bloom: 0xfff3d0, mote: 0xffd27a, ink: 0x05070e },
 }
@@ -49,7 +56,7 @@ export function makeTraversalScene(Phaser) {
         ...cfg,
         palette: { ...DEFAULTS.palette, ...(cfg.palette || {}) },
       }
-      this.durationMs = this.cfg.durationMs
+      this.goal = this.cfg.goal
       this.reduced = !!this.cfg.reducedMotion
 
       // Channel the bird is kept inside (no-fail bounds).
@@ -57,10 +64,10 @@ export function makeTraversalScene(Phaser) {
       this.maxX = GAME_W * 0.8
       this.baseY = GAME_H * 0.72
 
-      this.elapsed = 0
-      this.p = 0
+      this.started = false
       this.arrived = false
       this.ready = false
+      this.p = 0 // ascent progress, driven by connections/goal
       this.motes = 0
       this.conns = []
       this.connSpeed = 170 // px/s, descending from the top of the channel
@@ -71,6 +78,8 @@ export function makeTraversalScene(Phaser) {
       this.load.image('rv-bg', this.cfg.bgUrl)
       this.load.image('rv-fg', this.cfg.fgUrl)
       this.load.image('bird', this.cfg.birdUrl)
+      if (this.cfg.musicUrl) this.load.audio('music', this.cfg.musicUrl)
+      if (this.cfg.sfxCollectUrl) this.load.audio('sfx-collect', this.cfg.sfxCollectUrl)
     }
 
     create() {
@@ -126,7 +135,6 @@ export function makeTraversalScene(Phaser) {
         .setDepth(45)
         .setScale(0.2)
       if (!this.reduced) {
-        // wing-flap (subtle vertical squash)
         this.tweens.add({
           targets: this.bird,
           scaleY: 0.185,
@@ -135,7 +143,6 @@ export function makeTraversalScene(Phaser) {
           repeat: -1,
           ease: 'Sine.inOut',
         })
-        // sparkle trail
         this.trail = this.add
           .particles(0, 0, 'mote', {
             follow: this.bird,
@@ -158,34 +165,56 @@ export function makeTraversalScene(Phaser) {
         .setDepth(60)
         .setAlpha(0)
       this.counter = this.add
-        .text(GAME_W / 2, 42, '✦ 0', {
+        .text(GAME_W / 2, 42, '✦ 0 / ' + this.goal, {
           fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
           fontSize: '26px',
           color: '#ffe9b0',
         })
         .setOrigin(0.5, 0.5)
         .setDepth(70)
-        .setAlpha(0.85)
+        .setAlpha(0) // hidden until the flight begins
+
+      // --- audio (created here; playback deferred to begin()) ---
+      if (this.cache.audio.exists('music')) {
+        this.music = this.sound.add('music', { loop: true, volume: 0.35 })
+      }
 
       // --- input (one thumb; pointer + arrow keys) ---
       this.cursors = this.input.keyboard.createCursorKeys()
       const steer = (pointer) => {
-        if (!this.reduced && !this.arrived) {
+        if (!this.reduced && this.started && !this.arrived) {
           this.targetX = clamp(pointer.x, this.minX, this.maxX)
         }
       }
       this.input.on('pointermove', steer)
       this.input.on('pointerdown', steer)
 
-      // --- connection-mote spawner ---
+      this.ready = true
+    }
+
+    // Flip on when React sets registry 'traversalStarted' (polled in update).
+    begin() {
+      if (this.started) return
+      this.started = true
+      this.counter.setAlpha(0.85)
+      this.startMusic()
       this.spawnTimer = this.time.addEvent({
-        delay: this.reduced ? 1300 : 950,
+        delay: this.reduced ? 750 : 500,
         loop: true,
         callback: () => this.spawnConn(),
       })
-      this.time.delayedCall(500, () => this.spawnConn())
+      this.time.delayedCall(350, () => this.spawnConn())
+    }
 
-      this.ready = true
+    startMusic() {
+      if (!this.music) return
+      if (this.sound.locked) {
+        this.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+          if (this.music && !this.arrived) this.music.play()
+        })
+      } else {
+        this.music.play()
+      }
     }
 
     positionPlates(p) {
@@ -198,8 +227,9 @@ export function makeTraversalScene(Phaser) {
     spawnConn() {
       if (this.arrived) return
       const x = this.reduced
-        ? GAME_W / 2 + Phaser.Math.Between(-55, 55)
+        ? GAME_W / 2 + Phaser.Math.Between(-45, 45)
         : Phaser.Math.Between(this.minX, this.maxX)
+      // Descend from just above the top of the channel.
       const m = this.add
         .image(x, -30, 'mote')
         .setDepth(30)
@@ -221,7 +251,10 @@ export function makeTraversalScene(Phaser) {
 
     collect(m, i) {
       this.motes += 1
-      this.counter.setText('✦ ' + this.motes)
+      this.counter.setText('✦ ' + this.motes + ' / ' + this.goal)
+      if (this.cache.audio.exists('sfx-collect') && !this.sound.locked) {
+        this.sound.play('sfx-collect', { volume: 0.55 })
+      }
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         try {
           navigator.vibrate(10)
@@ -245,19 +278,34 @@ export function makeTraversalScene(Phaser) {
       }
       m.destroy()
       this.conns.splice(i, 1)
+      if (this.motes >= this.goal) this.arrive()
     }
 
     arrive() {
       if (this.arrived) return
       this.arrived = true
       if (this.spawnTimer) this.spawnTimer.remove()
+      if (this.music && this.music.isPlaying) {
+        this.tweens.add({ targets: this.music, volume: 0, duration: 900 })
+      }
+      // Glide the last of the pan to the gold top, then bloom + finish.
+      this.tweens.add({
+        targets: this,
+        p: 1,
+        duration: 700,
+        ease: 'Sine.inOut',
+        onUpdate: () => this.positionPlates(this.p),
+        onComplete: () => this.bloomAndFinish(),
+      })
+    }
+
+    bloomAndFinish() {
       const finish = () =>
         this.time.delayedCall(this.reduced ? 120 : 420, () => {
           if (typeof this.cfg.onComplete === 'function') {
             this.cfg.onComplete({ motesCollected: this.motes })
           }
         })
-
       if (this.reduced) {
         this.tweens.add({
           targets: this.bloom,
@@ -283,11 +331,22 @@ export function makeTraversalScene(Phaser) {
     update(time, delta) {
       if (!this.ready) return
 
+      // Idle until React flips the start flag (instructions screen up).
+      if (!this.started) {
+        if (this.game.registry.get('traversalStarted')) {
+          this.begin()
+        } else {
+          if (!this.reduced) this.bird.y = this.baseY + Math.sin(time * 0.004) * 8
+          return
+        }
+      }
+
+      // Ascent progress is driven by connections gathered, eased smoothly so
+      // each catch glides the climb upward rather than snapping.
       if (!this.arrived) {
-        this.elapsed += delta
-        this.p = Math.min(1, this.elapsed / this.durationMs)
+        const targetP = clamp(this.motes / this.goal, 0, 1)
+        this.p += (targetP - this.p) * 0.06
         this.positionPlates(this.p)
-        if (this.p >= 1) this.arrive()
       }
 
       // steering + bob
@@ -300,7 +359,6 @@ export function makeTraversalScene(Phaser) {
         this.bird.rotation += (desiredTilt - this.bird.rotation) * 0.1
         this.bird.y = this.baseY + Math.sin(time * 0.004) * 8
       } else {
-        // calm auto-centred ascent
         this.bird.x += (GAME_W / 2 - this.bird.x) * 0.05
         this.bird.y = this.baseY
       }
@@ -311,7 +369,7 @@ export function makeTraversalScene(Phaser) {
         m.y += (this.connSpeed * delta) / 1000
         if (
           !this.arrived &&
-          Phaser.Math.Distance.Between(this.bird.x, this.bird.y, m.x, m.y) < 40
+          Phaser.Math.Distance.Between(this.bird.x, this.bird.y, m.x, m.y) < 46
         ) {
           this.collect(m, i)
           continue
