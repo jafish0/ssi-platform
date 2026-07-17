@@ -96,6 +96,13 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **ea493a4** (2026-07-17) — Traversal tweak (in-conversation, no draft): connection
+  lights now **descend from the top** of the channel and drift down toward the bird as
+  it climbs (was spawning below and rising) — reads as flying up to meet the lights
+  ahead, and gives a longer intercept runway. Ambient ember particles still rise
+  (atmosphere). Prototype + demo copy updated to match. (Still can't run the RAF loop
+  in the headless pane — worth an eyeball on device.)
+
 - **83f6757** (2026-07-17) — Draft 8: first Phaser traversal prototype + **reusable
   Tier-2 game foundation**. Added Phaser 3 (`phaser@^3.90.0`), lazy-loaded via dynamic
   `import('phaser')` so it code-splits into its own ~1.48 MB chunk — main bundle
