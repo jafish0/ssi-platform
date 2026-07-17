@@ -12,10 +12,11 @@
 //
 // Vertical, no-fail ascent: the world (a fixed ravine plate, dark bottom →
 // gold top) pans upward past a lower-centre bird the player steers with one
-// thumb. Rising "connection" motes are collected on overlap (purely
-// additive — missing them costs nothing). The bird is clamped to the open
-// channel, so it can never crash, stall, or fail — it always reaches the
-// top, where a warm bloom plays and `onComplete({ motesCollected })` fires.
+// thumb. "Connection" motes descend from the top of the channel (the lights
+// you're climbing toward) and are collected on overlap (purely additive —
+// missing them costs nothing). The bird is clamped to the open channel, so it
+// can never crash, stall, or fail — it always reaches the top, where a warm
+// bloom plays and `onComplete({ motesCollected })` fires.
 //
 // Config (via registry key 'traversalConfig'):
 //   { bgUrl, fgUrl, birdUrl, durationMs, reducedMotion, palette, onComplete }
@@ -62,7 +63,7 @@ export function makeTraversalScene(Phaser) {
       this.ready = false
       this.motes = 0
       this.conns = []
-      this.connSpeed = 170 // px/s, rising up the channel
+      this.connSpeed = 170 // px/s, descending from the top of the channel
       this.targetX = GAME_W / 2
     }
 
@@ -200,7 +201,7 @@ export function makeTraversalScene(Phaser) {
         ? GAME_W / 2 + Phaser.Math.Between(-55, 55)
         : Phaser.Math.Between(this.minX, this.maxX)
       const m = this.add
-        .image(x, GAME_H + 30, 'mote')
+        .image(x, -30, 'mote')
         .setDepth(30)
         .setScale(1.5)
         .setTint(this.cfg.palette.mote)
@@ -304,10 +305,10 @@ export function makeTraversalScene(Phaser) {
         this.bird.y = this.baseY
       }
 
-      // rising connection motes + collection
+      // connection motes descend from the top + collection
       for (let i = this.conns.length - 1; i >= 0; i--) {
         const m = this.conns[i]
-        m.y -= (this.connSpeed * delta) / 1000
+        m.y += (this.connSpeed * delta) / 1000
         if (
           !this.arrived &&
           Phaser.Math.Distance.Between(this.bird.x, this.bird.y, m.x, m.y) < 40
@@ -315,7 +316,7 @@ export function makeTraversalScene(Phaser) {
           this.collect(m, i)
           continue
         }
-        if (m.y < -40) {
+        if (m.y > GAME_H + 40) {
           m.destroy()
           this.conns.splice(i, 1)
         }

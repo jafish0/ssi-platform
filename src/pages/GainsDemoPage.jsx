@@ -323,9 +323,9 @@ export default function GainsDemoPage() {
             </h3>
             <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
               A first playable of the between-zone flight: one-thumb steering,
-              rising “connection” lights to gather, and a no-fail climb toward
-              the light. This is the reusable game engine every future zone will
-              reskin.
+              “connection” lights drifting down to gather, and a no-fail climb
+              toward the light. This is the reusable game engine every future
+              zone will reskin.
             </p>
             <Link
               to="/gains-demo/traversal"

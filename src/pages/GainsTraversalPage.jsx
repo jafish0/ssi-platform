@@ -64,8 +64,9 @@ export default function GainsTraversalPage() {
         </h1>
         <p className="text-[14px] text-slate-600 leading-relaxed max-w-[620px]">
           A first playable of the between-zone flight. Steer with one thumb
-          (drag anywhere, or arrow keys on desktop) and gather the rising
-          lights — the <em>connections</em> that carry you up. It&apos;s{' '}
+          (drag anywhere, or arrow keys on desktop) and gather the lights
+          drifting down toward you — the <em>connections</em> that carry you up.
+          It&apos;s{' '}
           <strong>no-fail</strong>: you can&apos;t crash or lose, and you always
           reach the light. Concept art and feel are prototype-stage.
         </p>
