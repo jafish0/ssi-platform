@@ -62,7 +62,7 @@ export function makeTraversalScene(Phaser) {
       // Channel the bird is kept inside (no-fail bounds).
       this.minX = GAME_W * 0.2
       this.maxX = GAME_W * 0.8
-      this.baseY = GAME_H * 0.72
+      this.baseY = GAME_H * 0.62
 
       this.started = false
       this.arrived = false
