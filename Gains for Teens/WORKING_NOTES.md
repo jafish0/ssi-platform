@@ -96,6 +96,31 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **94a66a4** (2026-07-17) — Draft 7: GAINS Teens demo page at **/gains-demo**
+  (unlisted React route, `src/pages/GainsDemoPage.jsx`), mirroring the RfR `/demo`
+  pattern with the RfR feedback system reused. Sections: Pre/Post Measures & Consent
+  ("In development"), Activities (empty state, RfR pattern), Concept Art (4 player
+  avatars, 4 messengers w/ symptom labels, world map, 5 zones — all reusing the WebP
+  served from `/long-light/` via absolute paths; narrator "art coming" slot), and the
+  written Gameplay Loop & Zone Map spec verbatim from the pitch page's spec panel.
+  Feedback: migration `feedback_add_program_section` added `program` (default
+  `ready-for-roots`, backfills old rows) + `section` to `public.feedback`;
+  `submit-feedback` edge fn → v5 (accepts `program`/`section`, program allow-listed);
+  GAINS modal has a Section select (pre-post / activities / concept-art / pitch /
+  general); `/admin/feedback` gained a Program filter, GAINS badge + section tag, and
+  program/section in the CSV. Verified end-to-end: test submission landed tagged
+  `gains-teens` + `concept-art` (then deleted); RfR demo regression-checked
+  (unchanged). Change-log entry in INFRASTRUCTURE.md (note there: the v5 deploy
+  flipped `verify_jwt` false→true — harmless with the legacy anon JWT, redeploy with
+  false if the client ever moves to `sb_publishable_*` keys).
+
+- **dd4d1cc** (2026-07-17) — Draft 6: added `<base href="/long-light/">` to the pitch
+  page `<head>` so relative asset paths resolve correctly at BOTH `/long-light` and
+  `/long-light/` (no-slash URL serves 200 rather than redirecting, so relative refs
+  were resolving against `/` and 404ing — every image broken for anyone whose email
+  client stripped the slash). No internal anchors/links affected. Verified live: base
+  tag serving on both URL forms.
+
 - **d3cf367** (2026-07-08) — Spec §3 "The frame" copy replaced (in-conversation, no
   draft): now the participant-focused framing — "an adventure the participant plays,"
   quest to understand what trauma is / how it shows up / how people find their way to
@@ -346,7 +371,7 @@ Keep the eyebrow "GAINS for Teens · A Single-Session Intervention" and the "Scr
 
 > [Note: the archived Draft 5 text just above was cut off by a write error; the full shipped text is in git commit 7a743a0.]
 
-### Draft 6 — Fix relative asset paths so the pitch images don't 404 without a trailing slash
+### Draft 6 — Fix relative asset paths so the pitch images don't 404 without a trailing slash — ✅ SHIPPED dd4d1cc (2026-07-17)
 
 **Problem (live now).** `public/long-light/index.html` references images with **relative** paths (`url("zone1.webp")`, `art/…​.webp`). The files live at `public/long-light/` and `public/long-light/art/`. Those resolve correctly only when the page URL ends in a trailing slash (`/long-light/`). But the server redirects `https://ssi.ctac.app/long-light/` → `https://ssi.ctac.app/long-light` (drops the slash), so the browser resolves the relative paths against `/` and requests `/art/…​.webp` and `/zone1.webp`, which 404. Net effect: **every image on the pitch page is broken.** Confirmed by fetching the page (image src URLs resolve to `ssi.ctac.app/art/…`, not `…/long-light/art/…`).
 
@@ -362,3 +387,29 @@ Optionally also set `trailingSlash`/redirect config so `/long-light/` is canonic
 long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premise + ending are the new copy; loop shows 5 beats incl. the pending obstacle; gallery shows World + 4 selectable travelers + 4 messengers; all art loads; scroll dark→gold intact. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 5.*
+
+
+### Draft 7 — GAINS Teens demo page (mirrors Ready for Roots demo; reuses the RfR feedback system) — ✅ SHIPPED 94a66a4 (2026-07-17)
+
+**Context.** Pitch is approved. Stand up an internal **GAINS Teens demo page** for the team to review and leave feedback — the same kind of surface as the Ready for Roots `/demo`, reusing the **RfR feedback system** (the team specifically likes it). Separate from the public `/long-light/` pitch page. Unlisted; shared by link.
+
+**Route.** A **separate, standalone** React route in this app — e.g. `/gains-demo`. **Do NOT add to or modify the Ready for Roots `/demo` page; leave it entirely untouched.** This is its own page; the only thing shared with Ready for Roots is the **feedback-system code** (`FeedbackButton` + the submission/admin pipeline), NOT the page. It must render inside the app so it can use that feedback pipeline.
+
+**Feedback system (reuse RfR).** Wire the existing `FeedbackButton` / feedback submission + `AdminFeedbackPage` pipeline onto this page. **Tag GAINS demo feedback distinctly from Ready for Roots** — add a `program` value (e.g. `"gains-teens"`) and, since there are no versioned activities yet, tag the **section** the feedback was left on (pre-post, activities, concept-art, pitch) so comments are attributable and admin triage can filter GAINS vs RfR in the shared table. If the feedback schema needs a column for program/section, add it via `apply_migration` following the CLAUDE.md grant + RLS pattern, and log it in INFRASTRUCTURE.md.
+
+**Sections (in order):**
+1. **Pre/Post Measures & Consent** — placeholder only: a card that reads **"In development."** (Measures not identified yet.)
+2. **Activities** — same structure as the Ready for Roots demo's activities section, but none exist yet: an **empty state** ("Activities in development") using the RfR pattern so activities can be dropped in later.
+3. **Concept Art** — pull and **organize the art we have**, reusing the WebP already in `public/long-light/art/` and `public/long-light/` (use absolute paths, e.g. `/long-light/art/…`):
+   - **Choose your traveler** (player avatars): `avatar-traveler-1.webp` (The Traveler), `avatar-creature.webp` (The Creature), `avatar-traveler-2.webp` (The Wayfarer), `avatar-construct.webp` (The Construct).
+   - **The messengers**: `emberwick.webp`, `mirefly.webp`, `hollowshell.webp`, `dimmet.webp` (with symptom labels).
+   - **The world map**: `map-and-world.webp`.
+   - **The zones**: `zone1.webp`–`zone5.webp` (The Hollow, The Lantern Path, The Mistfields, The Bright Reaches, The Threshold).
+   - Leave a slot for the **narrator** (art coming). Reuse the labels/descriptions from the pitch page's "The World & Its Travelers" gallery.
+4. **The pitch (written)** — render the full **Gameplay Loop & Zone Map** spec: the intro line + sections 1–5 (The gameplay loop, Design principles, The frame, The messengers, Zone map table). **Reuse the exact spec text already in `public/long-light/index.html` (the spec panel)** so the two stay in sync — do not rewrite it.
+
+**Style.** Match the app's demo styling / CTAC palette (consistent with the RfR demo). No scroll-cinematics needed — this is a clean, sectioned review page. Optionally link out to the live pitch at `/long-light/`.
+
+**Verify.** Load the route; all sections render; Pre/Post + Activities show "in development"; concept art loads (4 avatars, 4 messengers, map, 5 zones) with no 404s; the written spec matches the pitch page; the feedback button submits and is tagged GAINS + section; it shows in the admin feedback view, distinguishable from RfR. Record any schema change in INFRASTRUCTURE.md. Log Recently-shipped + mark shipped.
+
+*End of Draft 7.*
