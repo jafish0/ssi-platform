@@ -36,6 +36,7 @@ const PROGRAMS = [
 const SECTION_LABELS = {
   'pre-post': 'Pre/Post Measures',
   activities: 'Activities',
+  videos: 'Videos',
   'concept-art': 'Concept Art',
   'traversal-prototype': 'Traversal prototype',
   pitch: 'The pitch (written)',

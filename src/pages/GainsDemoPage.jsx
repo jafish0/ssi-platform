@@ -15,16 +15,56 @@
 
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, Image as ImageIcon, Play } from 'lucide-react'
+import { HardHat, Play, Film } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'pre-post', label: 'Pre/Post Measures & Consent' },
   { value: 'activities', label: 'Activities' },
+  { value: 'videos', label: 'Videos' },
   { value: 'concept-art', label: 'Concept Art' },
   { value: 'traversal-prototype', label: 'Traversal prototype' },
   { value: 'pitch', label: 'The pitch (written)' },
   { value: 'general', label: 'General / whole page' },
+]
+
+// ---------- Psychoeducation video scripts (Draft 9). Videos aren't
+// produced yet — each card shows the verbatim script + length + zone. ----------
+
+const VIDEOS = [
+  {
+    track: 'Trauma 101 · Video 1',
+    title: 'What trauma is',
+    duration: '25 sec',
+    zone: 'Zone 1 · The Hollow',
+    script:
+      'A trauma is any frightening, dangerous, or violent event that harms or threatens to harm your life or well-being (for example, physical abuse, a serious car accident, or even a natural disaster). A trauma can also be something that happens to someone you love or something you witness (for example, seeing parents physically hurt one another, or having someone close suddenly die). Our minds and bodies automatically react to trauma in multiple ways, and even after the trauma is over our bodies have difficulty relaxing.',
+  },
+  {
+    track: 'Trauma 101 · Video 2',
+    title: 'The four reactions',
+    duration: '45 sec',
+    zone: 'Zone 2 · The Lantern Path',
+    note: 'Production note: show each category label on screen as it’s described.',
+    script:
+      'Experiencing trauma can cause lots of reactions, in addition to our body’s responses, and these are grouped into four main categories. Hypervigilance or reactivity: feeling more on edge or jumpy, on the lookout for danger — this can even make sleeping hard because your body and mind just won’t calm down. Intrusion: not being able to stop thinking about the trauma, or feeling like it’s happening all over again. Avoidance: trying hard not to think about it or staying away from reminders — it might feel okay at first, but pushing things down always causes more problems in the long term. And negative changes in mood and thoughts: more sadness, anger, or worry, and thoughts like “there’s no one I can trust” or “what happened was my fault.” Let’s look at some examples to better understand what these reactions look like.',
+  },
+  {
+    track: 'Trauma 101 · Video 3',
+    title: 'These are normal; help works',
+    duration: '25 sec',
+    zone: 'Zone 3 · The Mistfields',
+    script:
+      'Even though it may not feel like it, these are all normal reactions to experiencing trauma — your brain and body’s way of trying to keep you safe. But here’s the most important thing: trauma is something that happened to you, but it doesn’t define who you are. There are healthy ways to recover from even the worst things that happen to us. None of these characters healed alone — they recovered with the help of a good support system. Trauma therapy is one part of a good support system that can help people recover from very difficult things.',
+  },
+  {
+    track: 'Growth Mindset',
+    title: 'Choosing your mindset',
+    duration: '~55 sec',
+    zone: 'Part 2 · getting-help (Zone 4–5)',
+    script:
+      'Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think of it like colored glasses — put on a blue-tinted pair and everything looks blue, but you can choose a green pair and turn everything green. We often talk about two mindsets people “wear”: fixed and growth. With a fixed mindset on, you might think trauma therapy won’t help you, because nothing can change how you feel or think about what happened. That’s tricky: if you have that thought, you probably won’t want to begin trauma therapy, or you won’t really commit to it — and then things really don’t change for you. But that’s not because the thought was true; it’s a result of the fixed mindset you’re wearing. When you choose to put on your growth mindset, you recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy, and it will help you get the most benefit from treatment.',
+  },
 ]
 
 // ---------- Concept-art data (labels/descriptions from the pitch page's
@@ -290,13 +330,68 @@ export default function GainsDemoPage() {
 
       {/* 2. Activities */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           Activities
         </h2>
-        <InDevelopmentCard
-          label="Activities in development."
-          note="As activities are built they'll appear here as launchable sandbox cards, the same way the Ready for Roots demo works."
-        />
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          The reinforcing activities we have content for. Interactive versions
+          are in development — these describe how each will play.
+        </p>
+        <div className="space-y-4 max-w-[760px]">
+          <ActivityCard
+            title="Body Mapping"
+            duration="~1 min"
+            meta="Pairs with Video 1 · Zone 1"
+            goal="Normalize the body’s responses."
+          >
+            <p className="text-[14px] text-slate-700 leading-relaxed">
+              <strong>Part 1:</strong> tap to reveal how five parts of the body
+              react during and after trauma — <strong>Lungs</strong> (breathe
+              faster to take in more oxygen), <strong>Head</strong> (thoughts
+              race, hard to think clearly, dizzy or detached/unreal),{' '}
+              <strong>Heart</strong> (beats faster and harder),{' '}
+              <strong>Stomach</strong> (upset or nauseous as blood moves to the
+              arms and legs), <strong>Body</strong> (heats up and sweats, muscles
+              tense, shaky or tingly) — then note these responses can linger
+              after the danger passes or resurface when something reminds you of
+              it.
+            </p>
+            <p className="text-[14px] text-slate-700 leading-relaxed mt-2">
+              <strong>Part 2:</strong> tap each reaction you’ve felt recently.
+            </p>
+          </ActivityCard>
+
+          <ActivityCard
+            title="Character Examples"
+            duration="~1 min"
+            meta="Pairs with Video 2 · Zone 2"
+            goal="Recognize and name trauma reactions."
+          >
+            <p className="text-[14px] text-slate-700 leading-relaxed">
+              Meet the four messenger creatures —{' '}
+              <strong>Emberwick, Mirefly, Hollowshell, Dimmet</strong> — and for
+              each, hear a short script and choose which of the four symptom types
+              it shows (reactivity, intrusion, avoidance, negative mood/thoughts).
+              Ends with an animation of all four creatures’ symptoms easing.
+            </p>
+          </ActivityCard>
+        </div>
+      </section>
+
+      {/* Videos — psychoeducation scripts (production pending) */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Videos
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          The psychoeducation video scripts. The videos aren’t produced yet —
+          each card shows the script, its length, and where it lands in the climb.
+        </p>
+        <div className="space-y-4 max-w-[760px]">
+          {VIDEOS.map((v) => (
+            <VideoCard key={v.track} {...v} />
+          ))}
+        </div>
       </section>
 
       {/* Prototypes */}
@@ -396,23 +491,26 @@ export default function GainsDemoPage() {
           ))}
         </div>
 
-        {/* Narrator — art coming */}
-        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">The narrator</h3>
-        <div className="max-w-[360px]">
-          <div className="bg-white rounded-2xl shadow-card p-4">
-            <div
-              role="img"
-              aria-label="The narrator — art coming soon"
-              className="w-full aspect-[9/16] max-h-[280px] bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500 mb-3"
-            >
-              <ImageIcon size={28} strokeWidth={1.5} className="mb-2 opacity-50" />
-              <span className="text-sm italic">Art coming</span>
-            </div>
-            <h4 className="text-[15px] font-semibold text-slate-800">The Narrator</h4>
-            <p className="text-[13px] text-slate-600 leading-relaxed">
-              Concept art in progress.
-            </p>
-          </div>
+        {/* Narrator — two options for the team to weigh in on */}
+        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
+          Narrator — two options (which fits best?)
+        </h3>
+        <p className="text-[13px] text-slate-500 mb-4 max-w-[620px]">
+          The narrator narrates, gives instructions, and delivers much of the
+          psychoeducation, accompanying the journey. Two directions — tell us
+          which fits (use <strong>Give feedback</strong> → Concept Art).
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[560px]">
+          <ArtCard
+            src={`${ART}/narrator-spark.webp`}
+            name="Option 1 — The Spark"
+            blurb="A small companion spirit of living light, a piece of the Beacon’s glow that travels beside you and lights the way. Best as an ever-present voice threaded through the whole journey."
+          />
+          <ArtCard
+            src={`${ART}/narrator-keeper.webp`}
+            name="Option 2 — The Lantern Keeper"
+            blurb="A serene hooded guide whose lantern is its face; an ancient keeper of the path who has made the climb and now lights it for others. Best as a mentor who appears at key moments."
+          />
         </div>
       </section>
 
@@ -508,6 +606,57 @@ function InDevelopmentCard({ label, note }) {
       <p className="text-[16px] font-semibold text-slate-700 mb-1">{label}</p>
       {note && <p className="text-[13px] text-slate-500">{note}</p>}
     </div>
+  )
+}
+
+// Video-script card: title + duration + zone, a "Video in production" pill,
+// an optional production note, and the verbatim script. Structured so a real
+// player (the RfR Vimeo VideoPlayer pattern) can drop in later.
+function VideoCard({ track, title, duration, zone, note, script }) {
+  return (
+    <article className="bg-white rounded-2xl shadow-card p-5">
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-0.5">
+        <div>
+          <div className="text-[11px] uppercase tracking-wide text-ctac-teal-700 font-semibold">
+            {track}
+          </div>
+          <h3 className="text-[16px] font-semibold text-slate-800">{title}</h3>
+        </div>
+        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
+          {duration}
+        </span>
+      </div>
+      <div className="text-[12px] text-slate-500 mb-3">{zone}</div>
+      <div className="inline-flex items-center gap-1.5 text-[12px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 mb-3">
+        <Film size={13} strokeWidth={2} />
+        Video in production
+      </div>
+      {note && <p className="text-[12px] italic text-slate-500 mb-2">{note}</p>}
+      <p className="text-[14px] text-slate-700 leading-relaxed">{script}</p>
+    </article>
+  )
+}
+
+// Activity card: title + duration + zone/pairing + goal, an "Interactive
+// version in development" pill, and the description (passed as children).
+function ActivityCard({ title, duration, meta, goal, children }) {
+  return (
+    <article className="bg-white rounded-2xl shadow-card p-5">
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-0.5">
+        <h3 className="text-[16px] font-semibold text-slate-800">{title}</h3>
+        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
+          {duration}
+        </span>
+      </div>
+      <div className="text-[12px] text-slate-500 mb-3">
+        {meta} · Goal: {goal}
+      </div>
+      <div className="inline-flex items-center gap-1.5 text-[12px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 mb-3">
+        <HardHat size={13} strokeWidth={2} />
+        Interactive version in development
+      </div>
+      {children}
+    </article>
   )
 }
 
