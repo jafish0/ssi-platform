@@ -23,6 +23,7 @@ export default function DemoPageLayout({
   footerPath = '/demo',
   feedbackProgram = 'ready-for-roots',
   feedbackSections = null,
+  feedbackDefaultSection = null,
 }) {
   return (
     <div className="min-h-screen bg-ctac-teal-50 flex flex-col">
@@ -34,7 +35,11 @@ export default function DemoPageLayout({
           </Link>
           <div className="flex-1" />
           <LogoStrip variant="institutional" />
-          <FeedbackButton program={feedbackProgram} sections={feedbackSections} />
+          <FeedbackButton
+            program={feedbackProgram}
+            sections={feedbackSections}
+            defaultSection={feedbackDefaultSection}
+          />
         </div>
       </header>
 

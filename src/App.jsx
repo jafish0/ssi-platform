@@ -21,6 +21,7 @@ import AdminFeedbackPage from './pages/AdminFeedbackPage.jsx'
 import DemoPage from './pages/DemoPage.jsx'
 import DemoSandboxPage from './pages/DemoSandboxPage.jsx'
 import GainsDemoPage from './pages/GainsDemoPage.jsx'
+import GainsTraversalPage from './pages/GainsTraversalPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -120,6 +121,7 @@ export default function App() {
       {/* GAINS Teens demo — internal review surface for The Long Light,
           unlisted, shared by link (Draft 7 in Gains for Teens notes). */}
       <Route path="/gains-demo" element={<GainsDemoPage />} />
+      <Route path="/gains-demo/traversal" element={<GainsTraversalPage />} />
       {/* The Plan now ships as the seventh activity (Draft 39). The
           /the-plan entry point (montage closer CTA) redirects into the
           sandbox-hosted activity. */}

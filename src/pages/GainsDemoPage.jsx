@@ -14,13 +14,15 @@
 // sync — when that copy changes, update both.
 
 import { useEffect } from 'react'
-import { HardHat, Image as ImageIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { HardHat, Image as ImageIcon, Play } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'pre-post', label: 'Pre/Post Measures & Consent' },
   { value: 'activities', label: 'Activities' },
   { value: 'concept-art', label: 'Concept Art' },
+  { value: 'traversal-prototype', label: 'Traversal prototype' },
   { value: 'pitch', label: 'The pitch (written)' },
   { value: 'general', label: 'General / whole page' },
 ]
@@ -295,6 +297,45 @@ export default function GainsDemoPage() {
           label="Activities in development."
           note="As activities are built they'll appear here as launchable sandbox cards, the same way the Ready for Roots demo works."
         />
+      </section>
+
+      {/* Prototypes */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
+          Prototypes
+        </h2>
+        <article className="bg-white rounded-2xl shadow-card p-5 max-w-[760px] flex flex-col sm:flex-row sm:items-center gap-5">
+          <div
+            className="flex-shrink-0 mx-auto sm:mx-0 w-[120px] overflow-hidden rounded-2xl bg-[#05070e]"
+            style={{ aspectRatio: '9 / 16' }}
+            aria-hidden="true"
+          >
+            <img
+              src="/gains/traversal/ravine-bg.webp"
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-[17px] font-semibold text-slate-800 mb-1">
+              The ascent — traversal flight
+            </h3>
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
+              A first playable of the between-zone flight: one-thumb steering,
+              rising “connection” lights to gather, and a no-fail climb toward
+              the light. This is the reusable game engine every future zone will
+              reskin.
+            </p>
+            <Link
+              to="/gains-demo/traversal"
+              className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+            >
+              <Play size={14} strokeWidth={2} />
+              Play the traversal prototype
+            </Link>
+          </div>
+        </article>
       </section>
 
       {/* 3. Concept Art */}

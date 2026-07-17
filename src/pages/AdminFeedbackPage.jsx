@@ -37,6 +37,7 @@ const SECTION_LABELS = {
   'pre-post': 'Pre/Post Measures',
   activities: 'Activities',
   'concept-art': 'Concept Art',
+  'traversal-prototype': 'Traversal prototype',
   pitch: 'The pitch (written)',
   general: 'General',
 }

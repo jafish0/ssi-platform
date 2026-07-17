@@ -53,6 +53,9 @@ function deriveContext(pathname, params) {
   if (pathname === '/gains-demo' || pathname === '/gains-demo/') {
     return { area: 'GAINS Teens demo', activity_id: null, activity_version: null }
   }
+  if (pathname.startsWith('/gains-demo/traversal')) {
+    return { area: 'GAINS Teens traversal prototype', activity_id: null, activity_version: null }
+  }
   return { area: pathname, activity_id: null, activity_version: null }
 }
 
@@ -61,7 +64,11 @@ function deriveContext(pathname, params) {
 // a "Section" select to the modal (used by /gains-demo, which has no
 // versioned activities yet — the section is what makes GAINS comments
 // attributable).
-export default function FeedbackButton({ program = 'ready-for-roots', sections = null }) {
+export default function FeedbackButton({
+  program = 'ready-for-roots',
+  sections = null,
+  defaultSection = null,
+}) {
   const location = useLocation()
   const params = useParams()
   const [open, setOpen] = useState(false)
@@ -78,7 +85,7 @@ export default function FeedbackButton({ program = 'ready-for-roots', sections =
   // flips.
   const [submitter, setSubmitter] = useState('ginny')
   const [category, setCategory] = useState('general')
-  const [section, setSection] = useState(sections?.[0]?.value ?? null)
+  const [section, setSection] = useState(defaultSection ?? sections?.[0]?.value ?? null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -96,7 +103,7 @@ export default function FeedbackButton({ program = 'ready-for-roots', sections =
     setAreaEditing(false)
     setSubmitter('ginny')
     setCategory('general')
-    setSection(sections?.[0]?.value ?? null)
+    setSection(defaultSection ?? sections?.[0]?.value ?? null)
     setMessage('')
   }
 
