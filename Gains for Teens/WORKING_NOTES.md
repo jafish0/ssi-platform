@@ -96,6 +96,12 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **483ba76** (2026-07-17) — Traversal tweak (in-conversation): raised the bird's resting
+  position from 0.72 → 0.62 of the frame height (up a bit, between its old lower-third
+  spot and centre; also lengthens the runway for the top-descending connections). One
+  constant in `traversalScene.js`. Bird placement isn't RAF-independent-verifiable in the
+  headless pane — quick eyeball on device.
+
 - **38e6977** (2026-07-17) — Drafts 9 + 10: GAINS demo page additions (both edit
   `/gains-demo`). **Draft 9 — Videos section** (after Activities): the four
   psychoeducation scripts verbatim — Trauma 101 Videos 1–3 + the Growth Mindset script —
