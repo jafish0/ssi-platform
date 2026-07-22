@@ -110,6 +110,53 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`9606e55` · 2026-07-22** — **Draft 54 — Sam's Story repositioned on `/irb-preview`.** Moved Sam's Story from the opening slot of the intervention to a Part I/II interlude — it now plays between Kai Scene 4 ("The Foster Care Extra Level," end of Part I) and Kai Part II Scene 1, giving it a dramaturgical job and filling the pacing gap after Scene 4 (which has no activity). Section 4 intro-card copy updated to describe it as an interlude. Order is now Kai 1–4 → Sam's Story → Kai Part II 1–3 → Conclusion → The Plan. Verified: one Sam's Story embed in the interlude position, intro copy updated, console + build clean. No version bump.
+
+  <details>
+  <summary>Draft 54 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 54 — Move Sam's Story to interlude position on `/irb-preview`
+
+Small repositioning of Sam's Story on the IRB preview page shipped in Draft 53 (`a6f2665`). Currently Sam's Story renders as the FIRST item in the intervention sequence. Move it to sit between Kai Scene 4 and Kai Part II Scene 1 — acting as an interlude between Part I and Part II. This gives Sam's Story a specific dramaturgical job (dramatizing the "foster care extra level" concept Kai Scene 4 just introduced, right before Part II starts handing out skills), and it fills the natural pacing gap where Kai Scene 4 currently has no activity following it.
+
+**Change:** in `src/pages/IRBPreviewPage.jsx` (or wherever the intervention sequence is composed), reorder the intervention subsection order to:
+
+1. Kai Scene 1: The Scan
+2. Activity 1: Self-Reflection
+3. Kai Scene 2: The Why (It's in Your DNA)
+4. Activity 2: Who I Am Poem
+5. Kai Scene 3: Building a Safety Net
+6. Activity 3: Allies / Safety Net
+7. Kai Scene 4: The Foster Care "Extra Level"
+8. **Sam's Story video** (YouTube embed, video ID `tsnVUlklYi8`) — MOVED HERE (was position 1)
+9. Kai Part II Scene 1: Building Skills for Belonging
+10. Activity 4: Belonging Skills Sort
+11. Kai Part II Scene 2: The Roadblocks
+12. Activity 5: Getting Unstuck
+13. Kai Part II Scene 3: Putting it All Together
+14. Activity 6: Letter to Another Youth
+15. Kai Conclusion
+16. Activity 7: The Plan
+
+**Update the Section 4 intro card copy:**
+
+Old: *"The intervention opens with the animated video 'Sam's Story,' then alternates between Kai's psychoeducation and the six core activities, and closes with a personalized planning activity (The Plan)."*
+
+New: *"The intervention alternates between Kai's psychoeducation and the six core activities. An animated video ('Sam's Story') plays as an interlude between Part I and Part II. A personalized planning activity ('The Plan') closes the intervention."*
+
+**Verification:**
+
+- Sam's Story now renders between Kai Scene 4 and Kai Part II Scene 1 in the intervention section
+- All other subsection ordering unchanged
+- Section 4 intro card copy updated
+- Table of contents anchor structure unchanged (Sam's Story stays inside the Intervention anchor)
+- Build clean, no console errors
+
+**Version bump:** none.
+
+
+  </details>
+
 - **`66673e2` · 2026-07-22** — IRB preview fix (Josh): embedded activities no longer yank the page to the top when you advance a screen. Several paginated activities call `window.scrollTo({top:0})` on internal screen change — right for the standalone sandbox / real session (activity is at page top), but on the long IRB preview it scrolled the whole page up and you had to scroll back down (reported on the Safety Net exercise). Fixed locally in the IRB page (no activity edits, no version bumps): a `KeepInView` wrapper detects the post-click jump-to-top and snaps the activity back to the top of the viewport (rAF + setTimeout fallback; idempotent). Non-advancing clicks (tile selection, etc.) don't jump, so they're untouched. Verified: advancing Safety Net from a scrolled-down spot pins the new screen at the top of the viewport (~16px) instead of page-top; console clean.
 
 - **`e4ea71a` · 2026-07-22** — IRB preview follow-up (Josh): Kai now gets a full-size portrait (≈240px, natural ratio) on his first scene (Part I, Scene 1 — The Scan) to introduce him, then reverts to the small 40px avatar icon on the remaining 7 scenes. `KaiScene` gained a `feature` prop (true for `i === 0`). No other change.
