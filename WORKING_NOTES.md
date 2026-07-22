@@ -110,6 +110,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`e4ea71a` · 2026-07-22** — IRB preview follow-up (Josh): Kai now gets a full-size portrait (≈240px, natural ratio) on his first scene (Part I, Scene 1 — The Scan) to introduce him, then reverts to the small 40px avatar icon on the remaining 7 scenes. `KaiScene` gained a `feature` prop (true for `i === 0`). No other change.
+
 - **`a6f2665` · 2026-07-22** — **Draft 53 — IRB Review Preview (`/irb-preview`).** New unlisted, linear single-page walkthrough of the full participant flow for IRB reviewers (not linked from nav or /demo; no persistence, no feedback button, no version badges). Sections w/ TOC anchors: Parent Consent (Qualtrics placeholder) · Child Assent (real component inline + "Continue tour") · Welcome & Pretest · Intervention · Posttest (+ Next Steps) · 90-Day Follow-up (with the "emailed at 90 days" banner) · Wrap-up. Intervention order per Josh's 2026-07-23 update: Sam's Story (YouTube `tsnVUlklYi8`) FIRST, then the 8 Kai psychoed scenes (audio + verbatim script from castData) interleaved with the six core activities (collapsed "Expand to try"), The Plan LAST. Reuses the shipped activity components via the test registry with a no-op onSave. Palette uses the current CTAC teal/navy (spec said amber, but the app moved to teal in Draft 37). New `src/pages/IRBPreviewPage.jsx` + `/irb-preview` route. Verified: loads clean (no console errors), TOC anchors, assent inline, 8 Kai players, Sam embed, 7 activities expand/collapse, no feedback button, /demo unchanged, build clean.
 
   <details>
