@@ -20,6 +20,7 @@ import AdminExportsPage from './pages/AdminExportsPage.jsx'
 import AdminFeedbackPage from './pages/AdminFeedbackPage.jsx'
 import DemoPage from './pages/DemoPage.jsx'
 import DemoSandboxPage from './pages/DemoSandboxPage.jsx'
+import IRBPreviewPage from './pages/IRBPreviewPage.jsx'
 import GainsDemoPage from './pages/GainsDemoPage.jsx'
 import GainsTraversalPage from './pages/GainsTraversalPage.jsx'
 
@@ -118,6 +119,9 @@ export default function App() {
       {/* TEMP public demo. Remove these routes when no longer needed. */}
       <Route path="/demo" element={<DemoPage />} />
       <Route path="/demo/sandbox/:activityId" element={<DemoSandboxPage />} />
+      {/* IRB Review Preview (Draft 53) — unlisted linear walkthrough of the
+          full participant flow. Not linked from nav or /demo. */}
+      <Route path="/irb-preview" element={<IRBPreviewPage />} />
       {/* GAINS Teens demo — internal review surface for The Long Light,
           unlisted, shared by link (Draft 7 in Gains for Teens notes). */}
       <Route path="/gains-demo" element={<GainsDemoPage />} />
