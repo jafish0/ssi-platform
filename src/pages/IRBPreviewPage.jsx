@@ -20,7 +20,7 @@
 // with Sam's Story, alternates Kai psychoeducation with the six core
 // activities, and closes with The Plan.
 
-import { Suspense, useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 import { ChevronDown, ChevronUp, ArrowUp } from 'lucide-react'
 import { CAST } from '../lib/castData.js'
 import { findTestEntry } from '../lib/testRegistry.js'
@@ -55,6 +55,34 @@ const TOC = [
   { href: '#follow-up', label: '90-Day Follow-up' },
 ]
 
+// Several embedded activities call window.scrollTo({ top: 0 }) when they
+// advance to the next internal screen. That's the right behavior in the
+// standalone sandbox / real session (the activity is the top of the page),
+// but here the activity is embedded far down a long page, so it yanks the
+// whole page to the top. This wrapper detects that upward jump right after a
+// click inside the activity and snaps the activity back into view — leaving
+// non-advancing clicks (selecting a tile, etc.) alone.
+function KeepInView({ children }) {
+  const ref = useRef(null)
+  function handleClickCapture() {
+    const before = window.scrollY
+    const restore = () => {
+      if (ref.current && window.scrollY < before - 40) {
+        ref.current.scrollIntoView({ block: 'start' })
+      }
+    }
+    // rAF avoids a visible flash in a real browser; the setTimeout is a
+    // fallback for environments where rAF doesn't fire (and is idempotent).
+    requestAnimationFrame(restore)
+    setTimeout(restore, 0)
+  }
+  return (
+    <div ref={ref} onClickCapture={handleClickCapture} style={{ scrollMarginTop: '1rem' }}>
+      {children}
+    </div>
+  )
+}
+
 function ActivityFallback() {
   return (
     <div className="text-[14px] text-slate-500 italic text-center py-10">
@@ -83,9 +111,11 @@ function EmbeddedActivity({ id }) {
   const Component = entry.component
   return (
     <div className="bg-white rounded-2xl shadow-card p-4 sm:p-6">
-      <Suspense fallback={<ActivityFallback />}>
-        <Component onSave={noop} sessionData={{}} resolveToken={rt} {...entry.mockProps} />
-      </Suspense>
+      <KeepInView>
+        <Suspense fallback={<ActivityFallback />}>
+          <Component onSave={noop} sessionData={{}} resolveToken={rt} {...entry.mockProps} />
+        </Suspense>
+      </KeepInView>
     </div>
   )
 }
@@ -125,12 +155,14 @@ function CollapsibleActivity({ id, ordinal }) {
       </button>
       {open && (
         <div className="p-4 sm:p-5 bg-white border-t border-ctac-teal-200">
-          <Suspense fallback={<ActivityFallback />}>
-            {(() => {
-              const Component = entry.component
-              return <Component onSave={noop} sessionData={{}} resolveToken={rt} {...entry.mockProps} />
-            })()}
-          </Suspense>
+          <KeepInView>
+            <Suspense fallback={<ActivityFallback />}>
+              {(() => {
+                const Component = entry.component
+                return <Component onSave={noop} sessionData={{}} resolveToken={rt} {...entry.mockProps} />
+              })()}
+            </Suspense>
+          </KeepInView>
         </div>
       )}
     </div>
