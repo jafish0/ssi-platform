@@ -328,26 +328,28 @@ export default function IRBPreviewPage() {
           <SectionHeading eyebrow="Step 4" title="Intervention" />
           <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-4 mb-5">
             <p className="text-[14px] leading-relaxed text-slate-700">
-              The intervention opens with the animated video &ldquo;Sam&rsquo;s
-              Story,&rdquo; then alternates between Kai&rsquo;s psychoeducation
-              and the six core activities, and closes with a personalized
-              planning activity (The Plan). Each activity is collapsed by
-              default — use <span className="font-semibold">Expand to try</span> to
-              open one inline.
+              The intervention alternates between Kai&rsquo;s psychoeducation
+              and the six core activities. An animated video (&ldquo;Sam&rsquo;s
+              Story&rdquo;) plays as an interlude between Part I and Part II. A
+              personalized planning activity (&ldquo;The Plan&rdquo;) closes the
+              intervention. Each activity is collapsed by default — use{' '}
+              <span className="font-semibold">Expand to try</span> to open one
+              inline.
             </p>
           </div>
 
           <div className="space-y-5">
-            {/* Sam's Story opens the intervention */}
-            <SamsStory />
-
-            {/* Kai scenes interleaved with the activities they hand off to */}
+            {/* Kai scenes interleaved with the activities they hand off to.
+                Sam's Story plays as an interlude between Part I and Part II
+                (after Kai Scene 4 — "The Foster Care Extra Level"). */}
             {KAI_SCENES.map((scene, i) => {
               const activityId = scene.handoff ? HANDOFF_TO_ID[scene.handoff] : null
+              const samsStoryAfter = /Extra Level/.test(scene.label)
               return (
                 <div key={scene.label} className="space-y-5">
                   <KaiScene scene={scene} ordinal={i + 1} feature={i === 0} />
                   {activityId && <CollapsibleActivity id={activityId} />}
+                  {samsStoryAfter && <SamsStory />}
                 </div>
               )
             })}
