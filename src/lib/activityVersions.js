@@ -19,10 +19,11 @@
 
 export const ACTIVITY_VERSIONS = {
   assent: {
-    version: 'v1.0',
+    version: 'v1.1',
     updated: '2026-07-22',
     changelog: [
-      '2026-07-22 · v1.0 — initial build of the Child Assent screen, the first thing a participant sees (before the pretest). Copy verbatim from the IRB assent document (Belongingness_Assent_ages 6-11_updated7.22.26.doc). Reads the assent, then a Yes/No decision: Yes advances into the program; No ends on a friendly exit screen. Authored into the live "Ready! Set! Dedicate!" intervention as its new first section (a text_prompt + a Yes/No choice item whose exit_on ends the session on "no"); this sandbox component mirrors that flow. Save payload { assent: "yes" | "no" }.',
+      '2026-07-22 · v1.1 — title + copy corrected to be VERBATIM from the assent doc (verified programmatically against the source paragraphs). Title is now the doc\'s exact 4-line block ("A SINGLE SESSION PROGRAM TO FOSTER BELONGINGNESS" / "ASSENT TO PARTICIPATE IN A RESEARCH STUDY FOR CHILDREN AGE 11" / "UNIVERSITY OF KENTUCKY" / "CENTER ON TRAUMA AND CHILDREN") instead of the earlier friendly heading. Decision line fixed to the doc wording (lowercase "yes", "No" with the period outside the quote); Yes/No buttons relabeled to the doc\'s plain "Yes" / "No". Body already matched word-for-word (only invisible non-breaking-space / trailing-whitespace artifacts normalized). Live intervention republished as version 4 with the same corrected copy.',
+      '2026-07-22 · v1.0 — initial build of the Child Assent screen, the first thing a participant sees (before the pretest). Copy from the IRB assent document (Belongingness_Assent_ages 6-11_updated7.22.26.doc). Reads the assent, then a Yes/No decision: Yes advances into the program; No ends on a friendly exit screen. Authored into the live "Ready! Set! Dedicate!" intervention as its new first section (a text_prompt + a Yes/No choice item whose exit_on ends the session on "no"); this sandbox component mirrors that flow. Save payload { assent: "yes" | "no" }.',
     ],
   },
   'getting-unstuck': {
