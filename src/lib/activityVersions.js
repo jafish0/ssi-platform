@@ -116,9 +116,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   posttest: {
-    version: 'v1.0',
-    updated: '2026-05-13',
+    version: 'v1.1',
+    updated: '2026-07-16',
     changelog: [
+      '2026-07-16 · v1.1 — Jessica review note (6.29.26 doc). Program Feedback Acceptability scale: spelled out the value-2 anchor "Neither" → "Neither Agree nor Disagree" for clarity. No data-shape change.',
       '2026-05-13 · v1.0 — initial sandbox build of the locked Posttest survey (18 items: BHS, ASCS, NB, Belonging Worries, Perceived Helpfulness, Program Feedback Acceptability Likert + 2 open-response). 9-screen paginated flow mirroring the Pretest pattern. Shared survey-item components (SurveyItems.jsx). Save payload flat-keyed by `post_*` SPSS column names.',
     ],
   },
@@ -131,9 +132,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   pretest: {
-    version: 'v1.0',
-    updated: '2026-05-11',
+    version: 'v1.1',
+    updated: '2026-07-16',
     changelog: [
+      '2026-07-16 · v1.1 — Jessica review note (6.29.26 doc): added two items that were missing from the app. (1) Demographics gains an out-of-home-placements count ("How many out of home placements have you had?") as a required number field (payload key `placements`). (2) New 1-item "Placement Disruption Worry" scale on its own screen ("Your placement") between Belonging Worries and Program Expectation — "How worried are you right now that this placement will change?" on the locked 0–4 anchors (Not at all → Extremely), mirroring the FollowUp disruption item (payload key `pre_disruption_worry`). Now 11 screens. Production export columns for the two new items follow when they are added to the published survey snapshot in the builder (survey export is snapshot-driven, not from this sandbox file).',
       '2026-05-11 · v1.0 — initial sandbox build of the locked Belonging pretest (29 items: 6 demographics + 7 scales). 10-screen paginated flow mirroring the live session layout. Sliders require explicit interaction before counting as answered; pre_bw_2 hidden when pre_bw_1 = 0. Save payload keyed by SPSS column names from Draft 6.',
     ],
   },

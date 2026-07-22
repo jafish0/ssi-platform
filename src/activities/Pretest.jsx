@@ -4,7 +4,9 @@
 // exactly how the form will paginate and feel in a real participant
 // session before posttest + follow-up are wired up.
 //
-// 29 items across 7 scales + 6 demographics. Save payload is FLAT and
+// 31 items across 8 scales + 7 demographics (Jessica's 6.29.26 review
+// added an out-of-home-placements demographic + a 1-item Placement
+// Disruption Worry scale). Save payload is FLAT and
 // keyed by the SPSS column names defined in Draft 6's naming convention
 // (e.g. age, sex, race_white, pre_bhs_1, pre_ucla_3, pre_bw_2). That
 // shape is what the export pipeline already expects — keeping the
@@ -50,6 +52,16 @@ const BPB_ANCHORS = [
   { v: 1, label: 'Sometimes' },
   { v: 2, label: 'Often' },
   { v: 3, label: 'Always' },
+]
+// Placement Disruption Worry — added to the pretest per Jessica's
+// 6.29.26 review note. Same 0–4 locked anchors as the FollowUp survey's
+// disruption item (`DISRUPTION_ANCHORS` in FollowUp.jsx).
+const DISRUPTION_ANCHORS = [
+  { v: 0, label: 'Not at all' },
+  { v: 1, label: 'A little' },
+  { v: 2, label: 'Somewhat' },
+  { v: 3, label: 'Very' },
+  { v: 4, label: 'Extremely' },
 ]
 
 const BHS_ITEMS = [
@@ -105,6 +117,7 @@ const SCREENS = [
   { id: 'nb', label: 'Belonging beliefs' },
   { id: 'bpb', label: 'How often you do these' },
   { id: 'bw', label: 'Belonging worries' },
+  { id: 'pdw', label: 'Your placement' },
   { id: 'pe', label: 'Program expectation' },
   { id: 'submit', label: 'Submit' },
 ]
@@ -317,7 +330,8 @@ export default function Pretest({ onSave = console.log }) {
           [0, 1].includes(data.hispanic) &&
           numericOk(data.grade) &&
           numericOk(data.home_years) &&
-          numericOk(data.home_months)
+          numericOk(data.home_months) &&
+          numericOk(data.placements)
         )
       }
       case 'bhs':
@@ -336,6 +350,8 @@ export default function Pretest({ onSave = console.log }) {
         if ((data.pre_bw_1 || 0) === 0) return true // conditional skip
         return !!touched.pre_bw_2
       }
+      case 'pdw':
+        return typeof data.pre_disruption_worry === 'number'
       case 'pe':
         return !!touched.pre_pe_1
       case 'submit':
@@ -379,6 +395,8 @@ export default function Pretest({ onSave = console.log }) {
         grade: data.grade,
         home_years: data.home_years,
         home_months: data.home_months,
+        // Out-of-home placements count (demographics; added 6.29.26)
+        placements: data.placements,
         // Beck Hopelessness (0–3)
         pre_bhs_1: data.pre_bhs_1,
         pre_bhs_2: data.pre_bhs_2,
@@ -407,6 +425,8 @@ export default function Pretest({ onSave = console.log }) {
         // Belonging Worries (0–10 sliders); conditional skip of Q2
         pre_bw_1: data.pre_bw_1,
         pre_bw_2: (data.pre_bw_1 || 0) === 0 ? null : data.pre_bw_2,
+        // Placement Disruption Worry (0–4; added 6.29.26)
+        pre_disruption_worry: data.pre_disruption_worry,
         // Program Expectation (1–10)
         pre_pe_1: data.pre_pe_1,
         saved_at: new Date().toISOString(),
@@ -565,6 +585,13 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
               />
             </div>
           </div>
+          <NumberInput
+            prompt="How many out of home placements have you had?"
+            value={data.placements ?? null}
+            onChange={(v) => setField('placements', v)}
+            min={0}
+            max={50}
+          />
         </div>
       )
 
@@ -662,6 +689,19 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
         </div>
       )
     }
+
+    case 'pdw':
+      return (
+        <div>
+          <h2 className="text-[20px] font-semibold mb-3">How you feel about your placement</h2>
+          <LikertItem
+            prompt="How worried are you right now that this placement will change?"
+            anchors={DISRUPTION_ANCHORS}
+            value={data.pre_disruption_worry}
+            onChange={(v) => setField('pre_disruption_worry', v)}
+          />
+        </div>
+      )
 
     case 'pe':
       return (

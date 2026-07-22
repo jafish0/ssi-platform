@@ -50,7 +50,8 @@ const NB_ANCHORS = [
 const PF_ANCHORS = [
   { v: 0, label: 'Really Disagree' },
   { v: 1, label: 'Disagree' },
-  { v: 2, label: 'Neither' },
+  // Spelled out per Jessica's 6.29.26 review note (was "Neither").
+  { v: 2, label: 'Neither Agree nor Disagree' },
   { v: 3, label: 'Agree' },
   { v: 4, label: 'Really Agree' },
 ]
