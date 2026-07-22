@@ -190,6 +190,7 @@ export default function DemoPage() {
     }
   }
 
+  const assent = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots assent')
   const activities = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots activity')
   const tests = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots test')
 
@@ -201,6 +202,46 @@ export default function DemoPage() {
           Ready for Roots — Activities Testing, Videos and Data Export Demo
         </h1>
       </section>
+
+      {/* Child Assent — the very first thing a participant sees, before the
+          pretest. Surfaced first so reviewers hit it in program order. */}
+      {assent.length > 0 && (
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
+              Start here — Child Assent
+            </h2>
+            <span className="text-[12px] text-slate-500">
+              The first screen of the program.
+            </span>
+          </div>
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-4 max-w-[760px]">
+            <strong>Assent.</strong> Before anything else, the child reads the
+            assent and chooses whether to take part. Selecting{' '}
+            <strong>No</strong> ends the session on a friendly exit screen;{' '}
+            <strong>Yes</strong> leads into the pretest.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {assent.map((entry) => (
+              <article key={entry.id} className="bg-white rounded-2xl shadow-card p-4 flex flex-col">
+                <h3 className="text-[16px] font-semibold text-slate-800 mb-2">
+                  {entry.displayName}
+                </h3>
+                <p className="text-[13px] text-slate-600 leading-relaxed flex-1 mb-4">
+                  {entry.description}
+                </p>
+                <Link
+                  to={`/demo/sandbox/${entry.id}`}
+                  className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+                >
+                  <Play size={14} strokeWidth={2} />
+                  Launch test
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Activities */}
       <section className="mb-10">

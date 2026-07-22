@@ -19,12 +19,22 @@ const BelongingSkillsSort = lazy(() => import('../activities/BelongingSkillsSort
 const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
 const Plan = lazy(() => import('../activities/Plan.jsx'))
+const Assent = lazy(() => import('../activities/Assent.jsx'))
 const Pretest = lazy(() => import('../activities/Pretest.jsx'))
 const Posttest = lazy(() => import('../activities/Posttest.jsx'))
 const FollowUp = lazy(() => import('../activities/FollowUp.jsx'))
 
 // --- Registry ---
 export const TEST_REGISTRY = [
+  {
+    id: 'assent',
+    displayName: 'Child Assent',
+    category: 'Ready for Roots assent',
+    description:
+      'The child assent screen — the very first thing a participant sees, before the pretest. Reads the IRB assent, then chooses Yes (continue) or No (friendly exit). Copy verbatim from the assent document (7.22.26).',
+    component: Assent,
+    mockProps: {},
+  },
   {
     id: 'getting-unstuck',
     displayName: 'Getting Unstuck',

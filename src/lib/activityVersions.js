@@ -18,6 +18,13 @@
 // commit. Future-Josh / future-Claude relies on this being accurate.
 
 export const ACTIVITY_VERSIONS = {
+  assent: {
+    version: 'v1.0',
+    updated: '2026-07-22',
+    changelog: [
+      '2026-07-22 · v1.0 — initial build of the Child Assent screen, the first thing a participant sees (before the pretest). Copy verbatim from the IRB assent document (Belongingness_Assent_ages 6-11_updated7.22.26.doc). Reads the assent, then a Yes/No decision: Yes advances into the program; No ends on a friendly exit screen. Authored into the live "Ready! Set! Dedicate!" intervention as its new first section (a text_prompt + a Yes/No choice item whose exit_on ends the session on "no"); this sandbox component mirrors that flow. Save payload { assent: "yes" | "no" }.',
+    ],
+  },
   'getting-unstuck': {
     version: 'v5.8',
     updated: '2026-06-29',
