@@ -137,15 +137,28 @@ function CollapsibleActivity({ id, ordinal }) {
   )
 }
 
-function KaiScene({ scene, ordinal }) {
+function KaiScene({ scene, ordinal, feature }) {
   return (
     <div className="bg-white rounded-2xl shadow-card p-5 sm:p-6">
+      {/* First Kai scene shows a full portrait to introduce him; later
+          scenes use the small avatar icon in the header. */}
+      {feature && (
+        <div className="mb-4 flex justify-center">
+          <img
+            src={KAI.image}
+            alt="Kai, the psychoeducation narrator"
+            className="w-full max-w-[240px] rounded-2xl object-cover border border-ctac-teal-200"
+          />
+        </div>
+      )}
       <div className="flex items-center gap-3 mb-3">
-        <img
-          src={KAI.image}
-          alt=""
-          className="w-10 h-10 rounded-full object-cover border border-ctac-teal-200"
-        />
+        {!feature && (
+          <img
+            src={KAI.image}
+            alt=""
+            className="w-10 h-10 rounded-full object-cover border border-ctac-teal-200"
+          />
+        )}
         <div>
           <div className="text-[12px] font-semibold uppercase tracking-wide text-ctac-teal-700">
             Kai · Psychoeducation{ordinal ? ` ${ordinal}` : ''}
@@ -301,7 +314,7 @@ export default function IRBPreviewPage() {
               const activityId = scene.handoff ? HANDOFF_TO_ID[scene.handoff] : null
               return (
                 <div key={scene.label} className="space-y-5">
-                  <KaiScene scene={scene} ordinal={i + 1} />
+                  <KaiScene scene={scene} ordinal={i + 1} feature={i === 0} />
                   {activityId && <CollapsibleActivity id={activityId} />}
                 </div>
               )
