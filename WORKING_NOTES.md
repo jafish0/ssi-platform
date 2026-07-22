@@ -110,6 +110,176 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`a6f2665` · 2026-07-22** — **Draft 53 — IRB Review Preview (`/irb-preview`).** New unlisted, linear single-page walkthrough of the full participant flow for IRB reviewers (not linked from nav or /demo; no persistence, no feedback button, no version badges). Sections w/ TOC anchors: Parent Consent (Qualtrics placeholder) · Child Assent (real component inline + "Continue tour") · Welcome & Pretest · Intervention · Posttest (+ Next Steps) · 90-Day Follow-up (with the "emailed at 90 days" banner) · Wrap-up. Intervention order per Josh's 2026-07-23 update: Sam's Story (YouTube `tsnVUlklYi8`) FIRST, then the 8 Kai psychoed scenes (audio + verbatim script from castData) interleaved with the six core activities (collapsed "Expand to try"), The Plan LAST. Reuses the shipped activity components via the test registry with a no-op onSave. Palette uses the current CTAC teal/navy (spec said amber, but the app moved to teal in Draft 37). New `src/pages/IRBPreviewPage.jsx` + `/irb-preview` route. Verified: loads clean (no console errors), TOC anchors, assent inline, 8 Kai players, Sam embed, 7 activities expand/collapse, no feedback button, /demo unchanged, build clean.
+
+  <details>
+  <summary>Draft 53 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 53 — IRB Review Preview (`/irb-preview` route)
+
+**Purpose:** Single-page curated preview of the Ready for Roots participant flow, built for IRB reviewers. Different from `/demo`: linear (top-to-bottom), professional palette, no feedback button, no data persistence, no debug/version artifacts, not linked from anywhere else on the site. IRB reviewers will access it via URL that Jessica shares with them.
+
+**Route:** `/irb-preview` — public, but **unlisted** (no navigation link, no reference from `/demo` or elsewhere, no sitemap entry).
+
+**Page shape:** single-page scroll. Table of contents at top with in-page anchor links. Warm restrained palette (Ready for Roots amber accents on a lighter neutral base). Section headers h2, subsection headers h3. Generous whitespace between sections. Consistent card treatment for each embedded activity.
+
+Sequence per Adrienne's document `Belonging Psychoeducation Script Parts I & II revisedAW with activities.docx` (attached separately if needed — Josh has it in `Video Content/`).
+
+---
+
+#### Header
+
+- Title: **"Ready for Roots — IRB Review Preview"**
+- Subtitle line: *"A guided preview of the program flow for IRB reviewers. No data is saved from this tour."*
+- Table of contents (in-page anchor links): Parent Consent · Child Assent · Welcome & Pretest · Intervention · Posttest · 90-Day Follow-up
+
+#### Section 1 — Parent Consent (Qualtrics)
+
+- Anchor: `#parent-consent`
+- Light context (2 sentences): parents receive this via email; on completion, a Participant ID (PID) is generated in Qualtrics and passed to ctac.app when the child follows the intervention link
+- **Placeholder card** with subtle "Coming soon" treatment: *"The parent consent lives in Qualtrics. Screenshots and a live-preview link will be added here when available."* Josh will provide the screenshots + link later — build the card structure so those swap in easily (an obvious spot for a `<img>` + `<a>` element pair)
+
+#### Section 2 — Child Assent
+
+- Anchor: `#child-assent`
+- Light context (2 sentences): first screen in ctac.app after the parent completes consent; the child reads the assent, chooses Yes or No, and "No" ends the session
+- **Inline: the real `Assent.jsx` component in preview mode** (no save, no session-context assumptions). Both branches explorable:
+  - Yes → confirmation + normal advance (scroll to Section 3 anchor after a beat, so the flow continues visually)
+  - No → the friendly exit screen. Below the exit screen, render a small **"Continue tour →"** button that scrolls to Section 3's anchor (so reviewers can see both branches without getting stuck)
+
+#### Section 3 — Welcome & Pretest Survey
+
+- Anchor: `#pretest`
+- Light context (2 sentences): shown immediately after the assent; collects the study's baseline scales
+- **Inline: Pretest paginated preview in preview mode** (no save). Same visual as the current /demo Pretest sandbox, but wrapped in the IRB preview shell (no feedback button, no version badge, no admin affordances)
+
+#### Section 4 — Intervention
+
+- Anchor: `#intervention`
+- Light context (~2 sentences): the intervention alternates between Kai's psychoeducation (audio + on-screen script) and the six core activities, then closes with the seventh (The Plan) and the animated video "Sam's Story"
+- Small intro card: *"The following blocks appear in this order in a live session. Each Kai psychoeducation scene is followed by the activity it introduces. Sam's Story is a ~4-minute animated video that plays [PLACEMENT TBD — Josh to confirm]."*
+
+Then the intervention section renders each block in this order (using anchor IDs `#int-1` through `#int-16` for jumping):
+
+**Part I — All About Belonging**
+
+1. **Kai Scene 1 — The Scan** (~1 min) — audio player + script text
+2. **Activity 1: Self-Reflection** — inline preview (collapsed by default with "Expand to try" affordance — see implementation notes)
+3. **Kai Scene 2 — The Why (It's in Your DNA)** (~45s) — audio + script
+4. **Activity 2: Who I Am Poem** — inline preview (collapsed)
+5. **Kai Scene 3 — Building a Safety Net** (~1.5 min) — audio + script
+6. **Activity 3: Allies / Safety Net** — inline preview (collapsed)
+7. **Kai Scene 4 — The Foster Care "Extra Level"** (~45s) — audio + script
+
+**Part II — Skills for Belonging**
+
+8. **Kai Part II Scene 1 — Building Skills for Belonging** (~1.5 min) — audio + script
+9. **Activity 4: Belonging Skills Sort** — inline preview (collapsed)
+10. **Kai Part II Scene 2 — The Roadblocks** (~30s) — audio + script
+11. **Activity 5: Getting Unstuck** — inline preview (collapsed)
+12. **Kai Part II Scene 3 — Putting it All Together** (~1.5 min) — audio + script
+13. **Activity 6: Letter to Another Youth** — inline preview (collapsed)
+14. **Kai Conclusion** (~30s) — audio + script
+
+**Then (placement TBD — Josh to confirm):**
+
+15. **Sam's Story video** — YouTube embed (video ID `tsnVUlklYi8`), 9:16 responsive frame. Draft placement: after Kai Conclusion, before The Plan. Josh will confirm/reorder.
+16. **Activity 7: The Plan** — inline preview (collapsed). Draft placement: last activity, after Sam's Story. Josh will confirm/reorder if Adrienne's flow diverges.
+
+**Kai audio + script rendering:** each scene shows the scene title, an audio player using the already-shipped Kai mp3s (from `/cast/audio/kai-*.mp3` on the current live intervention or the demo folder — whichever set is authoritative), and the script text alongside/below. Use Adrienne's document (Belonging Psychoeducation Script Parts I & II revisedAW with activities.docx) as the source for the script text — verbatim.
+
+#### Section 5 — Posttest & Next Steps
+
+- Anchor: `#posttest`
+- Light context (2 sentences): appears immediately after the intervention closes
+- **Inline: Posttest paginated preview in preview mode** (no save)
+- After the posttest preview, a small "Next Steps" card summarizing what the participant sees post-completion: incentive info, the note that they'll receive the 90-day follow-up survey by email
+
+#### Section 6 — 90-Day Follow-up
+
+- Anchor: `#follow-up`
+- **Amber banner at the top of this section:** *"In production, this survey is emailed to the participant 90 days after they complete the intervention. It is shown here for review purposes only."*
+- Light context (2 sentences)
+- **Inline: FollowUp paginated preview in preview mode** (no save)
+
+#### Wrap-up (at bottom of page)
+
+- Small closing card: *"You've completed the Ready for Roots preview. Thank you for reviewing our program."*
+- Contact info: Josh Fisherkeller (joshua.fisherkeller@uky.edu) for platform questions, Jessica for IRB questions
+- Discreet link back to top
+
+---
+
+#### Implementation notes
+
+- **New file:** `src/pages/IRBPreviewPage.jsx` (or route file with associated components)
+- **Router:** add `/irb-preview` as a public route. Do not add to main nav. Do not link from `/demo`.
+- **Preview mode plumbing:** activities need a `previewMode` (or `noPersist`) prop that (a) disables save calls, (b) hides feedback button, (c) hides version badges, (d) hides admin affordances. If the current sandbox pattern already covers most of this, reuse it; if not, add the missing pieces uniformly across activity components.
+- **Collapsed activity previews:** each activity renders a compact header card by default (activity name + 1-sentence description + estimated duration). Reviewer clicks "Expand to try" to reveal the full interactive activity inline. This keeps the page scan-friendly at first load; reviewers who want to try each activity can expand as they go.
+- **Kai audio:** use the shipped Kai audio files from the live intervention (or the /demo cast card if those are the same). Reference by path directly; do not re-import.
+- **Sam's Story YouTube embed:** use video ID `tsnVUlklYi8`. Same responsive 9:16 frame as the Draft 52 embed.
+- **No feedback button.** Suppress the persistent Give Feedback FAB / bottom button that appears on `/demo`.
+- **No debug artifacts.** No version badges, no cast-preview elements, no admin affordances.
+- **Style:** professional but on-brand Ready for Roots. Amber accents used sparingly (section headers, primary CTAs, "Continue tour" affordance). Neutral cream / white base. Generous vertical whitespace. Body typography readable at length (this is a long page).
+- **Print-friendly (optional stretch):** if easy, add a print stylesheet so IRB reviewers can print the tour if desired.
+
+#### Verification
+
+- `/irb-preview` loads without console errors
+- Table of contents anchors jump correctly to each section
+- Assent renders in preview mode; Yes advances, No shows exit + "Continue tour →" button that jumps to Section 3
+- Pretest, Posttest, and FollowUp all render in preview mode without save calls firing
+- All 8 Kai psychoed scenes render with audio + script text; audio plays inline
+- All 6 activities from Adrienne's script render in the correct order between Kai scenes
+- Activity 7 (The Plan) renders in its placement
+- Sam's Story YouTube embed loads and plays
+- 90-day follow-up banner is visible above the FollowUp preview
+- No feedback button appears anywhere on the page
+- `/demo` is unchanged
+- Build clean
+
+**Version bump:** none — this is a new preview surface, not a versioned activity.
+
+**Open questions for Josh (please answer before or during Code's session):**
+
+1. Where does Sam's Story play in the live intervention flow? Draft assumes end-of-intervention (after Kai Conclusion, before The Plan).
+2. Where does The Plan sit in the flow? Draft assumes last activity, after Sam's Story.
+3. The parent-consent screenshots + link — Josh will send when Jessica provides them; the placeholder card in Section 1 should be set up so they can be dropped in without rework.
+
+---
+
+#### Draft 53 — Placement updates from Josh (2026-07-23)
+
+Two open questions from the Draft 53 spec above are now resolved. Please read these together with the original spec:
+
+1. **Sam's Story placement — confirmed: START of the intervention.** Sam's Story plays as the intro to the intervention flow, BEFORE Kai Scene 1 (The Scan). It sets the emotional context for the whole psychoed sequence. Rebuild the intervention subsection order as:
+
+    - Sam's Story video (YouTube embed, video ID `tsnVUlklYi8`) — **first**
+    - Kai Scene 1: The Scan
+    - Activity 1: Self-Reflection
+    - Kai Scene 2: The Why (It's in Your DNA)
+    - Activity 2: Who I Am Poem
+    - Kai Scene 3: Building a Safety Net
+    - Activity 3: Allies / Safety Net
+    - Kai Scene 4: The Foster Care "Extra Level"
+    - Kai Part II Scene 1: Building Skills for Belonging
+    - Activity 4: Belonging Skills Sort
+    - Kai Part II Scene 2: The Roadblocks
+    - Activity 5: Getting Unstuck
+    - Kai Part II Scene 3: Putting it All Together
+    - Activity 6: Letter to Another Youth
+    - Kai Conclusion
+    - Activity 7: The Plan — **last**
+
+2. **Activity 7 (The Plan) placement — confirmed: END of the intervention.** The Plan is the last thing the participant does — placed after Kai Conclusion, after all other activities and psychoeducation. Draft 53's original placement was already correct on this; keeping it explicit here.
+
+Update the Section 4 intro card to say: *"The intervention opens with the animated video 'Sam's Story,' then alternates between Kai's psychoeducation and the six core activities, and closes with a personalized planning activity (The Plan)."*
+
+The "Open questions for Josh" bullet at the very end of Draft 53 can be removed once these placements are wired in.
+
+
+  </details>
+
 - **`d313066` · 2026-07-22** — **Assent v1.1 — verbatim title + copy** (Josh follow-up). Set the title to the assent doc's exact 4-line block ("A SINGLE SESSION PROGRAM TO FOSTER BELONGINGNESS" / "ASSENT TO PARTICIPATE IN A RESEARCH STUDY FOR CHILDREN AGE 11" / "UNIVERSITY OF KENTUCKY" / "CENTER ON TRAUMA AND CHILDREN") and made all copy verbatim — verified programmatically against the source paragraphs (extracted via Word COM). Fixes vs. the first build: decision line now matches the doc (lowercase "yes", "No" with the period outside the quote); Yes/No buttons relabeled to the doc's plain "Yes"/"No"; body confirmed word-for-word (only invisible non-breaking-space / trailing-whitespace artifacts normalized). Live "Ready! Set! Dedicate!" intervention **republished as version 4** with the identical corrected copy (base64-decoded in-SQL to avoid escaping drift), `current_version_id` flipped; published body verified byte-identical to source (2451 chars). Sandbox v1.1 verified on /demo (title block exact, buttons Yes/No, badge v1.1, build clean). Logged in INFRASTRUCTURE.md.
 
 - **`2162461` + `a2aa86e` · 2026-07-22** — **Child Assent — new first screen of the program** (in-conversation, from Josh's IRB assent doc `Belongingness_Assent_ages 6-11_updated7.22.26.doc`; not a Cowork draft). Copy verbatim from the doc. **Frontend:** new `src/activities/Assent.jsx` (v1.0) — reads the assent, then a Yes/No decision (Yes → confirmation + advance; No → friendly exit screen); registered in `testRegistry` under a new "Ready for Roots assent" category + `activityVersions`; surfaced **first** on /demo as a "Start here — Child Assent" section above Activities. **Live DB (Ready! Set! Dedicate!, `ready-set-dedicate`):** authored the assent as the new first section (`order_index 0`, existing 13 sections shifted to 1–13) — a `text_prompt` (assent body) + a Yes/No `choice` (token `assent`) whose `content_json.exit_on` ends the session on "No" via the engine's existing hard-exit path. Confirmed the draft was in sync with live v2, then **published v3** (snapshot assembled to match `builderUtils.assembleSnapshot`: 14 sections / 57 items) and flipped `current_version_id` → new sessions now open on the assent; in-progress sessions keep their frozen version. Logged in INFRASTRUCTURE.md change log. Verified: sandbox both paths + exit screen, /demo lists it first, build clean, published snapshot structurally confirmed (assent first, exit_on intact). Live `/session` click-through not exercised (needs a real access code) — team can smoke-test.
@@ -7810,5 +7980,3 @@ Stephanie's request — more clinically standard. Every UI label, button, and sa
 *End of 2026-05-11 batch. After all five ship, Josh announces one stopping point to the team for batched review.*
 
 -->
-
----
