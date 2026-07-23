@@ -1,82 +1,115 @@
 // GAINS Teens demo page at /gains-demo — the internal review surface for
-// the GAINS for Teens SSI ("The Long Light"), mirroring the Ready for
-// Roots /demo pattern and reusing its feedback pipeline. Unlisted; shared
-// by link. Feedback from this page is tagged program="gains-teens" plus a
-// section (pre-post / activities / concept-art / pitch) so admin triage
-// can tell GAINS comments apart from RfR in the shared table.
+// the GAINS for Teens SSI ("The Long Light"). Reorganized (Draft 12) to
+// read like the actual GAME FLOW, top to bottom:
+//   Zone Map (roadmap) → Child Assent & Measures → Playable Characters →
+//   Zone 1…5 (each: image, characters, video/script, activity, gear,
+//   traversal) with "in development" placeholders where pending.
+// Unlisted; shared by link. Feedback reuses the shared pipeline tagged
+// program="gains-teens" + a section (see GAINS_FEEDBACK_SECTIONS).
 //
-// Concept art is served from the static pitch site at /long-light/ (the
-// WebP in public/long-light/ and public/long-light/art/) — absolute paths,
-// no imports, so the two surfaces share one copy of each asset.
-//
-// The written pitch section reuses the EXACT spec text from the pitch
-// page's spec panel (public/long-light/index.html) so the two stay in
-// sync — when that copy changes, update both.
+// Art is served from the static pitch site at /long-light/ (absolute
+// paths) so this page and the pitch share one copy of each asset. Video
+// scripts are the verbatim psychoeducation copy.
 
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, Play, Film } from 'lucide-react'
+import { HardHat, Film, Play, Waves } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
-  { value: 'pre-post', label: 'Pre/Post Measures & Consent' },
+  { value: 'zone-map', label: 'Zone Map' },
+  { value: 'assent-measures', label: 'Child Assent & Measures' },
+  { value: 'characters', label: 'Playable Characters' },
+  { value: 'videos', label: 'Videos / scripts' },
   { value: 'activities', label: 'Activities' },
-  { value: 'videos', label: 'Videos' },
-  { value: 'concept-art', label: 'Concept Art' },
   { value: 'traversal-prototype', label: 'Traversal prototype' },
-  { value: 'pitch', label: 'The pitch (written)' },
   { value: 'general', label: 'General / whole page' },
 ]
 
-// ---------- Psychoeducation video scripts (Draft 9). Videos aren't
-// produced yet — each card shows the verbatim script + length + zone. ----------
+const ART = '/long-light/art'
 
-const VIDEOS = [
+// ---------- Characters (for the per-zone "who's here" chips) ----------
+const CHAR = {
+  spark: { name: 'The Spark', role: 'narrator', src: `${ART}/narrator-spark.webp` },
+  emberwick: { name: 'Emberwick', src: `${ART}/emberwick.webp` },
+  mirefly: { name: 'Mirefly', src: `${ART}/mirefly.webp` },
+  hollowshell: { name: 'Hollowshell', src: `${ART}/hollowshell.webp` },
+  dimmet: { name: 'Dimmet', src: `${ART}/dimmet.webp` },
+}
+
+// ---------- Video scripts (verbatim) ----------
+const V1 =
+  'A trauma is any frightening, dangerous, or violent event that harms or threatens to harm your life or well-being (for example, physical abuse, a serious car accident, or even a natural disaster). A trauma can also be something that happens to someone you love or something you witness (for example, seeing parents physically hurt one another, or having someone close suddenly die). Our minds and bodies automatically react to trauma in multiple ways, and even after the trauma is over our bodies have difficulty relaxing.'
+
+const V2 =
+  'Experiencing trauma can cause lots of reactions, in addition to our body’s responses, and these are grouped into four main categories. Hypervigilance or reactivity: feeling more on edge or jumpy, on the lookout for danger — this can even make sleeping hard because your body and mind just won’t calm down. Intrusion: not being able to stop thinking about the trauma, or feeling like it’s happening all over again. Avoidance: trying hard not to think about it or staying away from reminders — it might feel okay at first, but pushing things down always causes more problems in the long term. And negative changes in mood and thoughts: more sadness, anger, or worry, and thoughts like “there’s no one I can trust” or “what happened was my fault.” Let’s look at some examples to better understand what these reactions look like.'
+
+const V3 =
+  'Even though it may not feel like it, these are all normal reactions to experiencing trauma — your brain and body’s way of trying to keep you safe. But here’s the most important thing: trauma is something that happened to you, but it doesn’t define who you are. There are healthy ways to recover from even the worst things that happen to us. None of these characters healed alone — they recovered with the help of a good support system. Trauma therapy is one part of a good support system that can help people recover from very difficult things.'
+
+const TIPS = `Here are some tips for getting the best trauma therapy:
+
+1. Find a therapist who says they are trauma-informed.
+
+2. Ask them what evidence-based trauma treatment they plan to use, what you’ll be asked to do, and how long they think you’ll need to be in therapy. A trauma-informed therapist should probably mention trauma-focused cognitive behavior therapy (or TF-CBT) or EMDR, and plan to meet with you once a week for roughly 4–5 months, not indefinitely. They should also plan to work with at least one of your parents or caregivers to help them understand your current symptoms and how to help you at home. But don’t worry, your caregiver won’t join you in every session and a trauma-informed therapist knows how to talk with caregivers without breaking your privacy.
+
+3. Speaking of privacy, before beginning treatment, ask your therapist to discuss what information is private. Therapy is confidential, so no one else will know that you are in treatment or anything that goes on in your sessions. But a trauma-informed therapist should also advocate for your privacy in sessions. So, while your therapist will need to tell your caregiver if they’re worried about your or someone else’s safety, they can keep other information private.
+
+And good news: participating in trauma therapy is very likely to help you. Research has found that teens who receive trauma treatment, such as TF-CBT, see significant improvement in their PTSD, depression, and anxiety symptoms — and that’s true regardless of who you are as a person, like your race, ethnicity, and gender.`
+
+const GROWTH =
+  'Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think about it like colored glasses – you put on a blue-tinted pair and all of a sudden, a yellow lemon looks green. Our mindset works like glasses; they can change the way something seems to us, but that doesn’t make it true – even if the lemon looks green, we know that it’s really yellow. We often consider two types of mindsets that people “wear”: fixed and growth mindsets. If you currently have on your fixed mindset, you might find yourself thinking that trauma therapy won’t help you because nothing can change how you feel or think because of what happened to you. This is tricky because if you have that thought, you probably won’t want to begin trauma therapy, or you won’t really commit to it, and then things really don’t change for you. But that’s not because your thought was true - it’s a result of the fixed mindset you’re wearing. When you choose to put on your growth mindset, you choose to recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy and will help you get the most benefit from treatment.'
+
+// ---------- Top Zone Map (the living roadmap) ----------
+const ZONE_MAP_ROWS = [
   {
-    track: 'Trauma 101 · Video 1',
-    title: 'What trauma is',
-    duration: '25 sec',
-    zone: 'Zone 1 · The Hollow',
-    script:
-      'A trauma is any frightening, dangerous, or violent event that harms or threatens to harm your life or well-being (for example, physical abuse, a serious car accident, or even a natural disaster). A trauma can also be something that happens to someone you love or something you witness (for example, seeing parents physically hurt one another, or having someone close suddenly die). Our minds and bodies automatically react to trauma in multiple ways, and even after the trauma is over our bodies have difficulty relaxing.',
+    zone: '1 · The Hollow',
+    scene: 'darkest; candle, beacon far above',
+    video: 'Video 1 — what trauma is',
+    activity: 'Body Mapping',
+    gear: 'An Anchor',
+    goal: 'Understand trauma; normalize bodily responses.',
   },
   {
-    track: 'Trauma 101 · Video 2',
-    title: 'The four reactions',
-    duration: '45 sec',
-    zone: 'Zone 2 · The Lantern Path',
-    note: 'Production note: show each category label on screen as it’s described.',
-    script:
-      'Experiencing trauma can cause lots of reactions, in addition to our body’s responses, and these are grouped into four main categories. Hypervigilance or reactivity: feeling more on edge or jumpy, on the lookout for danger — this can even make sleeping hard because your body and mind just won’t calm down. Intrusion: not being able to stop thinking about the trauma, or feeling like it’s happening all over again. Avoidance: trying hard not to think about it or staying away from reminders — it might feel okay at first, but pushing things down always causes more problems in the long term. And negative changes in mood and thoughts: more sadness, anger, or worry, and thoughts like “there’s no one I can trust” or “what happened was my fault.” Let’s look at some examples to better understand what these reactions look like.',
+    zone: '2 · The Lantern Path',
+    scene: 'brightening slopes; lanterns to relight',
+    video: 'Video 2 — the four reactions',
+    activity: 'Character Examples',
+    gear: 'A Lantern',
+    goal: 'Recognize and name common trauma reactions.',
   },
   {
-    track: 'Trauma 101 · Video 3',
-    title: 'These are normal; help works',
-    duration: '25 sec',
-    zone: 'Zone 3 · The Mistfields',
-    script:
-      'Even though it may not feel like it, these are all normal reactions to experiencing trauma — your brain and body’s way of trying to keep you safe. But here’s the most important thing: trauma is something that happened to you, but it doesn’t define who you are. There are healthy ways to recover from even the worst things that happen to us. None of these characters healed alone — they recovered with the help of a good support system. Trauma therapy is one part of a good support system that can help people recover from very difficult things.',
+    zone: '3 · The Mistfields',
+    scene: 'above first clouds; light breaks through',
+    video: 'Video 3 — these are normal; help works + Getting the best trauma therapy',
+    activity: 'Bridge beat (TBD)',
+    gear: 'Hope',
+    goal: 'Normalize + instill hope; bridge to getting help.',
   },
   {
-    track: 'Growth Mindset',
-    title: 'Choosing your mindset',
-    duration: '~55 sec',
-    zone: 'Part 2 · getting-help (Zone 4–5)',
-    script:
-      'Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think of it like colored glasses — put on a blue-tinted pair and everything looks blue, but you can choose a green pair and turn everything green. We often talk about two mindsets people “wear”: fixed and growth. With a fixed mindset on, you might think trauma therapy won’t help you, because nothing can change how you feel or think about what happened. That’s tricky: if you have that thought, you probably won’t want to begin trauma therapy, or you won’t really commit to it — and then things really don’t change for you. But that’s not because the thought was true; it’s a result of the fixed mindset you’re wearing. When you choose to put on your growth mindset, you recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy, and it will help you get the most benefit from treatment.',
+    zone: '4 · The Bright Reaches',
+    scene: 'above the clouds; warm, open',
+    video: 'What to Expect from Therapy (pending) — ends with the 3-3-3 rule',
+    activity: 'Mindfulness: 3-3-3 (see / hear / feel + breathing)',
+    gear: 'Oxygen Mask — helps you breathe',
+    goal: 'Demystify therapy; teach grounding.',
+  },
+  {
+    zone: '5 · The Threshold',
+    scene: 'the Beacon; door opens into light',
+    video: 'Part 2 (pending): shame/reluctance + Growth Mindset',
+    activity: 'TBD (CTAC)',
+    gear: 'Final gear / full toolkit',
+    goal: 'Address shame; commit; readiness.',
   },
 ]
 
-// ---------- Concept-art data (labels/descriptions from the pitch page's
-// "The World & Its Travelers" gallery — keep in sync with it) ----------
-
-const ART = '/long-light/art'
-
-const AVATARS = [
+// ---------- Playable characters ----------
+const PLAYABLE = [
   {
-    src: `${ART}/avatar-traveler-1.webp`,
-    name: 'The Traveler',
-    blurb: 'Hooded and wrapped, a small light in hand.',
+    src: `${ART}/avatar-construct.webp`,
+    name: 'The Construct',
+    blurb: 'Stone and warm light, quietly unstoppable.',
   },
   {
     src: `${ART}/avatar-creature.webp`,
@@ -84,197 +117,136 @@ const AVATARS = [
     blurb: 'Small and curious, with a lantern for a tail.',
   },
   {
-    src: `${ART}/avatar-traveler-2.webp`,
-    name: 'The Wayfarer',
-    blurb: 'Veiled, lighting the path with a lantern-staff.',
-  },
-  {
-    src: `${ART}/avatar-construct.webp`,
-    name: 'The Construct',
-    blurb: 'Stone and warm light, quietly unstoppable.',
+    placeholder: true,
+    name: 'The Traveler',
+    blurb: 'Redesign in progress.',
   },
 ]
 
-const MESSENGERS = [
-  {
-    src: `${ART}/emberwick.webp`,
-    name: 'The Emberwick',
-    symptom: 'Reactivity / hypervigilance',
-    blurb:
-      'Huge ears catch every sound and its lantern flares at the smallest one; it never sleeps. It learned, from someone who’d walked this path before, to tell true danger from its echoes — and its flame finally learned to rest.',
-  },
-  {
-    src: `${ART}/mirefly.webp`,
-    name: 'The Mirefly',
-    symptom: 'Intrusion',
-    blurb:
-      'It circles the same flame, trailed by fading images of itself, reliving one moment on a loop. With help it saw the memories for what they were — echoes, not the thing returning — and the circle opened.',
-  },
-  {
-    src: `${ART}/hollowshell.webp`,
-    name: 'The Hollowshell',
-    symptom: 'Avoidance',
-    blurb:
-      'It sealed itself inside a shell to feel safe, until nothing warm could reach it. Opening a single seam, a little at a time and with support, is what let the light back in.',
-  },
-  {
-    src: `${ART}/dimmet.webp`,
-    name: 'The Dimmet',
-    symptom: 'Negative mood / thoughts',
-    blurb:
-      'It walks bent under its own dark cloud, its glow turned low, sure the weight is its alone to carry. It learned those heavy thoughts weren’t facts, set the stone down, and turned its light back up.',
-  },
-]
-
+// ---------- The five zone sections (the game flow) ----------
 const ZONES = [
   {
-    src: '/long-light/zone1.webp',
-    name: 'Zone I — The Hollow',
-    blurb:
-      'The dark valley floor. A single candle in hand, and a warm beacon impossibly far above — the first glimpse of where you’re headed.',
-  },
-  {
-    src: '/long-light/zone2.webp',
-    name: 'Zone II — The Lantern Path',
-    blurb:
-      'Brightening slopes, and a winding trail of lanterns to relight as you climb up out of the dark.',
-  },
-  {
-    src: '/long-light/zone3.webp',
-    name: 'Zone III — The Mistfields',
-    blurb: 'Above the first clouds, where light finally breaks through the mist.',
-  },
-  {
-    src: '/long-light/zone4.webp',
-    name: 'Zone IV — The Bright Reaches',
-    blurb: 'Over the cloudline into open, warm, sunlit highland.',
-  },
-  {
-    src: '/long-light/zone5.webp',
-    name: 'Zone V — The Threshold',
-    blurb: 'The summit and the Beacon — the door that opens into light.',
-  },
-]
-
-// ---------- Written pitch (spec) data — verbatim from the pitch page's
-// spec panel in public/long-light/index.html ----------
-
-const LOOP_BEATS = [
-  {
-    lead: 'Discover a glyph → watch the message.',
-    text: 'A carved glyph, read with the phone, plays a ~30-second psychoeducation clip left by someone who walked this path before.',
-  },
-  {
-    lead: 'Take on the challenge.',
-    text: 'A short activity that reinforces what the message just taught.',
-  },
-  {
-    lead: 'Earn gear.',
-    text: 'Completing the challenge yields a piece of gear — the coping idea made tangible — that helps with what’s ahead.',
-  },
-  {
-    lead: 'Clear an obstacle.',
-    pending: '(Needs to be developed.)',
-    text: 'Somewhere on the path stands a barrier: an unhelpful thought or misconception about therapy (for example, “therapy won’t work”). You get past it — going over or around it, never destroying it — by answering with what you’ve learned (for example, “therapy is effective, and it can help me put this behind me”).',
-  },
-  {
-    lead: 'Travel to the next zone.',
-    text: 'A brief, fun, arcade-style traversal — you pilot your traveler across to the next, brighter environment, where the next glyph waits.',
-  },
-]
-
-const DESIGN_PRINCIPLES = [
-  {
-    lead: 'No-fail, always.',
-    text: 'Challenges and traversals are forgiving and success-guaranteed — retry freely, no game-over, no score-shaming. A therapeutic dose can’t be gated behind dexterity, and “I failed at coping” is a message we must never send.',
-  },
-  {
-    lead: 'Gear is the skill.',
-    text: 'Where possible each reward is the coping idea in physical form (a grounding “anchor,” a naming “lantern”). By the summit the traveler is fully equipped — which reads as “you’ve built a toolkit for what’s next.”',
-  },
-  {
-    lead: 'Understanding brightens the world.',
-    text: 'The psychoeducation arc is lined up with the dark→light gradient: the confusing, frightening material sits in the low dark zones; understanding and hope arrive as the world lightens.',
-  },
-  {
-    lead: 'Alone → not alone.',
-    text: 'The teen sets off resentful and alone; every glyph is proof others walked here first; by the top they’re accompanied — and the caregiver’s “I’ll meet you there” pays off at the summit.',
-  },
-  {
-    lead: 'The phone is the interface.',
-    text: 'The teen’s own phone becomes the in-world tool: scanner, map, inventory (the toolkit), and where the caregiver’s check-ins arrive.',
-  },
-  {
-    lead: 'One reusable traversal.',
-    text: 'A single arcade pattern reskinned per zone — low-twitch, one-handed — not five separate mini-games.',
-  },
-]
-
-const FRAME_TEXT =
-  'The Long Light is an adventure the participant plays. They choose a traveler to become and set out on a quest. Something happened to that traveler, kept deliberately vague, and the journey is about coming to understand it: what trauma is, how it shows up, and how people find their way to help. The player is only ever the traveler, a covered figure or a creature and never a specific face, which keeps the experience free of gender, race, and body type. Along the way they meet others who made the same climb and learned what helped, and the journey ends by reaching the Beacon: proof that help is real and within reach.'
-
-const MESSENGERS_INTRO =
-  'Original creatures of the story’s world — no borrowed IP. Each embodies one of the four trauma-reaction categories, reads as a simple dark silhouette in the vector style, and recovered with support (the peer voice). They do double duty: the travelers you meet at glyphs and the cast of the Character Examples challenge.'
-
-const MESSENGER_SPEC_LINES = [
-  {
-    lead: 'The Emberwick — reactivity / hypervigilance.',
-    text: 'Oversized ears and a lantern that flares at every sound; never sleeps. Learned to tell real danger from echoes so its flame could rest.',
-  },
-  {
-    lead: 'The Mirefly — intrusion.',
-    text: 'A moth trailed by fading after-images, circling the same flame. Learned the memories were echoes, not the event returning, and they loosened once faced with help.',
-  },
-  {
-    lead: 'The Hollowshell — avoidance.',
-    text: 'Curled in a sealed shell, light leaking from one crack. Learned that opening a sliver at a time, with support, let the warmth back in.',
-  },
-  {
-    lead: 'The Dimmet — negative mood / thoughts.',
-    text: 'Hunched under its own dark cloud, glow turned low. Learned those thoughts weren’t facts, set the weight down, and turned its light back up.',
-  },
-]
-
-const ZONE_MAP_ROWS = [
-  {
-    zone: '1 · The Hollow',
-    scene: 'darkest; candle, beacon far above',
-    video: 'Video 1 — what trauma is (definition + examples; the body reacts and can’t relax).',
-    challenge: 'Body Mapping — reveal how 5 body areas react, then tap the reactions you’ve felt.',
+    n: 'Zone 1',
+    name: 'The Hollow',
+    scenery: 'The dark valley floor — a single candle in hand, the beacon far above.',
+    image: '/long-light/zone1.webp',
+    characters: ['spark'],
+    videos: [{ title: 'Video 1 — What trauma is', duration: '25 sec', script: V1 }],
+    activity: {
+      title: 'Body Mapping',
+      desc: (
+        <>
+          <p>
+            <strong>Part 1:</strong> tap to reveal how five parts of the body
+            react during and after trauma — <strong>Lungs</strong> (breathe
+            faster to take in more oxygen), <strong>Head</strong> (thoughts
+            race, hard to think clearly, dizzy or detached/unreal),{' '}
+            <strong>Heart</strong> (beats faster and harder),{' '}
+            <strong>Stomach</strong> (upset or nauseous as blood moves to the
+            arms and legs), <strong>Body</strong> (heats up and sweats, muscles
+            tense, shaky or tingly) — then note these responses can linger after
+            the danger passes or resurface when something reminds you of it.
+          </p>
+          <p className="mt-2">
+            <strong>Part 2:</strong> tap each reaction you’ve felt recently.
+          </p>
+        </>
+      ),
+    },
     gear: 'An Anchor — your body’s alarm can be steadied.',
-    goal: 'Understand what trauma is; normalize bodily responses.',
+    traversal: { text: 'Traversal to Zone 2.', pending: true },
+    goal: 'Understand what trauma is; normalize the body’s responses.',
   },
   {
-    zone: '2 · The Lantern Path',
-    scene: 'brightening slopes; lanterns to relight',
-    video: 'Video 2 — the four reaction types: reactivity, intrusion, avoidance, negative mood/thoughts.',
-    challenge: 'Character Examples — meet the four messenger creatures; recognize each one’s symptom type.',
+    n: 'Zone 2',
+    name: 'The Lantern Path',
+    scenery: 'Brightening slopes, and a winding trail of lanterns to relight.',
+    image: '/long-light/zone2.webp',
+    characters: ['spark', 'emberwick', 'mirefly', 'hollowshell', 'dimmet'],
+    videos: [{ title: 'Video 2 — The four reactions', duration: '45 sec', note: 'Production note: show each category label on screen as it’s described.', script: V2 }],
+    activity: {
+      title: 'Character Examples',
+      desc: (
+        <>
+          Meet the four messenger creatures —{' '}
+          <strong>Emberwick, Mirefly, Hollowshell, Dimmet</strong> — and for
+          each, hear a short script and choose which of the four symptom types it
+          shows (reactivity, intrusion, avoidance, negative mood/thoughts). Ends
+          with an animation of all four creatures’ symptoms easing.
+        </>
+      ),
+    },
     gear: 'A Lantern — naming what’s happening.',
+    traversal: {
+      text: 'The bird flight — “the power of connections.” Gather connections to climb from the Lantern Path up to the Mistfields.',
+      playable: true,
+    },
     goal: 'Recognize and name common trauma reactions.',
   },
   {
-    zone: '3 · The Mistfields',
-    scene: 'above first clouds; light breaks through',
-    video: 'Video 3 — these are normal; trauma doesn’t define you; recovery happens with support; therapy is part of that.',
-    challenge: 'Bridge beat — light/reflective (TBD). A message, not a drill.',
+    n: 'Zone 3',
+    name: 'The Mistfields',
+    scenery: 'Above the first clouds, where light finally breaks through the mist.',
+    image: '/long-light/zone3.webp',
+    characters: ['spark'],
+    videos: [
+      { title: 'Video 3 — These are normal; help works', duration: '25 sec', script: V3 },
+      { title: 'Getting the best trauma therapy', duration: '~90 sec', script: TIPS },
+    ],
+    activity: {
+      title: 'Bridge beat',
+      pending: true,
+      desc: 'A light, reflective bridge beat (TBD) — a message, not a drill.',
+    },
     gear: 'Hope — you are not the first, and not alone.',
-    goal: 'Normalize + instill hope; bridge to getting help.',
+    traversal: { text: 'Traversal to Zone 4.', pending: true },
+    goal: 'Normalize and instill hope; bridge toward getting help.',
   },
   {
-    zone: '4 · The Bright Reaches',
-    scene: 'above the clouds; warm, open',
-    video: 'Part 2 — pending. What to expect from therapy.',
-    challenge: 'TBD (CTAC)',
-    gear: 'A skill-as-gear (Part 2)',
-    goal: 'Demystify therapy; reduce fear of the unknown.',
+    n: 'Zone 4',
+    name: 'The Bright Reaches',
+    scenery: 'Over the cloudline into open, warm, sunlit highland.',
+    image: '/long-light/zone4.webp',
+    characters: ['spark'],
+    videos: [
+      {
+        title: 'What to Expect from Therapy',
+        duration: 'pending',
+        pending: true,
+        pendingNote: 'Pending (Sprang). Ends with the 3-3-3 rule.',
+      },
+    ],
+    activity: {
+      title: 'Mindfulness — 3-3-3',
+      desc: 'Name 3 things you see (tap 3 options), 3 you hear (audio over the image, tap 3), then feel = deep breathing with concentric rings expanding and contracting on a slow 3-count, then it ends.',
+    },
+    gear: 'Oxygen Mask — helps you breathe.',
+    traversal: {
+      text: 'Underwater flight — use the Oxygen Mask you earned; collect air bubbles to keep it full and dodge underwater obstacles.',
+      pending: true,
+      underwater: true,
+    },
+    goal: 'Demystify therapy; reduce fear of the unknown; teach grounding/breathing.',
   },
   {
-    zone: '5 · The Threshold',
-    scene: 'the Beacon; door opens into light',
-    video: 'Part 2 — pending. Shame / reluctance to reach out; hope; then arrival.',
-    challenge: 'TBD (CTAC)',
-    gear: 'Final gear / full toolkit',
-    goal: 'Address shame; end on readiness to go.',
+    n: 'Zone 5',
+    name: 'The Threshold',
+    scenery: 'The summit and the Beacon — the door that opens into light.',
+    image: '/long-light/zone5.webp',
+    characters: ['spark'],
+    videos: [
+      {
+        title: 'Part 2 — shame / reluctance to reach out',
+        duration: 'pending',
+        pending: true,
+        pendingNote: 'Pending.',
+      },
+      { title: 'Growth Mindset — Choosing your mindset', duration: '~55 sec', script: GROWTH },
+    ],
+    activity: { title: 'Activity', pending: true, desc: 'To be designed with CTAC.' },
+    gear: 'Final gear / full toolkit.',
+    traversal: { text: 'Arrival at the Beacon — the journey’s end.', end: true },
+    goal: 'Address shame; end on readiness to commit and go.',
   },
 ]
 
@@ -301,298 +273,102 @@ export default function GainsDemoPage() {
           GAINS for Teens — The Long Light
         </h1>
         <p className="text-[14px] text-slate-600 leading-relaxed max-w-[760px]">
-          Internal review page for the GAINS for Teens single-session
-          intervention. Look through what&apos;s here and use the{' '}
-          <strong>Give feedback</strong> button (top right) — pick the section
-          your comment is about so it lands in the right pile.
+          An internal walkthrough of the intervention, laid out the way it
+          plays: the roadmap first, then the characters you can be, then each
+          zone of the climb — video, activity, gear, and the arcade flight to
+          the next zone. Use <strong>Give feedback</strong> (top right) and pick
+          the section your comment is about.
         </p>
         <p className="text-[13px] text-slate-500 mt-2">
           The scroll-through concept pitch lives at{' '}
-          <a
-            href="/long-light/"
-            target="_blank"
-            rel="noreferrer"
-            className="text-ctac-teal-700 hover:text-ctac-teal-900 underline"
-          >
+          <a href="/long-light/" target="_blank" rel="noreferrer" className="text-ctac-teal-700 hover:text-ctac-teal-900 underline">
             /long-light/
           </a>
           .
         </p>
       </section>
 
-      {/* 1. Pre/Post Measures & Consent */}
+      {/* A. Zone Map — the living roadmap */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
-          Pre/Post Measures &amp; Consent
-        </h2>
-        <InDevelopmentCard label="In development." note="Measures have not been identified yet." />
-      </section>
-
-      {/* 2. Activities */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Activities
-        </h2>
-        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          The reinforcing activities we have content for. Interactive versions
-          are in development — these describe how each will play.
-        </p>
-        <div className="space-y-4 max-w-[760px]">
-          <ActivityCard
-            title="Body Mapping"
-            duration="~1 min"
-            meta="Pairs with Video 1 · Zone 1"
-            goal="Normalize the body’s responses."
-          >
-            <p className="text-[14px] text-slate-700 leading-relaxed">
-              <strong>Part 1:</strong> tap to reveal how five parts of the body
-              react during and after trauma — <strong>Lungs</strong> (breathe
-              faster to take in more oxygen), <strong>Head</strong> (thoughts
-              race, hard to think clearly, dizzy or detached/unreal),{' '}
-              <strong>Heart</strong> (beats faster and harder),{' '}
-              <strong>Stomach</strong> (upset or nauseous as blood moves to the
-              arms and legs), <strong>Body</strong> (heats up and sweats, muscles
-              tense, shaky or tingly) — then note these responses can linger
-              after the danger passes or resurface when something reminds you of
-              it.
-            </p>
-            <p className="text-[14px] text-slate-700 leading-relaxed mt-2">
-              <strong>Part 2:</strong> tap each reaction you’ve felt recently.
-            </p>
-          </ActivityCard>
-
-          <ActivityCard
-            title="Character Examples"
-            duration="~1 min"
-            meta="Pairs with Video 2 · Zone 2"
-            goal="Recognize and name trauma reactions."
-          >
-            <p className="text-[14px] text-slate-700 leading-relaxed">
-              Meet the four messenger creatures —{' '}
-              <strong>Emberwick, Mirefly, Hollowshell, Dimmet</strong> — and for
-              each, hear a short script and choose which of the four symptom types
-              it shows (reactivity, intrusion, avoidance, negative mood/thoughts).
-              Ends with an animation of all four creatures’ symptoms easing.
-            </p>
-          </ActivityCard>
+        <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
+          <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
+            Zone Map — the roadmap
+          </h2>
+          <span className="text-[12px] text-slate-400 italic">updated as we go</span>
         </div>
-      </section>
-
-      {/* Videos — psychoeducation scripts (production pending) */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Videos
-        </h2>
-        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          The psychoeducation video scripts. The videos aren’t produced yet —
-          each card shows the script, its length, and where it lands in the climb.
-        </p>
-        <div className="space-y-4 max-w-[760px]">
-          {VIDEOS.map((v) => (
-            <VideoCard key={v.track} {...v} />
-          ))}
-        </div>
-      </section>
-
-      {/* Prototypes */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
-          Prototypes
-        </h2>
-        <article className="bg-white rounded-2xl shadow-card p-5 max-w-[760px] flex flex-col sm:flex-row sm:items-center gap-5">
-          <div
-            className="flex-shrink-0 mx-auto sm:mx-0 w-[120px] overflow-hidden rounded-2xl bg-[#05070e]"
-            style={{ aspectRatio: '9 / 16' }}
-            aria-hidden="true"
-          >
-            <img
-              src="/gains/traversal/ravine-bg.webp"
-              alt=""
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-[17px] font-semibold text-slate-800 mb-1">
-              The ascent — traversal flight
-            </h3>
-            <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
-              A first playable of the between-zone flight: one-thumb steering,
-              “connection” lights drifting down to gather, and a no-fail climb
-              toward the light. This is the reusable game engine every future
-              zone will reskin.
-            </p>
-            <Link
-              to="/gains-demo/traversal"
-              className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
-            >
-              <Play size={14} strokeWidth={2} />
-              Play the traversal prototype
-            </Link>
-          </div>
-        </article>
-      </section>
-
-      {/* 3. Concept Art */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Concept Art
-        </h2>
-        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          The visual language of The Long Light — vector-silhouette
-          environments and characters. All art is concept-stage.
-        </p>
-
-        {/* Choose your traveler */}
-        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">Choose your traveler</h3>
-        <p className="text-[13px] text-slate-500 mb-4">
-          The player avatars — you&apos;ll play as one of these.
-        </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          {AVATARS.map((a) => (
-            <ArtCard key={a.name} src={a.src} name={a.name} blurb={a.blurb} />
-          ))}
-        </div>
-
-        {/* The messengers */}
-        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">The messengers</h3>
-        <p className="text-[13px] text-slate-500 mb-4">
-          Travelers who made this climb before — each embodies one of the four
-          trauma-reaction types.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          {MESSENGERS.map((m) => (
-            <ArtCard key={m.name} src={m.src} name={m.name} tag={m.symptom} blurb={m.blurb} />
-          ))}
-        </div>
-
-        {/* The world map */}
-        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">The world map</h3>
-        <p className="text-[13px] text-slate-500 mb-4">
-          One climb, five regions — the path winds up from the dark valley
-          where you begin to the Beacon at the summit.
-        </p>
-        <div className="max-w-[360px] mb-8">
-          <ArtCard
-            src={`${ART}/map-and-world.webp`}
-            name="The World (the map)"
-            blurb="The map you are told to follow and the world you will cross."
-          />
-        </div>
-
-        {/* The zones */}
-        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">The zones</h3>
-        <p className="text-[13px] text-slate-500 mb-4">
-          The five environments of the climb, dark to light.
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
-          {ZONES.map((z) => (
-            <ArtCard key={z.name} src={z.src} name={z.name} blurb={z.blurb} />
-          ))}
-        </div>
-
-        {/* Narrator — two options for the team to weigh in on */}
-        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
-          Narrator — two options (which fits best?)
-        </h3>
-        <p className="text-[13px] text-slate-500 mb-4 max-w-[620px]">
-          The narrator narrates, gives instructions, and delivers much of the
-          psychoeducation, accompanying the journey. Two directions — tell us
-          which fits (use <strong>Give feedback</strong> → Concept Art).
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[560px]">
-          <ArtCard
-            src={`${ART}/narrator-spark.webp`}
-            name="Option 1 — The Spark"
-            blurb="A small companion spirit of living light, a piece of the Beacon’s glow that travels beside you and lights the way. Best as an ever-present voice threaded through the whole journey."
-          />
-          <ArtCard
-            src={`${ART}/narrator-keeper.webp`}
-            name="Option 2 — The Lantern Keeper"
-            blurb="A serene hooded guide whose lantern is its face; an ancient keeper of the path who has made the climb and now lights it for others. Best as a mentor who appears at key moments."
-          />
-        </div>
-      </section>
-
-      {/* 4. The pitch (written) */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
-          The pitch (written)
-        </h2>
-        <div className="bg-white rounded-2xl shadow-card p-6 max-w-[860px]">
-          <h3 className="text-[22px] font-bold text-slate-800 leading-tight">
-            GAINS for Teens — The Long Light
-          </h3>
-          <p className="text-[16px] font-semibold text-slate-700 mt-0.5">
-            Gameplay Loop &amp; Zone Map
-          </p>
-          <p className="text-[12px] text-slate-500 mt-1.5 tracking-wide">
-            Internal working spec · July 2026 · concept mapped against CTAC Part 1
-          </p>
-          <p className="text-[15px] italic text-slate-600 leading-relaxed mt-4">
-            A teen anxious about trauma therapy chooses a traveler and sets out
-            to climb from darkness to a distant light. The climb is the
-            intervention; reaching the Beacon is proof that help is real and
-            reachable.
-          </p>
-
-          <SpecHeading>1. The gameplay loop</SpecHeading>
-          <p className="text-[14px] text-slate-700 leading-relaxed">
-            One loop repeats per zone as the traveler climbs. Each turn:
-          </p>
-          <SpecList items={LOOP_BEATS} />
-
-          <SpecHeading>2. Design principles</SpecHeading>
-          <SpecList items={DESIGN_PRINCIPLES} />
-
-          <SpecHeading>3. The frame</SpecHeading>
-          <p className="text-[14px] text-slate-700 leading-relaxed">{FRAME_TEXT}</p>
-
-          <SpecHeading>4. The messengers</SpecHeading>
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-2">{MESSENGERS_INTRO}</p>
-          <SpecList items={MESSENGER_SPEC_LINES} />
-
-          <SpecHeading>5. Zone map</SpecHeading>
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-3">
-            First-pass mapping of CTAC&apos;s clinical content to the five
-            zones. Part 1 (Trauma 101) is in current draft; Part 2 (what to
-            expect from therapy; shame/reluctance) is not yet written, so Zones
-            4–5 are placeholders.
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-[13px] leading-relaxed border-collapse">
-              <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Zone &amp; scenery</th>
-                  <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Psychoeducation (glyph → video)</th>
-                  <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Challenge / activity</th>
-                  <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Gear earned</th>
-                  <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Clinical goal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ZONE_MAP_ROWS.map((r) => (
-                  <tr key={r.zone} className="align-top">
-                    <td className="px-3 py-2.5 border-b border-slate-200">
-                      <span className="font-semibold whitespace-nowrap text-slate-800">{r.zone}</span>
-                      <span className="block text-[12px] text-slate-500">{r.scene}</span>
-                    </td>
-                    <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.video}</td>
-                    <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.challenge}</td>
-                    <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.gear}</td>
-                    <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.goal}</td>
+        <div className="bg-white rounded-2xl shadow-card p-5">
+          <div className="flex flex-col lg:flex-row gap-5">
+            <div className="lg:w-[220px] flex-shrink-0 mx-auto lg:mx-0 w-[180px]">
+              <img
+                src={`${ART}/map-and-world.webp`}
+                alt="The world of The Long Light — the climb from the dark valley to the Beacon"
+                loading="lazy"
+                className="w-full rounded-2xl"
+              />
+            </div>
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full min-w-[720px] text-[13px] leading-relaxed border-collapse">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Zone &amp; scenery</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Video</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Activity</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Gear</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Clinical goal</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {ZONE_MAP_ROWS.map((r) => (
+                    <tr key={r.zone} className="align-top">
+                      <td className="px-3 py-2.5 border-b border-slate-200">
+                        <span className="font-semibold whitespace-nowrap text-slate-800">{r.zone}</span>
+                        <span className="block text-[12px] text-slate-500">{r.scene}</span>
+                      </td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.video}</td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.activity}</td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.gear}</td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.goal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <p className="text-[13px] italic text-slate-500 mt-3">
-            Note: Video 3 is a message-only beat (the hopeful pivot), so Zone 3
-            carries no discrete drill — it hands off from “understanding
-            trauma” (Part 1) to “getting help” (Part 2).
-          </p>
         </div>
       </section>
+
+      {/* B. Child Assent & Measures */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
+          Child Assent &amp; Measures
+        </h2>
+        <InDevelopmentCard label="In development." note="Assent flow and pre/post measures not identified yet." />
+      </section>
+
+      {/* C. Playable Characters */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Playable Characters
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+          The traveler the participant chooses to become for the climb.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-[640px]">
+          {PLAYABLE.map((c) => (
+            <ArtCard key={c.name} {...c} />
+          ))}
+        </div>
+      </section>
+
+      {/* D. The game flow — Zone 1 → Zone 5 */}
+      <section className="mb-4">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
+          The climb
+        </h2>
+      </section>
+      {ZONES.map((z) => (
+        <ZoneSection key={z.n} zone={z} />
+      ))}
     </DemoPageLayout>
   )
 }
@@ -609,94 +385,152 @@ function InDevelopmentCard({ label, note }) {
   )
 }
 
-// Video-script card: title + duration + zone, a "Video in production" pill,
-// an optional production note, and the verbatim script. Structured so a real
-// player (the RfR Vimeo VideoPlayer pattern) can drop in later.
-function VideoCard({ track, title, duration, zone, note, script }) {
-  return (
-    <article className="bg-white rounded-2xl shadow-card p-5">
-      <div className="flex items-start justify-between gap-3 flex-wrap mb-0.5">
-        <div>
-          <div className="text-[11px] uppercase tracking-wide text-ctac-teal-700 font-semibold">
-            {track}
-          </div>
-          <h3 className="text-[16px] font-semibold text-slate-800">{title}</h3>
-        </div>
-        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
-          {duration}
-        </span>
-      </div>
-      <div className="text-[12px] text-slate-500 mb-3">{zone}</div>
-      <div className="inline-flex items-center gap-1.5 text-[12px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 mb-3">
-        <Film size={13} strokeWidth={2} />
-        Video in production
-      </div>
-      {note && <p className="text-[12px] italic text-slate-500 mb-2">{note}</p>}
-      <p className="text-[14px] text-slate-700 leading-relaxed">{script}</p>
-    </article>
-  )
-}
-
-// Activity card: title + duration + zone/pairing + goal, an "Interactive
-// version in development" pill, and the description (passed as children).
-function ActivityCard({ title, duration, meta, goal, children }) {
-  return (
-    <article className="bg-white rounded-2xl shadow-card p-5">
-      <div className="flex items-start justify-between gap-3 flex-wrap mb-0.5">
-        <h3 className="text-[16px] font-semibold text-slate-800">{title}</h3>
-        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
-          {duration}
-        </span>
-      </div>
-      <div className="text-[12px] text-slate-500 mb-3">
-        {meta} · Goal: {goal}
-      </div>
-      <div className="inline-flex items-center gap-1.5 text-[12px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 mb-3">
-        <HardHat size={13} strokeWidth={2} />
-        Interactive version in development
-      </div>
-      {children}
-    </article>
-  )
-}
-
-// Image card for the concept-art galleries. The art has its own dark
-// background, so it sits in a white card with the caption below.
-function ArtCard({ src, name, tag, blurb }) {
+// Image card (playable characters). Handles a dashed placeholder when the
+// art isn't ready yet.
+function ArtCard({ src, name, blurb, placeholder }) {
   return (
     <figure className="bg-white rounded-2xl shadow-card p-3 flex flex-col">
-      <img src={src} alt={name} loading="lazy" className="w-full h-auto rounded-xl mb-3" />
+      {placeholder ? (
+        <div
+          role="img"
+          aria-label={`${name} — art in progress`}
+          className="w-full aspect-[3/4] bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-[13px] italic mb-3"
+        >
+          Redesign in progress
+        </div>
+      ) : (
+        <img src={src} alt={name} loading="lazy" className="w-full h-auto rounded-xl mb-3" />
+      )}
       <figcaption className="flex-1">
         <h4 className="text-[14px] font-semibold text-slate-800 leading-tight">{name}</h4>
-        {tag && (
-          <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1 text-[11px] font-medium bg-ctac-teal-100 text-ctac-teal-800">
-            {tag}
-          </span>
-        )}
-        {blurb && (
-          <p className="text-[12px] text-slate-600 leading-relaxed mt-1.5">{blurb}</p>
-        )}
+        {blurb && <p className="text-[12px] text-slate-600 leading-relaxed mt-1.5">{blurb}</p>}
       </figcaption>
     </figure>
   )
 }
 
-function SpecHeading({ children }) {
+function Pill({ icon: Icon, children }) {
   return (
-    <h4 className="text-[17px] font-bold text-slate-800 mt-7 mb-2">{children}</h4>
+    <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
+      <Icon size={13} strokeWidth={2} />
+      {children}
+    </span>
   )
 }
 
-function SpecList({ items }) {
+function Beat({ label, children }) {
   return (
-    <ul className="list-disc pl-5 space-y-2.5 mt-2">
-      {items.map((it) => (
-        <li key={it.lead} className="text-[14px] text-slate-700 leading-relaxed">
-          <strong className="text-slate-800">{it.lead}</strong>{' '}
-          {it.pending && <em className="text-slate-500">{it.pending}</em>}{' '}
-          {it.text}
-        </li>
-      ))}
-    </ul>
+    <div>
+      <div className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold mb-1.5">
+        {label}
+      </div>
+      <div className="text-[14px] text-slate-700 leading-relaxed">{children}</div>
+    </div>
+  )
+}
+
+function CharacterChips({ names }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {names.map((key) => {
+        const c = CHAR[key]
+        if (!c) return null
+        return (
+          <span key={key} className="inline-flex items-center gap-1.5 bg-slate-100 rounded-full pl-1 pr-3 py-1">
+            <img src={c.src} alt="" loading="lazy" className="w-6 h-6 rounded-full object-cover" />
+            <span className="text-[12px] font-medium text-slate-700">
+              {c.name}
+              {c.role ? <span className="text-slate-400"> · {c.role}</span> : null}
+            </span>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+function ZoneSection({ zone }) {
+  const t = zone.traversal
+  return (
+    <section className="mb-8">
+      <h3 className="text-[18px] font-bold text-slate-800">
+        {zone.n} · {zone.name}
+      </h3>
+      <p className="text-[13px] text-slate-500 mb-3">{zone.scenery}</p>
+
+      <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col md:flex-row gap-5">
+        <div className="md:w-[190px] flex-shrink-0 mx-auto md:mx-0 w-[150px]">
+          <img src={zone.image} alt={`${zone.name} — zone plate`} loading="lazy" className="w-full rounded-2xl" />
+        </div>
+
+        <div className="flex-1 space-y-4 min-w-0">
+          <Beat label="Characters in this zone">
+            <CharacterChips names={zone.characters} />
+          </Beat>
+
+          <Beat label={zone.videos.length > 1 ? 'Videos' : 'Video'}>
+            <div className="space-y-3">
+              {zone.videos.map((v) => (
+                <div key={v.title}>
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                    <span className="font-semibold text-slate-800">{v.title}</span>
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
+                      {v.duration}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <Pill icon={Film}>Video in production</Pill>
+                  </div>
+                  {v.note && <p className="text-[12px] italic text-slate-500 mb-1.5">{v.note}</p>}
+                  {v.pending ? (
+                    <p className="text-[13px] italic text-slate-500">{v.pendingNote}</p>
+                  ) : (
+                    <p className="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line">{v.script}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Beat>
+
+          <Beat label="Activity">
+            <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+              <span className="font-semibold text-slate-800">{zone.activity.title}</span>
+              <Pill icon={HardHat}>
+                {zone.activity.pending ? 'To be designed' : 'Interactive version in development'}
+              </Pill>
+            </div>
+            <div className="text-[13px] text-slate-700 leading-relaxed">{zone.activity.desc}</div>
+          </Beat>
+
+          <Beat label="Gear earned">{zone.gear}</Beat>
+
+          <Beat label={t.end ? 'Arrival' : 'Traversal to the next zone'}>
+            {t.playable ? (
+              <>
+                <p className="mb-2">{t.text}</p>
+                <Link
+                  to="/gains-demo/traversal"
+                  className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
+                >
+                  <Play size={14} strokeWidth={2} />
+                  Play the traversal prototype
+                </Link>
+              </>
+            ) : t.end ? (
+              <p>{t.text}</p>
+            ) : (
+              <>
+                <div className="mb-1.5">
+                  <Pill icon={t.underwater ? Waves : HardHat}>In development</Pill>
+                </div>
+                <p>{t.text}</p>
+              </>
+            )}
+          </Beat>
+
+          <Beat label="Clinical goal">{zone.goal}</Beat>
+        </div>
+      </div>
+    </section>
   )
 }

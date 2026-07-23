@@ -32,15 +32,20 @@ const PROGRAMS = [
   { value: 'gains-teens', label: 'GAINS Teens', cls: 'bg-amber-100 text-amber-800' },
 ]
 
-// GAINS demo section slugs → readable labels (see GainsDemoPage).
+// GAINS demo section slugs → readable labels (see GainsDemoPage). Current
+// sections first; older slugs kept below so historical rows still label.
 const SECTION_LABELS = {
-  'pre-post': 'Pre/Post Measures',
+  'zone-map': 'Zone Map',
+  'assent-measures': 'Child Assent & Measures',
+  characters: 'Playable Characters',
+  videos: 'Videos / scripts',
   activities: 'Activities',
-  videos: 'Videos',
-  'concept-art': 'Concept Art',
   'traversal-prototype': 'Traversal prototype',
-  pitch: 'The pitch (written)',
   general: 'General',
+  // retired section slugs (kept for older feedback rows)
+  'pre-post': 'Pre/Post Measures',
+  'concept-art': 'Concept Art',
+  pitch: 'The pitch (written)',
 }
 
 const SUBMITTER_LABELS = {
