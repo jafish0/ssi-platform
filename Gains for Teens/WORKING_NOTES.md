@@ -96,6 +96,26 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **0ce5ddd** (2026-07-17) — Draft 12 (supersedes + folds in Draft 11): restructured the
+  GAINS demo (`/gains-demo`) to read like the game flow, top→bottom — **Zone Map**
+  roadmap (world-map image + 5-col table, "updated as we go") → **Child Assent &
+  Measures** (renamed, in dev) → **Playable Characters** (The Construct + The Creature +
+  a Traveler "redesign in progress" placeholder; Wayfarer removed) → **Zone 1–5** sections
+  (each: zone image, in-zone character chips — Spark everywhere + the 4 messengers in Zone
+  2 — video/script, activity, gear, and the traversal to the next zone). Zone 2's
+  traversal links the playable bird-flight prototype; Zone 4's is the pending underwater
+  flight (Oxygen Mask). Folded in from Draft 11: **narrator = The Spark only** (Lantern
+  Keeper dropped), new **"Getting the best trauma therapy"** script (Zone 3), updated
+  lemon/colored-glasses **Growth Mindset** script (Zone 5). Removed the old standalone
+  Videos / Activities / Concept Art / Pitch sections (content now lives in the zones,
+  characters, and map). Feedback sections retuned (zone-map / assent-measures /
+  characters / videos / activities / traversal-prototype / general); admin keeps retired
+  slugs labeled for old rows. No version bumps. Verified in dev: page order, all
+  zone/character art 200, Zone 2 messengers + play link, no old sections, no errors,
+  build passes. *(Note: this commit sits on top of the parallel Ready-for-Roots work
+  stream's commits — Child Assent, IRB preview, Pretest/Posttest — on shared `main`;
+  history is linear and intact.)*
+
 - **483ba76** (2026-07-17) — Traversal tweak (in-conversation): raised the bird's resting
   position from 0.72 → 0.62 of the frame height (up a bit, between its old lower-third
   spot and centre; also lengthens the runway for the top-descending connections). One
@@ -573,3 +593,56 @@ long-light/: hero shows both taglines; NO "dream/tomorrow/wake" anywhere; premis
 **Verify.** Activities section shows the two placeholder cards (each "interactive version in development"); Concept Art narrator slot shows both options with images + descriptions and invites a preference; feedback works (tagged). No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 10.*
+
+
+### Draft 11 — GAINS demo updates from the July meeting — ⚠️ SUPERSEDED by Draft 12 · ✅ changes folded into 0ce5ddd (2026-07-17)
+
+Follow-up to the demo (Drafts 7–10). Four edits:
+
+**1. Narrator — keep The Spark, remove The Lantern Keeper.** The team chose **The Spark**. In the Concept Art section, drop the Lantern Keeper option and the "two options / which fits best?" framing; present The Spark as THE narrator ("The Narrator — The Spark", keep its description). `art/narrator-keeper.webp` is no longer referenced.
+
+**2. Choose your traveler — remove The Wayfarer → three avatars.** Drop `avatar-traveler-2.webp` (The Wayfarer) from the character-select. Leaves **three**: The Traveler, The Creature, The Construct. (The Traveler art is being redesigned separately — keep the current `avatar-traveler-1.webp` for now; a new file will swap in under the same name later.)
+
+**3. Videos — add a new video card right after Video 3, in Zone 3.** Place it immediately after "These are normal; help works" (Video 3). Title: **Getting the best trauma therapy** · ~90 sec (est.) · Zone 3 · goal: how to find and start good trauma therapy. "Video in production" placeholder + this script:
+> Here are some tips for getting the best trauma therapy:
+> 1. Find a therapist who says they are trauma-informed.
+> 2. Ask them what evidence-based trauma treatment they plan to use, what you'll be asked to do, and how long they think you'll need to be in therapy. A trauma-informed therapist should probably mention trauma-focused cognitive behavior therapy (or TF-CBT) or EMDR, and plan to meet with you once a week for roughly 4–5 months, not indefinitely. They should also plan to work with at least one of your parents or caregivers to help them understand your current symptoms and how to help you at home. But don't worry, your caregiver won't join you in every session and a trauma-informed therapist knows how to talk with caregivers without breaking your privacy.
+> 3. Speaking of privacy, before beginning treatment, ask your therapist to discuss what information is private. Therapy is confidential, so no one else will know that you are in treatment or anything that goes on in your sessions. But a trauma-informed therapist should also advocate for your privacy in sessions. So, while your therapist will need to tell your caregiver if they're worried about your or someone else's safety, they can keep other information private.
+> And good news: participating in trauma therapy is very likely to help you. Research has found that teens who receive trauma treatment, such as TF-CBT, see significant improvement in their PTSD, depression, and anxiety symptoms — and that's true regardless of who you are as a person, like your race, ethnicity, and gender.
+
+**4. Videos — replace the Growth Mindset ("Choosing your mindset") script** with this updated version (lemon/colored-glasses edit):
+> Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think about it like colored glasses – you put on a blue-tinted pair and all of a sudden, a yellow lemon looks green. Our mindset works like glasses; they can change the way something seems to us, but that doesn't make it true – even if the lemon looks green, we know that it's really yellow. We often consider two types of mindsets that people "wear": fixed and growth mindsets. If you currently have on your fixed mindset, you might find yourself thinking that trauma therapy won't help you because nothing can change how you feel or think because of what happened to you. This is tricky because if you have that thought, you probably won't want to begin trauma therapy, or you won't really commit to it, and then things really don't change for you. But that's not because your thought was true - it's a result of the fixed mindset you're wearing. When you choose to put on your growth mindset, you choose to recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy and will help you get the most benefit from treatment.
+
+**Verify.** Narrator shows only The Spark; character-select shows three avatars (no Wayfarer); Videos has the new "Getting the best trauma therapy" card after Video 3 in Zone 3; Growth Mindset card shows the new lemon/colored-glasses script. Feedback still works. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 11.*
+
+
+### Draft 12 — Restructure the GAINS demo around the game flow (SUPERSEDES Draft 11) — ✅ SHIPPED 0ce5ddd (2026-07-17)
+
+**Implement this INSTEAD of Draft 11 — it folds in all of Draft 11's changes.** Reorganize the demo page (built in Drafts 7–10) so it reads like the actual game flow. This is mostly reorganization: **reuse the existing video scripts, activity descriptions, and art already in the demo**; the new bits are called out.
+
+**New page order (top → bottom):**
+
+**A. TOP — the living Zone Map.** Move the 5-zone map table to the very top as the roadmap, with a note "updated as we go." Show the world-map image (`/long-light/art/map-and-world.webp`) here too. Keep the table's 5 columns (Zone & scenery / Video / Activity / Gear / Clinical goal), and update cells to current info: Zone 3 Video add "+ Getting the best trauma therapy"; Zone 4 → Video "What to Expect from Therapy (pending) — ends with the 3-3-3 rule", Activity "Mindfulness: 3-3-3 (see/hear/feel + breathing)", Gear "Oxygen Mask — helps you breathe", Goal "Demystify therapy; teach grounding"; Zone 5 Video "Part 2 (pending): shame/reluctance + Growth Mindset".
+
+**B. Section — Child Assent & Measures.** Keep first (rename to this); placeholder "In development."
+
+**C. Section — Playable Characters.** NEW. The avatars the participant chooses. For now show **The Construct** (`/long-light/art/avatar-construct.webp`) and **The Creature** (`/long-light/art/avatar-creature.webp`), each with name + short description, plus a **placeholder slot for The Traveler** ("redesign in progress"). (Wayfarer removed entirely.)
+
+**D. Sections — the game flow, Zone 1 → Zone 5** (one section each, in order). Every zone section shows: the **zone image** (`/long-light/zone1.webp`…`zone5.webp`); **zone name + scenery**; **Characters in this zone** (The Spark/narrator in all; plus zone-specific); **Video/script**; **Activity**; **Gear earned**; **Traversal (arcade game to the next zone)**. Use "in development" placeholders for anything not done.
+- **Zone 1 · The Hollow** — Characters: Spark. Video: Video 1 "What trauma is". Activity: Body Mapping. Gear: An Anchor. Traversal → Zone 2: placeholder. Goal: understand trauma; normalize bodily responses.
+- **Zone 2 · The Lantern Path** — Characters: Spark + the four messengers (Emberwick, Mirefly, Hollowshell, Dimmet). Video: Video 2 "The four reactions". Activity: Character Examples. Gear: A Lantern. Traversal → Zone 3: the **bird flight ("power of connections")** — link the existing playable prototype here. Goal: recognize/name reactions.
+- **Zone 3 · The Mistfields** — Characters: Spark. Videos: Video 3 "These are normal; help works", then **"Getting the best trauma therapy"** (NEW — script below). Activity: bridge beat (TBD placeholder). Gear: Hope. Traversal → Zone 4: placeholder. Goal: normalize + hope; bridge to getting help.
+- **Zone 4 · The Bright Reaches** — Characters: Spark. Video: "What to Expect from Therapy" (pending Sprang) — ends with the 3-3-3 rule. Activity: **Mindfulness (3-3-3)** — name 3 things you see (tap 3 options), 3 you hear (audio over the image, tap 3), then feel = deep breathing with concentric rings expanding/contracting on a slow 3-count, then ends. Gear: **Oxygen Mask** (helps you breathe). Traversal → Zone 5: **underwater flight** — use the Oxygen Mask; collect air bubbles to keep it full, dodge underwater obstacles. Goal: demystify therapy; teach grounding/breathing.
+- **Zone 5 · The Threshold** — Characters: Spark. Videos: Part 2 shame/reluctance (pending) + **Growth Mindset "Choosing your mindset"** (updated script below). Activity: TBD (CTAC placeholder). Gear: final gear / full toolkit. Traversal: arrival at the Beacon (journey end). Goal: address shame; commit; readiness.
+
+**E. REMOVE** the old standalone **Videos**, **Activities**, and **Concept Art** sections and the entire **"The Pitch (written)"** section — their content now lives in the per-zone sections, Playable Characters, and the top Zone Map. Keep the traversal prototype playable (linked from Zone 2). Narrator = **The Spark** only; drop the Lantern Keeper everywhere.
+
+**New/updated scripts (folded in from Draft 11):**
+- **Zone 3 — "Getting the best trauma therapy"** (~90 sec, Holly): Here are some tips for getting the best trauma therapy: 1) Find a therapist who says they are trauma-informed. 2) Ask what evidence-based trauma treatment they plan to use, what you'll be asked to do, and how long they think you'll need to be in therapy. A trauma-informed therapist should probably mention trauma-focused cognitive behavior therapy (TF-CBT) or EMDR, and plan to meet once a week for roughly 4–5 months, not indefinitely. They should also plan to work with at least one of your parents or caregivers to help them understand your symptoms and how to help at home — but your caregiver won't join every session, and a trauma-informed therapist knows how to talk with caregivers without breaking your privacy. 3) Speaking of privacy, before beginning treatment, ask your therapist to discuss what information is private. Therapy is confidential, so no one else will know you're in treatment or what goes on in sessions; a trauma-informed therapist also advocates for your privacy — while they must tell your caregiver if they're worried about your or someone else's safety, they can keep other information private. And good news: participating in trauma therapy is very likely to help you. Research finds teens who receive trauma treatment such as TF-CBT see significant improvement in PTSD, depression, and anxiety symptoms — regardless of who you are, like your race, ethnicity, and gender.
+- **Zone 5 — Growth Mindset "Choosing your mindset"** (updated): Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think about it like colored glasses – you put on a blue-tinted pair and all of a sudden, a yellow lemon looks green. Our mindset works like glasses; they can change the way something seems to us, but that doesn't make it true – even if the lemon looks green, we know that it's really yellow. We often consider two types of mindsets that people "wear": fixed and growth mindsets. If you currently have on your fixed mindset, you might find yourself thinking that trauma therapy won't help you because nothing can change how you feel or think because of what happened to you. This is tricky because if you have that thought, you probably won't want to begin trauma therapy, or you won't really commit to it, and then things really don't change for you. But that's not because your thought was true - it's a result of the fixed mindset you're wearing. When you choose to put on your growth mindset, you choose to recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy and will help you get the most benefit from treatment.
+
+**Verify.** Page order: Zone Map (top) → Child Assent & Measures → Playable Characters (Construct + Creature + Traveler placeholder) → Zone 1…5 sections (each with image, characters, video, activity, gear, traversal; placeholders where pending). No old Videos/Activities/Concept-Art/Pitch sections remain. Narrator = Spark only. Feedback works (tagged). No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 12.*
