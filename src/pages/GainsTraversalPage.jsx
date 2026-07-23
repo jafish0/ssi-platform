@@ -60,7 +60,7 @@ export default function GainsTraversalPage() {
       footerPath="/gains-demo/traversal"
       feedbackProgram="gains-teens"
       feedbackSections={GAINS_FEEDBACK_SECTIONS}
-      feedbackDefaultSection="traversal-prototype"
+      feedbackDefaultSection="zone-2"
     >
       <div className="mb-4">
         <Link

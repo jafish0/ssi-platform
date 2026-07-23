@@ -17,13 +17,14 @@ import { HardHat, Film, Play, Waves } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
-  { value: 'zone-map', label: 'Zone Map' },
-  { value: 'assent-measures', label: 'Child Assent & Measures' },
-  { value: 'characters', label: 'Playable Characters' },
-  { value: 'videos', label: 'Videos / scripts' },
-  { value: 'activities', label: 'Activities' },
-  { value: 'traversal-prototype', label: 'Traversal prototype' },
-  { value: 'general', label: 'General / whole page' },
+  { value: 'assent-measures', label: 'Child Assent / Measures' },
+  { value: 'exposition', label: 'Exposition' },
+  { value: 'zone-1', label: 'Zone 1' },
+  { value: 'zone-2', label: 'Zone 2' },
+  { value: 'zone-3', label: 'Zone 3' },
+  { value: 'zone-4', label: 'Zone 4' },
+  { value: 'zone-5', label: 'Zone 5' },
+  { value: 'general', label: 'General Feedback' },
 ]
 
 const ART = '/long-light/art'
@@ -75,7 +76,7 @@ const ZONE_MAP_ROWS = [
     scene: 'brightening slopes; lanterns to relight',
     video: 'Video 2 — the four reactions',
     activity: 'Character Examples',
-    gear: 'A Lantern',
+    gear: 'A Wingsuit — lets you take flight',
     goal: 'Recognize and name common trauma reactions.',
   },
   {
@@ -176,7 +177,7 @@ const ZONES = [
         </>
       ),
     },
-    gear: 'A Lantern — naming what’s happening.',
+    gear: 'A Wingsuit — lets you take flight.',
     traversal: {
       text: 'The bird flight — “the power of connections.” Gather connections to climb from the Lantern Path up to the Mistfields.',
       playable: true,
@@ -266,6 +267,7 @@ export default function GainsDemoPage() {
       footerPath="/gains-demo"
       feedbackProgram="gains-teens"
       feedbackSections={GAINS_FEEDBACK_SECTIONS}
+      feedbackDefaultSection="general"
     >
       {/* Intro */}
       <section className="mb-8">
@@ -292,7 +294,7 @@ export default function GainsDemoPage() {
       <section className="mb-10">
         <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
           <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
-            Zone Map — the roadmap
+            World and Development Map
           </h2>
           <span className="text-[12px] text-slate-400 italic">updated as we go</span>
         </div>
@@ -360,12 +362,31 @@ export default function GainsDemoPage() {
         </div>
       </section>
 
-      {/* D. The game flow — Zone 1 → Zone 5 */}
+      {/* D. The game flow — Exposition → Zone 1 → Zone 5 */}
       <section className="mb-4">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
           The climb
         </h2>
       </section>
+
+      {/* Exposition — the opening that sets up the world (placeholder) */}
+      <section className="mb-8">
+        <h3 className="text-[18px] font-bold text-slate-800">Exposition</h3>
+        <p className="text-[13px] text-slate-500 mb-3">
+          The opening that sets up the world, before Zone 1.
+        </p>
+        <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
+          <div className="mb-3">
+            <Pill icon={HardHat}>In development</Pill>
+          </div>
+          <p className="text-[14px] text-slate-700 leading-relaxed">
+            We need an introduction that sets up the game: What is this place?
+            What are they doing here? And why are these creatures telling me
+            about trauma?
+          </p>
+        </div>
+      </section>
+
       {ZONES.map((z) => (
         <ZoneSection key={z.n} zone={z} />
       ))}

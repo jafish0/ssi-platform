@@ -35,14 +35,20 @@ const PROGRAMS = [
 // GAINS demo section slugs → readable labels (see GainsDemoPage). Current
 // sections first; older slugs kept below so historical rows still label.
 const SECTION_LABELS = {
+  'assent-measures': 'Child Assent / Measures',
+  exposition: 'Exposition',
+  'zone-1': 'Zone 1',
+  'zone-2': 'Zone 2',
+  'zone-3': 'Zone 3',
+  'zone-4': 'Zone 4',
+  'zone-5': 'Zone 5',
+  general: 'General',
+  // retired section slugs (kept for older feedback rows)
   'zone-map': 'Zone Map',
-  'assent-measures': 'Child Assent & Measures',
   characters: 'Playable Characters',
   videos: 'Videos / scripts',
   activities: 'Activities',
   'traversal-prototype': 'Traversal prototype',
-  general: 'General',
-  // retired section slugs (kept for older feedback rows)
   'pre-post': 'Pre/Post Measures',
   'concept-art': 'Concept Art',
   pitch: 'The pitch (written)',
