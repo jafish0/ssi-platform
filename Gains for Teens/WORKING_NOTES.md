@@ -96,6 +96,17 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **b7cd9dd** (2026-07-17) — Demo tweaks (in-conversation): Zone 2 gear → **"A Wingsuit
+  — lets you take flight"** (was A Lantern; matches the flight traversal), in both the
+  map table and the zone. Renamed the top section **"Zone Map — the roadmap" → "World
+  and Development Map."** Added a new **Exposition** section right before Zone 1 — a
+  placeholder for the intro that sets up the world (what is this place / what are they
+  doing here / why are these creatures telling me about trauma). Retuned the demo's
+  **feedback options** to the reorganized structure: Child Assent / Measures · Exposition
+  · Zone 1–5 · General Feedback (demo defaults to General; the traversal prototype page
+  defaults to Zone 2). Admin keeps the retired section slugs labeled for old rows. No
+  version bumps.
+
 - **0ce5ddd** (2026-07-17) — Draft 12 (supersedes + folds in Draft 11): restructured the
   GAINS demo (`/gains-demo`) to read like the game flow, top→bottom — **Zone Map**
   roadmap (world-map image + 5-col table, "updated as we go") → **Child Assent &
