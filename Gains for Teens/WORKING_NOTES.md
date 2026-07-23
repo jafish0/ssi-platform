@@ -96,6 +96,16 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **2a4b57b** (2026-07-17) — Demo: moved the **Wingsuit gear + playable bird-flight
+  traversal from Zone 2 → Zone 3** (flight now climbs Mistfields → Bright Reaches; Zone 2
+  traversal is a placeholder again). Gear is now **TBD** for Zone 1 (was An Anchor) and
+  Zone 2 (was Wingsuit); Zone 3 gear = the Wingsuit (was Hope); map-table gears updated
+  to match. **Zone 4** got the real **"What to Expect from Therapy"** script (Sprang's
+  doc) in place of the pending placeholder, and the Mindfulness activity is now the actual
+  **3-3-3 rule** (3 see / 3 hear / 3 deep breaths with an expanding circle) from the same
+  doc; map-table Zone 4 video no longer marked pending. No version bumps. Verified: one
+  play link, in Zone 3 only; gears correct; Zone 4 script + 3-3-3 render; build passes.
+
 - **b7cd9dd** (2026-07-17) — Demo tweaks (in-conversation): Zone 2 gear → **"A Wingsuit
   — lets you take flight"** (was A Lantern; matches the flight traversal), in both the
   map table and the zone. Renamed the top section **"Zone Map — the roadmap" → "World
