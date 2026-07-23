@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Foster Forward — Healing Trauma and Building Futures for Kentucky's Children</title>
+<meta name="description" content="Foster Forward: Healing Trauma and Building Futures for Kentucky's Children — a proposal from the Institute on Fostering Resilience, University of Kentucky." />
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16264f;
+    --navy-2:#1e335f;
+    --teal:#00a79d;
+    --teal-dark:#00867e;
+    --ink:#20293a;
+    --muted:#5a6478;
+    --paper:#fdfcf9;
+    --paper-2:#f5f3ec;
+    --line:#e4e0d4;
+    --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; scroll-padding-top:76px; }
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.7;
+  }
+  img{ max-width:100%; height:auto; display:block; }
+  a{ color:var(--teal-dark); }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:rgba(253,252,249,.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:1120px; margin:0 auto; padding:12px 24px;
+    display:flex; align-items:center; gap:20px;
+  }
+  .topbar img{ height:34px; width:auto; }
+  .topbar .divider{ width:1px; height:26px; background:var(--line); }
+  nav.toplinks{ margin-left:auto; display:flex; gap:22px; }
+  nav.toplinks a{
+    font-size:12.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--navy); text-decoration:none; padding:6px 0;
+    border-bottom:2px solid transparent; transition:border-color .2s;
+  }
+  nav.toplinks a:hover{ border-color:var(--teal); }
+  @media (max-width:860px){ nav.toplinks{ display:none; } }
+
+  /* ---------- shared layout ---------- */
+  .wrap{ max-width:820px; margin:0 auto; padding:0 24px; }
+  .wrap-wide{ max-width:1060px; margin:0 auto; padding:0 24px; }
+  section{ padding:72px 0; }
+  .eyebrow{
+    font-size:12px; font-weight:700; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--teal-dark); margin-bottom:14px;
+  }
+  h2{
+    font-family:var(--serif); font-weight:600; color:var(--navy);
+    font-size:clamp(28px,4.4vw,42px); line-height:1.15; margin-bottom:26px;
+    text-wrap:balance;
+  }
+  h3{
+    font-family:var(--serif); font-weight:600; color:var(--navy);
+    font-size:clamp(21px,3vw,27px); line-height:1.25; margin:38px 0 16px;
+  }
+  p.body{ font-size:17px; line-height:1.85; color:var(--ink); margin-bottom:20px; }
+  p.body sup{ font-size:.62em; color:var(--muted); }
+  .rule{
+    width:56px; height:3px; background:var(--teal); border:0; margin:0 0 28px;
+  }
+  .center{ text-align:center; }
+  .center .rule{ margin-left:auto; margin-right:auto; }
+
+  .reveal{ opacity:0; transform:translateY(26px); transition:opacity .8s ease, transform .8s ease; }
+  .reveal.in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion:reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+    html{ scroll-behavior:auto; }
+  }
+
+  /* ---------- hero ---------- */
+  header.hero{
+    background:linear-gradient(180deg,var(--navy) 0%,var(--navy-2) 70%,#24406f 100%);
+    color:#f6f4ee; padding:84px 24px 96px; text-align:center; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; inset:auto 0 0 0; height:120px; pointer-events:none;
+    background:radial-gradient(60% 120px at 50% 100%, rgba(0,167,157,.22), transparent 70%);
+  }
+  .hero .eyebrow{ color:#7fd8d1; }
+  .hero h1{
+    font-family:var(--serif); font-weight:600; line-height:1.12;
+    font-size:clamp(34px,5.6vw,62px); max-width:20ch; margin:0 auto;
+    text-wrap:balance;
+  }
+  .hero h1 .subline{ display:block; font-size:.62em; font-weight:400; font-style:italic;
+    color:rgba(246,244,238,.82); margin-top:18px; line-height:1.35; }
+  .videoframe{
+    max-width:860px; margin:52px auto 0; position:relative; z-index:1;
+    border-radius:14px; overflow:hidden;
+    box-shadow:0 30px 80px rgba(4,10,26,.55), 0 4px 18px rgba(4,10,26,.4);
+    border:1px solid rgba(255,255,255,.14);
+    background:#000;
+  }
+  .videoframe .ratio{ position:relative; padding-top:56.25%; }
+  .videoframe iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .hero .partners{
+    margin:46px auto 0; display:flex; align-items:center; justify-content:center; gap:34px; flex-wrap:wrap;
+  }
+  .hero .partners img{ height:44px; width:auto; filter:brightness(0) invert(1); opacity:.85; }
+
+  /* ---------- opening narrative ---------- */
+  .opening p.body:first-of-type{ font-family:var(--serif); font-size:clamp(19px,2.6vw,23px); line-height:1.75; }
+  .opening p.body:first-of-type::first-letter{
+    font-family:var(--serif); font-size:3.1em; font-weight:600; color:var(--teal-dark);
+    float:left; line-height:.85; padding:6px 10px 0 0;
+  }
+  .opening .kicker{
+    font-family:var(--serif); font-style:italic; font-size:clamp(18px,2.4vw,22px);
+    color:var(--navy); border-left:3px solid var(--teal); padding-left:20px; margin-top:8px;
+  }
+
+  /* ---------- stat band ---------- */
+  .statband{ background:var(--navy); color:#f6f4ee; padding:64px 24px; }
+  .statgrid{
+    max-width:1060px; margin:0 auto; display:grid; gap:36px;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); text-align:center;
+  }
+  .stat .num{
+    font-family:var(--serif); font-weight:700; font-size:clamp(40px,5vw,58px);
+    color:#7fd8d1; line-height:1;
+  }
+  .stat .lbl{ font-size:14px; line-height:1.55; color:rgba(246,244,238,.85); margin-top:12px; }
+  .statband .src{ text-align:center; font-size:12px; color:rgba(246,244,238,.55); margin-top:34px; }
+
+  /* ---------- alt background section ---------- */
+  .tinted{ background:var(--paper-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+
+  /* ---------- model cards ---------- */
+  .cards2{ display:grid; gap:26px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin:34px 0; }
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:30px 30px 26px;
+    box-shadow:0 8px 30px rgba(22,38,79,.06);
+  }
+  .card .card-tag{
+    display:inline-block; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--teal-dark); background:rgba(0,167,157,.1); border-radius:99px; padding:5px 13px; margin-bottom:16px;
+  }
+  .card p{ font-size:15.5px; line-height:1.8; }
+  .card p strong{ color:var(--navy); }
+
+  .cards3{ display:grid; gap:22px; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); margin:30px 0 8px; }
+  .step-badge{
+    width:34px; height:34px; border-radius:50%; background:var(--navy); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--serif); font-weight:700; font-size:17px; margin-bottom:14px;
+  }
+
+  /* ---------- figures ---------- */
+  figure.doc-figure{ margin:38px 0; }
+  figure.doc-figure .figbox{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:26px;
+    box-shadow:0 8px 30px rgba(22,38,79,.06);
+  }
+  figure.doc-figure figcaption{
+    font-size:13px; color:var(--muted); text-align:center; margin-top:14px; letter-spacing:.02em;
+  }
+  .timeline-figure .figbox{ padding:0; overflow:hidden; background:#255a75; }
+
+  /* ---------- leadership ---------- */
+  .leads-photo{ margin:36px auto 8px; max-width:420px; text-align:center; }
+  .leads-photo img{
+    width:100%; border-radius:14px; border:1px solid var(--line);
+    box-shadow:0 14px 44px rgba(22,38,79,.14);
+  }
+  .leads-photo figcaption{ font-size:13px; color:var(--muted); margin-top:12px; letter-spacing:.02em; }
+
+  .leads{ display:grid; gap:26px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-top:34px; }
+  .lead-card{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:30px;
+    box-shadow:0 8px 30px rgba(22,38,79,.06);
+  }
+  .lead-card .name{
+    font-family:var(--serif); font-weight:600; font-size:21px; color:var(--navy); margin-bottom:4px;
+  }
+  .lead-card .role{ font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--teal-dark); margin-bottom:14px; }
+  .lead-card p{ font-size:15px; line-height:1.8; }
+
+  /* ---------- the ask ---------- */
+  .ask{
+    background:linear-gradient(180deg,var(--navy) 0%,var(--navy-2) 100%);
+    color:#f6f4ee; text-align:center; padding:92px 24px;
+  }
+  .ask .eyebrow{ color:#7fd8d1; }
+  .ask h2{ color:#fff; }
+  .ask p.body{ color:rgba(246,244,238,.9); max-width:760px; margin-left:auto; margin-right:auto; }
+  .ask .final{
+    font-family:var(--serif); font-size:clamp(22px,3.4vw,30px); font-weight:600; color:#fff;
+    max-width:26ch; margin:38px auto 0; line-height:1.4;
+  }
+  .ask .final em{ color:#7fd8d1; font-style:normal; }
+
+  /* ---------- appendix / references ---------- */
+  details.expander{
+    background:#fff; border:1px solid var(--line); border-radius:14px;
+    margin:18px 0; overflow:hidden;
+  }
+  details.expander summary{
+    cursor:pointer; list-style:none; padding:22px 28px; display:flex; align-items:center; gap:14px;
+    font-family:var(--serif); font-weight:600; font-size:19px; color:var(--navy);
+  }
+  details.expander summary::-webkit-details-marker{ display:none; }
+  details.expander summary .chev{
+    margin-left:auto; width:10px; height:10px; flex:none;
+    border-right:2px solid var(--teal-dark); border-bottom:2px solid var(--teal-dark);
+    transform:rotate(45deg); transition:transform .25s;
+  }
+  details.expander[open] summary .chev{ transform:rotate(-135deg); }
+  details.expander .inner{ padding:0 28px 30px; }
+
+  table.instruments{ width:100%; border-collapse:collapse; font-size:14px; line-height:1.65; }
+  table.instruments th{
+    text-align:left; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--teal-dark); border-bottom:2px solid var(--teal); padding:10px 14px 10px 0;
+  }
+  table.instruments td{
+    vertical-align:top; padding:14px 14px 14px 0; border-bottom:1px solid var(--line);
+  }
+  table.instruments td:first-child{ font-weight:600; color:var(--navy); width:21%; }
+  table.instruments td:nth-child(2){ width:37%; }
+  @media (max-width:680px){
+    table.instruments, table.instruments tbody, table.instruments tr, table.instruments td, table.instruments thead, table.instruments th{ display:block; width:100%; }
+    table.instruments thead{ display:none; }
+    table.instruments td{ border:0; padding:6px 0; }
+    table.instruments tr{ border-bottom:1px solid var(--line); padding:14px 0; }
+  }
+
+  ol.refs{ padding-left:22px; font-size:13.5px; line-height:1.75; color:var(--muted); }
+  ol.refs li{ margin-bottom:12px; }
+  ol.refs a{ word-break:break-all; }
+
+  /* ---------- footer ---------- */
+  footer{
+    background:var(--paper-2); border-top:1px solid var(--line); padding:52px 24px 44px; text-align:center;
+  }
+  footer .logos{ display:flex; justify-content:center; align-items:center; gap:36px; flex-wrap:wrap; margin-bottom:24px; }
+  footer .logos img{ height:46px; width:auto; }
+  footer p{ font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <img src="assets/ctac.png" alt="Center on Trauma and Children — Evidence in action" />
+    <span class="divider"></span>
+    <img src="assets/uk.png" alt="University of Kentucky" />
+    <nav class="toplinks">
+      <a href="#need">The Need</a>
+      <a href="#innovation">The Models</a>
+      <a href="#plan">Our Plan</a>
+      <a href="#leadership">Leadership</a>
+      <a href="#timeline">Timeline</a>
+      <a href="#next">Next Steps</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">Institute on Fostering Resilience &middot; University of Kentucky</p>
+  <h1>Foster Forward:
+    <span class="subline">Healing Trauma and Building Futures for Kentucky's Children</span>
+  </h1>
+  <div class="videoframe">
+    <div class="ratio">
+      <iframe src="https://www.youtube.com/embed/QAijhZ2g28g?rel=0" title="Foster Forward" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </div>
+  <div class="partners">
+    <img src="assets/ctac.png" alt="Center on Trauma and Children" />
+    <img src="assets/uk.png" alt="University of Kentucky" />
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ The Child Behind the Statistic ============ -->
+  <section class="opening" id="story">
+    <div class="wrap">
+      <div class="reveal">
+        <p class="eyebrow">The Child Behind the Statistic</p>
+        <hr class="rule" />
+        <p class="body">Somewhere in Kentucky tonight, a child who has survived more than any child should is waiting &mdash; waiting for a bed, waiting for a foster home, waiting for a therapist who has the time and training to help. She is not waiting because no one cares. She is waiting because the system meant to catch her was never built to hold the weight it now carries.</p>
+        <p class="kicker">This is the story of thousands of Kentucky children in foster care. It is a story we can change.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ stat band ============ -->
+  <div class="statband reveal" id="need">
+    <div class="statgrid">
+      <div class="stat">
+        <div class="num">8,700</div>
+        <div class="lbl">Kentucky children needed foster care</div>
+      </div>
+      <div class="stat">
+        <div class="num">&lt;&hairsp;4,600</div>
+        <div class="lbl">approved homes to receive them</div>
+      </div>
+      <div class="stat">
+        <div class="num">80%</div>
+        <div class="lbl">of Kentucky counties are federally designated shortage areas for health and behavioral health professionals</div>
+      </div>
+      <div class="stat">
+        <div class="num">7.5M</div>
+        <div class="lbl">children nationwide who need mental health care never receive it</div>
+      </div>
+    </div>
+    <p class="src">Figures drawn from the narrative below &mdash; Kentucky state auditor's report; HRSA Data Warehouse, 2025.</p>
+  </div>
+
+  <!-- ============ A System Straining ============ -->
+  <section>
+    <div class="wrap">
+      <div class="reveal">
+        <h2>A System Straining Under Its Own Good Intentions</h2>
+        <hr class="rule" />
+        <p class="body">Kentucky's own state auditors have named the problem plainly: the continuum of care does not yet meet the needs of the children the state is responsible for. That is a hard truth. It is also the reason this project exists. Kentucky has too many children needing out of home care (OOHC), not enough caregivers to meet the need, and inadequate services for children needing a safe home. Per the state auditor&rsquo;s report, 8,700 children needed foster care but there were less than 4,600 approved homes.</p>
+        <p class="body">Children and adolescents in OOHC developed disproportionately higher rates of chronic health conditions, developmental disabilities, mental health diagnosis, substance misuse and poorer health outcomes. These outcomes are largely related to experiencing higher number of adverse childhood experiences (ACEs), barriers to consistent high quality healthcare and unstable or multiple placements<sup>1, 2, 3,4</sup> which can often be potentiated by lack of accessible health information and lack of care coordination between the child welfare agency and healthcare systems. <sup>4,5,6</sup> Additionally, more than 70% of children in foster care have a history of child abuse and/or neglect<sup>7</sup> and more than 80% have been exposed to significant levels of violence.<sup>8</sup> Understanding the adversities and trauma and the effect of these experiences is integral in the care of children and guiding caregivers through the process.</p>
+        <p class="body">Across the country, nearly 80% of children who need mental health care never receive it &mdash; 7.5 million children left without support they desperately need. In Kentucky, the picture is even more urgent: more than 80% of our counties are federally designated shortage areas for health and behavioral health professionals. That means fewer therapists, longer waitlists, and higher caseloads for the clinicians who remain.</p>
+        <p class="body">For children in foster care &mdash; children who have already endured trauma, instability, and loss &mdash; this shortage isn't an abstraction. It shows up as care delivered by inexperienced providers, sessions that stop and start as clinicians turn over, and treatment plans that never quite match the child in front of them. When these children don't get better, the system too often blames the child, or the placement, instead of asking whether the care itself was ever set up to succeed.</p>
+        <p class="body">The human cost compounds from there. Foster parents and kinship caregivers, doing one of the hardest and most generous things a person can do, watch children they love struggle without real progress &mdash; and some, understandably, reach a breaking point. Every family that steps back is one less home for a child who needs one. And when there is nowhere else to go, children are sometimes housed in places never meant for children at all: offices, conference rooms, anywhere but a home.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Promising Opportunities ============ -->
+  <section class="tinted" id="innovation">
+    <div class="wrap-wide">
+      <div class="reveal center">
+        <h2>Promising Opportunities for Innovation</h2>
+        <hr class="rule" />
+      </div>
+      <div class="wrap reveal" style="padding:0;">
+        <p class="body">Over the past decade, researchers have developed two powerful models for delivering health and behavioral healthcare more wisely &mdash; not by spending more, but by spending smarter.</p>
+      </div>
+      <div class="cards2 reveal">
+        <div class="card">
+          <span class="card-tag">Model One</span>
+          <p><strong>Stepped care</strong> starts every child with the most accessible intervention, then escalates quickly for those who need more. It has been shown to cut wait times, ease caregiver burden, and achieve outcomes equal to gold-standard trauma treatment &mdash; at roughly half the cost.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag">Model Two</span>
+          <p><strong>Stratified care</strong> does the opposite in one important way: it identifies the children with the greatest needs up front and fast-tracks them straight to intensive treatment, so the most vulnerable children never have to wait in line behind a system that doesn't know yet how much they're hurting.</p>
+        </div>
+      </div>
+      <div class="wrap reveal" style="padding:0;">
+        <p class="body">Both models work. Both have been proven in rigorous trials. What no one yet knows &mdash; for children in OOHC care, in a state like Kentucky &mdash; is which model, or what blend of the two, helps the most children heal the fastest, at a cost every community can sustain.</p>
+        <p class="body"><strong>That missing answer is exactly what Phase I of this project will deliver.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Our Plan ============ -->
+  <section id="plan">
+    <div class="wrap-wide">
+      <div class="reveal center">
+        <h2>Our Plan: A Two-Phase Path to Lasting Change</h2>
+        <hr class="rule" />
+      </div>
+
+      <div class="wrap reveal" style="padding:0;">
+        <h3>Phase I: A Controlled Launch</h3>
+        <p class="body">In this phase, a continuum of services will be provided within the context of a rigorous study that will place Kentucky's foster children &mdash; with full ethical oversight and in true partnership with the state &mdash; into a stepped care or stratified care condition based on random assignment and then compared to treatment as usual. We will then assess which approach gets children into treatment faster, keeps them there, produces better outcomes, and does the most good per dollar spent. We will also sit down with the children and families to ask what worked, what didn't, and what they feel they need.</p>
+        <p class="body"><strong>Our Approach to the Controlled Launch:</strong> In this randomized controlled trial (RCT), we will recruit participants from primary care, patient-centered care, and community providers. If a tailored assessment confirms that outpatient care is right for them, participants will be randomly placed into either the "stepped care" group or the "stratified care" group.</p>
+      </div>
+
+      <div class="cards3 reveal">
+        <div class="card">
+          <div class="step-badge">A</div>
+          <p><strong>Stepped care group:</strong> Children, youth and caregivers start with a digital intervention (Step 1), no matter how severe their symptoms are &mdash; as long as outpatient care is appropriate for them. After Step 1, we check how well each person responded. Anyone who hasn't improved enough moves up to Step 2 (group therapy or online Cognitive Behavioral Therapy). If that's still not enough, they move up to Step 3 (intensive one-on-one therapy). We collect data after each step, and anyone who improves enough at a given step stops there &mdash; they don't move on to the next one. The idea is to start with the simplest, least costly treatment and only use more intensive (and expensive) treatments for people who need them.</p>
+        </div>
+        <div class="card">
+          <div class="step-badge">B</div>
+          <p><strong>Stratified care group:</strong> People with complex cases go straight to Step 3. Everyone else starts at Step 1, just like in the other group. This approach front-loads more intensive treatment for people likely to need it &mdash; specifically two types of patients: those whose condition is best treated with intensive therapy alone, and those with complex cases. The pilot study will provide us with data to establish these thresholds for the Kentucky population.</p>
+        </div>
+        <div class="card">
+          <div class="step-badge">C</div>
+          <p><strong>Treatment-as-usual group:</strong> we will compare our two groups (stepped and stratified) to a random sample of clients that received care as usual. We'll use a statistical technique (propensity score matching) to make sure this group is comparable to the other two.</p>
+        </div>
+      </div>
+
+      <div class="wrap reveal" style="padding:0;">
+        <p class="body">We need about 60 people in each of the three groups to draw reliable conclusions. All study procedures will be approved by the University's Institutional Review Board and the Cabinet for Health and Family Services Review Board and will follow the ethical standards set forth in the Declaration of Helsinki.</p>
+
+        <h3>Qualitative Study</h3>
+        <p class="body">We will conduct focus groups with a random sample of 20 % of the children and/or caregivers in each group to gain deeper insights into the feasibility, acceptability, appropriateness, and utility. These responses will be used to inform program design, and assist in the interpretation of outcomes and next steps.</p>
+
+        <h3>A Closer Look: Refining Our Approach Through Expert Input</h3>
+        <p class="body">Concurrent with the controlled launch, we will convene a meeting of key stakeholders &mdash; including individuals with lived experience, and content and process experts at the local, state, and national levels &mdash; to inform the design, delivery, and core components of effective, integrated health and behavioral health care. This meeting will take place within the first nine months of the funding period, shaping both programming and study design while laying the groundwork for key strategic partnerships. Central to this convening will be cultivating a collaborative culture in which participants share ownership of the process through meaningful input and shared decision-making.</p>
+
+        <h3>Phase II: A Full Launch Based on Lessons Learned</h3>
+        <p class="body">The phase takes what we learned in Phase 1 and builds it into something lasting: a comprehensive, evidence-based system of care for Kentucky's children in out-of-home placement and the caregivers raising them &mdash;a real, working model the Cabinet for Health and Family Services can put into practice and other states can learn from. The following figure provides an overview of model components of the Foster Forward Program that will be utilized in whatever service delivery context that is determined to be most effective in Phase 1.</p>
+      </div>
+
+      <figure class="doc-figure reveal">
+        <div class="figbox">
+          <img src="assets/continuum.png" alt="Model components of the Foster Forward Program, arranged from least intensive to most intensive in terms of resources and need: Screening and Assessment; Digital and Task Extender Interventions; Brief/Group EBTs; Intensive EBTs; Intensive and Non-Trauma Services — with feedback (test results, monitoring data, etc.) flowing across all components." />
+        </div>
+        <figcaption>Model components of the Foster Forward Program</figcaption>
+      </figure>
+
+      <div class="wrap reveal" style="padding:0;">
+        <p class="body">Recognizing the complexity of needs in children in OOHC, the American Academy of Pediatrics and the Healthy Foster Care America proposed integrated care as the gold standard for this population. Integrated care aims to improve outcomes by bringing services together at both the community level as well as at a treatment level for physical and mental health. In a majority of healthcare systems, the delivery of health and behavioral health is often fragmented and complex. &ldquo;Integrated&rdquo; acknowledges the complexity of needs and aims to coordinate care to meets those needs. Even with the published guidelines, there is often inconsistent or lack of standardized integrated care models that exist for children in out-of-home care. The phase I study will help identify the most effective service delivery method to guide the delivery of integrated care.</p>
+        <p class="body">The Foster Forward interventions will be delivered by the University of Kentucky through a partnership with the Division of Pediatric Forensic Medicine and the Center on Trauma and Children in an integrated care model.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Experience and Science ============ -->
+  <section class="tinted" id="leadership">
+    <div class="wrap-wide">
+      <div class="reveal center">
+        <h2>Experience and Science Lead the Way</h2>
+        <hr class="rule" />
+      </div>
+      <div class="wrap reveal" style="padding:0;">
+        <p class="body">As the flagship institution in the state, UK has been a leader in serving children experiencing child abuse and trauma through identification, intervention, innovation, and research. The Kosair for Kids Center for Safe and Healthy Children and Families opened in maltreatment in the state. The Center on Trauma and Children established in 1999 is the is the epicenter of translational research and practice on child abuse prevention, intervention and service delivery in the state. CTAC develops and disseminates knowledge, technologies and evidence-based treatments that can attenuate the need for OOHC and creates innovations to address the effects of trauma on children, families, systems and the workforce. Central to its core, CTAC uses implementation science to take what works, and determine how to make it sustainable in a community context.</p>
+        <p class="body">These partners have over a decade of experience working together, and in 2025, established the Institute on Fostering Resilience. The overall mission of the IFR is to provide a continuum of evidence-based programming to address the needs of children and families involved in OOHC, and to support the systems responsible for serving them. The institute takes evidence to action approach, ensuring that the outcomes most relevant to those involved are privileged, and achieved through its programming. To that end, translation research activities are embedded at each phase of the programming to determine efficacy, effectiveness, utility and to allow for real-time adjustments consistent with the latest quality improvement standards. This Foster Forward proposal will advance and extend the work of the IFR, in a strategic, data-driven manner by providing a continuum of evidence-based programming to address the needs of children and families involved in OOHC, and to support the systems responsible for serving them.</p>
+      </div>
+      <div class="wrap reveal" style="padding:0;">
+        <p class="body">Like the IFR, Foster Forward will be led by Dr. Christina Howard and Dr. Ginny Sprang.</p>
+      </div>
+      <figure class="leads-photo reveal">
+        <img src="assets/leads.jpg" alt="Dr. Ginny Sprang and Dr. Christina Howard walking together at the Kosair for Kids Center for Safe and Healthy Children and Families" onerror="this.closest('figure').style.display='none';" />
+        <figcaption>Dr. Ginny Sprang and Dr. Christina Howard at the Kosair for Kids Center for Safe &amp; Healthy Children &amp; Families</figcaption>
+      </figure>
+      <div class="leads reveal">
+        <div class="lead-card">
+          <div class="name">Dr. Christina Howard</div>
+          <div class="role">Co-Lead, Foster Forward</div>
+          <p>Dr. Howard is a board-certified child abuse pediatrician, one of only a few in the state, founder of the Pediatric Forensic Medicine Division at UK and a member of the state&rsquo;s child fatality review team, giving her broad state perspective and influence.</p>
+        </div>
+        <div class="lead-card">
+          <div class="name">Dr. Ginny Sprang</div>
+          <div class="role">Co-Lead, Foster Forward</div>
+          <p>Dr. Sprang brings over 25 years of experience as a consultant to the Cabinet for Health and Family Services, advising on issues such as child abuse prevention and intervention, the integration of evidence-based treatments into child-serving systems of care, and innovations in stabilizing OOHC. She recently completed a successful, statewide, five-year cluster randomized controlled trial on child sex trafficking prevention and intervention, funded by the CDC, in addition to two school-based randomized controlled trials examining the integration and sustainability of evidence-based care into school service systems. A tenured professor in the Department of Psychiatry, Dr. Sprang serves as Director of the Center on Trauma and Children. In 2026, she was named a Fellow of the International Society for Traumatic Stress Studies in recognition of outstanding, sustained contributions to the field. She is also recognized as being among the top 2% most cited scholars in the world for her research on the identification and treatment of traumatic stress conditions, child abuse prevention and intervention, child sex trafficking identification and response, and using implementation science to solve real world technology transfer problems.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Why This Moment Matters ============ -->
+  <section class="ask" id="moment">
+    <div class="reveal">
+      <p class="eyebrow">Why This Moment Matters</p>
+      <h2>Kentucky does not lack people who care about its children.</h2>
+      <p class="body">It lacks proof of which path turns that care into results. This project provides that proof &mdash; and then acts on it.</p>
+      <p class="body">A gift to this project is not funding one more program layered onto an overburdened system. It is an investment in finding out, once and for all, how to make every dollar already being spent work harder for every child who needs help. It is a bet on a future where a struggling placement isn't written off as a lost cause but recognized as a child who simply hasn't gotten the right care yet &mdash; and then gets it.</p>
+      <p class="body">Kentucky's children have already shown extraordinary resilience just to survive what brought them into care. They deserve a system built with the same resilience &mdash; one that meets them where they are, moves as fast as they need it to, and never gives up on the belief that healing is possible.</p>
+      <p class="final">With your support, we can build that system. <em>Not someday. Starting now.</em></p>
+    </div>
+  </section>
+
+  <!-- ============ Timeline ============ -->
+  <section id="timeline">
+    <div class="wrap-wide">
+      <div class="reveal center">
+        <h2>Timeline of Phase 1 &amp; Phase II</h2>
+        <hr class="rule" />
+      </div>
+      <figure class="doc-figure timeline-figure reveal">
+        <div class="figbox">
+          <img src="assets/timeline.svg" alt="Timeline of Phase I and Phase II activities, 2027 through 2032: 2027 — Phase I Controlled Launch and Scientific Meeting; establish protocols, hire/train staff, establish study advisory board, IRB approval, launch RCT. 2028 — full year of RCT. 2029 — RCT runs through Month 6; analysis and programming established. 2030 — Phase II Full Launch. 2031 — programming scale up Part 1. 2032 — programming scale-up state-wide." onerror="this.onerror=null;this.src='assets/timeline.png';" />
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ Next Steps ============ -->
+  <section class="tinted" id="next">
+    <div class="wrap">
+      <div class="reveal">
+        <h2>Next Steps</h2>
+        <hr class="rule" />
+        <p class="body">Kentucky's children deserve care as diverse as the communities they call home &mdash; whether that's a neighborhood foster home offering enriched clinical support, or a small town stretching to meet a child's needs with limited resources. Foster Forward bridges that gap. By partnering with key organizations across the state, we extend care beyond health and behavioral services to the enrichment and support every child needs to thrive. Guided by research and hands-on training, we work hand-in-hand with our communities to deliver individualized, state-of-the-art care &mdash; building the resilience that helps Kentucky's children not just survive, but flourish</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Appendix + References ============ -->
+  <section>
+    <div class="wrap-wide">
+      <details class="expander reveal">
+        <summary>Appendix A. Instruments Used in the Pilot Study to Measure Process and Outcomes<span class="chev"></span></summary>
+        <div class="inner">
+          <table class="instruments">
+            <thead>
+              <tr><th>Construct</th><th>Measure</th><th>Details</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Trauma Symptoms</td>
+                <td>Child and adolescent trauma screen (CATS), a validated measure of youth trauma symptoms based on DSM-5 criteria (Sachser et al., 2017).</td>
+                <td>Free<br>This measure includes 20 symptom items and 15 exposure items.<br>Caregiver report ages 3-6<br>Caregiver report ages 7-17<br>Youth self-report ages 7-17</td>
+              </tr>
+              <tr>
+                <td>Severity of Distress/Internalizing and Externalizing Symptoms</td>
+                <td>Child Behavior Checklist (CBCL), is an empirically validated broadband measure of child difficulties (Achenbach, 1991)</td>
+                <td>Cost associated with use, but widely utilized<br>This measure consists of 113 questions and captures a range of internalizing and externalizing symptoms<br>Caregiver report ages 1 &frac12;-5<br>Caregiver report ages 6-18</td>
+              </tr>
+              <tr>
+                <td>Parenting Stress</td>
+                <td>Parental Stress Scale (PSS; Berry and Jones, 1995)</td>
+                <td>Free to use<br>18 items that can help determine pre to post intervention changes</td>
+              </tr>
+              <tr>
+                <td>Child abuse potential</td>
+                <td>Brief, Child Abuse Potential Inventory (B-CAPI; Ondersma et al., 2005)</td>
+                <td>Cost associated with use. 34 item measure of child abuse risk. This includes the total risk score, with a cut-off, and validity scales. This is a caregiver report for children of all ages.</td>
+              </tr>
+              <tr>
+                <td>Child depression</td>
+                <td>Short Moods and Feelings Questionnaire (MFQ; Angold et al., 1995),</td>
+                <td>Free to use<br>13 items assessing for depressive symptoms.. Youth self-report for ages 8 -18</td>
+              </tr>
+              <tr>
+                <td>Caregiver-Child relationship</td>
+                <td>Child-Parent Relationship Scale Short Form. (Discoll &amp; Pianta, 2011)<br>Parent-Adolescent Relationship Scale (Burke et al., 2020</td>
+                <td>1)Free. 15-item caregiver report measure of their perceived conflict versus closeness with their child. It is appropriate for children ages 12 and younger.<br><br>2)Free. a 15-item measure of shared activities, connectedness, and hostility between adolescents and their caregiver.<br>Caregiver Report ages 12 and up<br>Youth self-report ages 12 and up</td>
+              </tr>
+              <tr>
+                <td>Implementation Outcomes<br>Treatment acceptability<br><br>Feasibility, Acceptability and Appropriateness</td>
+                <td>Client Satisfaction Questionnaire (Larsen et al., 1979<br><br>RE-AIM Acceptability of Intervention Measure/ Intervention Appropriateness Measure/ Feasibility of Intervention Measure(AIM/IAM/FIM)</td>
+                <td>Free. 8 item measure of client satisfaction, we will use to tailor to our programs/levels and ensure all are appropriate for foster care setting.<br>Free. Each scale has four items that are to be completed by the consumer</td>
+              </tr>
+              <tr>
+                <td>Process Outcomes</td>
+                <td>Dropout rates<br>Time from referral to treatment<br>Time/sessions needed to recovery<br>Service cost</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="expander reveal">
+        <summary>References<span class="chev"></span></summary>
+        <div class="inner">
+          <ol class="refs">
+            <li>Alegr&iacute;a, M., Green, J. G., McLaughlin, K. A., &amp; Loder, S. (2015). Disparities in child and adolescent mental health and mental health services in the US. New York, NY: William T. Grant Foundation, 26.</li>
+            <li>Berger, M., Fernando, S., Churchill, A., Cornish, P., Henderson, J., Shah, J., ... &amp; Salmon, A. (2022). Scoping review of stepped care interventions for mental health and substance use service delivery to youth and young adults. Early intervention in psychiatry, 16(4), 327-341.</li>
+            <li>CHFS, 2024). Child and Family Services Reviews, Statewide Assessment. <a href="https://acf.gov/sites/default/files/documents/cb/ky-cfsr-r4-swa.pdf" target="_blank" rel="noopener">https://acf.gov/sites/default/files/documents/cb/ky-cfsr-r4-swa.pdf</a></li>
+            <li>Commonwealth Office of the Ombudsman, (2025). An Examination of Children Sleeping in CHFS Office Buildings and Nontraditional Placement Settings, accessed June 7, 2026 from <a href="https://www.auditor.ky.gov/Auditreports/Franklin/2025%20COO%20NTP%20Report.pdf" target="_blank" rel="noopener">https://www.auditor.ky.gov/Auditreports/Franklin/2025%20COO%20NTP%20Report.pdf</a></li>
+            <li>Dondanville, K. A., Fina, B. A., Steigerwald, V. L., McCarthy, K. D., Worley, C., Straud, C. L., ... &amp; STRONG STAR Training Initiative. (2021). How often do community-based mental health providers educate and initiate PTSD treatment following training? Answering the question of reach. Implementation research and practice, 2, 26334895211011771.</li>
+            <li>Duarte, C. S., Lovero, K. L., Sourander, A., Ribeiro, W. S., &amp; Bordin, I. A. (2022). The child mental health treatment gap in an urban low-income setting: Multisectoral service use and correlates. Psychiatric services, 73(1), 32-38.</li>
+            <li>Eslinger J, Sprang G, Jodts J. (2022). Keeping children and youth in trauma treatment: Examination of an alliance building dropout management program. Clinical Child Psychology and Psychiatry, 28(2),721-733. <a href="https://doi.org/10.1177/13591045221111849" target="_blank" rel="noopener">https://doi.org/10.1177/13591045221111849</a></li>
+            <li>Farraway, S., Wuthrich, V. M., Lyneham, H., Hudson, J., Kangas, M., Chatterton, M.-L., Mihalopoulos, C., &amp; Rapee, R. M. (2022). Barriers to remission from child and adolescent anxiety disorders following extensive treatment: An exploratory study. Journal of Anxiety Disorders, 86, Article 102528. <a href="https://doi.org/10.1016/j.janxdis.2021.102528" target="_blank" rel="noopener">https://doi.org/10.1016/j.janxdis.2021.102528</a></li>
+            <li>Health Resource Services Administration, (2025). HRSA Data Warehouse. Accessed June 7, 2026 from <a href="https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find" target="_blank" rel="noopener">https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find</a></li>
+            <li>H&ouml;hne, E., B&ouml;ge, K., Karnouk, C., Tschorn, M., Banaschewski, T., Hoell, A., ... &amp; Kamp-Becker, I. (2024). Culturally sensitive stepped care for adolescent refugees: efficacy and cost&ndash;utility of a multicentric randomized controlled trial. European Child &amp; Adolescent Psychiatry, 33(2), 581-593.</li>
+            <li>Kataoka, S. H., Zhang, L., &amp; Wells, K. B. (2002). Unmet need for mental health care among US children: Variation by ethnicity and insurance status. American Journal of Psychiatry, 159(9), 1548-1555.</li>
+            <li>Mareya, S., Zhao, L., Watts, M. C., &amp; Olasoji, M. (2025). Insights Into the Australian Stepped Care Model in Primary Mental Health Care: A Qualitative Study With Informal Carers. International Journal of Mental Health Nursing, 34(3), e70058.</li>
+            <li>McDermott, B. M., &amp; Cobham, V. E. (2014). A stepped-care model of post-disaster child and adolescent mental health service provision. European Journal of Psychotraumatology, 5, Article 24294. <a href="https://doi.org/10.3402/ejpt.v5.24294" target="_blank" rel="noopener">https://doi.org/10.3402/ejpt.v5.24294</a></li>
+            <li>McLellan, L. F., Schniering, C., &amp; Wuthrich, V. (2021). Acceptability and feasibility of stepped-care for anxious adolescents in community mental health services: A secondary analysis. Child Psychiatry &amp; Human Development. <a href="https://doi.org/10.1007/s10578-021-01291-7" target="_blank" rel="noopener">https://doi.org/10.1007/s10578-021-01291-7</a></li>
+            <li>McHugh, C., Hu, N., Georgiou, G., Hodgins, M., Leung, S., Cadiri, M., Paul, N., Ryall, V., Rickwood, D., Eapen, V., Curtis, J., Lingam, R. (2024). Integrated care models for youth mental health: A systematic review and meta-analysis. Australian &amp; New Zealand Journal of Psychiatry. <a href="https://doi.org/10.1177/00048674241256759" target="_blank" rel="noopener">https://doi.org/10.1177/00048674241256759</a></li>
+            <li>Merikangas, K. R., He, J. P., Burstein, M., Swendsen, J., Avenevoli, S., Case, B., ... &amp; Olfson, M. (2011). Service utilization for lifetime mental disorders in US adolescents: results of the National Comorbidity Survey&ndash;Adolescent Supplement (NCS-A). Journal of the American Academy of Child &amp; Adolescent Psychiatry, 50(1), 32-45.</li>
+            <li>NIHR Evidence; Can stratified care help GPs manage long-term conditions?; September 2024; doi: 10.3310/nihrevidence_63807</li>
+            <li>National Institute for Health and Care Excellence. (2019). Depression in children and young people: Identification and management (NICE Guideline NG134). <a href="https://www.nice.org.uk/guidance/ng134" target="_blank" rel="noopener">https://www.nice.org.uk/guidance/ng134</a></li>
+            <li>Salloum, A., Lu, Y., Chen, H., Quast, T., Cohen, J. A., Scheeringa, M. S., Salomon, K., &amp; Storch, E. A. (2022a). Stepped care versus standard care for children after trauma: A randomized non-inferiority clinical trial. Journal of the American Academy of Child &amp; Adolescent Psychiatry, 61(8), 1010&ndash;1022. <a href="https://doi.org/10.1016/j.jaac.2021.12.013" target="_blank" rel="noopener">https://doi.org/10.1016/j.jaac.2021.12.013</a></li>
+            <li>Salloum, A., Lu, Y., Chen, H., Salomon, K., Scheeringa, M. S., Cohen, J. A., Swaidan, V., &amp; Storch, E. A. (2022b). Child and parent secondary outcomes in stepped care versus standard care treatment for childhood trauma. Journal of Affective Disorders, 307, 87&ndash;96. <a href="https://doi.org/10.1016/j.jad.2022.03.049" target="_blank" rel="noopener">https://doi.org/10.1016/j.jad.2022.03.049</a></li>
+            <li>Salloum, A., Small, B. J., Robst, J., Scheeringa, M. S., Cohen, J. A., &amp; Storch, E. A. (2017). Stepped and standard care for childhood trauma: A pilot randomized clinical trial. Research on Social Work Practice, 27(6), 653&ndash;663. <a href="https://doi.org/10.1177/1049731515601898" target="_blank" rel="noopener">https://doi.org/10.1177/1049731515601898</a></li>
+            <li>Sprang, G., Craig, C. D., Clark, J. J., Vergon, K., Tindall, M. S., Cohen, J., &amp; Gurwitch, R. (2013). Factors affecting the completion of trauma-focused treatments: What can make a difference?. Traumatology, 19(1), 28-40.</li>
+            <li>Tsoi, E. W. S., Mak, W. W. S., Ho, C. Y. Y., &amp; Yeung, G. T. Y. (2022). A Web-Based Stratified Stepped Care Mental Health Platform (TourHeart): Semistructured Interviews With Stakeholders. JMIR Human Factors, 9(2), e35057. <a href="https://doi.org/10.2196/35057" target="_blank" rel="noopener">https://doi.org/10.2196/35057</a></li>
+            <li>WA State Department of Children, Youth &amp; Families. (2004). Mockingbird Family. <a href="https://faithbridgefostercare.org/" target="_blank" rel="noopener">https://faithbridgefostercare.org/</a></li>
+            <li>Wuthrich, V. M., Rapee, R. M., McLellan, L., Chatterton, M.-L., Hudson, J. L., Kangas, M., &amp; Mihalopoulos, C. (2021). Psychological stepped care for anxious adolescents in community mental health services: A pilot effectiveness trial. Psychiatry Research, 303, Article 114066. <a href="https://doi.org/10.1016/j.psychres.2021.114066" target="_blank" rel="noopener">https://doi.org/10.1016/j.psychres.2021.114066</a></li>
+          </ol>
+        </div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="logos">
+    <img src="assets/ctac.png" alt="Center on Trauma and Children — Evidence in action" />
+    <img src="assets/uk.png" alt="University of Kentucky" />
+  </div>
+  <p>Institute on Fostering Resilience &middot; Center on Trauma and Children &middot; University of Kentucky</p>
+</footer>
+
+<script>
+  // scroll reveals
+  const io = new IntersectionObserver((entries)=>{
+    for(const e of entries){
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    }
+  },{ threshold:.12 });
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+
+</body>
+</html>
