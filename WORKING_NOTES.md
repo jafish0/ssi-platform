@@ -110,6 +110,70 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`bb8a780` · 2026-07-23** — **Draft 55 — Foster Forward (IFR) static pitch site + `ifr.ctac.app` rewrite.** Shipped `public/foster-forward/` (Cowork's self-contained static pitch page for the IFR "Foster Forward" funder proposal — inline CSS/JS, Google Fonts, YouTube hero embed `QAijhZ2g28g`, scroll reveals, collapsible Appendix A + References) plus `assets/` (continuum.png, timeline.svg + timeline.png fallback, ctac.png, uk.png, leads.jpg). No text/headers in index.html were touched (Josh's hard requirement). `vercel.json`: added a host rewrite for `ifr.ctac.app` → `/foster-forward/` **before** the SPA catch-all, excluded `foster-forward/` from the catch-all + global no-cache header, and mirrored the long-light cache headers (html no-cache; png/svg/jpg immutable). Verified locally: page renders, all 5 assets return 200, YouTube embed + both `<details>` expanders + 3 figures + topbar/footer logos present, console clean. The 26 MB source photo `assets/103_20260223-Edit (2).jpg` was intentionally left **untracked** — only the 900px `leads.jpg` ships. **Manual step remaining for Josh:** add `ifr.ctac.app` as a domain on the Vercel project + add the DNS CNAME — the rewrite is inert until the domain is attached.
+
+  <details>
+  <summary>Draft 55 (verbatim, Claude Cowork → Claude Code)</summary>
+
+  #### Draft 55 — Foster Forward pitch site: ship `public/foster-forward/` + wire up `ifr.ctac.app`
+
+  **Context (2026-07-23):** Urgent funder opportunity. Claude Cowork built a standalone
+  static pitch page for the IFR "Foster Forward" proposal (institutional-editorial style,
+  same pattern as `/long-light/`). The page content is the **verbatim** text of
+  `Foster Forward July 21 8pm.docx` — Josh's hard requirement: **do not edit any copy or
+  headers in `public/foster-forward/index.html`**. Layout/CSS tweaks are fine; words are not.
+
+  **Already in the working tree (built by Cowork, ready to commit):**
+  - `public/foster-forward/index.html` — self-contained (inline CSS/JS, Google Fonts,
+    YouTube hero embed `QAijhZ2g28g`, scroll reveals, collapsible Appendix A + References)
+  - `public/foster-forward/assets/` — `continuum.png`, `timeline.svg` + `timeline.png`
+    fallback (both extracted from the docx), `ctac.png`, `uk.png` (copied from `public/logos/`)
+
+  **Your tasks:**
+
+  1. **`vercel.json`** — three changes:
+     a. Add a host rewrite **before** the SPA catch-all so the subdomain serves the page:
+        ```json
+        { "source": "/(.*)", "has": [{ "type": "host", "value": "ifr.ctac.app" }], "destination": "/foster-forward/$1" }
+        ```
+        (empty path → `/foster-forward/` → index.html; relative asset paths resolve under the same host)
+     b. Exclude the folder from the SPA catch-all: `/((?!api/|long-light/|foster-forward/).*)`
+     c. Mirror the long-light cache headers for `foster-forward` (html no-cache; png/svg immutable),
+        and add `foster-forward/` to the global no-cache exclusion alongside `long-light/`.
+
+  2. **Sanity-check locally** (`npm run dev` or `vite preview`) that `/foster-forward/` renders:
+     hero video iframe, both figures, both `<details>` expanders, logos in topbar/footer.
+
+  3. **Commit + push.** One commit, message like `Add Foster Forward (IFR) static pitch site + ifr.ctac.app rewrite`.
+
+  4. **Note for Josh (manual, Vercel dashboard):** add `ifr.ctac.app` as a domain on the
+     project and add the DNS CNAME — the rewrite does nothing until the domain is attached.
+
+  **Do NOT:** touch app routes/SessionEngine; edit any text inside index.html; rename the folder
+  (the vercel rules and the page's relative asset paths assume `foster-forward/`).
+
+  **Draft 55 addendum (2026-07-23, later same day):**
+  - **One authorized copy deviation from the docx:** Josh approved fixing the acronym
+    "OOC" → "OOHC" in the "Children and adolescents in OOHC developed…" paragraph.
+    Everything else remains verbatim.
+  - **Leadership photo added:** `assets/leads.jpg` (Dr. Sprang + Dr. Howard at the Kosair
+    for Kids Center) is referenced in a `figure.leads-photo` above the lead cards, with an
+    `onerror` that hides the figure if the file is missing. Josh is supplying the image;
+    if it's not in `public/foster-forward/assets/` yet at commit time, ship anyway — the
+    page degrades gracefully.
+  - **Source-doc copy flags — do NOT fix on the page; pending wording from Dr. Sprang:**
+    1. "The Kosair for Kids Center for Safe and Healthy Children and Families opened in
+       maltreatment in the state." — words missing mid-sentence.
+    2. "…established in 1999 is the is the epicenter…" — doubled "is the".
+    3. "20 %" spacing in the Qualitative Study paragraph.
+    4. "Next Steps" section ends without a period after "flourish".
+
+  **Draft 55 addendum 2 (2026-07-23):** `assets/leads.jpg` (900px web version) is now in
+  place. The 26 MB original `assets/103_20260223-Edit (2).jpg` must NOT be committed —
+  leave it untracked (or Josh will move/delete it). Only `leads.jpg` ships.
+
+  </details>
+
 - **`9606e55` · 2026-07-22** — **Draft 54 — Sam's Story repositioned on `/irb-preview`.** Moved Sam's Story from the opening slot of the intervention to a Part I/II interlude — it now plays between Kai Scene 4 ("The Foster Care Extra Level," end of Part I) and Kai Part II Scene 1, giving it a dramaturgical job and filling the pacing gap after Scene 4 (which has no activity). Section 4 intro-card copy updated to describe it as an interlude. Order is now Kai 1–4 → Sam's Story → Kai Part II 1–3 → Conclusion → The Plan. Verified: one Sam's Story embed in the interlude position, intro copy updated, console + build clean. No version bump.
 
   <details>
@@ -8031,3 +8095,59 @@ Stephanie's request — more clinically standard. Every UI label, button, and sa
 *End of 2026-05-11 batch. After all five ship, Josh announces one stopping point to the team for batched review.*
 
 -->
+#### Draft 55 — Foster Forward pitch site: ship `public/foster-forward/` + wire up `ifr.ctac.app`
+
+**Context (2026-07-23):** Urgent funder opportunity. Claude Cowork built a standalone
+static pitch page for the IFR "Foster Forward" proposal (institutional-editorial style,
+same pattern as `/long-light/`). The page content is the **verbatim** text of
+`Foster Forward July 21 8pm.docx` — Josh's hard requirement: **do not edit any copy or
+headers in `public/foster-forward/index.html`**. Layout/CSS tweaks are fine; words are not.
+
+**Already in the working tree (built by Cowork, ready to commit):**
+- `public/foster-forward/index.html` — self-contained (inline CSS/JS, Google Fonts,
+  YouTube hero embed `QAijhZ2g28g`, scroll reveals, collapsible Appendix A + References)
+- `public/foster-forward/assets/` — `continuum.png`, `timeline.svg` + `timeline.png`
+  fallback (both extracted from the docx), `ctac.png`, `uk.png` (copied from `public/logos/`)
+
+**Your tasks:**
+
+1. **`vercel.json`** — three changes:
+   a. Add a host rewrite **before** the SPA catch-all so the subdomain serves the page:
+      ```json
+      { "source": "/(.*)", "has": [{ "type": "host", "value": "ifr.ctac.app" }], "destination": "/foster-forward/$1" }
+      ```
+      (empty path → `/foster-forward/` → index.html; relative asset paths resolve under the same host)
+   b. Exclude the folder from the SPA catch-all: `/((?!api/|long-light/|foster-forward/).*)`
+   c. Mirror the long-light cache headers for `foster-forward` (html no-cache; png/svg immutable),
+      and add `foster-forward/` to the global no-cache exclusion alongside `long-light/`.
+
+2. **Sanity-check locally** (`npm run dev` or `vite preview`) that `/foster-forward/` renders:
+   hero video iframe, both figures, both `<details>` expanders, logos in topbar/footer.
+
+3. **Commit + push.** One commit, message like `Add Foster Forward (IFR) static pitch site + ifr.ctac.app rewrite`.
+
+4. **Note for Josh (manual, Vercel dashboard):** add `ifr.ctac.app` as a domain on the
+   project and add the DNS CNAME — the rewrite does nothing until the domain is attached.
+
+**Do NOT:** touch app routes/SessionEngine; edit any text inside index.html; rename the folder
+(the vercel rules and the page's relative asset paths assume `foster-forward/`).
+
+**Draft 55 addendum (2026-07-23, later same day):**
+- **One authorized copy deviation from the docx:** Josh approved fixing the acronym
+  "OOC" → "OOHC" in the "Children and adolescents in OOHC developed…" paragraph.
+  Everything else remains verbatim.
+- **Leadership photo added:** `assets/leads.jpg` (Dr. Sprang + Dr. Howard at the Kosair
+  for Kids Center) is referenced in a `figure.leads-photo` above the lead cards, with an
+  `onerror` that hides the figure if the file is missing. Josh is supplying the image;
+  if it's not in `public/foster-forward/assets/` yet at commit time, ship anyway — the
+  page degrades gracefully.
+- **Source-doc copy flags — do NOT fix on the page; pending wording from Dr. Sprang:**
+  1. "The Kosair for Kids Center for Safe and Healthy Children and Families opened in
+     maltreatment in the state." — words missing mid-sentence.
+  2. "…established in 1999 is the is the epicenter…" — doubled "is the".
+  3. "20 %" spacing in the Qualitative Study paragraph.
+  4. "Next Steps" section ends without a period after "flourish".
+
+**Draft 55 addendum 2 (2026-07-23):** `assets/leads.jpg` (900px web version) is now in
+place. The 26 MB original `assets/103_20260223-Edit (2).jpg` must NOT be committed —
+leave it untracked (or Josh will move/delete it). Only `leads.jpg` ships.
