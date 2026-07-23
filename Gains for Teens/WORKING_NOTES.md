@@ -96,6 +96,22 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **564580e** (2026-07-23) — Drafts 13 + 14: added **"The Shadow"** section to the demo
+  (after Zone 5, "Concept in development") — the antagonist arc that spans the journey:
+  what it is, how it resolves (you **face** it, never fight/destroy — it burns down to a
+  **Spark** you carry onward), the locked cosmology ("all light in this world is a faced
+  shadow"), and how it's built in (build-up / training / climax, no-fail). Includes the
+  **three-phase transformation arc** — Looming (`shadow.webp`) → The Turning
+  (`shadow-phase2.webp`) → Your Spark (`shadow-phase3.webp`). Also replaced the Playable
+  Characters **Traveler placeholder with a real card** using the redesigned
+  `avatar-traveler-1.webp` ("Hooded and wrapped, a warm light in hand") — same filename,
+  so the `/long-light/` pitch character-select gets the new Traveler too. Feedback dropdown
+  + admin gained **The Shadow** (`section=shadow`). No version bumps. Verified on a prod
+  preview: Shadow section after Zone 5 with 3 phases + copy, Traveler card real (3
+  avatars), shadow art serves 200 image/webp, dropdown has The Shadow, build passes.
+  *(Draft 13 introduced the section with a TBD art slot; Draft 14 filled it with the
+  3-phase art + real Traveler — shipped together.)*
+
 - **2a4b57b** (2026-07-17) — Demo: moved the **Wingsuit gear + playable bird-flight
   traversal from Zone 2 → Zone 3** (flight now climbs Mistfields → Bright Reaches; Zone 2
   traversal is a placeholder again). Gear is now **TBD** for Zone 1 (was An Anchor) and
@@ -667,3 +683,45 @@ Follow-up to the demo (Drafts 7–10). Four edits:
 **Verify.** Page order: Zone Map (top) → Child Assent & Measures → Playable Characters (Construct + Creature + Traveler placeholder) → Zone 1…5 sections (each with image, characters, video, activity, gear, traversal; placeholders where pending). No old Videos/Activities/Concept-Art/Pitch sections remain. Narrator = Spark only. Feedback works (tagged). No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 12.*
+
+
+### Draft 13 — Add "The Shadow" section to the GAINS demo (after the Zones) — ✅ SHIPPED 564580e (2026-07-23)
+
+Add a new section titled **"The Shadow"** on `/gains-demo`, placed **after the Zone 5 section** (before the footer). It's a concept-in-development section (like the other placeholders) that presents the antagonist/arc tying the whole journey together. Mark it clearly **"Concept in development."** Use the looming Shadow art at `/long-light/art/shadow.webp`. The **end-state art — a Shadow → embering → Spark transformation — is still TBD**; leave a slot for it.
+
+**Copy / content:**
+
+- **What it is.** The Shadow is the past trauma that follows the player through the entire journey — a looming presence at the edges of the zones and traversals, the unresolved weight they're carrying.
+- **How it resolves (the arc).** The player faces the Shadow at the end, in the light — the climactic encounter where you use everything you've learned and earned. **Important framing: you don't fight or destroy it.** In keeping with the no-violence rule (and how healing actually works), you *face* it — shining your light and using the skills and gear you've gathered along the way — and it loses its power: as you face it, its darkness burns down to a small warm light — it becomes a **Spark**, the same kind of being as the narrator. You carry that Spark onward as your own inner light. Trauma faced and transformed, not erased.
+- **The cosmology (the big idea — LOCKED).** *All light in this world is a faced shadow.* The Spark who guides you was a shadow someone once faced; so are the lanterns along the path, the messenger creatures who recovered, and the Beacon itself — the gathered light of everyone who made the climb. When you face your Shadow it turns to light and you add it to that, and you **leave carrying your own Spark** (the internalized hope/skill the game exists to hand the participant). Guardrail: the light comes from *facing it with help* — courage + support + skills — NEVER from the trauma itself being good; final wording is CTAC's to bless.
+- **How it's built in (concept).**
+  - *Build-up:* a looming background presence that grows from zone to zone.
+  - *Training:* each earlier traversal teaches you to use one skill/gear under pressure.
+  - *Climax:* the final traversal / summit approach brings them all together — a **no-fail**, call-and-response "hold the light and use your skills" sequence where the Shadow shrinks with each skill you apply, until you pass through it into the Beacon and it settles into a small, carry-able companion-shadow.
+- **Ties it together with** the dark→light spine, Sprang's "avoidance creature shrinks" note, and the recovered-creature "symptoms lessening" animation.
+
+**Feedback:** reuse the feedback system; add a **`section=shadow`** option to the demo feedback dropdown and label it in admin.
+
+**Verify.** "The Shadow" section renders after Zone 5 with the concept text, an art placeholder, and an "in development" marker; feedback dropdown includes The Shadow. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 13.*
+
+
+### Draft 14 — New Traveler art + Shadow transformation arc — ✅ SHIPPED 564580e (2026-07-23)
+
+**Assets** (staged in `long-light-site/art/`; copy into `public/long-light/art/`):
+- `avatar-traveler-1.webp` — **UPDATED**: the redesigned Traveler (softer, heroic; replaces the old "too scary" one). Same filename, so replacing the file updates it everywhere it's referenced (demo Playable Characters + pitch character-select).
+- `shadow-phase2.webp` — NEW: "The Turning" (the Shadow burning into light, golden core kindling).
+- `shadow-phase3.webp` — NEW: "Your Spark" (the Spark born from the faced shadow).
+
+**Changes:**
+1. **Demo → Playable Characters:** replace the "The Traveler — redesign in progress" placeholder with a real card — image `avatar-traveler-1.webp`, name **The Traveler**, description "Hooded and wrapped, a warm light in hand." (Section now shows three real avatars: Traveler, Creature, Construct.)
+2. **Demo → The Shadow section:** replace the "end-state art TBD" slot with the **three-phase transformation arc**, in order with labels (keep the existing cosmology copy):
+   - Phase 1 — **Looming** (`/long-light/art/shadow.webp`) — the Shadow that follows you.
+   - Phase 2 — **The Turning** (`/long-light/art/shadow-phase2.webp`) — faced, its darkness burns to light.
+   - Phase 3 — **Your Spark** (`/long-light/art/shadow-phase3.webp`) — it becomes a Spark, your own light to carry onward.
+3. Copy the two new webp into `public/long-light/art/`; make sure `avatar-traveler-1.webp` there is the updated file.
+
+**Verify:** Playable Characters shows three real avatars (Traveler image updated, no placeholder); the Shadow section shows the 3-phase arc in order; the pitch page `/long-light/` character-select shows the new Traveler; all art returns 200. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 14.*
