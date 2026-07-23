@@ -220,7 +220,7 @@ const ZONES = [
     image: '/long-light/zone4.webp',
     characters: ['spark'],
     videos: [
-      { title: 'What to Expect from Therapy', duration: '~60 sec', script: WHAT_TO_EXPECT },
+      { title: 'What to Expect from Therapy', duration: '47 sec', script: WHAT_TO_EXPECT },
     ],
     activity: {
       title: 'Mindfulness — the 3-3-3 rule',
