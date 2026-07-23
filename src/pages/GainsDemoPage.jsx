@@ -61,6 +61,16 @@ And good news: participating in trauma therapy is very likely to help you. Resea
 const GROWTH =
   'Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think about it like colored glasses – you put on a blue-tinted pair and all of a sudden, a yellow lemon looks green. Our mindset works like glasses; they can change the way something seems to us, but that doesn’t make it true – even if the lemon looks green, we know that it’s really yellow. We often consider two types of mindsets that people “wear”: fixed and growth mindsets. If you currently have on your fixed mindset, you might find yourself thinking that trauma therapy won’t help you because nothing can change how you feel or think because of what happened to you. This is tricky because if you have that thought, you probably won’t want to begin trauma therapy, or you won’t really commit to it, and then things really don’t change for you. But that’s not because your thought was true - it’s a result of the fixed mindset you’re wearing. When you choose to put on your growth mindset, you choose to recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy and will help you get the most benefit from treatment.'
 
+const WHAT_TO_EXPECT = `Trauma therapy — here’s the deal.
+
+The first few sessions are about building trust, asking about what’s going on and what you actually want out of this — and yeah, you’ll dig into how your thoughts, feelings, and past stuff connect.
+
+You’ll feel a mix of things. Relief, because someone’s actually listening without judging you. Tired, because processing heavy stuff takes energy. Uncomfortable sometimes — that’s normal, not a sign something is wrong; it means the process is working.
+
+You set the pace — you don’t have to spill everything on day one. Just be honest as you go, and speak up if something’s not working.
+
+Your therapist will teach you skills that are proven to actually work. No single skill fixes everything, but the more tools you have, the more ready you’ll be for whatever comes your way.`
+
 // ---------- Top Zone Map (the living roadmap) ----------
 const ZONE_MAP_ROWS = [
   {
@@ -68,7 +78,7 @@ const ZONE_MAP_ROWS = [
     scene: 'darkest; candle, beacon far above',
     video: 'Video 1 — what trauma is',
     activity: 'Body Mapping',
-    gear: 'An Anchor',
+    gear: 'TBD',
     goal: 'Understand trauma; normalize bodily responses.',
   },
   {
@@ -76,7 +86,7 @@ const ZONE_MAP_ROWS = [
     scene: 'brightening slopes; lanterns to relight',
     video: 'Video 2 — the four reactions',
     activity: 'Character Examples',
-    gear: 'A Wingsuit — lets you take flight',
+    gear: 'TBD',
     goal: 'Recognize and name common trauma reactions.',
   },
   {
@@ -84,13 +94,13 @@ const ZONE_MAP_ROWS = [
     scene: 'above first clouds; light breaks through',
     video: 'Video 3 — these are normal; help works + Getting the best trauma therapy',
     activity: 'Bridge beat (TBD)',
-    gear: 'Hope',
+    gear: 'A Wingsuit',
     goal: 'Normalize + instill hope; bridge to getting help.',
   },
   {
     zone: '4 · The Bright Reaches',
     scene: 'above the clouds; warm, open',
-    video: 'What to Expect from Therapy (pending) — ends with the 3-3-3 rule',
+    video: 'What to Expect from Therapy — ends with the 3-3-3 rule',
     activity: 'Mindfulness: 3-3-3 (see / hear / feel + breathing)',
     gear: 'Oxygen Mask — helps you breathe',
     goal: 'Demystify therapy; teach grounding.',
@@ -154,7 +164,7 @@ const ZONES = [
         </>
       ),
     },
-    gear: 'An Anchor — your body’s alarm can be steadied.',
+    gear: 'TBD.',
     traversal: { text: 'Traversal to Zone 2.', pending: true },
     goal: 'Understand what trauma is; normalize the body’s responses.',
   },
@@ -177,11 +187,8 @@ const ZONES = [
         </>
       ),
     },
-    gear: 'A Wingsuit — lets you take flight.',
-    traversal: {
-      text: 'The bird flight — “the power of connections.” Gather connections to climb from the Lantern Path up to the Mistfields.',
-      playable: true,
-    },
+    gear: 'TBD.',
+    traversal: { text: 'Traversal to Zone 3.', pending: true },
     goal: 'Recognize and name common trauma reactions.',
   },
   {
@@ -199,8 +206,11 @@ const ZONES = [
       pending: true,
       desc: 'A light, reflective bridge beat (TBD) — a message, not a drill.',
     },
-    gear: 'Hope — you are not the first, and not alone.',
-    traversal: { text: 'Traversal to Zone 4.', pending: true },
+    gear: 'A Wingsuit — lets you take flight.',
+    traversal: {
+      text: 'The bird flight — “the power of connections.” Gather connections to climb from the Mistfields up to the Bright Reaches.',
+      playable: true,
+    },
     goal: 'Normalize and instill hope; bridge toward getting help.',
   },
   {
@@ -210,16 +220,32 @@ const ZONES = [
     image: '/long-light/zone4.webp',
     characters: ['spark'],
     videos: [
-      {
-        title: 'What to Expect from Therapy',
-        duration: 'pending',
-        pending: true,
-        pendingNote: 'Pending (Sprang). Ends with the 3-3-3 rule.',
-      },
+      { title: 'What to Expect from Therapy', duration: '~60 sec', script: WHAT_TO_EXPECT },
     ],
     activity: {
-      title: 'Mindfulness — 3-3-3',
-      desc: 'Name 3 things you see (tap 3 options), 3 you hear (audio over the image, tap 3), then feel = deep breathing with concentric rings expanding and contracting on a slow 3-count, then it ends.',
+      title: 'Mindfulness — the 3-3-3 rule',
+      desc: (
+        <>
+          <p>
+            Try it right now if you’re feeling panicky or overwhelmed — the
+            3-3-3 rule. Identify each of these in your surroundings:
+          </p>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
+            <li>
+              <strong>3 things you see</strong> — look around and name three
+              objects you can see.
+            </li>
+            <li>
+              <strong>3 sounds you hear</strong> — close your eyes and tune in to
+              three different sounds around you.
+            </li>
+            <li>
+              <strong>3 deep breaths</strong> — breathe along with an expanding
+              circle that guides a long, slow inhale and exhale.
+            </li>
+          </ul>
+        </>
+      ),
     },
     gear: 'Oxygen Mask — helps you breathe.',
     traversal: {
