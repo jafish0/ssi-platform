@@ -24,6 +24,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'zone-3', label: 'Zone 3' },
   { value: 'zone-4', label: 'Zone 4' },
   { value: 'zone-5', label: 'Zone 5' },
+  { value: 'shadow', label: 'The Shadow' },
   { value: 'general', label: 'General Feedback' },
 ]
 
@@ -128,9 +129,28 @@ const PLAYABLE = [
     blurb: 'Small and curious, with a lantern for a tail.',
   },
   {
-    placeholder: true,
+    src: `${ART}/avatar-traveler-1.webp`,
     name: 'The Traveler',
-    blurb: 'Redesign in progress.',
+    blurb: 'Hooded and wrapped, a warm light in hand.',
+  },
+]
+
+// ---------- The Shadow — three-phase transformation arc ----------
+const SHADOW_PHASES = [
+  {
+    src: `${ART}/shadow.webp`,
+    name: 'Phase 1 — Looming',
+    blurb: 'The Shadow that follows you through every zone.',
+  },
+  {
+    src: `${ART}/shadow-phase2.webp`,
+    name: 'Phase 2 — The Turning',
+    blurb: 'Faced in the light, its darkness burns down to a warm core.',
+  },
+  {
+    src: `${ART}/shadow-phase3.webp`,
+    name: 'Phase 3 — Your Spark',
+    blurb: 'It becomes a Spark — your own light to carry onward.',
   },
 ]
 
@@ -416,6 +436,82 @@ export default function GainsDemoPage() {
       {ZONES.map((z) => (
         <ZoneSection key={z.n} zone={z} />
       ))}
+
+      {/* E. The Shadow — the antagonist arc that spans the whole journey */}
+      <section className="mb-10">
+        <h2 className="text-[18px] font-bold text-slate-800">The Shadow</h2>
+        <p className="text-[13px] text-slate-500 mb-3">
+          The antagonist arc that ties the whole journey together.
+        </p>
+        <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200 max-w-[880px]">
+          <div className="mb-4">
+            <Pill icon={HardHat}>Concept in development</Pill>
+          </div>
+
+          {/* three-phase transformation arc */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            {SHADOW_PHASES.map((p) => (
+              <ArtCard key={p.name} {...p} />
+            ))}
+          </div>
+
+          <div className="space-y-3 text-[14px] text-slate-700 leading-relaxed">
+            <p>
+              <strong>What it is.</strong> The Shadow is the past trauma that
+              follows the player through the entire journey — a looming presence
+              at the edges of the zones and traversals, the unresolved weight
+              they’re carrying.
+            </p>
+            <p>
+              <strong>How it resolves (the arc).</strong> The player faces the
+              Shadow at the end, in the light — the climactic encounter where you
+              use everything you’ve learned and earned. You don’t fight or
+              destroy it: you <em>face</em> it, shining your light and using the
+              skills and gear you’ve gathered, and it loses its power. Its
+              darkness burns down to a small warm light — it becomes a{' '}
+              <strong>Spark</strong>, the same kind of being as the narrator, and
+              you carry it onward as your own inner light. Trauma faced and
+              transformed, not erased.
+            </p>
+            <p>
+              <strong>The cosmology (the big idea).</strong>{' '}
+              <em>All light in this world is a faced shadow.</em> The Spark who
+              guides you was a shadow someone once faced; so are the lanterns
+              along the path, the messenger creatures who recovered, and the
+              Beacon itself — the gathered light of everyone who made the climb.
+              When you face your Shadow it turns to light, and you leave carrying
+              your own Spark.
+            </p>
+            <div>
+              <p className="font-semibold text-slate-800">How it’s built in (concept):</p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                <li>
+                  <strong>Build-up:</strong> a looming background presence that
+                  grows from zone to zone.
+                </li>
+                <li>
+                  <strong>Training:</strong> each earlier traversal teaches you to
+                  use one skill/gear under pressure.
+                </li>
+                <li>
+                  <strong>Climax:</strong> the final approach brings them all
+                  together — a <strong>no-fail</strong>, call-and-response “hold
+                  the light and use your skills” sequence where the Shadow shrinks
+                  with each skill you apply, until you pass through it into the
+                  Beacon and it settles into a small, carry-able companion.
+                </li>
+              </ul>
+            </div>
+            <p className="text-[13px] text-slate-500 italic">
+              Guardrail: the light comes from <em>facing it with help</em> —
+              courage + support + skills — never from the trauma itself being
+              good; final wording is CTAC’s to bless. Ties together the dark→light
+              spine, the “avoidance creature shrinks” note, and the
+              recovered-creature “symptoms lessening” animation.
+            </p>
+          </div>
+        </div>
+      </section>
     </DemoPageLayout>
   )
 }

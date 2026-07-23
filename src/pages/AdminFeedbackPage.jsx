@@ -42,6 +42,7 @@ const SECTION_LABELS = {
   'zone-3': 'Zone 3',
   'zone-4': 'Zone 4',
   'zone-5': 'Zone 5',
+  shadow: 'The Shadow',
   general: 'General',
   // retired section slugs (kept for older feedback rows)
   'zone-map': 'Zone Map',
