@@ -110,6 +110,14 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`2da28f8` · 2026-07-24** — **Foster Forward: new hero video + richer scroll animations.** Swapped the hero YouTube embed to `BokrqlsR8zc` (per Josh). Added motion polish, CSS/JS only, zero copy changes: hero entrance cascade (eyebrow → title → video → partner logos), stat-band count-up animation (lands on exact original text incl. the `< 4,600` hairspace), staggered card-grid reveals, teal rules that grow in, figures settling in with a subtle scale, card hover lift, and a thin teal scroll-progress bar. Everything new is disabled under `prefers-reduced-motion`. Verified: video src, selector matches, count-up math for all four stats, console clean.
+
+- **`d90b6c1` · 2026-07-23** — **Foster Forward: fixed the garbled Kosair Center sentence** in the "Experience and Science" section with wording supplied by Josh/Dr. Sprang.
+
+- **`664bd3b` · 2026-07-23** — **Foster Forward: fixed obvious typos and a doubled phrase** — `20 %`→`20%`, doubled "is the is the", "Adovcates"→"Advocates", "county"→"country" (Howard bio), missing period after "flourish". Citations/appendix left verbatim.
+
+- **`c68c88e` · 2026-07-23** — **Foster Forward: expanded Dr. Christina Howard bio** with the full version Josh supplied (verbatim; typographic quotes only).
+
 - **`bb8a780` · 2026-07-23** — **Draft 55 — Foster Forward (IFR) static pitch site + `ifr.ctac.app` rewrite.** Shipped `public/foster-forward/` (Cowork's self-contained static pitch page for the IFR "Foster Forward" funder proposal — inline CSS/JS, Google Fonts, YouTube hero embed `QAijhZ2g28g`, scroll reveals, collapsible Appendix A + References) plus `assets/` (continuum.png, timeline.svg + timeline.png fallback, ctac.png, uk.png, leads.jpg). No text/headers in index.html were touched (Josh's hard requirement). `vercel.json`: added a host rewrite for `ifr.ctac.app` → `/foster-forward/` **before** the SPA catch-all, excluded `foster-forward/` from the catch-all + global no-cache header, and mirrored the long-light cache headers (html no-cache; png/svg/jpg immutable). Verified locally: page renders, all 5 assets return 200, YouTube embed + both `<details>` expanders + 3 figures + topbar/footer logos present, console clean. The 26 MB source photo `assets/103_20260223-Edit (2).jpg` was intentionally left **untracked** — only the 900px `leads.jpg` ships. **Manual step remaining for Josh:** add `ifr.ctac.app` as a domain on the Vercel project + add the DNS CNAME — the rewrite is inert until the domain is attached.
 
   <details>
