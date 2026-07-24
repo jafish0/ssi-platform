@@ -84,9 +84,54 @@
 
   .reveal{ opacity:0; transform:translateY(26px); transition:opacity .8s ease, transform .8s ease; }
   .reveal.in{ opacity:1; transform:none; }
+
+  /* ---------- motion: scroll progress bar ---------- */
+  #progress{
+    position:fixed; top:0; left:0; height:3px; width:0; z-index:60;
+    background:linear-gradient(90deg,var(--teal),#7fd8d1); pointer-events:none;
+  }
+
+  /* ---------- motion: hero entrance ---------- */
+  @keyframes heroUp{ from{ opacity:0; transform:translateY(30px); } to{ opacity:1; transform:none; } }
+  .hero .eyebrow, .hero h1, .hero .videoframe, .hero .partners{ animation:heroUp .95s cubic-bezier(.22,1,.36,1) both; }
+  .hero h1{ animation-delay:.14s; }
+  .hero .videoframe{ animation-delay:.32s; }
+  .hero .partners{ animation-delay:.52s; }
+
+  /* ---------- motion: teal rules grow in ---------- */
+  .reveal .rule{ width:0; transition:width .9s cubic-bezier(.22,1,.36,1) .25s; }
+  .reveal.in .rule{ width:56px; }
+
+  /* ---------- motion: staggered children ---------- */
+  .cards2 .card, .cards3 .card, .leads .lead-card, .statgrid .stat{
+    opacity:0; transform:translateY(26px);
+    transition:opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1), box-shadow .35s ease;
+  }
+  .reveal.in .card, .reveal.in .lead-card, .statband.in .stat{ opacity:1; transform:none; }
+  .reveal.in .card:nth-child(2), .reveal.in .lead-card:nth-child(2), .statband.in .stat:nth-child(2){ transition-delay:.14s; }
+  .reveal.in .card:nth-child(3), .statband.in .stat:nth-child(3){ transition-delay:.28s; }
+  .statband.in .stat:nth-child(4){ transition-delay:.42s; }
+
+  /* ---------- motion: card hover lift ---------- */
+  @media (hover:hover){
+    .reveal.in .card:hover, .reveal.in .lead-card:hover{
+      transform:translateY(-5px); transition-delay:0s;
+      box-shadow:0 18px 46px rgba(22,38,79,.13);
+    }
+  }
+
+  /* ---------- motion: figures settle in ---------- */
+  figure.doc-figure.reveal, figure.leads-photo.reveal{ transform:translateY(26px) scale(.97); }
+  figure.doc-figure.reveal.in, figure.leads-photo.reveal.in{ transform:none; }
+
   @media (prefers-reduced-motion:reduce){
     .reveal{ opacity:1; transform:none; transition:none; }
     html{ scroll-behavior:auto; }
+    .hero .eyebrow, .hero h1, .hero .videoframe, .hero .partners{ animation:none; }
+    .reveal .rule{ width:56px; transition:none; }
+    .cards2 .card, .cards3 .card, .leads .lead-card, .statgrid .stat{ opacity:1; transform:none; transition:none; }
+    figure.doc-figure.reveal, figure.leads-photo.reveal{ transform:none; }
+    #progress{ display:none; }
   }
 
   /* ---------- hero ---------- */
@@ -261,6 +306,8 @@
 </head>
 <body>
 
+<div id="progress"></div>
+
 <div class="topbar">
   <div class="topbar-inner">
     <img src="assets/ctac.png" alt="Center on Trauma and Children — Evidence in action" />
@@ -284,7 +331,7 @@
   </h1>
   <div class="videoframe">
     <div class="ratio">
-      <iframe src="https://www.youtube.com/embed/QAijhZ2g28g?rel=0" title="Foster Forward" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      <iframe src="https://www.youtube.com/embed/BokrqlsR8zc?rel=0" title="Foster Forward" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
     </div>
   </div>
   <div class="partners">
@@ -601,13 +648,54 @@
 </footer>
 
 <script>
+  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // stat count-up — animates the number, then restores the exact original text
+  function countUp(el){
+    const orig = el.textContent;
+    const m = orig.match(/([\d,]+\.?\d*)/);
+    if(!m){ return; }
+    const numStr = m[1];
+    const target = parseFloat(numStr.replace(/,/g,''));
+    const decimals = (numStr.split('.')[1]||'').length;
+    const hasComma = numStr.includes(',');
+    const prefix = orig.slice(0, m.index);
+    const suffix = orig.slice(m.index + numStr.length);
+    const dur = 1400;
+    let start;
+    function step(ts){
+      if(start===undefined){ start = ts; }
+      const p = Math.min((ts-start)/dur, 1);
+      const eased = 1-Math.pow(1-p,3);
+      let val = (target*eased).toFixed(decimals);
+      if(hasComma){ val = Number(val).toLocaleString('en-US',{minimumFractionDigits:decimals}); }
+      el.textContent = prefix+val+suffix;
+      if(p<1){ requestAnimationFrame(step); } else { el.textContent = orig; }
+    }
+    requestAnimationFrame(step);
+  }
+
   // scroll reveals
   const io = new IntersectionObserver((entries)=>{
     for(const e of entries){
-      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        if(e.target.id==='need' && !prefersReduced){
+          e.target.querySelectorAll('.num').forEach(countUp);
+        }
+        io.unobserve(e.target);
+      }
     }
   },{ threshold:.12 });
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // scroll progress bar
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', ()=>{
+    const h = document.documentElement;
+    const max = h.scrollHeight-h.clientHeight;
+    bar.style.width = (max>0 ? (h.scrollTop/max*100) : 0)+'%';
+  }, {passive:true});
 </script>
 
 </body>
