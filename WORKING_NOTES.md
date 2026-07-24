@@ -110,6 +110,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`3344736` · 2026-07-24** — **Foster Forward: fixed broken images at `/foster-forward` (no trailing slash).** Josh's screenshots showed every image (logos, continuum figure) as alt-text placeholders when visiting `ssi.ctac.app/foster-forward` without a trailing slash — relative `assets/...` paths were resolving against the site root. All 9 img srcs (plus the `timeline.png` onerror fallback) are now absolute `/foster-forward/assets/...`, and the `ifr.ctac.app` host rewrite now excludes paths already under `foster-forward/` so the absolute URLs don't get double-prefixed on the subdomain. Verified on production: both URL forms serve the new HTML, all 5 assets return 200, live embed is the new video `BokrqlsR8zc`.
+
 - **`2da28f8` · 2026-07-24** — **Foster Forward: new hero video + richer scroll animations.** Swapped the hero YouTube embed to `BokrqlsR8zc` (per Josh). Added motion polish, CSS/JS only, zero copy changes: hero entrance cascade (eyebrow → title → video → partner logos), stat-band count-up animation (lands on exact original text incl. the `< 4,600` hairspace), staggered card-grid reveals, teal rules that grow in, figures settling in with a subtle scale, card hover lift, and a thin teal scroll-progress bar. Everything new is disabled under `prefers-reduced-motion`. Verified: video src, selector matches, count-up math for all four stats, console clean.
 
 - **`d90b6c1` · 2026-07-23** — **Foster Forward: fixed the garbled Kosair Center sentence** in the "Experience and Science" section with wording supplied by Josh/Dr. Sprang.
