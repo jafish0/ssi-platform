@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Foster Forward — Healing Trauma and Building Futures for Kentucky's Children</title>
-<meta name="description" content="Foster Forward: Healing Trauma and Building Futures for Kentucky's Children — a proposal from the Institute on Fostering Resilience, University of Kentucky." />
+<title>Foster Forward — Giving Kentucky's Children a Real Chance to Heal</title>
+<meta name="description" content="Foster Forward: Giving Kentucky's Children a Real Chance to Heal — a proposal from the Institute on Fostering Resilience, University of Kentucky." />
 <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -242,6 +242,20 @@
   .lead-card .role{ font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--teal-dark); margin-bottom:14px; }
   .lead-card p{ font-size:15px; line-height:1.8; }
 
+  /* ---------- donor letter ---------- */
+  .letter-card{
+    background:#fff; border:1px solid var(--line); border-radius:14px;
+    padding:clamp(30px,5.5vw,58px); box-shadow:0 8px 30px rgba(22,38,79,.06);
+  }
+  .letter-card p{
+    font-family:var(--serif); font-size:16.5px; line-height:1.9;
+    color:var(--ink); margin-bottom:18px;
+  }
+  .letter-card p.lead-in{ font-size:18px; font-style:italic; color:var(--navy); }
+  .letter-card .signoff{ margin-top:28px; margin-bottom:2px; }
+  .letter-card .sig-name{ font-weight:600; color:var(--navy); margin-bottom:2px; }
+  .letter-card .sig-role{ font-family:var(--sans); font-size:13.5px; color:var(--muted); margin-bottom:0; line-height:1.6; }
+
   /* ---------- the ask ---------- */
   .ask{
     background:linear-gradient(180deg,var(--navy) 0%,var(--navy-2) 100%);
@@ -320,8 +334,7 @@
       <a href="#innovation">The Models</a>
       <a href="#plan">Our Plan</a>
       <a href="#leadership">Leadership</a>
-      <a href="#timeline">Timeline</a>
-      <a href="#next">Next Steps</a>
+      <a href="#timeline">Timeline &amp; Budget</a>
     </nav>
   </div>
 </div>
@@ -329,7 +342,7 @@
 <header class="hero">
   <p class="eyebrow">Institute on Fostering Resilience &middot; University of Kentucky</p>
   <h1>Foster Forward:
-    <span class="subline">Healing Trauma and Building Futures for Kentucky's Children</span>
+    <span class="subline">Giving Kentucky's Children a Real Chance to Heal</span>
   </h1>
   <div class="videoframe">
     <div class="ratio">
@@ -345,6 +358,29 @@
 
 <main>
 
+  <!-- ============ Donor letter ============ -->
+  <section class="tinted" id="letter">
+    <div class="wrap">
+      <div class="letter-card reveal">
+        <p>Dear Scott and Sean,</p>
+        <p class="lead-in">The strongest philanthropic investments don&rsquo;t simply address a single challenge&mdash;they strengthen the entire continuum of opportunity, from preparing future leaders to ensuring vulnerable children have the support they need to become them.</p>
+        <p>Thank you for taking the time to consider the proposal you recently received regarding the Gatton College of Business Capital Campaign. As distinguished University of Kentucky alumni, you understand the profound impact that education, innovation, and leadership development can have on individuals and communities alike. Your thoughtful consideration of this opportunity reflects your commitment to shaping the future of Kentucky.</p>
+        <p>As you evaluate that investment, I would like to introduce a second opportunity that is equally transformational&mdash;one that focuses on some of the Commonwealth&rsquo;s most vulnerable children.</p>
+        <p>The University of Kentucky is helping lead a bold, statewide initiative designed to fundamentally change outcomes for children and families involved in Kentucky&rsquo;s foster care system. This effort seeks to address longstanding challenges through innovative solutions, strategic partnerships, and evidence-based approaches that can disrupt the status quo and create a brighter future for thousands of children across our state.</p>
+        <p>At first glance, a business school campaign and a foster care initiative may appear to serve very different purposes. Yet both are rooted in the same belief: that people thrive when they are given the support, resources, and opportunities they need at pivotal moments in their lives.</p>
+        <p>One project builds pathways into the economy, while the other ensures children are not left behind by it.</p>
+        <p>Strong communities require both. They need world-class institutions that prepare future leaders, and they need strong social safety nets that protect and nurture those facing extraordinary challenges. Donors who invest in both are strengthening the entire ecosystem that drives long-term prosperity.</p>
+        <p>Whether it is a student entering the Gatton College of Business or a child entering foster care, both are standing at a critical crossroads. In each case, the right intervention, mentorship, and support can dramatically alter the trajectory of a life. One investment helps develop future entrepreneurs, executives, and innovators. The other helps ensure that children experiencing adversity have the stability, care, and opportunities necessary to realize their own potential.</p>
+        <p>By supporting these complementary efforts, you are investing in the full spectrum of what makes a person successful&mdash;in business and in life. You are helping create a Kentucky where talent is cultivated, opportunity is expanded, and every child has the chance to build a productive and fulfilling future.</p>
+        <p>We are deeply grateful for your consideration of the Gatton College proposal and would welcome the opportunity to discuss how this statewide foster care initiative can further align with your philanthropic vision and legacy. Together, these investments represent a powerful commitment to the people and future of Kentucky.</p>
+        <p>Thank you for your thoughtful leadership and your belief in what is possible when we invest in both opportunity and human potential.</p>
+        <p class="signoff">With sincere gratitude,</p>
+        <p class="sig-name">Jenni Decker</p>
+        <p class="sig-role">Assistant Vice President, Golisano Children&rsquo;s Alliance Development<br>Executive Director, UK College of Medicine</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ The Child Behind the Statistic ============ -->
   <section class="opening" id="story">
     <div class="wrap">
@@ -352,7 +388,7 @@
         <p class="eyebrow">The Child Behind the Statistic</p>
         <hr class="rule" />
         <p class="body">Somewhere in Kentucky tonight, a child who has survived more than any child should is waiting &mdash; waiting for a bed, waiting for a foster home, waiting for a therapist who has the time and training to help. She is not waiting because no one cares. She is waiting because the system meant to catch her was never built to hold the weight it now carries.</p>
-        <p class="kicker">This is the story of thousands of Kentucky children in foster care. It is a story we can change.</p>
+        <p class="kicker">This is the story of thousands of Kentucky children in foster care where non-traditional placements are utilized, some staying in agency office buildings up to 55 days. It is a story we can change.</p>
       </div>
     </div>
   </section>
@@ -386,11 +422,14 @@
       <div class="reveal">
         <h2>A System Straining Under Its Own Good Intentions</h2>
         <hr class="rule" />
-        <p class="body">Kentucky's own state auditors have named the problem plainly: the continuum of care does not yet meet the needs of the children the state is responsible for. That is a hard truth. It is also the reason this project exists. Kentucky has too many children needing out of home care (OOHC), not enough caregivers to meet the need, and inadequate services for children needing a safe home. Per the state auditor&rsquo;s report, 8,700 children needed foster care but there were less than 4,600 approved homes.</p>
-        <p class="body">Children and adolescents in OOHC developed disproportionately higher rates of chronic health conditions, developmental disabilities, mental health diagnosis, substance misuse and poorer health outcomes. These outcomes are largely related to experiencing higher number of adverse childhood experiences (ACEs), barriers to consistent high quality healthcare and unstable or multiple placements<sup>1, 2, 3,4</sup> which can often be potentiated by lack of accessible health information and lack of care coordination between the child welfare agency and healthcare systems. <sup>4,5,6</sup> Additionally, more than 70% of children in foster care have a history of child abuse and/or neglect<sup>7</sup> and more than 80% have been exposed to significant levels of violence.<sup>8</sup> Understanding the adversities and trauma and the effect of these experiences is integral in the care of children and guiding caregivers through the process.</p>
-        <p class="body">Across the country, nearly 80% of children who need mental health care never receive it &mdash; 7.5 million children left without support they desperately need. In Kentucky, the picture is even more urgent: more than 80% of our counties are federally designated shortage areas for health and behavioral health professionals. That means fewer therapists, longer waitlists, and higher caseloads for the clinicians who remain.</p>
+        <p class="body">Kentucky's own state auditors have named the problem plainly: &ldquo;the continuum of care does not yet meet the needs of the children the state is responsible for&rdquo;.<sup>1</sup> That is a hard truth. It is also the reason this project exists. Kentucky has too many children needing out of home care (OOHC), not enough caregivers to meet the need, and inadequate services for children needing a safe home. Per the state auditor&rsquo;s report, 8,700 children needed foster care, but fewer than 4,600 homes were approved<sup>1</sup>.</p>
+        <p class="body">Children and adolescents in OOHC develop disproportionately higher rates of chronic health conditions, developmental disabilities, mental health diagnosis, substance misuse and poorer health outcomes<sup>2</sup>. These outcomes are largely related to experiencing higher number of adverse childhood experiences (ACEs), barriers to consistent high-quality healthcare, and unstable or multiple placements,<sup>2,3,4,5,6,7</sup> which can often be potentiated by lack of accessible health information and lack of care coordination between the child welfare agency and healthcare systems<sup>7,8,9,10</sup>. Additionally, more than 70% of children in foster care have a history of child abuse and/or neglect<sup>11</sup> and more than 80% have been exposed to significant levels of violence<sup>12</sup>. Understanding the adversities and trauma &mdash; and the effect of these experiences &mdash; is integral to the care of children and guiding caregivers through the process.</p>
+        <p class="body">Even when a child in foster care is identified as needing help, gold standard care is often out of reach. Families may lack the support network to sustain a child through treatment. Therapy that should take weeks stretches into months, and too many children or foster parents give up before they heal. Clinics are stretched thin, and caregivers are often excluded from the recovery process, a missed opportunity to facilitate healing. These barriers are well documented, and they fall hardest on children in foster care, who carry the most complex trauma of all<sup>13,14,15</sup>.</p>
+        <p class="body">The numbers make the human cost impossible to ignore. Across three national studies of children ages 6 to 17 who needed mental health care, nearly 80% never received it &mdash; 7.5 million children across the country left waiting, without the help they needed<sup>16</sup>. A nationally representative survey of more than 10,000 adolescents found that only about one in three &mdash; 36.2% &mdash; of those living with a diagnosable mental health disorder received adequate treatment<sup>17</sup>. For adolescents struggling with anxiety, the gap is even wider: fewer than 2% received a full, adequate course of the treatment we know works<sup>18</sup>.</p>
+        <p class="body">Behind every one of these numbers is a child who is still waiting.</p>
+        <p class="body">In Kentucky, the picture is even more urgent: more than 80% of our counties are federally designated shortage areas for health and behavioral health professionals<sup>19</sup>. That means fewer therapists, longer waitlists, and higher caseloads for the clinicians who remain.</p>
         <p class="body">For children in foster care &mdash; children who have already endured trauma, instability, and loss &mdash; this shortage isn't an abstraction. It shows up as care delivered by inexperienced providers, sessions that stop and start as clinicians turn over, and treatment plans that never quite match the child in front of them. When these children don't get better, the system too often blames the child, or the placement, instead of asking whether the care itself was ever set up to succeed.</p>
-        <p class="body">The human cost compounds from there. Foster parents and kinship caregivers, doing one of the hardest and most generous things a person can do, watch children they love struggle without real progress &mdash; and some, understandably, reach a breaking point. Every family that steps back is one less home for a child who needs one. And when there is nowhere else to go, children are sometimes housed in places never meant for children at all: offices, conference rooms, anywhere but a home.</p>
+        <p class="body">The human cost compounds from there. Foster parents and kinship caregivers, doing one of the hardest and most generous things a person can do, watch children they love struggle without real progress &mdash; and some, understandably, reach a breaking point. Each family that steps back is one less home for a child who needs one. And when there is nowhere else to go, children are sometimes housed in places never meant for children at all: offices, conference rooms, anywhere but a home<sup>1</sup>.</p>
       </div>
     </div>
   </section>
@@ -403,20 +442,20 @@
         <hr class="rule" />
       </div>
       <div class="wrap reveal" style="padding:0;">
-        <p class="body">Over the past decade, researchers have developed two powerful models for delivering health and behavioral healthcare more wisely &mdash; not by spending more, but by spending smarter.</p>
+        <p class="body">Over the past decade, researchers have developed two powerful models for delivering health and behavioral healthcare &mdash; not by spending more, but by spending smarter.</p>
       </div>
       <div class="cards2 reveal">
         <div class="card">
           <span class="card-tag">Model One</span>
-          <p><strong>Stepped care</strong> starts every child with the most accessible intervention, then escalates quickly for those who need more. It has been shown to cut wait times, ease caregiver burden, and achieve outcomes equal to gold-standard trauma treatment &mdash; at roughly half the cost.</p>
+          <p><strong>Stepped care</strong> starts every child with the lightest-touch, most accessible intervention, then escalates quickly for those who need more. It has been shown to cut wait times, ease caregiver burden, and achieve outcomes equal to gold-standard trauma treatment &mdash; at roughly half the cost<sup>20</sup>.</p>
         </div>
         <div class="card">
           <span class="card-tag">Model Two</span>
-          <p><strong>Stratified care</strong> does the opposite in one important way: it identifies the children with the greatest needs up front and fast-tracks them straight to intensive treatment, so the most vulnerable children never have to wait in line behind a system that doesn't know yet how much they're hurting.</p>
+          <p><strong>Stratified care</strong> does the opposite in one important way: it identifies the children with the greatest needs up front and fast-tracks them straight to intensive treatment, so the most vulnerable children never have to wait in line behind a system that doesn't know yet how much they're hurting<sup>21</sup>.</p>
         </div>
       </div>
       <div class="wrap reveal" style="padding:0;">
-        <p class="body">Both models work. Both have been proven in rigorous trials. What no one yet knows &mdash; for children in OOHC care, in a state like Kentucky &mdash; is which model, or what blend of the two, helps the most children heal the fastest, at a cost every community can sustain.</p>
+        <p class="body">Both models work. Both have been proven in rigorous trials and are consistent with best practice guidance<sup>20,21,22,23,24</sup>. What no one yet knows &mdash; for children in foster care, in a state like Kentucky &mdash; is which model, or what blend of the two, helps the most children heal the fastest, at a cost every community can sustain.</p>
         <p class="body"><strong>That missing answer is exactly what Phase I of this project will deliver.</strong></p>
       </div>
     </div>
@@ -432,22 +471,22 @@
 
       <div class="wrap reveal" style="padding:0;">
         <h3>Phase I: A Controlled Launch</h3>
-        <p class="body">In this phase, a continuum of services will be provided within the context of a rigorous study that will place Kentucky's foster children &mdash; with full ethical oversight and in true partnership with the state &mdash; into a stepped care or stratified care condition based on random assignment and then compared to treatment as usual. We will then assess which approach gets children into treatment faster, keeps them there, produces better outcomes, and does the most good per dollar spent. We will also sit down with the children and families to ask what worked, what didn't, and what they feel they need.</p>
-        <p class="body"><strong>Our Approach to the Controlled Launch:</strong> In this randomized controlled trial (RCT), we will recruit participants from primary care, patient-centered care, and community providers. If a tailored assessment confirms that outpatient care is right for them, participants will be randomly placed into either the "stepped care" group or the "stratified care" group.</p>
+        <p class="body">In this phase, a continuum of services will be provided within a rigorous study that places Kentucky's foster children &mdash; with full ethical oversight and in true partnership with the state &mdash; into either a stepped care or stratified care group based on random assignment, and then compared to treatment as usual. We will then assess which approach gets children into treatment faster, keeps them there, produces better outcomes, and does the most good per dollar spent. We will also sit down with the children and families to ask what worked, what didn't, and what they feel they need.</p>
+        <p class="body"><strong>Our Approach to the Controlled Launch:</strong> We will recruit participants from primary care, our foster care clinic, and community providers. If a tailored assessment confirms that outpatient care is right for them, participants will be randomly placed into either the stepped care group or the stratified care group.</p>
       </div>
 
       <div class="cards3 reveal">
         <div class="card">
           <div class="step-badge">A</div>
-          <p><strong>Stepped care group:</strong> Children, youth and caregivers start with a digital intervention (Step 1), no matter how severe their symptoms are &mdash; as long as outpatient care is appropriate for them. After Step 1, we check how well each person responded. Anyone who hasn't improved enough moves up to Step 2 (group therapy or online Cognitive Behavioral Therapy). If that's still not enough, they move up to Step 3 (intensive one-on-one therapy). We collect data after each step, and anyone who improves enough at a given step stops there &mdash; they don't move on to the next one. The idea is to start with the simplest, least costly treatment and only use more intensive (and expensive) treatments for people who need them.</p>
+          <p><strong>Stepped care group:</strong> Everyone starts with a digital intervention (Step 1), no matter how severe their symptoms are &mdash; as long as outpatient care is appropriate for them. After Step 1, we check how well each person responded. Anyone who hasn't improved enough moves up to Step 2 (group therapy or online Cognitive Behavioral Therapy). If that's still not enough, they move up to Step 3 (intensive one-on-one therapy). We collect data after each step, and anyone who improves enough at a given step stops there &mdash; they don't move on to the next one. The idea is to start with the simplest, least costly treatment and only use more intensive (and expensive) treatments for people who need them.</p>
         </div>
         <div class="card">
           <div class="step-badge">B</div>
-          <p><strong>Stratified care group:</strong> People with complex cases go straight to Step 3. Everyone else starts at Step 1, just like in the other group. This approach front-loads more intensive treatment for people likely to need it &mdash; specifically two types of patients: those whose condition is best treated with intensive therapy alone, and those with complex cases. The pilot study will provide us with data to establish these thresholds for the Kentucky population.</p>
+          <p><strong>Stratified care group:</strong> People with complex cases go straight to Step 3. Everyone else starts at Step 1, just like in the other group. This approach front-loads more intensive treatment for people likely to need it &mdash; specifically for those whose condition is best treated with intensive therapy alone, and those with complex cases. The pilot study will provide us with data to establish these thresholds for the Kentucky population.</p>
         </div>
         <div class="card">
           <div class="step-badge">C</div>
-          <p><strong>Treatment-as-usual group:</strong> we will compare our two groups (stepped and stratified) to a random sample of clients that received care as usual. We'll use a statistical technique (propensity score matching) to make sure this group is comparable to the other two.</p>
+          <p><strong>Treatment-as-usual group:</strong> This is a comparison group made up of a random sample of clients who received standard care. We'll use a statistical technique (propensity score matching) to make sure this group is comparable to the other two.</p>
         </div>
       </div>
 
@@ -455,13 +494,13 @@
         <p class="body">We need about 60 people in each of the three groups to draw reliable conclusions. All study procedures will be approved by the University's Institutional Review Board and the Cabinet for Health and Family Services Review Board and will follow the ethical standards set forth in the Declaration of Helsinki.</p>
 
         <h3>Qualitative Study</h3>
-        <p class="body">We will conduct focus groups with a random sample of 20% of the children and/or caregivers in each group to gain deeper insights into the feasibility, acceptability, appropriateness, and utility. These responses will be used to inform program design, and assist in the interpretation of outcomes and next steps.</p>
+        <p class="body">We will conduct focus groups with a random sample of 20% of the children and/or caregivers in each group to gain deeper insights into the feasibility, acceptability, appropriateness, and utility. These responses will be used to inform program design and assist in the interpretation of outcomes and next steps.</p>
 
         <h3>A Closer Look: Refining Our Approach Through Expert Input</h3>
-        <p class="body">Concurrent with the controlled launch, we will convene a meeting of key stakeholders &mdash; including individuals with lived experience, and content and process experts at the local, state, and national levels &mdash; to inform the design, delivery, and core components of effective, integrated health and behavioral health care. This meeting will take place within the first nine months of the funding period, shaping both programming and study design while laying the groundwork for key strategic partnerships. Central to this convening will be cultivating a collaborative culture in which participants share ownership of the process through meaningful input and shared decision-making.</p>
+        <p class="body">Concurrent with the controlled launch, we will convene a meeting of key stakeholders &mdash; including individuals with lived experience, plus content and process experts at the local, state, and national levels &mdash; to inform the design, delivery, and core components of effective, integrated health and behavioral health care. This meeting will take place within the first nine months of the funding period, shaping both program and study design while laying the groundwork for key strategic partnerships. Central to this convening will be cultivating a collaborative culture in which participants share ownership of the process through meaningful input and shared decision-making.</p>
 
         <h3>Phase II: A Full Launch Based on Lessons Learned</h3>
-        <p class="body">The phase takes what we learned in Phase 1 and builds it into something lasting: a comprehensive, evidence-based system of care for Kentucky's children in out-of-home placement and the caregivers raising them &mdash;a real, working model the Cabinet for Health and Family Services can put into practice and other states can learn from. The following figure provides an overview of model components of the Foster Forward Program that will be utilized in whatever service delivery context that is determined to be most effective in Phase 1.</p>
+        <p class="body">The phase takes what we learned in Phase 1 and builds it into something lasting: a comprehensive, evidence-based system of care for Kentucky's children in out-of-home placement and the caregivers raising them &mdash;a real, working model the Cabinet for Health and Family Services can put into practice and other states can learn from. The following figure provides an overview of model components from the Foster Forward Program that will be utilized in whatever service delivery context that is determined to be most effective in Phase 1.</p>
       </div>
 
       <figure class="doc-figure reveal">
@@ -472,7 +511,7 @@
       </figure>
 
       <div class="wrap reveal" style="padding:0;">
-        <p class="body">Recognizing the complexity of needs in children in OOHC, the American Academy of Pediatrics and the Healthy Foster Care America proposed integrated care as the gold standard for this population. Integrated care aims to improve outcomes by bringing services together at both the community level as well as at a treatment level for physical and mental health. In a majority of healthcare systems, the delivery of health and behavioral health is often fragmented and complex. &ldquo;Integrated&rdquo; acknowledges the complexity of needs and aims to coordinate care to meets those needs. Even with the published guidelines, there is often inconsistent or lack of standardized integrated care models that exist for children in out-of-home care. The phase I study will help identify the most effective service delivery method to guide the delivery of integrated care.</p>
+        <p class="body">Recognizing the complexity of needs in children in OOHC, the American Academy of Pediatrics and the Healthy Foster Care America Initiative proposed integrated care as the gold standard for this population. Integrated care aims to improve outcomes by bringing services together at both the community level as well as at the treatment level for physical and mental health. In most healthcare systems, the delivery of health and behavioral health is often fragmented and complex. &ldquo;Integrated&rdquo; acknowledges the complexity of needs and aims to coordinate care to meet those needs. Even with the published guidelines, there is often inconsistent or lack of standardized integrated care models that exist for children in out-of-home care. The phase I study will help identify the most effective service delivery method to guide the delivery of integrated care.</p>
         <p class="body">The Foster Forward interventions will be delivered by the University of Kentucky through a partnership with the Division of Pediatric Forensic Medicine and the Center on Trauma and Children in an integrated care model.</p>
       </div>
     </div>
@@ -486,8 +525,8 @@
         <hr class="rule" />
       </div>
       <div class="wrap reveal" style="padding:0;">
-        <p class="body">As the flagship institution in the state, UK has been a leader in serving children experiencing child abuse and trauma through identification, intervention, innovation, and research. The Kosair for Kids Center for Safe and Healthy Children and Families opened in March of 2024 to address child maltreatment in the state. The Center on Trauma and Children established in 1999 is the epicenter of translational research and practice on child abuse prevention, intervention and service delivery in the state. CTAC develops and disseminates knowledge, technologies and evidence-based treatments that can attenuate the need for OOHC and creates innovations to address the effects of trauma on children, families, systems and the workforce. Central to its core, CTAC uses implementation science to take what works, and determine how to make it sustainable in a community context.</p>
-        <p class="body">These partners have over a decade of experience working together, and in 2025, established the Institute on Fostering Resilience. The overall mission of the IFR is to provide a continuum of evidence-based programming to address the needs of children and families involved in OOHC, and to support the systems responsible for serving them. The institute takes evidence to action approach, ensuring that the outcomes most relevant to those involved are privileged, and achieved through its programming. To that end, translation research activities are embedded at each phase of the programming to determine efficacy, effectiveness, utility and to allow for real-time adjustments consistent with the latest quality improvement standards. This Foster Forward proposal will advance and extend the work of the IFR, in a strategic, data-driven manner by providing a continuum of evidence-based programming to address the needs of children and families involved in OOHC, and to support the systems responsible for serving them.</p>
+        <p class="body">As the flagship institution in the state, UK has been a leader in serving children experiencing child abuse and trauma through identification, intervention, innovation, and research. The Kosair for Kids Center for Safe and Healthy Children and Families opened to address child maltreatment in the state. The Center on Trauma and Children (CTAC), established in 1999, is the epicenter of translational research and practice on child abuse prevention, intervention and service delivery in the state. CTAC develops and disseminates knowledge, technologies, and evidence-based treatments that can attenuate the need for OOHC and creates innovations to address the effects of trauma on children, families, systems, and the workforce. Central to its core, CTAC uses implementation science to take what works and determine how to make it sustainable in a community context.</p>
+        <p class="body">These partners have over a decade of experience working together, and in 2025, established the Institute on Fostering Resilience (IFR). The overall mission of the IFR is to provide a continuum of evidence-based programming to address the needs of children and families involved in OOHC and to support the systems responsible for serving them. The Institute takes an evidence-to-action approach, ensuring that the outcomes most relevant to those involved are privileged and achieved through its programming. Translation research activities are embedded at each phase of IFR programming to determine efficacy, effectiveness, utility, and to allow for real-time adjustments consistent with the latest quality improvement standards. Foster Forward will advance and extend the work of the IFR in a strategic, data-driven manner by providing evidence-based programming to address the needs of children and families involved in OOHC &mdash; and to support the systems responsible for serving them.</p>
       </div>
       <div class="wrap reveal" style="padding:0;">
         <p class="body">Like the IFR, Foster Forward will be led by Dr. Christina Howard and Dr. Ginny Sprang.</p>
@@ -500,12 +539,13 @@
         <div class="lead-card">
           <div class="name">Dr. Christina Howard</div>
           <div class="role">Co-Lead, Foster Forward</div>
-          <p>Dr. Howard is a board-certified child abuse pediatrician, one of only a few in the state, founder of the Pediatric Forensic Medicine Division at UK and is the pediatric consultant for the state of Kentucky on all child fatality reviews and injury prevention work, giving her broad state perspective and influence. In establishing the Division at UK, she has developed standards of care within the institution for suspected victims of physical abuse, sexual abuse, severe neglect and Human Trafficking while also building a team of experienced interdisciplinary clinicians to evaluate children with suspected abuse. The team continues to see year-to-year growth with over 1200 evaluations per year and has firsthand knowledge of what children in OOHC have experienced. She works with community partners on a daily basis in her clinical practice as well as in community initiatives including being involved in the local and state Human Trafficking Task Force and was part of the multidisciplinary team with the Attorney General&rsquo;s Office that developed the manual &ldquo;Responding to Strangulation in Kentucky Guidelines for Prosecutors, Law Enforcement, Health Care Providers and Victim Advocates&rdquo; one of the first of its kind in the country. She also brings unique perspective for a Child Abuse Pediatrician given her roles in multiple child fatality review boards at both the county and state levels. Through this work, she reviews details of each pediatric death with a focus of prevention.</p>
+          <p>Dr. Howard is a board-certified child abuse pediatrician &mdash; one of only a few in the state &mdash; founder of the Pediatric Forensic Medicine (PFM) Division at UK, and is the pediatric consultant for the state of Kentucky on all child fatality reviews and injury prevention work, giving her broad state perspective and influence. In establishing the PFM Division at UK, she has developed standards of care within the institution for suspected victims of physical abuse, sexual abuse, severe neglect, and Human Trafficking while also building a team of experienced interdisciplinary clinicians to evaluate children with suspected abuse. The team continues to see year-to-year growth &mdash; with over 1,200 evaluations per year &mdash; and has firsthand knowledge of what children in OOHC have experienced.</p>
+          <p>Dr. Howard works with community partners on a daily basis in her clinical practice as well as in community initiatives &mdash; including being involved in the local and state Human Trafficking Task Force and being part of the multidisciplinary team that developed the manual &ldquo;Responding to Strangulation in Kentucky Guidelines for Prosecutors, Law Enforcement, Health Care Providers and Victim Advocates&rdquo; with the Attorney General&rsquo;s Office &mdash; one of the first of its kind in the country. She also brings a unique perspective for a Child Abuse Pediatrician, given her roles in multiple child fatality review boards at both the county and state levels. Through this work, she reviews details of each pediatric death with a focus of prevention. Dr. Howard co-leads the state initiative on suicide and self-harm, injury prevention work through the Child Safety Learning Collaborative, and in establishing the Zero Suicide work within the Department of Pediatrics and across the state. It showed we are not doing enough for our children and is the driving force behind the deep desire to develop the Foster Forward program with Dr. Sprang.</p>
         </div>
         <div class="lead-card">
           <div class="name">Dr. Ginny Sprang</div>
           <div class="role">Co-Lead, Foster Forward</div>
-          <p>Dr. Sprang brings over 25 years of experience as a consultant to the Cabinet for Health and Family Services, advising on issues such as child abuse prevention and intervention, the integration of evidence-based treatments into child-serving systems of care, and innovations in stabilizing OOHC. She recently completed a successful, statewide, five-year cluster randomized controlled trial on child sex trafficking prevention and intervention, funded by the CDC, in addition to two school-based randomized controlled trials examining the integration and sustainability of evidence-based care into school service systems. A tenured professor in the Department of Psychiatry, Dr. Sprang serves as Director of the Center on Trauma and Children. In 2026, she was named a Fellow of the International Society for Traumatic Stress Studies in recognition of outstanding, sustained contributions to the field. She is also recognized as being among the top 2% most cited scholars in the world for her research on the identification and treatment of traumatic stress conditions, child abuse prevention and intervention, child sex trafficking identification and response, and using implementation science to solve real world technology transfer problems.</p>
+          <p>Dr. Sprang brings over 25 years of experience as a consultant to the Cabinet for Health and Family Services, advising on issues such as: child abuse prevention and intervention, the integration of evidence-based treatments into child-serving systems of care, and innovations in stabilizing OOHC. She recently completed a successful, statewide, five-year cluster randomized controlled trial on child sex trafficking prevention and intervention, funded by the CDC, in addition to two school-based randomized controlled trials examining the integration and sustainability of evidence-based care into school service systems. A tenured professor in the Department of Psychiatry, Dr. Sprang serves as Director of the Center on Trauma and Children. In 2026, she was named a Fellow of the International Society for Traumatic Stress Studies in recognition of outstanding, sustained contributions to the field. She is also recognized as being among the top 2% most cited scholars in the world for her research on the identification and treatment of traumatic stress conditions, child abuse prevention and intervention, child sex trafficking identification and response, and using implementation science to solve real world technology transfer problems.</p>
         </div>
       </div>
     </div>
@@ -516,18 +556,18 @@
     <div class="reveal">
       <p class="eyebrow">Why This Moment Matters</p>
       <h2>Kentucky does not lack people who care about its children.</h2>
-      <p class="body">It lacks proof of which path turns that care into results. This project provides that proof &mdash; and then acts on it.</p>
+      <p class="body">It lacks proof of which path turns that care into results<sup>1,19</sup>. This project provides that proof &mdash; and then acts on it.</p>
       <p class="body">A gift to this project is not funding one more program layered onto an overburdened system. It is an investment in finding out, once and for all, how to make every dollar already being spent work harder for every child who needs help. It is a bet on a future where a struggling placement isn't written off as a lost cause but recognized as a child who simply hasn't gotten the right care yet &mdash; and then gets it.</p>
       <p class="body">Kentucky's children have already shown extraordinary resilience just to survive what brought them into care. They deserve a system built with the same resilience &mdash; one that meets them where they are, moves as fast as they need it to, and never gives up on the belief that healing is possible.</p>
       <p class="final">With your support, we can build that system. <em>Not someday. Starting now.</em></p>
     </div>
   </section>
 
-  <!-- ============ Timeline ============ -->
+  <!-- ============ Appendix A: Timeline + Budget ============ -->
   <section id="timeline">
     <div class="wrap-wide">
       <div class="reveal center">
-        <h2>Timeline of Phase 1 &amp; Phase II</h2>
+        <h2>Appendix A: Timeline of Phase 1 &amp; Phase II, Budget</h2>
         <hr class="rule" />
       </div>
       <figure class="doc-figure timeline-figure reveal">
@@ -535,17 +575,11 @@
           <img src="/foster-forward/assets/timeline.svg" alt="Timeline of Phase I and Phase II activities, 2027 through 2032: 2027 — Phase I Controlled Launch and Scientific Meeting; establish protocols, hire/train staff, establish study advisory board, IRB approval, launch RCT. 2028 — full year of RCT. 2029 — RCT runs through Month 6; analysis and programming established. 2030 — Phase II Full Launch. 2031 — programming scale up Part 1. 2032 — programming scale-up state-wide." onerror="this.onerror=null;this.src='/foster-forward/assets/timeline.png';" />
         </div>
       </figure>
-    </div>
-  </section>
-
-  <!-- ============ Next Steps ============ -->
-  <section class="tinted" id="next">
-    <div class="wrap">
-      <div class="reveal">
-        <h2>Next Steps</h2>
-        <hr class="rule" />
-        <p class="body">Kentucky's children deserve care as diverse as the communities they call home &mdash; whether that's a neighborhood foster home offering enriched clinical support, or a small town stretching to meet a child's needs with limited resources. Foster Forward bridges that gap. By partnering with key organizations across the state, we extend care beyond health and behavioral services to the enrichment and support every child needs to thrive. Guided by research and hands-on training, we work hand-in-hand with our communities to deliver individualized, state-of-the-art care &mdash; building the resilience that helps Kentucky's children not just survive, but flourish.</p>
-      </div>
+      <figure class="doc-figure reveal">
+        <div class="figbox">
+          <img src="/foster-forward/assets/budget.png" alt="University of Kentucky Smith Brothers Proposal budget table. Budget category totals across Year 1, Year 2, and Year 3 with FTE and cost columns. Personnel: Salary and Fringe benefits — 8.75 FTE each year, $1,465,663 / $1,509,024 / $1,553,682, total $4,528,369. Travel — $5,000 per year, total $15,000. Other expenses: Consultation with Orphan Care Alliance $20,000 (Year 1 only); Scientific Meeting (venue/food/travel) $20,000 (Year 1 only); Study Measures $5,000 per year, total $15,000; Participant Incentives $9,000 per year, total $27,000. Total Direct Costs: $1,524,663 / $1,528,024 / $1,572,682 — total $4,625,369." />
+        </div>
+      </figure>
     </div>
   </section>
 
@@ -553,7 +587,7 @@
   <section>
     <div class="wrap-wide">
       <details class="expander reveal">
-        <summary>Appendix A. Instruments Used in the Pilot Study to Measure Process and Outcomes<span class="chev"></span></summary>
+        <summary>Appendix B: Instruments Used in the Pilot Study to Measure Process and Outcomes<span class="chev"></span></summary>
         <div class="inner">
           <table class="instruments">
             <thead>
@@ -583,16 +617,16 @@
               <tr>
                 <td>Child depression</td>
                 <td>Short Moods and Feelings Questionnaire (MFQ; Angold et al., 1995),</td>
-                <td>Free to use<br>13 items assessing for depressive symptoms.. Youth self-report for ages 8 -18</td>
+                <td>Free to use<br>13 items assessing for depressive symptoms. Youth self-report for ages 8-18</td>
               </tr>
               <tr>
                 <td>Caregiver-Child relationship</td>
-                <td>Child-Parent Relationship Scale Short Form. (Discoll &amp; Pianta, 2011)<br>Parent-Adolescent Relationship Scale (Burke et al., 2020</td>
+                <td>Child-Parent Relationship Scale Short Form (Driscoll &amp; Pianta, 2011)<br>Parent-Adolescent Relationship Scale (Burke et al., 2020)</td>
                 <td>1)Free. 15-item caregiver report measure of their perceived conflict versus closeness with their child. It is appropriate for children ages 12 and younger.<br><br>2)Free. a 15-item measure of shared activities, connectedness, and hostility between adolescents and their caregiver.<br>Caregiver Report ages 12 and up<br>Youth self-report ages 12 and up</td>
               </tr>
               <tr>
                 <td>Implementation Outcomes<br>Treatment acceptability<br><br>Feasibility, Acceptability and Appropriateness</td>
-                <td>Client Satisfaction Questionnaire (Larsen et al., 1979<br><br>RE-AIM Acceptability of Intervention Measure/ Intervention Appropriateness Measure/ Feasibility of Intervention Measure(AIM/IAM/FIM)</td>
+                <td>Client Satisfaction Questionnaire (Larsen et al., 1979)<br><br>RE-AIM Acceptability of Intervention Measure/ Intervention Appropriateness Measure/ Feasibility of Intervention Measure(AIM/IAM/FIM)</td>
                 <td>Free. 8 item measure of client satisfaction, we will use to tailor to our programs/levels and ensure all are appropriate for foster care setting.<br>Free. Each scale has four items that are to be completed by the consumer</td>
               </tr>
               <tr>
@@ -609,31 +643,31 @@
         <summary>References<span class="chev"></span></summary>
         <div class="inner">
           <ol class="refs">
-            <li>Alegr&iacute;a, M., Green, J. G., McLaughlin, K. A., &amp; Loder, S. (2015). Disparities in child and adolescent mental health and mental health services in the US. New York, NY: William T. Grant Foundation, 26.</li>
-            <li>Berger, M., Fernando, S., Churchill, A., Cornish, P., Henderson, J., Shah, J., ... &amp; Salmon, A. (2022). Scoping review of stepped care interventions for mental health and substance use service delivery to youth and young adults. Early intervention in psychiatry, 16(4), 327-341.</li>
-            <li>CHFS, 2024). Child and Family Services Reviews, Statewide Assessment. <a href="https://acf.gov/sites/default/files/documents/cb/ky-cfsr-r4-swa.pdf" target="_blank" rel="noopener">https://acf.gov/sites/default/files/documents/cb/ky-cfsr-r4-swa.pdf</a></li>
             <li>Commonwealth Office of the Ombudsman, (2025). An Examination of Children Sleeping in CHFS Office Buildings and Nontraditional Placement Settings, accessed June 7, 2026 from <a href="https://www.auditor.ky.gov/Auditreports/Franklin/2025%20COO%20NTP%20Report.pdf" target="_blank" rel="noopener">https://www.auditor.ky.gov/Auditreports/Franklin/2025%20COO%20NTP%20Report.pdf</a></li>
-            <li>Dondanville, K. A., Fina, B. A., Steigerwald, V. L., McCarthy, K. D., Worley, C., Straud, C. L., ... &amp; STRONG STAR Training Initiative. (2021). How often do community-based mental health providers educate and initiate PTSD treatment following training? Answering the question of reach. Implementation research and practice, 2, 26334895211011771.</li>
-            <li>Duarte, C. S., Lovero, K. L., Sourander, A., Ribeiro, W. S., &amp; Bordin, I. A. (2022). The child mental health treatment gap in an urban low-income setting: Multisectoral service use and correlates. Psychiatric services, 73(1), 32-38.</li>
-            <li>Eslinger J, Sprang G, Jodts J. (2022). Keeping children and youth in trauma treatment: Examination of an alliance building dropout management program. Clinical Child Psychology and Psychiatry, 28(2),721-733. <a href="https://doi.org/10.1177/13591045221111849" target="_blank" rel="noopener">https://doi.org/10.1177/13591045221111849</a></li>
-            <li>Farraway, S., Wuthrich, V. M., Lyneham, H., Hudson, J., Kangas, M., Chatterton, M.-L., Mihalopoulos, C., &amp; Rapee, R. M. (2022). Barriers to remission from child and adolescent anxiety disorders following extensive treatment: An exploratory study. Journal of Anxiety Disorders, 86, Article 102528. <a href="https://doi.org/10.1016/j.janxdis.2021.102528" target="_blank" rel="noopener">https://doi.org/10.1016/j.janxdis.2021.102528</a></li>
-            <li>Health Resource Services Administration, (2025). HRSA Data Warehouse. Accessed June 7, 2026 from <a href="https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find" target="_blank" rel="noopener">https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find</a></li>
-            <li>H&ouml;hne, E., B&ouml;ge, K., Karnouk, C., Tschorn, M., Banaschewski, T., Hoell, A., ... &amp; Kamp-Becker, I. (2024). Culturally sensitive stepped care for adolescent refugees: efficacy and cost&ndash;utility of a multicentric randomized controlled trial. European Child &amp; Adolescent Psychiatry, 33(2), 581-593.</li>
-            <li>Kataoka, S. H., Zhang, L., &amp; Wells, K. B. (2002). Unmet need for mental health care among US children: Variation by ethnicity and insurance status. American Journal of Psychiatry, 159(9), 1548-1555.</li>
-            <li>Mareya, S., Zhao, L., Watts, M. C., &amp; Olasoji, M. (2025). Insights Into the Australian Stepped Care Model in Primary Mental Health Care: A Qualitative Study With Informal Carers. International Journal of Mental Health Nursing, 34(3), e70058.</li>
-            <li>McDermott, B. M., &amp; Cobham, V. E. (2014). A stepped-care model of post-disaster child and adolescent mental health service provision. European Journal of Psychotraumatology, 5, Article 24294. <a href="https://doi.org/10.3402/ejpt.v5.24294" target="_blank" rel="noopener">https://doi.org/10.3402/ejpt.v5.24294</a></li>
-            <li>McLellan, L. F., Schniering, C., &amp; Wuthrich, V. (2021). Acceptability and feasibility of stepped-care for anxious adolescents in community mental health services: A secondary analysis. Child Psychiatry &amp; Human Development. <a href="https://doi.org/10.1007/s10578-021-01291-7" target="_blank" rel="noopener">https://doi.org/10.1007/s10578-021-01291-7</a></li>
-            <li>McHugh, C., Hu, N., Georgiou, G., Hodgins, M., Leung, S., Cadiri, M., Paul, N., Ryall, V., Rickwood, D., Eapen, V., Curtis, J., Lingam, R. (2024). Integrated care models for youth mental health: A systematic review and meta-analysis. Australian &amp; New Zealand Journal of Psychiatry. <a href="https://doi.org/10.1177/00048674241256759" target="_blank" rel="noopener">https://doi.org/10.1177/00048674241256759</a></li>
-            <li>Merikangas, K. R., He, J. P., Burstein, M., Swendsen, J., Avenevoli, S., Case, B., ... &amp; Olfson, M. (2011). Service utilization for lifetime mental disorders in US adolescents: results of the National Comorbidity Survey&ndash;Adolescent Supplement (NCS-A). Journal of the American Academy of Child &amp; Adolescent Psychiatry, 50(1), 32-45.</li>
-            <li>NIHR Evidence; Can stratified care help GPs manage long-term conditions?; September 2024; doi: 10.3310/nihrevidence_63807</li>
-            <li>National Institute for Health and Care Excellence. (2019). Depression in children and young people: Identification and management (NICE Guideline NG134). <a href="https://www.nice.org.uk/guidance/ng134" target="_blank" rel="noopener">https://www.nice.org.uk/guidance/ng134</a></li>
-            <li>Salloum, A., Lu, Y., Chen, H., Quast, T., Cohen, J. A., Scheeringa, M. S., Salomon, K., &amp; Storch, E. A. (2022a). Stepped care versus standard care for children after trauma: A randomized non-inferiority clinical trial. Journal of the American Academy of Child &amp; Adolescent Psychiatry, 61(8), 1010&ndash;1022. <a href="https://doi.org/10.1016/j.jaac.2021.12.013" target="_blank" rel="noopener">https://doi.org/10.1016/j.jaac.2021.12.013</a></li>
-            <li>Salloum, A., Lu, Y., Chen, H., Salomon, K., Scheeringa, M. S., Cohen, J. A., Swaidan, V., &amp; Storch, E. A. (2022b). Child and parent secondary outcomes in stepped care versus standard care treatment for childhood trauma. Journal of Affective Disorders, 307, 87&ndash;96. <a href="https://doi.org/10.1016/j.jad.2022.03.049" target="_blank" rel="noopener">https://doi.org/10.1016/j.jad.2022.03.049</a></li>
-            <li>Salloum, A., Small, B. J., Robst, J., Scheeringa, M. S., Cohen, J. A., &amp; Storch, E. A. (2017). Stepped and standard care for childhood trauma: A pilot randomized clinical trial. Research on Social Work Practice, 27(6), 653&ndash;663. <a href="https://doi.org/10.1177/1049731515601898" target="_blank" rel="noopener">https://doi.org/10.1177/1049731515601898</a></li>
+            <li>American Academy of Pediatrics, Council on Foster Care, Adoption, and Kinship Care. (2015). Health care issues for children and adolescents in foster care and kinship care. Pediatrics, 136(4), e1131&ndash;e1140.</li>
+            <li>Konijn, C., Admiraal, S., Baart, J., van der Steege, M., Vermeulen, K. M., Schuengel, C., &amp; Lindauer, R. J. L. (2019). Foster care placement instability: A meta-analytic review. Children and Youth Services Review, 96, 483&ndash;499.</li>
+            <li>Centers for Disease Control and Prevention (CDC). (2021). About the CDC-kaiser ACE study. Violence Prevention Injury Center, CDC. <a href="https://www.cdc.gov/violenceprevention/aces/about.html" target="_blank" rel="noopener">https://www.cdc.gov/violenceprevention/aces/about.html</a></li>
+            <li>Clarkson Freeman, P.A. (2014). Prevalence and relationship between adverse childhood experiences and child behavior among young children. Infant Mental Health Journal, 35(6), 544&ndash;554. <a href="https://doi.org/10.1002/imhj.21460" target="_blank" rel="noopener">https://doi.org/10.1002/imhj.21460</a></li>
+            <li>Council on Foster Care, Adoption and Kinship Care, Committee on Adolescents, and Council on Early Childhood. (2015). Healthcare issues for children and adolescents in foster care and kinship care. Pediatrics, 136(4), e1131&ndash;e1140. <a href="https://doi.org/10.1542/peds.2015-2655" target="_blank" rel="noopener">https://doi.org/10.1542/peds.2015-2655</a></li>
+            <li>Turney, K., &amp; Wildeman, C. (2016). Mental and physical health of children in foster care. Pediatrics, 138(5), e2016-1118. <a href="https://doi.org/10.1542/peds.2016-1118" target="_blank" rel="noopener">https://doi.org/10.1542/peds.2016-1118</a></li>
+            <li>Oswald, S. H., Heil, K., &amp; Goldbeck, L. (2010). History of maltreatment and mental health problems in foster children: A review of the literature. Journal of Pediatric Psychology, 35(5), 462&ndash;472.</li>
+            <li>Keefe, R. J., VanHorne, B. S., Cain, C. M., Budolfson, K., Thompson, R., &amp; Greeley, C. S. (2020). A comparison study of primary care utilization and mental health disorder diagnoses among children in and out of foster care on Medicaid. Clinical Pediatrics, 59(3), 252&ndash;258. <a href="https://doi.org/10.1177/0009922819898182" target="_blank" rel="noopener">https://doi.org/10.1177/0009922819898182</a></li>
+            <li>Lamminen, L. M., McLeigh, J. D., &amp; Roman, H. K. (2020). Caring for children in child welfare systems: A trauma informed model of integrated primary care. Practice Innovations, 5(1), 55&ndash;64. <a href="https://doi.org/10.1037/pri0000108" target="_blank" rel="noopener">https://doi.org/10.1037/pri0000108</a></li>
+            <li>Takayama JI, Wolfe E, Coulter KP. Relationship between reason for placement and medical findings among children in foster care. Pediatrics. 1998. 101(2):201&ndash;207</li>
+            <li>Bramlett, M. D., &amp; Radel, L. F. (2014). Adverse family experiences among children in nonparental care, 2011&ndash;2012. National Health Statistics Reports, No. 74, 1&ndash;8.</li>
+            <li>Alegr&iacute;a, M., Green, J. G., McLaughlin, K. A., &amp; Loder, S. (2015). Disparities in child and adolescent mental health and mental health services in the US. New York, NY: William T. Grant Foundation, 26.</li>
+            <li>Duarte, C. S., Lovero, K. L., Sourander, A., Ribeiro, W. S., &amp; Bordin, I. A. (2022). The child mental health treatment gap in an urban low-income setting: Multisectoral service use and correlates. Psychiatric Services, 73(1), 32-38.</li>
             <li>Sprang, G., Craig, C. D., Clark, J. J., Vergon, K., Tindall, M. S., Cohen, J., &amp; Gurwitch, R. (2013). Factors affecting the completion of trauma-focused treatments: What can make a difference?. Traumatology, 19(1), 28-40.</li>
-            <li>Tsoi, E. W. S., Mak, W. W. S., Ho, C. Y. Y., &amp; Yeung, G. T. Y. (2022). A Web-Based Stratified Stepped Care Mental Health Platform (TourHeart): Semistructured Interviews With Stakeholders. JMIR Human Factors, 9(2), e35057. <a href="https://doi.org/10.2196/35057" target="_blank" rel="noopener">https://doi.org/10.2196/35057</a></li>
-            <li>WA State Department of Children, Youth &amp; Families. (2004). Mockingbird Family. <a href="https://faithbridgefostercare.org/" target="_blank" rel="noopener">https://faithbridgefostercare.org/</a></li>
-            <li>Wuthrich, V. M., Rapee, R. M., McLellan, L., Chatterton, M.-L., Hudson, J. L., Kangas, M., &amp; Mihalopoulos, C. (2021). Psychological stepped care for anxious adolescents in community mental health services: A pilot effectiveness trial. Psychiatry Research, 303, Article 114066. <a href="https://doi.org/10.1016/j.psychres.2021.114066" target="_blank" rel="noopener">https://doi.org/10.1016/j.psychres.2021.114066</a></li>
+            <li>Kataoka, S. H., Zhang, L., &amp; Wells, K. B. (2002). Unmet need for mental health care among US children: Variation by ethnicity and insurance status. American Journal of Psychiatry, 159(9), 1548-1555.</li>
+            <li>Merikangas, K. R., He, J. P., Burstein, M., Swendsen, J., Avenevoli, S., Case, B., &amp; Olfson, M. (2011). Service utilization for lifetime mental disorders in US adolescents: results of the National Comorbidity Survey&ndash;Adolescent Supplement (NCS-A). Journal of the American Academy of Child &amp; Adolescent Psychiatry, 50(1), 32-45.</li>
+            <li>Isaksson, A., Elfstr&ouml;m, S., Engelbrektsson, J. et al. Stepped-Care Cognitive Behavioral Therapy for Anxiety in Children in Primary Care: A Randomized Pilot Trial. Child Youth Care Forum (2026). <a href="https://doi.org/10.1007/s10566-026-09948-x" target="_blank" rel="noopener">https://doi.org/10.1007/s10566-026-09948-x</a></li>
+            <li>Health Resource Services Administration, (2025). HRSA Data Warehouse. Accessed June 7, 2026 from <a href="https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find" target="_blank" rel="noopener">https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find</a></li>
+            <li>Berger, M., Fernando, S., Churchill, A., Cornish, P., Henderson, J., Shah, J., ... &amp; Salmon, A. (2022). Scoping review of stepped care interventions for mental health and substance use service delivery to youth and young adults. Early Intervention in Psychiatry, 16(4), 327-341.</li>
+            <li>NIHR Evidence; Can stratified care help GPs manage long-term conditions?. September 2024. <a href="https://doi.org/10.3310/nihrevidence_63807" target="_blank" rel="noopener">https://doi.org/10.3310/nihrevidence_63807</a></li>
+            <li>Salloum, A., Lu, Y., Chen, H., Quast, T., Cohen, J. A., Scheeringa, M. S., Salomon, K., &amp; Storch, E. A. (2022a). Stepped care versus standard care for children after trauma: A randomized non-inferiority clinical trial. Journal of the American Academy of Child &amp; Adolescent Psychiatry, 61(8), 1010&ndash;1022. <a href="https://doi.org/10.1016/j.jaac.2021.12.013" target="_blank" rel="noopener">https://doi.org/10.1016/j.jaac.2021.12.013</a></li>
+            <li>McHugh, C., Hu, N., Georgiou, G., Hodgins, M., Leung, S., Cadiri, M., Paul, N., Ryall, V., Rickwood, D., Eapen, V., Curtis, J., Lingam, R. (2024). Integrated care models for youth mental health: A systematic review and meta-analysis. Australian &amp; New Zealand Journal of Psychiatry. <a href="https://doi.org/10.1177/00048674241256759" target="_blank" rel="noopener">https://doi.org/10.1177/00048674241256759</a></li>
+            <li>National Institute for Health and Care Excellence. (2019). Depression in children and young people: Identification and management (NICE Guideline NG134). <a href="https://www.nice.org.uk/guidance/ng134" target="_blank" rel="noopener">https://www.nice.org.uk/guidance/ng134</a></li>
+            <li>CHFS, 2024. Child and Family Services Reviews, Statewide Assessment. <a href="https://acf.gov/sites/default/files/documents/cb/ky-cfsr-r4-swa.pdf" target="_blank" rel="noopener">https://acf.gov/sites/default/files/documents/cb/ky-cfsr-r4-swa.pdf</a></li>
           </ol>
         </div>
       </details>
