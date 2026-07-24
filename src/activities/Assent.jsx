@@ -1,9 +1,11 @@
 // Assent — child assent screen shown at the very beginning of the program,
 // before anything else (the first thing a participant sees). Title and body
-// copy are VERBATIM from the IRB assent document
+// copy are from the IRB assent document
 // (Belongingness_Assent_ages 6-11_updated7.22.26.doc, provided by Josh
-// 2026-07-22) — including the all-caps title block, curly quotes, and the
-// doc's exact wording. The child reads the assent, then chooses Yes or No:
+// 2026-07-22) — the all-caps title block, curly quotes, and exact wording,
+// with one intentional edit per Josh (2026-07-22): the "AGE 11" qualifier
+// was dropped from the assent title line ("...FOR CHILDREN AGE 11" →
+// "...FOR CHILDREN"). The child reads the assent, then chooses Yes or No:
 //   - Yes  → onSave({ assent: 'yes' }); the real session advances into the
 //            pretest. Here in the sandbox we show a short confirmation.
 //   - No   → onSave({ assent: 'no' }); the real session ends on a friendly
@@ -85,7 +87,7 @@ export default function Assent({ onSave }) {
           A SINGLE SESSION PROGRAM TO FOSTER BELONGINGNESS
         </h1>
         <p className="text-[15px] font-semibold text-slate-700">
-          ASSENT TO PARTICIPATE IN A RESEARCH STUDY FOR CHILDREN AGE 11
+          ASSENT TO PARTICIPATE IN A RESEARCH STUDY FOR CHILDREN
         </p>
         <p className="text-[13px] text-slate-500 mt-1">UNIVERSITY OF KENTUCKY</p>
         <p className="text-[13px] text-slate-500">CENTER ON TRAUMA AND CHILDREN</p>
