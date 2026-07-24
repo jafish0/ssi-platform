@@ -45,6 +45,8 @@ const HANDOFF_TO_ID = {
 }
 
 const SAMS_STORY_YOUTUBE_ID = 'tsnVUlklYi8'
+const PARENT_CONSENT_QUALTRICS_URL =
+  'https://uky.az1.qualtrics.com/jfe/form/SV_9YaOS43TzaqOjOK'
 
 const TOC = [
   { href: '#parent-consent', label: 'Parent Consent' },
@@ -290,17 +292,21 @@ export default function IRBPreviewPage() {
             Participant ID (PID) is generated in Qualtrics and passed to
             ctac.app when the child follows the intervention link.
           </p>
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-6 text-center">
-            <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
-              Coming soon
-            </div>
-            <p className="text-[15px] text-slate-600 leading-relaxed max-w-[520px] mx-auto">
-              The parent consent lives in Qualtrics. Screenshots and a
-              live-preview link will be added here when available.
+          <div className="bg-white rounded-2xl shadow-card p-6">
+            <p className="text-[15px] text-slate-700 leading-relaxed max-w-[560px] mb-4">
+              The parent consent is administered in Qualtrics. You can open the
+              live consent form to review it:
             </p>
-            {/* Josh: drop the consent screenshot + link here when ready.
-                e.g. <img src="..." alt="Parent consent" /> and
-                     <a href="...">Open the live consent form</a> */}
+            <a
+              href={PARENT_CONSENT_QUALTRICS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-6 py-3 min-h-[44px] text-[14px]"
+            >
+              Open the parent consent form ↗
+            </a>
+            {/* Josh: consent screenshots can be added above/below this link
+                later if a static view is wanted alongside the live form. */}
           </div>
         </section>
 
