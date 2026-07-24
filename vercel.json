@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "has": [{ "type": "host", "value": "ifr.ctac.app" }], "destination": "/foster-forward/$1" },
+    { "source": "/((?!foster-forward/).*)", "has": [{ "type": "host", "value": "ifr.ctac.app" }], "destination": "/foster-forward/$1" },
     { "source": "/((?!api/|long-light/|foster-forward/).*)", "destination": "/index.html" }
   ],
   "headers": [
