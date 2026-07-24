@@ -55,26 +55,36 @@ const TOC = [
   { href: '#follow-up', label: '90-Day Follow-up' },
 ]
 
-// Several embedded activities call window.scrollTo({ top: 0 }) when they
-// advance to the next internal screen. That's the right behavior in the
-// standalone sandbox / real session (the activity is the top of the page),
-// but here the activity is embedded far down a long page, so it yanks the
-// whole page to the top. This wrapper detects that upward jump right after a
-// click inside the activity and snaps the activity back into view — leaving
-// non-advancing clicks (selecting a tile, etc.) alone.
+// Embedded activities change their inner "screen" on a click, which — on
+// this long page — leaves the reviewer looking at the wrong place:
+//   - Paginated activities (Pretest, Safety Net, …) call window.scrollTo(0)
+//     on advance, yanking the whole page to the top.
+//   - The Assent swaps its long body for a short confirmation, so the result
+//     collapses upward and scrolls out of view above the viewport.
+// Both are screen transitions; a benign click (selecting a tile, toggling a
+// tooltip) is not. We detect a transition after a click by either a big
+// upward scroll jump OR a big change in the activity's height, and re-anchor
+// the activity to the top of the viewport. The height threshold is high
+// enough to ignore tooltips/drag reflow but easily catches a screen swap.
 function KeepInView({ children }) {
   const ref = useRef(null)
   function handleClickCapture() {
-    const before = window.scrollY
-    const restore = () => {
-      if (ref.current && window.scrollY < before - 40) {
-        ref.current.scrollIntoView({ block: 'start' })
+    const el = ref.current
+    if (!el) return
+    const beforeY = window.scrollY
+    const beforeH = el.scrollHeight
+    const reanchor = () => {
+      if (!el) return
+      const jumpedUp = window.scrollY < beforeY - 40
+      const heightChanged = Math.abs(el.scrollHeight - beforeH) > 200
+      if (jumpedUp || heightChanged) {
+        el.scrollIntoView({ block: 'start' })
       }
     }
     // rAF avoids a visible flash in a real browser; the setTimeout is a
-    // fallback for environments where rAF doesn't fire (and is idempotent).
-    requestAnimationFrame(restore)
-    setTimeout(restore, 0)
+    // fallback for environments where rAF doesn't fire (both idempotent).
+    requestAnimationFrame(reanchor)
+    setTimeout(reanchor, 0)
   }
   return (
     <div ref={ref} onClickCapture={handleClickCapture} style={{ scrollMarginTop: '1rem' }}>

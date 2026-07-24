@@ -69,8 +69,8 @@ export default function Assent({ onSave }) {
           You&rsquo;re all set!
         </h2>
         <p className="text-[17px] leading-relaxed text-slate-700 mb-6">
-          Thanks for saying yes. Next you&rsquo;ll answer a few quick questions,
-          and then we&rsquo;ll get started together.
+          Next you&rsquo;ll answer a few quick questions, and then we&rsquo;ll
+          get started together.
         </p>
         <SecondaryButton onClick={() => setDecision(null)}>
           ← Go back
