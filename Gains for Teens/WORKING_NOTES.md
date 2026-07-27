@@ -96,6 +96,18 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **ed80698** (2026-07-27) — Drafts 15 + 16 (demo). **Draft 15:** added **"The narrator's
+  arc"** subsection inside The Shadow — the Spark's thread through the journey in five
+  beats (Early hint → naming it → the reveal → the transformation → Your Spark) with
+  their lines, carrying the post-traumatic-growth idea (light = the strength grown from
+  facing the dark, with help). **Draft 16:** (1) dropped the choose-your-character set —
+  Playable Characters now shows a **single protagonist**, the new human-faced Traveler
+  (`avatar-human-traveler.webp`, "You play as the Traveler"); Creature/Construct/old
+  hooded Traveler no longer displayed (files kept in repo; the `/long-light/` pitch 4-up
+  left for a later cleanup). (2) Exposition placeholder → **"Stephanie writing a draft."**
+  No version bumps. Verified on a prod preview: single Traveler card, narrator arc (5
+  beats + lines), Exposition text, avatar 200, no console errors, build passes.
+
 - **564580e** (2026-07-23) — Drafts 13 + 14: added **"The Shadow"** section to the demo
   (after Zone 5, "Concept in development") — the antagonist arc that spans the journey:
   what it is, how it resolves (you **face** it, never fight/destroy — it burns down to a
@@ -725,3 +737,47 @@ Add a new section titled **"The Shadow"** on `/gains-demo`, placed **after the Z
 **Verify:** Playable Characters shows three real avatars (Traveler image updated, no placeholder); the Shadow section shows the 3-phase arc in order; the pitch page `/long-light/` character-select shows the new Traveler; all art returns 200. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 14.*
+
+
+### Draft 15 — Add "The narrator's arc" to the demo's Shadow section — ✅ SHIPPED ed80698 (2026-07-27)
+
+Add a subsection titled **"The narrator's arc"** inside the existing "The Shadow" section on `/gains-demo` (that section is already marked "Concept in development," so no other disclaimers needed). It shows how the Spark threads the Shadow through the whole journey and carries the post-traumatic-growth idea (the light is the strength that grows from facing the dark, with help). Intro line: *"The Spark carries a quiet thread the whole way up — a light that was once a shadow too."* Then the lines, grouped by beat:
+
+**Early — a hint**
+- "I'll be with you the whole way up. I know this path better than you'd think."
+- "That dark thing trailing behind you? I'm not afraid of it. I've got my reasons — I'll tell you at the top."
+
+**As it looms — naming it**
+- "You've felt it behind you, haven't you. That's the weight of what happened, and it's been with you a long time."
+- "We're not running from it, and we're not fighting it. We're climbing toward the light — because light is how you face a thing like that."
+
+**The reveal**
+- "Before you turn around, a secret. Every light in this place — the lanterns, the Beacon, me — we were all shadows once."
+- "Facing ours didn't just make the dark smaller. It changed us. We came back carrying something we didn't have before. That's what a light really is: not a shadow erased, but a shadow faced — and what grows from facing it."
+- "You're not the first, and you're not alone. Hold your light up, use everything you've gathered, and face it."
+
+**The transformation**
+- "See? It was never here to destroy you. Faced — with help — it becomes something you can carry. Not the weight it was. A light. A strength."
+
+**Your Spark**
+- "That light is yours now. It grew out of the hardest thing you carry — because you faced it, with help, and didn't do it alone."
+- "What happened will always be part of your story. But it won't loom over you the same way — and the courage it took to face it becomes part of you too. That's yours to keep."
+
+**Verify.** The Shadow section now includes "The narrator's arc" with the five beats and their lines, rendering after the cosmology/transformation content; no errors. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 15.*
+
+
+### Draft 16 — Demo: single playable character + Exposition note — ✅ SHIPPED ed80698 (2026-07-27)
+
+Two demo edits (both on `/gains-demo`):
+
+**1. Down to ONE playable character.** The team decided to drop the choose-your-character set and use a single protagonist: the new **human-faced Traveler** (`art/avatar-human-traveler.webp`, staged; copy to `public/long-light/art/`). In the Playable Characters section, show **only this one** — remove the Creature and Construct cards (and the old hooded Traveler). Keep the section but present it as the single protagonist (e.g., heading "The Traveler" / "You play as the Traveler"), card = the human-traveler image + name **The Traveler** + description "A young traveler setting out to understand what happened — and find the way forward."
+   - **Do NOT delete** the other avatar files (`avatar-traveler-1.webp`, `avatar-creature.webp`, `avatar-construct.webp`) — just stop displaying them on the demo.
+   - Note: the `/long-light/` pitch page still has the old "Choose your traveler" 4-up; leave it for now (separate cleanup later).
+
+**2. Exposition section.** Replace the placeholder text with: **"Stephanie writing a draft."**
+
+**Verify.** Playable Characters shows exactly one card (the human-faced Traveler); Creature/Construct no longer displayed; Exposition reads "Stephanie writing a draft"; avatar art 200. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 16.*
