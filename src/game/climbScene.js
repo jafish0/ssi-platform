@@ -24,9 +24,13 @@ const GAME_W = 540
 const GAME_H = 960
 const PLATE_RATIO = 2304 / 1296 // stage plates are 9:16
 const PLATE_ZOOM = 1.4 // >1 so there's vertical travel to pan through
-const CLIMB_FIG_H = 300 // on-screen height of the climber figure
+// A deliberately TINY climber against a vast wall — the "small traveler,
+// big world" read of the Long Light style. Everything else scales off it.
+const CLIMB_FIG_H = 40 // on-screen height of the climber figure
 const CLIMB_SRC_FIG_H = 1010 // opaque figure height inside the 1351px canvas
 const CLIMB_SRC_H = 1351
+const ORB_W = 14 // orb width on screen (height derived from its 256×408 art)
+const COLLECT_R = 34 // collection radius — forgiving, but you still steer
 
 const DEFAULTS = {
   durationMs: 48000,
@@ -290,7 +294,7 @@ export function makeClimbScene(Phaser) {
       const o = this.add
         .image(x, -50, 'orb')
         .setDepth(30)
-        .setDisplaySize(46, 46 * (408 / 256))
+        .setDisplaySize(ORB_W, ORB_W * (408 / 256))
         .setBlendMode('ADD')
       if (!this.reduced) {
         this.tweens.add({
@@ -324,15 +328,15 @@ export function makeClimbScene(Phaser) {
       if (!this.reduced) {
         const burst = this.add
           .particles(o.x, o.y, 'glow', {
-            lifespan: 500,
-            speed: { min: 60, max: 165 },
-            scale: { start: 0.5, end: 0 },
+            lifespan: 460,
+            speed: { min: 30, max: 85 },
+            scale: { start: 0.28, end: 0 },
             alpha: { start: 0.9, end: 0 },
             blendMode: 'ADD',
             emitting: false,
           })
           .setDepth(42)
-        burst.explode(11)
+        burst.explode(9)
         this.time.delayedCall(650, () => burst.destroy())
       }
       o.destroy()
@@ -439,12 +443,15 @@ export function makeClimbScene(Phaser) {
 
         // --- the Shadow: closes when breath is low, recedes when high.
         //     Hard-clamped so it can never reach the climber. ---
+        // Distances are relative to the (small) climber so it reads as a real
+        // pursuit; the clamp keeps the smoke's top edge strictly below the
+        // climber's feet (body spans baseY-CLIMB_FIG_H..baseY), so no contact.
         const far = GAME_H + 150
-        const near = this.baseY + 120
+        const near = this.baseY + 36
         let target = lerp(near, far, this.reduced ? 1 : this.breath)
         if (ledge) target = far
         this.shadowTop += (target - this.shadowTop) * 0.02
-        this.shadowTop = Math.max(this.baseY + 95, this.shadowTop)
+        this.shadowTop = Math.max(this.baseY + 22, this.shadowTop)
         this.shadow.y = this.shadowTop
 
         // --- HUD meter ---
@@ -478,9 +485,10 @@ export function makeClimbScene(Phaser) {
           this.climber.setTexture(key)
           this.climber.setDisplaySize(520 * this.climbScale, CLIMB_SRC_H * this.climbScale)
         }
-        // reach/pull bob: rises on the reach frames, settles on mid
-        const bob = this.reduced ? 0 : this.frameIdx % 2 === 0 ? -5 : 0
-        this.climber.y = this.baseY + bob + (this.reduced ? 0 : Math.sin(time * 0.006) * 3)
+        // reach/pull bob: rises on the reach frames, settles on mid.
+        // Kept proportional to the (small) figure so it reads as effort, not jitter.
+        const bob = this.reduced ? 0 : this.frameIdx % 2 === 0 ? -2 : 0
+        this.climber.y = this.baseY + bob + (this.reduced ? 0 : Math.sin(time * 0.006) * 1.2)
       }
 
       // --- orbs drift down past the climber ---
@@ -490,7 +498,8 @@ export function makeClimbScene(Phaser) {
         o.y += orbSpeed * dt
         if (
           !this.arrived &&
-          Phaser.Math.Distance.Between(this.climber.x, this.baseY - CLIMB_FIG_H * 0.55, o.x, o.y) < 62
+          Phaser.Math.Distance.Between(this.climber.x, this.baseY - CLIMB_FIG_H * 0.55, o.x, o.y) <
+            COLLECT_R
         ) {
           this.collectOrb(o, i)
           continue
