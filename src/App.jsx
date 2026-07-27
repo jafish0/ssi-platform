@@ -23,6 +23,7 @@ import DemoSandboxPage from './pages/DemoSandboxPage.jsx'
 import IRBPreviewPage from './pages/IRBPreviewPage.jsx'
 import GainsDemoPage from './pages/GainsDemoPage.jsx'
 import GainsTraversalPage from './pages/GainsTraversalPage.jsx'
+import GainsClimbPage from './pages/GainsClimbPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -126,6 +127,7 @@ export default function App() {
           unlisted, shared by link (Draft 7 in Gains for Teens notes). */}
       <Route path="/gains-demo" element={<GainsDemoPage />} />
       <Route path="/gains-demo/traversal" element={<GainsTraversalPage />} />
+      <Route path="/gains-demo/climb" element={<GainsClimbPage />} />
       {/* The Plan now ships as the seventh activity (Draft 39). The
           /the-plan entry point (montage closer CTA) redirects into the
           sandbox-hosted activity. */}

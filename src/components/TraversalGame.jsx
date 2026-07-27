@@ -19,16 +19,50 @@
 
 import { useEffect, useRef } from 'react'
 
-const ASSETS = {
-  bgUrl: '/gains/traversal/ravine-bg.webp',
-  fgUrl: '/gains/traversal/ravine-fg.png',
-  birdUrl: '/gains/traversal/bird.png',
-  musicUrl: '/gains/traversal/audio/music-ascent-loop.mp3',
-  sfxCollectUrl: '/gains/traversal/audio/sfx-collect.mp3',
+// Each mode is a scene + its asset set. The wrapper (lifecycle, audio
+// unlock, dispose, restart-in-place) is shared — that's the reusable
+// Tier-2 foundation; a new traversal is a new entry here plus a scene.
+const MODES = {
+  flight: {
+    sceneKey: 'Traversal',
+    loadScene: () =>
+      import('../game/traversalScene.js').then((m) => m.makeTraversalScene),
+    assets: {
+      bgUrl: '/gains/traversal/ravine-bg.webp',
+      fgUrl: '/gains/traversal/ravine-fg.png',
+      birdUrl: '/gains/traversal/bird.png',
+      musicUrl: '/gains/traversal/audio/music-ascent-loop.mp3',
+      sfxCollectUrl: '/gains/traversal/audio/sfx-collect.mp3',
+    },
+  },
+  climb: {
+    sceneKey: 'Climb',
+    loadScene: () =>
+      import('../game/climbScene.js').then((m) => m.makeClimbScene),
+    assets: {
+      stageUrls: [
+        '/gains/climb/stage-tree.webp',
+        '/gains/climb/stage-mountain.webp',
+        '/gains/climb/stage-spire.webp',
+      ],
+      // right → mid → left (the scene cycles right→mid→left→mid)
+      climbUrls: [
+        '/gains/climb/climb-right.png',
+        '/gains/climb/climb-mid.png',
+        '/gains/climb/climb-left.png',
+      ],
+      orbUrl: '/gains/climb/orb.png',
+      shadowUrl: '/gains/climb/shadow-pursuer.webp',
+      musicUrl: '/gains/climb/audio/climb-music.mp3',
+      sfxOrbUrl: '/gains/climb/audio/sfx-orb.mp3',
+    },
+  },
 }
 
 export default function TraversalGame({
+  mode = 'flight',
   goal = 50,
+  durationMs,
   started = false,
   muted = false,
   reducedMotion = false,
@@ -49,11 +83,13 @@ export default function TraversalGame({
     let game = null
     let cancelled = false
 
-    Promise.all([import('phaser'), import('../game/traversalScene.js')])
-      .then(([PhaserMod, sceneMod]) => {
+    const modeDef = MODES[mode] || MODES.flight
+
+    Promise.all([import('phaser'), modeDef.loadScene()])
+      .then(([PhaserMod, makeScene]) => {
         if (cancelled || !containerRef.current) return
         const Phaser = PhaserMod.default || PhaserMod
-        const Scene = sceneMod.makeTraversalScene(Phaser)
+        const Scene = makeScene(Phaser)
 
         game = new Phaser.Game({
           type: Phaser.AUTO,
@@ -73,8 +109,9 @@ export default function TraversalGame({
         // Registry is available synchronously; the scene reads config in
         // init() and polls 'traversalStarted' in update().
         game.registry.set('traversalConfig', {
-          ...ASSETS,
+          ...modeDef.assets,
           goal,
+          ...(durationMs ? { durationMs } : {}),
           reducedMotion,
           onComplete: (result) => {
             if (onCompleteRef.current) onCompleteRef.current(result)
@@ -103,7 +140,7 @@ export default function TraversalGame({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goal, reducedMotion])
+  }, [mode, goal, durationMs, reducedMotion])
 
   // Signal the flight to begin once the instructions are dismissed.
   useEffect(() => {
@@ -123,8 +160,9 @@ export default function TraversalGame({
     const game = gameRef.current
     if (!game) return
     game.registry.set('traversalStarted', true)
-    const scene = game.scene.getScene('Traversal')
+    const scene = game.scene.getScene((MODES[mode] || MODES.flight).sceneKey)
     if (scene && scene.scene) scene.scene.restart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restartSignal])
 
   // Live mute toggle.

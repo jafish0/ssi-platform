@@ -13,7 +13,7 @@
 
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, Film, Play, Waves } from 'lucide-react'
+import { HardHat, Film, Play } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
@@ -300,9 +300,10 @@ const ZONES = [
     },
     gear: 'Oxygen Mask — helps you breathe.',
     traversal: {
-      text: 'Underwater flight — use the Oxygen Mask you earned; collect air bubbles to keep it full and dodge underwater obstacles.',
-      pending: true,
-      underwater: true,
+      text: 'The Ascent — a one-thumb climb through tree, mountain, and crystal spire up to the Beacon. Orbs refill your Second Wind; the Shadow rises behind you but can never catch you.',
+      playable: true,
+      playHref: '/gains-demo/climb',
+      playLabel: 'Play the climb prototype',
     },
     goal: 'Demystify therapy; reduce fear of the unknown; teach grounding/breathing.',
   },
@@ -571,6 +572,31 @@ export default function GainsDemoPage() {
           </div>
         </div>
       </section>
+
+      {/* F. Prototypes — the playable traversals, side by side */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Prototypes
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+          Playable traversals — both built on the same game engine. Not wired
+          into the session flow yet.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[760px]">
+          <PrototypeCard
+            img="/gains/traversal/ravine-bg.webp"
+            title="The Flight — Zone 3 → 4"
+            blurb="One-thumb bird flight. Gather 50 connections to reach the light."
+            href="/gains-demo/traversal"
+          />
+          <PrototypeCard
+            img="/gains/climb/stage-spire.webp"
+            title="The Ascent — Zone 4 → 5"
+            blurb="One-thumb climb through tree, mountain, and spire. Orbs refill your Second Wind; the Shadow rises behind you."
+            href="/gains-demo/climb"
+          />
+        </div>
+      </section>
     </DemoPageLayout>
   )
 }
@@ -608,6 +634,33 @@ function ArtCard({ src, name, blurb, placeholder }) {
         {blurb && <p className="text-[12px] text-slate-600 leading-relaxed mt-1.5">{blurb}</p>}
       </figcaption>
     </figure>
+  )
+}
+
+function PrototypeCard({ img, title, blurb, href }) {
+  return (
+    <article className="bg-white rounded-2xl shadow-card p-4 flex gap-4">
+      <div
+        className="flex-shrink-0 w-[74px] overflow-hidden rounded-xl bg-[#05070e]"
+        style={{ aspectRatio: '9 / 16' }}
+        aria-hidden="true"
+      >
+        <img src={img} alt="" loading="lazy" className="w-full h-full object-cover" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-[15px] font-semibold text-slate-800 leading-tight mb-1">
+          {title}
+        </h3>
+        <p className="text-[12px] text-slate-600 leading-relaxed mb-3">{blurb}</p>
+        <Link
+          to={href}
+          className="inline-flex items-center gap-1.5 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
+        >
+          <Play size={13} strokeWidth={2} />
+          Play
+        </Link>
+      </div>
+    </article>
   )
 }
 
@@ -711,11 +764,11 @@ function ZoneSection({ zone }) {
               <>
                 <p className="mb-2">{t.text}</p>
                 <Link
-                  to="/gains-demo/traversal"
+                  to={t.playHref || '/gains-demo/traversal'}
                   className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
                 >
                   <Play size={14} strokeWidth={2} />
-                  Play the traversal prototype
+                  {t.playLabel || 'Play the traversal prototype'}
                 </Link>
               </>
             ) : t.end ? (
@@ -723,7 +776,7 @@ function ZoneSection({ zone }) {
             ) : (
               <>
                 <div className="mb-1.5">
-                  <Pill icon={t.underwater ? Waves : HardHat}>In development</Pill>
+                  <Pill icon={HardHat}>In development</Pill>
                 </div>
                 <p>{t.text}</p>
               </>
