@@ -117,21 +117,13 @@ const ZONE_MAP_ROWS = [
 ]
 
 // ---------- Playable characters ----------
+// One protagonist now (team dropped the choose-your-character set). The old
+// avatar files stay in the repo; they're just no longer displayed here.
 const PLAYABLE = [
   {
-    src: `${ART}/avatar-construct.webp`,
-    name: 'The Construct',
-    blurb: 'Stone and warm light, quietly unstoppable.',
-  },
-  {
-    src: `${ART}/avatar-creature.webp`,
-    name: 'The Creature',
-    blurb: 'Small and curious, with a lantern for a tail.',
-  },
-  {
-    src: `${ART}/avatar-traveler-1.webp`,
+    src: `${ART}/avatar-human-traveler.webp`,
     name: 'The Traveler',
-    blurb: 'Hooded and wrapped, a warm light in hand.',
+    blurb: 'A young traveler setting out to understand what happened — and find the way forward.',
   },
 ]
 
@@ -151,6 +143,45 @@ const SHADOW_PHASES = [
     src: `${ART}/shadow-phase3.webp`,
     name: 'Phase 3 — Your Spark',
     blurb: 'It becomes a Spark — your own light to carry onward.',
+  },
+]
+
+// ---------- The narrator's arc (the Spark's thread through the Shadow) ----------
+const NARRATOR_ARC = [
+  {
+    label: 'Early — a hint',
+    lines: [
+      'I’ll be with you the whole way up. I know this path better than you’d think.',
+      'That dark thing trailing behind you? I’m not afraid of it. I’ve got my reasons — I’ll tell you at the top.',
+    ],
+  },
+  {
+    label: 'As it looms — naming it',
+    lines: [
+      'You’ve felt it behind you, haven’t you. That’s the weight of what happened, and it’s been with you a long time.',
+      'We’re not running from it, and we’re not fighting it. We’re climbing toward the light — because light is how you face a thing like that.',
+    ],
+  },
+  {
+    label: 'The reveal',
+    lines: [
+      'Before you turn around, a secret. Every light in this place — the lanterns, the Beacon, me — we were all shadows once.',
+      'Facing ours didn’t just make the dark smaller. It changed us. We came back carrying something we didn’t have before. That’s what a light really is: not a shadow erased, but a shadow faced — and what grows from facing it.',
+      'You’re not the first, and you’re not alone. Hold your light up, use everything you’ve gathered, and face it.',
+    ],
+  },
+  {
+    label: 'The transformation',
+    lines: [
+      'See? It was never here to destroy you. Faced — with help — it becomes something you can carry. Not the weight it was. A light. A strength.',
+    ],
+  },
+  {
+    label: 'Your Spark',
+    lines: [
+      'That light is yours now. It grew out of the hardest thing you carry — because you faced it, with help, and didn’t do it alone.',
+      'What happened will always be part of your story. But it won’t loom over you the same way — and the courage it took to face it becomes part of you too. That’s yours to keep.',
+    ],
   },
 ]
 
@@ -393,15 +424,15 @@ export default function GainsDemoPage() {
         <InDevelopmentCard label="In development." note="Assent flow and pre/post measures not identified yet." />
       </section>
 
-      {/* C. Playable Characters */}
+      {/* C. Playable Character (single protagonist) */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Playable Characters
+          Playable Character
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
-          The traveler the participant chooses to become for the climb.
+          You play as the Traveler.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-[640px]">
+        <div className="max-w-[220px]">
           {PLAYABLE.map((c) => (
             <ArtCard key={c.name} {...c} />
           ))}
@@ -426,9 +457,7 @@ export default function GainsDemoPage() {
             <Pill icon={HardHat}>In development</Pill>
           </div>
           <p className="text-[14px] text-slate-700 leading-relaxed">
-            We need an introduction that sets up the game: What is this place?
-            What are they doing here? And why are these creatures telling me
-            about trauma?
+            Stephanie writing a draft.
           </p>
         </div>
       </section>
@@ -509,6 +538,36 @@ export default function GainsDemoPage() {
               spine, the “avoidance creature shrinks” note, and the
               recovered-creature “symptoms lessening” animation.
             </p>
+          </div>
+
+          {/* The narrator's arc — the Spark's thread through the journey */}
+          <div className="mt-6 pt-5 border-t border-slate-200">
+            <h3 className="text-[15px] font-semibold text-slate-800 mb-1">
+              The narrator’s arc
+            </h3>
+            <p className="text-[13px] italic text-slate-600 mb-4 max-w-[70ch]">
+              The Spark carries a quiet thread the whole way up — a light that
+              was once a shadow too.
+            </p>
+            <div className="space-y-4">
+              {NARRATOR_ARC.map((beat) => (
+                <div key={beat.label}>
+                  <div className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold mb-1.5">
+                    {beat.label}
+                  </div>
+                  <ul className="space-y-1.5">
+                    {beat.lines.map((line, i) => (
+                      <li
+                        key={i}
+                        className="text-[14px] text-slate-700 leading-relaxed pl-3 border-l-2 border-amber-200"
+                      >
+                        “{line}”
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
