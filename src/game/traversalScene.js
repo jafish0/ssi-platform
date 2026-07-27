@@ -285,9 +285,17 @@ export function makeTraversalScene(Phaser) {
         burst.explode(12)
         this.time.delayedCall(650, () => burst.destroy())
       }
+      this.removeConn(m, i)
+      if (this.motes >= this.goal) this.arrive()
+    }
+
+    // Connection motes carry an infinite (repeat:-1) pulse tween. Phaser's
+    // destroy() does NOT kill tweens targeting the object, so kill it by hand
+    // or they accumulate in the TweenManager writing to dead objects.
+    removeConn(m, i) {
+      this.tweens.killTweensOf(m) // no-op under reduced motion (no tween made)
       m.destroy()
       this.conns.splice(i, 1)
-      if (this.motes >= this.goal) this.arrive()
     }
 
     arrive() {
@@ -384,8 +392,7 @@ export function makeTraversalScene(Phaser) {
           continue
         }
         if (m.y > GAME_H + 40) {
-          m.destroy()
-          this.conns.splice(i, 1)
+          this.removeConn(m, i)
         }
       }
     }

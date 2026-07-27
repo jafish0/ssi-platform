@@ -54,7 +54,8 @@ const MODES = {
       orbUrl: '/gains/climb/orb.png',
       shadowUrl: '/gains/climb/shadow-pursuer.webp',
       musicUrl: '/gains/climb/audio/climb-music.mp3',
-      sfxOrbUrl: '/gains/climb/audio/sfx-orb.mp3',
+      // No orb SFX: the beep didn't fit. Cowork is sourcing an air-intake
+      // sound — drop it in as sfxOrbUrl and re-wire it in climbScene.
     },
   },
 }

@@ -26,7 +26,7 @@ const PLATE_RATIO = 2304 / 1296 // stage plates are 9:16
 const PLATE_ZOOM = 1.4 // >1 so there's vertical travel to pan through
 // A deliberately TINY climber against a vast wall — the "small traveler,
 // big world" read of the Long Light style. Everything else scales off it.
-const CLIMB_FIG_H = 40 // on-screen height of the climber figure
+const CLIMB_FIG_H = 48 // on-screen height of the climber figure
 const CLIMB_SRC_FIG_H = 1010 // opaque figure height inside the 1351px canvas
 const CLIMB_SRC_H = 1351
 const ORB_W = 14 // orb width on screen (height derived from its 256×408 art)
@@ -38,12 +38,24 @@ const DEFAULTS = {
   palette: { bloom: 0xfff3d0, orb: 0xffe3a0, ink: 0x05070e, warm: 0xffd9a0 },
 }
 
-// Per-stage breath drain (fraction per second) — the climb gets harder up high.
+// Per-stage breath drain (fraction per second) — the climb gets harder up
+// high. `arrival` is the beat shown when you cross into that stage.
 const STAGES = [
-  { key: 'stage-tree', drain: 0.055 },
-  { key: 'stage-mountain', drain: 0.075 },
-  { key: 'stage-spire', drain: 0.095 },
+  { key: 'stage-tree', drain: 0.055, arrival: null },
+  {
+    key: 'stage-mountain',
+    drain: 0.075,
+    arrival: 'You reached the Great Mountain!\nKeep going!',
+  },
+  {
+    key: 'stage-spire',
+    drain: 0.095,
+    arrival: 'You reached the Crystal Spire —\nalmost there!',
+  },
 ]
+
+// How long the climb holds on a stage-arrival beat.
+const STAGE_PAUSE_MS = 1800
 
 // Rest ledges: progress windows where the drain stops and the Shadow stalls.
 const LEDGES = [
@@ -89,6 +101,7 @@ export function makeClimbScene(Phaser) {
       this.frameMs = 0
       this.shadowTop = GAME_H + 200
       this.onLedge = false
+      this.pauseMs = 0 // stage-arrival beat: holds the climb briefly
     }
 
     preload() {
@@ -101,7 +114,8 @@ export function makeClimbScene(Phaser) {
       this.load.image('orb', c.orbUrl)
       this.load.image('shadow-pursuer', c.shadowUrl)
       if (c.musicUrl) this.load.audio('climb-music', c.musicUrl)
-      if (c.sfxOrbUrl) this.load.audio('sfx-orb', c.sfxOrbUrl)
+      // No orb SFX for now — the old beep didn't fit. Cowork is sourcing an
+      // "intake of air" sound; wire it back in here when it lands.
     }
 
     create() {
@@ -203,6 +217,22 @@ export function makeClimbScene(Phaser) {
           color: '#fff3d0',
         })
         .setOrigin(0.5, 0.5)
+        .setDepth(72)
+        .setAlpha(0)
+      // Stage-arrival beat ("You reached the Great Mountain!") — shown for
+      // STAGE_PAUSE_MS while the climb holds.
+      this.stageText = this.add
+        .text(GAME_W / 2, GAME_H * 0.42, '', {
+          fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
+          fontSize: '26px',
+          color: '#fff6de',
+          align: 'center',
+          lineSpacing: 8,
+          stroke: '#2a1a06',
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5, 0.5)
+        .setDepth(74)
         .setAlpha(0)
       this.hud.add([this.meterBg, this.meterFill, this.meterLabel, this.orbText])
 
@@ -263,6 +293,7 @@ export function makeClimbScene(Phaser) {
       const prev = this.stageIndex
       this.stageIndex = next
       this.positionPlate(next, 0)
+      this.showStageArrival(STAGES[next].arrival)
       if (this.reduced) {
         this.plates[prev].setAlpha(0)
         this.plates[next].setAlpha(1)
@@ -283,6 +314,27 @@ export function makeClimbScene(Phaser) {
         duration: 320,
         yoyo: true,
         onComplete: () => haze.destroy(),
+      })
+    }
+
+    // A quick beat as you cross into a new stage: hold the climb, name where
+    // you are, then carry on. Finite by construction (pauseMs counts down in
+    // update), so it can never stall the ascent.
+    showStageArrival(message) {
+      if (!message) return
+      this.pauseMs = STAGE_PAUSE_MS
+      this.stageText.setText(message)
+      this.tweens.killTweensOf(this.stageText)
+      this.stageText.setAlpha(0).setScale(0.94)
+      this.tweens.add({
+        targets: this.stageText,
+        alpha: 1,
+        scale: 1,
+        duration: 320,
+        ease: 'Back.out',
+      })
+      this.time.delayedCall(STAGE_PAUSE_MS - 380, () => {
+        this.tweens.add({ targets: this.stageText, alpha: 0, duration: 360 })
       })
     }
 
@@ -315,9 +367,7 @@ export function makeClimbScene(Phaser) {
       this.orbText.setText('✦ ' + this.orbCount)
       this.breath = clamp(this.breath + 0.3, 0, 1)
       this.surgeMs = 1100
-      if (this.cache.audio.exists('sfx-orb') && !this.sound.locked) {
-        this.sound.play('sfx-orb', { volume: 0.5 })
-      }
+      // (orb SFX intentionally absent — awaiting an air-intake sound)
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         try {
           navigator.vibrate(10)
@@ -339,6 +389,14 @@ export function makeClimbScene(Phaser) {
         burst.explode(9)
         this.time.delayedCall(650, () => burst.destroy())
       }
+      this.removeOrb(o, i)
+    }
+
+    // Orbs carry an infinite (repeat:-1) pulse tween. Phaser's destroy() does
+    // NOT kill tweens targeting the object, so they must be killed by hand or
+    // they pile up in the TweenManager writing to dead objects.
+    removeOrb(o, i) {
+      this.tweens.killTweensOf(o) // no-op under reduced motion (no tween made)
       o.destroy()
       this.orbs.splice(i, 1)
     }
@@ -394,7 +452,11 @@ export function makeClimbScene(Phaser) {
         if (this.game.registry.get('traversalStarted')) {
           this.begin()
         } else {
-          this.climber.y = this.baseY + Math.sin(time * 0.003) * 4
+          // Reduced motion: stay still behind the instructions overlay (the
+          // canvas shows through it), matching the in-run reduced path.
+          if (!this.reduced) {
+            this.climber.y = this.baseY + Math.sin(time * 0.003) * 4
+          }
           return
         }
       }
@@ -402,8 +464,14 @@ export function makeClimbScene(Phaser) {
       const dt = delta / 1000
 
       if (!this.arrived) {
+        // --- stage-arrival beat: hold the climb (and the drain) briefly ---
+        const beat = this.pauseMs > 0
+        if (beat) this.pauseMs -= delta
+
         // --- rest ledges: drain pauses, Shadow stalls ---
-        const ledge = LEDGES.some((l) => this.p >= l.from && this.p <= l.to)
+        // (suppressed during a stage beat so the two messages never overlap)
+        const ledge =
+          !beat && LEDGES.some((l) => this.p >= l.from && this.p <= l.to)
         if (ledge !== this.onLedge) {
           this.onLedge = ledge
           this.tweens.add({
@@ -413,8 +481,11 @@ export function makeClimbScene(Phaser) {
           })
         }
 
+        // A ledge or a stage beat both ease off the climb.
+        const hold = beat || ledge
+
         // --- Second Wind drains (faster up high), orbs refill it ---
-        if (!ledge) {
+        if (!hold) {
           this.breath = clamp(
             this.breath - STAGES[this.stageIndex].drain * dt,
             0,
@@ -429,6 +500,9 @@ export function makeClimbScene(Phaser) {
         if (this.surgeMs > 0) rate = 1.5
         else if (this.breath <= 0) rate = 0.55
         else if (this.breath < 0.25) rate = 0.8
+        // The stage beat pauses forward progress — finite, so the ascent
+        // always resumes and still always completes.
+        if (beat) rate = 0
 
         this.p = Math.min(1, this.p + (delta / this.durationMs) * rate)
 
@@ -449,7 +523,7 @@ export function makeClimbScene(Phaser) {
         const far = GAME_H + 150
         const near = this.baseY + 36
         let target = lerp(near, far, this.reduced ? 1 : this.breath)
-        if (ledge) target = far
+        if (hold) target = far
         this.shadowTop += (target - this.shadowTop) * 0.02
         this.shadowTop = Math.max(this.baseY + 22, this.shadowTop)
         this.shadow.y = this.shadowTop
@@ -505,8 +579,7 @@ export function makeClimbScene(Phaser) {
           continue
         }
         if (o.y > GAME_H + 60) {
-          o.destroy()
-          this.orbs.splice(i, 1)
+          this.removeOrb(o, i)
         }
       }
     }

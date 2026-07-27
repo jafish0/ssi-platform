@@ -106,19 +106,14 @@ export default function GainsClimbPage() {
               <h2 className="text-[22px] font-bold text-white mb-3">The Ascent</h2>
               <ul className="text-[14px] text-amber-50/90 leading-relaxed space-y-2 mb-6 text-left max-w-[290px]">
                 <li>• Steer with one thumb — drag anywhere (or the arrow keys).</li>
+                <li>• The air is getting thinner as you get closer to the summit.</li>
                 <li>
-                  • Gather <strong className="text-white">orbs</strong> to refill your{' '}
-                  <strong className="text-white">Second Wind</strong> — each one gives
-                  you a surge.
+                  • Use your <strong className="text-white">Second Wind</strong> gear to
+                  collect oxygen to keep going.
                 </li>
                 <li>
-                  • Out of breath? You climb wearily, but you{' '}
-                  <strong className="text-white">never fall</strong>. Rest ledges let you
-                  recover.
-                </li>
-                <li>
-                  • The <strong className="text-white">Shadow</strong> rises behind you.
-                  It can never catch you — keep climbing to the light.
+                  • The <strong className="text-white">Shadow</strong> is closer to you
+                  than you think — climb quickly!
                 </li>
               </ul>
               <button
