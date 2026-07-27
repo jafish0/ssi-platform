@@ -96,6 +96,43 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **0e2704d** (2026-07-27) — Climb scale pass (in-conversation): the climber read way too
+  big, so figure height **300 → 40px** (~1/8) — a tiny traveler against a vast wall, per
+  the visual-style guide. Everything sized off it followed: orbs 46 → **14px** wide,
+  collection radius 62 → **34** (still forgiving on a thumb, but you must steer — 34 in a
+  302px lane), smaller/slower collect burst, reduced bob. Also had to pull the **Shadow's
+  approach distances** in (near edge baseY+120 → +36, clamp +95 → +22) — tuned for the
+  300px climber, they'd have read as "not chasing" next to a tiny one; still strictly
+  below the feet so no contact, no-fail intact. Sizes are now named constants
+  (`CLIMB_FIG_H`, `ORB_W`, `COLLECT_R`) at the top of `climbScene.js` — further tuning is
+  one number.
+
+- **c0ce3b9** (2026-07-27) — Draft 17: **"The Ascent"** — the second traversal (Zone 4→5
+  climb), built by reusing/extending the Draft 8 engine. `src/game/climbScene.js`:
+  vertical one-thumb climb through three crossfading stages (tree → mountain → spire)
+  brightening to the Beacon; 3-frame climb cycle (right→mid→left→mid), bottom-anchored;
+  **Second Wind** breath meter drains faster at altitude, refilled by orbs that drift
+  down (each = speed surge + sfx + haptic); **the Shadow** wells up from below, closing
+  when breath is low and receding when high, hard-clamped so it can NEVER catch you; rest
+  ledges pause the drain and push it back; empty breath only makes the climb weary (rate
+  floor 0.55), never fatal; Beacon bloom → `onComplete({ orbsCollected })`.
+  **Engine reuse:** `<TraversalGame>` is now **mode-switched** (`flight` | `climb`) — one
+  wrapper owns the shared lifecycle (lazy-loaded Phaser, `destroy(true)` on unmount,
+  restart-in-place replay that keeps the unlocked iOS AudioContext, live mute). A third
+  traversal = a `MODES` entry + a scene file. Playable at **/gains-demo/climb**, linked
+  from Zone 4's traversal beat and a new **Prototypes** section listing both playables
+  side by side. Assets at `public/gains/climb/` (+`audio/`).
+  **DEVIATION:** Zone 4's traversal was Draft 12's (pending) underwater Oxygen-Mask
+  flight; Draft 17 defines the Zone 4→5 traversal as this climb, so that description was
+  replaced (gear stays the Oxygen Mask). Flagged to Josh — easy to restore. Feedback tags
+  `zone-4` (the retired `traversal-prototype` option is gone from the dropdown).
+  **Verify note:** routes + all 10 assets 200, 540×960 WebGL canvas mounts, instructions
+  → Begin works, **5 in-place restarts keep exactly one canvas with a live context**, no
+  console errors, build passes (climbScene splits to its own ~9KB chunk; phaser stays
+  separate). The RAF-driven climb itself can't run in the headless pane — device
+  play-through pending; an adversarial 3-lens code review of the new logic was run in
+  parallel.
+
 - **ed80698** (2026-07-27) — Drafts 15 + 16 (demo). **Draft 15:** added **"The narrator's
   arc"** subsection inside The Shadow — the Spark's thread through the journey in five
   beats (Early hint → naming it → the reveal → the transformation → Your Spark) with
@@ -781,3 +818,37 @@ Two demo edits (both on `/gains-demo`):
 **Verify.** Playable Characters shows exactly one card (the human-faced Traveler); Creature/Construct no longer displayed; Exposition reads "Stephanie writing a draft"; avatar art 200. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 16.*
+
+
+### Draft 17 — Zone 4→5 "The Ascent" climb traversal (Phaser; reuse/extend the traversal engine) — ✅ SHIPPED c0ce3b9 (2026-07-27)
+
+**Ambition (Fable):** the second traversal, built by **reusing/extending the Draft 8 traversal foundation** — proving the engine reskins to a new mechanic. Polished, no-fail, on-brand.
+
+**Concept.** A vertical, one-thumb CLIMB from Zone 4 (Bright Reaches) up to Zone 5 (the Beacon), through three stages — **tree → mountain → crystal spire** — brightening as you rise. The player is the human Traveler, climbing. "**Second Wind**" (a breath meter) drains as you climb (faster at altitude) and is refilled by collecting glowing **orbs** (air-blooms). The **Shadow chases from below** — it can NEVER catch you (no-fail); it only sets tension and pace. Reaching the Beacon = arrival into Zone 5; the Shadow falls away, unable to follow into the light (a breadcrumb for the final face-off).
+
+**Assets** (staged in `Gains for Teens/game-assets/climb/`; copy into the app, e.g. `public/gains/climb/`):
+- Climb sprite, 3 frames, already registered on a common 520×1351 canvas, bottom-aligned: `climb-right.png`, `climb-mid.png`, `climb-left.png`. Cycle: **right → mid → left → mid → loop.**
+- Stage backgrounds (9:16, 1296×2304, scroll vertically): `stage-tree.webp`, `stage-mountain.webp`, `stage-spire.webp`.
+- Collectible: `orb.png` (transparent, additive glow).
+- Audio: `climb-music.mp3` (looping background, "Skyiceberg – Epic"), `sfx-orb.mp3` (collect beep).
+- Pursuer: `shadow-pursuer.webp` — a purpose-built rising wall of dark smoke (transparent cut-out, spans the frame width, wisps at the top), staged with the other climb assets.
+
+**Engine.** Reuse the Draft 8 lazy-loaded, disposable `<TraversalGame>` React wrapper + Phaser setup (destroy on unmount, one WebGL context at a time, portrait scale, DPR cap, `touch-action:none`). Add a **climb mode** — a `ClimbScene` sharing the framework (or a `mode` param on the existing scene). Keep state in React; report via `onComplete`. Reuse the Draft 8 audio pattern (music created once; restart-in-place on replay to dodge the iOS suspended-AudioContext bug; mute toggle).
+
+**Mechanic (no-fail):**
+- The world scrolls DOWN as the Traveler climbs UP; stages transition tree → mountain → spire over ~40–60s (tunable); a warm light overlay grows as you ascend, blooming at the Beacon.
+- One thumb: drag/steer the Traveler left/right along the surface toward orbs and up the climbing lane; the 3-frame cycle plays with a bob (compressed on mid-pull, extended on reach).
+- **Second Wind meter** drains slowly, faster in the mountain and spire stages. Orbs refill it — each = a surge of climb speed + `sfx-orb` + optional `navigator.vibrate(10)`. Missing an orb costs nothing.
+- If Second Wind empties, the Traveler slows and climbs wearily — **never falls, never dies**; an orb restores pace.
+- **The Shadow** rises from below at a steady pace as a rising wall of dark smoke (`shadow-pursuer.webp`), always welling up from the lower frame. High breath → you pull ahead and it recedes; low breath → you slow and it closes toward you (near-miss pressure), but it NEVER catches/grabs/ends the run. Keep it a slow looming presence — no fast lunges or jump-scares. Add a few **rest ledges** — wide safe holds where the climb eases and the Shadow briefly stalls (paces the stress).
+- **Arrival:** at the spire's top, a warm white-gold Beacon bloom; the Shadow falls away below (can't enter the light); fire `onComplete({ orbsCollected })` with a short "You reached the Beacon" beat + Replay.
+
+**Juice:** climb bob, cloak sway, orb sparkle + collect pop, drifting motes, the brightening overlay, Beacon bloom, subtle vignette, the Shadow's dark haze at the bottom edge. `prefers-reduced-motion`: calm auto-climb, orbs auto-collect, the Shadow gentle and distant, minimal particles.
+
+**Where it lives:** a **second playable prototype** on the GAINS demo (Prototypes area), labeled "The Ascent — Zone 4→5 climb," beside the bird flight. Reuse the feedback system (tag `section=traversal-prototype`). Not wired into the real session flow yet.
+
+**Quality bar:** ~60fps mid-phone; lazy-load Phaser; dispose cleanly on unmount AND repeated replays (verify no WebGL/AudioContext leak over 5+ replays); reduced-motion path; one-handed. (Assets a bit heavy — stage webp ~600KB each, music 4.7MB — optional optimization later.)
+
+**Verify:** plays desktop + mobile portrait; one-thumb climb; orbs refill Second Wind; genuinely no-fail (can't fall/lose; always ascends); the Shadow pursues but never catches; three stages transition tree→mountain→spire brightening to the Beacon; arrival fires onComplete; replay works + disposes cleanly; music/SFX play and survive replay; reduced-motion path; feedback submits tagged. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 17.*
