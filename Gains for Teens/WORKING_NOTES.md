@@ -47,6 +47,20 @@ Claude Code (CLI — implementation).
 
 ---
 
+## ⬅ TODO for Claude Cowork (Claude Code → Claude Cowork)
+
+Asks pointed the other way — things Cowork/Josh need to source or decide.
+
+- **Orb collect sound for the climb traversal (2026-07-27).** The old beep
+  (`sfx-orb.mp3`) didn't fit and has been **unwired** from the climb — the climb
+  currently has music + a haptic tick but no collect SFX. Find one that sounds like an
+  **intake of air / a breath** (fits the "Second Wind / collect oxygen" fiction). Drop the
+  file at `public/gains/climb/audio/` (mp3, mono is fine, ~96–128 kbps, trim leading
+  silence); Claude Code re-wires it as `sfxOrbUrl` in `TraversalGame`'s climb MODES entry
+  plus one call site in `climbScene.collectOrb()`.
+
+---
+
 ## Visual style (canonical) — "Long Light" vector-silhouette
 
 The GAINS environment-art style, locked 2026-07-02. **Minimalist atmospheric
@@ -95,6 +109,34 @@ gradients and layered depth.
 ---
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **6c31139** (2026-07-27) — Climb round 2 (in-conversation) + adversarial-review fixes.
+  Josh's notes: **orb SFX removed** (beep didn't fit — music + haptic remain; see the
+  TODO-for-Cowork above for the air-intake replacement); **climber +20%** (40 → 48px);
+  **new instructions copy** (air thinning near the summit / use your Second Wind gear to
+  collect oxygen / the Shadow is closer than you think — climb quickly); **stage-arrival
+  beats** — crossing into a stage holds the climb 1.8s and names it ("You reached the
+  Great Mountain! / Keep going!", "You reached the Crystal Spire — almost there!"),
+  pausing breath drain and pushing the Shadow back; finite by construction so the ascent
+  always resumes and still completes; rest-ledge text suppressed during a beat.
+  **Review fixes** (3-lens adversarial review of the climb; 7 confirmed findings → 3 real
+  issues): (a) pre-start idle bob wasn't gated on `prefers-reduced-motion` (the canvas
+  shows through the translucent overlay) — now gated; (b) orb/mote pulse tweens are
+  `repeat:-1` and Phaser's `destroy()` does **not** kill tweens targeting an object, so
+  they piled up writing to dead objects — both scenes now destroy via
+  `removeOrb()`/`removeConn()` which `killTweensOf` first (**this also fixed the
+  already-shipped flight scene**); (c) rest-ledge text had no depth and sat behind the
+  opaque depth-5 plates so it was never visible — already resolved by the stage-beat work
+  (both text layers now at depth 72/74).
+  **Verification:** built a Node harness that drives the REAL `ClimbScene.update()` loop
+  against a stubbed Phaser (the headless preview pane never fires `requestAnimationFrame`,
+  so the loop can't run there) — **12/12 assertions pass** across normal / breath-pinned-
+  empty / reduced-motion runs: completes exactly once, all 3 stages, both beats at
+  p=1/3 and 2/3, p monotonic, orbs collect, Shadow never reaches the feet (min gap 36px).
+  Flight page regression-checked in a browser. **Measured pace:** ~37s collecting orbs
+  freely, ~52s at base rate, **~91s collecting none** (the 0.55 weary floor) — the draft
+  target was 40–60s, so the passive tail runs long; knobs are the surge (1.5), the floor
+  (0.55) and `durationMs`. Awaiting Josh's device play-through before tuning.
 
 - **0e2704d** (2026-07-27) — Climb scale pass (in-conversation): the climber read way too
   big, so figure height **300 → 40px** (~1/8) — a tiny traveler against a vast wall, per
