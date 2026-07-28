@@ -41,21 +41,28 @@ const DEFAULTS = {
 // Per-stage breath drain (fraction per second) — the climb gets harder up
 // high. `arrival` is the beat shown when you cross into that stage.
 const STAGES = [
-  { key: 'stage-tree', drain: 0.055, arrival: null },
+  { key: 'stage-tree', drain: 0.08, arrival: null },
   {
     key: 'stage-mountain',
-    drain: 0.075,
+    drain: 0.11,
     arrival: 'You reached the Great Mountain!\nKeep going!',
   },
   {
     key: 'stage-spire',
-    drain: 0.095,
+    drain: 0.135,
     arrival: 'You reached the Crystal Spire —\nalmost there!',
   },
 ]
 
 // How long the climb holds on a stage-arrival beat.
-const STAGE_PAUSE_MS = 1800
+const STAGE_PAUSE_MS = 5400
+
+// How fast the Shadow slides toward its target position (per-frame lerp).
+const SHADOW_EASE = 0.045
+// The breath→distance curve. Squaring means the Shadow starts closing while
+// your breath is still moderate, instead of only once you're nearly empty —
+// so ignoring orbs gets you chased noticeably sooner.
+const SHADOW_BREATH_CURVE = (b) => b * b
 
 // Rest ledges: progress windows where the drain stops and the Shadow stalls.
 const LEDGES = [
@@ -114,8 +121,7 @@ export function makeClimbScene(Phaser) {
       this.load.image('orb', c.orbUrl)
       this.load.image('shadow-pursuer', c.shadowUrl)
       if (c.musicUrl) this.load.audio('climb-music', c.musicUrl)
-      // No orb SFX for now — the old beep didn't fit. Cowork is sourcing an
-      // "intake of air" sound; wire it back in here when it lands.
+      if (c.sfxOrbUrl) this.load.audio('sfx-orb', c.sfxOrbUrl)
     }
 
     create() {
@@ -239,6 +245,12 @@ export function makeClimbScene(Phaser) {
       // --- audio: create music once so it survives scene.restart() ---
       if (!this.music && this.cache.audio.exists('climb-music')) {
         this.music = this.sound.add('climb-music', { loop: true, volume: 0.3 })
+      }
+      // ONE reusable air-whoosh instance: the clip is ~1.15s and orbs arrive
+      // about every second, so retriggering a single sound keeps collects crisp
+      // instead of letting whooshes pile up on each other.
+      if (!this.sfxOrb && this.cache.audio.exists('sfx-orb')) {
+        this.sfxOrb = this.sound.add('sfx-orb', { volume: 0.45 })
       }
 
       // --- input: one thumb (pointer) + arrow keys for desktop ---
@@ -367,7 +379,10 @@ export function makeClimbScene(Phaser) {
       this.orbText.setText('✦ ' + this.orbCount)
       this.breath = clamp(this.breath + 0.3, 0, 1)
       this.surgeMs = 1100
-      // (orb SFX intentionally absent — awaiting an air-intake sound)
+      if (this.sfxOrb && !this.sound.locked) {
+        this.sfxOrb.stop() // retrigger from the top rather than overlapping
+        this.sfxOrb.play()
+      }
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         try {
           navigator.vibrate(10)
@@ -522,9 +537,13 @@ export function makeClimbScene(Phaser) {
         // climber's feet (body spans baseY-CLIMB_FIG_H..baseY), so no contact.
         const far = GAME_H + 150
         const near = this.baseY + 36
-        let target = lerp(near, far, this.reduced ? 1 : this.breath)
+        let target = lerp(
+          near,
+          far,
+          this.reduced ? 1 : SHADOW_BREATH_CURVE(this.breath),
+        )
         if (hold) target = far
-        this.shadowTop += (target - this.shadowTop) * 0.02
+        this.shadowTop += (target - this.shadowTop) * SHADOW_EASE
         this.shadowTop = Math.max(this.baseY + 22, this.shadowTop)
         this.shadow.y = this.shadowTop
 

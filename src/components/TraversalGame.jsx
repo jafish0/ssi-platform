@@ -54,8 +54,8 @@ const MODES = {
       orbUrl: '/gains/climb/orb.png',
       shadowUrl: '/gains/climb/shadow-pursuer.webp',
       musicUrl: '/gains/climb/audio/climb-music.mp3',
-      // No orb SFX: the beep didn't fit. Cowork is sourcing an air-intake
-      // sound — drop it in as sfxOrbUrl and re-wire it in climbScene.
+      // Air-whoosh on orb collect (Josh's "Woosh 1"), replacing the old beep.
+      sfxOrbUrl: '/gains/climb/audio/sfx-air-intake.mp3',
     },
   },
 }
