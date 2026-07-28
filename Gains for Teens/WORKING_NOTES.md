@@ -51,13 +51,9 @@ Claude Code (CLI — implementation).
 
 Asks pointed the other way — things Cowork/Josh need to source or decide.
 
-- **Orb collect sound for the climb traversal (2026-07-27).** The old beep
-  (`sfx-orb.mp3`) didn't fit and has been **unwired** from the climb — the climb
-  currently has music + a haptic tick but no collect SFX. Find one that sounds like an
-  **intake of air / a breath** (fits the "Second Wind / collect oxygen" fiction). Drop the
-  file at `public/gains/climb/audio/` (mp3, mono is fine, ~96–128 kbps, trim leading
-  silence); Claude Code re-wires it as `sfxOrbUrl` in `TraversalGame`'s climb MODES entry
-  plus one call site in `climbScene.collectOrb()`.
+- ~~**Orb collect sound for the climb traversal (2026-07-27).**~~ ✅ **RESOLVED
+  2026-07-28** — Josh supplied "Woosh 1" (air whoosh); shipped in 9efaf02 as
+  `public/gains/climb/audio/sfx-air-intake.mp3`. (Nothing outstanding here right now.)
 
 ---
 
@@ -109,6 +105,22 @@ gradients and layered depth.
 ---
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **9efaf02** (2026-07-28) — Climb round 3 (in-conversation). **Air whoosh wired** as the
+  orb-collect sound (Josh's "Woosh 1" →
+  `public/gains/climb/audio/sfx-air-intake.mp3`) — resolves the Cowork TODO. The clip is
+  1.15s and orbs arrive ~every 1s, so it plays through ONE reusable Sound instance that
+  stops+retriggers per collect rather than stacking whooshes; volume 0.45.
+  **Stage holds tripled** (1800 → 5400ms). **Shadow pursuit sped up** — Josh: ignoring
+  orbs, it didn't come fast enough. Because its position is breath-derived, the real
+  bottleneck was the drain timeline, so three coupled changes: ease 0.02 → 0.045
+  (`SHADOW_EASE`), breath→distance curve **squared** (`SHADOW_BREATH_CURVE`, so it starts
+  closing while breath is still moderate), and per-stage drains 0.055/0.075/0.095 →
+  **0.08/0.11/0.135**. Measured (Node harness, real update loop, 14/14 assertions pass):
+  ignoring every orb → Shadow **on screen at 3.3s** (was ~8s) and **within 150px at 9.2s**
+  (was ~13s), closing to the 36px floor, still completes (~84s), still never contacts.
+  Collecting orbs → **~44s**, Shadow stays ~247px away and never gets close. Punishes
+  ignoring orbs without threatening a player who plays along; no-fail intact everywhere.
 
 - **6c31139** (2026-07-27) — Climb round 2 (in-conversation) + adversarial-review fixes.
   Josh's notes: **orb SFX removed** (beep didn't fit — music + haptic remain; see the
