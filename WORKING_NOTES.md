@@ -110,6 +110,104 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`c06e214` · 2026-07-27** — **Draft 55 — Round 9 activity polish (2026-07-27 meeting).** Three activities, one commit. **BSS v3.3 → v3.4:** each behavior gets a short bold `stem`; the sort-page cards lead with the bold stem then the rest of the sentence (Bianca: buckets read crowded), drag ghost-chip uses the stem, full sentences still show on cards + summary (presentation only). **Self-Reflection v1.5 → v1.6:** the closing insight line ("Our experiences can drive our thoughts and feelings about belonging.") promoted to the visual anchor of the closing screen (bigger + bold, navy), "Thanks for sharing!" softened (typography only). **The Plan v3.0 → v3.1:** (1) Allies typo "How could that be?" → "Who could that be?" (Jessica); (2) dropped the additional Words of Wisdom writing prompt (Holly + Stephanie — the letter IS the words of wisdom), creation flow 6 → 5 screens, letter still surfaces in the final plan labeled "Words of Wisdom" (read-only), removed the `letter_reflection` payload key; (3) Skills to Try enforces true pick-ONE — once a skill is picked the others lock ("for later") with a "Pick a different skill" reset, payload stays single `skill_commitment`. Verified in the sandbox (bold stems v3.4; Plan pick-one lock + no WoW prompt + "Who could that be?" + letter-as-WoW, v3.1; Self-Reflection v1.6); build + console clean.
+
+  <details>
+  <summary>Draft 55 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 55 — Round 9 activity polish bundle (2026-07-27 meeting)
+
+Four small changes across three activities, from the 2026-07-27 team meeting. Ship as one commit so the team sees one stopping point.
+
+---
+
+#### Part A — Belonging Skills Sort v3.3 → v3.4 (MINOR)
+
+**Context:** Bianca (7/26 CSV) flagged that the first sort page reads crowded because each behavior card shows its full sentence, and once phrases stack up in the buckets the wall of text feels dense. The team's fix at the meeting: add a short bold **stem** (a label prefix) to the start of each of the 7 behavior sentences so the sort page scans as short chunky labels while still carrying the full sentence. The full sentences still display in the end-of-activity summary as they do now.
+
+**File:** `src/activities/BelongingSkillsSort.jsx`.
+
+**Change:** in the `BEHAVIORS` array, add a `stem` field (or equivalent bolded prefix) to each behavior. Suggested stems per behavior (map by position, adjust wording if a better phrasing exists in the codebase already):
+
+- bs1 — **Pay close attention** — "Pay close attention when someone is talking to you (without checking your phone or getting distracted)"
+- bs2 — **Use inclusive language** — "Use words like 'we,' 'us,' or 'our group' to make people feel included"
+- bs3 — **Express appreciation** — "Say thank you or tell others when they do something you appreciate"
+- bs4 — **Help someone out** — "Help someone out when they need it"
+- bs5 — **Invite others** — "Invite others to spend time with you"
+- bs6 — **Include others** — "Include others in conversations and activities (like watching a movie, going for a walk, or playing a game)"
+- bs7 — **Work through disagreement** — "Talk through a disagreement with someone until you find an answer that works for everyone"
+
+**Rendering on the sort page:** bold the stem, then either a colon+space or a line break, then the rest of the sentence in normal weight. Example: **Pay close attention** — *when someone is talking to you (without checking your phone or getting distracted)*. Whichever formatting reads best in the card UI; the goal is that the visual "hit" of the card is the short bold stem, with the full explanation available.
+
+**Rendering elsewhere:** end-of-activity summary continues to show the full sentence unchanged. Definitions (the hover/tap tooltip content) unchanged. Skill IDs unchanged.
+
+**Version:** MINOR (v3.3 → v3.4) — presentation change only, no data-shape change.
+
+---
+
+#### Part B — Self-Reflection v1.5 → v1.6 (MINOR)
+
+**Context:** Bianca (7/26 CSV) flagged that Self-Reflection ends without a summary of the participant's responses, unlike the other activities which end with a summary block. Team discussion at the meeting concluded that Self-Reflection is a different kind of exercise (processing, not skill-teaching) and doesn't need a full summary. The agreed-upon compromise: the existing closing insight line ("our experiences drive our thoughts and feelings about belonging" or similar phrasing already in the closing screen) should be visually promoted so participants don't miss the takeaway.
+
+**File:** `src/activities/SelfReflection.jsx` (or wherever the closing screen lives).
+
+**Change:** on the closing screen, increase the visual weight of the closing insight line so it's the visual anchor of the screen — comparable weight to the "Thanks for sharing" line rather than getting lost in body copy. Larger font size + bold. No new content added; just typography emphasis on the existing sentence.
+
+**Version:** MINOR (v1.5 → v1.6) — presentation change only.
+
+---
+
+#### Part C — The Plan v3.0 → v3.1 (MINOR)
+
+Three small changes to The Plan. Ship together.
+
+**C.1 — Typo fix in Allies section**
+
+**File:** wherever The Plan's Allies section wording lives.
+
+**Change:** "How could that be?" → "Who could that be?" — Jessica caught this at the 7/27 meeting. The Allies section is about identifying a person, so "Who" is correct.
+
+**C.2 — Remove the additional Words of Wisdom prompt**
+
+**Context:** The Plan currently (a) labels the participant's Letter to Another Youth as "Words of Wisdom" in the final plan, AND (b) asks the participant to write an ADDITIONAL Words of Wisdom entry as a separate prompt in the creation flow. Holly (7/24 CSV) + Stephanie (7/24 CSV) both flagged this feels redundant — the letter IS the words of wisdom. At the meeting, the team agreed: drop the additional Words of Wisdom prompt from the creation flow.
+
+**File:** `src/activities/Plan.jsx` (and any related demo-data source under `src/lib/`).
+
+**Change:** remove the "additional Words of Wisdom" writing screen from the plan-creation flow. Keep the letter labeled "Words of Wisdom" in the final plan display (that labeling stays). Screen count in the creation flow drops by one (6 → 5).
+
+**Data shape:** the payload key for the additional Words of Wisdom writing (whatever it's currently called — likely `words_of_wisdom_extra` or similar) is removed. Existing demo data may need to be updated to reflect the new shape.
+
+**Final plan display:** the "Words of Wisdom" section in the final plan should now pull from the participant's letter (already labeled as Words of Wisdom), NOT from any separate additional-writing field. If the current implementation pulls both, remove the additional pull.
+
+**C.3 — Skills to Try: enforce true pick-ONE gating**
+
+**Context:** Holly (7/24 CSV) flagged that after selecting one skill and answering the how/who/when questions, the participant can still see and answer for the OTHER willing-to-try skills. The intended v3.0 behavior was pick-ONE. Current build lets the participant keep going. At the meeting, the team confirmed: after answering for the ONE selected skill, they advance to the next Plan screen. The full list of willing-to-try skills continues to display "for later" as it does now.
+
+**File:** `src/activities/Plan.jsx`.
+
+**Change:** after the participant selects a skill and completes the how/who/when questions for that ONE skill, the Continue button advances to the next Plan screen. Remove or hide any UI affordance that lets them ALSO complete the other willing-to-try skills at this point. The full willing-to-try list still renders on the plan display "for later" as before.
+
+**Data shape:** payload continues to be `skill_commitment` (single) as spec'd in Draft 51. If the current implementation was accidentally accepting multiple skill commitments, tighten it back to one.
+
+**Version:** MINOR (v3.0 → v3.1) — small copy fix + removed screen + tighter gating; no structural change beyond that.
+
+---
+
+#### Verification
+
+- **BSS:** sort page shows 7 behavior cards with short bold stem prefixes + full sentence; buckets look less crowded when phrases stack; end-of-activity summary still shows full sentences; version badge v3.4
+- **Self-Reflection:** closing screen's insight line is visually promoted (bigger + bolder) so it's the anchor of the screen; version badge v1.6
+- **The Plan:** Allies section reads "Who could that be?"; creation flow no longer asks for additional Words of Wisdom (screen count 5 in creation); final plan still shows letter labeled as Words of Wisdom; Skills to Try gates to ONE skill and does not allow completing others; version badge v3.1
+- Build clean, no console errors
+- Existing sandbox previews on /demo work correctly
+- `/irb-preview` reflects the updated activities (since it reuses the same components)
+
+**Version bumps:** BSS v3.3 → v3.4, Self-Reflection v1.5 → v1.6, Plan v3.0 → v3.1. All MINOR.
+
+
+
+  </details>
+
 - **`56cc050` · 2026-07-22** — IRB preview: Section 1 parent-consent placeholder ("Coming soon") replaced with a live **"Open the parent consent form ↗"** link to the Qualtrics consent survey (`https://uky.az1.qualtrics.com/jfe/form/SV_9YaOS43TzaqOjOK`), opening in a new tab (`rel="noopener noreferrer"`). Kept a note that static consent screenshots can be added alongside it later. Verified live: link text/href/target correct, no more "Coming soon"; build clean.
 
 - **`9ec7e8b` + `db998a6` · 2026-07-22** — Assent + IRB-preview follow-ups (Josh). (1) **Dropped "AGE 11" from the assent title** ("ASSENT TO PARTICIPATE IN A RESEARCH STUDY FOR CHILDREN AGE 11" → "…FOR CHILDREN") in `Assent.jsx` (v1.1 → **v1.2**) and in the live "Ready! Set! Dedicate!" intervention (targeted replace on the published text_prompt body), **republished as version 5**, `current_version_id` flipped; verified live snapshot title now "…FOR CHILDREN". (2) **Assent scroll-strand fix on /irb-preview:** clicking Yes/No swaps the long body for a short confirmation, so the result collapsed upward out of view; `KeepInView` now re-anchors on a large activity-height change (screen transition) in addition to the scrollTo-jump case — verified the "You're all set!" confirmation lands at the top of the viewport, and the paginated Safety Net fix still works. (3) **Trimmed the Yes confirmation copy:** removed "Thanks for saying yes." → now just "Next you'll answer a few quick questions, and then we'll get started together." (demo/preview-only screen; real session auto-advances, no DB change). Build + console clean.
