@@ -106,6 +106,28 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **bec20e5** (2026-07-28) — Climb round 4 + demo copy (in-conversation).
+  **The Shadow is now procedural, not a sprite** — Josh found the image goofy and wanted
+  "a gradient black wave… translucent." It's drawn as a vertical gradient (clear at the
+  crest → ~0.95 ink at the base) with everything above an *undulating carved crest*
+  erased, plus soft wisps licking off it; two offset/flipped layers drift against each
+  other so the crest moves. Reads as darkness welling up rather than an object.
+  `shadow-pursuer.webp` is no longer loaded (**−251 KB** download; file kept on disk).
+  Gradient ramps to ~0.85 within a third of the wave so a close Shadow actually darkens
+  the lower frame instead of a weak ~40% haze, while the crest stays feathered.
+  **Shadow faster again:** round 3 only moved the "threatening" moment ~0.4s (my earlier
+  9.2s figure was inflated by a harness artifact — one stray orb; the real number was
+  ~5.5s), so this time the **drain** went up where it actually binds: 0.08/0.11/0.135 →
+  **0.105/0.14/0.17**, plus curve exponent 2 → 2.4 and ease 0.045 → 0.06.
+  **Demo Zone 4 script** now ends with "For example, here is a cool trick called
+  'grounding' that can help your brain hit the pause button when you are upset." — hands
+  off into the 3-3-3 activity.
+  Measured (14/14 harness assertions pass; harness fixed to truly collect **zero** orbs in
+  the ignore scenario, so these are honest): ignoring every orb → Shadow **on screen 2.2s**,
+  **within 150px at 3.9s** (was ~5.5s), right behind by ~9.5s, closing to the 36px floor,
+  still completes (~91s), still never contacts. Collecting orbs → **~44s**, stays ~179px
+  away, never close.
+
 - **9efaf02** (2026-07-28) — Climb round 3 (in-conversation). **Air whoosh wired** as the
   orb-collect sound (Josh's "Woosh 1" →
   `public/gains/climb/audio/sfx-air-intake.mp3`) — resolves the Cowork TODO. The clip is
