@@ -326,57 +326,67 @@ export default function DemoPage() {
           (Script 2.0). Tap any sample to hear it.
         </p>
 
-        {/* Draft 1 Preview (Draft 52) — the first full assembled Sam's Story
-            cut (Male variant), featured at the top of the Sam's Story area
-            for end-to-end team review. YouTube unlisted embed (id
-            tsnVUlklYi8); no repo bloat. Female + Gender-Neutral variants
-            follow after this feedback round. */}
+        {/* Draft 1 cut comparison (Draft 56) — the 7/28/26 revised cut
+            (YouTube id pIDMKij-xIU, on top) shown alongside the original
+            2026-07-16 cut (id tsnVUlklYi8) so the team can compare before
+            locking. The 7/28 cut folds in the July-27 meeting feedback and
+            fixes the two flubs (2:39, 2:52) the original had — so the old
+            "Known issues" callout is retired. Both are unlisted embeds. */}
         <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h3 className="text-[18px] font-bold text-ctac-navy">
-              Sam&apos;s Story — Draft 1 (Male Version)
+              Sam&apos;s Story — Draft 1 (Male Version) — Cut Comparison
             </h3>
             <span className="inline-flex items-center rounded-full bg-amber-500 text-white text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">
-              New draft
+              New cut
             </span>
           </div>
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-4">
-            This is the first full assembled cut of Sam&apos;s Story, using the
-            Male Sam variant. Watch it end-to-end and use the feedback button
-            below to share your notes. Female and Gender-Neutral variants will
-            follow after this round of team feedback.
+          <p className="text-[14px] text-slate-700 leading-relaxed mb-6">
+            Two cuts of Sam&apos;s Story are below for side-by-side comparison.
+            The 7/28/26 cut incorporates the team&apos;s feedback from the July
+            27 meeting. Please watch both and share which reads best via the
+            feedback button below.
           </p>
-          <div className="mx-auto w-full max-w-[360px]">
+
+          {/* 7/28/26 cut — newest, on top */}
+          <div className="mx-auto w-full max-w-[360px] mb-8">
+            <h4 className="text-center text-[15px] font-semibold text-ctac-navy mb-2">
+              7/28/26 Cut
+            </h4>
             <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
               <iframe
-                src="https://www.youtube.com/embed/tsnVUlklYi8"
-                title="Sam's Story — Draft 1 (Male Version)"
+                src="https://www.youtube.com/embed/pIDMKij-xIU"
+                title="Sam's Story — 7/28/26 Cut"
                 className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
             </div>
             <p className="mt-2 text-center text-[12px] text-slate-500">
-              Draft 1 · Male variant · Runtime 4:07 · 2026-07-16
+              Revised cut with team feedback incorporated. Foster Mom voice +
+              shot regenerated, audio flubs at 2:39 and 2:52 fixed, awkward
+              smiles resolved, two-photos shot recomposed, flashback transition
+              improved. 2026-07-28.
             </p>
           </div>
 
-          {/* Known issues — flagged so reviewers don't re-report the two
-              lines Josh already knows need regenerating (Draft 52 follow-up). */}
-          <div className="mt-5 max-w-[520px] mx-auto rounded-2xl border border-amber-300 bg-amber-100/60 px-4 py-3">
-            <p className="text-[13px] font-semibold text-amber-800 mb-1">Known issues</p>
-            <p className="text-[13px] text-slate-700 leading-relaxed mb-2">
-              A couple of lines still need to be regenerated and re-cut into the
-              video — waiting on rendering credits (back next week):
+          {/* Original cut — for comparison */}
+          <div className="mx-auto w-full max-w-[360px]">
+            <h4 className="text-center text-[15px] font-semibold text-ctac-navy mb-2">
+              Original Cut
+            </h4>
+            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+              <iframe
+                src="https://www.youtube.com/embed/tsnVUlklYi8"
+                title="Sam's Story — Original Cut"
+                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            <p className="mt-2 text-center text-[12px] text-slate-500">
+              First full assembled cut. 2026-07-16.
             </p>
-            <ul className="list-disc pl-5 text-[13px] text-slate-700 space-y-0.5">
-              <li>
-                <span className="font-mono">2:39</span> — &ldquo;felt Dad for me&rdquo;
-              </li>
-              <li>
-                <span className="font-mono">2:52</span> — &ldquo;past placements hadn&apos;t stug&rdquo;
-              </li>
-            </ul>
           </div>
         </div>
 

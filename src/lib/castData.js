@@ -28,9 +28,11 @@
 //     voice, Sam (Female) with a young-adult female voice, Sam (Gender
 //     Neutral) with the Amara gender-neutral voice, and Sam (14 years
 //     old) with its own voice model — plus Foster Mom, Foster Dad,
-//     Mrs. Johnson. (Sam Female's image is mid-refresh per Draft 50 B:
-//     two "pick between" candidate versions render on the card while the
-//     team chooses one; the Draft 48 images are retired to disk-only.)
+//     Mrs. Johnson. (Sam Female's image is LOCKED as of Draft 56 B
+//     (2026-07-28): a single composite — V1 face/jawline + V2 skin tone +
+//     V1 softer hair, per the 2026-07-27 meeting — renders on the card;
+//     the earlier Draft 50 B "pick between" candidates and the Draft 48
+//     images are retired to disk-only.)
 //   - `'learning-skills'` — the psychoeducation track that wraps the six
 //     activities (Adrienne's script): a single Kai card. The team locked
 //     the voice at the 2026-07-13 meeting (Draft 50) — the former "Male
@@ -124,25 +126,14 @@ export const CAST = [
     shows: ['sams-story'],
     name: 'Sam (Female)',
     alt: 'Sam, female variant — 18-year-old young woman narrator, same character as Sam Male',
-    // Draft 50 B (2026-07-13): the original Draft 48 look read "a little
-    // masculine" / too much like Sam Male's sibling, so Josh generated two
-    // fresh candidates. These are two DIFFERENT characters to choose
-    // between (not multiple angles of one) — the team picks one at the
-    // next meeting. The Draft 48 files (sam-female-variant-1*.png) stay on
-    // disk unreferenced.
-    images: [
-      {
-        label: 'Version 1',
-        src: '/cast/images/sam-female-v2-version-1.png',
-        alt: 'Sam Female, version 1 — pick this or version 2',
-      },
-      {
-        label: 'Version 2',
-        src: '/cast/images/sam-female-v2-version-2.png',
-        alt: 'Sam Female, version 2 — pick this or version 1',
-      },
-    ],
-    role: 'The female variant of Sam. Two versions here for the team to pick between at the next meeting. Same all-lines narration script and voice as Sam Male and Sam (Gender Neutral).',
+    // Draft 56 B (2026-07-28): Female Sam is now LOCKED as a single
+    // composite — Version 1's face/jawline + Version 2's skin tone +
+    // Version 1's softer hair, per the team decision at the 2026-07-27
+    // meeting. Replaces the two Draft 50 B "pick between" candidates
+    // (sam-female-v2-version-1/2.png) and the Draft 48 files
+    // (sam-female-variant-1*.png), all of which stay on disk unreferenced.
+    image: '/cast/images/sam-female-v3.png',
+    role: 'The female variant of Sam — now locked as a single composite (Version 1 face/jawline + Version 2 skin tone + Version 1 softer hair, per the 2026-07-27 meeting). Same all-lines narration script and voice as Sam Male and Sam (Gender Neutral).',
     voiceSamples: [
       {
         label: 'New Sam Female Voice Model — All Lines',
