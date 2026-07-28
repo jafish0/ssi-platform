@@ -51,50 +51,75 @@ import { downloadSvgElementAsPng } from '../lib/imageDownload.js'
 // Skill labels match the locked pretest doc (set in commit `7b7046e`,
 // Draft 3). bs1–bs7 IDs are stable; the meaning of each ID is preserved
 // across versions.
+// Each behavior carries a short bold `stem` (a scannable label) plus the
+// full `text` sentence. On the sort page the card leads with the bold stem
+// so the buckets read as chunky labels rather than a wall of sentences
+// (Draft 55 / 2026-07-27 meeting, Bianca's crowding note); the full sentence
+// still shows on the card and in the end-of-activity summary.
 const BEHAVIORS = [
   {
     id: 'bs1',
+    stem: 'Pay close attention',
     text: 'Pay close attention when someone is talking to you (without checking your phone or getting distracted)',
     definition:
       "Giving someone your full attention when they're speaking — eyes on them, no phone, no looking around.",
   },
   {
     id: 'bs2',
+    stem: 'Use inclusive language',
     text: 'Use words like "we," "us," or "our group" to make people feel included',
     definition:
       'Saying things that signal everyone belongs in the group — "we" instead of "you guys," "our team" instead of "the group."',
   },
   {
     id: 'bs3',
+    stem: 'Express appreciation',
     text: 'Say thank you or tell others when they do something you appreciate',
     definition:
       'Telling someone you noticed and appreciated what they did, instead of just thinking it.',
   },
   {
     id: 'bs4',
+    stem: 'Help someone out',
     text: 'Help someone out when they need it',
     definition:
       'Offering help when you see someone needs it, without waiting to be asked.',
   },
   {
     id: 'bs5',
+    stem: 'Invite others',
     text: 'Invite others to spend time with you',
     definition:
       'Reaching out to bring someone into your plans or your day, instead of waiting for them to ask.',
   },
   {
     id: 'bs6',
+    stem: 'Include others',
     text: 'Include others in conversations and activities (like watching a movie, going for a walk, or playing a game)',
     definition:
       "Making space for others in what you're already doing — looping them into the conversation, the game, the show.",
   },
   {
     id: 'bs7',
+    stem: 'Work through disagreement',
     text: 'Talk through a disagreement with someone until you find an answer that works for everyone',
     definition:
       'Staying with a disagreement until you find something that works for everyone, instead of walking away or giving up.',
   },
 ]
+
+// The part of the full sentence that follows the bold stem on a sort card.
+// When the stem is a literal prefix of the sentence (e.g. "Pay close
+// attention …") we drop the duplicated words; otherwise (the stem is a
+// paraphrase label, e.g. "Use inclusive language") we show the whole
+// sentence after the stem.
+function behaviorRest(b) {
+  if (!b.stem) return b.text
+  const startsWithStem = b.text.toLowerCase().startsWith(b.stem.toLowerCase())
+  return startsWithStem
+    ? b.text.slice(b.stem.length).replace(/^[\s,.:;—-]+/, '')
+    : b.text
+}
 
 const BUCKETS = [
   { id: 'already_doing',  label: "What I'm already doing" },
@@ -231,7 +256,12 @@ function SkillCard({
             {index}
           </span>
         )}
-        <div className="flex-1 leading-snug">{behavior.text}</div>
+        <div className="flex-1 leading-snug">
+          <span className="font-semibold text-ctac-navy">{behavior.stem}</span>
+          {behaviorRest(behavior) && (
+            <span className="text-slate-700"> — {behaviorRest(behavior)}</span>
+          )}
+        </div>
         <button
           type="button"
           aria-label={defOpen ? 'Hide definition' : 'Show definition'}
@@ -351,9 +381,10 @@ function Bucket({
 
 function GhostChip({ behavior, x, y, dropMode, targetX, targetY }) {
   if (!behavior) return null
-  const text = behavior.text
+  // Use the short stem as the drag label (falls back to truncated text).
+  const label = behavior.stem || behavior.text
   const truncated =
-    text.length > GHOST_LABEL_MAX ? text.slice(0, GHOST_LABEL_MAX - 1) + '…' : text
+    label.length > GHOST_LABEL_MAX ? label.slice(0, GHOST_LABEL_MAX - 1) + '…' : label
   const finalX = dropMode ? targetX : x
   const finalY = dropMode ? targetY : y
   const transition = dropMode

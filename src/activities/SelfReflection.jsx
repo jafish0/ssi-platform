@@ -104,12 +104,15 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
     // Closing reworked v1.5 (Adrienne + Holly, 2026-06-29) — bare
     // "Thanks for sharing" read abrupt / slightly sarcastic; the context
     // line explains why we asked. The "!" is intentional warmth.
+    // v1.6 (Draft 55, 2026-07-27 meeting): the insight line is the takeaway,
+    // so it's promoted to the visual anchor of the screen (bigger + bold);
+    // "Thanks for sharing!" is softened to a warm follow-on. No new content.
     return (
       <div>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
+        <h2 className="text-[22px] font-semibold text-ctac-navy leading-snug mb-2">
           Our experiences can drive our thoughts and feelings about belonging.
-        </p>
-        <h2 className="text-[22px] font-semibold">Thanks for sharing!</h2>
+        </h2>
+        <p className="text-[16px] leading-relaxed text-slate-600">Thanks for sharing!</p>
       </div>
     )
   }

@@ -1,21 +1,23 @@
-// "Your Plan" — the seventh Ready for Roots activity. v3.0 streamline per
-// the 2026-07-13 meeting (Draft 51): Stephanie flagged v2.0 as "really
-// long," so the creation flow drops from 9 screens to 6 and several
-// read-only sections move out of the walkthrough onto the final plan.
+// "Your Plan" — the seventh Ready for Roots activity. v3.0 streamlined the
+// flow (2026-07-13 meeting, Draft 51). v3.1 (Draft 55, 2026-07-27 meeting)
+// drops the additional "Words of Wisdom" writing prompt (Holly + Stephanie:
+// the letter already IS the words of wisdom), so the creation flow goes from
+// 6 screens to 5; the letter still surfaces in the final plan labeled "Words
+// of Wisdom" (read-only). Skills to Try now enforces true pick-ONE.
 //
-// Six paginated screens (v3.0):
+// Five paginated screens (v3.1):
 //   1 Intro
 //   2 Skills to Try — PICK ONE willing-to-try skill to work through in
-//     detail (how + who + when); the rest stay on the final plan for later
-//   3 Words of Wisdom (the letter surfaced back; instructional line sits
-//     right above the reflection input)
-//   4 When you felt included (inclusion moment + belonging-behaviors
+//     detail (how + who + when); once one is picked the others lock as a
+//     "for later" list until you choose a different one
+//   3 When you felt included (inclusion moment + belonging-behaviors
 //     checklist w/ an Other option + safety qualifier; skipped when no
 //     inclusion text exists)
-//   5 Review — the rich final plan: skill commitment + other willing-to-try
+//   4 Review — the rich final plan: skill commitment + other willing-to-try
 //     + Thoughts to Practice + Your People (Allies Strengthening) + When
-//     You Felt Included + Words of Wisdom + Who You Are (poem)
-//   6 Saved (+ PNG / single-page PDF keepsake + screenshot guidance)
+//     You Felt Included + Words of Wisdom (the letter, read-only) + Who You
+//     Are (poem)
+//   5 Saved (+ PNG / single-page PDF keepsake + screenshot guidance)
 //
 // Thoughts to Practice, Your People, and Who You Are (poem) are now
 // display-only (no walkthrough screen) — a Continue click on a read-only
@@ -172,7 +174,6 @@ export default function Plan({ onSave = console.log, planData }) {
   // skill to work through; skillCommits keeps its how/who/when.
   const [selectedSkillId, setSelectedSkillId] = useState(null)
   const [skillCommits, setSkillCommits] = useState({})
-  const [letterReflection, setLetterReflection] = useState('')
   const [inclusionBehaviors, setInclusionBehaviors] = useState([])
   const [otherUsed, setOtherUsed] = useState(false)
   const [otherText, setOtherText] = useState('')
@@ -222,7 +223,6 @@ export default function Plan({ onSave = console.log, planData }) {
               when_is_freetext: c.when === 'Other…',
             }
           : null,
-      letter_reflection: letterReflection.trim() || null,
       inclusion_reflection: hasInclusion
         ? {
             behaviors_used: inclusionBehaviors,
@@ -238,7 +238,7 @@ export default function Plan({ onSave = console.log, planData }) {
     setSaving(true)
     try {
       await onSave(buildPayload())
-      go(6)
+      go(5)
     } finally {
       setSaving(false)
     }
@@ -277,6 +277,10 @@ export default function Plan({ onSave = console.log, planData }) {
           {d.willingToTrySkills.map((s) => {
             const c = skillCommits[s.id] || {}
             const selected = selectedSkillId === s.id
+            // Pick-ONE gating (Draft 55 C.3): once a skill is picked, the
+            // others lock ("for later") so the kid can't also fill them in.
+            // "Pick a different skill" (below) clears the selection to switch.
+            const locked = !!selectedSkillId && !selected
             return (
               <div
                 key={s.id}
@@ -284,14 +288,16 @@ export default function Plan({ onSave = console.log, planData }) {
                   'rounded-2xl border transition-colors ' +
                   (selected
                     ? 'bg-ctac-teal-50 border-ctac-teal-400'
-                    : 'bg-white border-ctac-teal-200')
+                    : 'bg-white border-ctac-teal-200') +
+                  (locked ? ' opacity-60' : '')
                 }
               >
                 {/* Selector row — click anywhere to pick this skill */}
                 <button
                   type="button"
                   onClick={() => setSelectedSkillId(s.id)}
-                  className="w-full flex items-start gap-3 text-left p-4"
+                  disabled={locked}
+                  className="w-full flex items-start gap-3 text-left p-4 disabled:cursor-not-allowed"
                 >
                   <span
                     className={
@@ -364,47 +370,26 @@ export default function Plan({ onSave = console.log, planData }) {
             )
           })}
         </div>
+        {selectedSkillId && (
+          <button
+            type="button"
+            onClick={() => setSelectedSkillId(null)}
+            className="mt-3 text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px] font-medium"
+          >
+            ← Pick a different skill
+          </button>
+        )}
         <NavFooter
           onBack={() => go(1)}
-          onNext={() => go(3)}
+          onNext={() => go(hasInclusion ? 3 : 4)}
           nextDisabled={!selectedComplete}
-          skip={() => go(3)}
+          skip={() => go(hasInclusion ? 3 : 4)}
         />
       </ScreenShell>
     )
   }
 
-  if (screen === 3) {
-    // Words of Wisdom (Draft 43 B; Draft 51 C moves the instructional line
-    // down so it sits right above the reflection input).
-    return (
-      <ScreenShell heading="Words of Wisdom." sub="Your letter, read back to you.">
-        <Keepsake>
-          <p className="text-[16px] leading-relaxed text-slate-800 font-serif italic whitespace-pre-line">
-            {d.letter}
-          </p>
-        </Keepsake>
-        <p className="text-[15px] text-slate-700 mt-6 mb-2">
-          You wrote this for another kid. But these are the things you might need
-          to hear too — your own words of wisdom, coming from you.
-        </p>
-        <label className="block text-[15px] font-medium text-slate-700 mb-1">
-          Any words of wisdom that stand out to you here?{' '}
-          <span className="text-slate-400 font-normal text-[13px]">— skip if you’d rather not</span>
-        </label>
-        <textarea
-          value={letterReflection}
-          onChange={(e) => setLetterReflection(e.target.value)}
-          maxLength={200}
-          rows={2}
-          className="w-full text-[15px] px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
-        />
-        <NavFooter onBack={() => go(2)} onNext={() => go(hasInclusion ? 4 : 5)} />
-      </ScreenShell>
-    )
-  }
-
-  if (screen === 4 && hasInclusion) {
+  if (screen === 3 && hasInclusion) {
     const toggleBehavior = (id) =>
       setInclusionBehaviors((prev) =>
         prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
@@ -472,12 +457,12 @@ export default function Plan({ onSave = console.log, planData }) {
           )}
         </div>
         <QualifierNote className="mt-5" />
-        <NavFooter onBack={() => go(3)} onNext={() => go(5)} />
+        <NavFooter onBack={() => go(2)} onNext={() => go(4)} />
       </ScreenShell>
     )
   }
 
-  if (screen === 5 || (screen === 4 && !hasInclusion)) {
+  if (screen === 4 || (screen === 3 && !hasInclusion)) {
     return (
       <ScreenShell heading="Here’s your plan.">
         <Keepsake>
@@ -486,7 +471,7 @@ export default function Plan({ onSave = console.log, planData }) {
         <div className="flex items-center justify-between mt-8 gap-3">
           <button
             type="button"
-            onClick={() => go(hasInclusion ? 4 : 3)}
+            onClick={() => go(hasInclusion ? 3 : 2)}
             className="text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px] font-medium"
           >
             Back
@@ -499,7 +484,7 @@ export default function Plan({ onSave = console.log, planData }) {
     )
   }
 
-  // screen === 6 — Saved
+  // screen === 5 — Saved
   return (
     <ScreenShell heading="Saved." sub="This is yours. Come back to it any time.">
       <p className="text-[14px] text-slate-600 mb-5">
@@ -617,7 +602,7 @@ function PlanReview({ model }) {
                 </div>
                 {p.person && (
                   <p className="text-[15px] text-slate-700">
-                    <span className="text-slate-500">How could that be? </span>
+                    <span className="text-slate-500">Who could that be? </span>
                     {p.person}
                   </p>
                 )}
@@ -823,7 +808,7 @@ function buildPlanKeepsakeSvg(model) {
     heading('Your people')
     for (const p of m.people) {
       body(`${p.label}`)
-      if (p.person) body(`How could that be? ${p.person}`, { indent: 14 })
+      if (p.person) body(`Who could that be? ${p.person}`, { indent: 14 })
       if (p.action) body(`One thing you could do: ${p.action}`, { indent: 14 })
     }
     body('Stuck? You could ask another supportive person for a recommendation.', { italic: true })

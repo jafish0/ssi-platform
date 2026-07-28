@@ -66,9 +66,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'self-reflection': {
-    version: 'v1.5',
-    updated: '2026-06-29',
+    version: 'v1.6',
+    updated: '2026-07-27',
     changelog: [
+      '2026-07-27 · v1.6 — Draft 55 Part B (2026-07-27 meeting; Bianca). Self-Reflection intentionally has no full end summary (it\'s processing, not skill-teaching), so the closing insight line ("Our experiences can drive our thoughts and feelings about belonging.") is promoted to the visual anchor of the closing screen (bigger + bold, navy); "Thanks for sharing!" softened to a warm follow-on. Typography only — no new content, no data-shape change.',
       '2026-06-29 · v1.5 — Draft 36 Part A. Closing reworked (Adrienne + Holly: bare "Thanks for sharing" read abrupt / slightly sarcastic) → a context line "Our experiences can drive our thoughts and feelings about belonging." + "Thanks for sharing!" (the "!" is intentional warmth). No data-shape change.',
       '2026-06-18 · v1.4 — Draft 32 Part A. Deleted the "Hold onto what came up" closing message (Ginny + Holly flagged it as unclear / no direction — same call as Draft 26\'s "we\'ll come back to it" removal); no replacement copy. Moved the example thought/feeling text out of the textarea `placeholder` into persistent slate-500 italic help text above each field, so it stays visible while the kid types (Holly). Wording unchanged from v1.3. No data-shape change.',
       '2026-06-08 · v1.3 — Draft 26. Removed the closing "we\'ll come back to it" line (Holly — there\'s no later activity that revisits the reflections); the simple Save confirmation stays. Added example thought/feeling placeholder text on the thoughts/feelings fields (Ginny — the fields read as ambiguous): inclusion → "e.g., People like me" / "e.g., Happy"; exclusion → "e.g., Nobody likes me" / "e.g., I felt sad". No data-shape change.',
@@ -78,9 +79,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'belonging-skills-sort': {
-    version: 'v3.3',
-    updated: '2026-06-29',
+    version: 'v3.4',
+    updated: '2026-07-27',
     changelog: [
+      '2026-07-27 · v3.4 — Draft 55 Part A (2026-07-27 meeting; Bianca crowding note). Each of the 7 behaviors gains a short bold `stem` label; the sort-page cards now lead with the bold stem then the rest of the sentence, so the buckets read as chunky labels instead of a wall of sentences. The drag ghost-chip uses the stem too. Full sentences still show on the cards and in the end-of-activity summary/PNG. Presentation only — no data-shape change.',
       '2026-06-29 · v3.3 — Draft 36 Part C. Directions copy now points the kid at the skill list below the buckets (Adrienne): "Drag each skill into a bucket" → "From the list of skills below, drag each one into a bucket." No data-shape change.',
       '2026-06-18 · v3.2 — Draft 32 Part C. Snapshot-screen closing message rewritten from the passive "Here\'s where you landed. It\'s yours to keep." to the action-oriented "Think about when you could try out one of these skills." (Holly). The action-plan pull-forward Josh flagged is deferred to the flow-integration draft (no false callback before the integration exists). No data-shape change.',
       '2026-06-08 · v3.1 — Draft 26. (1) Encouragement gains a "!" ("Nice work!"). (2) The post-submit screen renders a saveable PNG snapshot of the three sorted buckets (skill names inside each; unsorted excluded) via downloadSvgElementAsPng, same pattern as Allies / Safety Net + Who I Am Poem. (3) One-time "reconsider unsorted items?" prompt after the first Save click when skills remain unplaced — Yes returns to the sort UI, No saves; asked at most once. Data shape unchanged (the reconsider step just gives one more chance to move items from `unplaced` before save).',
@@ -115,9 +117,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   plan: {
-    version: 'v3.0',
-    updated: '2026-07-13',
+    version: 'v3.1',
+    updated: '2026-07-27',
     changelog: [
+      '2026-07-27 · v3.1 — Draft 55 Part C (2026-07-27 meeting). (1) Allies section typo "How could that be?" → "Who could that be?" (Jessica). (2) Dropped the additional Words of Wisdom writing prompt from the creation flow (Holly + Stephanie: the letter IS the words of wisdom) — creation flow 6 → 5 screens; the letter still surfaces in the final plan labeled "Words of Wisdom" (read-only); removed the `letter_reflection` payload key. (3) Skills to Try now enforces true pick-ONE: once a skill is picked the other willing-to-try skills lock ("for later") so the kid can\'t also fill them in; a "Pick a different skill" reset clears the selection. Save payload stays single `skill_commitment`. No structural change beyond the removed screen.',
       '2026-07-13 · v3.0 — 2026-07-13 meeting streamline (Draft 51). Skills to Try is now pick-one (participant chooses one willing-to-try skill to work through in detail; full list still surfaces on the final plan); Thoughts to Flip renamed to Thoughts to Practice and moved to plan-display only; Your People (Allies Strengthening pull-forward: per support type, the person who could strengthen it + one action) moved to plan-display only, replacing the pick-first-ally screen; Who You Are poem moved to plan-display only; When You Felt Included question reworded to "before, during, or after" with a new "Something else" (Other) option; Words of Wisdom instructional line moved to sit above the reflection input; PDF reworked to a single continuous page matching the PNG keepsake (rasterized from the same SVG); save/screenshot guidance added on the Saved screen. Screen count dropped 9 → 6. Save payload: skills_to_try[] → single skill_commitment; first_ally_outreach removed; inclusion_reflection gains other_used + other_text. Export: plan_skill_1..7_* + plan_first_ally/when replaced by plan_skill_pick_* (id/text/how/who/when); added plan_inclusion_behavior_other + _other_text.',
       '2026-07-10 · v2.0 — Round 7 (2026-07-07 meeting) restructure, Draft 43. Added per-skill "How could you demonstrate this skill?" required text input on Skills to try (with per-skill example placeholders; commitment = skill + how + who + when); renamed "Read your letter back" → "Words of Wisdom" per Sprang\'s aha reframe (screen heading, review-card label, PDF page, reflection prompt now "Any words of wisdom that stand out to you here?"); new Screen 7 surfacing the participant\'s Self-Reflection inclusion moment with a belonging-promoting-behaviors checklist (which behaviors they were already using; screen skipped when no inclusion text); safety qualifier text on all BPB surfaces per Sprang\'s dangerous-connection concern; read-only reminder of not-tried-yet BPBs on the review; PDF export grows to 6 pages with an inclusion-reflection page. Save payload grows: skills_to_try[].how + inclusion_reflection.behaviors_used[]. Export gains plan_skill_N_how + plan_inclusion_behavior_bsN columns. Now 9 screens. (Note: the BSS registry has 7 skills, bs1–bs7 — the draft\'s "8" references are corrected to 7 throughout.)',
       '2026-06-30 · v1.1 — Josh copy tweak. Screen 2 heading relabeled "Skills you said you\'d try." → "New Skills to Try". No data-shape change.',
