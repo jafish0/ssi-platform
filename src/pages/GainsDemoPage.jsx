@@ -70,7 +70,9 @@ You’ll feel a mix of things. Relief, because someone’s actually listening wi
 
 You set the pace — you don’t have to spill everything on day one. Just be honest as you go, and speak up if something’s not working.
 
-Your therapist will teach you skills that are proven to actually work. No single skill fixes everything, but the more tools you have, the more ready you’ll be for whatever comes your way.`
+Your therapist will teach you skills that are proven to actually work. No single skill fixes everything, but the more tools you have, the more ready you’ll be for whatever comes your way.
+
+For example, here is a cool trick called “grounding” that can help your brain hit the pause button when you are upset.`
 
 // ---------- Top Zone Map (the living roadmap) ----------
 const ZONE_MAP_ROWS = [

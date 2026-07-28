@@ -29,6 +29,9 @@ const PLATE_ZOOM = 1.4 // >1 so there's vertical travel to pan through
 const CLIMB_FIG_H = 48 // on-screen height of the climber figure
 const CLIMB_SRC_FIG_H = 1010 // opaque figure height inside the 1351px canvas
 const CLIMB_SRC_H = 1351
+// Procedural Shadow-wave texture size (wider than the frame so it can drift).
+const WAVE_W = 720
+const WAVE_H = 760
 const ORB_W = 14 // orb width on screen (height derived from its 256×408 art)
 const COLLECT_R = 34 // collection radius — forgiving, but you still steer
 
@@ -41,15 +44,15 @@ const DEFAULTS = {
 // Per-stage breath drain (fraction per second) — the climb gets harder up
 // high. `arrival` is the beat shown when you cross into that stage.
 const STAGES = [
-  { key: 'stage-tree', drain: 0.08, arrival: null },
+  { key: 'stage-tree', drain: 0.105, arrival: null },
   {
     key: 'stage-mountain',
-    drain: 0.11,
+    drain: 0.14,
     arrival: 'You reached the Great Mountain!\nKeep going!',
   },
   {
     key: 'stage-spire',
-    drain: 0.135,
+    drain: 0.17,
     arrival: 'You reached the Crystal Spire —\nalmost there!',
   },
 ]
@@ -58,11 +61,11 @@ const STAGES = [
 const STAGE_PAUSE_MS = 5400
 
 // How fast the Shadow slides toward its target position (per-frame lerp).
-const SHADOW_EASE = 0.045
-// The breath→distance curve. Squaring means the Shadow starts closing while
-// your breath is still moderate, instead of only once you're nearly empty —
-// so ignoring orbs gets you chased noticeably sooner.
-const SHADOW_BREATH_CURVE = (b) => b * b
+const SHADOW_EASE = 0.06
+// The breath→distance curve. The exponent means the Shadow starts closing
+// while your breath is still moderate, instead of only once you're nearly
+// empty — so ignoring orbs gets you chased sooner. Higher = closes earlier.
+const SHADOW_BREATH_CURVE = (b) => Math.pow(b, 2.4)
 
 // Rest ledges: progress windows where the drain stops and the Shadow stalls.
 const LEDGES = [
@@ -119,7 +122,7 @@ export function makeClimbScene(Phaser) {
       this.load.image('climb-mid', c.climbUrls[1])
       this.load.image('climb-left', c.climbUrls[2])
       this.load.image('orb', c.orbUrl)
-      this.load.image('shadow-pursuer', c.shadowUrl)
+      // (the Shadow is drawn procedurally — no sprite to load)
       if (c.musicUrl) this.load.audio('climb-music', c.musicUrl)
       if (c.sfxOrbUrl) this.load.audio('sfx-orb', c.sfxOrbUrl)
     }
@@ -162,14 +165,26 @@ export function makeClimbScene(Phaser) {
           .setDepth(18)
       }
 
-      // --- the Shadow: a rising wall of smoke, always below the climber ---
-      const shW = GAME_W * 1.18
-      this.shadow = this.add
-        .image(GAME_W / 2, this.shadowTop, 'shadow-pursuer')
+      // --- the Shadow: a translucent black wave, always below the climber.
+      // Drawn procedurally (a gradient with an undulating carved crest) rather
+      // than from a sprite, so it reads as darkness welling up instead of an
+      // object. Two offset layers drift against each other so the crest moves. ---
+      this.makeShadowWaveTexture()
+      const waveW = GAME_W * 1.34
+      const waveH = waveW * (WAVE_H / WAVE_W)
+      this.shadowBack = this.add
+        .image(GAME_W / 2, this.shadowTop, 'shadow-wave')
         .setOrigin(0.5, 0)
-        .setDisplaySize(shW, shW * (1621 / 1000))
+        .setDisplaySize(waveW, waveH)
+        .setDepth(26)
+        .setAlpha(0.68)
+      this.shadowFront = this.add
+        .image(GAME_W / 2, this.shadowTop, 'shadow-wave')
+        .setOrigin(0.5, 0)
+        .setDisplaySize(waveW * 1.12, waveH * 1.12)
         .setDepth(28)
-        .setAlpha(0.95)
+        .setAlpha(0.92)
+        .setFlipX(true)
 
       // --- the climber (bottom-anchored so the feet stay planted) ---
       const scale = CLIMB_FIG_H / CLIMB_SRC_FIG_H
@@ -425,9 +440,9 @@ export function makeClimbScene(Phaser) {
       }
       // The Shadow can't follow into the light — it falls away below.
       this.tweens.add({
-        targets: this.shadow,
+        targets: [this.shadowBack, this.shadowFront],
         y: GAME_H + 400,
-        alpha: 0.2,
+        alpha: 0.12,
         duration: 900,
         ease: 'Quad.in',
       })
@@ -545,7 +560,13 @@ export function makeClimbScene(Phaser) {
         if (hold) target = far
         this.shadowTop += (target - this.shadowTop) * SHADOW_EASE
         this.shadowTop = Math.max(this.baseY + 22, this.shadowTop)
-        this.shadow.y = this.shadowTop
+        // Two layers drifting against each other so the crest undulates.
+        const drift = this.reduced ? 0 : Math.sin(time * 0.00042) * 16
+        const wob = this.reduced ? 0 : Math.sin(time * 0.0009) * 5
+        this.shadowBack.x = GAME_W / 2 + drift
+        this.shadowBack.y = this.shadowTop + 14 + wob
+        this.shadowFront.x = GAME_W / 2 - drift * 1.4
+        this.shadowFront.y = this.shadowTop - wob
 
         // --- HUD meter ---
         this.meterFill.width = Math.max(0, 296 * this.breath)
@@ -617,6 +638,59 @@ export function makeClimbScene(Phaser) {
       g.fillCircle(R, R, 3)
       g.generateTexture('glow', R * 2, R * 2)
       g.destroy()
+    }
+
+    // A dark translucent wave: a vertical gradient (clear at the crest →
+    // near-opaque ink at the base) with the area above an undulating crest
+    // carved out, plus soft wisps licking up off it.
+    makeShadowWaveTexture() {
+      if (this.textures.exists('shadow-wave')) return
+      const tex = this.textures.createCanvas('shadow-wave', WAVE_W, WAVE_H)
+      if (!tex) return
+      const ctx = tex.getContext()
+      if (!ctx) return
+
+      // Density builds fast below the crest so that when the wave is close,
+      // the lower frame actually reads dark — but the crest stays feathered.
+      const grd = ctx.createLinearGradient(0, 0, 0, WAVE_H)
+      grd.addColorStop(0, 'rgba(4,4,10,0)')
+      grd.addColorStop(0.1, 'rgba(4,4,10,0.3)')
+      grd.addColorStop(0.22, 'rgba(3,3,9,0.62)')
+      grd.addColorStop(0.35, 'rgba(3,3,8,0.85)')
+      grd.addColorStop(1, 'rgba(2,2,6,0.95)')
+      ctx.fillStyle = grd
+      ctx.fillRect(0, 0, WAVE_W, WAVE_H)
+
+      const crestAt = (x) =>
+        74 +
+        Math.sin(x * 0.013) * 26 +
+        Math.sin(x * 0.031 + 1.7) * 12 +
+        Math.sin(x * 0.007 + 0.4) * 8
+
+      // carve everything above the crest away
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.beginPath()
+      ctx.moveTo(0, 0)
+      for (let x = 0; x <= WAVE_W; x += 6) ctx.lineTo(x, crestAt(x))
+      ctx.lineTo(WAVE_W, 0)
+      ctx.closePath()
+      ctx.fill()
+
+      // wisps rising off the crest
+      ctx.globalCompositeOperation = 'source-over'
+      for (let i = 0; i < 16; i++) {
+        const wx = (i / 16) * WAVE_W + 22
+        const wy = crestAt(wx) + 6
+        const r = 28 + ((i * 37) % 44)
+        const w = ctx.createRadialGradient(wx, wy, 0, wx, wy, r)
+        w.addColorStop(0, 'rgba(3,3,9,0.26)')
+        w.addColorStop(1, 'rgba(3,3,9,0)')
+        ctx.fillStyle = w
+        ctx.beginPath()
+        ctx.arc(wx, wy, r, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      tex.refresh()
     }
 
     makeVignetteTexture(ink) {

@@ -52,7 +52,7 @@ const MODES = {
         '/gains/climb/climb-left.png',
       ],
       orbUrl: '/gains/climb/orb.png',
-      shadowUrl: '/gains/climb/shadow-pursuer.webp',
+      // (no shadowUrl — the Shadow is a procedural gradient wave now)
       musicUrl: '/gains/climb/audio/climb-music.mp3',
       // Air-whoosh on orb collect (Josh's "Woosh 1"), replacing the old beep.
       sfxOrbUrl: '/gains/climb/audio/sfx-air-intake.mp3',
