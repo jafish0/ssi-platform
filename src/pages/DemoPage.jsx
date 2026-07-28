@@ -348,12 +348,17 @@ export default function DemoPage() {
             feedback button below.
           </p>
 
-          {/* 7/28/26 cut — newest, on top */}
-          <div className="mx-auto w-full max-w-[360px] mb-8">
+          {/* 7/28/26 cut — newest, on top. NOTE: this cut was exported as
+              16:9 landscape (854×480) — unlike the original, which is a true
+              9:16 vertical (352×640). So this embed uses a 16:9 frame to match
+              the source; forcing it into the 9:16 frame shrank it to a small
+              box. If Josh re-uploads this cut as a native vertical, switch the
+              frame back to 9:16 + max-w-[360px] to match the original. */}
+          <div className="mx-auto w-full max-w-[560px] mb-8">
             <h4 className="text-center text-[15px] font-semibold text-ctac-navy mb-2">
               7/28/26 Cut
             </h4>
-            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+            <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
               <iframe
                 src="https://www.youtube.com/embed/pIDMKij-xIU"
                 title="Sam's Story — 7/28/26 Cut"
