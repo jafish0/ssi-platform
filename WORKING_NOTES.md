@@ -110,6 +110,82 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`c3869d0` · 2026-07-28** — **Draft 56 — Sam's Story 7/28 cut comparison + Sam Female locked.** **Part A (/demo):** the Sam's Story featured section now shows BOTH cuts for team comparison — the 7/28/26 cut (YouTube `pIDMKij-xIU`) on top and the original 2026-07-16 cut (`tsnVUlklYi8`) below, each labeled, stacked 9:16 frames; heading → "…— Cut Comparison"; intro invites feedback (feedback button stays — this is /demo). Retired the old "Known issues" callout since the 7/28 cut fixes the 2:39 + 2:52 flubs (noted in its caption). **Part B (cast):** Sam Female card locked to a single composite (V1 face/jawline + V2 skin tone + V1 softer hair, per the 2026-07-27 meeting) — copied to `public/cast/images/sam-female-v3.png`; castData switched from the two-candidate `images[]` gallery to a single `image`, dropped the "pick between" framing, header comment updated; the Draft 50 B candidates + Draft 48 images stay on disk unreferenced. Verified on /demo (both embeds, 7/28 on top, Cut Comparison heading, locked composite loads, no old candidates, console + build clean). /irb-preview unaffected (keeps the original Sam's Story ID by design). No version bump.
+
+  <details>
+  <summary>Draft 56 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 56 — Sam's Story 7/28 cut on /demo + Sam Female composite locked
+
+Two related updates from the 2026-07-27 team meeting + the follow-up production work Josh completed 2026-07-28.
+
+---
+
+#### Part A — Sam's Story: add the 7/28 cut alongside the original for team comparison
+
+Following the 7/27 meeting feedback, a new cut of Sam's Story is ready. Team wants BOTH cuts visible on /demo side-by-side (or stacked) so they can compare before locking the final.
+
+**Changes incorporated in the 7/28 cut:**
+
+- Foster Mom's voice line re-recorded (address robotic tone / drawl) and her shot regenerated (address the "extra glow" backlighting that made her stylistically different from other characters)
+- Sam 16 Line 1+2 combined regenerated with a more neutral starting reference frame — resolves the awkward smiles at 0:45 and 1:03, AND fixes the "felt Dad for me" audio flub at 2:39 (which was within Line 2)
+- Sam 16 Line 5 regenerated with correct pronunciation of "stuck" (was "stug" at 2:52)
+- End-of-video second widening smile trimmed in Premiere (kept the first smaller warm smile on "both part of my story")
+- Two-photos-with-Sam shot at ~3:47 recomposed — photos now flat on the bed, Sam clearly looking down at them
+- Flashback re-entry beat added — new Sam-14-with-head-in-hands shot with tension strings and chair/plate SFX, plays after Sam 16's Line 2 reflection ends and before the Sam 14 rejection cut (addresses Ginny's 7/17 CSV note about needing more transition context)
+
+**Video files:**
+
+- **Original Cut:** YouTube video ID `tsnVUlklYi8` (already on /demo, do NOT remove)
+- **7/28/26 Cut:** YouTube video ID `pIDMKij-xIU` (new, add to /demo)
+
+**Placement:** In the current Sam's Story featured section at the top of the Sam's Story area on /demo, restructure to show BOTH cuts. Suggested layout: two labeled YouTube embeds stacked vertically (9:16 aspect responsive frames), with the newer 7/28 cut on TOP (surfaces the version team should compare against) and the original underneath.
+
+**Labels:**
+
+- **Top embed (new):** heading "**7/28/26 Cut**" · YouTube ID `pIDMKij-xIU` · caption: *"Revised cut with team feedback incorporated. Foster Mom voice + shot regenerated, audio flubs at 2:39 and 2:52 fixed, awkward smiles resolved, two-photos shot recomposed, flashback transition improved. 2026-07-28."*
+- **Bottom embed (original):** heading "**Original Cut**" · YouTube ID `tsnVUlklYi8` · caption: *"First full assembled cut. 2026-07-16."*
+
+**Section heading + intro:** update the featured section heading from "Sam's Story — Draft 1 (Male Version)" to "**Sam's Story — Draft 1 (Male Version) — Cut Comparison**" (or similar) so team sees the comparison intent immediately. Small paragraph above both embeds: *"Two cuts of Sam's Story are below for side-by-side comparison. The 7/28/26 cut incorporates the team's feedback from the July 27 meeting. Please watch both and share which reads best via the feedback button below."* (Feedback button remains present on /demo per the standard pattern — this is /demo, NOT /irb-preview.)
+
+---
+
+#### Part B — Sam Female character reference: locked composite
+
+Following the 7/27 meeting decision — **Version 1's face/jawline + Version 2's skin tone + Version 1's softer hair** — a single locked composite has been generated at:
+
+`Video Content/Sams Story/New Female Sam.png` (~4.2 MB)
+
+This replaces the two "pick between" candidate images that were rendering on the Sam Female card per Draft 50 B.
+
+**File placement:** copy the composite to `public/cast/images/sam-female-v3.png` (or a similar name that reflects it's the locked version — Code's call on the exact filename, just keep the previous v2 candidate images at their current paths for archive purposes).
+
+**castData.js update — the Sam Female card:**
+
+- Replace the current `images[]` gallery (two "pick between" V2 candidates from Draft 50 B) with a single `image` field pointing to the new composite
+- Update the card's role / description text to remove the "pick between two versions" framing — Female Sam is now locked
+- Update the top-of-file comment header to note that the Female Sam variant image is now locked as of 2026-07-28: V1 face/jawline + V2 skin tone + V1 softer hair per team decision at the 7/27 meeting
+- Retire the two old candidate images to disk-only (keep them at their current file paths, just unreferenced by the cast data — mirrors how prior Kai variant images were archived)
+
+---
+
+#### Verification
+
+- /demo Sam's Story featured section shows BOTH cuts with clear labels, the 7/28 cut on top
+- Both YouTube embeds load and play at 9:16 responsive frame
+- Section intro copy references both cuts and invites feedback
+- Sam Female card shows the new locked composite (single `image` field, no gallery)
+- Card copy updated to reflect the locked composite (no "pick between" language)
+- All other cast cards unchanged
+- All other /demo sections unaffected
+- Build clean, no console errors
+- `/irb-preview` unaffected (it uses a static Sam's Story reference by video ID; keeping the original ID there is fine since the IRB submission already went out)
+
+**Version bump:** none (demo content + cast reference update, not a versioned activity).
+
+
+  </details>
+
 - **`c06e214` · 2026-07-27** — **Draft 55 — Round 9 activity polish (2026-07-27 meeting).** Three activities, one commit. **BSS v3.3 → v3.4:** each behavior gets a short bold `stem`; the sort-page cards lead with the bold stem then the rest of the sentence (Bianca: buckets read crowded), drag ghost-chip uses the stem, full sentences still show on cards + summary (presentation only). **Self-Reflection v1.5 → v1.6:** the closing insight line ("Our experiences can drive our thoughts and feelings about belonging.") promoted to the visual anchor of the closing screen (bigger + bold, navy), "Thanks for sharing!" softened (typography only). **The Plan v3.0 → v3.1:** (1) Allies typo "How could that be?" → "Who could that be?" (Jessica); (2) dropped the additional Words of Wisdom writing prompt (Holly + Stephanie — the letter IS the words of wisdom), creation flow 6 → 5 screens, letter still surfaces in the final plan labeled "Words of Wisdom" (read-only), removed the `letter_reflection` payload key; (3) Skills to Try enforces true pick-ONE — once a skill is picked the others lock ("for later") with a "Pick a different skill" reset, payload stays single `skill_commitment`. Verified in the sandbox (bold stems v3.4; Plan pick-one lock + no WoW prompt + "Who could that be?" + letter-as-WoW, v3.1; Self-Reflection v1.6); build + console clean.
 
   <details>
@@ -8271,72 +8347,3 @@ headers in `public/foster-forward/index.html`**. Layout/CSS tweaks are fine; wor
 place. The 26 MB original `assets/103_20260223-Edit (2).jpg` must NOT be committed —
 leave it untracked (or Josh will move/delete it). Only `leads.jpg` ships.
 -->
----
-
-### Draft 56 — Sam's Story 7/28 cut on /demo + Sam Female composite locked
-
-Two related updates from the 2026-07-27 team meeting + the follow-up production work Josh completed 2026-07-28.
-
----
-
-#### Part A — Sam's Story: add the 7/28 cut alongside the original for team comparison
-
-Following the 7/27 meeting feedback, a new cut of Sam's Story is ready. Team wants BOTH cuts visible on /demo side-by-side (or stacked) so they can compare before locking the final.
-
-**Changes incorporated in the 7/28 cut:**
-
-- Foster Mom's voice line re-recorded (address robotic tone / drawl) and her shot regenerated (address the "extra glow" backlighting that made her stylistically different from other characters)
-- Sam 16 Line 1+2 combined regenerated with a more neutral starting reference frame — resolves the awkward smiles at 0:45 and 1:03, AND fixes the "felt Dad for me" audio flub at 2:39 (which was within Line 2)
-- Sam 16 Line 5 regenerated with correct pronunciation of "stuck" (was "stug" at 2:52)
-- End-of-video second widening smile trimmed in Premiere (kept the first smaller warm smile on "both part of my story")
-- Two-photos-with-Sam shot at ~3:47 recomposed — photos now flat on the bed, Sam clearly looking down at them
-- Flashback re-entry beat added — new Sam-14-with-head-in-hands shot with tension strings and chair/plate SFX, plays after Sam 16's Line 2 reflection ends and before the Sam 14 rejection cut (addresses Ginny's 7/17 CSV note about needing more transition context)
-
-**Video files:**
-
-- **Original Cut:** YouTube video ID `tsnVUlklYi8` (already on /demo, do NOT remove)
-- **7/28/26 Cut:** YouTube video ID `pIDMKij-xIU` (new, add to /demo)
-
-**Placement:** In the current Sam's Story featured section at the top of the Sam's Story area on /demo, restructure to show BOTH cuts. Suggested layout: two labeled YouTube embeds stacked vertically (9:16 aspect responsive frames), with the newer 7/28 cut on TOP (surfaces the version team should compare against) and the original underneath.
-
-**Labels:**
-
-- **Top embed (new):** heading "**7/28/26 Cut**" · YouTube ID `pIDMKij-xIU` · caption: *"Revised cut with team feedback incorporated. Foster Mom voice + shot regenerated, audio flubs at 2:39 and 2:52 fixed, awkward smiles resolved, two-photos shot recomposed, flashback transition improved. 2026-07-28."*
-- **Bottom embed (original):** heading "**Original Cut**" · YouTube ID `tsnVUlklYi8` · caption: *"First full assembled cut. 2026-07-16."*
-
-**Section heading + intro:** update the featured section heading from "Sam's Story — Draft 1 (Male Version)" to "**Sam's Story — Draft 1 (Male Version) — Cut Comparison**" (or similar) so team sees the comparison intent immediately. Small paragraph above both embeds: *"Two cuts of Sam's Story are below for side-by-side comparison. The 7/28/26 cut incorporates the team's feedback from the July 27 meeting. Please watch both and share which reads best via the feedback button below."* (Feedback button remains present on /demo per the standard pattern — this is /demo, NOT /irb-preview.)
-
----
-
-#### Part B — Sam Female character reference: locked composite
-
-Following the 7/27 meeting decision — **Version 1's face/jawline + Version 2's skin tone + Version 1's softer hair** — a single locked composite has been generated at:
-
-`Video Content/Sams Story/New Female Sam.png` (~4.2 MB)
-
-This replaces the two "pick between" candidate images that were rendering on the Sam Female card per Draft 50 B.
-
-**File placement:** copy the composite to `public/cast/images/sam-female-v3.png` (or a similar name that reflects it's the locked version — Code's call on the exact filename, just keep the previous v2 candidate images at their current paths for archive purposes).
-
-**castData.js update — the Sam Female card:**
-
-- Replace the current `images[]` gallery (two "pick between" V2 candidates from Draft 50 B) with a single `image` field pointing to the new composite
-- Update the card's role / description text to remove the "pick between two versions" framing — Female Sam is now locked
-- Update the top-of-file comment header to note that the Female Sam variant image is now locked as of 2026-07-28: V1 face/jawline + V2 skin tone + V1 softer hair per team decision at the 7/27 meeting
-- Retire the two old candidate images to disk-only (keep them at their current file paths, just unreferenced by the cast data — mirrors how prior Kai variant images were archived)
-
----
-
-#### Verification
-
-- /demo Sam's Story featured section shows BOTH cuts with clear labels, the 7/28 cut on top
-- Both YouTube embeds load and play at 9:16 responsive frame
-- Section intro copy references both cuts and invites feedback
-- Sam Female card shows the new locked composite (single `image` field, no gallery)
-- Card copy updated to reflect the locked composite (no "pick between" language)
-- All other cast cards unchanged
-- All other /demo sections unaffected
-- Build clean, no console errors
-- `/irb-preview` unaffected (it uses a static Sam's Story reference by video ID; keeping the original ID there is fine since the IRB submission already went out)
-
-**Version bump:** none (demo content + cast reference update, not a versioned activity).
