@@ -110,6 +110,82 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`8f98043` · 2026-07-28** — **Draft 57 — Video Preview section at top of /demo + Kai Part 1 Scene 1.** New top-of-page section (before the Assent section — first thing on /demo) surfacing the team's video review content. Sam's Story V3 (`1Rg2zMDmqsQ`) moved here from inside the Sam's Story cast section (no duplicate embed, just relocated). Kai Part 1 Scene 1 "The Scan" (`fNSK011fNnI`, confirmed native 9:16 vertical 352×640) added below it under a Part > Scene hierarchy (`KAI_VIDEO_PARTS` array) so future scenes/parts are data-only additions — no JSX changes needed. Verified: "Video Preview" is the first h2 on /demo (before "Start here — Child Assent"); both videos render as matching 9:16 verticals with correct Part/Scene headings; Sam's Story V3 no longer duplicated; Assent/Activities/Tests/Sam's Story/Learning Skills sections all still render below in their previous relative order; feedback button present; console + build clean. `/irb-preview` untouched. No version bump.
+
+  <details>
+  <summary>Draft 57 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 57 — Move videos to top of /demo + add Kai Part 1 Scene 1
+
+**Purpose:** Give the team a single top-of-page review surface for the animated video content. Sam's Story V3 is already up (from Draft 56 + follow-ups, currently sitting inside the Sam's Story cast area). Kai's first psychoeducation video (Part 1 Scene 1 "The Scan") is now ready and needs to sit alongside it. Move both videos to a new **top-of-page** section so team sees the review content immediately on /demo, before the Assent + activities + cast sections.
+
+The structure also needs to scaffold future Kai scenes — Kai will have Scenes 2-4 following, plus a Part 2 later. Set it up so additional Part/Scene entries slot in cleanly.
+
+---
+
+#### Part A — Relocate the Sam's Story V3 featured block to top of /demo
+
+**Current state:** the "Sam's Story V3" heading + `1Rg2zMDmqsQ` YouTube embed lives inside the Sam's Story cast area (from `c3869d0` + `6643ecb`).
+
+**Change:** move that block to a NEW top-of-page section — placed BEFORE the Assent section, so it's the very first thing on /demo. The old placement inside the Sam's Story cast area is removed (moved, not duplicated).
+
+Keep the vertical 9:16 embed shape and the `max-w-[360px]` sizing that Draft 56's follow-up landed on.
+
+---
+
+#### Part B — Add Kai Part 1 Scene 1 video with hierarchical structure
+
+New Kai psychoeducation video from Josh's production this week: YouTube video ID **`fNSK011fNnI`** (URL: `https://www.youtube.com/shorts/fNSK011fNnI`). YouTube Short, so it embeds as a native 9:16 vertical.
+
+**Add below the Sam's Story V3 block, still inside the same top-of-page video-review section.** Structure the markup as a nested hierarchy so future scenes drop in easily:
+
+```
+Part 1 — All About Belonging          [level-2 heading]
+    Scene 1: The Scan                  [level-3 subheading]
+        [YouTube embed: fNSK011fNnI, 9:16 vertical]
+    
+    (Scene 2, Scene 3, Scene 4 slot in here as they land)
+
+Part 2 — Skills for Belonging          (added later when those scenes land)
+    (Part 2 scenes slot in here)
+```
+
+For now, only Part 1 > Scene 1 has content. The Part 2 heading and other Part 1 scenes don't need to render yet — but the JSX / component structure should be organized so that adding them later is a data-only change (e.g., a scenes array with `{ part, scene, title, youtubeId }` entries that render conditionally when populated).
+
+---
+
+#### Part C — Section heading and framing
+
+The new top-of-page section needs a heading and short intro. Suggested:
+
+- Section heading: **"Video Preview"** or **"Videos for Team Review"** — Code's call, pick whichever reads cleaner
+- Intro paragraph (~1-2 sentences): *"The current cuts of Sam's Story and Kai's psychoeducation videos, up here at the top so they're easy to find. Use the feedback button below to share notes on either video."*
+
+Match the existing /demo section-heading typography and warm palette (Ready for Roots amber accents on lighter neutral base — same visual weight as the existing sam's-story section heading).
+
+Feedback button remains on the page as it currently does (this is /demo, not /irb-preview).
+
+---
+
+#### Verification
+
+- /demo loads without console errors
+- Top of the page shows the new "Video Preview" section BEFORE the Assent section
+- Sam's Story V3 renders correctly (9:16 vertical, YouTube `1Rg2zMDmqsQ`, `max-w-[360px]`)
+- Kai Scene 1 renders correctly (9:16 vertical, YouTube `fNSK011fNnI`, same sizing)
+- "Part 1 — All About Belonging" and "Scene 1: The Scan" hierarchy visible above the Kai embed
+- Component structure supports additional Part/Scene entries as data-only additions
+- The old Sam's Story V3 placement inside the Sam's Story cast area is REMOVED (no duplicate embed)
+- Assent, Activities, and Cast sections all still render below, unchanged, in their previous relative order
+- Feedback button still works on the new section
+- `/irb-preview` unaffected (it stays as-is)
+- Build clean
+
+**Version bump:** none — /demo structural change, not a versioned activity.
+
+
+  </details>
+
 - **`6643ecb` · 2026-07-28** — /demo Sam's Story simplified (Josh): removed the Original Cut embed (`tsnVUlklYi8`) and all the comparison copy — the "Cut Comparison" heading, the side-by-side intro paragraph, the "New cut" badge, and the per-embed labels + captions. The featured block is now just a **"Sam's Story V3"** heading + the single 9:16 vertical video (`1Rg2zMDmqsQ`). Build + console clean.
 
 - **`019d2f3` → `50048ff` · 2026-07-28** — Draft 56 follow-up: fixed the 7/28 Sam's Story cut rendering small on /demo. Root cause (diagnosed by reading each video's native `<video>` dimensions): the original cut (`tsnVUlklYi8`) is a true 9:16 vertical (352×640), but the first 7/28 export (`pIDMKij-xIU`) was 16:9 landscape (854×480) with the vertical content pillarboxed — so forcing it into the 9:16 embed frame shrank it to a small box. Interim fix (`019d2f3`) gave that landscape embed a 16:9 frame so it displayed at native size; then Josh re-uploaded the cut as a native 9:16 vertical (`1Rg2zMDmqsQ`, 352×640, confirmed), so the final state (`50048ff`) swaps in the new id and flips the frame back to 9:16 + max-w-[360px] — both cuts now sit side-by-side as matching verticals. Build + console clean.
