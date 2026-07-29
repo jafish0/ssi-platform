@@ -24,6 +24,20 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // SessionSummary still exists in the codebase but is no longer rendered in
 // the /demo preview (Draft 38 D.1) — kept for potential reuse.
 
+// Kai psychoeducation videos for the top-of-page Video Preview section
+// (Draft 57), grouped Part > Scene so additional scenes/parts are a
+// data-only addition — just append an entry, no JSX changes needed.
+const KAI_VIDEO_PARTS = [
+  {
+    title: 'Part 1 — All About Belonging',
+    scenes: [
+      { label: 'Scene 1', title: 'The Scan', youtubeId: 'fNSK011fNnI' },
+      // Scene 2, 3, 4 land here as Josh delivers them.
+    ],
+  },
+  // Part 2 — Skills for Belonging lands here once those scenes are ready.
+]
+
 // Per-stage encouragement copy for the "Growing your roots" preview
 // (Draft 25 Part C). Activity-name pairings are illustrative for the
 // preview — the production flow order may differ; Josh can tune.
@@ -203,6 +217,72 @@ export default function DemoPage() {
         </h1>
       </section>
 
+      {/* Video Preview (Draft 57) — top-of-page review surface for the
+          animated video content, so the team sees it before anything else.
+          Sam's Story V3 moved here from the Sam's Story cast section
+          (no duplicate); Kai's psychoeducation videos render grouped
+          Part > Scene from KAI_VIDEO_PARTS (data-only to extend). */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Video Preview
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          The current cuts of Sam&apos;s Story and Kai&apos;s psychoeducation
+          videos, up here at the top so they&apos;re easy to find. Use the
+          feedback button below to share notes on either video.
+        </p>
+
+        {/* Sam's Story V3 — native 9:16 vertical (YouTube id 1Rg2zMDmqsQ). */}
+        <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
+          <h3 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
+            Sam&apos;s Story V3
+          </h3>
+          <div className="mx-auto w-full max-w-[360px]">
+            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+              <iframe
+                src="https://www.youtube.com/embed/1Rg2zMDmqsQ"
+                title="Sam's Story V3"
+                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Kai psychoeducation videos, grouped Part > Scene. */}
+        {KAI_VIDEO_PARTS.map((part) => (
+          <div
+            key={part.title}
+            className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto"
+          >
+            <h3 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
+              {part.title}
+            </h3>
+            <div className="space-y-6">
+              {part.scenes.map((scene) => (
+                <div key={scene.label}>
+                  <h4 className="text-[15px] font-semibold text-slate-700 mb-2 text-center">
+                    {scene.label}: {scene.title}
+                  </h4>
+                  <div className="mx-auto w-full max-w-[360px]">
+                    <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+                      <iframe
+                        src={`https://www.youtube.com/embed/${scene.youtubeId}`}
+                        title={`Kai — ${part.title} ${scene.label}: ${scene.title}`}
+                        className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+
       {/* Child Assent — the very first thing a participant sees, before the
           pretest. Surfaced first so reviewers hit it in program order. */}
       {assent.length > 0 && (
@@ -326,25 +406,8 @@ export default function DemoPage() {
           (Script 2.0). Tap any sample to hear it.
         </p>
 
-        {/* Sam's Story v3 — the current cut (Draft 56 follow-up). Josh asked
-            to drop the original cut + all the comparison copy and just show
-            the v3 video. Native 9:16 vertical (YouTube id 1Rg2zMDmqsQ). */}
-        <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
-          <h3 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
-            Sam&apos;s Story V3
-          </h3>
-          <div className="mx-auto w-full max-w-[360px]">
-            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-              <iframe
-                src="https://www.youtube.com/embed/1Rg2zMDmqsQ"
-                title="Sam's Story V3"
-                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
+        {/* Sam's Story V3 video moved to the top-of-page Video Preview
+            section (Draft 57) — no longer rendered here. */}
 
         {/* Full-script download — so reviewers can read along while they
             listen. The `download` attr sets a clean saved filename. */}
