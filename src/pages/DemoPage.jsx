@@ -326,70 +326,23 @@ export default function DemoPage() {
           (Script 2.0). Tap any sample to hear it.
         </p>
 
-        {/* Draft 1 cut comparison (Draft 56) — the 7/28/26 revised cut
-            (YouTube id pIDMKij-xIU, on top) shown alongside the original
-            2026-07-16 cut (id tsnVUlklYi8) so the team can compare before
-            locking. The 7/28 cut folds in the July-27 meeting feedback and
-            fixes the two flubs (2:39, 2:52) the original had — so the old
-            "Known issues" callout is retired. Both are unlisted embeds. */}
+        {/* Sam's Story v3 — the current cut (Draft 56 follow-up). Josh asked
+            to drop the original cut + all the comparison copy and just show
+            the v3 video. Native 9:16 vertical (YouTube id 1Rg2zMDmqsQ). */}
         <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h3 className="text-[18px] font-bold text-ctac-navy">
-              Sam&apos;s Story — Draft 1 (Male Version) — Cut Comparison
-            </h3>
-            <span className="inline-flex items-center rounded-full bg-amber-500 text-white text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5">
-              New cut
-            </span>
-          </div>
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-6">
-            Two cuts of Sam&apos;s Story are below for side-by-side comparison.
-            The 7/28/26 cut incorporates the team&apos;s feedback from the July
-            27 meeting. Please watch both and share which reads best via the
-            feedback button below.
-          </p>
-
-          {/* 7/28/26 cut — newest, on top. Re-uploaded as a native 9:16
-              vertical (1Rg2zMDmqsQ, 352×640) to match the original, so it uses
-              the same 9:16 frame. (Superseded the earlier landscape export
-              pIDMKij-xIU, which had to be shown in a 16:9 frame.) */}
-          <div className="mx-auto w-full max-w-[360px] mb-8">
-            <h4 className="text-center text-[15px] font-semibold text-ctac-navy mb-2">
-              7/28/26 Cut
-            </h4>
+          <h3 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
+            Sam&apos;s Story V3
+          </h3>
+          <div className="mx-auto w-full max-w-[360px]">
             <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
               <iframe
                 src="https://www.youtube.com/embed/1Rg2zMDmqsQ"
-                title="Sam's Story — 7/28/26 Cut"
+                title="Sam's Story V3"
                 className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
             </div>
-            <p className="mt-2 text-center text-[12px] text-slate-500">
-              Revised cut with team feedback incorporated. Foster Mom voice +
-              shot regenerated, audio flubs at 2:39 and 2:52 fixed, awkward
-              smiles resolved, two-photos shot recomposed, flashback transition
-              improved. 2026-07-28.
-            </p>
-          </div>
-
-          {/* Original cut — for comparison */}
-          <div className="mx-auto w-full max-w-[360px]">
-            <h4 className="text-center text-[15px] font-semibold text-ctac-navy mb-2">
-              Original Cut
-            </h4>
-            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-              <iframe
-                src="https://www.youtube.com/embed/tsnVUlklYi8"
-                title="Sam's Story — Original Cut"
-                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-            <p className="mt-2 text-center text-[12px] text-slate-500">
-              First full assembled cut. 2026-07-16.
-            </p>
           </div>
         </div>
 
