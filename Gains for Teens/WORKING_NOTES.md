@@ -106,6 +106,26 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **9399844** (2026-07-28) — Draft 18: Exposition card now carries **Stephanie's
+  intro/transition text, verbatim**, in two labeled parts (the Spark's intro narration +
+  the 7 transition phrases); the "Stephanie writing a draft" placeholder is gone. Kept
+  deliberately as-written — her wording, her **straight apostrophes** (her source is
+  all-ASCII, unlike the rest of the page's curly typography), and her production notes in
+  `{}` / `[]` (`{show the shadow creature}`, `{insert gear}`, `[maybe gear for this level
+  could be a lantern]`, `[show phase 2 of the shadow]`). A comment above the constants
+  says not to "tidy" it. Verified all 8 strings match the working-notes source
+  **character-for-character** via a scripted diff; 7 transitions render; no errors.
+  **⚠ Naming divergence for Cowork/Josh to reconcile** (left alone on purpose, since the
+  ask was verbatim): her text introduces new lore — world **"Shadowveil"**, narrator
+  **"Spryte"** (vs the demo's "The Spark"), a companion **"Cinder"** (the shadow creature
+  the player is helping become a spark), and the summit **"Mount Hope"** (vs "the
+  Beacon"). It also says **"Level"** not "Zone", **"the Hallow"** (demo: "The Hollow"),
+  **"the Path"** (demo: "The Lantern Path"), and contains two likely typos — "starting
+  help Cinder" and "final assent" (ascent). Notably it also reframes the Shadow: here the
+  shadow is a *friend you're helping*, where the demo's Shadow section has it as the
+  player's own trauma that pursues them. Worth a deliberate decision before this copy
+  propagates into the zones.
+
 - **bec20e5** (2026-07-28) — Climb round 4 + demo copy (in-conversation).
   **The Shadow is now procedural, not a sprite** — Josh found the image goofy and wanted
   "a gradient black wave… translucent." It's drawn as a vertical gradient (clear at the
@@ -928,3 +948,38 @@ Two demo edits (both on `/gains-demo`):
 **Verify:** plays desktop + mobile portrait; one-thumb climb; orbs refill Second Wind; genuinely no-fail (can't fall/lose; always ascends); the Shadow pursues but never catches; three stages transition tree→mountain→spire brightening to the Beacon; arrival fires onComplete; replay works + disposes cleanly; music/SFX play and survive replay; reduced-motion path; feedback submits tagged. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 17.*
+
+
+### Draft 18 — Exposition card: Stephanie's intro/transitions text (VERBATIM) — ✅ SHIPPED 9399844 (2026-07-28)
+
+On `/gains-demo`, replace the Exposition section placeholder ("Stephanie writing a draft") with Stephanie's text below, **verbatim** — keep her wording and her production notes in `{}` / `[]` exactly as-is (this is a working demo card). Two labeled parts:
+
+**The Spark's intro narration:**
+> Welcome to Shadowveil, my name is Spryte and I am a Spark. I need your help getting my friend Cinder to the top of Mount Hope {show the shadow creature}. Only once we reach the top of the Mountain can Cinder turn into a spark, like me! Cinder has experienced really scary and stressful things causing her to feel hopeless, scared, and angry. This is why she looks like a shadow now. But with our help we can get Cinder across all 5 levels of Shadowveil to reach Mount Hope and become the spark she used to be!
+
+**Transition phrases for the spark to narrate:**
+> - Let's start in Level 1, the Hallow where we will learn more about what trauma is.
+> - [maybe gear for this level could be a lantern] Wow! You got the lantern of knowledge, let's keep moving to level 2, the Path
+> - Awesome job, now we have {insert gear} to help us onto level 3, the Mistfields. And it looks like all your hard work is starting help Cinder transform [show phase 2 of the shadow]
+> - Now, we have a wingsuit! You can use this to capture as many light orbs as possible to move to level 4.
+> - You did it! Onto level 4, the Bright Reaches
+> - Wow! Now you have the oxygen mask and we can make the final assent to Mount Hope
+> - You completed the last task, now you have the {insert gear}, the last thing we needed to help Cinder become a spark again!
+
+**Verify.** Exposition card shows this verbatim text; nothing else changes. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 18.*
+
+
+### Draft 19 — Zone 3: shortened second-video script (Holly's revision)
+
+On `/gains-demo`, in **Zone 3 (The Mistfields)**, replace the script of the **second video** — "Getting the best trauma therapy" (the card that comes after Video 3) — with Holly's shortened revision below, **verbatim**. Also update its duration estimate from ~90 sec down to **~60 sec (est.)**. Leave the first Zone 3 video (Video 3, "These are normal; help works") unchanged.
+
+New script (verbatim):
+> Research has found that teens of all races, ethnicities, and genders who receive trauma treatment see significant improvement in their PTSD, depression, and anxiety symptoms.
+> To participate in trauma therapy, find a trauma-informed therapist who provides trauma-focused cognitive behavior therapy or EMDR and will meet with you once a week for roughly 4-5 months. In therapy, your parents or caregivers will learn about trauma and how to help you at home, but they won't join you in every session and a trauma-informed therapist knows how to talk with caregivers without breaking your privacy.
+> But before beginning treatment, you can ask your therapist to discuss what information is private. Therapy is confidential, so no one else will know that you are in treatment or anything that goes on in your sessions. But a trauma-informed therapist should also advocate for your privacy in sessions. So, while your therapist will need to tell your caregiver if they're worried about your or someone else's safety, they can keep other information private.
+
+**Verify.** Zone 3's second video card shows the shortened script + ~60 sec; the first Zone 3 video is unchanged. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 19.*
