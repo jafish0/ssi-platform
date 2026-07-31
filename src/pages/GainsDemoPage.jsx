@@ -49,15 +49,14 @@ const V2 =
 const V3 =
   'Even though it may not feel like it, these are all normal reactions to experiencing trauma — your brain and body’s way of trying to keep you safe. But here’s the most important thing: trauma is something that happened to you, but it doesn’t define who you are. There are healthy ways to recover from even the worst things that happen to us. None of these characters healed alone — they recovered with the help of a good support system. Trauma therapy is one part of a good support system that can help people recover from very difficult things.'
 
-const TIPS = `Here are some tips for getting the best trauma therapy:
+// Zone 3's second video — Holly's shortened revision (Draft 19), VERBATIM.
+// Her source is all-ASCII: straight apostrophes and a plain "4-5" hyphen.
+// Don't re-typeset it to curly quotes/en dashes.
+const TIPS = `Research has found that teens of all races, ethnicities, and genders who receive trauma treatment see significant improvement in their PTSD, depression, and anxiety symptoms.
 
-1. Find a therapist who says they are trauma-informed.
+To participate in trauma therapy, find a trauma-informed therapist who provides trauma-focused cognitive behavior therapy or EMDR and will meet with you once a week for roughly 4-5 months. In therapy, your parents or caregivers will learn about trauma and how to help you at home, but they won't join you in every session and a trauma-informed therapist knows how to talk with caregivers without breaking your privacy.
 
-2. Ask them what evidence-based trauma treatment they plan to use, what you’ll be asked to do, and how long they think you’ll need to be in therapy. A trauma-informed therapist should probably mention trauma-focused cognitive behavior therapy (or TF-CBT) or EMDR, and plan to meet with you once a week for roughly 4–5 months, not indefinitely. They should also plan to work with at least one of your parents or caregivers to help them understand your current symptoms and how to help you at home. But don’t worry, your caregiver won’t join you in every session and a trauma-informed therapist knows how to talk with caregivers without breaking your privacy.
-
-3. Speaking of privacy, before beginning treatment, ask your therapist to discuss what information is private. Therapy is confidential, so no one else will know that you are in treatment or anything that goes on in your sessions. But a trauma-informed therapist should also advocate for your privacy in sessions. So, while your therapist will need to tell your caregiver if they’re worried about your or someone else’s safety, they can keep other information private.
-
-And good news: participating in trauma therapy is very likely to help you. Research has found that teens who receive trauma treatment, such as TF-CBT, see significant improvement in their PTSD, depression, and anxiety symptoms — and that’s true regardless of who you are as a person, like your race, ethnicity, and gender.`
+But before beginning treatment, you can ask your therapist to discuss what information is private. Therapy is confidential, so no one else will know that you are in treatment or anything that goes on in your sessions. But a trauma-informed therapist should also advocate for your privacy in sessions. So, while your therapist will need to tell your caregiver if they're worried about your or someone else's safety, they can keep other information private.`
 
 const GROWTH =
   'Your mindset is a collection of beliefs, attitudes, and thoughts that shape how you understand yourself and the world. Think about it like colored glasses – you put on a blue-tinted pair and all of a sudden, a yellow lemon looks green. Our mindset works like glasses; they can change the way something seems to us, but that doesn’t make it true – even if the lemon looks green, we know that it’s really yellow. We often consider two types of mindsets that people “wear”: fixed and growth mindsets. If you currently have on your fixed mindset, you might find yourself thinking that trauma therapy won’t help you because nothing can change how you feel or think because of what happened to you. This is tricky because if you have that thought, you probably won’t want to begin trauma therapy, or you won’t really commit to it, and then things really don’t change for you. But that’s not because your thought was true - it’s a result of the fixed mindset you’re wearing. When you choose to put on your growth mindset, you choose to recognize that you have the power to change your thoughts, behaviors, skills, and life. This growth mindset is important for wanting to begin and commit to trauma therapy and will help you get the most benefit from treatment.'
@@ -269,7 +268,7 @@ const ZONES = [
     characters: ['spark'],
     videos: [
       { title: 'Video 3 — These are normal; help works', duration: '25 sec', script: V3 },
-      { title: 'Getting the best trauma therapy', duration: '~90 sec', script: TIPS },
+      { title: 'Getting the best trauma therapy', duration: '~60 sec (est.)', script: TIPS },
     ],
     activity: {
       title: 'Bridge beat',
