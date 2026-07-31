@@ -74,6 +74,23 @@ Your therapist will teach you skills that are proven to actually work. No single
 
 For example, here is a cool trick called “grounding” that can help your brain hit the pause button when you are upset.`
 
+// ---------- Exposition (Draft 18) ----------
+// Stephanie's intro/transition text, VERBATIM — her wording, her straight
+// apostrophes, and her production notes in {} / [] are preserved exactly.
+// Do not "fix" spellings or renames here; it's a working demo card.
+const EXPO_INTRO =
+  "Welcome to Shadowveil, my name is Spryte and I am a Spark. I need your help getting my friend Cinder to the top of Mount Hope {show the shadow creature}. Only once we reach the top of the Mountain can Cinder turn into a spark, like me! Cinder has experienced really scary and stressful things causing her to feel hopeless, scared, and angry. This is why she looks like a shadow now. But with our help we can get Cinder across all 5 levels of Shadowveil to reach Mount Hope and become the spark she used to be!"
+
+const EXPO_TRANSITIONS = [
+  "Let's start in Level 1, the Hallow where we will learn more about what trauma is.",
+  "[maybe gear for this level could be a lantern] Wow! You got the lantern of knowledge, let's keep moving to level 2, the Path",
+  "Awesome job, now we have {insert gear} to help us onto level 3, the Mistfields. And it looks like all your hard work is starting help Cinder transform [show phase 2 of the shadow]",
+  "Now, we have a wingsuit! You can use this to capture as many light orbs as possible to move to level 4.",
+  'You did it! Onto level 4, the Bright Reaches',
+  'Wow! Now you have the oxygen mask and we can make the final assent to Mount Hope',
+  "You completed the last task, now you have the {insert gear}, the last thing we needed to help Cinder become a spark again!",
+]
+
 // ---------- Top Zone Map (the living roadmap) ----------
 const ZONE_MAP_ROWS = [
   {
@@ -456,12 +473,23 @@ export default function GainsDemoPage() {
           The opening that sets up the world, before Zone 1.
         </p>
         <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
-          <div className="mb-3">
+          <div className="mb-4">
             <Pill icon={HardHat}>In development</Pill>
           </div>
-          <p className="text-[14px] text-slate-700 leading-relaxed">
-            Stephanie writing a draft.
-          </p>
+
+          <Beat label="The Spark’s intro narration">
+            <p className="leading-relaxed">{EXPO_INTRO}</p>
+          </Beat>
+
+          <div className="mt-4">
+            <Beat label="Transition phrases for the spark to narrate">
+              <ul className="list-disc pl-5 space-y-1.5">
+                {EXPO_TRANSITIONS.map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
+            </Beat>
+          </div>
         </div>
       </section>
 
