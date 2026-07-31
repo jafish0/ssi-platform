@@ -106,6 +106,16 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1e391b6** (2026-07-28) — Draft 19: Zone 3's **second** video ("Getting the best trauma
+  therapy") now carries **Holly's shortened script, verbatim** (3 paragraphs, down from the
+  numbered-tips version), and its estimate drops **~90 sec → ~60 sec (est.)**. Zone 3's
+  first video (Video 3, "These are normal; help works") untouched. Kept verbatim: her
+  source is all-ASCII, so the straight apostrophes (won't / they're / else's) and the plain
+  **"4-5"** hyphen stay rather than being re-typeset to the curly quotes + en dash the rest
+  of the page uses; a comment above the constant says so. Verified all 3 paragraphs match
+  the source **character-for-character** (scripted diff), Zone 3 renders both cards with
+  the new script + duration, old script and ~90 sec label gone, no errors.
+
 - **9399844** (2026-07-28) — Draft 18: Exposition card now carries **Stephanie's
   intro/transition text, verbatim**, in two labeled parts (the Spark's intro narration +
   the 7 transition phrases); the "Stephanie writing a draft" placeholder is gone. Kept
@@ -971,7 +981,7 @@ On `/gains-demo`, replace the Exposition section placeholder ("Stephanie writing
 *End of Draft 18.*
 
 
-### Draft 19 — Zone 3: shortened second-video script (Holly's revision)
+### Draft 19 — Zone 3: shortened second-video script (Holly's revision) — ✅ SHIPPED 1e391b6 (2026-07-28)
 
 On `/gains-demo`, in **Zone 3 (The Mistfields)**, replace the script of the **second video** — "Getting the best trauma therapy" (the card that comes after Video 3) — with Holly's shortened revision below, **verbatim**. Also update its duration estimate from ~90 sec down to **~60 sec (est.)**. Leave the first Zone 3 video (Video 3, "These are normal; help works") unchanged.
 
