@@ -110,6 +110,73 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`96fe01b` · 2026-08-03** — **Draft 58 — BSS bucket display (v3.5) + Safety Net X-click fix (v5.7).** Two Bianca-flagged fixes from the 2026-08-03 meeting, one commit. **Part A — Belonging Skills Sort v3.4 → v3.5:** Draft 55's bold `stem` prefix fixed crowding on the sort page itself, but buckets still rendered the FULL sentence once a card was dropped in — buckets now show ONLY the bold stem; the source pile (before dragging) and the end-of-activity summary/PNG both keep showing stem + full sentence, unchanged. Presentation only. **Part B — Allies / Safety Net v5.6 → v5.7 (bug fix):** on the Inspect X-out screen, the × removal badge sat outside the halo's hit-tested radius AND had `pointer-events: none` on its own visual group, so tapping directly on it never registered a click — the whole ally icon/halo was the (accidental) real click target instead, which read as an unreliable X (Bianca got stuck on Step 10). The badge (`TrampolineNet.jsx`) is now its OWN clickable/focusable control (role=button, keyboard Enter/Space) with a generously padded invisible hit circle sized toward the WCAG 2.5.5 ~44px benchmark; the ally icon/halo is no longer clickable for removal. Visual badge unchanged in position/size; legacy non-inspect walkthrough path untouched. Verified in the sandbox: BSS v3.5 badge, dragging a card into a bucket shows only its bold stem (source pile unaffected); Safety Net v5.7 badge, clicking the person icon/halo does nothing, the × badge reliably toggles remove/restore via mouse click AND keyboard Enter/Space, other allies unaffected; build + console clean.
+
+  <details>
+  <summary>Draft 58 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 58 — BSS bucket display + Safety Net X-click fixes (2026-08-03 meeting)
+
+Two small Bianca-flagged fixes from the 2026-08-03 team meeting. Ship as one commit.
+
+---
+
+#### Part A — Belonging Skills Sort v3.4 → v3.5 (MINOR)
+
+**Context:** Draft 55 (BSS v3.3 → v3.4) added a short bold `stem` prefix to each behavior card so the sort page reads less crowded. That worked for the SORT PAGE itself, but Bianca (2026-08-03) noted the buckets still feel crowded because when a card is dragged into a bucket the FULL SENTENCE renders. Fix: buckets should show ONLY the bold stem when a card lands in them (truncated view). Full sentences continue to render (a) on the sort cards themselves before they're dragged, and (b) in the end-of-activity summary. This is a presentation-only change to the bucket-view rendering.
+
+**File:** `src/activities/BelongingSkillsSort.jsx` (and any related child components — the bucket-item component if it's split out).
+
+**Change:** in the bucket-item rendering path, display only `behavior.stem` (bold), not the full `behavior.text`. Everywhere else (source pile of cards, drag ghost-chip if that's currently showing the stem per Draft 55, and end-of-activity summary) stays as-is.
+
+**Verification:**
+- Sort page (source pile of cards): still shows bold stem + full sentence — unchanged
+- Buckets: when a card is dropped in, only the bold stem shows in the bucket — the full sentence does NOT render there
+- End-of-activity summary: still shows full sentences with bold stems — unchanged
+- Definitions (hover/tap tooltip content on the source cards) — unchanged
+- Skill IDs unchanged, data shape unchanged
+
+**Version:** MINOR (v3.4 → v3.5) — presentation change to bucket-view only.
+
+---
+
+#### Part B — Allies / Safety Net v5.6 → v5.7 (MINOR bug fix)
+
+**Context:** Bianca (2026-08-03) got stuck on Step 10 of Safety Net — the removal step where you can take a person out of the net by clicking their X. She reported that at one point she couldn't remove anyone (though it started working again after a couple minutes). Josh's diagnosis in the admin notes: **the little X icon next to each person's icon has a click boundary that doesn't include the X itself.** The clickable region is limited to the person-icon area, and the X sits outside it. So depending on where a user clicks, the X action doesn't fire.
+
+**Fix:** extend the click / tap boundary of the removal control to include the X icon and a bit of padding around it. This is a hitbox expansion, not a visual change — the X should keep its current visual position and size, but be reliably clickable.
+
+**File:** `src/activities/AlliesSafetyNet.jsx` (or wherever the Safety Net Step 10 removal UI is composed — check the component that renders each placed person with their removal control).
+
+**Change:** on each placed-person item that has an X removal control, ensure the click handler's boundary encompasses BOTH the person icon AND the X icon (plus a small ~4-8px padding around the X for reliable tap targets on mobile). Most likely this means wrapping the person + X in a single `<button>` or hit-region container with the click handler on the parent, rather than having the X icon be a separate too-tight target. Or it could be a padding/margin issue where the X's clickable pseudo-region needs to expand.
+
+Whichever approach fits the current implementation cleanest. The key requirement: **clicking on or very near the X reliably triggers the removal action.** Test the fix on both desktop (mouse cursor) and mobile (touch target — the WCAG 2.5.5 recommendation is 44×44 CSS pixels for touch targets, which is a good benchmark).
+
+**Verification:**
+- Step 10: clicking the X on any placed person reliably removes them from the net
+- Clicking directly on the person icon (not the X) does NOT trigger removal — only clicking the X or the immediate padded area around it does (preserves the ability to select/interact with the person icon for other actions if any)
+- Works on desktop mouse click
+- Works on mobile touch — X hitbox is at least ~44px (comfortable tap target)
+- No visual change to the X or person icon
+- All other Safety Net steps unchanged
+
+**Version:** MINOR (v5.6 → v5.7) — bug fix, no visual or data-shape change.
+
+---
+
+#### Combined verification (both parts)
+
+- BSS v3.5 badge visible in the sandbox; buckets show only bold stems, source cards + summary show full sentences
+- Safety Net v5.7 badge visible in the sandbox; X removal reliably works on Step 10
+- Build clean, no console errors
+- Existing sandbox previews on /demo work correctly
+- `/irb-preview` reflects the updated activities (both share components)
+
+**Version bumps:** BSS v3.4 → v3.5, Safety Net v5.6 → v5.7. Both MINOR.
+
+
+  </details>
+
 - **`8f98043` · 2026-07-28** — **Draft 57 — Video Preview section at top of /demo + Kai Part 1 Scene 1.** New top-of-page section (before the Assent section — first thing on /demo) surfacing the team's video review content. Sam's Story V3 (`1Rg2zMDmqsQ`) moved here from inside the Sam's Story cast section (no duplicate embed, just relocated). Kai Part 1 Scene 1 "The Scan" (`fNSK011fNnI`, confirmed native 9:16 vertical 352×640) added below it under a Part > Scene hierarchy (`KAI_VIDEO_PARTS` array) so future scenes/parts are data-only additions — no JSX changes needed. Verified: "Video Preview" is the first h2 on /demo (before "Start here — Child Assent"); both videos render as matching 9:16 verticals with correct Part/Scene headings; Sam's Story V3 no longer duplicated; Assent/Activities/Tests/Sam's Story/Learning Skills sections all still render below in their previous relative order; feedback button present; console + build clean. `/irb-preview` untouched. No version bump.
 
   <details>
