@@ -258,7 +258,10 @@ function SkillCard({
         )}
         <div className="flex-1 leading-snug">
           <span className="font-semibold text-ctac-navy">{behavior.stem}</span>
-          {behaviorRest(behavior) && (
+          {/* Draft 58 A: once a card is placed in a bucket, only the bold
+              stem shows (buckets read crowded with the full sentence too);
+              the source pile (isUnplaced) keeps stem + full sentence. */}
+          {isUnplaced && behaviorRest(behavior) && (
             <span className="text-slate-700"> — {behaviorRest(behavior)}</span>
           )}
         </div>

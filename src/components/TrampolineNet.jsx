@@ -360,13 +360,22 @@ export default function TrampolineNet({
         const isInspected = !!p.ally.inspected
         const isHighlighted = highlightedAllyId && p.ally.id === highlightedAllyId
         const isRemovedViaInspect = inspectMode && !!p.ally.removed_via_inspect
-        // Click target: in inspectMode the whole ally toggles removal;
-        // otherwise the legacy `interactive` + onAllyTap path.
-        const handleTap = inspectMode && onAllyToggleRemoved
+        // Click target. Draft 58 B (2026-08-03, Bianca): in inspectMode,
+        // removal is now the × badge's OWN control (see below) — the whole
+        // ally icon/halo is no longer clickable for removal. Previously the
+        // entire ally toggled removal on any click, which (a) made
+        // accidental taps easy and (b) masked the real complaint, since the
+        // visual × badge itself had pointer-events:none and sat outside the
+        // halo's hit-tested radius, so tapping directly on it did nothing —
+        // only tapping the icon/halo "worked," which read as an unreliable X.
+        // The legacy `interactive` + onAllyTap path (non-inspect walkthrough)
+        // is unchanged.
+        const removeTap = inspectMode && onAllyToggleRemoved
           ? () => onAllyToggleRemoved(p.ally.id)
-          : interactive && onAllyTap
-            ? () => onAllyTap(p.ally.id)
-            : undefined
+          : null
+        const handleTap = !inspectMode && interactive && onAllyTap
+          ? () => onAllyTap(p.ally.id)
+          : undefined
         const isClickable = !!handleTap
         // Halo stroke priority: highlighted (current walkthrough ally) >
         // inspected (already done) > default.
@@ -388,13 +397,7 @@ export default function TrampolineNet({
             tabIndex={isClickable ? 0 : -1}
             role={isClickable ? 'button' : undefined}
             aria-label={
-              inspectMode
-                ? isRemovedViaInspect
-                  ? `Restore ally ${p.ally.name} to the net`
-                  : `Take ally ${p.ally.name} out of the net`
-                : interactive
-                  ? `Inspect ally ${p.ally.name}`
-                  : undefined
+              !inspectMode && interactive ? `Inspect ally ${p.ally.name}` : undefined
             }
             onKeyDown={(e) => {
               if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
@@ -473,40 +476,72 @@ export default function TrampolineNet({
               </g>
             )}
             {/* × affordance in top-right corner of the halo (inspectMode
-                only). Visual only — the whole <g> handles the click. */}
-            {inspectMode && (
+                only). Draft 58 B (2026-08-03, Bianca): this badge is now
+                its own clickable/focusable control — the only thing that
+                removes/restores an ally — with a generously padded invisible
+                hit circle (a normal transparent-fill shape, so it actually
+                hit-tests, unlike the old pointer-events:none wrapper). The
+                visual badge itself (circle + glyph) keeps its exact
+                position/size, nested in its own pointerEvents="none" group
+                so the paint doesn't shrink the hit target down to its size. */}
+            {inspectMode && removeTap && (
               <g
                 transform={`translate(${half + 1} ${-half - 1})`}
-                pointerEvents="none"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  removeTap()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    removeTap()
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={
+                  isRemovedViaInspect
+                    ? `Restore ally ${p.ally.name} to the net`
+                    : `Take ally ${p.ally.name} out of the net`
+                }
+                style={{ cursor: 'pointer', outline: 'none' }}
               >
-                <circle
-                  cx="0"
-                  cy="0"
-                  r="6"
-                  fill={isRemovedViaInspect ? '#16A34A' : '#B91C1C'}
-                  stroke="#FFFDF7"
-                  strokeWidth="1"
-                />
-                {isRemovedViaInspect ? (
-                  // Restore icon: a small circular-arrow / plus to read
-                  // as "put back."
-                  <path
-                    d="M -2.4 0 L 0 -2.4 L 2.4 0 M 0 -2.4 L 0 2.4"
-                    stroke="white"
-                    strokeWidth="1.4"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {/* Sized so the hit circle's CSS-pixel diameter lands close
+                    to WCAG 2.5.5's 44px comfortable-tap-target benchmark at
+                    the net's typical rendered scale, without ballooning so
+                    much on a crowded net that it overlaps neighboring allies. */}
+                <circle cx="0" cy="0" r={Math.max(half * 1.4, 18)} fill="black" fillOpacity={0} />
+                <g pointerEvents="none">
+                  <circle
+                    cx="0"
+                    cy="0"
+                    r="6"
+                    fill={isRemovedViaInspect ? '#16A34A' : '#B91C1C'}
+                    stroke="#FFFDF7"
+                    strokeWidth="1"
                   />
-                ) : (
-                  <path
-                    d="M -2.2 -2.2 L 2.2 2.2 M 2.2 -2.2 L -2.2 2.2"
-                    stroke="white"
-                    strokeWidth="1.6"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                )}
+                  {isRemovedViaInspect ? (
+                    // Restore icon: a small circular-arrow / plus to read
+                    // as "put back."
+                    <path
+                      d="M -2.4 0 L 0 -2.4 L 2.4 0 M 0 -2.4 L 0 2.4"
+                      stroke="white"
+                      strokeWidth="1.4"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ) : (
+                    <path
+                      d="M -2.2 -2.2 L 2.2 2.2 M 2.2 -2.2 L -2.2 2.2"
+                      stroke="white"
+                      strokeWidth="1.6"
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                  )}
+                </g>
               </g>
             )}
           </g>
