@@ -113,6 +113,13 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **b812925** (2026-08-06) — Traveler-strip tweaks (in-conversation): Zone 1 label reverted
+  from the draft's placeholder **"The Hallow" → "The Hollow"** (matches the zone sections),
+  and the progression is now **two per line at every width with each image 25% larger**
+  (196px vs the old 4-up's 157px at 1280px) so the darkness lightening between stages reads
+  clearly. Verified at 1280px and 375px: 2 columns, images uniform, both rows' captions
+  aligned, no horizontal overflow.
+
 - **ae9cb67** (2026-08-06) — Draft 23: **Playable Character now shows the Traveler's
   four-stage progression** instead of a single card — the same traveler with their darkness
   lightening as they climb (the Option-2 promise made visible on the character): Zone 1 —
