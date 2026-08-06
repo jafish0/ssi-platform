@@ -139,7 +139,7 @@ const ZONE_MAP_ROWS = [
 const TRAVELER_STAGES = [
   {
     src: `${ART}/traveler-stage1-hallow.webp`,
-    name: 'Zone 1 — The Hallow',
+    name: 'Zone 1 — The Hollow',
     blurb: 'Arrives wrapped in shadow.',
   },
   {
@@ -411,7 +411,9 @@ export default function GainsDemoPage() {
           One traveler, the whole way up — the darkness they arrive with lightens
           as they climb, until everyone can see the person they&apos;ve always been.
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
+        {/* Two to a line, ~25% larger than the old 4-up strip so the darkness
+            lightening between stages is actually readable. */}
+        <div className="grid grid-cols-2 gap-3 max-w-[452px]">
           {TRAVELER_STAGES.map((c) => (
             <ArtCard key={c.name} {...c} uniform />
           ))}
