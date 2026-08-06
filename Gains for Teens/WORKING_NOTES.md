@@ -106,6 +106,45 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **6a47bb8** (2026-08-06) — Drafts 20 + 21 + 22, shipped together (the team adopted
+  **Option 2**, which has no shadow character).
+  **Draft 20 — NPCs section** on `/gains-demo`, right after Playable Character: **Spark**
+  featured with art, the recorded **intro narration** (`/long-light/audio/spark-introduction.mp3`,
+  `preload="metadata"`, 38.2s) and the line text **verbatim** (all-ASCII source → straight
+  apostrophes preserved); then the four **symptom creatures** as art + name + symptom pill,
+  no voice lines yet. New feedback option **NPCs** (`section=npcs`) + admin label; `ArtCard`
+  regained `tag` support for the pills.
+  **Draft 22 — removed the entire "The Shadow" section** (concept copy, the "all light is a
+  faced shadow" cosmology, the 3-phase transformation art, and "The narrator's arc"), its
+  `SHADOW_PHASES`/`NARRATOR_ARC` data, and the `section=shadow` feedback option. Admin label
+  kept for old rows; the three shadow images stay on disk, just unused.
+  **Draft 21 — the climb has no pursuer.** The procedural rising wave is gone; tension is now
+  the traveler's **own darkness closing in from the screen EDGES** as Second Wind drops (a
+  radial "hole" texture driven by `aura`, two rings for depth, slow breathing pulse), with the
+  world dimming and the **music ducking** as it presses in, all receding on collect. Added the
+  **Second Wind recovery beat** — an orb caught while low shoves the darkness back at once,
+  flashes light, and grants a longer surge. **Climber +15%** (48 → 55px) with orbs (14 → 16)
+  and collect radius (34 → 39) scaled to match. Stage beats/ledges now just ease and clear the
+  edges. All Shadow copy removed from the climb page, the Zone 4 traversal text, and the
+  Prototypes card.
+  **Tuning note worth keeping:** the aura's first curve (inherited from the pursuer's distance
+  math) darkened the frame to 0.55 within ~3s of *every* run — before the first orb can reach
+  you. Reshaped to `(1-breath)^1.8` so a healthy Second Wind keeps the frame clear and it only
+  bites as you run low.
+  **Verified** — harness (real ClimbScene loop, stubbed Phaser) **14/14**: collecting orbs
+  peaks at aura **0.12** (clear, ~44s); ignoring every orb → visible at **3.7s**, heavy by
+  **7.0s**, capped at 0.92 so the climber is never blacked out, still completes (~91s);
+  reduced motion stays clear; 3 stages + both beats intact; **no-fail holds everywhere**.
+  Browser: demo order Map → Assent → Playable → **NPCs** → climb → zones → Prototypes with no
+  Shadow section; Spark audio loads; dropdown has NPCs, not Shadow; climb mounts, 3 restarts
+  keep one canvas + live context, no pursuer asset fetched, no console errors.
+  **⚠ Left for the team:** the **Exposition card still holds Stephanie's earlier proposal**
+  (Shadowveil / Spryte / **Cinder the shadow creature** / Mount Hope), which now sits beside
+  the Option-2 Spark line (**Shadowmend** / Spark / no shadow character). Neither draft asked
+  to change it, so it's untouched — but the two world names and the presence/absence of a
+  shadow character contradict. Say the word and I'll swap the Exposition card to the Option-2
+  text.
+
 - **1e391b6** (2026-07-28) — Draft 19: Zone 3's **second** video ("Getting the best trauma
   therapy") now carries **Holly's shortened script, verbatim** (3 paragraphs, down from the
   numbered-tips version), and its estimate drops **~90 sec → ~60 sec (est.)**. Zone 3's
@@ -926,18 +965,18 @@ Two demo edits (both on `/gains-demo`):
 *End of Draft 16.*
 
 
-### Draft 17 — Zone 4→5 "The Ascent" climb traversal (Phaser; reuse/extend the traversal engine) — ✅ SHIPPED c0ce3b9 (2026-07-27)
+### Draft 17 — Zone 4→5 "The Ascent" climb traversal (Phaser; reuse/extend the traversal engine) — ✅ SHIPPED c0ce3b9 (2026-07-27)  _(SHIPPED — post-launch changes are in Draft 21; edits inside this archived block are superseded)_
 
 **Ambition (Fable):** the second traversal, built by **reusing/extending the Draft 8 traversal foundation** — proving the engine reskins to a new mechanic. Polished, no-fail, on-brand.
 
-**Concept.** A vertical, one-thumb CLIMB from Zone 4 (Bright Reaches) up to Zone 5 (the Beacon), through three stages — **tree → mountain → crystal spire** — brightening as you rise. The player is the human Traveler, climbing. "**Second Wind**" (a breath meter) drains as you climb (faster at altitude) and is refilled by collecting glowing **orbs** (air-blooms). The **Shadow chases from below** — it can NEVER catch you (no-fail); it only sets tension and pace. Reaching the Beacon = arrival into Zone 5; the Shadow falls away, unable to follow into the light (a breadcrumb for the final face-off).
+**Concept.** A vertical, one-thumb CLIMB from Zone 4 (Bright Reaches) up to Zone 5 (the Beacon), through three stages — **tree → mountain → crystal spire** — brightening as you rise. The player is the human Traveler, climbing. "**Second Wind**" (a breath meter) drains as you climb (faster at altitude) and is refilled by collecting glowing **orbs** (air-blooms). The tension comes from the breath itself: as Second Wind runs low a **darkness closes in around you** (Option-2 lore — the traveler's own darkness), pushed back each time you grab an orb. Reaching the Beacon = arrival into Zone 5; the Shadow falls away, unable to follow into the light (a breadcrumb for the final face-off).
 
 **Assets** (staged in `Gains for Teens/game-assets/climb/`; copy into the app, e.g. `public/gains/climb/`):
 - Climb sprite, 3 frames, already registered on a common 520×1351 canvas, bottom-aligned: `climb-right.png`, `climb-mid.png`, `climb-left.png`. Cycle: **right → mid → left → mid → loop.**
 - Stage backgrounds (9:16, 1296×2304, scroll vertically): `stage-tree.webp`, `stage-mountain.webp`, `stage-spire.webp`.
 - Collectible: `orb.png` (transparent, additive glow).
 - Audio: `climb-music.mp3` (looping background, "Skyiceberg – Epic"), `sfx-orb.mp3` (collect beep).
-- Pursuer: `shadow-pursuer.webp` — a purpose-built rising wall of dark smoke (transparent cut-out, spans the frame width, wisps at the top), staged with the other climb assets.
+- (No pursuer — the chasing Shadow is REMOVED per the Option-2 lore. `shadow-pursuer.webp` stays staged but unused for now.)
 
 **Engine.** Reuse the Draft 8 lazy-loaded, disposable `<TraversalGame>` React wrapper + Phaser setup (destroy on unmount, one WebGL context at a time, portrait scale, DPR cap, `touch-action:none`). Add a **climb mode** — a `ClimbScene` sharing the framework (or a `mode` param on the existing scene). Keep state in React; report via `onComplete`. Reuse the Draft 8 audio pattern (music created once; restart-in-place on replay to dodge the iOS suspended-AudioContext bug; mute toggle).
 
@@ -946,8 +985,9 @@ Two demo edits (both on `/gains-demo`):
 - One thumb: drag/steer the Traveler left/right along the surface toward orbs and up the climbing lane; the 3-frame cycle plays with a bob (compressed on mid-pull, extended on reach).
 - **Second Wind meter** drains slowly, faster in the mountain and spire stages. Orbs refill it — each = a surge of climb speed + `sfx-orb` + optional `navigator.vibrate(10)`. Missing an orb costs nothing.
 - If Second Wind empties, the Traveler slows and climbs wearily — **never falls, never dies**; an orb restores pace.
-- **The Shadow** rises from below at a steady pace as a rising wall of dark smoke (`shadow-pursuer.webp`), always welling up from the lower frame. High breath → you pull ahead and it recedes; low breath → you slow and it closes toward you (near-miss pressure), but it NEVER catches/grabs/ends the run. Keep it a slow looming presence — no fast lunges or jump-scares. Add a few **rest ledges** — wide safe holds where the climb eases and the Shadow briefly stalls (paces the stress).
-- **Arrival:** at the spire's top, a warm white-gold Beacon bloom; the Shadow falls away below (can't enter the light); fire `onComplete({ orbsCollected })` with a short "You reached the Beacon" beat + Replay.
+- **Character size:** render the Traveler sprite **~15% larger** than the base (team request).
+- **Tension = the breath + the encroaching darkness (NO shadow character; no-fail).** High Second Wind = bright, warm, clear world. As it drains, a **dark vignette/haze creeps in from the screen edges** (the traveler's own darkness, per Option-2 lore), colors desaturate, the climb slows, and the music dims — urgent without ever failing. Grabbing an orb snaps the light back (bright flood + music swell). If Second Wind empties you don't fall — you slow to a labored crawl in near-dark, and the next orb triggers a dramatic **"Second Wind"** recovery surge. Ramp pressure by making orbs **sparser and more spread out** (side reaches / small risk-reward detours) as you climb higher and breath drains faster. **Put the relief beats at the stage transitions:** crossing tree → mountain and mountain → spire eases the pressure — a brief "catch your breath" moment (plentiful orbs, calmer pace, warm light) — before the next stage ramps the drain back up. No streak/combo system (the run is short enough it doesn't need one).
+- **Arrival:** at the spire's top, a warm white-gold Beacon bloom; the last of the darkness lifts and you arrive in full light; fire `onComplete({ orbsCollected })` with a short "You reached the Beacon" beat + Replay.
 
 **Juice:** climb bob, cloak sway, orb sparkle + collect pop, drifting motes, the brightening overlay, Beacon bloom, subtle vignette, the Shadow's dark haze at the bottom edge. `prefers-reduced-motion`: calm auto-climb, orbs auto-collect, the Shadow gentle and distant, minimal particles.
 
@@ -960,23 +1000,16 @@ Two demo edits (both on `/gains-demo`):
 *End of Draft 17.*
 
 
-### Draft 18 — Exposition card: Stephanie's intro/transitions text (VERBATIM) — ✅ SHIPPED 9399844 (2026-07-28)
+### Draft 18 — Exposition card: Stephanie's reworked exposition, OPTION 2 (verbatim)
 
-On `/gains-demo`, replace the Exposition section placeholder ("Stephanie writing a draft") with Stephanie's text below, **verbatim** — keep her wording and her production notes in `{}` / `[]` exactly as-is (this is a working demo card). Two labeled parts:
+The team chose **Option 2** of Stephanie's reworked exposition (Sprang + Holly both picked it). On `/gains-demo`, put Option 2's narration on the Exposition card, **verbatim** — this REPLACES the earlier Shadowveil / Spryte / Cinder draft. New canon in Option 2: world = **Shadowmend**, narrator = **Spark** (no "Spryte"), and **no shadow/Cinder character** — the "darkness" is the traveler's OWN aura that lightens toward Mount Hope.
 
-**The Spark's intro narration:**
-> Welcome to Shadowveil, my name is Spryte and I am a Spark. I need your help getting my friend Cinder to the top of Mount Hope {show the shadow creature}. Only once we reach the top of the Mountain can Cinder turn into a spark, like me! Cinder has experienced really scary and stressful things causing her to feel hopeless, scared, and angry. This is why she looks like a shadow now. But with our help we can get Cinder across all 5 levels of Shadowveil to reach Mount Hope and become the spark she used to be!
+**The Spark's intro narration (Option 2):**
+> Welcome to Shadowmend, my name is Spark. Everyone that comes here has experienced really scary and stressful things. They usually arrive with a darkness around them that can feel upsetting and heavy and also make it hard for others to really see or get to know them. It's my job to teach you more about trauma and ways to feel better. Together, we will move through each of the five levels; learning, playing games, and getting gear to help us reach Mount Hope, where that darkness around you will get lighter, helping everyone see the amazing person you are!
 
-**Transition phrases for the spark to narrate:**
-> - Let's start in Level 1, the Hallow where we will learn more about what trauma is.
-> - [maybe gear for this level could be a lantern] Wow! You got the lantern of knowledge, let's keep moving to level 2, the Path
-> - Awesome job, now we have {insert gear} to help us onto level 3, the Mistfields. And it looks like all your hard work is starting help Cinder transform [show phase 2 of the shadow]
-> - Now, we have a wingsuit! You can use this to capture as many light orbs as possible to move to level 4.
-> - You did it! Onto level 4, the Bright Reaches
-> - Wow! Now you have the oxygen mask and we can make the final assent to Mount Hope
-> - You completed the last task, now you have the {insert gear}, the last thing we needed to help Cinder become a spark again!
+**Transition phrases: HOLD for now.** Stephanie's doc still carries the Option-1 transition phrases that reference "Cinder" (whom Option 2 removes). Do NOT put them on the card yet — pending an Option-2-consistent rewrite.
 
-**Verify.** Exposition card shows this verbatim text; nothing else changes. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+**Verify.** Exposition card shows the Option 2 narration verbatim; no Cinder / Shadowveil references anywhere; nothing else changes. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 18.*
 
@@ -993,3 +1026,61 @@ New script (verbatim):
 **Verify.** Zone 3's second video card shows the shortened script + ~60 sec; the first Zone 3 video is unchanged. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 19.*
+
+
+### Draft 20 — Demo: add an "NPCs" section (Spark + the four symptom creatures) — ✅ SHIPPED 6a47bb8 (2026-08-06)
+
+On `/gains-demo`, add a new section titled **"NPCs"** immediately AFTER the Playable Character section.
+
+**1. Spark** (first, featured):
+- Image: `/long-light/art/narrator-spark.webp`.
+- Name: **Spark** — the narrator and guide.
+- **Audio player** with Spark's intro voice line: copy `spark-introduction.mp3` into `public/long-light/audio/` and reference `/long-light/audio/spark-introduction.mp3` (reuse the demo's existing audio-player pattern, `preload="metadata"`). Label it "Spark's intro narration."
+- Show the line text beneath the player (verbatim):
+> Welcome to Shadowmend, my name is Spark. Everyone that comes here has experienced really scary and stressful things. They usually arrive with a darkness around them that can feel upsetting and heavy and also make it hard for others to really see or get to know them. It's my job to teach you more about trauma and ways to feel better. Together, we will move through each of the five levels; learning, playing games, and getting gear to help us reach Mount Hope, where that darkness around you will get lighter, helping everyone see the amazing person you are!
+
+**2. The symptom creatures** (below Spark, in a row/grid — same style as the messengers gallery). Image + name + symptom label, **no lines / no audio yet** (leave room to add voice lines later):
+- **Emberwick** — reactivity / hypervigilance — `/long-light/art/emberwick.webp`
+- **Mirefly** — intrusion — `/long-light/art/mirefly.webp`
+- **Hollowshell** — avoidance — `/long-light/art/hollowshell.webp`
+- **Dimmet** — negative mood / thoughts — `/long-light/art/dimmet.webp`
+
+**Assets:** `spark-introduction.mp3` staged at `Gains for Teens/long-light-site/audio/` → copy to `public/long-light/audio/`. All images already deployed in `public/long-light/art/`.
+
+**Feedback:** add an **NPCs** option (`section=npcs`) to the demo feedback dropdown + admin labels.
+
+**Verify.** NPCs section renders right after Playable Character; Spark card shows the image, name, a working audio player (plays the intro), and the line text; the four creatures show image + name + symptom with no audio; feedback dropdown has NPCs. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 20.*
+
+
+### Draft 21 — Climb ("The Ascent"): remove the Shadow, bigger climber, darkness-aura tension — ✅ SHIPPED 6a47bb8 (2026-08-06)
+
+Post-launch changes to the **already-shipped** climb (`src/game/climbScene.js`; Draft 17 + rounds). The team adopted Option 2 lore, which has **no shadow character**, so:
+
+1. **Remove the Shadow entirely.** The live climb currently has a procedural welling-up dark wave (the pursuer, round bec20e5). Rip it out — no pursuer from below, no dark wave. Remove Shadow references from the instructions/copy too (e.g., "the Shadow is closer than you think — climb quickly").
+
+2. **Replace the tension with a "darkness aura" (Option-2 lore).** Instead of darkness rising from below, the traveler's OWN darkness closes in from the screen **edges** as Second Wind drops: a dark vignette + slight desaturation creeping inward from the borders, the climb slowing, the music dimming — all receding/brightening each time an orb is collected. Breath high = bright, warm, clear; breath low = the darkness presses in around the edges. Reuse the existing breath-derived darkness logic, just re-target it from a bottom wave to an **edge vignette/aura**. Still strictly no-fail.
+
+3. **"Second Wind" recovery beat.** Keep the empty-breath weary crawl (rate floor), and when an orb is collected after breath has run low, add a brighter recovery surge (light floods back, small burst) — earns the gear name.
+
+4. **Bigger climber.** Increase the climber ~15% (`CLIMB_FIG_H` ≈ 48px → ~55px) and scale its dependents (orb size, collect radius, bob) proportionally, as the earlier scale pass did, so the balance holds.
+
+5. **Keep everything else** (three stages tree→mountain→spire, orbs, the air-intake collect sound, music, the stage-arrival relief beats at each transition) — but reword the arrival beats so they no longer "push the Shadow back"; just ease/brighten. Relief beats stay at the stage transitions.
+
+**Verify.** No Shadow anywhere in the climb (no wave, no copy); at low breath the darkness now closes in from the screen edges and lightens on collect; climber ~15% larger; still strictly no-fail; three stages + arrival + audio intact. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 21.*
+
+
+### Draft 22 — Demo: remove the "The Shadow" antagonist section — ✅ SHIPPED 6a47bb8 (2026-08-06)
+
+On `/gains-demo`, **remove the entire "The Shadow" section** (the antagonist-arc concept section after Zone 5, added in Drafts 13/14/15): its "what it is" copy, the "all light is a faced shadow" cosmology, the three-phase transformation art (Looming `shadow.webp` → The Turning `shadow-phase2.webp` → Your Spark `shadow-phase3.webp`), and "The narrator's arc" subsection. **Option 2 has no shadow character/antagonist**, so this whole section no longer fits and should be pulled.
+
+- Remove the section entirely. Drop its feedback option (`section=shadow`) from the demo dropdown (keep the admin label for any old rows).
+- The three transformation images become unused on the demo — **keep the files on disk**, just stop displaying them.
+- Leave everything else (the Option-2 exposition and the "darkness lightens" idea live in the Exposition card / narration now, not in a dedicated Shadow section).
+
+**Verify.** The "The Shadow" section is gone; the demo flows cleanly (Zone 5 → whatever follows → footer) with no broken links or empty anchors; feedback dropdown no longer lists The Shadow. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 22.*
