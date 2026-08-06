@@ -130,14 +130,32 @@ const ZONE_MAP_ROWS = [
   },
 ]
 
-// ---------- Playable characters ----------
-// One protagonist now (team dropped the choose-your-character set). The old
-// avatar files stay in the repo; they're just no longer displayed here.
-const PLAYABLE = [
+// ---------- Playable character ----------
+// One protagonist (the team dropped the choose-your-character set), shown as
+// the four-stage progression: the same traveler with their darkness lightening
+// as they climb — the Option-2 promise made visible on the character. All four
+// plates are 9:16 so they line up as an even strip. Zone labels/captions are
+// placeholder copy from Draft 23. The old avatar files stay in the repo.
+const TRAVELER_STAGES = [
+  {
+    src: `${ART}/traveler-stage1-hallow.webp`,
+    name: 'Zone 1 — The Hallow',
+    blurb: 'Arrives wrapped in shadow.',
+  },
   {
     src: `${ART}/avatar-human-traveler.webp`,
-    name: 'The Traveler',
-    blurb: 'A young traveler setting out to understand what happened — and find the way forward.',
+    name: 'Zone 2',
+    blurb: 'The journey begins.',
+  },
+  {
+    src: `${ART}/traveler-stage3.webp`,
+    name: 'Zones 3–4',
+    blurb: 'The light grows.',
+  },
+  {
+    src: `${ART}/traveler-stage4-bright.webp`,
+    name: 'Zone 5 · Mount Hope',
+    blurb: 'Fully seen.',
   },
 ]
 
@@ -386,12 +404,16 @@ export default function GainsDemoPage() {
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           Playable Character
         </h2>
-        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+        <p className="text-[13px] text-slate-500 italic mb-1 max-w-[760px]">
           You play as the Traveler.
         </p>
-        <div className="max-w-[220px]">
-          {PLAYABLE.map((c) => (
-            <ArtCard key={c.name} {...c} />
+        <p className="text-[13px] text-slate-600 leading-relaxed mb-4 max-w-[700px]">
+          One traveler, the whole way up — the darkness they arrive with lightens
+          as they climb, until everyone can see the person they&apos;ve always been.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
+          {TRAVELER_STAGES.map((c) => (
+            <ArtCard key={c.name} {...c} uniform />
           ))}
         </div>
       </section>
@@ -531,8 +553,11 @@ function InDevelopmentCard({ label, note }) {
 }
 
 // Image card (playable character, NPCs). `tag` renders a small pill — used
-// for the symptom labels. Handles a dashed placeholder when art isn't ready.
-function ArtCard({ src, name, tag, blurb, placeholder }) {
+// for the symptom labels. `uniform` pins the image to a 9:16 box so a row of
+// them lines up exactly even if the source plates differ in pixel size (the
+// traveler-progression strip mixes a 941×1672 plate with 576×1024 ones).
+// Handles a dashed placeholder when art isn't ready.
+function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
   return (
     <figure className="bg-white rounded-2xl shadow-card p-3 flex flex-col">
       {placeholder ? (
@@ -544,7 +569,15 @@ function ArtCard({ src, name, tag, blurb, placeholder }) {
           Redesign in progress
         </div>
       ) : (
-        <img src={src} alt={name} loading="lazy" className="w-full h-auto rounded-xl mb-3" />
+        <img
+          src={src}
+          alt={name}
+          loading="lazy"
+          className={
+            'w-full rounded-xl mb-3 ' +
+            (uniform ? 'aspect-[9/16] object-cover' : 'h-auto')
+          }
+        />
       )}
       <figcaption className="flex-1">
         <h4 className="text-[14px] font-semibold text-slate-800 leading-tight">{name}</h4>
