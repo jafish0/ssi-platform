@@ -51,9 +51,16 @@ Claude Code (CLI — implementation).
 
 Asks pointed the other way — things Cowork/Josh need to source or decide.
 
+- **Option-2 transition phrases (2026-08-06).** The Exposition card's intro narration is now
+  the Option-2 Spark line (Shadowmend), but its **seven transition phrases are pending** —
+  the earlier set was built around Cinder and the old level names, so it was pulled rather
+  than silently rewritten. Need an Option-2 set: one line per hand-off (into Zone 1, then
+  after each zone's gear through to Mount Hope). Drop them in a draft and Claude Code will
+  wire them into the same card.
+
 - ~~**Orb collect sound for the climb traversal (2026-07-27).**~~ ✅ **RESOLVED
   2026-07-28** — Josh supplied "Woosh 1" (air whoosh); shipped in 9efaf02 as
-  `public/gains/climb/audio/sfx-air-intake.mp3`. (Nothing outstanding here right now.)
+  `public/gains/climb/audio/sfx-air-intake.mp3`.
 
 ---
 
@@ -105,6 +112,18 @@ gradients and layered depth.
 ---
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **c26f1e4** (2026-08-06) — **Exposition card swapped to the Option-2 text** (Josh's call,
+  resolving the ⚠ flagged on 6a47bb8). The card had still held the earlier proposal
+  (Shadowveil / Spryte / **Cinder**), which contradicted the rest of the page. Now:
+  • intro narration = the **Option-2 Spark line** (Shadowmend), rendered from the **same
+  `SPARK_INTRO_LINE` constant the NPCs card uses**, so the two copies can't drift apart,
+  plus a pointer to where the recording lives; • the **seven transition phrases are
+  pending** — they were written around Cinder and the old level names and no Option-2 set
+  exists yet, so they were pulled rather than silently rewritten (**now a TODO for Cowork**,
+  above); • dropped the unused `EXPO_INTRO`/`EXPO_TRANSITIONS` constants. Verified **zero**
+  occurrences of Shadowveil / Spryte / Cinder anywhere on the page, NPC audio still plays,
+  no console errors. **The demo is now internally consistent on Option-2 lore.**
 
 - **6a47bb8** (2026-08-06) — Drafts 20 + 21 + 22, shipped together (the team adopted
   **Option 2**, which has no shadow character).
