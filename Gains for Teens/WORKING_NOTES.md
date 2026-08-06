@@ -113,6 +113,22 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **ae9cb67** (2026-08-06) — Draft 23: **Playable Character now shows the Traveler's
+  four-stage progression** instead of a single card — the same traveler with their darkness
+  lightening as they climb (the Option-2 promise made visible on the character): Zone 1 —
+  The Hallow "Arrives wrapped in shadow." → Zone 2 "The journey begins." (the existing
+  image) → Zones 3–4 "The light grows." → Zone 5 · Mount Hope "Fully seen." 4-up on
+  desktop, 2-up on mobile, with the draft's lead-in line. Zone labels/captions are the
+  draft's placeholder copy, rendered as-is for Josh to tune (note they say **"The Hallow"**
+  where the zone sections say "The Hollow"). NPCs section untouched.
+  **One addition beyond the draft:** the stage-2 plate is 941×1672 while the three new ones
+  are 576×1024, so the strip rendered 1px uneven. `ArtCard` gained an opt-in **`uniform`**
+  prop pinning the image to a 9:16 box (`object-cover`), used only by this row — the strip
+  is exact now and stays exact if art is swapped at a different size later.
+  Verified at 750px and 375px: all four in order, images 200, rendered sizes **identical**
+  (143×254 / 142×252), captions pixel-aligned on desktop, grid 4→2 columns on mobile, no
+  horizontal overflow, NPC cards unaffected, no console errors.
+
 - **c26f1e4** (2026-08-06) — **Exposition card swapped to the Option-2 text** (Josh's call,
   resolving the ⚠ flagged on 6a47bb8). The card had still held the earlier proposal
   (Shadowveil / Spryte / **Cinder**), which contradicted the rest of the page. Now:
@@ -1103,3 +1119,25 @@ On `/gains-demo`, **remove the entire "The Shadow" section** (the antagonist-arc
 **Verify.** The "The Shadow" section is gone; the demo flows cleanly (Zone 5 → whatever follows → footer) with no broken links or empty anchors; feedback dropdown no longer lists The Shadow. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 22.*
+
+
+### Draft 23 — Playable Character: show the Traveler's four-stage progression — ✅ SHIPPED ae9cb67 (2026-08-06)
+
+In the **Playable Character** section of `/gains-demo`, replace the single traveler image with the **four-stage progression** — the same traveler, their darkness lightening as they climb toward Mount Hope (this is the Option-2 promise made visible on the character). Show the four left-to-right (a 4-up row on desktop; wrap/stack gracefully on mobile), each with its zone label + a short caption underneath.
+
+Images (all already staged in `long-light-site/art/`, served at `/long-light/art/`):
+
+1. `/long-light/art/traveler-stage1-hallow.webp` — **Zone 1 — The Hallow** · "Arrives wrapped in shadow."
+2. `/long-light/art/avatar-human-traveler.webp` — **Zone 2** · "The journey begins." *(existing image, now stage 2)*
+3. `/long-light/art/traveler-stage3.webp` — **Zones 3–4** · "The light grows."
+4. `/long-light/art/traveler-stage4-bright.webp` — **Zone 5 · Mount Hope** · "Fully seen."
+
+Notes:
+- A short lead-in line above the row is welcome, e.g. *"One traveler, the whole way up — the darkness they arrive with lightens as they climb, until everyone can see the person they've always been."* (Josh can tweak this copy.)
+- All four share the same dimensions/pose, so they should line up as a clean strip. Keep them uniformly sized.
+- Captions/zone labels are placeholder copy — fine to render as-is; Josh will adjust wording later.
+- This is the **Playable Character** section only — leave the new **NPCs** section (Draft 20) untouched.
+
+**Verify.** Playable Character section shows four traveler stages in order with zone labels beneath each; images load (no 404s); row is responsive on mobile. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 23.*
