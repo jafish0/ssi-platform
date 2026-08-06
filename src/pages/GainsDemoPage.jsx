@@ -19,16 +19,29 @@ import DemoPageLayout from '../components/DemoPageLayout.jsx'
 export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'assent-measures', label: 'Child Assent / Measures' },
   { value: 'exposition', label: 'Exposition' },
+  { value: 'npcs', label: 'NPCs' },
   { value: 'zone-1', label: 'Zone 1' },
   { value: 'zone-2', label: 'Zone 2' },
   { value: 'zone-3', label: 'Zone 3' },
   { value: 'zone-4', label: 'Zone 4' },
   { value: 'zone-5', label: 'Zone 5' },
-  { value: 'shadow', label: 'The Shadow' },
   { value: 'general', label: 'General Feedback' },
 ]
 
 const ART = '/long-light/art'
+
+// ---------- NPCs (Draft 20) ----------
+// Spark's intro line is VERBATIM (all-ASCII source: straight apostrophes) —
+// don't re-typeset it. The four symptom creatures have no voice lines yet.
+const SPARK_INTRO_LINE =
+  "Welcome to Shadowmend, my name is Spark. Everyone that comes here has experienced really scary and stressful things. They usually arrive with a darkness around them that can feel upsetting and heavy and also make it hard for others to really see or get to know them. It's my job to teach you more about trauma and ways to feel better. Together, we will move through each of the five levels; learning, playing games, and getting gear to help us reach Mount Hope, where that darkness around you will get lighter, helping everyone see the amazing person you are!"
+
+const SYMPTOM_CREATURES = [
+  { src: `${ART}/emberwick.webp`, name: 'Emberwick', tag: 'reactivity / hypervigilance' },
+  { src: `${ART}/mirefly.webp`, name: 'Mirefly', tag: 'intrusion' },
+  { src: `${ART}/hollowshell.webp`, name: 'Hollowshell', tag: 'avoidance' },
+  { src: `${ART}/dimmet.webp`, name: 'Dimmet', tag: 'negative mood / thoughts' },
+]
 
 // ---------- Characters (for the per-zone "who's here" chips) ----------
 const CHAR = {
@@ -142,64 +155,6 @@ const PLAYABLE = [
     src: `${ART}/avatar-human-traveler.webp`,
     name: 'The Traveler',
     blurb: 'A young traveler setting out to understand what happened — and find the way forward.',
-  },
-]
-
-// ---------- The Shadow — three-phase transformation arc ----------
-const SHADOW_PHASES = [
-  {
-    src: `${ART}/shadow.webp`,
-    name: 'Phase 1 — Looming',
-    blurb: 'The Shadow that follows you through every zone.',
-  },
-  {
-    src: `${ART}/shadow-phase2.webp`,
-    name: 'Phase 2 — The Turning',
-    blurb: 'Faced in the light, its darkness burns down to a warm core.',
-  },
-  {
-    src: `${ART}/shadow-phase3.webp`,
-    name: 'Phase 3 — Your Spark',
-    blurb: 'It becomes a Spark — your own light to carry onward.',
-  },
-]
-
-// ---------- The narrator's arc (the Spark's thread through the Shadow) ----------
-const NARRATOR_ARC = [
-  {
-    label: 'Early — a hint',
-    lines: [
-      'I’ll be with you the whole way up. I know this path better than you’d think.',
-      'That dark thing trailing behind you? I’m not afraid of it. I’ve got my reasons — I’ll tell you at the top.',
-    ],
-  },
-  {
-    label: 'As it looms — naming it',
-    lines: [
-      'You’ve felt it behind you, haven’t you. That’s the weight of what happened, and it’s been with you a long time.',
-      'We’re not running from it, and we’re not fighting it. We’re climbing toward the light — because light is how you face a thing like that.',
-    ],
-  },
-  {
-    label: 'The reveal',
-    lines: [
-      'Before you turn around, a secret. Every light in this place — the lanterns, the Beacon, me — we were all shadows once.',
-      'Facing ours didn’t just make the dark smaller. It changed us. We came back carrying something we didn’t have before. That’s what a light really is: not a shadow erased, but a shadow faced — and what grows from facing it.',
-      'You’re not the first, and you’re not alone. Hold your light up, use everything you’ve gathered, and face it.',
-    ],
-  },
-  {
-    label: 'The transformation',
-    lines: [
-      'See? It was never here to destroy you. Faced — with help — it becomes something you can carry. Not the weight it was. A light. A strength.',
-    ],
-  },
-  {
-    label: 'Your Spark',
-    lines: [
-      'That light is yours now. It grew out of the hardest thing you carry — because you faced it, with help, and didn’t do it alone.',
-      'What happened will always be part of your story. But it won’t loom over you the same way — and the courage it took to face it becomes part of you too. That’s yours to keep.',
-    ],
   },
 ]
 
@@ -318,7 +273,7 @@ const ZONES = [
     },
     gear: 'Oxygen Mask — helps you breathe.',
     traversal: {
-      text: 'The Ascent — a one-thumb climb through tree, mountain, and crystal spire up to the Beacon. Orbs refill your Second Wind; the Shadow rises behind you but can never catch you.',
+      text: 'The Ascent — a one-thumb climb through tree, mountain, and crystal spire up to the Beacon. Orbs refill your Second Wind; as it runs low your own darkness closes in from the edges, and each orb pushes it back.',
       playable: true,
       playHref: '/gains-demo/climb',
       playLabel: 'Play the climb prototype',
@@ -458,6 +413,60 @@ export default function GainsDemoPage() {
         </div>
       </section>
 
+      {/* C2. NPCs — the guide and the four symptom creatures */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          NPCs
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+          The characters you meet along the way.
+        </p>
+
+        {/* Spark — featured, with the recorded intro narration */}
+        <article className="bg-white rounded-2xl shadow-card p-5 max-w-[760px] flex flex-col sm:flex-row gap-5 mb-6">
+          <div className="flex-shrink-0 mx-auto sm:mx-0 w-[130px]">
+            <img
+              src={`${ART}/narrator-spark.webp`}
+              alt="Spark — the narrator and guide"
+              loading="lazy"
+              className="w-full h-auto rounded-2xl"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[17px] font-semibold text-slate-800">Spark</h3>
+            <p className="text-[13px] text-slate-500 italic mb-3">
+              The narrator and guide.
+            </p>
+            <p className="text-[13px] font-medium text-slate-700 mb-1.5">
+              Spark&apos;s intro narration
+            </p>
+            <audio
+              controls
+              preload="metadata"
+              src="/long-light/audio/spark-introduction.mp3"
+              aria-label="Audio: Spark's intro narration"
+              className="w-full mb-3"
+            />
+            <p className="text-[14px] text-slate-700 leading-relaxed">
+              {SPARK_INTRO_LINE}
+            </p>
+          </div>
+        </article>
+
+        {/* The four symptom creatures — art + name + symptom, no lines yet */}
+        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
+          The symptom creatures
+        </h3>
+        <p className="text-[13px] text-slate-500 mb-4">
+          Voice lines to come.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
+          {SYMPTOM_CREATURES.map((c) => (
+            <ArtCard key={c.name} {...c} />
+          ))}
+        </div>
+      </section>
+
       {/* D. The game flow — Exposition → Zone 1 → Zone 5 */}
       <section className="mb-4">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
@@ -496,112 +505,6 @@ export default function GainsDemoPage() {
         <ZoneSection key={z.n} zone={z} />
       ))}
 
-      {/* E. The Shadow — the antagonist arc that spans the whole journey */}
-      <section className="mb-10">
-        <h2 className="text-[18px] font-bold text-slate-800">The Shadow</h2>
-        <p className="text-[13px] text-slate-500 mb-3">
-          The antagonist arc that ties the whole journey together.
-        </p>
-        <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200 max-w-[880px]">
-          <div className="mb-4">
-            <Pill icon={HardHat}>Concept in development</Pill>
-          </div>
-
-          {/* three-phase transformation arc */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            {SHADOW_PHASES.map((p) => (
-              <ArtCard key={p.name} {...p} />
-            ))}
-          </div>
-
-          <div className="space-y-3 text-[14px] text-slate-700 leading-relaxed">
-            <p>
-              <strong>What it is.</strong> The Shadow is the past trauma that
-              follows the player through the entire journey — a looming presence
-              at the edges of the zones and traversals, the unresolved weight
-              they’re carrying.
-            </p>
-            <p>
-              <strong>How it resolves (the arc).</strong> The player faces the
-              Shadow at the end, in the light — the climactic encounter where you
-              use everything you’ve learned and earned. You don’t fight or
-              destroy it: you <em>face</em> it, shining your light and using the
-              skills and gear you’ve gathered, and it loses its power. Its
-              darkness burns down to a small warm light — it becomes a{' '}
-              <strong>Spark</strong>, the same kind of being as the narrator, and
-              you carry it onward as your own inner light. Trauma faced and
-              transformed, not erased.
-            </p>
-            <p>
-              <strong>The cosmology (the big idea).</strong>{' '}
-              <em>All light in this world is a faced shadow.</em> The Spark who
-              guides you was a shadow someone once faced; so are the lanterns
-              along the path, the messenger creatures who recovered, and the
-              Beacon itself — the gathered light of everyone who made the climb.
-              When you face your Shadow it turns to light, and you leave carrying
-              your own Spark.
-            </p>
-            <div>
-              <p className="font-semibold text-slate-800">How it’s built in (concept):</p>
-              <ul className="list-disc pl-5 mt-1 space-y-1">
-                <li>
-                  <strong>Build-up:</strong> a looming background presence that
-                  grows from zone to zone.
-                </li>
-                <li>
-                  <strong>Training:</strong> each earlier traversal teaches you to
-                  use one skill/gear under pressure.
-                </li>
-                <li>
-                  <strong>Climax:</strong> the final approach brings them all
-                  together — a <strong>no-fail</strong>, call-and-response “hold
-                  the light and use your skills” sequence where the Shadow shrinks
-                  with each skill you apply, until you pass through it into the
-                  Beacon and it settles into a small, carry-able companion.
-                </li>
-              </ul>
-            </div>
-            <p className="text-[13px] text-slate-500 italic">
-              Guardrail: the light comes from <em>facing it with help</em> —
-              courage + support + skills — never from the trauma itself being
-              good; final wording is CTAC’s to bless. Ties together the dark→light
-              spine, the “avoidance creature shrinks” note, and the
-              recovered-creature “symptoms lessening” animation.
-            </p>
-          </div>
-
-          {/* The narrator's arc — the Spark's thread through the journey */}
-          <div className="mt-6 pt-5 border-t border-slate-200">
-            <h3 className="text-[15px] font-semibold text-slate-800 mb-1">
-              The narrator’s arc
-            </h3>
-            <p className="text-[13px] italic text-slate-600 mb-4 max-w-[70ch]">
-              The Spark carries a quiet thread the whole way up — a light that
-              was once a shadow too.
-            </p>
-            <div className="space-y-4">
-              {NARRATOR_ARC.map((beat) => (
-                <div key={beat.label}>
-                  <div className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold mb-1.5">
-                    {beat.label}
-                  </div>
-                  <ul className="space-y-1.5">
-                    {beat.lines.map((line, i) => (
-                      <li
-                        key={i}
-                        className="text-[14px] text-slate-700 leading-relaxed pl-3 border-l-2 border-amber-200"
-                      >
-                        “{line}”
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* F. Prototypes — the playable traversals, side by side */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
@@ -621,7 +524,7 @@ export default function GainsDemoPage() {
           <PrototypeCard
             img="/gains/climb/stage-spire.webp"
             title="The Ascent — Zone 4 → 5"
-            blurb="One-thumb climb through tree, mountain, and spire. Orbs refill your Second Wind; the Shadow rises behind you."
+            blurb="One-thumb climb through tree, mountain, and spire. Orbs refill your Second Wind; low air lets your darkness close in from the edges."
             href="/gains-demo/climb"
           />
         </div>
@@ -642,9 +545,9 @@ function InDevelopmentCard({ label, note }) {
   )
 }
 
-// Image card (playable characters). Handles a dashed placeholder when the
-// art isn't ready yet.
-function ArtCard({ src, name, blurb, placeholder }) {
+// Image card (playable character, NPCs). `tag` renders a small pill — used
+// for the symptom labels. Handles a dashed placeholder when art isn't ready.
+function ArtCard({ src, name, tag, blurb, placeholder }) {
   return (
     <figure className="bg-white rounded-2xl shadow-card p-3 flex flex-col">
       {placeholder ? (
@@ -660,6 +563,11 @@ function ArtCard({ src, name, blurb, placeholder }) {
       )}
       <figcaption className="flex-1">
         <h4 className="text-[14px] font-semibold text-slate-800 leading-tight">{name}</h4>
+        {tag && (
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1 text-[11px] font-medium bg-ctac-teal-100 text-ctac-teal-800">
+            {tag}
+          </span>
+        )}
         {blurb && <p className="text-[12px] text-slate-600 leading-relaxed mt-1.5">{blurb}</p>}
       </figcaption>
     </figure>

@@ -10,14 +10,18 @@
 // Vertical one-thumb CLIMB through three stages (tree → mountain → spire),
 // brightening as you rise. "Second Wind" (a breath meter) drains as you
 // climb — faster at altitude — and is refilled by orbs (air-blooms) that
-// drift down past you. The Shadow wells up from below as a rising wall of
-// smoke: high breath and you pull ahead, low breath and it closes in — but
-// it can NEVER catch you. Empty breath only makes the climb weary and slow,
-// never fatal. Rest ledges pause the drain and push the Shadow back.
+// drift down past you.
+//
+// Tension is the traveler's OWN darkness (Option-2 lore — there is no shadow
+// character): as Second Wind drops, a dark aura closes in from the screen
+// EDGES and the climb slows; each orb pushes it back out and floods light in
+// (a brighter recovery surge if you were running low). Empty breath only makes
+// the climb weary, never fatal. Rest ledges and the stage-arrival beats ease
+// the drain and clear the edges.
 // Reaching the Beacon fires `onComplete({ orbsCollected })`.
 //
 // Config (registry key 'traversalConfig'):
-//   { stageUrls[3], climbUrls[3], orbUrl, shadowUrl, musicUrl, sfxOrbUrl,
+//   { stageUrls[3], climbUrls[3], orbUrl, musicUrl, sfxOrbUrl,
 //     durationMs, reducedMotion, palette, onComplete }
 
 const GAME_W = 540
@@ -26,14 +30,11 @@ const PLATE_RATIO = 2304 / 1296 // stage plates are 9:16
 const PLATE_ZOOM = 1.4 // >1 so there's vertical travel to pan through
 // A deliberately TINY climber against a vast wall — the "small traveler,
 // big world" read of the Long Light style. Everything else scales off it.
-const CLIMB_FIG_H = 48 // on-screen height of the climber figure
+const CLIMB_FIG_H = 55 // on-screen height of the climber figure
 const CLIMB_SRC_FIG_H = 1010 // opaque figure height inside the 1351px canvas
 const CLIMB_SRC_H = 1351
-// Procedural Shadow-wave texture size (wider than the frame so it can drift).
-const WAVE_W = 720
-const WAVE_H = 760
-const ORB_W = 14 // orb width on screen (height derived from its 256×408 art)
-const COLLECT_R = 34 // collection radius — forgiving, but you still steer
+const ORB_W = 16 // orb width on screen (height derived from its 256×408 art)
+const COLLECT_R = 39 // collection radius — forgiving, but you still steer
 
 const DEFAULTS = {
   durationMs: 48000,
@@ -60,14 +61,16 @@ const STAGES = [
 // How long the climb holds on a stage-arrival beat.
 const STAGE_PAUSE_MS = 5400
 
-// How fast the Shadow slides toward its target position (per-frame lerp).
-const SHADOW_EASE = 0.06
-// The breath→distance curve. The exponent means the Shadow starts closing
-// while your breath is still moderate, instead of only once you're nearly
-// empty — so ignoring orbs gets you chased sooner. Higher = closes earlier.
-const SHADOW_BREATH_CURVE = (b) => Math.pow(b, 2.4)
+// The darkness aura: how fast it creeps in/out (per-frame lerp) and how
+// strongly low breath drives it. Shaped so a healthy Second Wind keeps the
+// frame clear (breath 0.9 → ~0.01) and it bites as you run low (0.25 → ~0.55,
+// empty → the cap). Without the curve, every run would open in darkness
+// during the seconds before the first orb reaches you.
+const AURA_EASE = 0.06
+const AURA_FROM_BREATH = (b) => Math.pow(1 - b, 1.8)
+const AURA_MAX = 0.92 // alpha at zero breath; never fully blacks the frame
 
-// Rest ledges: progress windows where the drain stops and the Shadow stalls.
+// Rest ledges: progress windows where the drain stops and the edges clear.
 const LEDGES = [
   { from: 0.30, to: 0.36 },
   { from: 0.64, to: 0.70 },
@@ -109,7 +112,7 @@ export function makeClimbScene(Phaser) {
       this.targetX = GAME_W / 2
       this.frameIdx = 0
       this.frameMs = 0
-      this.shadowTop = GAME_H + 200
+      this.aura = 0 // 0 = clear edges, 1 = darkness pressed all the way in
       this.onLedge = false
       this.pauseMs = 0 // stage-arrival beat: holds the climb briefly
     }
@@ -122,7 +125,7 @@ export function makeClimbScene(Phaser) {
       this.load.image('climb-mid', c.climbUrls[1])
       this.load.image('climb-left', c.climbUrls[2])
       this.load.image('orb', c.orbUrl)
-      // (the Shadow is drawn procedurally — no sprite to load)
+      // (no pursuer sprite — the darkness aura is drawn procedurally)
       if (c.musicUrl) this.load.audio('climb-music', c.musicUrl)
       if (c.sfxOrbUrl) this.load.audio('sfx-orb', c.sfxOrbUrl)
     }
@@ -165,26 +168,22 @@ export function makeClimbScene(Phaser) {
           .setDepth(18)
       }
 
-      // --- the Shadow: a translucent black wave, always below the climber.
-      // Drawn procedurally (a gradient with an undulating carved crest) rather
-      // than from a sprite, so it reads as darkness welling up instead of an
-      // object. Two offset layers drift against each other so the crest moves. ---
-      this.makeShadowWaveTexture()
-      const waveW = GAME_W * 1.34
-      const waveH = waveW * (WAVE_H / WAVE_W)
-      this.shadowBack = this.add
-        .image(GAME_W / 2, this.shadowTop, 'shadow-wave')
-        .setOrigin(0.5, 0)
-        .setDisplaySize(waveW, waveH)
+      // --- the darkness aura: the traveler's OWN darkness, pressing in from
+      // the edges as Second Wind drops (no pursuer, no shadow character).
+      // Two rings so it reads as depth rather than a flat frame: a wide soft
+      // haze plus a tighter, darker edge. Both sit above the world but below
+      // the HUD, and are driven by `this.aura` in update(). ---
+      this.makeAuraTexture()
+      this.auraSoft = this.add
+        .image(GAME_W / 2, GAME_H / 2, 'aura')
+        .setDisplaySize(GAME_W * 1.02, GAME_H * 1.02)
         .setDepth(26)
-        .setAlpha(0.68)
-      this.shadowFront = this.add
-        .image(GAME_W / 2, this.shadowTop, 'shadow-wave')
-        .setOrigin(0.5, 0)
-        .setDisplaySize(waveW * 1.12, waveH * 1.12)
+        .setAlpha(0)
+      this.auraEdge = this.add
+        .image(GAME_W / 2, GAME_H / 2, 'aura')
+        .setDisplaySize(GAME_W * 1.3, GAME_H * 1.24)
         .setDepth(28)
-        .setAlpha(0.92)
-        .setFlipX(true)
+        .setAlpha(0)
 
       // --- the climber (bottom-anchored so the feet stay planted) ---
       const scale = CLIMB_FIG_H / CLIMB_SRC_FIG_H
@@ -392,8 +391,28 @@ export function makeClimbScene(Phaser) {
     collectOrb(o, i) {
       this.orbCount += 1
       this.orbText.setText('✦ ' + this.orbCount)
+      // "Second Wind" recovery beat: catching an orb after running low floods
+      // the light back in — a brighter flash and a longer surge than a routine
+      // top-up, so the gear earns its name.
+      const wasLow = this.breath < 0.3
       this.breath = clamp(this.breath + 0.3, 0, 1)
-      this.surgeMs = 1100
+      this.surgeMs = wasLow ? 1600 : 1100
+      if (wasLow && !this.reduced) {
+        this.aura = Math.min(this.aura, 0.25) // shove the darkness back at once
+        const flash = this.add
+          .rectangle(GAME_W / 2, GAME_H / 2, GAME_W, GAME_H, 0xfff3d0, 1)
+          .setDepth(45)
+          .setBlendMode('ADD')
+          .setAlpha(0)
+        this.tweens.add({
+          targets: flash,
+          alpha: 0.3,
+          duration: 160,
+          yoyo: true,
+          ease: 'Quad.out',
+          onComplete: () => flash.destroy(),
+        })
+      }
       if (this.sfxOrb && !this.sound.locked) {
         this.sfxOrb.stop() // retrigger from the top rather than overlapping
         this.sfxOrb.play()
@@ -438,13 +457,13 @@ export function makeClimbScene(Phaser) {
       if (this.music && this.music.isPlaying) {
         this.tweens.add({ targets: this.music, volume: 0, duration: 1000 })
       }
-      // The Shadow can't follow into the light — it falls away below.
+      // The darkness lifts entirely at the Beacon.
+      this.aura = 0
       this.tweens.add({
-        targets: [this.shadowBack, this.shadowFront],
-        y: GAME_H + 400,
-        alpha: 0.12,
-        duration: 900,
-        ease: 'Quad.in',
+        targets: [this.auraSoft, this.auraEdge],
+        alpha: 0,
+        duration: 700,
+        ease: 'Quad.out',
       })
       const finish = () =>
         this.time.delayedCall(this.reduced ? 120 : 420, () => {
@@ -498,7 +517,7 @@ export function makeClimbScene(Phaser) {
         const beat = this.pauseMs > 0
         if (beat) this.pauseMs -= delta
 
-        // --- rest ledges: drain pauses, Shadow stalls ---
+        // --- rest ledges: drain pauses, the edges clear ---
         // (suppressed during a stage beat so the two messages never overlap)
         const ledge =
           !beat && LEDGES.some((l) => this.p >= l.from && this.p <= l.to)
@@ -542,31 +561,25 @@ export function makeClimbScene(Phaser) {
         if (idx !== this.stageIndex) this.setStage(idx)
         this.positionPlate(this.stageIndex, Math.min(1, raw - this.stageIndex))
 
-        // --- brightening as you rise ---
-        this.warm.setAlpha(this.p * 0.2)
+        // (the warm brightening is applied with the aura below, since the
+        // closing darkness dims it)
 
-        // --- the Shadow: closes when breath is low, recedes when high.
-        //     Hard-clamped so it can never reach the climber. ---
-        // Distances are relative to the (small) climber so it reads as a real
-        // pursuit; the clamp keeps the smoke's top edge strictly below the
-        // climber's feet (body spans baseY-CLIMB_FIG_H..baseY), so no contact.
-        const far = GAME_H + 150
-        const near = this.baseY + 36
-        let target = lerp(
-          near,
-          far,
-          this.reduced ? 1 : SHADOW_BREATH_CURVE(this.breath),
-        )
-        if (hold) target = far
-        this.shadowTop += (target - this.shadowTop) * SHADOW_EASE
-        this.shadowTop = Math.max(this.baseY + 22, this.shadowTop)
-        // Two layers drifting against each other so the crest undulates.
-        const drift = this.reduced ? 0 : Math.sin(time * 0.00042) * 16
-        const wob = this.reduced ? 0 : Math.sin(time * 0.0009) * 5
-        this.shadowBack.x = GAME_W / 2 + drift
-        this.shadowBack.y = this.shadowTop + 14 + wob
-        this.shadowFront.x = GAME_W / 2 - drift * 1.4
-        this.shadowFront.y = this.shadowTop - wob
+        // --- the darkness aura: presses in from the edges as breath drops,
+        //     recedes as it recovers. Never covers the centre (the texture is
+        //     a radial hole), so the climber is always visible — no-fail. ---
+        const auraTarget = hold
+          ? 0
+          : AURA_FROM_BREATH(this.reduced ? 1 : this.breath) * AURA_MAX
+        this.aura += (auraTarget - this.aura) * AURA_EASE
+        // A slow breathing pulse so the edges feel alive rather than static.
+        const pulse = this.reduced ? 0 : Math.sin(time * 0.0011) * 0.03 * this.aura
+        this.auraSoft.setAlpha(Math.max(0, this.aura * 0.75 + pulse))
+        this.auraEdge.setAlpha(Math.max(0, this.aura + pulse))
+        // The world dims a little as the darkness closes in.
+        this.warm.setAlpha(Math.max(0, this.p * 0.2 - this.aura * 0.12))
+        if (this.music && this.music.isPlaying && !this.arrived) {
+          this.music.setVolume(0.3 * (1 - this.aura * 0.45))
+        }
 
         // --- HUD meter ---
         this.meterFill.width = Math.max(0, 296 * this.breath)
@@ -640,56 +653,24 @@ export function makeClimbScene(Phaser) {
       g.destroy()
     }
 
-    // A dark translucent wave: a vertical gradient (clear at the crest →
-    // near-opaque ink at the base) with the area above an undulating crest
-    // carved out, plus soft wisps licking up off it.
-    makeShadowWaveTexture() {
-      if (this.textures.exists('shadow-wave')) return
-      const tex = this.textures.createCanvas('shadow-wave', WAVE_W, WAVE_H)
+    // The darkness aura: a radial hole — clear in the middle, darkening
+    // toward the edges — so it can be faded in to press the frame's borders
+    // inward without ever blacking out the centre where the climber is.
+    makeAuraTexture() {
+      if (this.textures.exists('aura')) return
+      const W = 512
+      const H = 512
+      const tex = this.textures.createCanvas('aura', W, H)
       if (!tex) return
       const ctx = tex.getContext()
       if (!ctx) return
-
-      // Density builds fast below the crest so that when the wave is close,
-      // the lower frame actually reads dark — but the crest stays feathered.
-      const grd = ctx.createLinearGradient(0, 0, 0, WAVE_H)
-      grd.addColorStop(0, 'rgba(4,4,10,0)')
-      grd.addColorStop(0.1, 'rgba(4,4,10,0.3)')
-      grd.addColorStop(0.22, 'rgba(3,3,9,0.62)')
-      grd.addColorStop(0.35, 'rgba(3,3,8,0.85)')
-      grd.addColorStop(1, 'rgba(2,2,6,0.95)')
+      const grd = ctx.createRadialGradient(W / 2, H / 2, W * 0.12, W / 2, H / 2, W * 0.52)
+      grd.addColorStop(0, 'rgba(3,3,9,0)')
+      grd.addColorStop(0.45, 'rgba(3,3,9,0.18)')
+      grd.addColorStop(0.75, 'rgba(2,2,7,0.62)')
+      grd.addColorStop(1, 'rgba(1,1,5,0.95)')
       ctx.fillStyle = grd
-      ctx.fillRect(0, 0, WAVE_W, WAVE_H)
-
-      const crestAt = (x) =>
-        74 +
-        Math.sin(x * 0.013) * 26 +
-        Math.sin(x * 0.031 + 1.7) * 12 +
-        Math.sin(x * 0.007 + 0.4) * 8
-
-      // carve everything above the crest away
-      ctx.globalCompositeOperation = 'destination-out'
-      ctx.beginPath()
-      ctx.moveTo(0, 0)
-      for (let x = 0; x <= WAVE_W; x += 6) ctx.lineTo(x, crestAt(x))
-      ctx.lineTo(WAVE_W, 0)
-      ctx.closePath()
-      ctx.fill()
-
-      // wisps rising off the crest
-      ctx.globalCompositeOperation = 'source-over'
-      for (let i = 0; i < 16; i++) {
-        const wx = (i / 16) * WAVE_W + 22
-        const wy = crestAt(wx) + 6
-        const r = 28 + ((i * 37) % 44)
-        const w = ctx.createRadialGradient(wx, wy, 0, wx, wy, r)
-        w.addColorStop(0, 'rgba(3,3,9,0.26)')
-        w.addColorStop(1, 'rgba(3,3,9,0)')
-        ctx.fillStyle = w
-        ctx.beginPath()
-        ctx.arc(wx, wy, r, 0, Math.PI * 2)
-        ctx.fill()
-      }
+      ctx.fillRect(0, 0, W, H)
       tex.refresh()
     }
 

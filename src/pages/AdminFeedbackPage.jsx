@@ -37,6 +37,7 @@ const PROGRAMS = [
 const SECTION_LABELS = {
   'assent-measures': 'Child Assent / Measures',
   exposition: 'Exposition',
+  npcs: 'NPCs',
   'zone-1': 'Zone 1',
   'zone-2': 'Zone 2',
   'zone-3': 'Zone 3',

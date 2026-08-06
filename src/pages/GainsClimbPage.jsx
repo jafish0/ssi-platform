@@ -67,9 +67,10 @@ export default function GainsClimbPage() {
           The second traversal prototype, built on the same game engine as the
           bird flight. Climb through three stages — tree, mountain, crystal
           spire — up to the Beacon. Gather orbs to keep your{' '}
-          <strong>Second Wind</strong> up. The Shadow rises behind you, but it{' '}
-          <strong>can never catch you</strong> — and you can&apos;t fall. Art,
-          music, and feel are prototype-stage.
+          <strong>Second Wind</strong> up: as it runs low your own darkness
+          closes in from the edges, and every orb pushes it back. It&apos;s{' '}
+          <strong>no-fail</strong> — you can&apos;t fall or lose. Art, music,
+          and feel are prototype-stage.
         </p>
       </section>
 
@@ -112,8 +113,9 @@ export default function GainsClimbPage() {
                   collect oxygen to keep going.
                 </li>
                 <li>
-                  • The <strong className="text-white">Shadow</strong> is closer to you
-                  than you think — climb quickly!
+                  • As your air runs low the{' '}
+                  <strong className="text-white">darkness</strong> closes in around you —
+                  grab an orb and it clears.
                 </li>
               </ul>
               <button
@@ -138,7 +140,7 @@ export default function GainsClimbPage() {
                 You gathered{' '}
                 <span className="font-bold text-white">{result.orbsCollected}</span>{' '}
                 {result.orbsCollected === 1 ? 'orb' : 'orbs'} on the way up — and the
-                Shadow couldn’t follow you into the light.
+                darkness lifted in the light of the Beacon.
               </p>
               <button
                 type="button"
