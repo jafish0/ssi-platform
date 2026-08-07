@@ -25,14 +25,17 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // SessionSummary still exists in the codebase but is no longer rendered in
 // the /demo preview (Draft 38 D.1) — kept for potential reuse.
 
-// "For Review This Week" cards (Draft 60) — the top-of-page video review
-// section. Replaces Draft 57's "Video Preview" section (Part/Scene
-// hierarchy) with a richer per-video card, each with its own dedicated
-// feedback affordance (FeedbackButton's `initialArea`) rather than
-// everything landing in one global feedback bucket. Data-driven so a new
-// week's batch is a data-only addition — append a card (with an optional
-// `groupSubheading` to start a new visual group) and it renders below the
-// existing ones, no JSX changes needed.
+// "For Review This Week" cards (Draft 60, extended by Draft 61). The
+// top-of-page review section. Replaces Draft 57's "Video Preview" section
+// (Part/Scene hierarchy) with a richer per-card structure, each with its
+// own dedicated feedback affordance (FeedbackButton's `initialArea`)
+// rather than everything landing in one global feedback bucket.
+// Data-driven so a new week's batch is a data-only addition — append a
+// card (with an optional `groupSubheading` to start a new visual group)
+// and it renders below the existing ones, no JSX changes needed. A card
+// sets exactly one of `youtubeId` (video embed) or `imageSrc` (still
+// image) — Draft 61 added the image-card variant for the Sam Female
+// composites, which have no video yet.
 const REVIEW_CARDS = [
   {
     title: "Sam's Story V4",
@@ -74,10 +77,29 @@ const REVIEW_CARDS = [
       'The specific difficulty of building belonging while in foster or relative care — "playing the Belonging Game on Hard Mode."',
     feedbackArea: 'Kai Part 1 Scene 4: The Foster Care Extra Level',
   },
+  {
+    title: 'Sam Female — Adult Narrator',
+    imageSrc: '/cast/images/sam-female-v3.png',
+    description:
+      "The 18-year-old female narrator variant of Sam. This is the composite the team approved at the July 27 meeting — Version 1's face and jawline, Version 2's skin tone, Version 1's softer hair — now up here for a final look before Female variant video production begins.",
+    feedbackArea: 'Sam Female — Adult Narrator',
+    groupSubheading: {
+      title: 'Sam variants for review',
+    },
+  },
+  {
+    title: 'Sam Female — 14-year-old',
+    imageSrc: '/cast/images/sam-female-14.png',
+    description:
+      'The 14-year-old female variant of Sam. This is the younger-Sam companion to the adult narrator, generated for team review before I use it as the character reference for the Female variant video production.',
+    feedbackArea: 'Sam Female — 14-year-old',
+  },
 ]
 
-// One review card: optional group subheading, then title + 9:16 embed +
-// description + a dedicated feedback button pinned to this video.
+// One review card: optional group subheading, then title + media (a 9:16
+// YouTube embed for `youtubeId` cards, or a still image for `imageSrc`
+// cards — Draft 61) + description + a dedicated feedback button pinned to
+// this item.
 function ReviewCard({ card }) {
   return (
     <>
@@ -99,13 +121,21 @@ function ReviewCard({ card }) {
         </h4>
         <div className="mx-auto w-full max-w-[360px] mb-4">
           <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-            <iframe
-              src={`https://www.youtube.com/embed/${card.youtubeId}`}
-              title={card.title}
-              className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
+            {card.imageSrc ? (
+              <img
+                src={card.imageSrc}
+                alt={card.title}
+                className="absolute inset-0 h-full w-full object-cover rounded-2xl border border-amber-200"
+              />
+            ) : (
+              <iframe
+                src={`https://www.youtube.com/embed/${card.youtubeId}`}
+                title={card.title}
+                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            )}
           </div>
         </div>
         <p className="text-[13px] text-slate-600 leading-relaxed text-center mb-4 max-w-[480px] mx-auto">
