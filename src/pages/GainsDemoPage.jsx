@@ -411,9 +411,11 @@ export default function GainsDemoPage() {
           One traveler, the whole way up — the darkness they arrive with lightens
           as they climb, until everyone can see the person they&apos;ve always been.
         </p>
-        {/* Two to a line, ~25% larger than the old 4-up strip so the darkness
-            lightening between stages is actually readable. */}
-        <div className="grid grid-cols-2 gap-3 max-w-[452px]">
+        {/* Two to a line on anything tablet-sized and up; one to a line on a
+            phone, where two 9:16 portraits side by side can only ever be
+            thumbnail-sized. Either way each image lands ~310px — about double
+            the old 4-up strip — so the darkness lightening actually reads. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[680px]">
           {TRAVELER_STAGES.map((c) => (
             <ArtCard key={c.name} {...c} uniform />
           ))}
