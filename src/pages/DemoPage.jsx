@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Play, Download, AlertCircle } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
+import FeedbackButton from '../components/FeedbackButton.jsx'
 import { TEST_REGISTRY } from '../lib/testRegistry.js'
 import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
@@ -24,19 +25,102 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // SessionSummary still exists in the codebase but is no longer rendered in
 // the /demo preview (Draft 38 D.1) — kept for potential reuse.
 
-// Kai psychoeducation videos for the top-of-page Video Preview section
-// (Draft 57), grouped Part > Scene so additional scenes/parts are a
-// data-only addition — just append an entry, no JSX changes needed.
-const KAI_VIDEO_PARTS = [
+// "For Review This Week" cards (Draft 60) — the top-of-page video review
+// section. Replaces Draft 57's "Video Preview" section (Part/Scene
+// hierarchy) with a richer per-video card, each with its own dedicated
+// feedback affordance (FeedbackButton's `initialArea`) rather than
+// everything landing in one global feedback bucket. Data-driven so a new
+// week's batch is a data-only addition — append a card (with an optional
+// `groupSubheading` to start a new visual group) and it renders below the
+// existing ones, no JSX changes needed.
+const REVIEW_CARDS = [
   {
-    title: 'Part 1 — All About Belonging',
-    scenes: [
-      { label: 'Scene 1', title: 'The Scan', youtubeId: 'fNSK011fNnI' },
-      // Scene 2, 3, 4 land here as Josh delivers them.
-    ],
+    title: "Sam's Story V4",
+    youtubeId: 'QsnyIxeHc_c',
+    description:
+      'Final V4 cut incorporating the 8/3 meeting revisions — photo composition at 3:48 recomposed, foster family table shot regenerated without the sink, Foster Mom’s line re-recorded with a new voice model.',
+    feedbackArea: "Sam's Story V4",
   },
-  // Part 2 — Skills for Belonging lands here once those scenes are ready.
+  {
+    title: 'Learning Skills for Belonging — Part 1, Scene 1: The Scan',
+    youtubeId: 'fNSK011fNnI',
+    description:
+      'Kai introduces himself and the concept of the belonging scan — the way our brains constantly evaluate social situations.',
+    feedbackArea: 'Kai Part 1 Scene 1: The Scan',
+    groupSubheading: {
+      title: 'Learning Skills for Belonging — Part 1',
+      intro:
+        "Kai's psychoeducation videos that play interleaved with the activities. Part 2 scenes will drop in as they're ready.",
+    },
+  },
+  {
+    title: "Learning Skills for Belonging — Part 1, Scene 2: The Why (It's in Your DNA)",
+    youtubeId: 'u1b2FoAwZPs',
+    description:
+      'Why belonging is a survival requirement wired into human biology — from ancient humans around fires to modern families sharing meals.',
+    feedbackArea: 'Kai Part 1 Scene 2: The Why',
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 1, Scene 3: Building a Safety Net',
+    youtubeId: 'z9IMWmArols',
+    description:
+      'The safety-net metaphor for belonging — you need multiple places to belong. Includes the GPS metaphor for friend groups.',
+    feedbackArea: 'Kai Part 1 Scene 3: Building a Safety Net',
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 1, Scene 4: The Foster Care "Extra Level"',
+    youtubeId: 'hTgGTKsx2Oo',
+    description:
+      'The specific difficulty of building belonging while in foster or relative care — "playing the Belonging Game on Hard Mode."',
+    feedbackArea: 'Kai Part 1 Scene 4: The Foster Care Extra Level',
+  },
 ]
+
+// One review card: optional group subheading, then title + 9:16 embed +
+// description + a dedicated feedback button pinned to this video.
+function ReviewCard({ card }) {
+  return (
+    <>
+      {card.groupSubheading && (
+        <div className="mb-4 max-w-[760px] mx-auto">
+          <h3 className="text-[15px] font-semibold text-ctac-navy mb-1">
+            {card.groupSubheading.title}
+          </h3>
+          {card.groupSubheading.intro && (
+            <p className="text-[13px] text-slate-500 italic">
+              {card.groupSubheading.intro}
+            </p>
+          )}
+        </div>
+      )}
+      <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
+        <h4 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
+          {card.title}
+        </h4>
+        <div className="mx-auto w-full max-w-[360px] mb-4">
+          <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+            <iframe
+              src={`https://www.youtube.com/embed/${card.youtubeId}`}
+              title={card.title}
+              className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        </div>
+        <p className="text-[13px] text-slate-600 leading-relaxed text-center mb-4 max-w-[480px] mx-auto">
+          {card.description}
+        </p>
+        <div className="text-center">
+          <FeedbackButton
+            label="Leave a note on this video"
+            initialArea={card.feedbackArea}
+          />
+        </div>
+      </div>
+    </>
+  )
+}
 
 // Per-stage encouragement copy for the "Growing your roots" preview
 // (Draft 25 Part C). Activity-name pairings are illustrative for the
@@ -217,69 +301,26 @@ export default function DemoPage() {
         </h1>
       </section>
 
-      {/* Video Preview (Draft 57) — top-of-page review surface for the
-          animated video content, so the team sees it before anything else.
-          Sam's Story V3 moved here from the Sam's Story cast section
-          (no duplicate); Kai's psychoeducation videos render grouped
-          Part > Scene from KAI_VIDEO_PARTS (data-only to extend). */}
+      {/* For Review This Week (Draft 60) — replaces Draft 57 + 59's
+          "Video Preview" section. Top-of-page review surface, restructured
+          each week to hold whatever new video work is ready for team
+          feedback. Each video is its own card with its own dedicated
+          feedback button (area pre-filled per-card) rather than one global
+          feedback bucket. Data-driven via REVIEW_CARDS — a new week's
+          batch is a data-only addition. */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Video Preview
+          For Review This Week
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          The current cuts of Sam&apos;s Story and Kai&apos;s psychoeducation
-          videos, up here at the top so they&apos;re easy to find. Use the
-          feedback button below to share notes on either video.
+          The videos below are the new cuts we&apos;d like feedback on this
+          week. Each card has its own comment button — use it to share
+          notes specific to that video. New cuts drop into this section as
+          they&apos;re ready.
         </p>
 
-        {/* Sam's Story V3 — native 9:16 vertical (YouTube id 1Rg2zMDmqsQ). */}
-        <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
-          <h3 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
-            Sam&apos;s Story V3
-          </h3>
-          <div className="mx-auto w-full max-w-[360px]">
-            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-              <iframe
-                src="https://www.youtube.com/embed/1Rg2zMDmqsQ"
-                title="Sam's Story V3"
-                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Kai psychoeducation videos, grouped Part > Scene. */}
-        {KAI_VIDEO_PARTS.map((part) => (
-          <div
-            key={part.title}
-            className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto"
-          >
-            <h3 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
-              {part.title}
-            </h3>
-            <div className="space-y-6">
-              {part.scenes.map((scene) => (
-                <div key={scene.label}>
-                  <h4 className="text-[15px] font-semibold text-slate-700 mb-2 text-center">
-                    {scene.label}: {scene.title}
-                  </h4>
-                  <div className="mx-auto w-full max-w-[360px]">
-                    <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-                      <iframe
-                        src={`https://www.youtube.com/embed/${scene.youtubeId}`}
-                        title={`Kai — ${part.title} ${scene.label}: ${scene.title}`}
-                        className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {REVIEW_CARDS.map((card) => (
+          <ReviewCard key={card.title} card={card} />
         ))}
       </section>
 

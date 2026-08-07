@@ -67,12 +67,18 @@ function deriveContext(pathname, params) {
 // `label` / `subtle` let the same button be dropped inline next to an
 // individual item as its own comment thread (the review section on
 // /gains-demo does this, one per proposal, each pinned to its own section).
+// `initialArea` (Draft 60) overrides the route-derived "Where you are" —
+// for per-video review cards on /demo, where every card shares the same
+// route but needs its own area string. The Edit affordance still lets the
+// submitter override it further; re-syncing on route change (below) uses
+// this override instead of the derived value when present.
 export default function FeedbackButton({
   program = 'ready-for-roots',
   sections = null,
   defaultSection = null,
   label = 'Give feedback',
   subtle = false,
+  initialArea = null,
 }) {
   const location = useLocation()
   const params = useParams()
@@ -82,8 +88,9 @@ export default function FeedbackButton({
   const [done, setDone] = useState(false)
 
   const ctx = useMemo(() => deriveContext(location.pathname, params), [location.pathname, params])
+  const effectiveArea = initialArea ?? ctx.area
 
-  const [area, setArea] = useState(ctx.area)
+  const [area, setArea] = useState(effectiveArea)
   const [areaEditing, setAreaEditing] = useState(false)
   // Default to Ginny Sprang (Josh's 2026-05-19 call). Anonymous is
   // still a selectable option in the dropdown; only the initial value
@@ -94,17 +101,17 @@ export default function FeedbackButton({
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    // Re-sync the auto-filled area when the route changes (and the user
-    // hasn't chosen to override it).
-    if (!areaEditing) setArea(ctx.area)
+    // Re-sync the auto-filled area when the route (or initialArea) changes
+    // (and the user hasn't chosen to override it).
+    if (!areaEditing) setArea(effectiveArea)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ctx.area])
+  }, [effectiveArea])
 
   function reset() {
     setSubmitting(false)
     setError(null)
     setDone(false)
-    setArea(ctx.area)
+    setArea(effectiveArea)
     setAreaEditing(false)
     setSubmitter('ginny')
     setCategory('general')
@@ -131,7 +138,7 @@ export default function FeedbackButton({
     try {
       await callEdgeFunction('submit-feedback', {
         page_path: location.pathname,
-        area: area?.trim() || ctx.area,
+        area: area?.trim() || effectiveArea,
         activity_id: ctx.activity_id,
         activity_version: ctx.activity_version,
         category,
