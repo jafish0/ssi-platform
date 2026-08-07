@@ -65,11 +65,11 @@ export default function GainsClimbPage() {
         </h1>
         <p className="text-[14px] text-slate-600 leading-relaxed max-w-[620px]">
           The second traversal prototype, built on the same game engine as the
-          bird flight. Climb through three stages — tree, mountain, crystal
-          spire — up to the Beacon. Gather orbs to keep your{' '}
+          bird flight. Climb through three stages (tree, mountain, crystal
+          spire) up to the Beacon. Gather orbs to keep your{' '}
           <strong>Second Wind</strong> up: as it runs low your own darkness
           closes in from the edges, and every orb pushes it back. It&apos;s{' '}
-          <strong>no-fail</strong> — you can&apos;t fall or lose. Art, music,
+          <strong>no-fail</strong>, so you can&apos;t fall or lose. Art, music,
           and feel are prototype-stage.
         </p>
       </section>
@@ -106,7 +106,7 @@ export default function GainsClimbPage() {
               <Sparkles size={30} strokeWidth={1.5} className="text-amber-200 mb-3" />
               <h2 className="text-[22px] font-bold text-white mb-3">The Ascent</h2>
               <ul className="text-[14px] text-amber-50/90 leading-relaxed space-y-2 mb-6 text-left max-w-[290px]">
-                <li>• Steer with one thumb — drag anywhere (or the arrow keys).</li>
+                <li>• Steer with one thumb: drag anywhere (or the arrow keys).</li>
                 <li>• The air is getting thinner as you get closer to the summit.</li>
                 <li>
                   • Use your <strong className="text-white">Second Wind</strong> gear to
@@ -114,8 +114,8 @@ export default function GainsClimbPage() {
                 </li>
                 <li>
                   • As your air runs low the{' '}
-                  <strong className="text-white">darkness</strong> closes in around you —
-                  grab an orb and it clears.
+                  <strong className="text-white">darkness</strong> closes in around
+                  you. Grab an orb and it clears.
                 </li>
               </ul>
               <button
@@ -139,7 +139,7 @@ export default function GainsClimbPage() {
               <p className="text-[15px] text-amber-100/90 mb-6">
                 You gathered{' '}
                 <span className="font-bold text-white">{result.orbsCollected}</span>{' '}
-                {result.orbsCollected === 1 ? 'orb' : 'orbs'} on the way up — and the
+                {result.orbsCollected === 1 ? 'orb' : 'orbs'} on the way up, and the
                 darkness lifted in the light of the Beacon.
               </p>
               <button

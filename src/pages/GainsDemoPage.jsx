@@ -148,25 +148,23 @@ const REVIEW_ARCADES = [
   {
     title: 'Reaching the Lantern Path — a slower, revealing arcade',
     body: 'You hold the Lantern, which lights only a small circle; you feel your way out of the opening zone and the path unfolds as you go.',
-    alts: 'Alternates for comment: a "keep it lit" tending game vs. gusts; or a "hold still to reveal the next safe step" patience crossing.',
   },
   {
     title: 'Clearing the darkness → the Mistfields',
-    body: 'With the amplified light you drag to aim and release a light-bloom that sweeps a cone of fog clear, revealing the background; when the area is cleared the camera pans up above the cloud line — "You made it to the Mistfields."',
-    alts: 'Framed as lifting/dissolving darkness, not combat.',
+    body: 'With the amplified light you drag to aim and release a light-bloom that sweeps a cone of fog clear, revealing the background; when the area is cleared the camera pans up above the cloud line and says "You made it to the Mistfields."',
   },
 ]
 
 const REVIEW_GEAR_POINTS = [
-  'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Glass. In the Mistfields it grows bird-of-light wings (a reskin of the existing bird traversal — no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
-  'Intent for comment: tools grow stronger the more they’re used (practice), and the real power is in combining them — the coping-skills-toolbox idea.',
+  'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Glass. In the Mistfields it grows bird-of-light wings (a reskin of the existing bird traversal, with no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
+  'Intent for comment: tools grow stronger the more they’re used (practice), and the real power is in combining them. That is the coping-skills-toolbox idea.',
 ]
 
 const REVIEW_GEAR_THEME =
-  'Every activity earns a tool. The tools combine and grow — a lantern becomes a Focusing Glass, the Glass grows wings — so you reach the summit carrying everything you’ve learned.'
+  'Every activity earns a tool. The tools combine and grow. A lantern becomes a Focusing Glass, and the Glass grows wings, so you reach the summit carrying everything you’ve learned.'
 
 const REVIEW_RENAME_RATIONALE =
-  '"The Hollow" was meant to convey an empty, desolate place — but that’s also how you’d spell what’s pronounced "holler" in Eastern Kentucky, and we don’t want to equate that emptiness with where anyone lives. A rename keeps the metaphor about an internal emotional state, not a real place.'
+  '"The Hollow" was meant to convey an empty, desolate place. But that’s also how you’d spell what’s pronounced "holler" in Eastern Kentucky, and we don’t want to equate that emptiness with where anyone lives. A rename keeps the metaphor about an internal emotional state, not a real place.'
 
 // ---------- Playable character ----------
 // One protagonist (the team dropped the choose-your-character set), shown as
@@ -202,7 +200,7 @@ const ZONES = [
   {
     n: 'Zone 1',
     name: 'The Hollow',
-    scenery: 'The dark valley floor — a single candle in hand, the beacon far above.',
+    scenery: 'The dark valley floor. A single candle in hand, and the beacon far above.',
     image: '/long-light/zone1.webp',
     characters: ['spark'],
     videos: [{ title: 'Video 1 — What trauma is', duration: '25 sec', script: V1 }],
@@ -212,14 +210,14 @@ const ZONES = [
         <>
           <p>
             <strong>Part 1:</strong> tap to reveal how five parts of the body
-            react during and after trauma — <strong>Lungs</strong> (breathe
+            react during and after trauma. <strong>Lungs</strong> (breathe
             faster to take in more oxygen), <strong>Head</strong> (thoughts
             race, hard to think clearly, dizzy or detached/unreal),{' '}
             <strong>Heart</strong> (beats faster and harder),{' '}
             <strong>Stomach</strong> (upset or nauseous as blood moves to the
             arms and legs), <strong>Body</strong> (heats up and sweats, muscles
-            tense, shaky or tingly) — then note these responses can linger after
-            the danger passes or resurface when something reminds you of it.
+            tense, shaky or tingly). These responses can linger after the
+            danger passes or resurface when something reminds you of it.
           </p>
           <p className="mt-2">
             <strong>Part 2:</strong> tap each reaction you’ve felt recently.
@@ -242,8 +240,8 @@ const ZONES = [
       title: 'Character Examples',
       desc: (
         <>
-          Meet the four messenger creatures —{' '}
-          <strong>Emberwick, Mirefly, Hollowshell, Dimmet</strong> — and for
+          Meet the four messenger creatures:{' '}
+          <strong>Emberwick, Mirefly, Hollowshell, Dimmet</strong>. For
           each, hear a short script and choose which of the four symptom types it
           shows (reactivity, intrusion, avoidance, negative mood/thoughts). Ends
           with an animation of all four creatures’ symptoms easing.
@@ -267,11 +265,11 @@ const ZONES = [
     activity: {
       title: 'Bridge beat',
       pending: true,
-      desc: 'A light, reflective bridge beat (TBD) — a message, not a drill.',
+      desc: 'A light, reflective bridge beat (TBD). A message, not a drill.',
     },
     gear: 'A Wingsuit — lets you take flight.',
     traversal: {
-      text: 'The bird flight — “the power of connections.” Gather connections to climb from the Mistfields up to the Bright Reaches.',
+      text: 'The bird flight, “the power of connections.” Gather connections to climb from the Mistfields up to the Bright Reaches.',
       playable: true,
     },
     goal: 'Normalize and instill hope; bridge toward getting help.',
@@ -290,8 +288,8 @@ const ZONES = [
       desc: (
         <>
           <p>
-            Try it right now if you’re feeling panicky or overwhelmed — the
-            3-3-3 rule. Identify each of these in your surroundings:
+            Try it right now if you’re feeling panicky or overwhelmed. It’s
+            called the 3-3-3 rule. Identify each of these in your surroundings:
           </p>
           <ul className="list-disc pl-5 mt-2 space-y-1">
             <li>
@@ -312,7 +310,7 @@ const ZONES = [
     },
     gear: 'Oxygen Mask — helps you breathe.',
     traversal: {
-      text: 'The Ascent — a one-thumb climb through tree, mountain, and crystal spire up to the Beacon. Orbs refill your Second Wind; as it runs low your own darkness closes in from the edges, and each orb pushes it back.',
+      text: 'The Ascent, a one-thumb climb through tree, mountain, and crystal spire up to the Beacon. Orbs refill your Second Wind; as it runs low your own darkness closes in from the edges, and each orb pushes it back.',
       playable: true,
       playHref: '/gains-demo/climb',
       playLabel: 'Play the climb prototype',
@@ -322,7 +320,7 @@ const ZONES = [
   {
     n: 'Zone 5',
     name: 'The Threshold',
-    scenery: 'The summit and the Beacon — the door that opens into light.',
+    scenery: 'The summit and the Beacon. The door that opens into light.',
     image: '/long-light/zone5.webp',
     characters: ['spark'],
     videos: [
@@ -336,7 +334,7 @@ const ZONES = [
     ],
     activity: { title: 'Activity', pending: true, desc: 'To be designed with CTAC.' },
     gear: 'Final gear / full toolkit.',
-    traversal: { text: 'Arrival at the Beacon — the journey’s end.', end: true },
+    traversal: { text: 'Arrival at the Beacon. The journey’s end.', end: true },
     goal: 'Address shame; end on readiness to commit and go.',
   },
 ]
@@ -367,7 +365,7 @@ export default function GainsDemoPage() {
         <p className="text-[14px] text-slate-600 leading-relaxed max-w-[760px]">
           An internal walkthrough of the intervention, laid out the way it
           plays: the roadmap first, then the characters you can be, then each
-          zone of the climb — video, activity, gear, and the arcade flight to
+          zone of the climb: video, activity, gear, and the arcade flight to
           the next zone. Use <strong>Give feedback</strong> (top right) and pick
           the section your comment is about.
         </p>
@@ -415,7 +413,7 @@ export default function GainsDemoPage() {
                 section="review-character"
               >
                 <p className="mb-3">
-                  One traveler, the whole way up — the darkness they arrive with
+                  One traveler, the whole way up. The darkness they arrive with
                   lightens as they climb, until everyone can see the person
                   they’ve always been.
                 </p>
@@ -437,7 +435,6 @@ export default function GainsDemoPage() {
                     <div key={a.title}>
                       <p className="font-semibold text-slate-800">{a.title}</p>
                       <p className="leading-relaxed">{a.body}</p>
-                      <p className="text-[13px] italic text-slate-500 mt-1">{a.alts}</p>
                     </div>
                   ))}
                 </div>
@@ -468,8 +465,7 @@ export default function GainsDemoPage() {
                 <p className="leading-relaxed mb-2">
                   Rename the opening zone (currently{' '}
                   <strong>“the Hollow”</strong>) to <strong>“The Deep”</strong>,
-                  with <strong>“Lowreach”</strong> as an alternative. Proposal
-                  only — the official breakdown below is unchanged.
+                  with <strong>“Lowreach”</strong> as an alternative.
                 </p>
                 <p className="text-[14px] italic text-slate-700 border-l-2 border-amber-300 pl-3">
                   {REVIEW_RENAME_RATIONALE}
@@ -493,7 +489,7 @@ export default function GainsDemoPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-slate-700 mb-1.5">
-                      Spark&apos;s intro narration — how does the voice model sound?
+                      Spark&apos;s intro narration. How does the voice model sound?
                     </p>
                     <audio
                       controls
@@ -502,9 +498,6 @@ export default function GainsDemoPage() {
                       aria-label="Audio: Spark's intro narration"
                       className="w-full mb-2"
                     />
-                    <p className="text-[13px] text-slate-500 italic">
-                      Script is the Exposition text in item 1 above.
-                    </p>
                   </div>
                 </div>
               </ReviewItem>
@@ -584,7 +577,7 @@ export default function GainsDemoPage() {
           <ArtCard
             src={`${ART}/avatar-human-traveler.webp`}
             name="The Traveler"
-            blurb="A young traveler setting out to understand what happened — and find the way forward."
+            blurb="A young traveler setting out to understand what happened, and to find the way forward."
           />
         </div>
       </section>
@@ -624,8 +617,8 @@ export default function GainsDemoPage() {
           </div>
 
           <p className="text-[14px] text-slate-700 leading-relaxed">
-            Exposition — proposal under review (see{' '}
-            <strong>Ideas &amp; Demos for Review</strong> at the top).
+            This exposition is a proposal under review. See{' '}
+            <strong>Ideas &amp; Demos for Review</strong> at the top.
           </p>
         </div>
       </section>
@@ -640,7 +633,7 @@ export default function GainsDemoPage() {
           Prototypes
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
-          Playable traversals — both built on the same game engine. Not wired
+          Playable traversals, both built on the same game engine. Not wired
           into the session flow yet.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[760px]">

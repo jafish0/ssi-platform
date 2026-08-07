@@ -117,8 +117,8 @@ export default function GainsTraversalPage() {
               <Sparkles size={30} strokeWidth={1.5} className="text-amber-200 mb-3" />
               <h2 className="text-[22px] font-bold text-white mb-3">The Ascent</h2>
               <ul className="text-[14px] text-amber-50/90 leading-relaxed space-y-2 mb-6 text-left max-w-[280px]">
-                <li>• Steer with one thumb — drag anywhere (or use the arrow keys).</li>
-                <li>• Gather the <strong className="text-white">connections</strong> drifting down — each one lifts you higher.</li>
+                <li>• Steer with one thumb: drag anywhere (or use the arrow keys).</li>
+                <li>• Gather the <strong className="text-white">connections</strong> drifting down. Each one lifts you higher.</li>
                 <li>• Reach <strong className="text-white">{GOAL} connections</strong> to arrive at the light.</li>
                 <li>• You can&apos;t crash or fall. Take your time.</li>
               </ul>
