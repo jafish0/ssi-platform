@@ -110,6 +110,85 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`9c5de60` · 2026-08-07** — **Draft 61 — Sam Female Adult + Sam Female 14 cards added to "For Review This Week".** Two new review cards after the four Kai Part 1 scene cards, under a new "Sam variants for review" subheading. **Card 6 — Sam Female Adult Narrator:** renders the already-committed locked composite (`public/cast/images/sam-female-v3.png`, Draft 56). **Card 7 — Sam Female 14:** new image copied from `Video Content/Sams Story/Sam Female 14.png` to `public/cast/images/sam-female-14.png`. `REVIEW_CARDS` gained an `imageSrc` field as an alternative to `youtubeId` (exactly one set per card); `ReviewCard` now conditionally renders an `<img>` for image cards or the `<iframe>` for video cards — same card container/title/description/feedback-button pattern either way, both at the same 9:16 `max-w-[360px]` sizing as the video cards. Verified on /demo: heading order is the 5 video cards → "Sam variants for review" subheading → Card 6 → Card 7; both images load (1296px natural width) at their correct paths; each card's feedback button opens with its correct pre-filled area ("Sam Female — Adult Narrator" / "Sam Female — 14-year-old"); console + build clean. No version bump.
+
+  <details>
+  <summary>Draft 61 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 61 — Add Sam Female Adult + Sam Female 14 cards to "For Review This Week"
+
+Small addition to Draft 60 — two more review cards to add to the "For Review This Week" section. Read this together with Draft 60; both should ship in the same commit.
+
+**Purpose:** the team has approved the Sam Female Adult composite (from Draft 56) and Josh has now generated a matching Sam Female 14 image for the team to review as the younger-Sam variant. Both belong in the "For Review This Week" section as image-review cards (no video, just the still image + description + comment button).
+
+---
+
+#### Files
+
+**Sam Female Adult (already on disk):**
+
+- Source: `public/cast/images/sam-female-v3.png` (already committed from Draft 56 — the locked composite: V1 face/jawline + V2 skin tone + V1 softer hair)
+
+**Sam Female 14 (new — copy in):**
+
+- Master: `Video Content/Sams Story/Sam Female 14.png` (~4.1 MB, generated 2026-08-07)
+- Copy to: `public/cast/images/sam-female-14.png`
+
+---
+
+#### Two new cards in the "For Review This Week" section
+
+Cards go at the BOTTOM of the review section, after the four Kai Part 1 scene cards. Add a new grouping subheading between the last Kai scene card and these two Sam Female cards:
+
+**Grouping subheading:** "Sam variants for review"
+
+**Card 6 — Sam Female Adult (18-year-old narrator variant)**
+
+- Title: **"Sam Female — Adult Narrator"**
+- Content: single image (not a video card). Render the composite image (`sam-female-v3.png`) at a comparable size to the video embeds — 9:16 aspect, `max-w-[360px]`
+- Description below the image: *"The 18-year-old female narrator variant of Sam. This is the composite the team approved at the July 27 meeting — Version 1's face and jawline, Version 2's skin tone, Version 1's softer hair — now up here for a final look before Female variant video production begins."*
+- Feedback button: `area` = `"Sam Female — Adult Narrator"`
+
+**Card 7 — Sam Female 14 (14-year-old variant)**
+
+- Title: **"Sam Female — 14-year-old"**
+- Content: single image (not a video card). Render `sam-female-14.png` at the same size as Card 6
+- Description below the image: *"The 14-year-old female variant of Sam. This is the younger-Sam companion to the adult narrator, generated for team review before I use it as the character reference for the Female variant video production."*
+- Feedback button: `area` = `"Sam Female — 14-year-old"`
+
+---
+
+#### Card structure for image-only cards
+
+Same card container, title, description, and feedback button pattern as Draft 60's video cards. The only difference: the media slot renders an `<img>` element instead of a YouTube embed. The rest of the card structure is identical — bordered container, title, media, description, feedback CTA.
+
+If the `reviewCards` data structure from Draft 60 has a `youtubeId` field, add an alternate `imageSrc` field so cards can be either video-embed OR image-only. The card component conditionally renders `<iframe>` for `youtubeId` cards or `<img>` for `imageSrc` cards.
+
+Example data-shape addition:
+
+```
+{ title, description, feedbackArea, youtubeId?, imageSrc?, groupSubheading? }
+```
+
+Exactly one of `youtubeId` or `imageSrc` should be set per card.
+
+---
+
+#### Verification (in addition to Draft 60 verification)
+
+- After the four Kai scene cards, the "Sam variants for review" subheading renders
+- Card 6 renders with the Sam Female Adult composite image, title "Sam Female — Adult Narrator", description, and feedback button
+- Card 7 renders with the Sam Female 14 image, title "Sam Female — 14-year-old", description, and feedback button
+- Both image cards use the same 9:16 aspect, `max-w-[360px]` sizing pattern as the video cards
+- Feedback buttons pre-fill the correct `area` value for each card
+- Sam Female 14 image copied cleanly from `Video Content/Sams Story/Sam Female 14.png` to `public/cast/images/sam-female-14.png`
+- Build clean
+
+**Version bump:** none — /demo content addition, not a versioned activity.
+
+
+  </details>
+
 - **`3091f44` · 2026-08-03** — **Draft 60 — "For Review This Week" section on /demo (supersedes Draft 57 + 59).** Replaces the top-of-page "Video Preview" section (Draft 57) with a data-driven, per-video card structure — each card gets its own dedicated feedback button instead of one global feedback bucket. Absorbs Draft 59 (Sam's Story V3 → V4 swap, `QsnyIxeHc_c`) directly as Card 1 rather than shipping the swap separately. Cards 2–5: Kai Part 1 Scenes 1–4 (`fNSK011fNnI`, `u1b2FoAwZPs`, `z9IMWmArols`, `hTgGTKsx2Oo`), with a "Learning Skills for Belonging — Part 1" group subheading before Card 2. New `REVIEW_CARDS` data array + `ReviewCard` component in `DemoPage.jsx` — a future week's batch is a data-only addition. `FeedbackButton` gained an `initialArea` prop overriding the route-derived "Where you are" (every card shares the /demo route but needs its own feedback area); backward-compatible, existing callers unaffected. Verified all 5 YouTube IDs directly against YouTube's player before shipping — each is a native 352×640 (9:16) vertical. Verified on /demo: "For Review This Week" is the first h2; heading order Sam's Story V4 → group subheading → Scenes 1–4; exactly 5 iframes total, no duplicate in the Sam's Story cast section; two different cards' feedback buttons open with correct pre-filled areas; global header feedback button unaffected ("Demo home"); rest of the page unchanged; `/irb-preview` unaffected; console + build clean. No version bump.
 
   <details>
