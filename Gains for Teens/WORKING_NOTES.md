@@ -113,6 +113,18 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **274ab8b** (2026-08-06) — Traveler strip **actually** bigger (Josh: "they aren't any
+  bigger just stacked on top of each other" — he was right). b812925 was near a no-op:
+  on a phone the strip was **already** `grid-cols-2` and the 452px cap sits above a 375px
+  screen, so images stayed 142px — zero visible change; on desktop 157 → 196px just read as
+  "4 in a row became 2×2". Now **2-up from tablet width up** (680px container) and **1-up on
+  phones**, since two 9:16 portraits side by side on a 375px screen can only ever be
+  thumbnails. Both paths land **~310px** — roughly double the original. Measured: 1280px →
+  310px each (**+97%** vs the original 157px); 375px → 319px each (**+125%** vs 142px).
+  Uniform sizes, no overflow.
+  *Lesson for future "make it bigger" asks: check the actual rendered px at the viewport the
+  reviewer is using — a max-width cap above the screen width changes nothing.*
+
 - **b812925** (2026-08-06) — Traveler-strip tweaks (in-conversation): Zone 1 label reverted
   from the draft's placeholder **"The Hallow" → "The Hollow"** (matches the zone sections),
   and the progression is now **two per line at every width with each image 25% larger**
