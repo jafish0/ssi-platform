@@ -64,6 +64,19 @@ Asks pointed the other way — things Cowork/Josh need to source or decide.
 
 ---
 
+## ✍ Writing style (standing rule)
+
+- **No em dashes inside a sentence.** Josh, 2026-08-06: "I really don't like them, let's
+  never use them in sentence." Rewrite as separate sentences, or use a comma / colon /
+  parentheses. This applies to all copy we author (UI, captions, intros, notes).
+- **Em dashes are fine as a true separator** — titles and label/descriptor pairs, e.g.
+  "Zone 1 — The Hollow", "Video 1 — what trauma is", "Oxygen Mask — helps you breathe".
+- **Verbatim source text is exempt.** Scripts and quotes from Stephanie / Sprang / Holly
+  stay exactly as written (they still contain em dashes in V2, V3 and "What to Expect").
+  Flag them rather than silently re-typesetting.
+
+---
+
 ## Visual style (canonical) — "Long Light" vector-silhouette
 
 The GAINS environment-art style, locked 2026-07-02. **Minimalist atmospheric
@@ -112,6 +125,18 @@ gradients and layered depth.
 ---
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **6c3d6be** (2026-08-06) — **Em-dash cleanup + four lines cut** (in-conversation).
+  Rewrote ~25 mid-sentence em dashes across the demo, climb and traversal pages into plain
+  sentences (see the new **Writing style** standing rule above). Removed the four lines Josh
+  called out: the two arcade "Alternates for comment" / "Framed as lifting/dissolving
+  darkness" notes (the `alts` field is gone entirely), "Proposal only … the official
+  breakdown below is unchanged," and "Script is the Exposition text in item 1 above."
+  **Deliberately kept:** em dashes acting as true separators (titles, label/descriptor
+  pairs) and the **verbatim narration scripts** (V2, V3, "What to Expect"), which are
+  Stephanie's / Sprang's / Holly's words. **Those three scripts still contain em dashes —
+  flagged for Josh** rather than changed, since rewriting them would diverge from the source
+  docs. Verified on all three pages: lines gone, rewrites render, no console errors.
 
 - **1febed8** (2026-08-06) — Draft 24: new **"Ideas & Demos for Review"** section at the
   very top of `/gains-demo` — a staging area for proposals/previews to be commented on
