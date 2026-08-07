@@ -113,6 +113,31 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1febed8** (2026-08-06) — Draft 24: new **"Ideas & Demos for Review"** section at the
+  very top of `/gains-demo` — a staging area for proposals/previews to be commented on
+  *before* they're folded into the official zones. Amber callout + "Proposals — comment
+  before we make them official" ribbon + the draft's intro line. **Six items, each with its
+  OWN comment thread**: `FeedbackButton` gained `label`/`subtle` props so it can be dropped
+  inline per item pinned to that item's tag (`review-exposition`, `review-character`,
+  `review-arcades`, `review-gear`, `review-rename`, `review-spark-voice` — all added to the
+  dropdown + admin labels).
+  **Moves out of official spots:** (1) the Option-2 **Exposition** text moved up; the
+  official Exposition card kept structurally but its body is now a pointer to the review
+  section. (2) The **four-stage Traveler strip** moved up; **Playable Character restored to
+  its pre-Draft-23 state** (single current Traveler). (6) **Spark's card + intro audio**
+  moved up from NPCs, which now holds just the four symptom creatures.
+  **Text-only items:** (3) two arcade proposals w/ alternates, (4) the growing-toolbox gear
+  idea + theme line, (5) the zone rename **"The Deep"** (alt **"Lowreach"**) with the
+  Eastern-Kentucky "holler" rationale — **proposal only, the official breakdown still says
+  the Hollow**.
+  *Small deviation:* item 6 points at item 1 for the script rather than repeating the same
+  ~100-word paragraph twice in one section — item 6 exists to react to how the voice sounds.
+  **Verified:** review section renders first; all 6 per-item threads open preset to their own
+  tag and a live submission round-tripped as `section=review-rename` (then deleted); Playable
+  Character back to one card; Exposition is a pointer; NPCs = 4 creatures, no audio; official
+  zone breakdown, 5-row map table and both prototypes unchanged; the Hollow not renamed; no
+  console errors.
+
 - **274ab8b** (2026-08-06) — Traveler strip **actually** bigger (Josh: "they aren't any
   bigger just stacked on top of each other" — he was right). b812925 was near a no-op:
   on a phone the strip was **already** `grid-cols-2` and the 452px cap sits above a 375px
@@ -1054,7 +1079,7 @@ Two demo edits (both on `/gains-demo`):
 *End of Draft 17.*
 
 
-### Draft 18 — Exposition card: Stephanie's reworked exposition, OPTION 2 (verbatim)
+### Draft 18 — Exposition card: Stephanie's reworked exposition, OPTION 2 (verbatim)  — ✅ SHIPPED c26f1e4 (2026-08-06)
 
 The team chose **Option 2** of Stephanie's reworked exposition (Sprang + Holly both picked it). On `/gains-demo`, put Option 2's narration on the Exposition card, **verbatim** — this REPLACES the earlier Shadowveil / Spryte / Cinder draft. New canon in Option 2: world = **Shadowmend**, narrator = **Spark** (no "Spryte"), and **no shadow/Cinder character** — the "darkness" is the traveler's OWN aura that lightens toward Mount Hope.
 
@@ -1160,3 +1185,36 @@ Notes:
 **Verify.** Playable Character section shows four traveler stages in order with zone labels beneath each; images load (no 404s); row is responsive on mobile. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 23.*
+
+
+### Draft 24 — New "Ideas & Demos for Review" section at the top of the demo — ✅ SHIPPED 1febed8 (2026-08-06)
+
+Add a new section, **"Ideas & Demos for Review,"** as the **very first section** of `/gains-demo` (above the Zone Map / official zone breakdown). It's a staging area where proposals and previews live for team comment BEFORE they're folded into the official zones. **Do NOT otherwise change the official Zone breakdown / structure** — this draft only (a) adds this new top section, and (b) moves two already-shipped items up into it.
+
+Mark it visually as provisional (tinted callout band / "Proposals — comment before we make them official" ribbon). Intro line:
+> *"These are proposals and previews under discussion. Comment on any item below before we fold it into the official zones."*
+
+Each item gets its own comment thread using the existing Ready-for-Roots-style feedback system, with a distinct section tag (suggested: `review-exposition`, `review-character`, `review-arcades`, `review-gear`, `review-rename`).
+
+**Item 1 — Exposition (Stephanie's Option 2).** MOVE the Option-2 exposition text (currently live on the official Exposition card, shipped c26f1e4) UP into this section, with a comment thread. Leave the official Exposition card in place structurally but replace its body with a short pointer: *"Exposition — proposal under review (see Ideas & Demos for Review at the top)."*
+
+**Item 2 — How the character changes (four-stage Traveler progression).** MOVE the four-stage Traveler strip (currently in the official Playable Character section, shipped ae9cb67 + polish) UP into this section as a proposal, with a comment thread. **Restore the official Playable Character section to its pre-Draft-23 state** (the single current Traveler). Same four images already in `long-light-site/art/`.
+
+**Item 3 — Possible new arcade activities (text only, no playable stub).**
+- *Reaching the Lantern Path — a slower, revealing arcade.* You hold the Lantern, which lights only a small circle; you feel your way out of the opening zone and the path unfolds as you go. (Alternates noted for comment: a "keep it lit" tending game vs. gusts; or a "hold still to reveal the next safe step" patience crossing.)
+- *Clearing the darkness → the Mistfields.* With the amplified light you **drag to aim and release a light-bloom that sweeps a cone of fog clear**, revealing the background; when the area is cleared the camera pans up above the cloud line — *"You made it to the Mistfields."* (Framed as lifting/dissolving darkness, not combat.)
+
+**Item 4 — The gear that evolves: a growing toolbox (text only).**
+- Everything you earn is one **growing toolkit**, not scattered pickups. It starts as a simple **Lantern** (Spark's gift). Each psychoed character teaches a skill and gives you a **part**; the parts combine the Lantern into the **Focusing Glass**. In the Mistfields it grows **bird-of-light wings** (a reskin of the existing bird traversal — no mechanical change). At the summit, the fully-built kit **lights the Beacon** at the Summit of Mount Hope.
+- Theme line: *"Every activity earns a tool. The tools combine and grow — a lantern becomes a Focusing Glass, the Glass grows wings — so you reach the summit carrying everything you've learned."*
+- Intent for comment: tools **grow stronger the more they're used** (practice), and the real power is in **combining** them — the coping-skills-toolbox idea.
+
+**Item 5 — Proposed zone rename (text only).** Propose renaming the opening zone (currently **"the Hollow"**) to **"The Deep"**, with **"Lowreach"** offered as an alternative. Include the rationale for comment:
+> *"'The Hollow' was meant to convey an empty, desolate place — but that's also how you'd spell what's pronounced 'holler' in Eastern Kentucky, and we don't want to equate that emptiness with where anyone lives. A rename keeps the metaphor about an internal emotional state, not a real place."*
+Do NOT rename the zone in the official breakdown yet — proposal only.
+
+**Item 6 — Spark's voice (voice-model preview).** MOVE the **Spark** card — including its intro voice audio (`/long-light/audio/spark-introduction.mp3`, the ElevenLabs voice-model output) and its Option-2 intro text — UP from the NPCs section into this review section, with its own comment thread (`review-spark-voice`), so the team can react to how Spark sounds. Leave the four symptom creatures where they are in the NPCs section (that section then holds just the creatures).
+
+**Verify.** The "Ideas & Demos for Review" section renders at the very top; exposition + progression now appear there and are removed from / pointered out of their official spots; items 3–5 render as text; each item has a working comment thread with its own tag; the official Zone breakdown is otherwise unchanged; no 404s on the four traveler images; the Spark card + its audio now play in the review section and the NPCs section still shows the four creatures. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 24.*
