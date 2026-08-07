@@ -64,10 +64,15 @@ function deriveContext(pathname, params) {
 // a "Section" select to the modal (used by /gains-demo, which has no
 // versioned activities yet — the section is what makes GAINS comments
 // attributable).
+// `label` / `subtle` let the same button be dropped inline next to an
+// individual item as its own comment thread (the review section on
+// /gains-demo does this, one per proposal, each pinned to its own section).
 export default function FeedbackButton({
   program = 'ready-for-roots',
   sections = null,
   defaultSection = null,
+  label = 'Give feedback',
+  subtle = false,
 }) {
   const location = useLocation()
   const params = useParams()
@@ -149,10 +154,14 @@ export default function FeedbackButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
+        className={
+          subtle
+            ? 'inline-flex items-center gap-1.5 bg-white hover:bg-ctac-teal-50 text-ctac-teal-800 font-semibold rounded-full border border-ctac-teal-300 px-3.5 py-1.5 min-h-[36px] text-[12px]'
+            : 'inline-flex items-center gap-1.5 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]'
+        }
       >
-        <MessageSquare size={14} strokeWidth={2} />
-        Give feedback
+        <MessageSquare size={subtle ? 13 : 14} strokeWidth={2} />
+        {label}
       </button>
 
       {open && (

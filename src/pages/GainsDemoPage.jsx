@@ -15,8 +15,17 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { HardHat, Film, Play } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
+import FeedbackButton from '../components/FeedbackButton.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
+  // Ideas & Demos for Review — one thread per proposal
+  { value: 'review-exposition', label: 'Review: Exposition' },
+  { value: 'review-character', label: 'Review: Character progression' },
+  { value: 'review-arcades', label: 'Review: Arcade ideas' },
+  { value: 'review-gear', label: 'Review: Gear toolbox' },
+  { value: 'review-rename', label: 'Review: Zone rename' },
+  { value: 'review-spark-voice', label: "Review: Spark's voice" },
+  // The official breakdown
   { value: 'assent-measures', label: 'Child Assent / Measures' },
   { value: 'exposition', label: 'Exposition' },
   { value: 'npcs', label: 'NPCs' },
@@ -129,6 +138,35 @@ const ZONE_MAP_ROWS = [
     goal: 'Address shame; commit; readiness.',
   },
 ]
+
+// ---------- Ideas & Demos for Review (Draft 24) ----------
+// A staging area at the top of the page: proposals and previews the team
+// comments on BEFORE they're folded into the official zone breakdown. Items
+// 3–5 are text-only; items 1, 2 and 6 are things moved up out of their
+// official spots while they're under discussion.
+const REVIEW_ARCADES = [
+  {
+    title: 'Reaching the Lantern Path — a slower, revealing arcade',
+    body: 'You hold the Lantern, which lights only a small circle; you feel your way out of the opening zone and the path unfolds as you go.',
+    alts: 'Alternates for comment: a "keep it lit" tending game vs. gusts; or a "hold still to reveal the next safe step" patience crossing.',
+  },
+  {
+    title: 'Clearing the darkness → the Mistfields',
+    body: 'With the amplified light you drag to aim and release a light-bloom that sweeps a cone of fog clear, revealing the background; when the area is cleared the camera pans up above the cloud line — "You made it to the Mistfields."',
+    alts: 'Framed as lifting/dissolving darkness, not combat.',
+  },
+]
+
+const REVIEW_GEAR_POINTS = [
+  'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Glass. In the Mistfields it grows bird-of-light wings (a reskin of the existing bird traversal — no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
+  'Intent for comment: tools grow stronger the more they’re used (practice), and the real power is in combining them — the coping-skills-toolbox idea.',
+]
+
+const REVIEW_GEAR_THEME =
+  'Every activity earns a tool. The tools combine and grow — a lantern becomes a Focusing Glass, the Glass grows wings — so you reach the summit carrying everything you’ve learned.'
+
+const REVIEW_RENAME_RATIONALE =
+  '"The Hollow" was meant to convey an empty, desolate place — but that’s also how you’d spell what’s pronounced "holler" in Eastern Kentucky, and we don’t want to equate that emptiness with where anyone lives. A rename keeps the metaphor about an internal emotional state, not a real place.'
 
 // ---------- Playable character ----------
 // One protagonist (the team dropped the choose-your-character set), shown as
@@ -342,6 +380,139 @@ export default function GainsDemoPage() {
         </p>
       </section>
 
+      {/* Ideas & Demos for Review — staging area above the official
+          breakdown. Each item carries its own comment thread. */}
+      <section className="mb-12">
+        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 overflow-hidden">
+          <div className="bg-amber-400/90 px-5 py-2">
+            <span className="text-[12px] font-bold uppercase tracking-wide text-amber-950">
+              Proposals — comment before we make them official
+            </span>
+          </div>
+          <div className="p-5">
+            <h2 className="text-[20px] font-bold text-slate-800 mb-1">
+              Ideas &amp; Demos for Review
+            </h2>
+            <p className="text-[14px] italic text-slate-600 leading-relaxed mb-5 max-w-[720px]">
+              These are proposals and previews under discussion. Comment on any
+              item below before we fold it into the official zones.
+            </p>
+
+            <div className="space-y-4">
+              {/* 1 — Exposition (Option 2) */}
+              <ReviewItem
+                n={1}
+                title="Exposition (Stephanie’s Option 2)"
+                section="review-exposition"
+              >
+                <p className="leading-relaxed">{SPARK_INTRO_LINE}</p>
+              </ReviewItem>
+
+              {/* 2 — How the character changes */}
+              <ReviewItem
+                n={2}
+                title="How the character changes"
+                section="review-character"
+              >
+                <p className="mb-3">
+                  One traveler, the whole way up — the darkness they arrive with
+                  lightens as they climb, until everyone can see the person
+                  they’ve always been.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[680px]">
+                  {TRAVELER_STAGES.map((c) => (
+                    <ArtCard key={c.name} {...c} uniform />
+                  ))}
+                </div>
+              </ReviewItem>
+
+              {/* 3 — Possible new arcade activities */}
+              <ReviewItem
+                n={3}
+                title="Possible new arcade activities"
+                section="review-arcades"
+              >
+                <div className="space-y-3">
+                  {REVIEW_ARCADES.map((a) => (
+                    <div key={a.title}>
+                      <p className="font-semibold text-slate-800">{a.title}</p>
+                      <p className="leading-relaxed">{a.body}</p>
+                      <p className="text-[13px] italic text-slate-500 mt-1">{a.alts}</p>
+                    </div>
+                  ))}
+                </div>
+              </ReviewItem>
+
+              {/* 4 — The gear that evolves */}
+              <ReviewItem
+                n={4}
+                title="The gear that evolves: a growing toolbox"
+                section="review-gear"
+              >
+                <div className="space-y-2">
+                  {REVIEW_GEAR_POINTS.map((p, i) => (
+                    <p key={i} className="leading-relaxed">{p}</p>
+                  ))}
+                </div>
+                <p className="text-[14px] italic text-slate-700 border-l-2 border-amber-300 pl-3 mt-3">
+                  {REVIEW_GEAR_THEME}
+                </p>
+              </ReviewItem>
+
+              {/* 5 — Proposed zone rename */}
+              <ReviewItem
+                n={5}
+                title="Proposed zone rename"
+                section="review-rename"
+              >
+                <p className="leading-relaxed mb-2">
+                  Rename the opening zone (currently{' '}
+                  <strong>“the Hollow”</strong>) to <strong>“The Deep”</strong>,
+                  with <strong>“Lowreach”</strong> as an alternative. Proposal
+                  only — the official breakdown below is unchanged.
+                </p>
+                <p className="text-[14px] italic text-slate-700 border-l-2 border-amber-300 pl-3">
+                  {REVIEW_RENAME_RATIONALE}
+                </p>
+              </ReviewItem>
+
+              {/* 6 — Spark's voice */}
+              <ReviewItem
+                n={6}
+                title="Spark’s voice (voice-model preview)"
+                section="review-spark-voice"
+              >
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-shrink-0 mx-auto sm:mx-0 w-[110px]">
+                    <img
+                      src={`${ART}/narrator-spark.webp`}
+                      alt="Spark — the narrator and guide"
+                      loading="lazy"
+                      className="w-full h-auto rounded-2xl"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-slate-700 mb-1.5">
+                      Spark&apos;s intro narration — how does the voice model sound?
+                    </p>
+                    <audio
+                      controls
+                      preload="metadata"
+                      src="/long-light/audio/spark-introduction.mp3"
+                      aria-label="Audio: Spark's intro narration"
+                      className="w-full mb-2"
+                    />
+                    <p className="text-[13px] text-slate-500 italic">
+                      Script is the Exposition text in item 1 above.
+                    </p>
+                  </div>
+                </div>
+              </ReviewItem>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* A. Zone Map — the living roadmap */}
       <section className="mb-10">
         <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
@@ -404,70 +575,28 @@ export default function GainsDemoPage() {
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           Playable Character
         </h2>
-        <p className="text-[13px] text-slate-500 italic mb-1 max-w-[760px]">
+        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
           You play as the Traveler.
         </p>
-        <p className="text-[13px] text-slate-600 leading-relaxed mb-4 max-w-[700px]">
-          One traveler, the whole way up — the darkness they arrive with lightens
-          as they climb, until everyone can see the person they&apos;ve always been.
-        </p>
-        {/* Two to a line on anything tablet-sized and up; one to a line on a
-            phone, where two 9:16 portraits side by side can only ever be
-            thumbnail-sized. Either way each image lands ~310px — about double
-            the old 4-up strip — so the darkness lightening actually reads. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[680px]">
-          {TRAVELER_STAGES.map((c) => (
-            <ArtCard key={c.name} {...c} uniform />
-          ))}
+        {/* The four-stage progression is a proposal for now — it lives in
+            Ideas & Demos for Review at the top until the team signs off. */}
+        <div className="max-w-[220px]">
+          <ArtCard
+            src={`${ART}/avatar-human-traveler.webp`}
+            name="The Traveler"
+            blurb="A young traveler setting out to understand what happened — and find the way forward."
+          />
         </div>
       </section>
 
-      {/* C2. NPCs — the guide and the four symptom creatures */}
+      {/* C2. NPCs — the four symptom creatures. (Spark's card sits in the
+          review section at the top while his voice model is under review.) */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           NPCs
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
-          The characters you meet along the way.
-        </p>
-
-        {/* Spark — featured, with the recorded intro narration */}
-        <article className="bg-white rounded-2xl shadow-card p-5 max-w-[760px] flex flex-col sm:flex-row gap-5 mb-6">
-          <div className="flex-shrink-0 mx-auto sm:mx-0 w-[130px]">
-            <img
-              src={`${ART}/narrator-spark.webp`}
-              alt="Spark — the narrator and guide"
-              loading="lazy"
-              className="w-full h-auto rounded-2xl"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-[17px] font-semibold text-slate-800">Spark</h3>
-            <p className="text-[13px] text-slate-500 italic mb-3">
-              The narrator and guide.
-            </p>
-            <p className="text-[13px] font-medium text-slate-700 mb-1.5">
-              Spark&apos;s intro narration
-            </p>
-            <audio
-              controls
-              preload="metadata"
-              src="/long-light/audio/spark-introduction.mp3"
-              aria-label="Audio: Spark's intro narration"
-              className="w-full mb-3"
-            />
-            <p className="text-[14px] text-slate-700 leading-relaxed">
-              {SPARK_INTRO_LINE}
-            </p>
-          </div>
-        </article>
-
-        {/* The four symptom creatures — art + name + symptom, no lines yet */}
-        <h3 className="text-[16px] font-semibold text-slate-800 mb-1">
-          The symptom creatures
-        </h3>
-        <p className="text-[13px] text-slate-500 mb-4">
-          Voice lines to come.
+          The characters you meet along the way. Voice lines to come.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
           {SYMPTOM_CREATURES.map((c) => (
@@ -494,21 +623,10 @@ export default function GainsDemoPage() {
             <Pill icon={HardHat}>In development</Pill>
           </div>
 
-          <Beat label="The Spark’s intro narration">
-            <p className="leading-relaxed">{SPARK_INTRO_LINE}</p>
-            <p className="text-[12px] text-slate-500 italic mt-2">
-              Recorded — hear it on Spark&apos;s card in the NPCs section above.
-            </p>
-          </Beat>
-
-          <div className="mt-4">
-            <Beat label="Transition phrases for the spark to narrate">
-              <p className="text-[13px] italic text-slate-500">
-                Pending — the earlier set was written for the previous proposal
-                and doesn&apos;t fit this one.
-              </p>
-            </Beat>
-          </div>
+          <p className="text-[14px] text-slate-700 leading-relaxed">
+            Exposition — proposal under review (see{' '}
+            <strong>Ideas &amp; Demos for Review</strong> at the top).
+          </p>
         </div>
       </section>
 
@@ -545,6 +663,28 @@ export default function GainsDemoPage() {
 }
 
 // ---------- Reusable pieces ----------
+
+// One proposal in the review section, with its own comment thread pinned to
+// that item's feedback section tag.
+function ReviewItem({ n, title, section, children }) {
+  return (
+    <article className="bg-white rounded-2xl border border-amber-200 p-5">
+      <h3 className="text-[16px] font-semibold text-slate-800 mb-2">
+        <span className="text-amber-700">{n}.</span> {title}
+      </h3>
+      <div className="text-[14px] text-slate-700 leading-relaxed">{children}</div>
+      <div className="mt-4 pt-3 border-t border-amber-100">
+        <FeedbackButton
+          program="gains-teens"
+          sections={GAINS_FEEDBACK_SECTIONS}
+          defaultSection={section}
+          label="Comment on this"
+          subtle
+        />
+      </div>
+    </article>
+  )
+}
 
 function InDevelopmentCard({ label, note }) {
   return (

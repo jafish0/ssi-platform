@@ -35,6 +35,13 @@ const PROGRAMS = [
 // GAINS demo section slugs → readable labels (see GainsDemoPage). Current
 // sections first; older slugs kept below so historical rows still label.
 const SECTION_LABELS = {
+  // Ideas & Demos for Review (proposals staged above the official breakdown)
+  'review-exposition': 'Review: Exposition',
+  'review-character': 'Review: Character progression',
+  'review-arcades': 'Review: Arcade ideas',
+  'review-gear': 'Review: Gear toolbox',
+  'review-rename': 'Review: Zone rename',
+  'review-spark-voice': "Review: Spark's voice",
   'assent-measures': 'Child Assent / Measures',
   exposition: 'Exposition',
   npcs: 'NPCs',
