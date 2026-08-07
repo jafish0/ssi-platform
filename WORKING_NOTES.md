@@ -110,6 +110,138 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`3091f44` · 2026-08-03** — **Draft 60 — "For Review This Week" section on /demo (supersedes Draft 57 + 59).** Replaces the top-of-page "Video Preview" section (Draft 57) with a data-driven, per-video card structure — each card gets its own dedicated feedback button instead of one global feedback bucket. Absorbs Draft 59 (Sam's Story V3 → V4 swap, `QsnyIxeHc_c`) directly as Card 1 rather than shipping the swap separately. Cards 2–5: Kai Part 1 Scenes 1–4 (`fNSK011fNnI`, `u1b2FoAwZPs`, `z9IMWmArols`, `hTgGTKsx2Oo`), with a "Learning Skills for Belonging — Part 1" group subheading before Card 2. New `REVIEW_CARDS` data array + `ReviewCard` component in `DemoPage.jsx` — a future week's batch is a data-only addition. `FeedbackButton` gained an `initialArea` prop overriding the route-derived "Where you are" (every card shares the /demo route but needs its own feedback area); backward-compatible, existing callers unaffected. Verified all 5 YouTube IDs directly against YouTube's player before shipping — each is a native 352×640 (9:16) vertical. Verified on /demo: "For Review This Week" is the first h2; heading order Sam's Story V4 → group subheading → Scenes 1–4; exactly 5 iframes total, no duplicate in the Sam's Story cast section; two different cards' feedback buttons open with correct pre-filled areas; global header feedback button unaffected ("Demo home"); rest of the page unchanged; `/irb-preview` unaffected; console + build clean. No version bump.
+
+  <details>
+  <summary>Draft 60 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 60 — "For Review This Week" section on /demo with per-video comment cards
+
+**Purpose:** Team review workflow. Restructure the top of /demo into a "For Review This Week" section that changes composition each week to hold whatever new video work is ready for team feedback. Each video lives in its own card with its own dedicated comment/feedback affordance — team leaves notes specific to that video rather than everything going into a global feedback bucket.
+
+This REPLACES the current top-of-page "Video Preview" section from Draft 57 + 59 (same purpose, richer structure).
+
+---
+
+#### Part A — Section structure
+
+**Section placement:** the very top of /demo, above the Assent and everything else.
+
+**Section heading + intro:**
+
+- Heading: **"For Review This Week"**
+- Intro paragraph: *"The videos below are the new cuts we'd like feedback on this week. Each card has its own comment button — use it to share notes specific to that video. New cuts drop into this section as they're ready."*
+
+Match the current /demo section-heading typography and warm palette.
+
+---
+
+#### Part B — This week's review batch (5 cards)
+
+**Card 1 — Sam's Story V4**
+
+- Title: "Sam's Story V4"
+- YouTube video ID: `QsnyIxeHc_c`
+- Description (below embed): *"Final V4 cut incorporating the 8/3 meeting revisions — photo composition at 3:48 recomposed, foster family table shot regenerated without the sink, Foster Mom's line re-recorded with a new voice model."*
+- Feedback button: opens the existing FeedbackButton flow with `area` pre-filled to `"Sam's Story V4"`
+
+**Card 2 — Learning Skills for Belonging, Part 1 · Scene 1: The Scan**
+
+- Title: "Learning Skills for Belonging — Part 1, Scene 1: The Scan"
+- YouTube video ID: `fNSK011fNnI`
+- Description (below embed): *"Kai introduces himself and the concept of the belonging scan — the way our brains constantly evaluate social situations."*
+- Feedback button: `area` = `"Kai Part 1 Scene 1: The Scan"`
+
+**Card 3 — Learning Skills for Belonging, Part 1 · Scene 2: The Why (It's in Your DNA)**
+
+- Title: "Learning Skills for Belonging — Part 1, Scene 2: The Why (It's in Your DNA)"
+- YouTube video ID: `u1b2FoAwZPs`
+- Description: *"Why belonging is a survival requirement wired into human biology — from ancient humans around fires to modern families sharing meals."*
+- Feedback button: `area` = `"Kai Part 1 Scene 2: The Why"`
+
+**Card 4 — Learning Skills for Belonging, Part 1 · Scene 3: Building a Safety Net**
+
+- Title: "Learning Skills for Belonging — Part 1, Scene 3: Building a Safety Net"
+- YouTube video ID: `z9IMWmArols`
+- Description: *"The safety-net metaphor for belonging — you need multiple places to belong. Includes the GPS metaphor for friend groups."*
+- Feedback button: `area` = `"Kai Part 1 Scene 3: Building a Safety Net"`
+
+**Card 5 — Learning Skills for Belonging, Part 1 · Scene 4: The Foster Care "Extra Level"**
+
+- Title: "Learning Skills for Belonging — Part 1, Scene 4: The Foster Care Extra Level"
+- YouTube video ID: `hTgGTKsx2Oo`
+- Description: *"The specific difficulty of building belonging while in foster or relative care — 'playing the Belonging Game on Hard Mode.'"*
+- Feedback button: `area` = `"Kai Part 1 Scene 4: The Foster Care Extra Level"`
+
+---
+
+#### Part C — Card structure per video
+
+Each card is a discrete visual unit:
+
+- **Card container:** subtle border and shadow, rounded corners, warm neutral background so cards visually separate from the surrounding page. Slight visual weight (padding, border) so it reads as "a thing to review."
+- **Card title:** at the top of the card, bold, matches /demo heading typography
+- **YouTube embed:** 9:16 vertical, responsive, `max-w-[360px]` (same sizing pattern as the existing Sam's Story embed). Centered within the card.
+- **Description text:** short 1-2 sentence blurb below the embed, muted color, `text-sm` (or similar smaller-than-body scale)
+- **Feedback button:** primary-action CTA below the description. Label: *"Leave a note on this video"* or *"Give feedback on this video"* — Code's call, whichever reads clearer. Clicking opens the existing FeedbackButton modal with `area` pre-filled to the card's specific string.
+
+Cards stack vertically on both desktop and mobile. Maybe a subtle divider or extra vertical spacing between them for visual breathing room.
+
+---
+
+#### Part D — Grouping subheading for Kai Part 1
+
+Between Card 1 (Sam's Story V4) and Card 2 (Kai Scene 1), add a smaller subheading to group the Kai scenes visually:
+
+- Subheading: **"Learning Skills for Belonging — Part 1"**
+- Small intro line (optional): *"Kai's psychoeducation videos that play interleaved with the activities. Part 2 scenes will drop in as they're ready."*
+
+Cards 2-5 render below this subheading, visually grouped as belonging to Part 1.
+
+---
+
+#### Part E — Data structure
+
+Cards should be data-driven (an array of card configs) so future weeks' review batches drop in as data-only additions:
+
+```
+const reviewCards = [
+  { title, description, youtubeId, feedbackArea, groupSubheading? },
+  ...
+]
+```
+
+Add a `groupSubheading` field on Card 2 so the subheading renders at that position. Future cards can add their own group subheadings as needed.
+
+---
+
+#### Part F — Retire the current top-of-page "Video Preview" section
+
+The section created by Draft 57 (heading "Video Preview" or similar, containing Sam's Story V3/V4 embed + Kai Scene 1 hierarchy) is REPLACED by the new "For Review This Week" section. Remove the old JSX. The featured Sam's Story block that was previously in the Sam's Story cast area (that Draft 57 moved to the top) is now inside the new "For Review This Week" Sam's Story V4 card.
+
+The `Part 1 — All About Belonging` and `Scene 1: The Scan` scaffolding hierarchy from Draft 57 can be removed — the new per-card structure with the grouping subheading replaces it.
+
+---
+
+#### Verification
+
+- /demo loads without console errors
+- Top of the page shows the new "For Review This Week" section with the section heading and intro paragraph
+- Sam's Story V4 card renders (title, `QsnyIxeHc_c` embed, description, feedback button)
+- "Learning Skills for Belonging — Part 1" subheading renders below Sam's Story
+- Four Kai scene cards render below the subheading with correct titles, correct YouTube IDs (`fNSK011fNnI`, `u1b2FoAwZPs`, `z9IMWmArols`, `hTgGTKsx2Oo`), descriptions, and feedback buttons
+- Each card's feedback button opens the existing FeedbackButton modal with the correct `area` value pre-filled
+- Feedback submitted with pre-filled area shows up in /admin/feedback with that area tag
+- The old Draft 57 "Video Preview" section is removed (not duplicated)
+- Assent, activities, and cast sections all still render below, unchanged
+- Build clean, no console errors
+- `/irb-preview` unaffected
+
+**Version bump:** none — /demo structure change, not a versioned activity.
+
+
+  </details>
+
 - **`96fe01b` · 2026-08-03** — **Draft 58 — BSS bucket display (v3.5) + Safety Net X-click fix (v5.7).** Two Bianca-flagged fixes from the 2026-08-03 meeting, one commit. **Part A — Belonging Skills Sort v3.4 → v3.5:** Draft 55's bold `stem` prefix fixed crowding on the sort page itself, but buckets still rendered the FULL sentence once a card was dropped in — buckets now show ONLY the bold stem; the source pile (before dragging) and the end-of-activity summary/PNG both keep showing stem + full sentence, unchanged. Presentation only. **Part B — Allies / Safety Net v5.6 → v5.7 (bug fix):** on the Inspect X-out screen, the × removal badge sat outside the halo's hit-tested radius AND had `pointer-events: none` on its own visual group, so tapping directly on it never registered a click — the whole ally icon/halo was the (accidental) real click target instead, which read as an unreliable X (Bianca got stuck on Step 10). The badge (`TrampolineNet.jsx`) is now its OWN clickable/focusable control (role=button, keyboard Enter/Space) with a generously padded invisible hit circle sized toward the WCAG 2.5.5 ~44px benchmark; the ally icon/halo is no longer clickable for removal. Visual badge unchanged in position/size; legacy non-inspect walkthrough path untouched. Verified in the sandbox: BSS v3.5 badge, dragging a card into a bucket shows only its bold stem (source pile unaffected); Safety Net v5.7 badge, clicking the person icon/halo does nothing, the × badge reliably toggles remove/restore via mouse click AND keyboard Enter/Space, other allies unaffected; build + console clean.
 
   <details>
@@ -8493,4 +8625,39 @@ headers in `public/foster-forward/index.html`**. Layout/CSS tweaks are fine; wor
 **Draft 55 addendum 2 (2026-07-23):** `assets/leads.jpg` (900px web version) is now in
 place. The 26 MB original `assets/103_20260223-Edit (2).jpg` must NOT be committed —
 leave it untracked (or Josh will move/delete it). Only `leads.jpg` ships.
+-->
+
+<!-- Draft 59 (Sam's Story V4 swap) was superseded by Draft 60 before Claude Code implemented it — drafted moments later in the same batch, Draft 60 explicitly replaces the Draft 57 "Video Preview" section entirely and folds the V3→V4 swap into its own Card 1 (with slightly different supporting copy). Draft 59 was never built as a standalone commit. Archived here, unshipped, for the record. -->
+
+<!--
+### Draft 59 — Sam's Story V4 on /demo (replaces V3)
+
+The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) is superseded by V4 (YouTube `QsnyIxeHc_c`) which incorporates the final revisions from the 2026-08-03 team meeting. Swap the embed and add a short "what changed" description below the video.
+
+**Changes:**
+
+1. In the top-of-page Video Preview section on /demo, replace the current Sam's Story V3 embed with V4:
+   - Change the heading from "Sam's Story V3" to **"Sam's Story V4"**
+   - Change the YouTube video ID from `1Rg2zMDmqsQ` to **`QsnyIxeHc_c`**
+   - Keep the same 9:16 vertical frame + `max-w-[360px]` sizing
+
+2. Add a short description block BELOW the V4 embed (still inside the same top-of-page section, above the Kai video hierarchy). Suggested copy:
+
+    > **What's new in V4:**
+    > - Photo composition at 3:48 recomposed (photos on a dresser with Sam viewed from behind)
+    > - Foster family table shot regenerated without the sink, fixing the perspective issue
+    > - Foster Mom's line re-recorded with a new voice model
+
+    Styling: same visual weight as the existing intro paragraphs on /demo — small caption-adjacent text, muted color, `text-sm` or similar. Not a large heading. A tight bulleted list under a small "What's new in V4" label.
+
+**Verification:**
+
+- Top-of-page Video Preview section shows the Sam's Story V4 heading and the new `QsnyIxeHc_c` embed
+- The old V3 embed is removed (not duplicated)
+- "What's new in V4" description with the three bullets renders below the V4 embed
+- Kai Scene 1 hierarchy (Part 1 — All About Belonging > Scene 1: The Scan) still renders below the Sam block, unchanged
+- Build clean, no console errors
+- /irb-preview unaffected
+
+**Version bump:** none — demo content swap, not a versioned activity.
 -->
