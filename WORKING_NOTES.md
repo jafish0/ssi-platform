@@ -110,6 +110,102 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`49a21e5` · 2026-08-12** — **Draft 63 — Sam's Story V5 + Kai Part 2 review cards (2026-08-12 production day).** Big production day: Sam's Story got an audio fix, and all four Kai Part 2 scenes were produced, completing the full 8-scene Learning Skills for Belonging psychoeducation series (Part 1 + Part 2). Updated the "For Review This Week" section on `/demo`. **Part A:** Sam's Story card swapped V4 (`QsnyIxeHc_c`) → **V5** (`fuc8PF8SaMA`), description updated for Jessica's cleaned-up Foster Mom audio (volume lowered to match Sam's narration, background hum removed), feedback area renamed to "Sam's Story V5". **Part B:** added four new Kai Part 2 review cards — Scene 1 (Building Skills for Belonging, `mHiQ6lTi1R8`), Scene 2 (The Roadblocks, `BV4cOda5on4`), Scene 3 (Putting it All Together, `GAXfgODSEbw`), and the Conclusion (`GIxBJpD6O-E`) — under a new "Learning Skills for Belonging — Part 2" grouping subheading rendered below the four existing Part 1 cards; removed the now-stale "Part 2 scenes will drop in as they're ready" note from the Part 1 subheading intro since Part 2 has landed. **Part C:** added a `knownIssue` field to the `REVIEW_CARDS` data shape and a muted-amber italic note renderer in `ReviewCard`; flagged Part 1 Scene 4 (`hTgGTKsx2Oo`) with a note that its opening line's "foster or relative care" pronunciation is being re-recorded, without pulling the card. Verified on /demo: 9 video cards + 2 Sam Female image cards (11 total), correct heading order (Sam's Story V5 → Part 1 Scenes 1-4 → Part 2 subheading → Part 2 Scenes 1-3 + Conclusion → Sam variants subheading → Sam Female Adult/14), all 9 YouTube IDs correct with no duplicate old V4 embed, Scene 4's known-issue note renders, feedback button on a Part 2 card opens pre-filled with the correct area ("Kai Part 2 Scene 1: Building Skills for Belonging"), console + build clean. No version bump — /demo content update, not a versioned activity.
+
+  <details>
+  <summary>Draft 63 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 63 — Sam's Story V5 + Kai Part 2 complete (2026-08-12 production day)
+
+Big production day. Sam's Story got an audio fix, and all four Kai Part 2 scenes were produced, completing the entire Learning Skills for Belonging psychoeducation series (8 scenes total across Part 1 + Part 2).
+
+Update the "For Review This Week" section on /demo to reflect the new state.
+
+---
+
+#### Part A — Swap Sam's Story V4 → V5
+
+Sam's Story now has a V5 cut. Jessica's Foster Mom audio was cleaned up: volume lowered (team noted it was louder than Sam's voice that follows) and the background hum removed.
+
+**Change:**
+
+- In the Sam's Story review card, change the heading from "Sam's Story V4" to **"Sam's Story V5"**
+- Change the YouTube video ID from `QsnyIxeHc_c` to **`fuc8PF8SaMA`**
+- Update the card description to: *"V5 cut with Jessica's Foster Mom audio cleaned up — volume lowered to match Sam's narration level, background hum removed."*
+- Keep the same 9:16 vertical frame and `max-w-[360px]` sizing
+- Feedback button `area` becomes `"Sam's Story V5"`
+
+---
+
+#### Part B — Add four Kai Part 2 cards
+
+All four Part 2 scenes are produced. Add them to the "For Review This Week" section below the existing four Part 1 cards, with a new grouping subheading.
+
+**New grouping subheading** (renders above Card 6, below the last Part 1 card):
+
+> **"Learning Skills for Belonging — Part 2"**
+>
+> Small intro line: *"Part 2 completes the psychoeducation series. All eight scenes across both parts are now produced."*
+
+**Card 6 — Part 2, Scene 1: Building Skills for Belonging**
+
+- Title: "Learning Skills for Belonging — Part 2, Scene 1: Building Skills for Belonging"
+- YouTube video ID: `mHiQ6lTi1R8`
+- Description: *"Kai introduces the five core belonging skills — Active Listening, Conflict Resolution, Inclusive Language, Provide Support, and Express Gratitude."*
+- Feedback button `area` = `"Kai Part 2 Scene 1: Building Skills for Belonging"`
+
+**Card 7 — Part 2, Scene 2: The Roadblocks**
+
+- Title: "Learning Skills for Belonging — Part 2, Scene 2: The Roadblocks"
+- YouTube video ID: `BV4cOda5on4`
+- Description: *"Two unhelpful thinking patterns that block belonging — All-or-Nothing Thinking and Holding onto the Past."*
+- Feedback button `area` = `"Kai Part 2 Scene 2: The Roadblocks"`
+
+**Card 8 — Part 2, Scene 3: Putting it All Together**
+
+- Title: "Learning Skills for Belonging — Part 2, Scene 3: Putting it All Together"
+- YouTube video ID: `GAXfgODSEbw`
+- Description: *"Self-regulation, the too-heavy-shield metaphor, and the shift from a fixed mindset to a growth mindset."*
+- Feedback button `area` = `"Kai Part 2 Scene 3: Putting it All Together"`
+
+**Card 9 — Part 2, Conclusion**
+
+- Title: "Learning Skills for Belonging — Conclusion"
+- YouTube video ID: `GIxBJpD6O-E`
+- Description: *"Kai's closing encouragement — your story isn't over just because the current chapter has been chaotic."*
+- Feedback button `area` = `"Kai Conclusion"`
+
+---
+
+#### Part C — Flag Part 1 Scene 4 as pending a re-record
+
+Part 1 Scene 4 (The Foster Care "Extra Level", video ID `hTgGTKsx2Oo`) has a known audio issue the team flagged at the 2026-08-11 meeting: in the opening line, "foster or relative care" comes out sounding like "foster of care." Josh will re-record that line, regenerate the opening lip-sync clip, and produce a new Scene 4 cut.
+
+**Change:** add a small inline note to the Part 1 Scene 4 card so reviewers know it's a known issue and don't re-report it. Suggested treatment — a short italic line below the existing card description, in a muted/amber accent color:
+
+> *Known issue: the opening line's "foster or relative care" pronunciation is being re-recorded. A new cut will replace this one.*
+
+Keep the card and its current video in place — the rest of the scene is fine for review, just flag the one known problem.
+
+---
+
+#### Verification
+
+- Sam's Story card shows "Sam's Story V5" with the `fuc8PF8SaMA` embed and the updated description
+- The old V4 embed (`QsnyIxeHc_c`) is removed (not duplicated)
+- "Learning Skills for Belonging — Part 2" subheading renders below the four Part 1 cards
+- Four new Part 2 cards render with correct titles, YouTube IDs (`mHiQ6lTi1R8`, `BV4cOda5on4`, `GAXfgODSEbw`, `GIxBJpD6O-E`), descriptions, and feedback buttons
+- Each new card's feedback button pre-fills the correct `area` value
+- Part 1 Scene 4 card shows the known-issue note in muted/amber italic below its description
+- All existing cards (Part 1 Scenes 1-4, Sam Female Adult, Sam Female 14) still render correctly
+- Nine total cards in the review section (1 Sam's Story + 4 Part 1 Kai + 4 Part 2 Kai) plus the two Sam Female image cards
+- Build clean, no console errors
+- `/irb-preview` unaffected
+
+**Version bump:** none — /demo content update, not a versioned activity.
+
+  </details>
+
 - **`1cdd12b` · 2026-08-12** — **Draft 62 — Getting Unstuck 0-endorsement fallback + Kai audio narration replacing video placeholders (2026-08-11 meeting).** **Part A (Getting Unstuck v5.9):** if a participant rates all six stuck thoughts below the eligibility threshold, they no longer skip straight to Save — new `zero_endorsement_intro` phase shows encouraging copy, then auto-selects 2 random items from the appraisal list (random per participant, deterministic per session — no reshuffle on back-navigation), flagged `randomly_selected: true` on those entries in the saved payload, and walks the participant through the same Challenge/Both-And exercise as a normal 2-endorsed-item pick. `selectedItems` derivation rewritten as a two-pass union (eligible items + any explicitly-selected fallback items) so the fallback pair renders correctly in the strategy screens. **Part B + C:** new shared `KaiNarrationPlayer` component (`src/components/KaiNarrationPlayer.jsx`) replaces three "Video Coming Soon" placeholders — Allies/Safety Net intro (before ally selection) and Inspect-education (before Step 2), and Getting Unstuck before the Challenge/Both-And exercise (shared by both the normal and fallback paths via a new `kai_strategy_intro` phase) — with an auto-playing `<audio>` element (Play-button fallback if autoplay is blocked), a progress indicator, an always-visible transcript, and a Replay button. Continue is gated on narration completion; since the three mp3s (`safety-net-allies-intro.mp3`, `safety-net-inspect-intro.mp3`, `getting-unstuck-strategies-intro.mp3`) don't exist yet, an `onError` handler fails open — treats the transcript as the intended fallback and unlocks Continue immediately rather than permanently blocking it, per the draft's own framing of the transcript as a fallback. `public/kai-narration/README.md` documents the expected filenames for when Josh drops the recorded audio in. Getting Unstuck v5.8 → v5.9, Allies/Safety Net v5.7 → v5.8. Verified end-to-end in-browser: fallback path (all-zero ratings) confirmed 2 distinct random thoughts walked through Challenge + Both/And with a captured save payload showing `randomly_selected: true` on exactly the two auto-picked items; normal endorsed-pick regression path confirmed the Kai gate still fails open correctly and the save payload carries no `randomly_selected` flags; both Allies/Safety Net Kai spots confirmed rendering with correct verbatim transcripts and fail-open Continue. Console clean, build clean.
 
   <details>
