@@ -110,6 +110,211 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`1cdd12b` · 2026-08-12** — **Draft 62 — Getting Unstuck 0-endorsement fallback + Kai audio narration replacing video placeholders (2026-08-11 meeting).** **Part A (Getting Unstuck v5.9):** if a participant rates all six stuck thoughts below the eligibility threshold, they no longer skip straight to Save — new `zero_endorsement_intro` phase shows encouraging copy, then auto-selects 2 random items from the appraisal list (random per participant, deterministic per session — no reshuffle on back-navigation), flagged `randomly_selected: true` on those entries in the saved payload, and walks the participant through the same Challenge/Both-And exercise as a normal 2-endorsed-item pick. `selectedItems` derivation rewritten as a two-pass union (eligible items + any explicitly-selected fallback items) so the fallback pair renders correctly in the strategy screens. **Part B + C:** new shared `KaiNarrationPlayer` component (`src/components/KaiNarrationPlayer.jsx`) replaces three "Video Coming Soon" placeholders — Allies/Safety Net intro (before ally selection) and Inspect-education (before Step 2), and Getting Unstuck before the Challenge/Both-And exercise (shared by both the normal and fallback paths via a new `kai_strategy_intro` phase) — with an auto-playing `<audio>` element (Play-button fallback if autoplay is blocked), a progress indicator, an always-visible transcript, and a Replay button. Continue is gated on narration completion; since the three mp3s (`safety-net-allies-intro.mp3`, `safety-net-inspect-intro.mp3`, `getting-unstuck-strategies-intro.mp3`) don't exist yet, an `onError` handler fails open — treats the transcript as the intended fallback and unlocks Continue immediately rather than permanently blocking it, per the draft's own framing of the transcript as a fallback. `public/kai-narration/README.md` documents the expected filenames for when Josh drops the recorded audio in. Getting Unstuck v5.8 → v5.9, Allies/Safety Net v5.7 → v5.8. Verified end-to-end in-browser: fallback path (all-zero ratings) confirmed 2 distinct random thoughts walked through Challenge + Both/And with a captured save payload showing `randomly_selected: true` on exactly the two auto-picked items; normal endorsed-pick regression path confirmed the Kai gate still fails open correctly and the save payload carries no `randomly_selected` flags; both Allies/Safety Net Kai spots confirmed rendering with correct verbatim transcripts and fail-open Continue. Console clean, build clean.
+
+  <details>
+  <summary>Draft 62 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 62 — Getting Unstuck 0-endorsement fallback + Kai audio narration replacing video placeholders (2026-08-11 meeting)
+
+Two related changes from the 2026-08-11 team meeting. Ship as one commit.
+
+Part A is a small behavioral change to Getting Unstuck. Part B is a structural change — remove three "Video Coming Soon" placeholders and replace them with auto-play Kai audio narration. Part C adds the shared audio-narration component that Part B uses.
+
+---
+
+#### Part A — Getting Unstuck v5.8 → v5.9 (MINOR)
+
+**Context:** Holly (2026-08-11 feedback) noted that if a participant rates ALL stuck thoughts as 0, they can end the activity without practicing Challenge or Both/And. Team decided: they should still practice with 2 thoughts. Stephanie wrote the copy.
+
+**File:** `src/activities/GettingUnstuck.jsx`.
+
+**New behavior when all thoughts are rated 0:**
+
+1. Instead of exiting the activity, show a new intro screen with this copy:
+   > *"That's great! Try out the following exercise in case a new thought pops up that you need to deal with in the future."*
+
+2. From the same list of stuck thoughts the participant just rated (all 0s), the system **auto-selects 2 random thoughts** to present to them.
+
+3. Participant proceeds through the Challenge / Both-And exercise on those 2 randomly-selected thoughts — same UX as if they had endorsed 2 themselves. Same payload shape (payloads for both thoughts recorded).
+
+4. Random selection is deterministic per session (same 2 thoughts shown to the same participant if they navigate back) but random across participants — different kids get different random pairs. Standard `Math.random()` on the eligible pool at session start is fine.
+
+**Behavior when the participant endorses ≥1 thought at ≥1** stays exactly as it is today (unchanged from v5.8 — they pick from their endorsed list).
+
+**Data shape:** payload continues to record which thoughts the participant worked with. Add a boolean field (`randomly_selected: true`) on the two randomly-selected thoughts' payload entries so the export pipeline can tell "endorsed" from "randomly given" for analysis purposes. Field defaults to `false` (or absent) for endorsed thoughts.
+
+**Version:** MINOR (v5.8 → v5.9) — new behavior branch, small copy add, no structural change.
+
+---
+
+#### Part B — Remove three "Video Coming Soon" placeholders, replace with Kai audio narration
+
+**Context:** Three activity spots currently render a "Video Coming Soon" placeholder awaiting a Kai psychoeducation video. Team decided at the 2026-08-11 meeting: skip the video for these three spots — Kai's voice-only narration reading the script is enough. Auto-play the audio when the participant reaches that screen, gate the Continue button until the audio has played.
+
+**Three spots to modify:**
+
+1. **Allies / Safety Net — before Step 1** (intro to allies). Currently shows "Video Coming Soon" before the ally-selection step.
+2. **Allies / Safety Net — before Step 2** (Inspect your net). Currently shows "Video Coming Soon" before the "check for people who don't belong in your net" step.
+3. **Getting Unstuck — before the Challenge / Both-And exercise.** Currently shows "Video Coming Soon" before the participant does the two-strategies work.
+
+**For each spot:**
+
+- Remove the "Video Coming Soon" JSX placeholder
+- Insert the shared `KaiNarrationPlayer` component (Part C below)
+- Pass the audio file path + transcript text as props
+- The component handles auto-play + Continue gating (participant can't advance until audio has played, either via auto-play or a manual play button)
+
+**Audio file paths (Josh will drop the actual mp3s at these paths):**
+
+- Allies/Safety Net Step 1 intro: `/public/kai-narration/safety-net-allies-intro.mp3`
+- Allies/Safety Net Step 2 intro: `/public/kai-narration/safety-net-inspect-intro.mp3`
+- Getting Unstuck Challenge intro: `/public/kai-narration/getting-unstuck-strategies-intro.mp3`
+
+Create the `public/kai-narration/` folder if it doesn't exist. Add a small `README.md` in that folder noting the audio files are recorded by Josh + processed through ElevenLabs Kai voice model.
+
+**Transcript text for each spot** (source: Stephanie's `Kai Audio Script for Activities.docx`, verbatim). Display the transcript below the audio player as accessible text (kids who can't hear well can read along; also serves as a fallback if audio fails):
+
+**Safety Net #1 (before Step 1):**
+
+> For this activity you are going to build your own safety net, starting with figuring out who your allies are.
+>
+> An ally is a person you trust to give you support and help you become the person you want to be.
+>
+> To have the strongest safety net possible it is important to have allies that give you different kinds of support:
+>
+> - Allies that give you **practical support** help you solve problems, teach you things, or make sure you have the things you need.
+> - People that give **emotional support** help you feel good about yourself, listen to you, or help you cope with hard feelings.
+> - Any allies for **social support** are those people you feel like you can be yourself around and they help you feel less alone.
+>
+> Let's see who your allies are!
+
+**Safety Net #2 (before Step 2 — Inspect your net):**
+
+> It is important to make sure your net is as strong as possible to keep you from falling through! So, let's inspect your net.
+>
+> Think about if there is anyone in your net that:
+>
+> - Usually gets you into trouble
+> - Tries to keep you from talking to or getting close to other people
+> - Frequently lies to you
+> - Or you sometimes feel afraid of
+>
+> If there are people like that in your net, please click on that person or people to remove them. Even though you may like to hang out with them, these things describe an unhealthy relationship. And including unhealthy relationships in your safety net would lead to strings that could easily snap, leading you to feel alone and unsupported in the long run.
+
+**Getting Unstuck (before Challenge / Both-And):**
+
+> There are two helpful ways to get unstuck from these thoughts.
+>
+> First, is to **challenge** them by asking yourself:
+>
+> - Is there another way I can think about this?
+> - Is this really true or can I think of a way it is not true?
+> - Is this thought helping me, and if not what is a thought that might be more helpful?
+>
+> Another way to get unstuck is to acknowledge that the thought might have a small piece of truth, but it leaves out other truths.
+>
+> For this, it is important to recognize that two things that seem different can be true at the same time. Starting with your stuck thought then saying AND… what else is also true. For example:
+>
+> - My foster family isn't my real family AND there can still be a place for them in my life
+> - I feel like no one understands me AND there are ways I can help people get to know me more
+> - A lot of people have given up on me in the past AND it doesn't mean everyone will
+
+**Version bumps:**
+
+- Allies/Safety Net: current → next MINOR (v5.7 → v5.8)
+- Getting Unstuck: covered in Part A above (v5.8 → v5.9). The Kai narration change is part of the same version bump.
+
+---
+
+#### Part C — New `KaiNarrationPlayer` component
+
+**Purpose:** Reusable audio-narration player used in three spots (Part B). Auto-plays Kai's audio when the participant reaches the screen, shows the transcript text below, gates the Continue button until the audio has played.
+
+**File:** `src/components/KaiNarrationPlayer.jsx` (or wherever shared components live).
+
+**Props:**
+
+- `audioSrc` (string) — path to the mp3 file
+- `transcript` (string or JSX) — the script text to display below the player
+- `onComplete` (function) — called when audio finishes playing (used to enable the parent's Continue button)
+
+**Behavior:**
+
+1. On mount, attempt to auto-play the audio. Modern browsers block auto-play without user interaction, so:
+   - If auto-play succeeds: audio starts, show a "playing" indicator (waveform / progress bar / "Kai is speaking..." label)
+   - If auto-play is blocked: show a prominent "Play" button the participant clicks to start playback
+2. Show a visible **playback progress indicator** (progress bar or elapsed/total time) so the participant sees the audio is playing
+3. Show the **transcript text** below the audio player, formatted with the same warm Ready-for-Roots typography as the surrounding activity content
+4. When audio ends, call `onComplete` so the parent component can enable the Continue button
+5. Provide a **replay button** the participant can click if they want to hear it again
+6. Once played to completion at least once, the Continue button (in the parent activity) should become enabled. If the participant hits replay, that doesn't reset the completion state — they're just re-listening
+
+**Accessibility:**
+
+- Native `<audio>` element with `controls` attribute available as a secondary control (visible or hidden — implementer's call, but the native controls provide accessible seek/pause/volume)
+- Transcript text is always visible below the audio (not hidden behind a toggle) — supports participants who can't hear well or are in an environment without sound
+- Play/pause buttons have proper ARIA labels
+- Keyboard-accessible
+
+**Styling:**
+
+- Match the warm Ready-for-Roots amber/cream palette
+- Distinct from the "video" style (this isn't pretending to be a video) — it's clearly an audio player with transcript
+- Comfortable padding, warm background card
+- Consider a small icon indicating "Kai is speaking" — a stylized speech bubble or a small Kai avatar
+
+**Gating logic in parent activities:**
+
+Each activity that uses `KaiNarrationPlayer` should disable its "Continue" button until the `onComplete` callback fires. Once fired, the Continue button becomes enabled. This is what enforces the "can't skip Kai's narration" behavior the team wanted.
+
+---
+
+#### Verification
+
+**Part A — Getting Unstuck 0-endorsement fallback:**
+
+- Sandbox test: rate all 7 thoughts as 0, hit Continue → new intro screen shows Stephanie's copy, then 2 randomly-selected thoughts appear for the Challenge / Both-And exercise
+- Sandbox test: rate at least 1 thought ≥1 → normal flow (unchanged from v5.8)
+- Payload includes `randomly_selected: true` on the auto-selected pair when the fallback fires
+- Version badge shows v5.9
+
+**Part B — Kai audio narration:**
+
+- All three "Video Coming Soon" placeholders are removed from Allies/Safety Net and Getting Unstuck
+- Each spot now renders `KaiNarrationPlayer` with the correct audio file path and transcript
+- Continue button is disabled until the audio has played (either via auto-play or manual click)
+- Transcript text is visible below the audio player in each of the three spots
+- `public/kai-narration/` folder exists with a README noting the mp3 filenames Josh will drop in
+
+**Part C — KaiNarrationPlayer component:**
+
+- Component renders on mount
+- Auto-play attempts (works in most cases since participant has already interacted with the page to reach the activity screen)
+- If auto-play blocked, a visible "Play" button appears
+- Playback progress indicator visible during playback
+- Transcript text visible at all times
+- Replay button available after first playback
+- `onComplete` fires when audio ends, enabling the parent's Continue button
+- Keyboard-accessible controls
+- ARIA labels on interactive elements
+
+**Cross-cutting:**
+
+- Build clean, no console errors
+- Existing /demo sandbox previews work correctly
+- `/irb-preview` reflects the updated activities (both share components)
+- Feedback button still works
+
+**Version bumps:**
+
+- Getting Unstuck: v5.8 → v5.9 (MINOR — combined 0-endorsement fallback + Kai audio spot)
+- Allies/Safety Net: v5.7 → v5.8 (MINOR — Kai audio spots replace "Video Coming Soon" placeholders)
+
+**Note for Josh:** the audio files (`safety-net-allies-intro.mp3`, `safety-net-inspect-intro.mp3`, `getting-unstuck-strategies-intro.mp3`) do NOT exist yet — they will be added after Code ships this draft. Until Josh drops the mp3s at those paths, the KaiNarrationPlayer component will fail to load audio at each of the three spots. That's expected. Code should NOT create placeholder audio files or attempt to work around missing audio — the infrastructure exists, the files land when Josh has recorded and processed them.
+
+  </details>
+
 - **`9c5de60` · 2026-08-07** — **Draft 61 — Sam Female Adult + Sam Female 14 cards added to "For Review This Week".** Two new review cards after the four Kai Part 1 scene cards, under a new "Sam variants for review" subheading. **Card 6 — Sam Female Adult Narrator:** renders the already-committed locked composite (`public/cast/images/sam-female-v3.png`, Draft 56). **Card 7 — Sam Female 14:** new image copied from `Video Content/Sams Story/Sam Female 14.png` to `public/cast/images/sam-female-14.png`. `REVIEW_CARDS` gained an `imageSrc` field as an alternative to `youtubeId` (exactly one set per card); `ReviewCard` now conditionally renders an `<img>` for image cards or the `<iframe>` for video cards — same card container/title/description/feedback-button pattern either way, both at the same 9:16 `max-w-[360px]` sizing as the video cards. Verified on /demo: heading order is the 5 video cards → "Sam variants for review" subheading → Card 6 → Card 7; both images load (1296px natural width) at their correct paths; each card's feedback button opens with its correct pre-filled area ("Sam Female — Adult Narrator" / "Sam Female — 14-year-old"); console + build clean. No version bump.
 
   <details>
