@@ -5,9 +5,10 @@
 //                    one transition + one selection screen per support
 //                    type (Practical → Emotional → Social).
 //   Part 1 final  — Your Safety Net (TrampolineNet, non-interactive).
-//   Part 2 (Inspect) — educational screen (video placeholder + 4 red
-//                    flags) + a single X-out screen where the kid taps
-//                    × on any ally they want to take out of their net.
+//   Part 2 (Inspect) — educational screen (Kai audio narration as of
+//                    v5.8 + 4 red flags) + a single X-out screen where
+//                    the kid taps × on any ally they want to take out
+//                    of their net.
 //   Part 3 (Strengthen) — for each support type with 0 or 1 ally
 //                    post-removal, a per-type screen prompts "Who could
 //                    that be? What's one thing you could do?" with
@@ -55,11 +56,12 @@
 // skipped:false).
 
 import { useMemo, useRef, useState } from 'react'
-import { Check, Download, PlayCircle } from 'lucide-react'
+import { Check, Download } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
 import TrampolineNet from '../components/TrampolineNet.jsx'
 import { downloadSvgElementAsPng } from '../lib/imageDownload.js'
+import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
 
 // Which tile ids are custom-name-entry tiles. ALLY_TILES is the source
 // of truth (via `custom: true`); this is a derived set.
@@ -106,6 +108,70 @@ function toneFor(typeId) {
   const t = SUPPORT_TYPES.find((x) => x.id === typeId)
   return TONE_TOKENS[t?.tone] || TONE_TOKENS.amber
 }
+
+// Kai narration transcripts (Draft 62 Part B, 2026-08-11 meeting) — verbatim
+// from Stephanie's "Kai Audio Script for Activities.docx", displayed below
+// the KaiNarrationPlayer's audio so kids who can't hear well (or are in a
+// sound-off environment) can still get the content. JSX (not plain
+// strings) so the bold/bulleted structure renders properly.
+const KAI_INTRO_TRANSCRIPT = (
+  <>
+    <p className="mb-3">
+      For this activity you are going to build your own safety net,
+      starting with figuring out who your allies are.
+    </p>
+    <p className="mb-3">
+      An ally is a person you trust to give you support and help you
+      become the person you want to be.
+    </p>
+    <p className="mb-2">
+      To have the strongest safety net possible it is important to have
+      allies that give you different kinds of support:
+    </p>
+    <ul className="list-disc pl-5 space-y-1 mb-3">
+      <li>
+        Allies that give you <strong>practical support</strong> help you
+        solve problems, teach you things, or make sure you have the
+        things you need.
+      </li>
+      <li>
+        People that give <strong>emotional support</strong> help you feel
+        good about yourself, listen to you, or help you cope with hard
+        feelings.
+      </li>
+      <li>
+        Any allies for <strong>social support</strong> are those people
+        you feel like you can be yourself around and they help you feel
+        less alone.
+      </li>
+    </ul>
+    <p>Let&apos;s see who your allies are!</p>
+  </>
+)
+
+const KAI_INSPECT_TRANSCRIPT = (
+  <>
+    <p className="mb-3">
+      It is important to make sure your net is as strong as possible to
+      keep you from falling through! So, let&apos;s inspect your net.
+    </p>
+    <p className="mb-2">Think about if there is anyone in your net that:</p>
+    <ul className="list-disc pl-5 space-y-1 mb-3">
+      <li>Usually gets you into trouble</li>
+      <li>Tries to keep you from talking to or getting close to other people</li>
+      <li>Frequently lies to you</li>
+      <li>Or you sometimes feel afraid of</li>
+    </ul>
+    <p>
+      If there are people like that in your net, please click on that
+      person or people to remove them. Even though you may like to hang
+      out with them, these things describe an unhealthy relationship. And
+      including unhealthy relationships in your safety net would lead to
+      strings that could easily snap, leading you to feel alone and
+      unsupported in the long run.
+    </p>
+  </>
+)
 
 // Per-type example for the Strengthen "what could you do?" input. The
 // example now matches the support type (Holly's 2026-06-18 note: the
@@ -336,6 +402,13 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   const isFirstScreen = safeScreenIdx === 0
   const isReviewScreen = screen?.type === 'review'
 
+  // Kai narration gating (Draft 62 Part B) — Continue is disabled on the
+  // intro + inspect-education screens until that screen's KaiNarrationPlayer
+  // fires onComplete at least once. Sticky once true (a later replay
+  // doesn't re-lock Continue).
+  const [introNarrationDone, setIntroNarrationDone] = useState(false)
+  const [inspectNarrationDone, setInspectNarrationDone] = useState(false)
+
   // ---- Navigation ----
   function goNext() {
     setScreenIdx((i) => Math.min(i + 1, screens.length - 1))
@@ -439,7 +512,9 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         </div>
       </div>
 
-      {screen?.type === 'intro' && <IntroScreen />}
+      {screen?.type === 'intro' && (
+        <IntroScreen onNarrationComplete={() => setIntroNarrationDone(true)} />
+      )}
 
       {screen?.type === 'transition' && (
         <TransitionScreen typeId={screen.supportType} />
@@ -469,7 +544,9 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
         />
       )}
 
-      {screen?.type === 'inspect-education' && <InspectEducationScreen />}
+      {screen?.type === 'inspect-education' && (
+        <InspectEducationScreen onNarrationComplete={() => setInspectNarrationDone(true)} />
+      )}
 
       {screen?.type === 'inspect-xout' && (
         <InspectXOutScreen
@@ -511,6 +588,8 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
           onNext={goNext}
           onSubmit={handleSubmit}
           isReview={isReviewScreen}
+          introNarrationDone={introNarrationDone}
+          inspectNarrationDone={inspectNarrationDone}
         />
       </div>
     </div>
@@ -596,7 +675,15 @@ function progressLabel(screen) {
   }
 }
 
-function PrimaryAdvanceButton({ screen, submitting, onNext, onSubmit, isReview }) {
+function PrimaryAdvanceButton({
+  screen,
+  submitting,
+  onNext,
+  onSubmit,
+  isReview,
+  introNarrationDone,
+  inspectNarrationDone,
+}) {
   if (!screen) return null
   if (isReview) {
     return (
@@ -606,7 +693,12 @@ function PrimaryAdvanceButton({ screen, submitting, onNext, onSubmit, isReview }
     )
   }
   if (screen.type === 'intro') {
-    return <PrimaryButton onClick={onNext}>Let&apos;s build it →</PrimaryButton>
+    // Draft 62 Part B — gated until Kai's intro narration has played once.
+    return (
+      <PrimaryButton onClick={onNext} disabled={!introNarrationDone}>
+        Let&apos;s build it →
+      </PrimaryButton>
+    )
   }
   if (screen.type === 'transition') {
     return <PrimaryButton onClick={onNext}>Continue →</PrimaryButton>
@@ -618,7 +710,12 @@ function PrimaryAdvanceButton({ screen, submitting, onNext, onSubmit, isReview }
     return <PrimaryButton onClick={onNext}>Inspect your net →</PrimaryButton>
   }
   if (screen.type === 'inspect-education') {
-    return <PrimaryButton onClick={onNext}>Continue →</PrimaryButton>
+    // Draft 62 Part B — gated until Kai's inspect narration has played once.
+    return (
+      <PrimaryButton onClick={onNext} disabled={!inspectNarrationDone}>
+        Continue →
+      </PrimaryButton>
+    )
   }
   if (screen.type === 'inspect-xout') {
     return <PrimaryButton onClick={onNext}>Continue →</PrimaryButton>
@@ -631,12 +728,22 @@ function PrimaryAdvanceButton({ screen, submitting, onNext, onSubmit, isReview }
 
 // ---------- Intro screen ----------
 
-function IntroScreen() {
+function IntroScreen({ onNarrationComplete }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">
         Who are the allies in your safety net?
       </h2>
+
+      {/* Kai narration (Draft 62 Part B) — replaces what would otherwise
+          be a "Video Coming Soon" spot; Continue is gated on this having
+          played at least once (see PrimaryAdvanceButton). */}
+      <KaiNarrationPlayer
+        audioSrc="/kai-narration/safety-net-allies-intro.mp3"
+        transcript={KAI_INTRO_TRANSCRIPT}
+        onComplete={onNarrationComplete}
+      />
+
       <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
         An ally is someone you trust to provide support and help you become
         the person you want to be. They might not always get it right, but
@@ -876,7 +983,7 @@ function BuildFinalScreen({ allies, noneFor, lowSupport }) {
 
 // ---------- Inspect Education ----------
 
-function InspectEducationScreen() {
+function InspectEducationScreen({ onNarrationComplete }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">
@@ -888,22 +995,14 @@ function InspectEducationScreen() {
         Let&apos;s look at four warning signs.
       </p>
 
-      {/* Video placeholder — Adrian will record the actual content;
-          this is just a structurally-positioned container with a fixed
-          16:9 aspect ratio so the eventual video drops in cleanly. */}
-      <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
-        <div
-          className="relative w-full bg-slate-900"
-          style={{ paddingBottom: '56.25%' }}
-        >
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-200 gap-2">
-            <PlayCircle size={48} strokeWidth={1.4} />
-            <span className="text-[13px] uppercase tracking-widest">
-              Video coming soon
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* Kai narration (Draft 62 Part B) — replaces the old "Video Coming
+          Soon" placeholder; Continue is gated on this having played at
+          least once (see PrimaryAdvanceButton). */}
+      <KaiNarrationPlayer
+        audioSrc="/kai-narration/safety-net-inspect-intro.mp3"
+        transcript={KAI_INSPECT_TRANSCRIPT}
+        onComplete={onNarrationComplete}
+      />
 
       {/* Four red-flag bullets — Stephanie's PPT phrasing, verbatim
           from commit 71a37e9. Don't edit without Stephanie's sign-off. */}

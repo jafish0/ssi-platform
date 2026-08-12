@@ -1,9 +1,19 @@
 import { useMemo, useState } from 'react'
-import { PlayCircle } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
+import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
 
 // Getting Unstuck — Ready for Roots' stuck-thought / strategy / reflection activity.
+//
+// v5.9 (2026-08-11, Draft 62 Part A): the old "affirmation" dead-end (kid
+// rated nothing ≥2, saw a static two-strategies explainer, saved without
+// practicing) is replaced — the kid now practices Challenge/Both-And on 2
+// randomly-selected thoughts from the locked pool (`zero_endorsement_intro`
+// phase, `randomly_selected: true` on those two payload entries). Also
+// (Part B/C): a Kai audio-narration gate (`kai_strategy_intro`,
+// KaiNarrationPlayer) now sits before EVERY first strategy screen —
+// normal endorsed-pick path or the fallback — replacing the old
+// affirmation screen's "Video Coming Soon" placeholder.
 //
 // v5.0 (2026-05-13, Draft 15): structural rebuild.
 //   - The 8 RSD-specific stuck thoughts are replaced with the 6 locked
@@ -83,6 +93,45 @@ const CHALLENGE_PROMPTS = [
 
 const OTHER_ID = 'a_other'
 
+// Kai narration transcript for the Challenge/Both-And intro (Draft 62
+// Part B, 2026-08-11 meeting) — verbatim from Stephanie's "Kai Audio
+// Script for Activities.docx". Shown below the audio player so kids who
+// can't hear well still get the content. Replaces the old "Video Coming
+// Soon" placeholder that used to live in the (now-removed) zero-eligible
+// affirmation screen.
+const KAI_STRATEGY_TRANSCRIPT = (
+  <>
+    <p className="mb-3">
+      There are two helpful ways to get unstuck from these thoughts.
+    </p>
+    <p className="mb-2">
+      First, is to <strong>challenge</strong> them by asking yourself:
+    </p>
+    <ul className="list-disc pl-5 space-y-1 mb-3">
+      <li>Is there another way I can think about this?</li>
+      <li>Is this really true or can I think of a way it is not true?</li>
+      <li>
+        Is this thought helping me, and if not what is a thought that
+        might be more helpful?
+      </li>
+    </ul>
+    <p className="mb-3">
+      Another way to get unstuck is to acknowledge that the thought might
+      have a small piece of truth, but it leaves out other truths.
+    </p>
+    <p className="mb-2">
+      For this, it is important to recognize that two things that seem
+      different can be true at the same time. Starting with your stuck
+      thought then saying AND… what else is also true. For example:
+    </p>
+    <ul className="list-disc pl-5 space-y-1">
+      <li>My foster family isn&apos;t my real family AND there can still be a place for them in my life</li>
+      <li>I feel like no one understands me AND there are ways I can help people get to know me more</li>
+      <li>A lot of people have given up on me in the past AND it doesn&apos;t mean everyone will</li>
+    </ul>
+  </>
+)
+
 // ---------- Reusable truth-rating scale (0-4 as of v5.4) ----------
 //
 // Anchors come from APPRAISAL_SCALE so this component and the FollowUp
@@ -130,16 +179,27 @@ export default function GettingUnstuck({ onSave = console.log }) {
   //   rate        → score the 6 appraisal items
   //   other       → Yes/No on an Other thought; if Yes, type + rate it
   //   pick        → choose 1-2 eligible items to work on
+  //   zero_endorsement_intro → v5.9 (Draft 62 Part A): shown instead of
+  //                 pick when nothing cleared the eligibility threshold —
+  //                 tells the kid they'll still practice with 2 thoughts
+  //                 the system picks at random from the locked pool
+  //   kai_strategy_intro → v5.9 (Draft 62 Part B): Kai audio narration
+  //                 gate before the first strategy screen, entered from
+  //                 either 'pick' or 'zero_endorsement_intro'
   //   strategy    → per-picked: Challenge or Both/And + open text
   //   cycle_affirmation → brief "nice work, let's try the next one" beat
   //                 shown between consecutive picked thoughts (v5.3)
   //   review      → read-back before save
-  //   affirmation → alt path when zero items clear threshold (skip pick + strategy)
   const [phase, setPhase] = useState('rate')
 
   // Heading for the between-thoughts affirmation beat (randomized when we
   // enter the cycle_affirmation phase).
   const [cycleHeading, setCycleHeading] = useState(CYCLE_AFFIRMATIONS[0])
+
+  // Kai narration gating (Draft 62 Part B) — Continue on kai_strategy_intro
+  // is disabled until the narration has played once. Sticky: a later
+  // replay (or revisiting the screen) doesn't re-lock it.
+  const [strategyIntroNarrationDone, setStrategyIntroNarrationDone] = useState(false)
 
   // Per-item state keyed by id ('a1'…'a6' and optionally 'a_other').
   // Shape: { truth_rating?: 0..5, selected?: bool, strategy?, response?, and_statement? }
@@ -183,11 +243,30 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return locked
   }, [items, otherChoice, otherText])
 
-  // Selected (chosen to work on), in eligible-list order.
-  const selectedItems = useMemo(
-    () => eligibleItems.filter((it) => items[it.id]?.selected),
-    [eligibleItems, items],
-  )
+  // Selected (chosen to work on), in eligible-list order — plus, as of
+  // v5.9 (Draft 62 Part A), any items the 0-endorsement fallback
+  // auto-selected. Those carry `selected: true` but aren't in
+  // `eligibleItems` (nothing cleared threshold in that branch), so a
+  // second pass over the full locked list picks them up without
+  // disturbing the normal endorsed-pick path (there, every `selected`
+  // item is already inside `eligibleItems`, so this pass adds nothing).
+  const selectedItems = useMemo(() => {
+    const seen = new Set()
+    const out = []
+    for (const it of eligibleItems) {
+      if (items[it.id]?.selected && !seen.has(it.id)) {
+        seen.add(it.id)
+        out.push(it)
+      }
+    }
+    for (const it of APPRAISAL_ITEMS) {
+      if (items[it.id]?.selected && !seen.has(it.id)) {
+        seen.add(it.id)
+        out.push(it)
+      }
+    }
+    return out
+  }, [eligibleItems, items])
 
   const allRated = useMemo(
     () => APPRAISAL_ITEMS.every((it) => items[it.id]?.truth_rating != null),
@@ -269,6 +348,10 @@ export default function GettingUnstuck({ onSave = console.log }) {
           truth_rating: r.truth_rating ?? null,
           selected: !!r.selected,
         }
+        // v5.9 (Draft 62 Part A) — flags the two thoughts the
+        // 0-endorsement fallback auto-picked, so export can tell
+        // "endorsed" apart from "randomly given" for analysis.
+        if (r.randomly_selected) entry.randomly_selected = true
         if (r.selected) {
           if (r.strategy) entry.strategy = r.strategy
           if (r.strategy === 'challenge') entry.response = r.response || ''
@@ -369,7 +452,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
     function handleOtherContinue() {
       // Decide downstream phase based on eligibility after the Other
       // contribution. If no items (locked or Other) clear the
-      // threshold → affirmation; otherwise → pick.
+      // threshold → the v5.9 0-endorsement fallback; otherwise → pick.
       const hasEligible = eligibleItems.length > 0
       // Defensive eligibility sweep before entering Pick, matching v3.0
       // behavior.
@@ -392,7 +475,31 @@ export default function GettingUnstuck({ onSave = console.log }) {
         return next
       })
       setLimitNudge(false)
-      setPhase(hasEligible ? 'pick' : 'affirmation')
+      if (hasEligible) {
+        setPhase('pick')
+      } else {
+        // v5.9 (Draft 62 Part A, Holly's 2026-08-11 feedback): nothing
+        // cleared threshold, but the kid still practices Challenge/Both-
+        // And once — auto-select 2 random thoughts from the locked pool
+        // (a_other deliberately excluded: forcing practice on a custom
+        // thought the kid just typed and dismissed doesn't fit "in case a
+        // new thought pops up in the future"). Random per participant;
+        // stored in `items` state so it stays fixed if they navigate back.
+        const pool = APPRAISAL_ITEMS.map((it) => it.id)
+        const chosen = []
+        while (chosen.length < Math.min(MAX_PICKS, pool.length)) {
+          const i = Math.floor(Math.random() * pool.length)
+          chosen.push(pool.splice(i, 1)[0])
+        }
+        setItems((prev) => {
+          const next = { ...prev }
+          for (const id of chosen) {
+            next[id] = { ...(next[id] || {}), selected: true, randomly_selected: true }
+          }
+          return next
+        })
+        setPhase('zero_endorsement_intro')
+      }
       scrollTop()
     }
 
@@ -542,8 +649,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
           </GhostButton>
           <PrimaryButton
             onClick={() => {
-              setThoughtIdx(0)
-              setPhase('strategy')
+              setPhase('kai_strategy_intro')
               scrollTop()
             }}
             disabled={selectedCount < 1}
@@ -555,58 +661,20 @@ export default function GettingUnstuck({ onSave = console.log }) {
     )
   }
 
-  // ---- Phase: affirmation ----
-  if (phase === 'affirmation') {
+  // ---- Phase: zero_endorsement_intro ----
+  // v5.9 (Draft 62 Part A) — replaces the old "affirmation" dead-end
+  // (which just explained the two strategies and let the kid Save without
+  // practicing). Now they practice with 2 randomly-selected thoughts,
+  // same as if they'd endorsed 2 themselves — handleOtherContinue already
+  // picked + flagged them before landing here.
+  if (phase === 'zero_endorsement_intro') {
     return (
-      <div className="py-4">
-        <div className="text-center">
-          <h2 className="text-[22px] font-semibold mb-3">That&apos;s good news.</h2>
-          <p className="text-[16px] leading-relaxed text-slate-700 mb-6 max-w-[480px] mx-auto">
-            Looks like none of these thoughts are sticking with you right now —
-            you don&apos;t have to wrestle with them today.
-          </p>
-        </div>
-
-        {/* Strategy explainer — even when there's no specific thought to
-            work on, the kid still learns the two strategies (Ginny's
-            2026-06-01 ask). Video is a placeholder for now (Adrian to
-            record; Stephanie offered to script a ~1-min version); the
-            text scaffolding below carries the content until then. */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-6 text-left max-w-[560px] mx-auto">
-          <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
-            If a stuck thought ever does come up, here are two ways to work
-            with it:
-          </p>
-
-          <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
-            <div className="relative w-full bg-slate-900" style={{ paddingBottom: '56.25%' }}>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-200 gap-2">
-                <PlayCircle size={44} strokeWidth={1.4} />
-                <span className="text-[13px] uppercase tracking-widest">
-                  Video coming soon
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-slate-200 p-3">
-              <div className="font-semibold text-[15px] mb-1">Challenge it</div>
-              <div className="text-[13px] text-slate-600 leading-relaxed">
-                Push back on the thought. Is there another way to see this? Is
-                it really true, or is there a more helpful way to think about it?
-              </div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 p-3">
-              <div className="font-semibold text-[15px] mb-1">Both/And it</div>
-              <div className="text-[13px] text-slate-600 leading-relaxed">
-                The thought might hold a piece of truth, but it leaves out other
-                truths. You hold both at once — &quot;this AND that.&quot;
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="py-4 text-center">
+        <h2 className="text-[22px] font-semibold mb-3">That&apos;s great!</h2>
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-8 max-w-[480px] mx-auto">
+          Try out the following exercise in case a new thought pops up that
+          you need to deal with in the future.
+        </p>
         <div className="flex items-center justify-between">
           <GhostButton
             onClick={() => {
@@ -616,8 +684,54 @@ export default function GettingUnstuck({ onSave = console.log }) {
           >
             ← Back
           </GhostButton>
-          <PrimaryButton onClick={handleSave} disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save'}
+          <PrimaryButton
+            onClick={() => {
+              setPhase('kai_strategy_intro')
+              scrollTop()
+            }}
+          >
+            Keep going →
+          </PrimaryButton>
+        </div>
+      </div>
+    )
+  }
+
+  // ---- Phase: kai_strategy_intro ----
+  // v5.9 (Draft 62 Part B/C) — Kai audio narration gate shown once before
+  // the first strategy screen, entered from either 'pick' (normal
+  // endorsed path) or 'zero_endorsement_intro' (fallback path). Replaces
+  // the old affirmation-only "Video Coming Soon" explainer above.
+  if (phase === 'kai_strategy_intro') {
+    const cameFromFallback = eligibleItems.length === 0
+    return (
+      <div>
+        <h2 className="text-[22px] font-semibold mb-4">
+          Two ways to get unstuck.
+        </h2>
+        <KaiNarrationPlayer
+          audioSrc="/kai-narration/getting-unstuck-strategies-intro.mp3"
+          transcript={KAI_STRATEGY_TRANSCRIPT}
+          onComplete={() => setStrategyIntroNarrationDone(true)}
+        />
+        <div className="flex items-center justify-between">
+          <GhostButton
+            onClick={() => {
+              setPhase(cameFromFallback ? 'zero_endorsement_intro' : 'pick')
+              scrollTop()
+            }}
+          >
+            ← Back
+          </GhostButton>
+          <PrimaryButton
+            onClick={() => {
+              setThoughtIdx(0)
+              setPhase('strategy')
+              scrollTop()
+            }}
+            disabled={!strategyIntroNarrationDone}
+          >
+            Keep going →
           </PrimaryButton>
         </div>
       </div>
@@ -812,7 +926,9 @@ export default function GettingUnstuck({ onSave = console.log }) {
               if (thoughtIdx > 0) {
                 setThoughtIdx((i) => i - 1)
               } else {
-                setPhase('pick')
+                // v5.9 — the strategy screens are now always entered via
+                // the kai_strategy_intro gate, from either path.
+                setPhase('kai_strategy_intro')
               }
               scrollTop()
             }}
