@@ -25,7 +25,7 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // SessionSummary still exists in the codebase but is no longer rendered in
 // the /demo preview (Draft 38 D.1) — kept for potential reuse.
 
-// "For Review This Week" cards (Draft 60, extended by Draft 61). The
+// "For Review This Week" cards (Draft 60, extended by Draft 61 + 63). The
 // top-of-page review section. Replaces Draft 57's "Video Preview" section
 // (Part/Scene hierarchy) with a richer per-card structure, each with its
 // own dedicated feedback affordance (FeedbackButton's `initialArea`)
@@ -35,14 +35,16 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // and it renders below the existing ones, no JSX changes needed. A card
 // sets exactly one of `youtubeId` (video embed) or `imageSrc` (still
 // image) — Draft 61 added the image-card variant for the Sam Female
-// composites, which have no video yet.
+// composites, which have no video yet. A card can also set `knownIssue`
+// (Draft 63) — a short italic note rendered below the description when a
+// cut has a flagged problem but is otherwise fine to review.
 const REVIEW_CARDS = [
   {
-    title: "Sam's Story V4",
-    youtubeId: 'QsnyIxeHc_c',
+    title: "Sam's Story V5",
+    youtubeId: 'fuc8PF8SaMA',
     description:
-      'Final V4 cut incorporating the 8/3 meeting revisions — photo composition at 3:48 recomposed, foster family table shot regenerated without the sink, Foster Mom’s line re-recorded with a new voice model.',
-    feedbackArea: "Sam's Story V4",
+      "V5 cut with Jessica's Foster Mom audio cleaned up — volume lowered to match Sam's narration level, background hum removed.",
+    feedbackArea: "Sam's Story V5",
   },
   {
     title: 'Learning Skills for Belonging — Part 1, Scene 1: The Scan',
@@ -53,7 +55,7 @@ const REVIEW_CARDS = [
     groupSubheading: {
       title: 'Learning Skills for Belonging — Part 1',
       intro:
-        "Kai's psychoeducation videos that play interleaved with the activities. Part 2 scenes will drop in as they're ready.",
+        "Kai's psychoeducation videos that play interleaved with the activities.",
     },
   },
   {
@@ -76,6 +78,41 @@ const REVIEW_CARDS = [
     description:
       'The specific difficulty of building belonging while in foster or relative care — "playing the Belonging Game on Hard Mode."',
     feedbackArea: 'Kai Part 1 Scene 4: The Foster Care Extra Level',
+    knownIssue:
+      'Known issue: the opening line’s "foster or relative care" pronunciation is being re-recorded. A new cut will replace this one.',
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 2, Scene 1: Building Skills for Belonging',
+    youtubeId: 'mHiQ6lTi1R8',
+    description:
+      'Kai introduces the five core belonging skills — Active Listening, Conflict Resolution, Inclusive Language, Provide Support, and Express Gratitude.',
+    feedbackArea: 'Kai Part 2 Scene 1: Building Skills for Belonging',
+    groupSubheading: {
+      title: 'Learning Skills for Belonging — Part 2',
+      intro:
+        'Part 2 completes the psychoeducation series. All eight scenes across both parts are now produced.',
+    },
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 2, Scene 2: The Roadblocks',
+    youtubeId: 'BV4cOda5on4',
+    description:
+      'Two unhelpful thinking patterns that block belonging — All-or-Nothing Thinking and Holding onto the Past.',
+    feedbackArea: 'Kai Part 2 Scene 2: The Roadblocks',
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 2, Scene 3: Putting it All Together',
+    youtubeId: 'GAXfgODSEbw',
+    description:
+      'Self-regulation, the too-heavy-shield metaphor, and the shift from a fixed mindset to a growth mindset.',
+    feedbackArea: 'Kai Part 2 Scene 3: Putting it All Together',
+  },
+  {
+    title: 'Learning Skills for Belonging — Conclusion',
+    youtubeId: 'GIxBJpD6O-E',
+    description:
+      "Kai's closing encouragement — your story isn't over just because the current chapter has been chaotic.",
+    feedbackArea: 'Kai Conclusion',
   },
   {
     title: 'Sam Female — Adult Narrator',
@@ -141,6 +178,11 @@ function ReviewCard({ card }) {
         <p className="text-[13px] text-slate-600 leading-relaxed text-center mb-4 max-w-[480px] mx-auto">
           {card.description}
         </p>
+        {card.knownIssue && (
+          <p className="text-[12px] text-amber-700 italic text-center mb-4 max-w-[480px] mx-auto">
+            {card.knownIssue}
+          </p>
+        )}
         <div className="text-center">
           <FeedbackButton
             label="Leave a note on this video"
