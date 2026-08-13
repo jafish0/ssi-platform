@@ -23,7 +23,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-character', label: 'Review: Character progression' },
   { value: 'review-arcades', label: 'Review: Arcade ideas' },
   { value: 'review-gear', label: 'Review: Gear toolbox' },
-  { value: 'review-rename', label: 'Review: Zone rename' },
+  // review-rename retired: the zone rename was accepted and is now canon.
   { value: 'review-spark-voice', label: "Review: Spark's voice" },
   // The official breakdown
   { value: 'assent-measures', label: 'Child Assent / Measures' },
@@ -98,7 +98,7 @@ For example, here is a cool trick called “grounding” that can help your brai
 // ---------- Top Zone Map (the living roadmap) ----------
 const ZONE_MAP_ROWS = [
   {
-    zone: '1 · The Hollow',
+    zone: '1 · The Dark Abyss',
     scene: 'darkest; candle, beacon far above',
     video: 'Video 1 — what trauma is',
     activity: 'Body Mapping',
@@ -163,9 +163,6 @@ const REVIEW_GEAR_POINTS = [
 const REVIEW_GEAR_THEME =
   'Every activity earns a tool. The tools combine and grow. A lantern becomes a Focusing Glass, and the Glass grows wings, so you reach the summit carrying everything you’ve learned.'
 
-const REVIEW_RENAME_RATIONALE =
-  '"The Hollow" was meant to convey an empty, desolate place. But that’s also how you’d spell what’s pronounced "holler" in Eastern Kentucky, and we don’t want to equate that emptiness with where anyone lives. A rename keeps the metaphor about an internal emotional state, not a real place.'
-
 // ---------- Playable character ----------
 // One protagonist (the team dropped the choose-your-character set), shown as
 // the four-stage progression: the same traveler with their darkness lightening
@@ -175,7 +172,7 @@ const REVIEW_RENAME_RATIONALE =
 const TRAVELER_STAGES = [
   {
     src: `${ART}/traveler-stage1-hallow.webp`,
-    name: 'Zone 1 — The Hollow',
+    name: 'Zone 1 — The Dark Abyss',
     blurb: 'Arrives wrapped in shadow.',
   },
   {
@@ -199,7 +196,7 @@ const TRAVELER_STAGES = [
 const ZONES = [
   {
     n: 'Zone 1',
-    name: 'The Hollow',
+    name: 'The Dark Abyss',
     scenery: 'The dark valley floor. A single candle in hand, and the beacon far above.',
     image: '/long-light/zone1.webp',
     characters: ['spark'],
@@ -456,26 +453,12 @@ export default function GainsDemoPage() {
                 </p>
               </ReviewItem>
 
-              {/* 5 — Proposed zone rename */}
+              {/* 5 — Spark's voice. (The zone-rename proposal that used to
+                  sit here was accepted at the Aug 11 meeting and is now canon:
+                  the opening zone reads "The Dark Abyss" in the breakdown.) */}
               <ReviewItem
                 n={5}
-                title="Proposed zone rename"
-                section="review-rename"
-              >
-                <p className="leading-relaxed mb-2">
-                  Rename the opening zone (currently{' '}
-                  <strong>“the Hollow”</strong>) to <strong>“The Deep”</strong>,
-                  with <strong>“Lowreach”</strong> as an alternative.
-                </p>
-                <p className="text-[14px] italic text-slate-700 border-l-2 border-amber-300 pl-3">
-                  {REVIEW_RENAME_RATIONALE}
-                </p>
-              </ReviewItem>
-
-              {/* 6 — Spark's voice */}
-              <ReviewItem
-                n={6}
-                title="Spark’s voice (voice-model preview)"
+                title="Spark’s voice (two options)"
                 section="review-spark-voice"
               >
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -488,16 +471,33 @@ export default function GainsDemoPage() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-slate-700 mb-1.5">
-                      Spark&apos;s intro narration. How does the voice model sound?
+                    <p className="text-[13px] font-medium text-slate-700 mb-2">
+                      Two voices for Spark, both reading the intro below. Have a
+                      listen and tell us which one you prefer.
+                    </p>
+                    <p className="text-[12px] font-semibold text-slate-600 mb-1">
+                      Option A
                     </p>
                     <audio
                       controls
                       preload="metadata"
-                      src="/long-light/audio/spark-introduction.mp3"
-                      aria-label="Audio: Spark's intro narration"
-                      className="w-full mb-2"
+                      src="/long-light/audio/spark-voice-a.mp3"
+                      aria-label="Audio: Spark voice option A"
+                      className="w-full mb-3"
                     />
+                    <p className="text-[12px] font-semibold text-slate-600 mb-1">
+                      Option B
+                    </p>
+                    <audio
+                      controls
+                      preload="metadata"
+                      src="/long-light/audio/spark-voice-b.mp3"
+                      aria-label="Audio: Spark voice option B"
+                      className="w-full mb-3"
+                    />
+                    <p className="text-[13px] text-slate-700 leading-relaxed">
+                      {SPARK_INTRO_LINE}
+                    </p>
                   </div>
                 </div>
               </ReviewItem>
