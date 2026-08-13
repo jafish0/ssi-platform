@@ -85,6 +85,13 @@ const REVIEW_CARDS = [
       "Kai's closing encouragement — your story isn't over just because the current chapter has been chaotic.",
     feedbackArea: 'Kai Conclusion',
   },
+  {
+    title: 'Kai (Gender Neutral) — 14 years old',
+    imageSrc: '/cast/images/kai-gender-neutral-14.png',
+    description:
+      'A 14-year-old version of the gender-neutral Kai design, up for review.',
+    feedbackArea: 'Kai (Gender Neutral) — 14 years old',
+  },
 ]
 
 // Kai's four Part 1 scenes (2026-08-13) — pulled out of weekly review and
