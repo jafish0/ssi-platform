@@ -47,7 +47,7 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 const REVIEW_CARDS = [
   {
     title: "Sam's Story V5",
-    youtubeId: 'fuc8PF8SaMA',
+    youtubeId: 'eEgHiFWatA0',
     description:
       "V5 cut with Jessica's Foster Mom audio cleaned up — volume lowered to match Sam's narration level, background hum removed.",
     feedbackArea: "Sam's Story V5",
