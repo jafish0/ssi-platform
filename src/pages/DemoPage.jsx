@@ -19,7 +19,7 @@ import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
 import { buildSpssSyntax } from '../lib/spssSyntax.js'
 import { buildRsdDemoDataset } from '../lib/demoDataset.js'
-import { CAST, FAMILY_PHOTO } from '../lib/castData.js'
+import { CAST } from '../lib/castData.js'
 import TreeProgress from '../components/TreeProgress.jsx'
 import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // SessionSummary still exists in the codebase but is no longer rendered in
@@ -506,14 +506,15 @@ export default function DemoPage() {
       )}
 
       {/* Meet the cast — preview of Holly's video script (Script 2.0)
-          before animation: character cards + a closing Family Photo. Sits
-          between Tests and Data export so the reviewer flows sandbox →
-          surveys → cast → export. Cards render as a compact 2-up grid
-          (2026-08-13) — Foster Mom/Dad retired (their one scene is fully
-          covered by the assembled Sam's Story video above), voice-sample
-          audio removed from the remaining Sam variants for the same
-          reason, and the Sam Female cards moved down here from the
-          weekly review section since this is their permanent home. */}
+          before animation. Sits between Tests and Data export so the
+          reviewer flows sandbox → surveys → cast → export. Cards render
+          as a compact 2-up grid (2026-08-13) — Foster Mom/Dad retired
+          (their one scene is fully covered by the assembled Sam's Story
+          video above), voice-sample audio removed from the remaining Sam
+          variants for the same reason, the Sam Female cards moved down
+          here from the weekly review section since this is their
+          permanent home, and (2026-08-13) Mrs. Johnson and the closing
+          Family Photo removed — down to just the five Sam variants. */}
       {/* Sam's Story — the narrative-video cast (Holly's Script 2.0). */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
@@ -547,18 +548,6 @@ export default function DemoPage() {
             <CastCard key={character.id} character={character} />
           ))}
         </div>
-
-        {/* Family Photo — borderless hero-style closer */}
-        <figure className="mt-6 mx-auto w-full max-w-[820px] text-center">
-          <img
-            src={FAMILY_PHOTO.image}
-            alt={FAMILY_PHOTO.alt}
-            className="w-full h-auto rounded-2xl shadow-card"
-          />
-          <figcaption className="text-[13px] text-slate-500 italic mt-3">
-            {FAMILY_PHOTO.caption}
-          </figcaption>
-        </figure>
       </section>
 
       {/* Learning Skills for Belonging — the psychoeducation track that
@@ -902,14 +891,14 @@ function ExportFileBlock({
 // narrator audio by scene — label + duration/handoff + script + <audio>),
 // `lines` (per-line scene cue + quoted text; native <audio> if the line
 // has an `audio` clip), or `description` (a paragraph for cast who don't
-// speak — currently just Mrs. Johnson). `voiceSamples` (labeled audio
-// players) and `videos` (9:16 animation previews) render as their own
-// blocks above the main content when present. None of the current cast
-// cards use `scenes`, `lines`, `voiceSamples`, or `videos` as of Draft 63
-// + the 2026-08-13 cast cleanup (Kai's audio scenes, Foster Mom/Dad, and
-// all Sam-variant voice samples were retired once the psychoeducation and
-// Sam's Story tracks existed as finished video) — the shapes stay
-// documented here for whenever new cast content needs them. See
+// speak). `voiceSamples` (labeled audio players) and `videos` (9:16
+// animation previews) render as their own blocks above the main content
+// when present. None of the current cast cards use `scenes`, `lines`,
+// `voiceSamples`, `videos`, or `description` as of Draft 63 + the
+// 2026-08-13 cast cleanup (Kai's audio scenes, Foster Mom/Dad, Mrs.
+// Johnson, and all Sam-variant voice samples were retired once the
+// psychoeducation and Sam's Story tracks existed as finished video) — the
+// shapes stay documented here for whenever new cast content needs them. See
 // src/lib/castData.js.
 
 function CastCard({ character }) {

@@ -1,8 +1,7 @@
 // Cast data for the /demo "Meet the cast" section (Draft 22, 2026-06-03).
 //
 // Previews Holly's video script (Script 2.0) before animation: each
-// character card shows a small photo and a role line, plus (for a couple
-// of characters who don't speak in Script 2.0) a description paragraph.
+// character card shows a small photo and a role line.
 //
 // Draft 52 (2026-07-16): a full-assembly video preview now renders at the
 // TOP of the Sam's Story area on /demo (above these cast cards) — the
@@ -23,17 +22,18 @@
 // appear in multiple sections at once — no current card does):
 //   - `'sams-story'` — the narrative-video cast (Holly's Script 2.0): five
 //     Sam variants — Sam (18 years old), Sam (Female) and Sam (Female, 14
-//     years old), Sam (Gender Neutral), and Sam (14 years old) — plus
-//     Mrs. Johnson. (Sam Female's image is LOCKED as of Draft 56 B
-//     (2026-07-28): a single composite — V1 face/jawline + V2 skin tone +
-//     V1 softer hair, per the 2026-07-27 meeting — renders on the card;
-//     the earlier Draft 50 B "pick between" candidates and the Draft 48
-//     images are retired to disk-only. Foster Mom and Foster Dad were
-//     retired 2026-08-13 — their one dining-table scene is fully covered
-//     by the assembled Sam's Story video above this section, and the
-//     card's only role was previewing that same line before it was shot.
-//     Sam variants' voice-sample audio was removed the same day for the
-//     same reason: the finished Sam's Story video supersedes it.)
+//     years old), Sam (Gender Neutral), and Sam (14 years old). (Sam
+//     Female's image is LOCKED as of Draft 56 B (2026-07-28): a single
+//     composite — V1 face/jawline + V2 skin tone + V1 softer hair, per
+//     the 2026-07-27 meeting — renders on the card; the earlier Draft
+//     50 B "pick between" candidates and the Draft 48 images are retired
+//     to disk-only. Foster Mom, Foster Dad, and Mrs. Johnson were
+//     retired 2026-08-13 — the dining-table scene (Foster Mom/Dad) is
+//     fully covered by the assembled Sam's Story video above this
+//     section, and Josh wanted the section trimmed to just the Sam
+//     variants. Sam variants' voice-sample audio was removed the same
+//     day for the same reason: the finished Sam's Story video supersedes
+//     it. The closing Family Photo was removed the same day too.)
 //   - `'learning-skills'` — the psychoeducation track that wraps the six
 //     activities (Adrienne's script; Kai narrates). Used to carry a
 //     single Kai card (photo + all 8 scenes of narrator audio); retired
@@ -55,12 +55,12 @@
 //     Female). Takes precedence over `image`/`images` when set.
 //
 // A card can carry one content shape, in precedence order — none of the
-// current cast cards use `videos`, `voiceSamples`, `lines`, or `scenes`
-// as of the 2026-08-13 cast cleanup (Kai's 8 narrator-audio scenes,
-// Foster Mom/Dad, and all Sam-variant voice samples were retired once
-// the psychoeducation track and Sam's Story existed as finished video);
-// the shapes stay documented here for whenever new cast content needs
-// them:
+// current cast cards use `videos`, `voiceSamples`, `lines`, `scenes`, or
+// `description` as of the 2026-08-13 cast cleanup (Kai's 8 narrator-audio
+// scenes, Foster Mom/Dad, Mrs. Johnson, and all Sam-variant voice samples
+// were retired once the psychoeducation track and Sam's Story existed as
+// finished video); the shapes stay documented here for whenever new cast
+// content needs them:
 //   - `videos`: [{ src | youtubeId, caption, label? }, ...] — one or
 //     more rendered video shots. Per entry: `src` = self-hosted mp4
 //     (native <video>, no overlay chrome) OR `youtubeId` = YouTube Short
@@ -80,8 +80,7 @@
 //     `durationSeconds` (51) show the length and sum to a total runtime;
 //     `handoff` names the activity the scene hands off to. Each renders
 //     as label + duration/handoff + text + native <audio>.
-//   - `description`: a paragraph for characters who don't speak yet
-//     (Mrs. Johnson).
+//   - `description`: a paragraph for characters who don't speak yet.
 
 export const CAST = [
   {
@@ -148,20 +147,4 @@ export const CAST = [
     alt: 'Sam, gender-neutral variant',
     role: 'The gender-neutral variant of Sam — same character, different presentation. Character design reuses the current Kai visual (blonde).',
   },
-  {
-    id: 'mrs-johnson',
-    shows: ['sams-story'],
-    name: 'Mrs. Johnson',
-    image: '/cast/images/mrs-johnson.png',
-    alt: 'Mrs. Johnson — Sam’s teacher and the catalyst for change',
-    role: 'Sam’s teacher and the catalyst for change.',
-    description:
-      'No directly quoted lines in Script 2.0. Mrs. Johnson is referenced in 16-year-old Sam’s voice-over as the teacher who suggested he join the backstage crew of the school musical — the invitation that becomes the turning point in the story. If her own dialogue is added in a later revision (for example, the moment where she invites Sam to join the crew), it would slot into the school / hallway scene before Sam’s decision to try it.',
-  },
 ]
-
-export const FAMILY_PHOTO = {
-  image: '/cast/images/family-photo.png',
-  alt: 'Sam with his foster family',
-  caption: 'Sam and his foster family, after the realization.',
-}
