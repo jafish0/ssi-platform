@@ -38,6 +38,12 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // composites, which have no video yet. A card can also set `knownIssue`
 // (Draft 63) — a short italic note rendered below the description when a
 // cut has a flagged problem but is otherwise fine to review.
+//
+// Kai Part 1 (the four scenes that have graduated out of weekly review)
+// moved to LEARNING_SKILLS_CARDS below (2026-08-13) — they now render
+// permanently in the "Learning Skills for Belonging" section instead of
+// here. The Sam Female Adult/14 image cards moved down into the Sam's
+// Story cast section for the same reason (both already had a home there).
 const REVIEW_CARDS = [
   {
     title: "Sam's Story V5",
@@ -45,41 +51,6 @@ const REVIEW_CARDS = [
     description:
       "V5 cut with Jessica's Foster Mom audio cleaned up — volume lowered to match Sam's narration level, background hum removed.",
     feedbackArea: "Sam's Story V5",
-  },
-  {
-    title: 'Learning Skills for Belonging — Part 1, Scene 1: The Scan',
-    youtubeId: 'fNSK011fNnI',
-    description:
-      'Kai introduces himself and the concept of the belonging scan — the way our brains constantly evaluate social situations.',
-    feedbackArea: 'Kai Part 1 Scene 1: The Scan',
-    groupSubheading: {
-      title: 'Learning Skills for Belonging — Part 1',
-      intro:
-        "Kai's psychoeducation videos that play interleaved with the activities.",
-    },
-  },
-  {
-    title: "Learning Skills for Belonging — Part 1, Scene 2: The Why (It's in Your DNA)",
-    youtubeId: 'u1b2FoAwZPs',
-    description:
-      'Why belonging is a survival requirement wired into human biology — from ancient humans around fires to modern families sharing meals.',
-    feedbackArea: 'Kai Part 1 Scene 2: The Why',
-  },
-  {
-    title: 'Learning Skills for Belonging — Part 1, Scene 3: Building a Safety Net',
-    youtubeId: 'z9IMWmArols',
-    description:
-      'The safety-net metaphor for belonging — you need multiple places to belong. Includes the GPS metaphor for friend groups.',
-    feedbackArea: 'Kai Part 1 Scene 3: Building a Safety Net',
-  },
-  {
-    title: 'Learning Skills for Belonging — Part 1, Scene 4: The Foster Care "Extra Level"',
-    youtubeId: 'hTgGTKsx2Oo',
-    description:
-      'The specific difficulty of building belonging while in foster or relative care — "playing the Belonging Game on Hard Mode."',
-    feedbackArea: 'Kai Part 1 Scene 4: The Foster Care Extra Level',
-    knownIssue:
-      'Known issue: the opening line’s "foster or relative care" pronunciation is being re-recorded. A new cut will replace this one.',
   },
   {
     title: 'Learning Skills for Belonging — Part 2, Scene 1: Building Skills for Belonging',
@@ -114,22 +85,44 @@ const REVIEW_CARDS = [
       "Kai's closing encouragement — your story isn't over just because the current chapter has been chaotic.",
     feedbackArea: 'Kai Conclusion',
   },
+]
+
+// Kai's four Part 1 scenes (2026-08-13) — pulled out of weekly review and
+// into a permanent home in the "Learning Skills for Belonging" section,
+// replacing the old CAST-driven Kai card (photo + 8 scenes of narrator
+// audio) now that these scenes exist as finished video. Same `ReviewCard`
+// shape/component as REVIEW_CARDS, just rendered under a different
+// section heading.
+const LEARNING_SKILLS_CARDS = [
   {
-    title: 'Sam Female — Adult Narrator',
-    imageSrc: '/cast/images/sam-female-v3.png',
+    title: 'Learning Skills for Belonging — Part 1, Scene 1: The Scan',
+    youtubeId: 'fNSK011fNnI',
     description:
-      "The 18-year-old female narrator variant of Sam. This is the composite the team approved at the July 27 meeting — Version 1's face and jawline, Version 2's skin tone, Version 1's softer hair — now up here for a final look before Female variant video production begins.",
-    feedbackArea: 'Sam Female — Adult Narrator',
-    groupSubheading: {
-      title: 'Sam variants for review',
-    },
+      'Kai introduces himself and the concept of the belonging scan — the way our brains constantly evaluate social situations.',
+    feedbackArea: 'Kai Part 1 Scene 1: The Scan',
   },
   {
-    title: 'Sam Female — 14-year-old',
-    imageSrc: '/cast/images/sam-female-14.png',
+    title: "Learning Skills for Belonging — Part 1, Scene 2: The Why (It's in Your DNA)",
+    youtubeId: 'u1b2FoAwZPs',
     description:
-      'The 14-year-old female variant of Sam. This is the younger-Sam companion to the adult narrator, generated for team review before I use it as the character reference for the Female variant video production.',
-    feedbackArea: 'Sam Female — 14-year-old',
+      'Why belonging is a survival requirement wired into human biology — from ancient humans around fires to modern families sharing meals.',
+    feedbackArea: 'Kai Part 1 Scene 2: The Why',
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 1, Scene 3: Building a Safety Net',
+    youtubeId: 'z9IMWmArols',
+    description:
+      'The safety-net metaphor for belonging — you need multiple places to belong. Includes the GPS metaphor for friend groups.',
+    feedbackArea: 'Kai Part 1 Scene 3: Building a Safety Net',
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 1, Scene 4: The Foster Care "Extra Level"',
+    youtubeId: 'hTgGTKsx2Oo',
+    description:
+      'The specific difficulty of building belonging while in foster or relative care — "playing the Belonging Game on Hard Mode."',
+    feedbackArea: 'Kai Part 1 Scene 4: The Foster Care Extra Level',
+    knownIssue:
+      'Known issue: the opening line’s "foster or relative care" pronunciation is being re-recorded. A new cut will replace this one.',
   },
 ]
 
@@ -506,17 +499,21 @@ export default function DemoPage() {
       )}
 
       {/* Meet the cast — preview of Holly's video script (Script 2.0)
-          before animation: character cards + per-line ElevenLabs voice
-          samples + a closing Family Photo. Sits between Tests and Data
-          export so the reviewer flows sandbox → surveys → cast → export. */}
+          before animation: character cards + a closing Family Photo. Sits
+          between Tests and Data export so the reviewer flows sandbox →
+          surveys → cast → export. Cards render as a compact 2-up grid
+          (2026-08-13) — Foster Mom/Dad retired (their one scene is fully
+          covered by the assembled Sam's Story video above), voice-sample
+          audio removed from the remaining Sam variants for the same
+          reason, and the Sam Female cards moved down here from the
+          weekly review section since this is their permanent home. */}
       {/* Sam's Story — the narrative-video cast (Holly's Script 2.0). */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           Sam&apos;s Story
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          Preview of the cast and voice samples for Holly&apos;s video script
-          (Script 2.0). Tap any sample to hear it.
+          Preview of the cast for Holly&apos;s video script (Script 2.0).
         </p>
 
         {/* Sam's Story V3 video moved to the top-of-page Video Preview
@@ -538,7 +535,7 @@ export default function DemoPage() {
           </a>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {CAST.filter((c) => c.shows.includes('sams-story')).map((character) => (
             <CastCard key={character.id} character={character} />
           ))}
@@ -558,15 +555,23 @@ export default function DemoPage() {
       </section>
 
       {/* Learning Skills for Belonging — the psychoeducation track that
-          wraps the six activities (Adrienne's script; Kai narrates). */}
+          wraps the six activities (Adrienne's script; Kai narrates). Now
+          renders the finished Part 1 videos directly (2026-08-13) — these
+          graduated out of the old CAST-driven Kai card (photo + 8 scenes
+          of narrator audio) and out of weekly review once the cut videos
+          existed; Part 2 stays in "For Review This Week" a little longer. */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-5">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           Learning Skills for Belonging
         </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          Kai&apos;s psychoeducation videos that play interleaved with the
+          activities.
+        </p>
 
-        <div className="space-y-4">
-          {CAST.filter((c) => c.shows.includes('learning-skills')).map((character) => (
-            <CastCard key={character.id} character={character} />
+        <div>
+          {LEARNING_SKILLS_CARDS.map((card) => (
+            <ReviewCard key={card.title} card={card} />
           ))}
         </div>
       </section>
@@ -882,20 +887,23 @@ function ExportFileBlock({
 
 // ---------- Reusable: cast character card ----------
 //
-// Image column on the left (~40%): a variant gallery when the card has
-// an `images` array (Kai), else the single `image`. Text on the right
-// (~60%); stacks on mobile. Two optional fields render as their own
-// blocks ABOVE the main content (so a card can combine them with the main
-// content — e.g. Kai shows an animation clip + voiceover scenes):
-// `voiceSamples` (labeled audio players) and `videos` (9:16 animation
-// previews — optional label + native <video> for `src` or YouTube iframe
-// for `youtubeId` + caption; Draft 41). The main content then branches on
-// one of these, in precedence order: `scenes` (longer-form narrator audio
-// by scene — label + duration/handoff + script + <audio>; Kai), `lines`
-// (per-line scene cue + quoted text; native <audio> if the line has an
-// `audio` clip, else a "Voice model coming soon" note — suppressed when
-// the card has `voiceSamples`), or `description` (a paragraph for cast who
-// don't speak yet). See src/lib/castData.js.
+// Small fixed-width image thumbnail on the left, text on the right — sized
+// (2026-08-13) so two cards fit side by side in the Sam's Story 2-up grid.
+// Image column: a variant gallery when the card has an `images` array,
+// else the single `image`. Text column shows name + role, then whichever
+// of these the card sets, in precedence order: `scenes` (longer-form
+// narrator audio by scene — label + duration/handoff + script + <audio>),
+// `lines` (per-line scene cue + quoted text; native <audio> if the line
+// has an `audio` clip), or `description` (a paragraph for cast who don't
+// speak — currently just Mrs. Johnson). `voiceSamples` (labeled audio
+// players) and `videos` (9:16 animation previews) render as their own
+// blocks above the main content when present. None of the current cast
+// cards use `scenes`, `lines`, `voiceSamples`, or `videos` as of Draft 63
+// + the 2026-08-13 cast cleanup (Kai's audio scenes, Foster Mom/Dad, and
+// all Sam-variant voice samples were retired once the psychoeducation and
+// Sam's Story tracks existed as finished video) — the shapes stay
+// documented here for whenever new cast content needs them. See
+// src/lib/castData.js.
 
 function CastCard({ character }) {
   const {
@@ -917,26 +925,29 @@ function CastCard({ character }) {
   return (
     <article
       tabIndex={0}
-      className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-6 flex flex-col md:flex-row gap-6"
+      className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-4 flex flex-row gap-4"
     >
       {/* Image column — a "coming soon" placeholder when `placeholder` is
           set (Draft 42, Sam — Female), a gallery of design variants when
-          `images` is present (Kai), else the single character image. */}
-      <div className="w-full md:w-2/5 flex-shrink-0">
+          `images` is present (Kai), else the single character image.
+          Fixed small width (2026-08-13, ~75% smaller than the original
+          full-width photo) so two cards sit comfortably side by side in
+          the 2-up grid. */}
+      <div className="w-20 sm:w-24 flex-shrink-0">
         {placeholder ? (
           <div
             role="img"
             aria-label={alt || `${name} — character not yet built`}
-            className="w-full aspect-[3/4] max-h-[280px] bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500"
+            className="w-full aspect-[3/4] max-h-[80px] bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500"
           >
-            <svg viewBox="0 0 40 40" className="w-16 h-16 mb-2 opacity-40">
+            <svg viewBox="0 0 40 40" className="w-6 h-6 mb-1 opacity-40">
               <circle cx="20" cy="14" r="6" fill="currentColor" />
               <path d="M 8 36 Q 8 24, 20 24 Q 32 24, 32 36 Z" fill="currentColor" />
             </svg>
-            <span className="text-sm italic">Coming soon</span>
+            <span className="text-[10px] italic">Soon</span>
           </div>
         ) : images && images.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-2">
             {images.map((img, i) => (
               <figure key={i}>
                 <img
@@ -945,7 +956,7 @@ function CastCard({ character }) {
                   className="w-full h-auto rounded-xl shadow-card"
                 />
                 {img.label && (
-                  <figcaption className="text-sm text-slate-600 italic mt-1 text-center">
+                  <figcaption className="text-xs text-slate-600 italic mt-1 text-center">
                     {img.label}
                   </figcaption>
                 )}
@@ -961,18 +972,18 @@ function CastCard({ character }) {
               // Sam 14 is landscape — crop to a gentle ~4:3 portrait so the
               // faces stay centered. Portrait images render at natural ratio.
               (landscape
-                ? 'object-cover aspect-[4/3] max-h-[320px] md:max-h-none'
-                : 'h-auto max-h-[280px] md:max-h-none object-cover md:object-contain')
+                ? 'object-cover aspect-[4/3] max-h-[80px]'
+                : 'h-auto max-h-[70px] object-cover')
             }
           />
         )}
       </div>
 
       {/* Text column */}
-      <div className="w-full md:w-3/5">
-        <h3 className="text-2xl font-bold text-slate-700 mb-1">{name}</h3>
-        <p className={'text-sm italic text-slate-500 ' + (roleNote ? 'mb-1' : 'mb-4')}>{role}</p>
-        {roleNote && <p className="text-xs italic text-slate-400 mb-4">{roleNote}</p>}
+      <div className="flex-1 min-w-0">
+        <h3 className="text-base font-bold text-slate-700 mb-1">{name}</h3>
+        <p className={'text-xs italic text-slate-500 ' + (roleNote ? 'mb-1' : 'mb-2')}>{role}</p>
+        {roleNote && <p className="text-xs italic text-slate-400 mb-2">{roleNote}</p>}
 
         {/* Voice samples render as their own block ABOVE the
             videos/lines/description content (Draft 34) — a card can have
