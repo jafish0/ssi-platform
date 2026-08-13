@@ -110,6 +110,110 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`640805e` · 2026-08-13** — **Draft 65 — Kai portrait in the narration player + dedupe the narration screens.** Three related polish changes now that the Kai narration audio has landed. **(A)** `KaiNarrationPlayer` gains a small circular Kai portrait (`/cast/images/kai-man.png`, `object-cover object-top` so his face fills the circle) to the left of the existing speaker icon, so participants see who is talking — a shared-component change picked up by all three narration spots automatically. **(B)** Removed body copy on the two Allies/Safety Net narration screens that duplicated Kai's transcript almost verbatim: the intro screen's opening ally-definition sentence and its closing "Let's build your safety net." line are gone (the additive "They might not always get it right..." sentence and the three color-coded support-type bullets stay, since those aren't in the narration); the Inspect-education screen's four red-flag bullets below the player are gone (the same four warning signs are already verbatim in the transcript) — the intro paragraph above the player and the closing "On the next screen..." paragraph stay, and the stale "Stephanie's PPT phrasing, don't edit without sign-off" code comment was updated to explain where the content now lives. Getting Unstuck's `kai_strategy_intro` phase needed no changes, confirmed by reading it directly — it only renders the `h2`, the player, and nav buttons. **(C)** Color-coded "practical support" / "emotional support" / "social support" inside the Kai intro transcript (amber/rose/sky, matching `TONE_TOKENS`) to match the `SUPPORT_TYPES` bullets below it. Allies / Safety Net v5.8 → v5.9 (MINOR). Verified in-browser end to end: Kai portrait renders on both Allies/Safety Net narration screens; old duplicate intro sentence and closing line gone, kept sentence + bullets present; transcript color-coding matches (amber/rose/sky `<strong>` classes confirmed); Inspect screen's red-flag bullets gone, intro/closing paragraphs intact; Continue-gating genuinely works off real audio completion (`audio.ended === true` confirmed, not just the fail-open path); version badge shows v5.9; console clean aside from the pre-existing unrelated Supabase snapshot-fetch error in this local dev sandbox; build clean.
+
+  <details>
+  <summary>Draft 65 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 65 — Kai portrait in the narration player + dedupe the narration screens
+
+Three related polish changes now that the Kai narration audio has landed. Ship as one commit.
+
+---
+
+#### Part A — Add a small Kai portrait to `KaiNarrationPlayer`
+
+**File:** `src/components/KaiNarrationPlayer.jsx`
+
+Currently the player's header row shows a speaker icon in an amber circle plus the label "Kai has something to say." Add a **small circular Kai portrait** next to the speaker icon so the participant sees who's talking.
+
+- Image source: `/cast/images/kai-man.png` (already in `public/`, the locked Kai character reference)
+- Size: small — roughly 40-48px diameter, comparable to the existing speaker-icon circle
+- Shape: circular crop (`rounded-full`), with a subtle amber ring or border to match the card's amber treatment
+- Placement: to the LEFT of the existing speaker icon, so the row reads: **[Kai portrait] [speaker icon] "Kai has something to say"**
+- The portrait is decorative-adjacent but should carry a meaningful `alt` ("Kai") for screen readers
+- Keep the existing speaker icon — the portrait is additive, not a replacement (the icon signals "audio," the portrait signals "who")
+
+The image is a full-body/upper-body character portrait, so it will need `object-cover` with the crop positioned toward the top so his face fills the circle rather than centering on his torso. Something like `object-cover object-top`.
+
+---
+
+#### Part B — Remove duplicative body text on the two Allies/Safety Net narration screens
+
+Now that each narration screen shows Kai's transcript, some of the original body copy below it repeats the same content. Remove what duplicates, keep what adds.
+
+##### B.1 — `IntroScreen` (`src/activities/AlliesSafetyNet.jsx`, around line 745)
+
+Current structure below the `KaiNarrationPlayer`:
+
+1. A paragraph defining what an ally is
+2. "We'll walk through three kinds of support — one at a time:"
+3. The three `SUPPORT_TYPES` bullets (Practical / Emotional / Social, color-coded via `TONE_TOKENS`)
+4. "Let's build your safety net."
+
+**Changes:**
+
+- **Remove the first sentence of paragraph 1** — *"An ally is someone you trust to provide support and help you become the person you want to be."* This duplicates the transcript's *"An ally is a person you trust to give you support and help you become the person you want to be."* **Keep the second sentence** — *"They might not always get it right, but you know they care about you, they're a positive influence, and they try to help."* — that's additive and appears nowhere in the narration. Reflow it as its own paragraph.
+- **Keep** *"We'll walk through three kinds of support — one at a time:"* — it's navigational scaffolding, not duplication. It tells the participant what happens next in the UI.
+- **Keep the three `SUPPORT_TYPES` bullets.** These are NOT duplicative of the transcript's versions — the transcript describes each support type abstractly ("help you solve problems, teach you things"), while these give concrete kid-facing examples ("rides, food, getting your homework done"). Complementary, not redundant. They also carry the color coding that the rest of the activity relies on.
+- **Remove** *"Let's build your safety net."* This duplicates the transcript's closing *"Let's see who your allies are!"*
+
+##### B.2 — `InspectEducationScreen` (`src/activities/AlliesSafetyNet.jsx`, around line 986)
+
+Current structure:
+
+1. `h2`: "Watch out for warning signs."
+2. Paragraph: *"Not everyone in your life belongs in your safety net. Sometimes people we're close to don't actually help us feel safer. Let's look at four warning signs."* — ABOVE the player
+3. `KaiNarrationPlayer`
+4. *"Watch out for relationships where the person:"* + the four red-flag bullets
+5. Closing paragraph about the next screen
+
+**Changes:**
+
+- **Keep** the `h2` and the intro paragraph above the player. That copy frames the screen before Kai speaks and doesn't duplicate the transcript's phrasing.
+- **Remove** the *"Watch out for relationships where the person:"* label and the four red-flag bullets below the player. The transcript already lists all four warning signs verbatim (gets you into trouble / keeps you from talking to others / frequently lies / you feel afraid of). This is the clearest duplication in either screen.
+  - **Important:** there's a code comment above those bullets — *"Four red-flag bullets — Stephanie's PPT phrasing, verbatim from commit 71a37e9. Don't edit without Stephanie's sign-off."* We are not editing Stephanie's phrasing; the identical content now lives in the Kai transcript (also verbatim from her script doc). Update or remove that comment so a future reader isn't confused about where the four signs went, and note that they're now surfaced through the narration transcript.
+- **Keep** the closing paragraph about the next screen (*"On the next screen, you'll see your safety net…"*) — pure navigational, not in the narration.
+
+##### B.3 — Getting Unstuck (`src/activities/GettingUnstuck.jsx`, `kai_strategy_intro` phase, around line 705)
+
+**No changes needed.** That phase renders only the `h2` ("Two ways to get unstuck.") plus the player and the nav buttons — there's no duplicative body copy to remove.
+
+---
+
+#### Part C — Color-code the support types inside the Kai intro transcript
+
+**File:** `src/activities/AlliesSafetyNet.jsx`, `KAI_INTRO_TRANSCRIPT` (around line 117)
+
+The transcript's three bullets currently bold *practical support*, *emotional support*, and *social support* with plain `<strong>`. The rest of the activity color-codes these three concepts consistently via `TONE_TOKENS` — amber for Practical, rose for Emotional, sky for Social — and that coding carries through the transition screens, selection screens, and the net visual.
+
+Apply the same color treatment inside the transcript so the concepts are visually consistent from their first appearance:
+
+- *practical support* → `TONE_TOKENS.amber.word` (`text-amber-700`)
+- *emotional support* → `TONE_TOKENS.rose.word` (`text-rose-700`)
+- *social support* → `TONE_TOKENS.sky.word` (`text-sky-700`)
+
+Keep them bold as well — the goal is bold + colored, matching how `SUPPORT_TYPES` labels render in the bullets below.
+
+Note that `KAI_INTRO_TRANSCRIPT` is currently defined near the top of the file, before `TONE_TOKENS`. If referencing the tokens there creates an ordering problem, either move the transcript definition below `TONE_TOKENS` or inline the Tailwind class strings directly — either is fine, whichever is cleaner.
+
+---
+
+#### Verification
+
+- **Part A:** all three narration spots show the small circular Kai portrait to the left of the speaker icon; his face (not torso) fills the circle; portrait has an `alt` of "Kai"; the speaker icon is still present
+- **Part B.1:** Intro screen no longer repeats the ally definition or "Let's build your safety net"; the "They might not always get it right…" sentence survives as its own paragraph; the three color-coded support-type bullets and the "We'll walk through three kinds of support" line are unchanged
+- **Part B.2:** Inspect education screen no longer shows the duplicated four red-flag bullets below the player; the `h2`, the intro paragraph above the player, and the closing "On the next screen…" paragraph all remain; the stale code comment about Stephanie's bullets is updated
+- **Part B.3:** Getting Unstuck's `kai_strategy_intro` phase is untouched
+- **Part C:** inside the Kai intro transcript, "practical support" renders amber, "emotional support" renders rose, "social support" renders sky — matching the bullets below and the rest of the activity
+- Continue-gating still works on all three screens (disabled until narration plays once)
+- Build clean, no console errors
+- `/irb-preview` reflects the changes (shares the same activity components)
+
+**Version bumps:** Allies / Safety Net v5.8 → v5.9 (MINOR — copy removal + transcript formatting). Getting Unstuck unchanged at v5.9 (Part A touches the shared component, not the activity's own content, so no bump needed there — but if the shared-component change warrants noting in `activityVersions.js`, add a line without incrementing).
+
+  </details>
+
 - **`2761ff6` · 2026-08-13** — **/demo: swap Sam's Story V5 embed to new cut (in-conversation, no draft).** Josh dropped in a new YouTube cut (`eEgHiFWatA0`) to replace the previous V5 embed (`fuc8PF8SaMA`) in the "For Review This Week" section. Per Josh's direction, kept the "Sam's Story V5" title/description/feedback-area exactly as-is — just the embedded video changed. Verified on /demo: the review card now embeds the new video ID, everything else unchanged, build + console clean.
 
 - **`eebde1e` · 2026-08-13** — **Draft 64 — Track and push the three Kai narration mp3s.** Housekeeping: the three Draft 62 Kai narration audio files (`safety-net-allies-intro.mp3`, `safety-net-inspect-intro.mp3`, `getting-unstuck-strategies-intro.mp3`) were recorded and sitting in `public/kai-narration/` but had never been committed, so `KaiNarrationPlayer` kept failing open to transcript-only on the deployed site even though the files existed locally. No code changes needed — confirmed via `git status`/`git ls-files`/`git check-ignore` that the files were genuinely untracked (not gitignored) and that all three `KaiNarrationPlayer` callsites already referenced the correct on-disk filenames. Committed and pushed the three mp3s (~2.1 MB total, 128 kbps/44.1 kHz) and rewrote `public/kai-narration/README.md` to drop the now-stale files-dont-exist-yet note. Verified locally: all three files fetch with HTTP 200 and the correct content-length; the Allies/Safety Net intro screen’s `<audio>` element loads real audio (readyState 4, duration 39.55s matching the recorded file) instead of showing the fail-open message, and Continue is correctly gated (disabled) pending playback. No version bump — asset addition only, no component or activity logic change.
