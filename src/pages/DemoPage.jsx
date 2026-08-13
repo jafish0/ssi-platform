@@ -964,12 +964,13 @@ function CastCard({ character }) {
             src={image}
             alt={alt}
             className={
-              'w-full rounded-xl shadow-card ' +
-              // Sam 14 is landscape — crop to a gentle ~4:3 portrait so the
-              // faces stay centered. Portrait images render at natural ratio.
-              (landscape
-                ? 'object-cover aspect-[4/3] max-h-[80px]'
-                : 'h-auto max-h-[70px] object-cover')
+              'w-full rounded-xl shadow-card object-cover object-top ' +
+              // Sam 14 is landscape — crop to a gentle ~4:3 box (faces stay
+              // centered horizontally). Portrait images crop to the small
+              // fixed thumbnail height instead; `object-top` keeps the
+              // crop anchored to the face rather than the vertical center,
+              // which otherwise cuts heads off at this thumbnail size.
+              (landscape ? 'aspect-[4/3] max-h-[80px]' : 'h-[70px]')
             }
           />
         )}
