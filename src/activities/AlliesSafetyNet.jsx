@@ -130,19 +130,22 @@ const KAI_INTRO_TRANSCRIPT = (
     </p>
     <ul className="list-disc pl-5 space-y-1 mb-3">
       <li>
-        Allies that give you <strong>practical support</strong> help you
-        solve problems, teach you things, or make sure you have the
-        things you need.
+        Allies that give you{' '}
+        <strong className={TONE_TOKENS.amber.word}>practical support</strong>{' '}
+        help you solve problems, teach you things, or make sure you have
+        the things you need.
       </li>
       <li>
-        People that give <strong>emotional support</strong> help you feel
-        good about yourself, listen to you, or help you cope with hard
-        feelings.
+        People that give{' '}
+        <strong className={TONE_TOKENS.rose.word}>emotional support</strong>{' '}
+        help you feel good about yourself, listen to you, or help you cope
+        with hard feelings.
       </li>
       <li>
-        Any allies for <strong>social support</strong> are those people
-        you feel like you can be yourself around and they help you feel
-        less alone.
+        Any allies for{' '}
+        <strong className={TONE_TOKENS.sky.word}>social support</strong> are
+        those people you feel like you can be yourself around and they help
+        you feel less alone.
       </li>
     </ul>
     <p>Let&apos;s see who your allies are!</p>
@@ -744,11 +747,13 @@ function IntroScreen({ onNarrationComplete }) {
         onComplete={onNarrationComplete}
       />
 
+      {/* Draft 65 B.1 (2026-08-13): the ally-definition sentence was
+          removed — it duplicated the transcript above almost verbatim.
+          This sentence survives because it's additive, not in the
+          narration. */}
       <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
-        An ally is someone you trust to provide support and help you become
-        the person you want to be. They might not always get it right, but
-        you know they care about you, they&apos;re a positive influence,
-        and they try to help.
+        They might not always get it right, but you know they care about
+        you, they&apos;re a positive influence, and they try to help.
       </p>
       <p className="text-[15px] leading-relaxed text-slate-800 mb-3">
         We&apos;ll walk through three kinds of support — one at a time:
@@ -764,9 +769,6 @@ function IntroScreen({ onNarrationComplete }) {
           )
         })}
       </ul>
-      <p className="text-[15px] leading-relaxed text-slate-800">
-        Let&apos;s build your safety net.
-      </p>
     </div>
   )
 }
@@ -1004,19 +1006,11 @@ function InspectEducationScreen({ onNarrationComplete }) {
         onComplete={onNarrationComplete}
       />
 
-      {/* Four red-flag bullets — Stephanie's PPT phrasing, verbatim
-          from commit 71a37e9. Don't edit without Stephanie's sign-off. */}
-      <p className="text-[15px] leading-relaxed text-slate-800 mb-2 font-medium">
-        Watch out for relationships where the person:
-      </p>
-      <ul className="list-disc pl-6 space-y-2 text-[15px] leading-relaxed text-slate-800 mb-4">
-        <li>usually gets you into trouble</li>
-        <li>
-          tries to keep you from talking to or getting close to other people
-        </li>
-        <li>frequently lies to you</li>
-        <li>makes you feel afraid</li>
-      </ul>
+      {/* Draft 65 B.2 (2026-08-13): the four red-flag bullets (Stephanie's
+          PPT phrasing, verbatim from commit 71a37e9) were removed from
+          here — the same four warning signs now appear verbatim inside
+          KAI_INSPECT_TRANSCRIPT above, so this was the clearest
+          duplication on either narration screen. */}
 
       <p className="text-[15px] leading-relaxed text-slate-800">
         On the next screen, you&apos;ll see your safety net. You can take

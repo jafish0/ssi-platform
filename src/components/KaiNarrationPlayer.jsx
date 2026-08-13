@@ -12,6 +12,10 @@
 // audio player + transcript, using the warm amber palette instead of the
 // dark 16:9 video-frame look used elsewhere in these activities.
 //
+// Draft 65 Part A (2026-08-13): a small circular Kai portrait sits to the
+// left of the speaker icon so the participant sees who's talking — the
+// icon still signals "audio," the portrait signals "who."
+//
 // Fails open: if the audio fails to load (e.g. Josh hasn't dropped the mp3
 // in at its expected path yet — see public/kai-narration/README.md), this
 // treats the transcript as the intended fallback (per the draft's own
@@ -83,6 +87,11 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
   return (
     <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 mb-5">
       <div className="flex items-center gap-2 mb-3">
+        <img
+          src="/cast/images/kai-man.png"
+          alt="Kai"
+          className="w-10 h-10 rounded-full border-2 border-amber-300 object-cover object-top flex-shrink-0"
+        />
         <span
           aria-hidden="true"
           className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500 text-white flex-shrink-0"
