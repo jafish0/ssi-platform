@@ -126,6 +126,28 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **0d63109** (2026-08-13) — Drafts 25 + 26 (Aug 11 meeting).
+  **25A — new Zone 1 traveler art** (face visible with a sad expression, hood/cloak/aura
+  unchanged); asset swap only, same 576×1024, renders in the progression strip.
+  **25B — the opening zone is now "The Dark Abyss"** in canon. Renamed every user-facing
+  reference across the demo (zone title, Zone Map row, the strip's Zone 1 label) and the
+  pitch site (h2, zone-map row, aria-label), in both the live copy and the staging source.
+  **"Hollowshell" deliberately untouched** (it's the avoidance creature, a separate name).
+  Since the rename is accepted, the rename proposal was **removed from Ideas & Demos for
+  Review** and `review-rename` retired from the demo dropdown (admin label kept for
+  existing rows); remaining review items renumbered, so **Spark's voice is now item 5**.
+  **26 — Spark's voice is now an A/B test.** The rejected somber take
+  (`spark-introduction.mp3`) is unwired; **Option A** and **Option B** players sit above
+  Spark's Option-2 intro text (the reference script both voices read), with a neutral
+  prompt asking which the team prefers. The `review-spark-voice` thread is unchanged.
+  **Verified:** 3 "The Dark Abyss" refs and **zero** "the Hollow" zone refs; Hollowshell
+  intact; Lowreach/proposal gone; items renumbered 1–5; both new players load (37.8s /
+  41.1s) and the old file is no longer fetched; new art renders with the updated label;
+  `review-rename` absent from the demo dropdown but present in admin labels; no console
+  errors.
+  *Note: the file is still named `traveler-stage1-hallow.webp` on disk. It's not
+  user-facing, so it was left alone rather than churning paths; say the word to rename it.*
+
 - **6c3d6be** (2026-08-06) — **Em-dash cleanup + four lines cut** (in-conversation).
   Rewrote ~25 mid-sentence em dashes across the demo, climb and traversal pages into plain
   sentences (see the new **Writing style** standing rule above). Removed the four lines Josh
@@ -1243,3 +1265,36 @@ Do NOT rename the zone in the official breakdown yet — proposal only.
 **Verify.** The "Ideas & Demos for Review" section renders at the very top; exposition + progression now appear there and are removed from / pointered out of their official spots; items 3–5 render as text; each item has a working comment thread with its own tag; the official Zone breakdown is otherwise unchanged; no 404s on the four traveler images; the Spark card + its audio now play in the review section and the NPCs section still shows the four creatures. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 24.*
+
+
+### Draft 25 — Zone 1 art update + rename the opening zone "the Hollow" → "The Dark Abyss" — ✅ SHIPPED 0d63109 (2026-08-13)
+
+Two changes from the Aug 11 team meeting.
+
+**Part A — New Zone 1 traveler art.** The Zone 1 / stage-1 traveler image has been replaced on disk at `long-light-site/art/traveler-stage1-hallow.webp` (same 576×1024 dimensions as the other three stages). Per the team's feedback, the face is now visible with a sad expression (clearly human, not a monster) while the hood stays up and the dark cloak, aura, and tendrils are unchanged. No code change is needed beyond committing the updated asset — just confirm it renders in the four-stage Traveler progression strip (currently in the "Ideas & Demos for Review" section) and anywhere else the stage-1 traveler shows.
+
+**Part B — Rename the opening zone: "the Hollow" → "The Dark Abyss".** The team accepted this rename (it keeps the darkness→light metaphor). Promote it into canon now:
+- Rename every **user-facing** reference to the opening zone from **"the Hollow" / "The Hollow"** to **"The Dark Abyss"** across the demo (`/gains-demo`) and the pitch site (`/long-light/`): the zone title, the Zone Map / zone chart, section headings, body copy, and the Zone 1 label under the traveler progression strip.
+- **Do NOT rename "Hollowshell"** — that's the avoidance symptom creature (a separate name). Leave it exactly as-is.
+- Since the rename is now accepted, **remove the rename proposal (Item 5) from the "Ideas & Demos for Review" section** — it's been promoted to canon. The `review-rename` feedback option can retire (keep the admin label for any existing rows).
+
+**Verify.** No user-facing "the Hollow" zone references remain (grep the demo + pitch site); "Hollowshell" is untouched; the opening zone reads "The Dark Abyss" everywhere, including the Zone Map and the strip's Zone 1 label; the new Zone 1 art renders in the strip; the review section no longer shows the rename proposal. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 25.*
+
+
+### Draft 26 — Review section: swap Spark's voice for two new contenders (A/B) — ✅ SHIPPED 0d63109 (2026-08-13)
+
+In the **"Ideas & Demos for Review"** section, update the **Spark's voice** item (`review-spark-voice`, Item 6).
+
+- **Remove** the current rejected voice player (`/long-light/audio/spark-introduction.mp3` — the somber one the team passed on at the Aug 11 meeting).
+- **Add two audio players** for the new contenders, labeled neutrally so the team isn't biased:
+  - **Option A** → `/long-light/audio/spark-voice-a.mp3`
+  - **Option B** → `/long-light/audio/spark-voice-b.mp3`
+  (Both files are already staged in `long-light-site/audio/`.)
+- Keep Spark's Option-2 intro text alongside the players (both voices are reading that same intro, so it's the reference script).
+- Update the item's prompt so it asks the team to compare and comment on which they prefer (the `review-spark-voice` comment thread stays).
+
+**Verify.** The review section's Spark item now shows two players (Option A and Option B) that both play; the old `spark-introduction.mp3` player is gone; Spark's intro text still shows; the comment thread still works. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 26.*
