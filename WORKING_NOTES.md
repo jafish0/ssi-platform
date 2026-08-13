@@ -110,6 +110,57 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`eebde1e` · 2026-08-13** — **Draft 64 — Track and push the three Kai narration mp3s.** Housekeeping: the three Draft 62 Kai narration audio files (`safety-net-allies-intro.mp3`, `safety-net-inspect-intro.mp3`, `getting-unstuck-strategies-intro.mp3`) were recorded and sitting in `public/kai-narration/` but had never been committed, so `KaiNarrationPlayer` kept failing open to transcript-only on the deployed site even though the files existed locally. No code changes needed — confirmed via `git status`/`git ls-files`/`git check-ignore` that the files were genuinely untracked (not gitignored) and that all three `KaiNarrationPlayer` callsites already referenced the correct on-disk filenames. Committed and pushed the three mp3s (~2.1 MB total, 128 kbps/44.1 kHz) and rewrote `public/kai-narration/README.md` to drop the now-stale files-dont-exist-yet note. Verified locally: all three files fetch with HTTP 200 and the correct content-length; the Allies/Safety Net intro screen’s `<audio>` element loads real audio (readyState 4, duration 39.55s matching the recorded file) instead of showing the fail-open message, and Continue is correctly gated (disabled) pending playback. No version bump — asset addition only, no component or activity logic change.
+
+  <details>
+  <summary>Draft 64 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 64 — Commit + push the three Kai narration mp3s
+
+Quick housekeeping task. The three Kai narration audio files from Draft 62 are now recorded and sitting in `public/kai-narration/`, but they are **untracked in git** — so they aren't deployed, and the `KaiNarrationPlayer` component's audio still reports as unavailable on the live site.
+
+**Diagnosis already done (2026-08-13):**
+
+- All three files exist on disk at the correct paths with the correct filenames
+- `git status --short public/kai-narration/` shows all three as `??` (untracked)
+- `git ls-files public/kai-narration/` returns only `README.md` — none of the mp3s are tracked
+- `git check-ignore` confirms they are NOT gitignored (`public/` is not in `.gitignore`; only `dist/` and `build/` are)
+- Component references verified as matching the on-disk filenames exactly:
+  - `src/activities/AlliesSafetyNet.jsx:742` → `/kai-narration/safety-net-allies-intro.mp3`
+  - `src/activities/AlliesSafetyNet.jsx:1002` → `/kai-narration/safety-net-inspect-intro.mp3`
+  - `src/activities/GettingUnstuck.jsx:713` → `/kai-narration/getting-unstuck-strategies-intro.mp3`
+
+So there is no code bug — the files simply need to be committed and pushed.
+
+**Files to commit:**
+
+- `public/kai-narration/safety-net-allies-intro.mp3` (39.5s, ~649 KB)
+- `public/kai-narration/safety-net-inspect-intro.mp3` (37.9s, ~622 KB)
+- `public/kai-narration/getting-unstuck-strategies-intro.mp3` (52.6s, ~858 KB)
+
+Total ~2.1 MB across the three files. All 128 kbps / 44.1 kHz mp3.
+
+**Task:**
+
+1. `git add` the three mp3 files
+2. Commit with a message noting these are the Draft 62 Kai narration audio files, now recorded and dropped in
+3. Push
+4. Verify the deploy picks them up — once live, the three `KaiNarrationPlayer` spots should load real audio instead of failing open to transcript-only
+
+**Also update `public/kai-narration/README.md`:** the current text says the files don't exist yet and that their absence "is not a bug." That's now stale. Rewrite it to note the three files have landed (recorded 2026-08-13 by Josh, processed through the ElevenLabs Kai voice model), keep the filename list as documentation of what each one covers, and drop the "until a file lands at one of these paths…" paragraph.
+
+**Verification:**
+
+- All three mp3s tracked in git and pushed
+- README no longer says the files are missing
+- On the deployed site: walk Allies/Safety Net to the intro screen and confirm the audio loads and plays (or shows the Play fallback if the browser blocks autoplay), the progress indicator advances, and Continue stays disabled until playback completes
+- Same check on the Allies/Safety Net Inspect screen and the Getting Unstuck strategies screen
+- The fail-open transcript path should no longer trigger, since the audio now exists
+
+**Version bump:** none — asset addition only, no component or activity logic change.
+
+  </details>
+
 - **`84c0948` · 2026-08-13** — **/demo: remove Mrs. Johnson and the closing Family Photo (in-conversation, no draft).** Josh's follow-up trim on Sam's Story — removed the Mrs. Johnson cast card and the closing "Sam and his foster family, after the realization" Family Photo (`FAMILY_PHOTO` export removed from `castData.js`). Sam's Story now shows just the five Sam variants (three full rows in the 2-up grid — Sam 18/Sam 14, Sam Female/Sam Female 14, Sam Gender Neutral alone). Image assets (`mrs-johnson.png`, `family-photo.png`) stay on disk unreferenced, same pattern as other retired cast images. Verified on /demo: neither renders, no console errors beyond the pre-existing unrelated Supabase snapshot-fetch error in this local dev sandbox, build clean. No version bump — /demo content only.
 
 - **`0579931` · 2026-08-13** — **/demo: add Kai (Gender Neutral) 14-year-old image card to review (in-conversation, no draft).** Josh had a new character asset — a 14-year-old version of the gender-neutral Kai design — sitting in `dist/cast/images/` (the gitignored build output, which gets wiped on every build) rather than `public/cast/images/` (the actual source folder). Copied it into `public/cast/images/kai-gender-neutral-14.png` and added it as a new image card at the end of "For Review This Week" in `REVIEW_CARDS`, same imageSrc/description/feedbackArea pattern as the earlier Sam Female cards. Verified on /demo: card renders last in the review section with the correct image, feedback button opens pre-filled with "Kai (Gender Neutral) — 14 years old", build + console clean (aside from the pre-existing, unrelated Supabase snapshot-fetch connection error in this local dev sandbox).
