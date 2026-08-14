@@ -523,14 +523,22 @@ export default function GainsDemoPage() {
                   No scoring, nothing to get wrong. Try it here in the phone
                   frame.
                 </p>
+                <p className="mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2.5 text-[13px] text-slate-700">
+                  <strong className="font-semibold">Reading it for now.</strong>{' '}
+                  Once we settle on Spark&apos;s voice (item 5 above), we will
+                  add audio narration so each of these lines is read aloud
+                  instead.
+                </p>
                 {/* Phone frame. minHeight matters: nested inside two padded
                     cards, a strict 9:16 box on a 375px screen would only be
                     ~455px tall, which is shorter than any real phone and
-                    squeezes the figure out. */}
+                    squeezes the figure out. It is also only ~257px wide, well
+                    under a real phone, so copy wraps to more lines here than it
+                    will in the app. 700px gives the activity honest room back. */}
                 <div className="mx-auto w-full max-w-[360px]">
                   <div
                     className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
-                    style={{ aspectRatio: '9 / 16', minHeight: '620px' }}
+                    style={{ aspectRatio: '9 / 16', minHeight: '700px' }}
                   >
                     <BodyMapping />
                   </div>

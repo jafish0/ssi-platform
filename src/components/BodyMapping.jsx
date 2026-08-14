@@ -11,9 +11,11 @@
 //                then a closing line unlocks Continue.
 //   2. Select  — tap the reactions you've felt recently, then Done.
 //
-// Fits the app's 9:16 vertical frame: the figure flexes to fill whatever is
-// left after the instruction, panel and button, so nothing needs scrolling.
-// Region copy is VERBATIM from Stephanie; don't reword it.
+// Fits the app's 9:16 vertical frame. The figure is a FIXED share of the
+// frame and the copy block below it is the flexible one, so the body never
+// moves or resizes as you tap between regions (it used to: the figure was
+// flex-1, so a long region text stole its space). Region copy is VERBATIM
+// from Stephanie; don't reword it.
 
 import { useState } from 'react'
 
@@ -45,6 +47,18 @@ const REGIONS = [
   },
 ]
 
+// Share of the frame height reserved for the figure. Fixed so the body never
+// resizes between taps; see the layout comment on the figure container. Tuned
+// against the demo's phone frame: big enough that the figure still reads as the
+// centrepiece, small enough that a single region's copy never needs scrolling.
+const FIGURE_SHARE = '30%'
+
+const INSTRUCTIONS = {
+  reveal: 'Click to reveal different areas of the body that react during and after a trauma.',
+  select: 'Click on each of these reactions you have had recently.',
+  done: 'Nice noticing.',
+}
+
 const CLOSING =
   'Each of these things help us respond to danger, but these responses can stick around even after the danger has passed or can pop up if something reminds us of the danger or trauma.'
 
@@ -65,6 +79,12 @@ const SVG_CSS = `
 @media (prefers-reduced-motion: reduce) {
   .bm-region .bm-target, .bm-region .bm-icon path, .bm-region .bm-check { transition: none; }
 }
+/* Only shows when the longest copy needs it; kept thin so it doesn't read as
+   page furniture inside the phone frame. */
+.bm-scroll { scrollbar-width: thin; scrollbar-color: #FCD34D transparent; }
+.bm-scroll::-webkit-scrollbar { width: 5px; }
+.bm-scroll::-webkit-scrollbar-thumb { background: #FCD34D; border-radius: 999px; }
+.bm-scroll::-webkit-scrollbar-track { background: transparent; }
 `
 
 export default function BodyMapping() {
@@ -120,14 +140,14 @@ export default function BodyMapping() {
   })
 
   // ---- panel + instruction copy per mode ----
-  let instruction = 'Click to reveal different areas of the body that react during and after a trauma.'
+  let instruction = INSTRUCTIONS.reveal
   let panel = { muted: true, label: null, text: 'Tap a glowing area to learn what it does.' }
 
   if (mode === 'reveal' && lastRevealed) {
     const r = REGIONS.find((x) => x.id === lastRevealed)
     panel = { muted: false, label: r.label, text: r.text }
   } else if (mode === 'select') {
-    instruction = 'Click on each of these reactions you have had recently.'
+    instruction = INSTRUCTIONS.select
     panel =
       selected.length === 0
         ? { muted: true, label: null, text: 'Tap any reaction you’ve felt recently.' }
@@ -137,7 +157,7 @@ export default function BodyMapping() {
             text: 'You can pick as many as fit.',
           }
   } else if (mode === 'done') {
-    instruction = 'Nice noticing.'
+    instruction = INSTRUCTIONS.done
     panel = {
       muted: false,
       label: 'You did it',
@@ -164,12 +184,44 @@ export default function BodyMapping() {
             }}
             aria-hidden="true"
           />
-          <span className="text-[13px] leading-snug">{instruction}</span>
+          {/* All three instructions are stacked in one grid cell and the
+              inactive ones are hidden, so the slot is always as tall as the
+              longest of them. A fixed min-height can't do this: the three are
+              different lengths and wrap to a different number of lines at every
+              frame width, which made the header change height and the figure
+              slide up and down on Continue / Done. */}
+          <span className="grid text-[13px] leading-snug">
+            {Object.entries(INSTRUCTIONS).map(([key, text]) => (
+              <span
+                key={key}
+                className={
+                  'col-start-1 row-start-1 ' +
+                  (text === instruction ? '' : 'invisible')
+                }
+                aria-hidden={text === instruction ? undefined : 'true'}
+              >
+                {text}
+              </span>
+            ))}
+          </span>
         </div>
       </div>
 
-      {/* figure: takes whatever vertical room is left */}
-      <div className="flex-1 min-h-0 my-2 flex items-center justify-center">
+      {/* Figure. Deliberately a FIXED share of the frame, not flex-1.
+          It used to take "whatever room is left", which meant each region's
+          copy length changed the leftover space and the body visibly grew and
+          shrank from tap to tap (Josh, 2026-08-13 — worst between Lungs, two
+          lines, and Head, seven). The figure is the anchor now; the copy block
+          below absorbs the variance instead. A percentage rather than a pixel
+          height so it still scales between the narrow demo embed and a real
+          full-screen phone. */}
+      {/* min-h-0 is load-bearing: a column flex item defaults to
+          min-height:auto, which clamps it up to the SVG's intrinsic aspect
+          height and silently ignores the basis below. */}
+      <div
+        className="flex-none min-h-0 my-2 flex items-center justify-center"
+        style={{ flexBasis: FIGURE_SHARE }}
+      >
         <svg
           viewBox="0 0 600 1000"
           preserveAspectRatio="xMidYMid meet"
@@ -319,8 +371,11 @@ export default function BodyMapping() {
         </svg>
       </div>
 
-      {/* panel + progress + closing + CTA */}
-      <div className="flex-shrink-0">
+      {/* Copy block. This is the flexible one now, so a long region text
+          (Head) is absorbed here instead of squeezing the figure. It scrolls
+          internally in the rare case where the longest text and the closing
+          line are on screen together; the CTA below stays pinned and visible. */}
+      <div className="flex-1 min-h-0 overflow-y-auto bm-scroll">
         <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5">
           {panel.label && (
             <div className="font-extrabold text-amber-700 text-[13px] mb-0.5">
@@ -343,7 +398,10 @@ export default function BodyMapping() {
             {CLOSING}
           </div>
         )}
+      </div>
 
+      {/* CTA, pinned outside the scroll region so it is always reachable */}
+      <div className="flex-none">
         {((mode === 'reveal' && allRevealed) || mode === 'select') && (
           <button
             type="button"
