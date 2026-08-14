@@ -47,11 +47,15 @@ const REGIONS = [
   },
 ]
 
-// Share of the frame height reserved for the figure. Fixed so the body never
-// resizes between taps; see the layout comment on the figure container. Tuned
-// against the demo's phone frame: big enough that the figure still reads as the
-// centrepiece, small enough that a single region's copy never needs scrolling.
-const FIGURE_SHARE = '30%'
+// The tallest the copy panel can ever be. Head is not just the longest of the
+// five by a little, it is ~55% longer than the next one, so it wraps tallest at
+// every width and is a safe stand-in for "worst case" without hardcoding a
+// pixel height. If a region's copy is ever rewritten longer than Head's, this
+// needs to follow it.
+const LONGEST_REGION_TEXT = REGIONS.reduce(
+  (a, b) => (b.text.length > a.text.length ? b : a),
+  REGIONS[0]
+).text
 
 const INSTRUCTIONS = {
   reveal: 'Click to reveal different areas of the body that react during and after a trauma.',
@@ -79,13 +83,50 @@ const SVG_CSS = `
 @media (prefers-reduced-motion: reduce) {
   .bm-region .bm-target, .bm-region .bm-icon path, .bm-region .bm-check { transition: none; }
 }
-/* Only shows when the longest copy needs it; kept thin so it doesn't read as
-   page furniture inside the phone frame. */
-.bm-scroll { scrollbar-width: thin; scrollbar-color: #FCD34D transparent; }
-.bm-scroll::-webkit-scrollbar { width: 5px; }
-.bm-scroll::-webkit-scrollbar-thumb { background: #FCD34D; border-radius: 999px; }
-.bm-scroll::-webkit-scrollbar-track { background: transparent; }
 `
+
+// Shared by the live CTA and by the invisible spacer that reserves its slot.
+const CTA_CLASS =
+  'w-full mt-2 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold text-center'
+
+// The three pieces of the copy block. Factored out because the block renders
+// them twice: once invisibly at their worst case to reserve height, once live.
+// Both copies must stay identical or the reservation drifts.
+function PanelBox({ label, text, muted }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5">
+      {label && (
+        <div className="font-extrabold text-amber-700 text-[13px] mb-0.5">
+          {label}
+        </div>
+      )}
+      <div
+        className={
+          'text-[12.5px] leading-snug ' +
+          (muted ? 'text-slate-400' : 'text-slate-700')
+        }
+      >
+        {text}
+      </div>
+    </div>
+  )
+}
+
+function ProgressLine({ revealed }) {
+  return (
+    <div className="text-[12px] text-slate-400 text-center mt-1.5">
+      {revealed} of {REGIONS.length} revealed
+    </div>
+  )
+}
+
+function ClosingBox() {
+  return (
+    <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2 text-[11.5px] leading-snug">
+      {CLOSING}
+    </div>
+  )
+}
 
 export default function BodyMapping() {
   const [mode, setMode] = useState('reveal') // reveal | select | done
@@ -215,13 +256,12 @@ export default function BodyMapping() {
           below absorbs the variance instead. A percentage rather than a pixel
           height so it still scales between the narrow demo embed and a real
           full-screen phone. */}
-      {/* min-h-0 is load-bearing: a column flex item defaults to
+      {/* Figure. Takes every pixel the fixed header, copy block and CTA don't
+          use, which is a constant because the copy block below reserves its
+          worst case. min-h-0 is load-bearing: a column flex item defaults to
           min-height:auto, which clamps it up to the SVG's intrinsic aspect
-          height and silently ignores the basis below. */}
-      <div
-        className="flex-none min-h-0 my-2 flex items-center justify-center"
-        style={{ flexBasis: FIGURE_SHARE }}
-      >
+          height and would let it push the rest of the layout around. */}
+      <div className="flex-1 min-h-0 my-2 flex items-center justify-center">
         <svg
           viewBox="0 0 600 1000"
           preserveAspectRatio="xMidYMid meet"
@@ -371,56 +411,64 @@ export default function BodyMapping() {
         </svg>
       </div>
 
-      {/* Copy block. This is the flexible one now, so a long region text
-          (Head) is absorbed here instead of squeezing the figure. It scrolls
-          internally in the rare case where the longest text and the closing
-          line are on screen together; the CTA below stays pinned and visible. */}
-      <div className="flex-1 min-h-0 overflow-y-auto bm-scroll">
-        <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5">
-          {panel.label && (
-            <div className="font-extrabold text-amber-700 text-[13px] mb-0.5">
-              {panel.label}
-            </div>
-          )}
-          <div className={'text-[12.5px] leading-snug ' + (panel.muted ? 'text-slate-400' : 'text-slate-700')}>
-            {panel.text}
-          </div>
+      {/* Copy block. Its height is set by an INVISIBLE worst-case spacer (the
+          longest region text, plus the progress line, plus the closing) sharing
+          one grid cell with the live copy, so the block is always exactly as
+          tall as it could ever need to be and never changes size. That keeps
+          the figure above it constant while letting the figure be flex-1 and
+          take every pixel this block doesn't need. The live copy is bottom
+          aligned in the cell so the text sits against the CTA rather than
+          floating in the middle (Josh, 2026-08-13). */}
+      <div className="flex-none grid">
+        {/* Worst case is the longest panel plus the closing. The counter and
+            the closing never co-occur, and the closing is the taller of the
+            two, so reserving the closing covers both. */}
+        <div className="col-start-1 row-start-1 invisible" aria-hidden="true">
+          <PanelBox label="Head" text={LONGEST_REGION_TEXT} />
+          <ClosingBox />
         </div>
 
-        {mode === 'reveal' && (
-          <div className="text-[12px] text-slate-400 text-center mt-1.5">
-            {revealed.length} of {REGIONS.length} revealed
-          </div>
-        )}
+        <div className="col-start-1 row-start-1 flex flex-col justify-end">
+          <PanelBox label={panel.label} text={panel.text} muted={panel.muted} />
 
-        {mode === 'reveal' && allRevealed && (
-          <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2 text-[11.5px] leading-snug">
-            {CLOSING}
-          </div>
-        )}
+          {/* The counter is dropped once it reads 5 of 5: the closing line and
+              the now-enabled Continue already say you're done, and the row it
+              was taking is worth more to the figure. */}
+          {mode === 'reveal' && !allRevealed && (
+            <ProgressLine revealed={revealed.length} />
+          )}
+
+          {mode === 'reveal' && allRevealed && <ClosingBox />}
+        </div>
       </div>
 
-      {/* CTA, pinned outside the scroll region so it is always reachable */}
-      <div className="flex-none">
-        {((mode === 'reveal' && allRevealed) || mode === 'select') && (
-          <button
-            type="button"
-            onClick={advance}
-            className="w-full mt-2 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
-          >
-            {mode === 'reveal' ? 'Continue' : 'Done'}
-          </button>
-        )}
+      {/* CTA, pinned below the copy block so it is always reachable. Same
+          invisible-spacer trick as the copy block: the button is absent for the
+          first four reveals and the two button styles differ in height, and
+          without a reserved slot that difference lands on the flex-1 figure and
+          resizes the body the moment Continue appears. */}
+      <div className="flex-none grid">
+        <div className="col-start-1 row-start-1 invisible" aria-hidden="true">
+          <div className={CTA_CLASS}>Continue</div>
+        </div>
 
-        {mode === 'done' && (
-          <button
-            type="button"
-            onClick={restart}
-            className="w-full mt-2.5 py-2 text-[13px] font-semibold text-amber-700 hover:text-amber-900 underline"
-          >
-            Start over
-          </button>
-        )}
+        <div className="col-start-1 row-start-1 flex flex-col justify-end">
+          {((mode === 'reveal' && allRevealed) || mode === 'select') && (
+            <button type="button" onClick={advance} className={CTA_CLASS}>
+              {mode === 'reveal' ? 'Continue' : 'Done'}
+            </button>
+          )}
+
+          {mode === 'done' && (
+            <button
+              type="button"
+              onClick={restart}
+              className="w-full mt-2.5 py-2 text-[13px] font-semibold text-amber-700 hover:text-amber-900 underline"
+            >
+              Start over
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

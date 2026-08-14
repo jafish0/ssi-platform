@@ -20,11 +20,13 @@ import BodyMapping from '../components/BodyMapping.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
-  { value: 'review-exposition', label: 'Review: Exposition' },
   { value: 'review-character', label: 'Review: Character progression' },
-  { value: 'review-arcades', label: 'Review: Arcade ideas' },
-  { value: 'review-gear', label: 'Review: Gear toolbox' },
-  // review-rename retired: the zone rename was accepted and is now canon.
+  // Retired as their proposals were adopted (labels are kept in
+  // AdminFeedbackPage so existing rows still read correctly):
+  //   review-rename     — the zone rename, accepted 2026-08-11, now canon
+  //   review-exposition — adopted 2026-08-13, now the Exposition section
+  //   review-arcades    — adopted 2026-08-13, now under Prototypes and In Development
+  //   review-gear       — adopted 2026-08-13, now under Prototypes and In Development
   { value: 'review-spark-voice', label: "Review: Spark's voice" },
   { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
   // The official breakdown
@@ -407,18 +409,14 @@ export default function GainsDemoPage() {
             </p>
 
             <div className="space-y-4">
-              {/* 1 — Exposition (Option 2) */}
+              {/* Adopted at the 2026-08-13 review and moved out of this
+                  section: the Exposition (now its own section under The climb),
+                  the arcade ideas and the gear toolbox (both now under
+                  Prototypes and In Development). */}
+
+              {/* 1 — How the character changes */}
               <ReviewItem
                 n={1}
-                title="Exposition (Stephanie’s Option 2)"
-                section="review-exposition"
-              >
-                <p className="leading-relaxed">{SPARK_INTRO_LINE}</p>
-              </ReviewItem>
-
-              {/* 2 — How the character changes */}
-              <ReviewItem
-                n={2}
                 title="How the character changes"
                 section="review-character"
               >
@@ -434,43 +432,11 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 3 — Possible new arcade activities */}
-              <ReviewItem
-                n={3}
-                title="Possible new arcade activities"
-                section="review-arcades"
-              >
-                <div className="space-y-3">
-                  {REVIEW_ARCADES.map((a) => (
-                    <div key={a.title}>
-                      <p className="font-semibold text-slate-800">{a.title}</p>
-                      <p className="leading-relaxed">{a.body}</p>
-                    </div>
-                  ))}
-                </div>
-              </ReviewItem>
-
-              {/* 4 — The gear that evolves */}
-              <ReviewItem
-                n={4}
-                title="The gear that evolves: a growing toolbox"
-                section="review-gear"
-              >
-                <div className="space-y-2">
-                  {REVIEW_GEAR_POINTS.map((p, i) => (
-                    <p key={i} className="leading-relaxed">{p}</p>
-                  ))}
-                </div>
-                <p className="text-[14px] italic text-slate-700 border-l-2 border-amber-300 pl-3 mt-3">
-                  {REVIEW_GEAR_THEME}
-                </p>
-              </ReviewItem>
-
-              {/* 5 — Spark's voice. (The zone-rename proposal that used to
+              {/* 2 — Spark's voice. (The zone-rename proposal that used to
                   sit here was accepted at the Aug 11 meeting and is now canon:
                   the opening zone reads "The Dark Abyss" in the breakdown.) */}
               <ReviewItem
-                n={5}
+                n={2}
                 title="Spark’s voice (three options)"
                 section="review-spark-voice"
               >
@@ -510,9 +476,9 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 6 — Body Mapping activity (playable) */}
+              {/* 3 — Body Mapping activity (playable) */}
               <ReviewItem
-                n={6}
+                n={3}
                 title="Body Mapping activity (playable)"
                 section="review-bodymap"
               >
@@ -535,7 +501,11 @@ export default function GainsDemoPage() {
                     squeezes the figure out. It is also only ~257px wide, well
                     under a real phone, so copy wraps to more lines here than it
                     will in the app. 700px gives the activity honest room back. */}
-                <div className="mx-auto w-full max-w-[360px]">
+                {/* -mx-4 on phones claws back the review card's own padding so
+                    the frame isn't squeezed to ~257px, well under a real phone,
+                    which made every line of copy wrap taller than it will in
+                    the app. Back to normal from sm: up, where there is room. */}
+                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
                   <div
                     className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
                     style={{ aspectRatio: '9 / 16', minHeight: '700px' }}
@@ -648,20 +618,28 @@ export default function GainsDemoPage() {
         </h2>
       </section>
 
-      {/* Exposition — the opening that sets up the world (Option-2 text) */}
+      {/* Exposition — the opening that sets up the world. Stephanie's Option-2
+          text, adopted by the team (2026-08-13) and moved down here from Ideas
+          & Demos for Review. The script is settled; the build is not, hence the
+          in-development pill. SPARK_INTRO_LINE is VERBATIM. */}
       <section className="mb-8">
         <h3 className="text-[18px] font-bold text-slate-800">Exposition</h3>
         <p className="text-[13px] text-slate-500 mb-3">
           The opening that sets up the world, before Zone 1.
         </p>
         <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
-          <div className="mb-4">
+          <div className="mb-4 flex items-center gap-2 flex-wrap">
             <Pill icon={HardHat}>In development</Pill>
+            <span className="text-[12px] text-slate-500 italic">
+              script adopted, build pending
+            </span>
           </div>
 
+          <p className="text-[13px] font-semibold text-slate-600 mb-1">
+            Spark, to the player
+          </p>
           <p className="text-[14px] text-slate-700 leading-relaxed">
-            This exposition is a proposal under review. See{' '}
-            <strong>Ideas &amp; Demos for Review</strong> at the top.
+            {SPARK_INTRO_LINE}
           </p>
         </div>
       </section>
@@ -670,14 +648,17 @@ export default function GainsDemoPage() {
         <ZoneSection key={z.n} zone={z} />
       ))}
 
-      {/* F. Prototypes — the playable traversals, side by side */}
+      {/* F. Prototypes and In Development — the playable traversals, plus the
+          proposals the team adopted on 2026-08-13 (arcade ideas, gear toolbox)
+          which moved down here out of Ideas & Demos for Review. */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
-          Prototypes
+          Prototypes and In Development
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
-          Playable traversals, both built on the same game engine. Not wired
-          into the session flow yet.
+          Playable traversals, both built on the same game engine. Both of these
+          traversal games will be fully developed. Below them are the pieces the
+          team has adopted and that are now being built out.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[760px]">
           <PrototypeCard
@@ -692,6 +673,43 @@ export default function GainsDemoPage() {
             blurb="One-thumb climb through tree, mountain, and spire. Orbs refill your Second Wind; low air lets your darkness close in from the edges."
             href="/gains-demo/climb"
           />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-[760px] mt-3">
+          {/* Adopted 2026-08-13, moved from Ideas & Demos for Review */}
+          <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
+            <div className="mb-3">
+              <Pill icon={HardHat}>In development</Pill>
+            </div>
+            <h3 className="text-[15px] font-bold text-slate-800 mb-2">
+              New arcade activities
+            </h3>
+            <div className="space-y-3 text-[13px] text-slate-700">
+              {REVIEW_ARCADES.map((a) => (
+                <div key={a.title}>
+                  <p className="font-semibold text-slate-800">{a.title}</p>
+                  <p className="leading-relaxed">{a.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
+            <div className="mb-3">
+              <Pill icon={HardHat}>In development</Pill>
+            </div>
+            <h3 className="text-[15px] font-bold text-slate-800 mb-2">
+              The gear that evolves: a growing toolbox
+            </h3>
+            <div className="space-y-2 text-[13px] text-slate-700">
+              {REVIEW_GEAR_POINTS.map((p, i) => (
+                <p key={i} className="leading-relaxed">{p}</p>
+              ))}
+            </div>
+            <p className="text-[13px] italic text-slate-700 border-l-2 border-amber-300 pl-3 mt-3">
+              {REVIEW_GEAR_THEME}
+            </p>
+          </div>
         </div>
       </section>
     </DemoPageLayout>
