@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 1000" width="600" height="1000" role="img" aria-label="Body map with five tappable regions">
+<style>
+  .region { cursor: pointer; }
+  .region .target { fill:#334155; fill-opacity:0; transition:fill-opacity .25s, fill .25s; }
+  .region .icon path { fill:none; stroke:#334155; stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; transition:stroke .25s; }
+  .region .check { opacity:0; transition:opacity .2s; }
+  .region:hover .target { fill:#334155; fill-opacity:.06; }
+  .region.active   .target { fill:#F59E0B; fill-opacity:.20; filter:url(#amberGlow); }
+  .region.active   .icon path { stroke:#B45309; }
+  .region.selected .target { fill:#F59E0B; fill-opacity:.24; }
+  .region.selected .icon path { stroke:#B45309; }
+  .region.selected .check { opacity:1; }
+</style>
+
+
+
+
+<defs>
+  <filter id="amberGlow" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="7" result="b"></feGaussianBlur>
+    <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.96  0 0 0 0 0.62  0 0 0 0 0.04  0 0 0 0.75 0" result="g"></feColorMatrix>
+    <feMerge><feMergeNode in="g"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+  </filter>
+</defs>
+<g id="body-base">
+      <path d="M320,150 C340,140 352,122 352,98 C352,46 330,32 300,32 C270,32 248,46 248,98 C248,122 260,140 280,150 L280,176 C280,198 266,206 246,216 C230,224 222,232 216,248 Q196,300 176,356 Q158,420 146,486 C142,508 140,528 150,538 C160,548 170,542 172,530 Q178,510 184,492 Q200,424 214,360 Q222,308 236,266 Q238,320 240,362 Q232,400 224,442 Q232,530 238,622 Q243,662 245,702 Q247,790 251,882 L237,916 C232,927 237,933 247,933 L263,933 C271,933 274,927 273,916 Q277,808 281,702 Q288,610 296,522 L300,514 L304,522 Q312,610 319,702 Q323,808 327,916 C326,927 329,933 337,933 L353,933 C363,933 368,927 363,916 L349,882 Q353,790 355,702 Q357,662 362,622 Q368,530 376,442 Q368,400 360,362 Q362,320 364,266 Q378,308 386,360 Q400,424 416,492 Q422,510 428,530 C430,542 440,548 450,538 C460,528 458,508 454,486 Q442,420 424,356 Q404,300 384,248 C378,232 370,224 354,216 C334,206 320,198 320,176 Z" fill="#334155" fill-opacity="0.045" stroke="#334155" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"></path>
+      <path d="M282,182 Q300,192 318,182" fill="none" stroke="#334155" stroke-opacity="0.35" stroke-width="3.5" stroke-linecap="round"></path>
+    </g>
+<g id="regions">
+
+      <g id="region-body" class="region">
+        <title>Whole body — sweat, tension, shakiness</title>
+        <path class="target" d="M320,150 C340,140 352,122 352,98 C352,46 330,32 300,32 C270,32 248,46 248,98 C248,122 260,140 280,150 L280,176 C280,198 266,206 246,216 C230,224 222,232 216,248 Q196,300 176,356 Q158,420 146,486 C142,508 140,528 150,538 C160,548 170,542 172,530 Q178,510 184,492 Q200,424 214,360 Q222,308 236,266 Q238,320 240,362 Q232,400 224,442 Q232,530 238,622 Q243,662 245,702 Q247,790 251,882 L237,916 C232,927 237,933 247,933 L263,933 C271,933 274,927 273,916 Q277,808 281,702 Q288,610 296,522 L300,514 L304,522 Q312,610 319,702 Q323,808 327,916 C326,927 329,933 337,933 L353,933 C363,933 368,927 363,916 L349,882 Q353,790 355,702 Q357,662 362,622 Q368,530 376,442 Q368,400 360,362 Q362,320 364,266 Q378,308 386,360 Q400,424 416,492 Q422,510 428,530 C430,542 440,548 450,538 C460,528 458,508 454,486 Q442,420 424,356 Q404,300 384,248 C378,232 370,224 354,216 C334,206 320,198 320,176 Z"></path>
+        <circle class="target" cx="300" cy="672" r="44"></circle>
+        <g class="icon" transform="translate(300,672) scale(1.15)">
+          <path d="M-3,-20 L-15,2 L-3,2 L-7,20 L15,-4 L3,-4 L7,-20 Z"></path>
+        </g>
+        <g class="check" transform="translate(334,706)">
+          <circle r="14" fill="#B45309"></circle>
+          <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </g>
+      </g>
+
+      <g id="region-head" class="region">
+        <title>Head — brain and thoughts</title>
+        <circle class="target" cx="300" cy="96" r="46"></circle>
+        <g class="icon" transform="translate(300,96) scale(1.25)">
+          <path d="M-1,-16 C-9,-19 -17,-13 -15,-5 C-20,0 -17,9 -9,11 C-6,17 4,18 8,13 C17,12 20,3 15,-3 C17,-12 8,-19 0,-15"></path>
+          <path d="M0,-15 L0,13"></path>
+          <path d="M-8,-6 L-2,-3"></path>
+          <path d="M8,4 L1,6"></path>
+        </g>
+        <g class="check" transform="translate(336,130)">
+          <circle r="14" fill="#B45309"></circle>
+          <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </g>
+      </g>
+
+      <g id="region-lungs" class="region">
+        <title>Lungs — breathing</title>
+        <circle class="target" cx="300" cy="240" r="42"></circle>
+        <g class="icon" transform="translate(300,240) scale(1.1)">
+          <path d="M0,-18 L0,-2"></path>
+          <path d="M-1,-4 C-11,-6 -18,3 -16,13 C-15,19 -6,19 -4,12 C-1,4 -1,-1 -1,-4 Z"></path>
+          <path d="M1,-4 C11,-6 18,3 16,13 C15,19 6,19 4,12 C1,4 1,-1 1,-4 Z"></path>
+        </g>
+        <g class="check" transform="translate(332,272)">
+          <circle r="14" fill="#B45309"></circle>
+          <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </g>
+      </g>
+
+      <g id="region-heart" class="region">
+        <title>Heart — heartbeat</title>
+        <circle class="target" cx="258" cy="322" r="38"></circle>
+        <g class="icon" transform="translate(258,322) scale(1.05)">
+          <path d="M0,13 C-15,3 -19,-6 -13,-12 C-8,-17 -1,-15 0,-9 C1,-15 8,-17 13,-12 C19,-6 15,3 0,13 Z"></path>
+        </g>
+        <g class="check" transform="translate(286,350)">
+          <circle r="13" fill="#B45309"></circle>
+          <path d="M-5.5,0 L-1.5,4.5 L6,-4.5" fill="none" stroke="#FFFBEB" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </g>
+      </g>
+
+      <g id="region-stomach" class="region">
+        <title>Stomach — gut feelings</title>
+        <circle class="target" cx="302" cy="418" r="40"></circle>
+        <g class="icon" transform="translate(302,418) scale(1.1)">
+          <path d="M-8,-17 C-6,-9 -8,-5 -11,-1 C-15,6 -12,15 -4,17 C5,19 13,12 13,2 C13,-8 5,-16 -5,-16"></path>
+          <path d="M-8,-17 L-1,-19"></path>
+        </g>
+        <g class="check" transform="translate(332,448)">
+          <circle r="13" fill="#B45309"></circle>
+          <path d="M-5.5,0 L-1.5,4.5 L6,-4.5" fill="none" stroke="#FFFBEB" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </g>
+      </g>
+
+    </g>
+</svg>

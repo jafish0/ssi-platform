@@ -42,6 +42,7 @@ const SECTION_LABELS = {
   'review-gear': 'Review: Gear toolbox',
   'review-rename': 'Review: Zone rename',
   'review-spark-voice': "Review: Spark's voice",
+  'review-bodymap': 'Review: Body Mapping activity',
   'assent-measures': 'Child Assent / Measures',
   exposition: 'Exposition',
   npcs: 'NPCs',

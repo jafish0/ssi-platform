@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom'
 import { HardHat, Film, Play } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
+import BodyMapping from '../components/BodyMapping.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
@@ -25,6 +26,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-gear', label: 'Review: Gear toolbox' },
   // review-rename retired: the zone rename was accepted and is now canon.
   { value: 'review-spark-voice', label: "Review: Spark's voice" },
+  { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
   // The official breakdown
   { value: 'assent-measures', label: 'Child Assent / Measures' },
   { value: 'exposition', label: 'Exposition' },
@@ -498,6 +500,33 @@ export default function GainsDemoPage() {
                     <p className="text-[13px] text-slate-700 leading-relaxed">
                       {SPARK_INTRO_LINE}
                     </p>
+                  </div>
+                </div>
+              </ReviewItem>
+
+              {/* 6 — Body Mapping activity (playable) */}
+              <ReviewItem
+                n={6}
+                title="Body Mapping activity (playable)"
+                section="review-bodymap"
+              >
+                <p className="mb-3">
+                  Activity 1, built from Stephanie&apos;s blueprint. Part 1 reveals
+                  how five parts of the body react during and after a trauma.
+                  Part 2 asks which of those reactions you&apos;ve felt recently.
+                  No scoring, nothing to get wrong. Try it here in the phone
+                  frame.
+                </p>
+                {/* Phone frame. minHeight matters: nested inside two padded
+                    cards, a strict 9:16 box on a 375px screen would only be
+                    ~455px tall, which is shorter than any real phone and
+                    squeezes the figure out. */}
+                <div className="mx-auto w-full max-w-[360px]">
+                  <div
+                    className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
+                    style={{ aspectRatio: '9 / 16', minHeight: '620px' }}
+                  >
+                    <BodyMapping />
                   </div>
                 </div>
               </ReviewItem>
