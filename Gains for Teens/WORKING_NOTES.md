@@ -135,6 +135,34 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **5846cf6** (2026-08-13) — Body Mapping: **the figure no longer resizes between taps**,
+  plus a narration note. From Josh reviewing the live demo: "when you click on the
+  different parts, the body gets bigger and smaller."
+  **Cause:** the figure was the `flex-1` element, so it took whatever room was left after
+  the copy panel. Each region's text is a different length (Lungs wraps to two lines, Head
+  to seven), so every tap changed the leftover space and the body rescaled.
+  **Fix:** inverted the layout. The figure is a fixed share of the frame height and the
+  copy block below it is the flexible, scrollable one; the CTA moved outside the scroll
+  region so it stays pinned. Two gotchas this needed: `min-h-0` on the figure container
+  (a column flex item defaults to `min-height:auto`, which clamps it up to the SVG's
+  intrinsic height and silently ignores the basis, giving 372px instead of 202px), and the
+  three modes' instruction lines wrap to a different number of lines at every width, so
+  they are now stacked in one grid cell with the inactive ones hidden and the slot is
+  always as tall as the longest. A fixed min-height can't do that, the line count is
+  width-dependent.
+  **Frame min-height 620 → 700.** The embed is only ~257px wide, well under a real phone,
+  so copy wraps to more lines here than it will in the app. At 620 the end state scrolled
+  by 138px; at 700 the single-region states never scroll and only the all-revealed end
+  state does, by 59px at 375px and not at all on desktop. Desktop is now 360×700 (ratio
+  1.94) rather than 360×640, which sits closer to a modern phone than 9:16 does.
+  **Also:** a note above the phone frame saying the activity reads on screen for now and
+  gets audio narration once the team picks Spark's voice.
+  **Verified** at 375px and 1280px by measuring the silhouette's box relative to the frame
+  across 11 states (initial, all five Part 1 taps, Head revealed last, Part 2 start, Part 2
+  selected, done, after restart): **height spread 0.00px and position spread 0.00px** at
+  both widths. No frame or horizontal overflow, CTA and Start over always inside the frame,
+  no console errors.
+
 - **6b12a14** (2026-08-13) — Draft 28: **Spark's voice is now a three-way A/B/C.**
   The two players on review item 5 become three. A and B were overwritten with the new
   versions, C is new, and all three are mirrored from `long-light-site/audio/` into
