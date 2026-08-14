@@ -85,6 +85,10 @@ const SVG_CSS = `
 }
 `
 
+// Silhouette bounds are x 140..460, y 32..933 within the source's 600x1000
+// box; this trims the dead margin and keeps ~24 units of padding for the glow.
+const VIEW_BOX = '116 8 368 949'
+
 // Shared by the live CTA and by the invisible spacer that reserves its slot.
 const CTA_CLASS =
   'w-full mt-2 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold text-center'
@@ -133,13 +137,22 @@ export default function BodyMapping() {
   const [revealed, setRevealed] = useState([])
   const [selected, setSelected] = useState([])
   const [lastRevealed, setLastRevealed] = useState(null)
+  // Whether the panel is currently given over to the closing line.
+  const [showClosing, setShowClosing] = useState(false)
 
   const allRevealed = revealed.length === REGIONS.length
 
   function tapRegion(id) {
     if (mode === 'reveal') {
       setLastRevealed(id)
-      setRevealed((r) => (r.includes(id) ? r : [...r, id]))
+      setRevealed((r) => {
+        const next = r.includes(id) ? r : [...r, id]
+        // Completing the set swaps the panel over to the closing line; tapping
+        // a region again afterwards swaps back to that region's description, so
+        // nothing is stranded once the closing takes the panel over.
+        setShowClosing(next.length === REGIONS.length && !r.includes(id))
+        return next
+      })
     } else if (mode === 'select') {
       setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
     }
@@ -155,6 +168,7 @@ export default function BodyMapping() {
     setRevealed([])
     setSelected([])
     setLastRevealed(null)
+    setShowClosing(false)
   }
 
   const regionClass = (id) => {
@@ -248,22 +262,17 @@ export default function BodyMapping() {
         </div>
       </div>
 
-      {/* Figure. Deliberately a FIXED share of the frame, not flex-1.
-          It used to take "whatever room is left", which meant each region's
-          copy length changed the leftover space and the body visibly grew and
-          shrank from tap to tap (Josh, 2026-08-13 — worst between Lungs, two
-          lines, and Head, seven). The figure is the anchor now; the copy block
-          below absorbs the variance instead. A percentage rather than a pixel
-          height so it still scales between the narrow demo embed and a real
-          full-screen phone. */}
       {/* Figure. Takes every pixel the fixed header, copy block and CTA don't
-          use, which is a constant because the copy block below reserves its
-          worst case. min-h-0 is load-bearing: a column flex item defaults to
+          use, which is a constant because those all reserve their worst case.
+          It used to be the other way round: the figure took "whatever room is
+          left", so each region's copy length changed the leftover space and the
+          body visibly grew and shrank from tap to tap (Josh, 2026-08-13).
+          min-h-0 is load-bearing: a column flex item defaults to
           min-height:auto, which clamps it up to the SVG's intrinsic aspect
           height and would let it push the rest of the layout around. */}
       <div className="flex-1 min-h-0 my-2 flex items-center justify-center">
         <svg
-          viewBox="0 0 600 1000"
+          viewBox={VIEW_BOX}
           preserveAspectRatio="xMidYMid meet"
           className="h-full w-full"
           role="group"
@@ -420,25 +429,37 @@ export default function BodyMapping() {
           aligned in the cell so the text sits against the CTA rather than
           floating in the middle (Josh, 2026-08-13). */}
       <div className="flex-none grid">
-        {/* Worst case is the longest panel plus the closing. The counter and
-            the closing never co-occur, and the closing is the taller of the
-            two, so reserving the closing covers both. */}
+        {/* Worst case is the longest region panel plus the counter. The
+            closing now REPLACES the region panel rather than stacking under
+            it, and it is shorter than the longest panel, so this spacer covers
+            every state. */}
         <div className="col-start-1 row-start-1 invisible" aria-hidden="true">
           <PanelBox label="Head" text={LONGEST_REGION_TEXT} />
-          <ClosingBox />
+          <ProgressLine revealed={REGIONS.length} />
         </div>
 
         <div className="col-start-1 row-start-1 flex flex-col justify-end">
-          <PanelBox label={panel.label} text={panel.text} muted={panel.muted} />
-
-          {/* The counter is dropped once it reads 5 of 5: the closing line and
-              the now-enabled Continue already say you're done, and the row it
-              was taking is worth more to the figure. */}
-          {mode === 'reveal' && !allRevealed && (
-            <ProgressLine revealed={revealed.length} />
+          {/* Completing the set gives the panel over to the closing line
+              alone: it is the payoff, and keeping the last region's
+              description on screen under it was the single biggest block of
+              text in the activity (Josh, 2026-08-13). Tapping any region
+              afterwards brings its description back, so nothing is stranded.
+              The counter stops once it would read 5 of 5, since the closing and
+              the enabled Continue already say you're done. */}
+          {mode === 'reveal' && allRevealed && showClosing ? (
+            <ClosingBox />
+          ) : (
+            <>
+              <PanelBox
+                label={panel.label}
+                text={panel.text}
+                muted={panel.muted}
+              />
+              {mode === 'reveal' && !allRevealed && (
+                <ProgressLine revealed={revealed.length} />
+              )}
+            </>
           )}
-
-          {mode === 'reveal' && allRevealed && <ClosingBox />}
         </div>
       </div>
 

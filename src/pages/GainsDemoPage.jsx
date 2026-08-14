@@ -495,12 +495,14 @@ export default function GainsDemoPage() {
                   add audio narration so each of these lines is read aloud
                   instead.
                 </p>
-                {/* Phone frame. minHeight matters: nested inside two padded
-                    cards, a strict 9:16 box on a 375px screen would only be
-                    ~455px tall, which is shorter than any real phone and
-                    squeezes the figure out. It is also only ~257px wide, well
-                    under a real phone, so copy wraps to more lines here than it
-                    will in the app. 700px gives the activity honest room back. */}
+                {/* Phone frame. Nested inside two padded cards, a strict 9:16
+                    box on a 375px screen would only be ~455px tall, shorter
+                    than any real phone, which squeezed the figure out. It is
+                    also narrower than a real phone, so copy wraps to more lines
+                    here than it will in the app. 360x780 is a ratio of 2.17,
+                    which is an iPhone 15 Pro (393x852) rather than the older
+                    9:16, and every pixel of the extra height goes to the figure
+                    since everything else in the activity is a fixed size. */}
                 {/* -mx-4 on phones claws back the review card's own padding so
                     the frame isn't squeezed to ~257px, well under a real phone,
                     which made every line of copy wrap taller than it will in
@@ -508,7 +510,7 @@ export default function GainsDemoPage() {
                 <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
                   <div
                     className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
-                    style={{ aspectRatio: '9 / 16', minHeight: '700px' }}
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
                   >
                     <BodyMapping />
                   </div>
