@@ -135,6 +135,30 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **8cc8e93** (2026-08-13) — Body Mapping: **the closing stands alone and the figure is
+  now half the screen.** Josh: still needs to be significantly bigger, and the closing
+  should show without the last region's description under it. Three levers, all buying the
+  figure height:
+  1. **The closing replaces the region description** instead of stacking under it. That was
+     the biggest block of text in the activity and it only appeared in the state that was
+     already fullest. Tapping any region afterwards brings its description back so nothing
+     is stranded, and the "N of 5" counter stops rather than reading 5 of 5 under a closing
+     that already says you're done. Since the reserved height is the worst case, removing a
+     stacked block from that case hands the whole difference to the figure.
+  2. **The SVG viewBox is cropped to the silhouette.** The art is drawn in a 600×1000 box
+     but the body only occupies x 140..460, y 32..933, so a tenth of the height was empty
+     margin the figure was paying for. The padding kept is for the amber glow, which blurs
+     ~21px past an active region and would otherwise cut off at the edge.
+  3. **The demo frame goes 700 → 780** at 360 wide, a ratio of 2.17. That is an iPhone 15
+     Pro (393×852) rather than the older 9:16, so more realistic, not less, and every pixel
+     reaches the figure because everything else reserves a fixed size.
+  **Measured at 1280px:** the body is **408px, 52% of the frame**, up from 260 before this
+  change and 182 before the layout work started, so **+57% now and +124% overall**. At
+  375px it is 358px, up from 198 (+81%). Spread stays **0.00px** on both axes at both
+  widths, the copy still sits 8px above the button, and the full sequence was verified
+  fresh at both widths (five reveals, closing alone at 5/5, re-tap restoring a description,
+  Part 2, Done, Start over). No overflow, no console errors.
+
 - **e513a5b** (2026-08-13) — **Three proposals adopted and moved out of review**, plus a
   bigger Body Mapping figure. From the Aug 13 team review.
   **Moves.** The **Exposition** (Option 2) moved down into its own Exposition section under
