@@ -40,6 +40,17 @@ export const GAINS_FEEDBACK_SECTIONS = [
 ]
 
 const ART = '/long-light/art'
+const AUDIO = '/long-light/audio'
+
+// Spark's voice A/B/C contenders (Draft 28). Neutral labels on purpose: the
+// team is picking blind, so nothing here should hint at a favourite. The files
+// live in public/long-light/audio/ and are mirrored from the staging copy in
+// Gains for Teens/long-light-site/audio/.
+const SPARK_VOICE_OPTIONS = [
+  { id: 'A', file: 'a' },
+  { id: 'B', file: 'b' },
+  { id: 'C', file: 'c' },
+]
 
 // ---------- NPCs (Draft 20) ----------
 // Spark's intro line is VERBATIM (all-ASCII source: straight apostrophes) —
@@ -460,7 +471,7 @@ export default function GainsDemoPage() {
                   the opening zone reads "The Dark Abyss" in the breakdown.) */}
               <ReviewItem
                 n={5}
-                title="Spark’s voice (two options)"
+                title="Spark’s voice (three options)"
                 section="review-spark-voice"
               >
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -474,29 +485,24 @@ export default function GainsDemoPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-slate-700 mb-2">
-                      Two voices for Spark, both reading the intro below. Have a
-                      listen and tell us which one you prefer.
+                      Three voices to choose from, each with music and reverb
+                      added. All three read the intro below. Have a listen and
+                      tell us which one you prefer.
                     </p>
-                    <p className="text-[12px] font-semibold text-slate-600 mb-1">
-                      Option A
-                    </p>
-                    <audio
-                      controls
-                      preload="metadata"
-                      src="/long-light/audio/spark-voice-a.mp3"
-                      aria-label="Audio: Spark voice option A"
-                      className="w-full mb-3"
-                    />
-                    <p className="text-[12px] font-semibold text-slate-600 mb-1">
-                      Option B
-                    </p>
-                    <audio
-                      controls
-                      preload="metadata"
-                      src="/long-light/audio/spark-voice-b.mp3"
-                      aria-label="Audio: Spark voice option B"
-                      className="w-full mb-3"
-                    />
+                    {SPARK_VOICE_OPTIONS.map((opt) => (
+                      <div key={opt.id}>
+                        <p className="text-[12px] font-semibold text-slate-600 mb-1">
+                          Option {opt.id}
+                        </p>
+                        <audio
+                          controls
+                          preload="metadata"
+                          src={`${AUDIO}/spark-voice-${opt.file}.mp3`}
+                          aria-label={`Audio: Spark voice option ${opt.id}`}
+                          className="w-full mb-3"
+                        />
+                      </div>
+                    ))}
                     <p className="text-[13px] text-slate-700 leading-relaxed">
                       {SPARK_INTRO_LINE}
                     </p>
