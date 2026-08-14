@@ -135,6 +135,40 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **e513a5b** (2026-08-13) — **Three proposals adopted and moved out of review**, plus a
+  bigger Body Mapping figure. From the Aug 13 team review.
+  **Moves.** The **Exposition** (Option 2) moved down into its own Exposition section under
+  The climb, which until now was a placeholder pointing back up at the proposal; it carries
+  the verbatim script, marked "script adopted, build pending" since the text is settled but
+  the build is not. The **arcade ideas** and the **gear toolbox** moved to the prototypes
+  section as in-development cards. That section is renamed **"Prototypes and In
+  Development"** and its note says both traversal games will be fully developed, and that
+  what follows them is adopted work being built out.
+  **Renumbering.** The three review items left are now 1–3: character progression, Spark's
+  voice, Body Mapping. `review-exposition`, `review-arcades` and `review-gear` are retired
+  from the demo dropdown following the `review-rename` precedent; their labels stay in
+  AdminFeedbackPage so existing rows still read correctly.
+  **Body Mapping**, from Josh: the state with the most text left the copy floating well
+  above the Continue button, wasting space the figure could use. The copy block now sizes
+  itself from an **invisible worst-case spacer** (longest region text plus the closing)
+  sharing one grid cell with the live copy, so it is always exactly as tall as it could ever
+  need to be and never changes. That frees the figure to be `flex-1` and take every
+  remaining pixel while staying pixel-constant, and the live copy is bottom-aligned so it
+  sits against the button. The CTA slot needed the same treatment: it is empty for the first
+  four reveals and the two button styles differ in height, and that difference otherwise
+  landed on the figure and resized the body by 47px the moment Continue appeared. Two
+  supporting changes: the **"N of 5" counter is dropped once it reads 5 of 5** (the closing
+  and the enabled Continue already say you're done, and the row is worth more to the
+  figure), and the frame **reclaims the review card's padding on phones** (`-mx-4`) so it is
+  289px rather than 257px, since at 257 every line wrapped taller than it will in the app.
+  **Measured across 11 states at 375px and 1280px:** the body is **42% taller on desktop**
+  (182 → 260px) and 9% on mobile (182 → 198px), the copy sits **8px above the button** in
+  every state, and the body's size and position spread is **0.00px** on both axes at both
+  widths. No frame or page overflow, frame stays inside its card, no console errors.
+  *Available if wanted: another ~30% on the figure, but only by dropping the last region's
+  text in the all-revealed state so the closing stands alone. That is a content call, so I
+  left it.*
+
 - **5846cf6** (2026-08-13) — Body Mapping: **the figure no longer resizes between taps**,
   plus a narration note. From Josh reviewing the live demo: "when you click on the
   different parts, the body gets bigger and smaller."
