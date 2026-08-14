@@ -126,6 +126,36 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1f4d072** (2026-08-13) — Draft 27: **the Body Mapping activity is playable.**
+  Built from the blueprint in `Gains for Teens/Activities/` as
+  `src/components/BodyMapping.jsx`. The SVG is **inlined** rather than embedded as an
+  image, so the five region groups take their state from React: `is-active` for the
+  Part 1 reveal glow, `is-selected` for the Part 2 amber fill + check badge. Classes are
+  `bm-` prefixed and the glow filter id is namespaced so nothing collides with the page.
+  **Flow** is no-fail and unscored: Part 1 taps reveal each region's line with an
+  "N of 5" counter, all five unlock the closing line + **Continue**; Part 2 clears the
+  reveals, switches the instruction, and taps toggle a selection, with **Done** ending on
+  the gentle closing. **Region copy and the closing are verbatim Stephanie** (diffed
+  against the prototype: 5/5 regions + closing match exactly).
+  **Placement:** a new playable item in **Ideas & Demos for Review** with its own comment
+  thread (`review-bodymap`, added to the demo dropdown and the admin labels), so it's now
+  **item 6**. Deliberately **not** registered as a versioned sandbox activity, since it
+  isn't wired into a zone or the SessionEngine yet, so there's no `activityVersions.js`
+  entry per CLAUDE.md; that comes when the team blesses it and it moves into Zone 1.
+  Two things beyond the draft: a **"Start over"** link on the end screen so reviewers can
+  replay, and **keyboard access** (regions are `role="button"`, tabbable, Enter/Space
+  activated, `aria-pressed` reflecting state).
+  **The 9:16 fit needed a real fix.** Nested inside two padded cards, a strict 9:16 box on
+  a 375px screen is only ~257×455, shorter than any actual phone. Once the closing panel
+  and the button were both showing, content ran to 569px, overflowed, and squeezed the
+  figure to zero height. The frame now carries a 620px `minHeight` and the activity's
+  fixed chrome was tightened.
+  **Verified** at 750px and 375px: full play-through (reveal 1→5 → closing + Continue →
+  reveals cleared, instruction switches → select toggles on and off → Done → closing +
+  Start over); no vertical overflow in the worst case at either width; Continue sits fully
+  inside the frame; desktop keeps a true 9:16 (360×640, ratio 1.78); no horizontal
+  overflow; the comment thread opens preset to `review-bodymap`; no console errors.
+
 - **0d63109** (2026-08-13) — Drafts 25 + 26 (Aug 11 meeting).
   **25A — new Zone 1 traveler art** (face visible with a sad expression, hood/cloak/aura
   unchanged); asset swap only, same 576×1024, renders in the progression strip.
@@ -1298,3 +1328,32 @@ In the **"Ideas & Demos for Review"** section, update the **Spark's voice** item
 **Verify.** The review section's Spark item now shows two players (Option A and Option B) that both play; the old `spark-introduction.mp3` player is gone; Spark's intro text still shows; the comment thread still works. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 26.*
+
+
+### Draft 27 — Build the Body Mapping activity (Activity 1), 9:16 — ✅ SHIPPED 1f4d072 (2026-08-13)
+
+Build Stephanie's **Body Mapping** activity as a real interactive component for `/gains-demo`. Blueprint files are in `Gains for Teens/Activities/`:
+- `body-map.svg` — the finished figure: neutral gender-inclusive outline, five region groups with ids `region-lungs`, `region-head`, `region-heart`, `region-stomach`, `region-body` (each with an icon + circular hit-target), plus an internal `<style>` defining `.region` / `.region.active` / `.region.selected` states and an `amberGlow` filter.
+- `Body Map (prototype).html` — a working vanilla-JS reference of the exact interaction.
+
+**Inline the SVG into the component** and drive the region classes from component state (don't just embed the static file as an image — the states need to toggle).
+
+**MUST fit the same 9:16 vertical mobile format as everything else in the app.** The figure scales to fit the vertical frame with the instruction line, the copy panel, and the button all visible without awkward scrolling; no horizontal overflow. Use the app's amber/slate design system (amber-500 `rounded-full` CTA, amber-50 `rounded-2xl` panels).
+
+**Flow (no-fail, no scoring):**
+- **Part 1 — reveal.** Instruction (Spark): *"Click to reveal different areas of the body that react during and after a trauma."* Tapping a region adds the `active` glow and shows that region's line in the copy panel. Track progress ("N of 5"). When all five are revealed, show the closing line and unlock a **Continue** button.
+- **Part 2 — select.** Same figure/icons. Clear the reveals and switch the instruction to: *"Click on each of these reactions you have had recently."* Tapping a region toggles `selected` (amber fill + check badge). A **Done** button ends on a gentle closing (e.g., *"Noticing where big feelings show up is the first step to feeling better."*).
+
+**Verbatim copy — use Stephanie's exact wording:**
+- **Lungs** — "We start breathing faster, to help our body take in more oxygen"
+- **Head** — "Thoughts begin to race through our heads to allow us to make quick decisions, but this also makes it hard to think clearly, can cause us to feel dizzy, and can even make us feel detached or like things around us aren’t real"
+- **Heart** — "Our hearts start beating faster because it is harder to pump blood to all our muscles"
+- **Stomach** — "Our stomach might feel upset or we might feel nauseous because blood is moving away from our stomach and into our arms and legs"
+- **Body** — "Our body heats up, leading to more sweating. Our muscles also get tense, and we might feel shaky or tingly."
+- **Closing (after all 5 revealed)** — "Each of these things help us respond to danger, but these responses can stick around even after the danger has passed or can pop up if something reminds us of the danger or trauma."
+
+**Placement.** It hasn't been team-reviewed yet, so add it as a **playable demo in the "Ideas & Demos for Review" section** (new item "Body Mapping activity," its own comment thread, tag `review-bodymap`). Once the team blesses it, it moves into its zone as Activity 1.
+
+**Verify.** Renders and fits the 9:16 frame on mobile (no overflow, everything reachable); Part 1 reveal → all-5 → closing → Continue works; Part 2 select toggles with check badges → Done closing; copy matches Stephanie's verbatim exactly; amber/slate styling; appears in the review section with a working comment thread. Follow the repo's convention for GAINS demo interactive pieces; if registered as a versioned activity, add its version entry per CLAUDE.md. Log Recently-shipped + mark shipped.
+
+*End of Draft 27.*
