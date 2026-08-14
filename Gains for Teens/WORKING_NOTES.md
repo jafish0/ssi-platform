@@ -58,6 +58,15 @@ Asks pointed the other way — things Cowork/Josh need to source or decide.
   after each zone's gear through to Mount Hope). Drop them in a draft and Claude Code will
   wire them into the same card.
 
+- **Spark voice A/B/C are not loudness-matched (2026-08-13).** Measured off the shipped
+  files: **A is about 3 dB louder than B and about 6 dB louder than C** (RMS -9.3 / -12.4 /
+  -15.3 dBFS; A and B also peak at full scale, C peaks at -0.5 dB). Louder reliably reads as
+  "better" in a blind listening test regardless of the performance, so as staged the vote is
+  biased toward A. Two ways out, Josh's call: ask the sound designer for loudness-matched
+  exports (cleanest, they all land near the same LUFS), or have Claude Code trim the
+  players' playback volume to level them, which is a one-line change but means the team
+  hears them quieter than delivered. Worth settling **before** the team votes.
+
 - ~~**Orb collect sound for the climb traversal (2026-07-27).**~~ ✅ **RESOLVED
   2026-07-28** — Josh supplied "Woosh 1" (air whoosh); shipped in 9efaf02 as
   `public/gains/climb/audio/sfx-air-intake.mp3`.
@@ -125,6 +134,28 @@ gradients and layered depth.
 ---
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **6b12a14** (2026-08-13) — Draft 28: **Spark's voice is now a three-way A/B/C.**
+  The two players on review item 5 become three. A and B were overwritten with the new
+  versions, C is new, and all three are mirrored from `long-light-site/audio/` into
+  `public/long-light/audio/`. The players were two hardcoded blocks and are now mapped
+  from a `SPARK_VOICE_OPTIONS` list, so a fourth contender is a one-line change. Labels
+  stay neutral (Option A/B/C) since the team is picking blind. Spark's Option-2 intro text
+  stays alongside as the shared reference script, and the `review-spark-voice` thread is
+  untouched. Description copy avoids the em dash per the standing style rule (the draft's
+  suggested line used one).
+  **Cache check:** overwriting a.mp3 and b.mp3 at the same URL is safe. `/long-light/*.mp3`
+  matches no immutable rule in `vercel.json`, and the live host serves it
+  `max-age=0, must-revalidate` with an ETag, so browsers revalidate and get the new bytes.
+  No cache-busting query string needed.
+  **Verified:** three players render and all three decode and play (37.8s / 41.1s /
+  41.1s); the retired `spark-introduction.mp3` is still unreferenced; the thread opens
+  preset to `review-spark-voice`; mobile at 375px stacks all three full-width with no
+  horizontal overflow; no console errors. No `src/activities` changes, so no version bumps.
+  *B and C report a **sample-identical** length, so I checked whether C was an accidental
+  duplicate export of B: cross-correlation is 0.021 (a duplicate would be ~1.0), with
+  different RMS and peak. They're genuinely different takes that share a fixed-length
+  music bed. See the loudness note in the TODO section, it affects the vote.*
 
 - **1f4d072** (2026-08-13) — Draft 27: **the Body Mapping activity is playable.**
   Built from the blueprint in `Gains for Teens/Activities/` as
@@ -1357,3 +1388,30 @@ Build Stephanie's **Body Mapping** activity as a real interactive component for 
 **Verify.** Renders and fits the 9:16 frame on mobile (no overflow, everything reachable); Part 1 reveal → all-5 → closing → Continue works; Part 2 select toggles with check badges → Done closing; copy matches Stephanie's verbatim exactly; amber/slate styling; appears in the review section with a working comment thread. Follow the repo's convention for GAINS demo interactive pieces; if registered as a versioned activity, add its version entry per CLAUDE.md. Log Recently-shipped + mark shipped.
 
 *End of Draft 27.*
+
+
+### Draft 28 — Review section: replace Spark's voice players with three new contenders (A/B/C) — ✅ SHIPPED 6b12a14 (2026-08-13)
+
+In the **"Ideas & Demos for Review"** section, update the **Spark's voice** item (`review-spark-voice`).
+
+- **Replace** the current two players (Option A / Option B) with **three** players, labeled neutrally:
+  - **Option A** → `/long-light/audio/spark-voice-a.mp3`
+  - **Option B** → `/long-light/audio/spark-voice-b.mp3`
+  - **Option C** → `/long-light/audio/spark-voice-c.mp3`
+  (All three files are already staged in `long-light-site/audio/` — the A/B files have been overwritten with the new versions and C is new.)
+- Update the item description to say something like: **"Three voices to choose from — each with music and reverb added."** Keep Spark's Option-2 intro text alongside as the shared reference script.
+- Keep the `review-spark-voice` comment thread; ask the team which of the three they prefer.
+
+**Verify.** The Spark item now shows three players (A, B, C) that all play; no leftover second-only layout; the intro text still shows; the comment thread still works. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 28.*
+
+
+<!-- REFERENCE (not a draft) — Spark voice file map (2026-08-13) -->
+<!--
+Current Spark voice contenders in the review section, staged from `Voices/Spark with Music/`:
+  Option A  =  long-light-site/audio/spark-voice-a.mp3  <-  "Spark 1 with Music and Reverb.mp3"  (ElevenLabs voice: ____ — Josh to fill)
+  Option B  =  long-light-site/audio/spark-voice-b.mp3  <-  "Spark 2 with Music and Reverb.mp3"  (ElevenLabs voice: ____)
+  Option C  =  long-light-site/audio/spark-voice-c.mp3  <-  "Spark 3 with Music and Reverb.mp3"  (ElevenLabs voice: ____)
+Note: source filename numbers are NOT the ElevenLabs voice numbers (last batch, "Spark 2" was actually "spark 6" on ElevenLabs), so trace the winner by the source file, and Josh should note the real ElevenLabs voice name/id next to whichever the team picks.
+-->
