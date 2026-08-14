@@ -58,14 +58,11 @@ Asks pointed the other way — things Cowork/Josh need to source or decide.
   after each zone's gear through to Mount Hope). Drop them in a draft and Claude Code will
   wire them into the same card.
 
-- **Spark voice A/B/C are not loudness-matched (2026-08-13).** Measured off the shipped
-  files: **A is about 3 dB louder than B and about 6 dB louder than C** (RMS -9.3 / -12.4 /
-  -15.3 dBFS; A and B also peak at full scale, C peaks at -0.5 dB). Louder reliably reads as
-  "better" in a blind listening test regardless of the performance, so as staged the vote is
-  biased toward A. Two ways out, Josh's call: ask the sound designer for loudness-matched
-  exports (cleanest, they all land near the same LUFS), or have Claude Code trim the
-  players' playback volume to level them, which is a one-line change but means the team
-  hears them quieter than delivered. Worth settling **before** the team votes.
+- ~~**Spark voice A/B/C are not loudness-matched (2026-08-13).**~~ ✅ **RESOLVED
+  2026-08-14** by the Draft 29 re-mixes (b4f7465). The old set ran -9.3 / -12.4 / -15.3 dBFS
+  RMS, a 6 dB spread with A and B clipping at full scale, which biased a blind vote toward
+  whichever was loudest. The new set measures **-23.1 / -23.9 / -23.1, a 0.85 dB spread**,
+  peaking at -8.7 / -7.7 / -7.9 with no clipping. The A/B/C vote is a fair comparison now.
 
 - ~~**Orb collect sound for the climb traversal (2026-07-27).**~~ ✅ **RESOLVED
   2026-07-28** — Josh supplied "Woosh 1" (air whoosh); shipped in 9efaf02 as
@@ -134,6 +131,25 @@ gradients and layered depth.
 ---
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **b4f7465** (2026-08-14) — Draft 29: **the three Spark voice mixes are refreshed.**
+  Same filenames, new audio, mirrored from `long-light-site/audio/` into `public/`.
+  Asset-only: the A/B/C players already point at these paths, so no wiring change and no
+  version bumps.
+  **No cache-busting string, and the draft's suggested `?v=2` is not needed.** Vercel serves
+  `/long-light/*.mp3` as `max-age=0, must-revalidate` with an ETag that is literally the
+  file's md5 (verified against the live host: the deployed ETag equalled the md5 of the file
+  it was replacing), so every browser revalidates on load and gets the new bytes. A version
+  string would just mean hand-bumping three URLs on every future swap.
+  **These mixes fix the loudness bias** flagged when the last set shipped: the old files ran
+  -9.3 / -12.4 / -15.3 dBFS RMS (6 dB spread, A and B clipping at full scale), the new ones
+  are **-23.1 / -23.9 / -23.1, a 0.85 dB spread**, peaking at -8.7 / -7.7 / -7.9 with no
+  clipping. The blind vote is a fair comparison now and that TODO is closed.
+  The three are also properly distinct (pairwise cross-correlation 0.06–0.07) and no longer
+  share a sample-identical length: **39.0s / 43.2s / 41.1s**, where B and C previously
+  matched to the sample.
+  **Verified:** all three decode, reach readyState 4 and play; durations match the decoded
+  audio; the retired `spark-introduction.mp3` is still unreferenced.
 
 - **8cc8e93** (2026-08-13) — Body Mapping: **the closing stands alone and the figure is
   now half the screen.** Josh: still needs to be significantly bigger, and the closing
@@ -1501,3 +1517,14 @@ Current Spark voice contenders in the review section, staged from `Voices/Spark 
   Option C  =  long-light-site/audio/spark-voice-c.mp3  <-  "Spark 3 with Music and Reverb.mp3"  (ElevenLabs voice: ____)
 Note: source filename numbers are NOT the ElevenLabs voice numbers (last batch, "Spark 2" was actually "spark 6" on ElevenLabs), so trace the winner by the source file, and Josh should note the real ElevenLabs voice name/id next to whichever the team picks.
 -->
+
+
+### Draft 29 — Refresh the three Spark voice files (replaced, same filenames) — ✅ SHIPPED b4f7465 (2026-08-14)
+
+The three Spark voice mp3s in `long-light-site/audio/` — `spark-voice-a.mp3`, `spark-voice-b.mp3`, `spark-voice-c.mp3` — have been **replaced with new versions** (same filenames, new audio; updated music/reverb mixes). The review-section A/B/C players from Draft 28 already point at these paths, so **no wiring change is needed** — just commit and redeploy the updated assets.
+
+**Caching caveat:** because the filenames are unchanged, browsers / the CDN may serve the OLD cached audio. To force the new files, bump a version query string on the three audio sources (e.g., `spark-voice-a.mp3?v=2`), or otherwise ensure the deploy invalidates those three assets.
+
+**Verify.** On a hard refresh, all three review-section players play the NEW audio (not stale cached versions). No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 29.*
