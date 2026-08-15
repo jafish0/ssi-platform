@@ -110,6 +110,124 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`255decb` · 2026-08-16** — **Draft 84 (P0) — `mint-access-code` v3 accepts the partner key from `Authorization`.** The consent → access-code pipeline is unblocked on our side. The Workflow WebService credential always sends `Authorization: <token>` and its editor exposes only Name / API Token / mTLS, so the header can't be renamed; the function now reads the shared secret from **`x-partner-key`** (primary, wins if both present) or **`Authorization`** (optional `Bearer ` stripped, value trimmed). Comparison unchanged (constant-time explicitly out of scope). **Deployed CLI-only with `--no-verify-jwt`** — live version **7**, `verify_jwt` confirmed still `false` (it is the only function in the project with JWT verification off). **Pre-flight that de-risked the whole approach:** before touching anything I probed whether the gateway would even pass a non-JWT `Authorization` through to a `verify_jwt=false` function — a raw token, `Bearer <garbage>`, and the **public anon JWT** all reached the function and got its own `{"error":"Invalid partner key"}`, never a gateway error. Same probe confirmed `PARTNER_API_KEY_QUALTRICS` is now genuinely set (401, not the Draft-76-era 500). Then 22/22 local header-resolution checks (public anon JWT does NOT authorize; precedence holds even when `x-partner-key` is wrong; only one `Bearer` stripped; `Basic` rejected), and a post-deploy regression probe: all six unauthorized shapes still 401, zero `access_codes` rows created. **A 12-agent adversarial security review confirmed three findings — all fixed before this landed, and one of them was mine.** (1) **Confidentiality regression:** the gateway doesn't *enforce* Authorization here but it does *parse* it, and writes the **first 10 characters** of an unrecognized value into `function_edge_logs` (`request.sb.apikey.authorization.prefix`) — measured with a 32-char sentinel — while `x-partner-key` appears nowhere in the log schema. So every consent authenticating that way deposits a partial copy of the live secret into project logs. Not a bypass (~130 bits remain, the 1000/day post-auth cap holds), but real: I corrected the function header's now-disproven "Supabase never tries to interpret that value" claim, switched the smoke harness to send the REAL key **only** via `x-partner-key` (Authorization keeps negative-only coverage — wrong token + anon JWT, neither secret), and documented "prefer `x-partner-key` wherever the name is settable; treat the Authorization-borne key as lower-trust, on rotation." (2) **A generated partner key was sitting in cleartext in INFRASTRUCTURE.md's open follow-ups** (committed May, `4862350`), reading as a live instruction to install it — now placeholdered and marked **burned**. It was never the live secret (Draft 76 proved the secret was unset until Josh generated a fresh one) so nothing needs rotating for this system, **but it is permanent in git history and must never be installed.** (3) **QUALTRICS_SETUP §8.2 was revert-bait for this very P0:** it still prescribed renaming the credential parameter to `x-partner-key` as "the fix" — now both unnecessary and impossible in the Workflow editor — and it is the single place a future debugger grepping `"Invalid partner key"` would land, under a heading reading "READ THIS". §8.2/§8.3 are marked HISTORICAL with pointers to §2/§9/§10, §8's heading warns that the later-numbered sections supersede it, and §8.1's "✅ Built + proven live" was corrected — those two real codes came from builder **Test** clicks, which proved the endpoint, not the delivery. **Also corrected** §2 of the runbook, which still instructed building the Survey Flow web service elements that provably never fire, and the stale secrets-checklist row that still said the partner key was NOT SET. **Josh's next step is the Qualtrics-side verify:** open `WF_lFfvg4FT5Ltm9SA` → the WebService task → **Run test**, expect `200` with `code`/`url`, confirm the row lands with `cohort_label = beta-2026-08` / `external_ref = WF-TEST-2026-08-15`, then deactivate that test code. Everything else in the draft's "NOT in this draft" list stays with Cowork — including **deleting the two dead Survey Flow elements**, without which every consent would mint four codes instead of two. No version bump.
+
+  <details>
+  <summary>Draft 84 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 84 — Accept the partner key from the `Authorization` header (unblocks Qualtrics Workflow minting)
+
+**Priority: P0. This is the last thing standing between us and a working
+consent → access-code pipeline.** Everything else on the Qualtrics side is
+built.
+
+### Background — what we learned 2026-08-15 evening
+
+The Survey Flow **Web Service elements do not execute** on real
+submissions. Two live anonymous-link submissions with consent = Yes were
+completed and recorded, and `mint-access-code` received **zero** requests.
+Not a 401, not a 500 — Qualtrics never opened the connection. Element
+placement, config, and publish state were all verified correct. Cause
+unknown; the Survey Flow gives no execution logs, which is why this went
+unnoticed for weeks.
+
+Minting was therefore rebuilt as a **Qualtrics Workflow**
+(`WF_lFfvg4FT5Ltm9SA`), which does have per-run history and error detail:
+
+- Event: Survey response, newly created only
+- Decision: continue only if `QID10` (consent) = `Yes`
+- Task: authenticated WebService → `POST` `mint-access-code`
+
+**This works.** Its test request reached Supabase at `2026-08-15T23:27:50`.
+It returned `401 {"error":"Invalid partner key"}`.
+
+### The remaining problem
+
+The Workflow WebService task's "API key" credential sends the token as
+`Authorization: <token>`. Unlike the Survey Flow web service element,
+the Workflow credential editor exposes **only** Name / API Token / mTLS —
+there is no "Configure credential parameters" option, so the header name
+cannot be changed to `x-partner-key` from the Qualtrics side.
+
+`mint-access-code` currently reads only `x-partner-key`
+(`supabase/functions/mint-access-code/index.ts` line 116).
+
+We deliberately are NOT adding the raw key as a plaintext custom header in
+the task config — Josh already rejected that approach in favour of the
+credential store.
+
+### The change
+
+In `supabase/functions/mint-access-code/index.ts`, accept the shared secret
+from **either** header. Keep `x-partner-key` as the documented primary so
+nothing existing breaks; add `Authorization` as a fallback, tolerating an
+optional `Bearer ` prefix:
+
+```ts
+const expected = Deno.env.get('PARTNER_API_KEY_QUALTRICS')
+if (!expected) {
+  console.error('PARTNER_API_KEY_QUALTRICS is not configured')
+  // ...existing 500 path unchanged
+}
+
+// Qualtrics Workflow WebService tasks send the credential as
+// `Authorization: <token>` and give no way to rename the header, so we
+// accept it there as well as in our documented `x-partner-key`.
+// Safe because this function deploys with verify_jwt OFF — Supabase does
+// not try to interpret Authorization as a JWT.
+const provided =
+  req.headers.get('x-partner-key') ||
+  (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '') ||
+  ''
+```
+
+Use a constant-time comparison if one is already in place; otherwise leave
+the existing comparison as-is — not in scope for this change.
+
+Also update the header comment at the top of the file (line 5) so it names
+both accepted headers and says why.
+
+### Deploy
+
+**Must be deployed with `--no-verify-jwt`, and must NOT go through
+Supabase MCP `deploy_edge_function`** — MCP flips `verify_jwt` to true,
+which breaks Qualtrics. Existing warning is already in the file header;
+please keep it.
+
+```
+npx supabase functions deploy mint-access-code --no-verify-jwt --project-ref fflezknnpmbemeqyqxml
+```
+
+### Verify
+
+1. In Qualtrics, open workflow `WF_lFfvg4FT5Ltm9SA` → the WebService task →
+   scroll to **Test** → **Run test**. Expect `200` and a body containing
+   `code` and `url`.
+2. Confirm a row lands in `access_codes` with `cohort_label = 'beta-2026-08'`
+   and `external_ref = 'WF-TEST-2026-08-15'`.
+3. Deactivate that test code afterward.
+
+### Append to INFRASTRUCTURE.md
+
+Log the auth change, and note the Survey-Flow-doesn't-fire finding — it is
+the reason the architecture moved to Workflows, and future-us will want to
+know why there are two mechanisms in the history.
+
+### NOT in this draft (Cowork will handle in Qualtrics)
+
+- Second WebService task for `rsd-follow-up-90d`
+- Writing `intervention_code` / `intervention_url` / `followup_code` /
+  `followup_url` back to embedded data
+- The two consent-time emails
+- **Deleting the two dead Web Service elements from the Survey Flow** —
+  important: if they ever start firing alongside the Workflow, every
+  consent would mint four codes instead of two
+- Publishing + enabling both workflows (`WF_lFfvg4FT5Ltm9SA` and the older
+  `WF_JFIOeoc0oOU3G4T` completion-webhook receiver, which is also still
+  Draft / Disabled / never published)
+
+  </details>
+
 - **`7d2f644` · 2026-08-15** — **Draft 83 — Locked-instrument alignment, decision-independent slice (pre/post anchor labels + BW conditional).** Builder tables only — **no publish; live v5 verified untouched** (zero new fields in the current snapshot, `current_version_id` unchanged). Effective at the v6 republish. **Part A (from the locked docs' .docx XML, Draft 5.11.26):** verbatim `anchor_labels` authored on every core-scale item — BHS 0–3 ("Absolutely disagree / Somewhat disagree / Somewhat agree / Absolutely agree", pre+post), ASCS 1–5 ("Never / Rarely / Sometimes / Often / Always", pre+post), UCLA 1–3 ("Hardly ever / Some of the time / Often", pre only — the posttest doesn't carry UCLA), NB 1–5 ("Strongly disagree / Moderately disagree / Neither agree nor disagree / Moderately agree / Strongly agree", pre+post, labels as printed with the nb1/nb2 reverse flags untouched), BPB 0–3 ("Never / Sometimes / Often / Always", pre only). The locked docs label every point on these scales, so no sparse arrays were needed. **Part B:** the bw1→bw2 `show_if` (gt 0) + skip note authored on BOTH BW pairs (`belong_stress_pre`, `belong_stress_post`) — SQL-asserted **byte-identical to follow-up v2's config**. All ten edits via `jsonb_set`, composing with the pending Draft 71/72 builder edits rather than overwriting them. **Scope guard honored:** appraisals (Q1), program helpfulness + acceptability (Q2), demographics/PDW (Q3) untouched. **Part C checklist — the ten authored item ids:** BHS `106fef64`/`983ed115` · ASCS `3b0077de`/`aee35777` · UCLA `5cc6837a` · NB `e10a0017`/`4032db48` · BPB `5d2b2245` · BW `d18ee378`/`bd56a665`. Builder-vs-published-v5 diff moved from the 11 prior intended rows to **exactly 16** — the 5 newly-differing are self_agency_pre/post, loneliness_pre, belong_stress_pre/post; the other 5 in-scope items were already in the diff from D71/72 and just changed hash. Verified: every label array's length matches its scale's range with verbatim endpoints (SQL); rendering checked at a REAL 375px viewport by temporarily mounting the exact authored rows in the sandbox — labels under every point, aria-labels ("3 — Neither agree nor disagree"), selected-echo line, no horizontal overflow; BW behaves both ways (note + enabled Continue at 0, bw2 appears above 0). Throwaway sandbox entries reverted before commit — nothing shipped but the INFRASTRUCTURE entry. **Noted (not built):** the locked BW header prints a mid-anchor ("Moderately" at ~5) that the VAS renderer can't show (min/max labels only) — a tiny `vas_config.mid_label` capability if the team wants it, flagged for a future draft. No version bump.
 
   <details>
