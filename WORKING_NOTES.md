@@ -110,6 +110,30 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`aa6ecb1` · 2026-08-15** — **Draft 77 — Rate limiting on public edge functions (pre-distribution hardening).** New `edge_rate_limits` migration: a **service_role-only** counters table (`bucket` PK = `<function>:<key>:<YYYY-MM-DD>` → counters reset daily by construction; RLS on with zero policies, invisible to the public Data API) + an atomic `bump_rate_limit()` upsert-increment. **Every limiter fails OPEN on counter errors** — a hiccup must never block a kid. Deployed: **`validate-code` v4** (100/day/IP, counted on EVERY request BEFORE the code lookup so brute-forcing is bounded; 429 with the draft's kid-friendly copy), **`submit-feedback` v6** (40/day/IP), **`get-rsd-snapshot` v2** (200/day/IP; heads-up: the MCP redeploy flipped its `verify_jwt` false→true — same landmine INFRASTRUCTURE documented for submit-feedback v5 — verified harmless since /demo always sends the anon JWT, and bare unauthenticated GETs now 401, which is a tightening). **`mint-access-code` was deliberately NOT redeployed via MCP:** an MCP deploy would flip `verify_jwt` to true and break Qualtrics (which sends no JWT) before the partner-key check even runs. Its rate-limited v2 source is **repo-tracked at `supabase/functions/mint-access-code/index.ts`** with the limit keyed on the PARTNER KEY (1000/day, counted post-auth — per the draft's note that batched consents can share one Qualtrics egress IP) — **Josh ships it with `supabase functions deploy mint-access-code --no-verify-jwt`** (one line, noted in the file header and INFRASTRUCTURE). Verified live against production: normal validate/feedback/snapshot flows unaffected at realistic volume; counter seeded to 99 → the 100th validate passed and the **101st returned the 429 + caregiver-help message**; deleting the bucket restored normal flow immediately; limit-hits logged (`[rate-limit] limit hit`). Sizing honors the must-not-break list: household retries, Draft 69 resume revalidation, team QA on the multi-use code, and Qualtrics consent bursts all sit far below the caps. No version bump.
+
+  <details>
+  <summary>Draft 77 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 77 — Rate limiting on public edge functions (pre-distribution hardening)
+
+**Context.** STATE_OF_THE_PLATFORM has carried this since May: `mint-access-code`, `validate-code`, `submit-feedback`, and `get-rsd-snapshot` have no rate limiting. That was acceptable while the audience was the named team; it stops being acceptable the day codes go out to real caregivers (beta, ~2 weeks). The threat is modest (leaked partner key minting unlimited codes; validate-code brute-forcing; feedback spam) but the insurance is cheap, so buy it now while nothing is urgent.
+
+**Scope — keep it simple:**
+
+- Per-IP counters with per-function daily caps, sized generously against legitimate use (a family retrying a code a dozen times must NEVER hit a limit; suggested starting points — `validate-code` ~50/day/IP, `mint-access-code` ~100/day/IP since it's server-to-server from Qualtrics's IPs, `submit-feedback` ~40/day/IP, `get-rsd-snapshot` ~200/day/IP — tune to your read of the traffic).
+- Storage: a small counters table or whatever lightweight mechanism fits the edge-function runtime — your call; no new infrastructure for its own sake.
+- On limit: 429 with a kid-friendly message on participant-facing functions ("Too many tries — take a break and try again later, or ask your caregiver for help."), plain 429 on the server-to-server one.
+- Log limit-hits so a real incident is visible in function logs.
+- **Must-not-break:** Qualtrics's mint calls (two per consent, batched consents on one Qualtrics IP could be N×2/day — size accordingly or key mint's limit on the partner key rather than IP), the Draft 69 resume path (repeated validate calls from one household), and the team's QA code usage.
+- New table (if used) follows the CLAUDE.md grants pattern (service_role only — no anon/authenticated access).
+
+**Verification:** normal flows unaffected (mint two codes, validate + resume repeatedly at household-realistic volume, submit feedback — none throttled); exceeding a cap returns the 429 + message; counters reset daily; limit-hit logged; INFRASTRUCTURE.md change-log entry.
+
+**Version bump:** none (edge-function change).
+
+  </details>
+
 - **`9ef719c` · 2026-08-15** — **Draft 76 — Qualtrics integration runbook + smoke-test harness.** **Part A:** new **`docs/QUALTRICS_SETUP.md`** — the Thursday (8/20–21) build guide in survey-flow order: the 8 embedded-data fields; both mint Web Service calls with exact copy-pasteable request/response JSON (piped `${e://Field/ResponseID}` external_ref, ~30/~120-day expiries, error-case table, and the resume-by-code semantics the emailed links rely on); the two triggered emails with the Outlook-safe table-button pattern (`docs/supabase_invite_email_template.html`, no gradients); the completion-webhook JSON-event receiver with the exact inbound payload and workflow branching on `intervention_slug` (`study_completed` vs `followup_completed`); the 90-day scheduled email (pre-minted URL, live since Draft 75); the secrets checklist; and the §7 joint end-to-end test script with pass conditions. Every contract verified against the deployed sources (mint v1, validate v3, update-session-progress v2). **Part B:** new **`scripts/qualtrics-smoke.mjs`** — simulates Qualtrics against the LIVE functions: mint auth probes (tri-state: 401 = enforced / 500 = secret missing), full mint round-trip when the partner key is in env, then per-slug validate → resume-by-code → complete → completed-routing legs, with cleanup SQL printed. **Run 2026-08-15: all 16 functional checks GREEN on both slugs** (including the new follow-up) — the our-side half of the "smoke test pending since May" is retired; only Thursday's joint test remains. **⚠️ One blocking discovery: `PARTNER_API_KEY_QUALTRICS` is NOT actually set in Supabase** — mint returns 500 "Server misconfigured" (the env-var-missing branch, proven live), despite STATE_OF_THE_PLATFORM's May "handed off in chat" note. **Josh: set it in the dashboard (Project Settings → Edge Functions → Secrets) before building the Qualtrics Web Service elements**, then re-run the harness with the key in env to green the mint legs. Test codes deactivated + sessions abandoned after; logged in INFRASTRUCTURE.md. No version bump.
 
   <details>
@@ -9634,24 +9658,3 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
-
-
-
----
-
-### Draft 77 — Rate limiting on public edge functions (pre-distribution hardening)
-
-**Context.** STATE_OF_THE_PLATFORM has carried this since May: `mint-access-code`, `validate-code`, `submit-feedback`, and `get-rsd-snapshot` have no rate limiting. That was acceptable while the audience was the named team; it stops being acceptable the day codes go out to real caregivers (beta, ~2 weeks). The threat is modest (leaked partner key minting unlimited codes; validate-code brute-forcing; feedback spam) but the insurance is cheap, so buy it now while nothing is urgent.
-
-**Scope — keep it simple:**
-
-- Per-IP counters with per-function daily caps, sized generously against legitimate use (a family retrying a code a dozen times must NEVER hit a limit; suggested starting points — `validate-code` ~50/day/IP, `mint-access-code` ~100/day/IP since it's server-to-server from Qualtrics's IPs, `submit-feedback` ~40/day/IP, `get-rsd-snapshot` ~200/day/IP — tune to your read of the traffic).
-- Storage: a small counters table or whatever lightweight mechanism fits the edge-function runtime — your call; no new infrastructure for its own sake.
-- On limit: 429 with a kid-friendly message on participant-facing functions ("Too many tries — take a break and try again later, or ask your caregiver for help."), plain 429 on the server-to-server one.
-- Log limit-hits so a real incident is visible in function logs.
-- **Must-not-break:** Qualtrics's mint calls (two per consent, batched consents on one Qualtrics IP could be N×2/day — size accordingly or key mint's limit on the partner key rather than IP), the Draft 69 resume path (repeated validate calls from one household), and the team's QA code usage.
-- New table (if used) follows the CLAUDE.md grants pattern (service_role only — no anon/authenticated access).
-
-**Verification:** normal flows unaffected (mint two codes, validate + resume repeatedly at household-realistic volume, submit feedback — none throttled); exceeding a cap returns the 429 + message; counters reset daily; limit-hit logged; INFRASTRUCTURE.md change-log entry.
-
-**Version bump:** none (edge-function change).
