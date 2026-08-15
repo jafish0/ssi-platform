@@ -21,9 +21,19 @@
 //
 // Thoughts to Practice, Your People, and Who You Are (poem) are now
 // display-only (no walkthrough screen) — a Continue click on a read-only
-// screen was friction without value. Real cross-activity persistence is
-// deferred (Draft 21); the /demo/sandbox preview reads synthetic content
-// from `src/lib/planDemoData.js` via the `planData` prop.
+// screen was friction without value.
+//
+// v4.0 (Draft 72, 2026-08-15) — REAL cross-activity pull-forward, closing
+// the item deferred since Draft 21. In a live session the component reads
+// the actual upstream save payloads from `sessionData` (the engine's
+// token_key-keyed responses map), mapped into the same planData contract
+// by `src/lib/planRealData.js`. `planDemoData.js` is now strictly the
+// sandbox / IRB-preview fallback (no real sessionData → synthetic content
+// + the Draft 49 caveat note; real data → caveat suppressed). Every
+// section handles a skipped/half-done upstream activity gracefully: an
+// empty willing-to-try bucket offers the full skills list to pick from,
+// and empty display-only sections collapse cleanly from both the review
+// and the keepsake.
 
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -31,6 +41,7 @@ import { Download, FileText, ArrowLeft } from 'lucide-react'
 import { PrimaryButton } from '../components/items/shared.jsx'
 import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
 import { PLAN_DEMO_DATA, ALL_BELONGING_SKILLS } from '../lib/planDemoData.js'
+import { buildRealPlanData } from '../lib/planRealData.js'
 
 const WHEN_OPTIONS = ['This week', 'This month', 'When the moment shows up', 'Other…']
 
@@ -167,8 +178,13 @@ function isComplete(c) {
 
 // ---------- Component ----------
 
-export default function Plan({ onSave = console.log, planData }) {
-  const d = planData || PLAN_DEMO_DATA
+export default function Plan({ onSave = console.log, planData, sessionData }) {
+  // Data source priority (v4.0): explicit planData prop (testing hook) →
+  // real cross-activity payloads from the session → synthetic demo data
+  // (sandbox / IRB preview, where sessionData is {} or absent).
+  const realData = useMemo(() => buildRealPlanData(sessionData), [sessionData])
+  const d = planData || realData || PLAN_DEMO_DATA
+  const usingDemoData = !planData && !realData
   const [screen, setScreen] = useState(1)
   // Pick-one flow (Draft 51 A): the kid selects a single willing-to-try
   // skill to work through; skillCommits keeps its how/who/when.
@@ -266,13 +282,25 @@ export default function Plan({ onSave = console.log, planData }) {
         heading="New Skills to Try"
         sub="Pick one skill to focus on. You can come back to the others later."
       >
-        {/* Draft 49 A: quiet preview caveat — the demo shows synthetic
-            skills; the real BSS→Plan pull-forward is deferred (Draft 21). */}
-        <p className="text-sm italic text-slate-500 mb-4">
-          In the real session, these are the skills you put in the &ldquo;willing
-          to try&rdquo; bucket in Belonging Skills Sort. This preview shows sample
-          skills for demonstration.
-        </p>
+        {/* Draft 49 A caveat — demo/preview mode only (v4.0: real
+            sessions render the kid's actual willing-to-try bucket, so the
+            caveat is suppressed there). */}
+        {usingDemoData && (
+          <p className="text-sm italic text-slate-500 mb-4">
+            In the real session, these are the skills you put in the &ldquo;willing
+            to try&rdquo; bucket in Belonging Skills Sort. This preview shows sample
+            skills for demonstration.
+          </p>
+        )}
+        {/* Empty-bucket fallback (v4.0, Draft 72 C): the kid put nothing
+            in willing-to-try, so the full skills list is offered instead —
+            they still do the practice, GU-v5.9 style. */}
+        {d.skillsFromFullList && (
+          <p className="text-sm italic text-slate-600 mb-4">
+            You didn&apos;t put anything in your willing-to-try bucket — no
+            problem. Pick one from the full list that feels worth a try.
+          </p>
+        )}
         <div className="space-y-3">
           {d.willingToTrySkills.map((s) => {
             const c = skillCommits[s.id] || {}
@@ -517,9 +545,13 @@ function buildPlanModel(
     pick && isComplete(c)
       ? { text: pick.text, how: (c.how || '').trim(), who: resolveWho(c), when: resolveWhen(c) }
       : null
-  const otherSkills = d.willingToTrySkills
-    .filter((s) => s.id !== selectedSkillId)
-    .map((s) => s.text)
+  // When the willing-to-try bucket was empty and the full list was
+  // offered instead (v4.0 fallback), the non-picked skills are NOT
+  // "skills you said you'd try" — suppress the for-later list rather
+  // than mislabel it.
+  const otherSkills = d.skillsFromFullList
+    ? []
+    : d.willingToTrySkills.filter((s) => s.id !== selectedSkillId).map((s) => s.text)
   const people = TYPE_ORDER.map((t) => (d.strengthening || []).find((x) => x.type === t))
     .filter((x) => x && ((x.person || '').trim() || (x.action || '').trim()))
     .map((x) => ({ typeKey: x.type, label: TONE[x.type].label, person: x.person, action: x.action }))
@@ -583,13 +615,18 @@ function PlanReview({ model }) {
         )}
       </Section>
 
-      <Section title="Thoughts to practice">
-        <ul className="space-y-1">
-          {m.thoughts.map((t, i) => (
-            <li key={i} className="text-[15px] text-slate-700">{t}</li>
-          ))}
-        </ul>
-      </Section>
+      {/* Display-only sections collapse when their upstream activity has
+          no content (v4.0, Draft 72 C) — never a heading over an empty
+          box. */}
+      {m.thoughts.length > 0 && (
+        <Section title="Thoughts to practice">
+          <ul className="space-y-1">
+            {m.thoughts.map((t, i) => (
+              <li key={i} className="text-[15px] text-slate-700">{t}</li>
+            ))}
+          </ul>
+        </Section>
+      )}
 
       {m.people.length > 0 && (
         <Section title="Your people">
@@ -657,17 +694,21 @@ function PlanReview({ model }) {
         </Section>
       )}
 
-      <Section title="Words of Wisdom">
-        <p className="text-[15px] italic text-slate-600 whitespace-pre-line">{m.letter}</p>
-      </Section>
+      {(m.letter || '').trim() && (
+        <Section title="Words of Wisdom">
+          <p className="text-[15px] italic text-slate-600 whitespace-pre-line">{m.letter}</p>
+        </Section>
+      )}
 
-      <Section title="Who you are">
-        <div className="text-[15px] leading-relaxed text-slate-700 font-serif italic">
-          {m.poemLines.map((line, i) => (
-            <p key={i}>{line}</p>
-          ))}
-        </div>
-      </Section>
+      {(m.poemLines || []).length > 0 && (
+        <Section title="Who you are">
+          <div className="text-[15px] leading-relaxed text-slate-700 font-serif italic">
+            {m.poemLines.map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
+        </Section>
+      )}
     </div>
   )
 }
@@ -801,8 +842,12 @@ function buildPlanKeepsakeSvg(model) {
     for (const s of m.otherSkills) body(`• ${s}`, { indent: 14 })
   }
 
-  heading('Thoughts to practice')
-  for (const t of m.thoughts) body(`• ${t}`)
+  // Empty display-only sections collapse from the keepsake too (v4.0,
+  // Draft 72 C/D) — a heading over nothing reads as broken.
+  if (m.thoughts.length) {
+    heading('Thoughts to practice')
+    for (const t of m.thoughts) body(`• ${t}`)
+  }
 
   if (m.people.length) {
     heading('Your people')
@@ -829,11 +874,15 @@ function buildPlanKeepsakeSvg(model) {
     }
   }
 
-  heading('Words of Wisdom')
-  body(m.letter, { italic: true })
+  if ((m.letter || '').trim()) {
+    heading('Words of Wisdom')
+    body(m.letter, { italic: true })
+  }
 
-  heading('Who you are')
-  for (const line of m.poemLines) body(line, { italic: true })
+  if ((m.poemLines || []).length) {
+    heading('Who you are')
+    for (const line of m.poemLines) body(line, { italic: true })
+  }
 
   y += 20
   const height = y + 30

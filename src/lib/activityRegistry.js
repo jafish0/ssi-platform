@@ -6,6 +6,7 @@ import SelfReflection from '../activities/SelfReflection.jsx'
 import BelongingSkillsSort from '../activities/BelongingSkillsSort.jsx'
 import WhoIAmPoem from '../activities/WhoIAmPoem.jsx'
 import LetterBuilder from '../activities/LetterBuilder.jsx'
+import Plan from '../activities/Plan.jsx'
 
 export const ACTIVITY_REGISTRY = {
   GettingUnstuck,
@@ -14,4 +15,5 @@ export const ACTIVITY_REGISTRY = {
   BelongingSkillsSort,
   WhoIAmPoem,
   LetterBuilder,
+  Plan,
 }
