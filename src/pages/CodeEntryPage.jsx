@@ -51,6 +51,13 @@ export default function CodeEntryPage() {
         throw new Error('No session returned.')
       }
       sessionStorage.setItem('session_id', data.session_id)
+      // Resume-by-code (Draft 69): a single-use code with an existing
+      // in-progress session returns that session with resumed: true —
+      // flag it so the delivery page can greet the participant instead
+      // of silently teleporting them mid-flow.
+      if (data.resumed && data.session_status === 'in_progress') {
+        sessionStorage.setItem('resumed_notice', '1')
+      }
       navigate(`/session/${data.session_id}`, { replace: true })
     } catch (err) {
       setError(err)

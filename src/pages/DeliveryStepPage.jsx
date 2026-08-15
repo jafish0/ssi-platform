@@ -44,6 +44,24 @@ export default function DeliveryStepPage() {
   const [showTransition, setShowTransition] = useState(false)
   const lastSectionRef = useRef(currentSectionIndex)
 
+  // Resume-by-code acknowledgment (Draft 69): when CodeEntryPage flagged
+  // this navigation as a resume into an existing session, greet the
+  // participant so landing mid-flow reads as intentional. The read and
+  // the removal are deliberately separated: removing inside the useState
+  // initializer breaks under StrictMode's dev double-mount (the first
+  // mount eats the flag, the remount reads it as empty). The banner
+  // clears on the first advance.
+  const [resumedNotice, setResumedNotice] = useState(
+    () =>
+      typeof sessionStorage !== 'undefined' &&
+      sessionStorage.getItem('resumed_notice') === '1',
+  )
+  useEffect(() => {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('resumed_notice')
+    }
+  }, [])
+
   // Scroll to top whenever the current item changes so a long form (e.g. the
   // demographics structured_activity) starts from its heading rather than
   // wherever the previous page was scrolled to.
@@ -90,6 +108,7 @@ export default function DeliveryStepPage() {
       // If the item triggered a hard exit, the engine has already marked the
       // session completed and the shell will swap to the exit screen.
       if (result?.exited) return
+      if (resumedNotice) setResumedNotice(false)
       goNext()
     } catch (err) {
       console.error('Failed to save response', err)
@@ -102,6 +121,12 @@ export default function DeliveryStepPage() {
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-8">
       <div className="w-full max-w-[640px]">
+        {resumedNotice && (
+          <div className="mb-4 rounded-2xl bg-ctac-teal-100 border border-ctac-teal-300 text-ctac-teal-900 px-4 py-3 text-[14px]">
+            Welcome back — picking up where you left off.
+          </div>
+        )}
+
         {/* Section header */}
         {currentSection?.title && (
           <div className="text-[13px] text-slate-500 mb-3 px-1">
