@@ -110,6 +110,41 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`e4112a6` · 2026-08-15** — **Draft 79 — Engagement-data recon: what the study promises vs. what the app records (read-only).** New **`docs/ENGAGEMENT_DATA_2026-08.md`**, grounded in the Draft 68 completed QA session (`302722b5-baeb-428b-8fdd-3cabbd9418ef`, v5, 57/57 responses) — every claim queried, zero production changes. **The load-bearing structural fact:** EVERY item saves a timestamped row on advance — `text_prompt` saves `{viewed}`, `page_break` saves `{advanced}` — so a completed session is an ordered event trail, not just answers. That makes **time on task already derivable with no build**: consecutive `responded_at` deltas ≈ per-screen dwell (the previous save IS the current screen’s arrival time), demonstrated with a per-section duration table computed in SQL on the cited session; honest limits stated (idle-vs-active indistinguishable, resume breaks inflate one delta, back-nav only visible via `updated_at` > `responded_at`). **Activity content: promise met** — one-line inventory of all 10 activity/scale payload shapes, all export-mapped. **Video watch: split by hosting, and this is Monday’s Q4** — the two live Kai items are still `_placeholder` **Vimeo** configs, and the Vimeo path records real watch data TODAY (`play_count`, max `completion_fraction`, `watched` ≥ authored 0.85 threshold; gating already exists as `required_completion`, currently false — the cited QA run honestly recorded `{watched:false, play_count:0, completion_fraction:0}` for a click-past). The Draft 67 **YouTube** path saves explicit **nulls** + `{source, video_id, variant_used}` ("shown, not measured" → SPSS missing, not zero) and gating is unenforceable without the IFrame API. **Report framing for Monday: hosting + gating + watch-tracking are ONE decision** — final cuts on Vimeo → tracking exists now and gating is per-item config; on YouTube → one Draft-67-sized IFrame API build buys BOTH tracking and gating for all nine v6 videos; or the team explicitly accepts "shown + variant" as the beta answer. Also flagged: resume counts are not recorded (Draft 69 deliberately doesn’t bump `use_count`; `metadata_json` is the natural home for a counter if ever wanted); per-item-render timestamps judged NOT worth building (the derived deltas are already arrival-to-departure). No version bump.
+
+  <details>
+  <summary>Draft 79 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 79 — Engagement-data recon: what the study promises vs. what the app records (read-only)
+
+**Context.** The participant-flow doc promises the IRB "intervention engagement data (activity content, video watch, time on task)." Draft 67's YouTube path records `{ source, video_id, variant_used }` — no watch progress (no IFrame API). Time-on-task exists, if at all, only as response timestamps. Before Monday's meeting (whose open question #4 is video gating — the same IFrame API decision) and before v6 authors nine video items, establish the facts. **Read-only recon; no code changes.**
+
+**Part A — Enumerate what one completed session actually captures today.**
+
+Using a completed QA session (the Draft 68 one, or run a fresh one on the internal QA code): list every piece of engagement-relevant data that lands in the database, per category —
+
+1. **Activity content:** per-activity payloads (rich — inventory which activities capture what, one line each).
+2. **Video engagement:** exactly what a YouTube video item saves (and what the Vimeo path WOULD save, for contrast — it has progress events + completion thresholds).
+3. **Time on task:** what timestamps exist (`created_at`/`updated_at` per response, `last_active_at`, section transitions via update-session-progress, `completed_at`) and what can honestly be derived from them (per-item dwell? per-section duration? total session time? idle-vs-active can't be distinguished — say so).
+4. **Navigation/attrition:** what's knowable about where a kid stopped, abandoned sessions, resume counts.
+
+**Part B — Gap analysis against the flow-doc promise.**
+
+For each promised category: recorded today / derivable with analysis effort / NOT recorded. For gaps, the options with honest cost:
+
+- **Video watch:** the YouTube IFrame API route (what it buys: play/pause/percent-watched events + would also enable Monday's Q4 gating; what it costs: real implementation + the gating UX decision), vs. a cheap proxy (timestamp delta across the video item — time-on-screen, not watch), vs. accepting "video shown, variant recorded" as the beta-level answer.
+- **Time on task:** whether a lightweight per-item-render timestamp would materially improve on response-timestamp deltas, or whether derived deltas suffice for the study's needs.
+
+**Part C — Deliverable.**
+
+Short report (`docs/ENGAGEMENT_DATA_2026-08.md` or appended here — your call): the inventory table, the gap list, and a recommendation per gap sized for a 20-participant beta. Framed so Josh can hand the video-watch section directly into Monday's Q4 discussion — the team should decide gating and watch-tracking as ONE decision, with the costs in front of them.
+
+**Verification:** report exists, grounded in actual queried session data (cite the session), zero production changes.
+
+**Version bump:** none (read-only).
+
+  </details>
+
 - **`d61ace4` · 2026-08-15** — **Draft 78 — Conditional item display (bw2 + locked-instrument conditionals).** **Part A enumeration (from the locked docs themselves, extracted from the .docx XML):** exactly ONE display-logic conditional exists across all three instruments, and it appears in all three — Pretest ¶63, Posttest ¶26, FollowUp ¶52 all carry "To what degree do you have worries about belonging…? *(If they select “0” on the slider, Q2 will be skipped)*", i.e. **bw1 gates bw2**. The FollowUp permanency "Other: (please specify)" is an inline specify affordance on a choice option, NOT display logic — the current choice + optional free_text authoring already records it, so per the draft’s own guard ("build exactly that much") nothing was built for it. **The capability is intra-scale, not engine-level:** bw1/bw2 live inside ONE `psychometric_scale` item’s `items` array (`belong_stress_fu`, format vas — matching the doc’s "slider"), so an engine-level item `show_if` could never express it. Built the smallest correct thing: **sub-item `show_if`** in `PsychometricScale` — `{ item_id, operator (equals|not_equals|gt|gte|lt|lte|in), value }` referencing another item in the same scale, evaluated live against in-scale responses. Gate unanswered → dependent renders nothing (progressive disclosure); condition met → normal item; condition failed → the optional authored `skip_note` renders in its place (survey-mirror styling + copy, `aria-live=polite`). Hidden items are excluded from the Continue gate, and **responses are pruned to visible items at save** — bw2 answered, then bw1 moved to 0, saves `{bw1:0}` only (proven in sandbox). Malformed conditions fail OPEN (a broken condition must never silently drop a locked-instrument question). One-at-a-time mode navigates/paginates over the visible list. **Export verified, not assumed:** `exportFlatten`’s scale extractor emits `''` for an absent `scale_responses` key → skipped bw2 lands as an SPSS missing cell while the column stays in the codebook; builder round-trips the new fields untouched (`patchItem` spreads). **Applied + republished:** bw2’s `show_if` (gt 0) + skip note authored in the builder tables; **`rsd-follow-up-90d` republished as v2** (snapshot assembled matching `assembleSnapshot`; v1→v2 diff verified to be exactly the one `belong_stress_fu` item). Verified live at 375×812 on two temp single-use codes, both completing on v2: **bw1=3 → bw2 appears, payload `{bw1:3, bw2:7}`**; **bw1=0 → skip note, Continue enabled, payload `{bw1:0}` with no bw2 key, 12/12 responses, completion clean**. Unconditioned scales regression-checked (anchors preview identical). Temp codes deactivated after. Sandbox QA surface: `/demo/sandbox/scale-conditional-preview` (unlisted, internal QA). Ready for v6: the same mechanism covers the identical BW conditional in the locked Pretest/Posttest. No version bumps (engine + authoring).
 
   <details>
@@ -9690,34 +9725,3 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
-
-
----
-
-### Draft 79 — Engagement-data recon: what the study promises vs. what the app records (read-only)
-
-**Context.** The participant-flow doc promises the IRB "intervention engagement data (activity content, video watch, time on task)." Draft 67's YouTube path records `{ source, video_id, variant_used }` — no watch progress (no IFrame API). Time-on-task exists, if at all, only as response timestamps. Before Monday's meeting (whose open question #4 is video gating — the same IFrame API decision) and before v6 authors nine video items, establish the facts. **Read-only recon; no code changes.**
-
-**Part A — Enumerate what one completed session actually captures today.**
-
-Using a completed QA session (the Draft 68 one, or run a fresh one on the internal QA code): list every piece of engagement-relevant data that lands in the database, per category —
-
-1. **Activity content:** per-activity payloads (rich — inventory which activities capture what, one line each).
-2. **Video engagement:** exactly what a YouTube video item saves (and what the Vimeo path WOULD save, for contrast — it has progress events + completion thresholds).
-3. **Time on task:** what timestamps exist (`created_at`/`updated_at` per response, `last_active_at`, section transitions via update-session-progress, `completed_at`) and what can honestly be derived from them (per-item dwell? per-section duration? total session time? idle-vs-active can't be distinguished — say so).
-4. **Navigation/attrition:** what's knowable about where a kid stopped, abandoned sessions, resume counts.
-
-**Part B — Gap analysis against the flow-doc promise.**
-
-For each promised category: recorded today / derivable with analysis effort / NOT recorded. For gaps, the options with honest cost:
-
-- **Video watch:** the YouTube IFrame API route (what it buys: play/pause/percent-watched events + would also enable Monday's Q4 gating; what it costs: real implementation + the gating UX decision), vs. a cheap proxy (timestamp delta across the video item — time-on-screen, not watch), vs. accepting "video shown, variant recorded" as the beta-level answer.
-- **Time on task:** whether a lightweight per-item-render timestamp would materially improve on response-timestamp deltas, or whether derived deltas suffice for the study's needs.
-
-**Part C — Deliverable.**
-
-Short report (`docs/ENGAGEMENT_DATA_2026-08.md` or appended here — your call): the inventory table, the gap list, and a recommendation per gap sized for a 20-participant beta. Framed so Josh can hand the video-watch section directly into Monday's Q4 discussion — the team should decide gating and watch-tracking as ONE decision, with the costs in front of them.
-
-**Verification:** report exists, grounded in actual queried session data (cite the session), zero production changes.
-
-**Version bump:** none (read-only).
