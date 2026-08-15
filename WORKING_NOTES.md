@@ -110,6 +110,44 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`9ef719c` · 2026-08-15** — **Draft 76 — Qualtrics integration runbook + smoke-test harness.** **Part A:** new **`docs/QUALTRICS_SETUP.md`** — the Thursday (8/20–21) build guide in survey-flow order: the 8 embedded-data fields; both mint Web Service calls with exact copy-pasteable request/response JSON (piped `${e://Field/ResponseID}` external_ref, ~30/~120-day expiries, error-case table, and the resume-by-code semantics the emailed links rely on); the two triggered emails with the Outlook-safe table-button pattern (`docs/supabase_invite_email_template.html`, no gradients); the completion-webhook JSON-event receiver with the exact inbound payload and workflow branching on `intervention_slug` (`study_completed` vs `followup_completed`); the 90-day scheduled email (pre-minted URL, live since Draft 75); the secrets checklist; and the §7 joint end-to-end test script with pass conditions. Every contract verified against the deployed sources (mint v1, validate v3, update-session-progress v2). **Part B:** new **`scripts/qualtrics-smoke.mjs`** — simulates Qualtrics against the LIVE functions: mint auth probes (tri-state: 401 = enforced / 500 = secret missing), full mint round-trip when the partner key is in env, then per-slug validate → resume-by-code → complete → completed-routing legs, with cleanup SQL printed. **Run 2026-08-15: all 16 functional checks GREEN on both slugs** (including the new follow-up) — the our-side half of the "smoke test pending since May" is retired; only Thursday's joint test remains. **⚠️ One blocking discovery: `PARTNER_API_KEY_QUALTRICS` is NOT actually set in Supabase** — mint returns 500 "Server misconfigured" (the env-var-missing branch, proven live), despite STATE_OF_THE_PLATFORM's May "handed off in chat" note. **Josh: set it in the dashboard (Project Settings → Edge Functions → Secrets) before building the Qualtrics Web Service elements**, then re-run the harness with the key in env to green the mint legs. Test codes deactivated + sessions abandoned after; logged in INFRASTRUCTURE.md. No version bump.
+
+  <details>
+  <summary>Draft 76 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 76 — Qualtrics integration runbook + smoke-test harness
+
+**Context.** Josh builds the Qualtrics consent survey Thursday 8/20 and Friday 8/21. The ctac.app side of the handshake is built (mint-access-code with partner-key auth; completion webhook in update-session-progress), but the end-to-end smoke test has been pending since May because the Qualtrics side never existed. Two deliverables so Thursday is assembly-by-checklist instead of discovery: a runbook for Josh, and a harness that verifies the ctac.app side NOW, before Qualtrics exists.
+
+**Part A — `docs/QUALTRICS_SETUP.md` (the runbook).**
+
+Written for Josh following along inside the Qualtrics survey builder, in flow order. You own the edge-function contracts — every request/response below should be exact, copy-pasteable, and match the deployed source:
+
+1. **Embedded-data fields** to create on the survey flow (code + URL for both intervention and follow-up, and anything else the flow doc's "stored as embedded data" line implies).
+2. **The two mint calls** (Qualtrics Web Service elements, fired on consent submission): exact URL, method, headers (`x-partner-key` — reference where the key lives, do NOT print the secret in the doc), exact JSON body for each call (`ready-set-dedicate` / `rsd-follow-up-90d`, `external_ref` piped from the Qualtrics ResponseID — show the Qualtrics piped-text syntax), and how to map each JSON response field back into the embedded-data fields. Include the constructed participant URL format (`https://ssi.ctac.app/?code=...`).
+3. **The two triggered emails** (consent receipt to caregiver; intervention link to the delivery email) — where the embedded-data URL pipes into the message body. Plain-HTML button guidance per the known Outlook `linear-gradient` landmine (STATE_OF_THE_PLATFORM) — point at `docs/supabase_invite_email_template.html` for the safe pattern.
+4. **The completion-webhook receiver** (Qualtrics workflow with a JSON-event inbound task): how to create it, where its URL appears, and the reminder that this URL becomes the `QUALTRICS_COMPLETION_WEBHOOK_URL` secret (plus `QUALTRICS_API_TOKEN` if Qualtrics requires header auth — document both cases). What the inbound payload looks like (exact JSON), and the follow-on workflow steps: match on `external_ref`, set `study_completed`, fire the caregiver confirmation email.
+5. **The 90-day scheduled workflow** — fires 90 days after `completed_at`, emails the caregiver the pre-minted follow-up URL.
+6. **Secrets checklist** — the three Edge Function secrets, where each is set, which are already in place, which Thursday produces.
+7. **Joint test script** — the ordered end-to-end test Josh runs Thursday once both sides exist: fake consent → verify codes minted (SQL or /admin/codes) → emails arrive → link entry → partial completion + resume check → full completion → webhook received in Qualtrics → `study_completed` set → confirmation email. With expected-result checkboxes.
+
+**Part B — Smoke-test harness (verify OUR side now).**
+
+A small script (or documented curl sequence) in `scripts/` that simulates Qualtrics exactly:
+
+1. Calls `mint-access-code` twice as Qualtrics would (same headers, same bodies, a fake `external_ref`) — asserts both codes mint with the right slugs/expiries and shared `external_ref`.
+2. Temporarily points `QUALTRICS_COMPLETION_WEBHOOK_URL` at a stand-in receiver you control for the test (document the mechanism; restore state after), completes a session on the minted intervention code end-to-end, and asserts the webhook fires with the exact expected payload (`external_ref` round-trips).
+3. Same completion assertion for the follow-up slug **if Draft 75 has shipped** (coordinate; if not, note it as pending and the harness gains that leg later).
+4. Leaves no test residue: codes deactivated, sessions marked abandoned/cleaned, secret restored — enumerate the cleanup in the shipped notes.
+
+Run it and report results in the shipped notes — this retires the "smoke test pending since May" line on our side, leaving only the joint test for Thursday.
+
+**Verification:** runbook complete and matching deployed contracts (cite the function versions checked); harness run green with output pasted/summarized; no lingering test codes or secret changes; INFRASTRUCTURE.md updated (smoke-test status + runbook location).
+
+**Version bump:** none.
+
+  </details>
+
 - **`76bf63e` · 2026-08-15** — **Draft 75 — `rsd-follow-up-90d` created, authored, and published as v1 (gap fix).** The slug was allow-listed in `mint-access-code` and routed in the participant flow, but the intervention never existed — every follow-up link would have dead-ended. Now live in production: **5 sections / 12 items** authored in the builder tables from the LOCKED FollowUp instrument (`FollowUp Survey Draft Belongingness_5.2.26.docx` via the Draft 16 sandbox mirror, verbatim — with the source doc's doubled-word "of this of the" typo corrected, **pending sign-off**): Welcome (locked intro incl. the $25 gift-card line, `Begin →`) → "How you feel" (BHS 0–3, ASCS 1–5, UCLA 1–3, NB 1–5 with reverse flags on nb1/nb2) → "Your skills and thoughts" (BPB 0–3, the 6 locked Appraisals 0–4, Belonging Worries as two 0–10 VAS) → "Your placement" (permanency `choice` with the four locked options + optional other-text `free_text` + disruption worry 0–4, all five anchors labeled) → "All done" (thanks). **Every likert uses Draft 73's `anchor_labels`** (sparse on Appraisals — only 0/2/4 labeled, matching the locked doc); token keys `*_fu` mirror the pre/post convention (`hopelessness_fu`, `appraisals_fu`, …). Snapshot assembled in SQL matching `builderUtils.assembleSnapshot` field-for-field; published v1; `current_version_id` flipped; `mint-access-code` needs zero changes (slug already allow-listed). **Celebration override capability** added to `DeliveryShellPage`: the last section's `config_json.celebration` (`{heading, line1, line2, show_tree}`) overrides the Draft 74 copy — the follow-up celebrates with *"That's everything — thanks for checking back in."* instead of "you finished the whole program"; defaults unchanged for the main program. **QA caught a real race and it's fixed:** the `?code=` auto-submit double-fired (StrictMode dev double-effect; the same race exists for real double-taps), minting two sessions **21ms apart** on a single-use code — and resume then picked the empty newest-started twin, stranding the kid's work. `validate-code` → **v3** (resume lookup orders by `last_active_at DESC` — the worked-in session is always fresher since save-response and update-session-progress both touch it; reconciliation verified live with the twin still present) + `CodeEntryPage`'s auto-submit is now ref-guarded (the `!submitting` state check can't stop a same-tick double-fire). Plus a PsychometricScale a11y nit: unlabeled sparse points announce just the number, not "1 — " with a dangling dash. **Verified end-to-end** on a temp single-use code at 375×667: entry → all 12 items (labels render incl. sparse; permanency auto-advance; optional other-text; zero overflow) → follow-up celebration with tree → completion stamped with 12/12 responses; resume-by-code regression passed on this slug; webhook branch confirmed slug-generic from deployed source (silent no-op until the Qualtrics secret is set — the harness draft covers the rest). QA artifacts cleaned up. **Open flags for the team:** (1) re-assent at follow-up — confirm with Jessica (flow doc says none); (2) intro typo fix sign-off; (3) display name ("Ready for Roots — 90-Day Check-In"); (4) Monday's psychometric decisions may touch this instrument too; (5) known limitations: no bw2 conditional skip (renderer limitation, same as live pre/post) and other-text as a separate optional item. Logged in INFRASTRUCTURE.md.
 
   <details>
@@ -9598,38 +9636,6 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > test. Do not build the PID design.
 
 
----
-
-### Draft 76 — Qualtrics integration runbook + smoke-test harness
-
-**Context.** Josh builds the Qualtrics consent survey Thursday 8/20 and Friday 8/21. The ctac.app side of the handshake is built (mint-access-code with partner-key auth; completion webhook in update-session-progress), but the end-to-end smoke test has been pending since May because the Qualtrics side never existed. Two deliverables so Thursday is assembly-by-checklist instead of discovery: a runbook for Josh, and a harness that verifies the ctac.app side NOW, before Qualtrics exists.
-
-**Part A — `docs/QUALTRICS_SETUP.md` (the runbook).**
-
-Written for Josh following along inside the Qualtrics survey builder, in flow order. You own the edge-function contracts — every request/response below should be exact, copy-pasteable, and match the deployed source:
-
-1. **Embedded-data fields** to create on the survey flow (code + URL for both intervention and follow-up, and anything else the flow doc's "stored as embedded data" line implies).
-2. **The two mint calls** (Qualtrics Web Service elements, fired on consent submission): exact URL, method, headers (`x-partner-key` — reference where the key lives, do NOT print the secret in the doc), exact JSON body for each call (`ready-set-dedicate` / `rsd-follow-up-90d`, `external_ref` piped from the Qualtrics ResponseID — show the Qualtrics piped-text syntax), and how to map each JSON response field back into the embedded-data fields. Include the constructed participant URL format (`https://ssi.ctac.app/?code=...`).
-3. **The two triggered emails** (consent receipt to caregiver; intervention link to the delivery email) — where the embedded-data URL pipes into the message body. Plain-HTML button guidance per the known Outlook `linear-gradient` landmine (STATE_OF_THE_PLATFORM) — point at `docs/supabase_invite_email_template.html` for the safe pattern.
-4. **The completion-webhook receiver** (Qualtrics workflow with a JSON-event inbound task): how to create it, where its URL appears, and the reminder that this URL becomes the `QUALTRICS_COMPLETION_WEBHOOK_URL` secret (plus `QUALTRICS_API_TOKEN` if Qualtrics requires header auth — document both cases). What the inbound payload looks like (exact JSON), and the follow-on workflow steps: match on `external_ref`, set `study_completed`, fire the caregiver confirmation email.
-5. **The 90-day scheduled workflow** — fires 90 days after `completed_at`, emails the caregiver the pre-minted follow-up URL.
-6. **Secrets checklist** — the three Edge Function secrets, where each is set, which are already in place, which Thursday produces.
-7. **Joint test script** — the ordered end-to-end test Josh runs Thursday once both sides exist: fake consent → verify codes minted (SQL or /admin/codes) → emails arrive → link entry → partial completion + resume check → full completion → webhook received in Qualtrics → `study_completed` set → confirmation email. With expected-result checkboxes.
-
-**Part B — Smoke-test harness (verify OUR side now).**
-
-A small script (or documented curl sequence) in `scripts/` that simulates Qualtrics exactly:
-
-1. Calls `mint-access-code` twice as Qualtrics would (same headers, same bodies, a fake `external_ref`) — asserts both codes mint with the right slugs/expiries and shared `external_ref`.
-2. Temporarily points `QUALTRICS_COMPLETION_WEBHOOK_URL` at a stand-in receiver you control for the test (document the mechanism; restore state after), completes a session on the minted intervention code end-to-end, and asserts the webhook fires with the exact expected payload (`external_ref` round-trips).
-3. Same completion assertion for the follow-up slug **if Draft 75 has shipped** (coordinate; if not, note it as pending and the harness gains that leg later).
-4. Leaves no test residue: codes deactivated, sessions marked abandoned/cleaned, secret restored — enumerate the cleanup in the shipped notes.
-
-Run it and report results in the shipped notes — this retires the "smoke test pending since May" line on our side, leaving only the joint test for Thursday.
-
-**Verification:** runbook complete and matching deployed contracts (cite the function versions checked); harness run green with output pasted/summarized; no lingering test codes or secret changes; INFRASTRUCTURE.md updated (smoke-test status + runbook location).
-
-**Version bump:** none.
 
 ---
 
