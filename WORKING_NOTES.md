@@ -110,6 +110,41 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`3a3d172` · 2026-08-14** — **Draft 70 — BSS v3.6: tap-to-place + drag edge auto-scroll (P0-2 fix).** **Part A (tap-to-place, primary):** pointerdown still starts a drag immediately (the existing no-threshold behavior), but a pointer sequence that travels **< 8px** before pointerup now reads as a TAP and opens a **bottom-sheet chooser** — three bucket buttons + Cancel, fixed to the viewport bottom so it's one-thumb reachable no matter where the tapped card sits (the whole point: the first bucket was more than a viewport from the source cards). Choosing places the card through the exact same `placeIntoBucket` path as a drag (same stem-only bucket rendering, same pulse, same aria-live announcement, same payload). Tapping a **placed** card opens the same sheet with the current bucket marked "(it's here now)" plus **Put it back in the list**; its `?` and `×` buttons keep working independently (they already stopPropagation). Chooser buttons are real keyboard-operable `<button>`s with focus moved in on open; Escape/backdrop cancels; the existing Space-pickup keyboard path is untouched; drag-and-drop fully preserved. Directions copy now leads with tap ("Tap each skill below to choose its bucket — or drag it in."). **Part B (edge auto-scroll, kept — it was cheap):** while a drag is active and the pointer is within 70px of the viewport top/bottom, a rAF loop scrolls 14px/frame and **re-hit-tests the hovered bucket each frame** (pointermove stops firing while a finger holds still, and the page scrolling under a stationary finger changes what's beneath it; `bucketAtPoint` reads fresh rects so scrolling can't stale the hit-test). Verified at 375×667: tap chooser opens with focus on the first button; placed into the previously-unreachable "What I'm already doing" bucket; move-between-buckets + put-back verified; **all 7 skills placed via tap** across all three buckets; a real drag (movement > slop) still drops normally and does NOT open the chooser; keyboard pickup → arrow → Enter still places; save payload byte-shape-identical with mixed tap/drag/keyboard placements; v3.6 badge renders; build + console clean. BSS v3.5 → **v3.6** (MINOR — interaction addition, no data-shape change).
+
+  <details>
+  <summary>Draft 70 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 70 — BSS mobile placement: tap-to-place + drag edge auto-scroll (P0 from QA_MOBILE_2026-08)
+
+**Context.** QA_MOBILE_2026-08.md P0-2: on a phone, the Belonging Skills Sort's "What I'm already doing" bucket is more than a viewport away from the source cards, and the ghost-chip drag has no edge auto-scroll — so a real finger cannot complete the drop (reproduced empirically; a drop at viewport-edge y≈5 didn't register). The activity is partially unusable on the primary beta device class.
+
+**Part A — Tap-to-place (primary fix).**
+
+Add a tap path that requires no dragging at all:
+
+- Tapping a skill card (in the source pile) opens a compact chooser — three bucket buttons ("Already doing" / "Willing to try" / "Not interested"), plus Cancel. Bottom-sheet or inline popover, whichever fits the existing component structure; must be one-thumb reachable.
+- Choosing a bucket places the card exactly as a drag-drop would (same state update, same stem-only bucket rendering from v3.5, same payload).
+- Tapping a card already in a bucket offers: move to another bucket / return to the pile — same chooser pattern.
+- Drag-and-drop remains fully functional alongside; tap-to-place is additive.
+- Desktop: tap/click-to-place works there too (harmless, and it's an accessibility win — the drag interaction has no keyboard path today; the chooser buttons should be focusable/keyboard-operable).
+
+**Part B — Drag edge auto-scroll (secondary, keep-if-cheap).**
+
+While a ghost-chip drag is active and the pointer is within ~60px of the viewport top/bottom edge, scroll the page in that direction (standard drag auto-scroll). If this fights the current drag implementation or runs long, SKIP it — Part A alone resolves the P0, and the QA report can note drag-on-mobile as "works when bucket is on-screen; use tap-to-place otherwise."
+
+**Part C — Verification.**
+
+- 375×667 viewport: place every one of the 7 skills into each bucket via tap only — all reachable, no scrolling gymnastics.
+- Moved/returned cards behave identically to drag-placed ones (bucket shows bold stem only; summary shows full sentences; payload identical shape).
+- Drag still works on desktop; drag with auto-scroll works on mobile if Part B ships.
+- Keyboard: a card can be placed without a pointer (tab to card, Enter opens chooser, arrow/tab to bucket, Enter places).
+- No payload/data-shape change.
+
+**Version bump:** BSS v3.5 → v3.6 (MINOR — interaction addition, no data-shape change).
+
+  </details>
+
 - **`e8afca7` · 2026-08-14** — **Draft 69 — Resume-by-code (P0-1 fix).** `validate-code` bumped to **v2** (deployed via Supabase MCP — sources live only in the deployed function; full contract change logged in INFRASTRUCTURE.md): for **single-use codes (`max_uses = 1`)**, re-entering the code or re-clicking the emailed `?code=` link now returns the participant's EXISTING session (`resumed: true` + `session_status`) instead of minting a new one — no insert, no `use_count` bump, so `use_count` counts sessions created and `max_uses = 1` means "one participant," not "one browser tab, ever." Completed sessions route to the engine's friendly already-finished screen; abandoned sessions are deliberately not resumed (releases the code to the exhausted check); **multi-use QA codes deliberately keep mint-per-validation** (that's the desired QA behavior, and covers the Draft 71 interaction note); intervention active/published gates don't apply to resumes (frozen `version_id`). Engine-wide — GAINS codes behave identically. Client: `CodeEntryPage` flags a resumed in-progress session; `DeliveryStepPage` shows "Welcome back — picking up where you left off." clearing on first advance (found + fixed a StrictMode dev double-mount bug: consuming the sessionStorage flag inside the `useState` initializer let the remount read it as empty — read and removal now split across `useState`/`useEffect`). **Part C (localStorage pointer) skipped per the draft's own option (a)** — Part A fixes the real-world path (kids re-click their email link) and localStorage would weaken the per-tab isolation. Verified live end-to-end with a temp single-use code: create → partial progress → simulated browser close → re-entry by typed code AND `?code=` link both returned the SAME session at the saved position with the banner showing and `use_count` still 1 after three validations; completed → re-entry shows the finished screen with no banner; multi-use `TEST-RSD-001` still mints distinct fresh sessions (`resumed: false`). Documented behavior change: two tabs on the same single-use code now share one session (last-write-wins per item) — accepted as far better than the lockout it replaces. QA artifacts cleaned up (temp code deactivated, orphan sessions abandoned). No version bump (engine/edge-function change).
 
   <details>
@@ -9395,35 +9430,6 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > test. Do not build the PID design.
 
 
----
-
-### Draft 70 — BSS mobile placement: tap-to-place + drag edge auto-scroll (P0 from QA_MOBILE_2026-08)
-
-**Context.** QA_MOBILE_2026-08.md P0-2: on a phone, the Belonging Skills Sort's "What I'm already doing" bucket is more than a viewport away from the source cards, and the ghost-chip drag has no edge auto-scroll — so a real finger cannot complete the drop (reproduced empirically; a drop at viewport-edge y≈5 didn't register). The activity is partially unusable on the primary beta device class.
-
-**Part A — Tap-to-place (primary fix).**
-
-Add a tap path that requires no dragging at all:
-
-- Tapping a skill card (in the source pile) opens a compact chooser — three bucket buttons ("Already doing" / "Willing to try" / "Not interested"), plus Cancel. Bottom-sheet or inline popover, whichever fits the existing component structure; must be one-thumb reachable.
-- Choosing a bucket places the card exactly as a drag-drop would (same state update, same stem-only bucket rendering from v3.5, same payload).
-- Tapping a card already in a bucket offers: move to another bucket / return to the pile — same chooser pattern.
-- Drag-and-drop remains fully functional alongside; tap-to-place is additive.
-- Desktop: tap/click-to-place works there too (harmless, and it's an accessibility win — the drag interaction has no keyboard path today; the chooser buttons should be focusable/keyboard-operable).
-
-**Part B — Drag edge auto-scroll (secondary, keep-if-cheap).**
-
-While a ghost-chip drag is active and the pointer is within ~60px of the viewport top/bottom edge, scroll the page in that direction (standard drag auto-scroll). If this fights the current drag implementation or runs long, SKIP it — Part A alone resolves the P0, and the QA report can note drag-on-mobile as "works when bucket is on-screen; use tap-to-place otherwise."
-
-**Part C — Verification.**
-
-- 375×667 viewport: place every one of the 7 skills into each bucket via tap only — all reachable, no scrolling gymnastics.
-- Moved/returned cards behave identically to drag-placed ones (bucket shows bold stem only; summary shows full sentences; payload identical shape).
-- Drag still works on desktop; drag with auto-scroll works on mobile if Part B ships.
-- Keyboard: a card can be placed without a pointer (tab to card, Enter opens chooser, arrow/tab to bucket, Enter places).
-- No payload/data-shape change.
-
-**Version bump:** BSS v3.5 → v3.6 (MINOR — interaction addition, no data-shape change).
 
 ---
 
