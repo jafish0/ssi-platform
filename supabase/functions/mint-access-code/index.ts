@@ -2,14 +2,33 @@
 // (currently Qualtrics consent flow) to mint a participant access code
 // for a configured intervention.
 //
-// Auth: shared secret in the `x-partner-key` header. JWT verification is
-// disabled because Qualtrics has no Supabase JWT; the partner-key header
-// is the actual auth gate.
+// Auth: shared secret, accepted from EITHER the `x-partner-key` header
+// (documented primary) or `Authorization` (optionally `Bearer `-prefixed).
+// Both are read because the two Qualtrics mechanisms differ: a Survey Flow
+// web service element can name its own header, but a Workflow WebService
+// task's stored credential always sends `Authorization: <token>` and its
+// editor offers no way to rename it. JWT verification is disabled because
+// Qualtrics has no Supabase JWT, so the value reaches this function
+// verbatim and the shared secret is the actual auth gate.
 //
-// ⚠️ DEPLOYMENT (Draft 77): this file is the repo-tracked v2 source with
-// the per-key rate limit. It MUST be deployed with verify_jwt DISABLED:
+// ⚠️ PREFER `x-partner-key` WHEREVER THE HEADER NAME CAN BE SET. The
+// gateway does not *enforce* Authorization here, but it does *parse* it:
+// a value it can't recognize as a Supabase key is logged to
+// `function_edge_logs` as `request.sb.apikey.authorization.prefix` — the
+// first 10 characters of the secret — with `...authorization.error =
+// "invalid"`. `x-partner-key` is not captured by the log pipeline at all.
+// So the Authorization path deposits a partial copy of the secret into
+// project logs on every call (measured, not theorized: a 32-char sentinel
+// logged exactly 10 chars). That is a confidentiality cost, not a bypass
+// — ~130 bits remain and the 1000/day post-auth cap bounds abuse — but it
+// means the Authorization-borne key should be treated as lower-trust
+// material on a rotation schedule, and nothing that CAN send
+// `x-partner-key` should send `Authorization` instead.
 //
-//   supabase functions deploy mint-access-code --no-verify-jwt
+// ⚠️ DEPLOYMENT: this file is the repo-tracked source of truth. It MUST
+// be deployed with verify_jwt DISABLED:
+//
+//   npx supabase functions deploy mint-access-code --no-verify-jwt --project-ref fflezknnpmbemeqyqxml
 //
 // Do NOT deploy this function through the Supabase MCP tool — MCP deploys
 // flip verify_jwt back to true (the documented submit-feedback landmine),
@@ -27,6 +46,11 @@
 // bounds a leaked-key incident at two orders of magnitude above any
 // realistic consent volume. Counted AFTER auth so unauthenticated probes
 // can't exhaust the partner's budget. Fails OPEN on counter errors.
+//
+// v3 (Draft 84): also accept the shared secret from `Authorization` (see
+// the Auth note above). Unblocks the Qualtrics Workflow that replaced the
+// Survey Flow web service elements after those were found never to fire
+// on real submissions.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -113,7 +137,18 @@ Deno.serve(async (req) => {
     console.error('PARTNER_API_KEY_QUALTRICS is not configured')
     return json({ error: 'Server misconfigured' }, 500)
   }
-  const provided = req.headers.get('x-partner-key') || ''
+  // v3 (Draft 84): Qualtrics Workflow WebService tasks send the stored
+  // credential as `Authorization: <token>` with no way to rename the
+  // header, so accept it there as well as in our documented
+  // `x-partner-key`. x-partner-key wins when both are present. Trimmed
+  // because an invisible trailing newline pasted into a credential field
+  // would otherwise read as a bare "Invalid partner key" — it can only
+  // ever remove whitespace, never match a different secret.
+  const provided = (
+    req.headers.get('x-partner-key') ||
+    (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '') ||
+    ''
+  ).trim()
   if (provided !== expected) {
     return json({ error: 'Invalid partner key' }, 401)
   }

@@ -43,21 +43,44 @@ directly into the mint calls below.)
 
 ## 2. The two mint calls (fired on consent submission)
 
-Add two **Web Service** elements in the survey flow, placed AFTER the
-consent block's end-of-survey confirmation logic (they must only fire on a
-completed, consented response).
-
-Both calls are identical except for the JSON body:
+> **⚠️ CORRECTED 2026-08-15 — use a Workflow, not Survey Flow web service
+> elements.** Survey Flow **Web Service elements do not execute** on real
+> submissions here: two live anonymous-link submissions with consent = Yes
+> were recorded and `mint-access-code` received **zero** requests — not a
+> 401, not a 500; Qualtrics never opened the connection. Placement, config,
+> and publish state were all verified correct; the Survey Flow gives no
+> execution logs, which is why it went unnoticed for weeks. Minting is
+> therefore built as a **Qualtrics Workflow** (`WF_lFfvg4FT5Ltm9SA`), which
+> does have per-run history and error detail: event = survey response
+> (newly created only) → decision = consent `QID10` is `Yes` → task =
+> authenticated WebService POST. **The two dead Survey Flow elements must
+> be deleted** — if they ever start firing alongside the Workflow, every
+> consent would mint four codes instead of two. The request/response
+> contracts below are unchanged and still authoritative; only the mechanism
+> that sends them changed.
 
 - **URL:** `https://fflezknnpmbemeqyqxml.supabase.co/functions/v1/mint-access-code`
 - **Method:** `POST`
 - **Headers:**
   - `Content-Type`: `application/json`
-  - `x-partner-key`: the partner key (set as a Qualtrics *credential /
-    secure embedded field*, NOT typed into a visible field — the value was
-    handed off in chat and lives in Supabase as the
-    `PARTNER_API_KEY_QUALTRICS` secret; never print it in the survey or
-    this doc)
+  - The partner key, sent **either** way — the function accepts both
+    (Draft 84):
+    - `Authorization: <token>` — what a **Workflow** WebService task's
+      stored "API key" credential sends. Its credential editor exposes only
+      Name / API Token / mTLS, so the header name can't be changed; the
+      function reads it there (a `Bearer ` prefix is tolerated).
+    - `x-partner-key: <token>` — the documented primary, still preferred
+      wherever the header name *can* be set. Wins if both are present.
+  - Either way the key must live in the Qualtrics **credential store**, not
+    typed into a visible field or a plaintext custom header. It lives in
+    Supabase as the `PARTNER_API_KEY_QUALTRICS` secret (confirmed set —
+    see §8.5); never print it in the survey or this doc.
+  - **Prefer `x-partner-key` wherever the header name can be set.** The
+    Supabase gateway logs the first 10 characters of an unrecognized
+    `Authorization` value into `function_edge_logs`; `x-partner-key` is
+    never captured. `Authorization` exists so the Workflow — which cannot
+    rename its header — works at all. Treat the key as lower-trust material
+    on a rotation schedule for as long as it travels that way.
 
 **Call #1 — intervention code** (body, with Qualtrics piped text for the
 ResponseID; set the expiry ~30 days out using Qualtrics date math or omit
@@ -219,7 +242,7 @@ Supabase dashboard → Project Settings → Edge Functions → Secrets:
 
 | Secret | Status (2026-08-15) | Produced by |
 |---|---|---|
-| `PARTNER_API_KEY_QUALTRICS` | ❌ **NOT SET** — the smoke harness proved mint returns 500 "Server misconfigured" today, despite STATE_OF_THE_PLATFORM's "handed off in chat" note. Set it (reuse the May value if you still have it, or generate a fresh one) BEFORE building the Web Service elements. | Josh, in the Supabase dashboard; the same value goes in the Qualtrics `x-partner-key` header |
+| `PARTNER_API_KEY_QUALTRICS` | ✅ **SET** (was ❌ when Draft 76's harness ran; Josh set it 2026-08-15 — see the fuller note in the later checklist). Confirmed live: wrong keys now return 401 "Invalid partner key" rather than the 500 "Server misconfigured" branch. | Josh, in the Supabase dashboard; the same value goes in the Qualtrics credential used by the mint Workflow |
 | `QUALTRICS_COMPLETION_WEBHOOK_URL` | ❌ TBD | section 4 step 1–2 (Thursday) |
 | `QUALTRICS_API_TOKEN` | ❌ TBD (may stay unset) | section 4 step 2, only if the JSON event needs header auth |
 
@@ -276,3 +299,399 @@ status + the first 300 chars of its body), and the session's
 `metadata_json->'webhook'` record for the persisted outcome
 (`failed` + `last_error`/`last_http_status`). Recover with
 `scripts/refire-webhook.mjs` once the receiver side is fixed.
+
+---
+
+## 8. BUILD LOG — what is actually built (updated 2026-08-16)
+
+> **Read §9 and §10 first if you are debugging.** They are dated a day
+> earlier but SUPERSEDE parts of this section: §9 records that the Survey
+> Flow web service elements never execute, and §10 covers the Workflow
+> rebuild that replaced them. §8.2 and §8.3 below are retained as history
+> only.
+
+Sections 1 and 2 are **DONE and verified live** in the "Ready for Roots
+Guardian Consent" survey (`SV_9YaOS43TzaqOjOK`). This section records what
+exists, what differs from the plan above, and what is left.
+
+### 8.1 Status at a glance
+
+| Runbook section | Status |
+|---|---|
+| 1. Embedded-data fields | ✅ Built |
+| 2. Two mint calls | 🟡 **Endpoint proven, delivery NOT.** The two real codes were minted by clicking **Test** in the builder — that proved `mint-access-code` works, not that the integration fires. On real submissions the Survey Flow elements sent **zero** requests (§9). Rebuilt as Workflow `WF_lFfvg4FT5Ltm9SA` (§2 banner); its own Test run reached Supabase and now authorizes since Draft 84. Still to do: the second (follow-up) task, embedded-data write-back, deleting the two dead elements, and publish/enable. |
+| 3. Two triggered emails | ⬜ Not started (Workflows tab) |
+| 4. Completion-webhook receiver | ⬜ Not started (Workflows tab) |
+| 5. 90-day scheduled email | ⬜ Not started (Workflows tab) |
+| 6. Secrets | 🟡 2 of 3 done — see 8.5 |
+| 7. Joint end-to-end test | ⬜ Blocked until 3–5 exist |
+
+**The survey is in Draft.** Everything below is saved to the flow but NOT
+published. "Changes won't be live until you publish."
+
+### 8.2 The credential-header trap (HISTORICAL — resolved by Draft 84)
+
+> **⚠️ This section describes the DEAD Survey Flow mechanism and is kept
+> only as history. Do not follow it as instructions.** As of
+> `mint-access-code` **v3** (Draft 84, deployed 2026-08-16) the function
+> accepts the shared secret from **`Authorization` as well as
+> `x-partner-key`**, so the header no longer has to be renamed — which
+> matters because the *Workflow* credential editor (the mechanism actually
+> in use, see §2's banner) exposes only Name / API Token / mTLS and offers
+> no rename at all. **If you are debugging a 401 `Invalid partner key` from
+> the Workflow, the cause is the key VALUE, not the header name.** See §2.
+
+What was true of the Survey Flow web service element, for the record:
+
+**A Qualtrics "API key" credential sends the token as `Authorization: %s`
+by default.** `mint-access-code` v1/v2 read only **`x-partner-key`**, so
+the default produced `401 {"error":"Invalid partner key"}` with nothing in
+the UI hinting at why. The workaround was: on the Web Service element,
+`…` next to the credential → **Configure credential parameters** →
+Parameter format `Header`, Parameter name `x-partner-key`, Parameter
+template `%s`.
+
+That workaround is still the *preferred* configuration anywhere the header
+name CAN be set: the Supabase gateway logs the first 10 characters of an
+unrecognized `Authorization` value into `function_edge_logs`, while
+`x-partner-key` is never captured. Use `x-partner-key` when you can;
+`Authorization` exists so the Workflow, which cannot, still works.
+
+The credential itself is named **`ctac-app-partner-key`** (type: API key).
+Note that credentials in this UK Qualtrics tenant appear as **Shared** —
+i.e. potentially visible org-wide, not just to Josh. Acceptable here: the
+key only permits minting codes for two allow-listed interventions and is
+rate-limited to 1000/day (Draft 77).
+
+### 8.3 Exact built configuration (both Web Service elements) — HISTORICAL
+
+> **⚠️ These are the two Survey Flow elements that never fire** (§2 banner,
+> §9). They are recorded here because the request/response contract they
+> encode is still correct and the Workflow reuses it — but **the elements
+> themselves must be DELETED**: if they ever started firing alongside the
+> Workflow, every consent would mint four codes instead of two.
+
+Both live at the END of the survey flow, after all four question blocks and
+after the pre-existing `Signature date` embedded-data element.
+
+Common to both:
+
+- **URL:** `https://fflezknnpmbemeqyqxml.supabase.co/functions/v1/mint-access-code`
+- **Method:** `POST`
+- **Credential:** `ctac-app-partner-key`, header name `x-partner-key`, template `%s`
+- **Body Parameters** content type: **`application/json`** (defaults to
+  `application/x-www-form-urlencoded` — must be changed)
+- **Fire and Forget:** unchecked
+
+Body parameters (note the per-row **type** dropdown — `max_uses` must be
+`Number`, not the default `String`):
+
+| Parameter | Type | Call #1 value | Call #2 value |
+|---|---|---|---|
+| `intervention_slug` | String | `ready-set-dedicate` | `rsd-follow-up-90d` |
+| `external_ref` | String | `${e://Field/ResponseID}` | `${e://Field/ResponseID}` |
+| `max_uses` | **Number** | `1` | `1` |
+| `cohort_label` | String | `beta-2026-08` | `beta-2026-08` |
+
+Response mapping (Set Embedded Data on the element):
+
+| Call | Mapping |
+|---|---|
+| #1 | `intervention_code` = `code` · `intervention_url` = `url` |
+| #2 | `followup_code` = `code` · `followup_url` = `url` |
+
+**Build tip:** build call #1 completely, Apply, then use the element's
+**Duplicate** link and change only the slug + the two mapping names. Much
+faster than building the second from scratch.
+
+**Response-mapping tip:** click **Test** and use the resulting "Select
+fields to include as embedded data" dialog — check `code` and `url`, click
+**Add Embedded Data**, then rename the left-hand chips from `code`/`url` to
+the target field names. This is more reliable than hand-entering paths.
+**Each Test mints a REAL code** — deactivate them afterward (see 8.6).
+
+### 8.4 Deliberate deviation: no `expires_at`
+
+§2 above suggests ~30-day and ~120-day expiries. **We send no `expires_at`
+on either call.** Verified in the deployed function source: `expires_at`
+defaults to `null`, meaning codes never expire unless explicitly set.
+
+Rationale: a 30-day intervention expiry risks a family losing access after
+a delay, and the follow-up code MUST still be alive when the 90-day email
+fires. Tradeoff accepted: stale codes remain technically valid, but they
+are single-use and bound to one consent record.
+
+### 8.5 Secrets status
+
+| Secret | Status |
+|---|---|
+| `PARTNER_API_KEY_QUALTRICS` | ✅ **Set 2026-08-16.** It was never actually set before this (the May "handed off in chat" note in STATE_OF_THE_PLATFORM was wrong — Draft 76's harness proved mint returned 500 "Server misconfigured"). A fresh key was generated and set at Project Settings → Edge Functions → Secrets (real URL: `/project/<ref>/functions/secrets`). |
+| `QUALTRICS_COMPLETION_WEBHOOK_URL` | ✅ **Set 2026-08-16.** The inbound URL from the JSON trigger on workflow `WF_JFIOeoc0oOU3G4T` ("Completion webhook receiver (from ctac.app)"), copied via that trigger's **Copy URL** button. |
+| `QUALTRICS_API_TOKEN` | ✅ **Set 2026-08-16.** Josh's Qualtrics API token (Account Settings → Qualtrics IDs → API). Required because the JSON trigger has **"Require authentication by Qualtrics" ON** — which is the right setting, and conveniently `update-session-progress` already sends the token as `X-API-TOKEN`, matching what Qualtrics expects. |
+
+**All three secrets are now set.** The ctac.app half of the integration is
+fully configured. What remains is Qualtrics-side workflow building (§3,
+§4 downstream tasks, §5) and the joint test (§7).
+
+Also done 2026-08-16: `mint-access-code` v2 (the rate-limited Draft 77
+source) deployed via `npx supabase functions deploy mint-access-code
+--no-verify-jwt`. The Supabase CLI was not installed; `npx supabase` works
+without a global install (needs `npx supabase login` + `npx supabase link
+--project-ref fflezknnpmbemeqyqxml` first).
+
+### 8.6 Test residue cleanup
+
+Every **Test** click mints a real row in `access_codes`. Codes minted
+during this build (`RSD-QVFZ-XWUJ`, `RSD-C4BN-TYTG`) have been deactivated.
+To clean up future test codes:
+
+```sql
+UPDATE access_codes
+SET is_active = false, cohort_label = 'qualtrics-setup-test (spent)'
+WHERE code IN ('RSD-XXXX-XXXX');
+```
+
+### 8.7 ⚠️ STILL OPEN — preview mode does not exercise the Web Service
+
+**Do not trust preview for this test.** On 2026-08-16 two full runs were
+completed through **Preview** — one answering No to consent, one answering
+Yes all the way to "Your response has been recorded." In BOTH cases:
+
+- zero new rows in `access_codes`
+- zero `mint-access-code` entries in the Supabase edge-function logs
+  (the only hits are the 2026-08-15 build tests at 20:23 / 20:39 / 20:42)
+
+Because the **Yes** path also produced nothing, the null result on the No
+path proves nothing about the skip logic. Qualtrics preview appears not to
+execute Survey Flow Web Service elements at all.
+
+The flow itself was re-inspected in the builder and is correct and
+**Published**: both Web Service elements sit at the top level of the flow,
+after all four Show Block elements, with the right URL, credential,
+body params, and response mappings.
+
+**The real test must go through the live anonymous link:**
+
+`https://uky.az1.qualtrics.com/jfe/form/SV_9YaOS43TzaqOjOK`
+
+Run it twice — once answering **No** to "Do you consent for your child to
+participate in this research study?", once answering **Yes** through to
+submission — then check:
+
+```sql
+SELECT ac.code, i.slug, ac.cohort_label, ac.external_ref,
+       ac.max_uses, ac.use_count, ac.expires_at, ac.is_active, ac.created_at
+FROM access_codes ac
+LEFT JOIN interventions i ON i.id = ac.intervention_id
+WHERE ac.cohort_label = 'beta-2026-08'
+ORDER BY ac.created_at DESC;
+```
+
+Expected: the No run produces nothing; the Yes run produces exactly two
+rows (`ready-set-dedicate` + `rsd-follow-up-90d`) sharing one
+`external_ref` (the Qualtrics ResponseID). Also open the response in
+Data & Analysis and confirm `intervention_code`, `intervention_url`,
+`followup_code`, and `followup_url` are populated.
+
+If the No run DOES mint, wrap both Web Service elements in a Branch
+conditioned on the consent question = Yes before any real participant
+touches the link.
+
+Deactivate the test codes afterward per 8.6.
+
+### 8.8 Two other things spotted 2026-08-16
+
+- **Three empty embedded-data rows** in the second Set Embedded Data
+  element, showing as `Create New Field or Choose From Dropdown...` with no
+  name. Residue from the 2026-08-15 typing race. Harmless but should be
+  deleted so the flow reads clean.
+- **Consent copy says "about 500 people with the United States."** Two
+  issues: the participant count doesn't match the N=20 in the IRB
+  parameters we have on file, and "with" should be "within". The IRB
+  application is already submitted, so this is a question for Jessica
+  rather than a unilateral edit.
+
+### 8.8 Survey structure reference (as built by Jessica)
+
+- **Default Question Block (3q):** consent narrative · future-contact
+  permission · signature preamble
+- **Block 1 (1q):** *Do you consent…* Yes/No — **skip-to-end on No**
+- **Block 2 (6q):** child name · consenter name · relationship · signature
+  · **consenter email ×2** ("this consent will be emailed to this address")
+- **Block 3 (6q):** daily-caregiver name · **daily-caregiver email ×2**
+  ("used to send the weblink for the program, the e-gift card(s), and the
+  90 day follow-up survey") · placement type · state · county
+
+**Two different emails, two different jobs** (confirmed by Josh
+2026-08-16): consent receipt → **Block 2** (consenter's own email);
+intervention link, gift cards, and 90-day follow-up → **Block 3** (daily
+caregiver's email). The `delivery_email` embedded field should be populated
+from the Block 3 address. The team needs to be told this explicitly — when
+the two addresses differ, the person who signs consent is NOT the person
+who receives the program link.
+
+Note also: **placement type and county are already collected** (Block 3),
+which answers the collection half of the covariate question pending with
+Dr. Sprang — only the pass-through-to-ctac.app decision remains.
+
+---
+
+## 9. 2026-08-15 evening — BLOCKER: Web Service never executes
+
+### 9.1 What was tested
+
+| Route | Consent | Result |
+|---|---|---|
+| Preview (Claude) | Yes, full submit | no mint request |
+| Preview (Josh) | No | no mint request |
+| **Anonymous link (Josh) 7:02 PM** | **Yes, completed** | **no mint request** |
+| **Anonymous link (Josh) 7:03 PM** | **Yes, completed, 57s** | **no mint request** |
+
+Both live-link runs recorded normally in Qualtrics (Distributions →
+Anonymous link "surveys finished" went 2 → 4; Data & Analysis shows both
+rows with QID10 = Yes).
+
+### 9.2 What the evidence says
+
+`mint-access-code` has received **zero** requests since the 2026-08-15
+build tests at 20:23 / 20:39 / 20:42 UTC. Not a 401, not a 500 — nothing.
+Qualtrics never opened the connection. `access_codes` has no new rows.
+
+This is not a consent-branch problem and not a credential problem. **The
+Survey Flow Web Service elements are not executing at all on real
+submissions.**
+
+### 9.3 What was ruled out
+
+- **Element placement.** Flow order re-read directly from the builder:
+  4 × Show Block → 2 × Set Embedded Data → Web Service (+mappings) →
+  Web Service (+mappings). All top level. **No End of Survey element**
+  anywhere in the flow, so nothing short-circuits before them.
+- **Element config.** URL, POST, credential `ctac-app-partner-key`,
+  `application/json`, all four body params, both response mappings —
+  all still correct on screen.
+- **Respondent didn't finish.** Both runs are recorded as finished.
+- **Credential/auth.** A failed auth would still produce a Supabase log
+  entry (yesterday's 401s did). There is nothing.
+
+### 9.4 Live hypotheses, cheapest first
+
+1. **Three malformed embedded-data rows abort the flow.** The second Set
+   Embedded Data element contains three unnamed rows rendering as
+   `Create New Field or Choose From Dropdown...` (residue from the
+   2026-08-15 typing race). A malformed element can halt flow execution
+   before later elements run. Cheap to test: delete them, Apply, re-run.
+2. **Flow edits saved but never published.** The builder shows "Published"
+   with Publish greyed, which normally means no pending changes — but the
+   survey belongs to Jessica and was shared with Josh. If Josh's role
+   can Apply but not Publish, the live link would serve the older
+   published flow, which has no Web Service elements. Worth confirming
+   with Jessica.
+3. **Datacenter mismatch.** The admin console is `uky.pdx1.qualtrics.com`
+   but the anonymous link is `uky.az1.qualtrics.com`. Unusual. Responses
+   do land, so it is the same survey, but worth raising if 1 and 2 fail.
+
+### 9.5 Recommended fallback — move minting into a Workflow
+
+If the flow-level Web Service can't be made to fire, rebuild it as a
+**Qualtrics Workflow**: trigger = survey response (completed), task =
+Web Service POST to `mint-access-code`, then write `code` / `url` back to
+embedded data.
+
+The decisive advantage is observability: Workflows keep a **run history
+with per-run status and error detail**. Survey Flow Web Service elements
+log nothing, which is why this failure was invisible until we checked
+Supabase from the other side. We already know Workflows function in this
+account — `WF_JFIOeoc0oOU3G4T` was built there yesterday.
+
+### 9.6 Test residue to clean up
+
+Recorded responses from this session, all junk, safe to delete once the
+integration is working: 2026-08-15 6:11 PM, 6:23 PM, 7:02 PM, 7:03 PM.
+No access codes were created by any of them.
+
+---
+
+## 10. Workflow rebuild — in progress, blocked in the editor
+
+### 10.1 What exists now
+
+A second workflow was created on `SV_9YaOS43TzaqOjOK`:
+
+- **Name:** New Workflow (rename it)
+- **Workflow ID:** `WF_lFfvg4FT5Ltm9SA`
+- **Container:** `OC_WlXX1glFtgz1QWf`
+- **State:** Draft, Disabled, unpublished
+
+Built so far:
+
+1. **Event —** Survey response → "Newly created responses" only
+   (imported and incomplete responses excluded).
+2. **Decision —** Branch 1 if Question `QID10 Do you consent for your child
+   to participate in this research study?` → `Yes` → `is selected`.
+3. **Task (unsaved) —** WebService, Authenticated, account
+   `ctac-app-partner-key`.
+   - `POST https://fflezknnpmbemeqyqxml.supabase.co/functions/v1/mint-access-code`
+   - Header `Content-Type: application/json`
+   - Body (JSON, key-value pairs):
+     | Key | Value | Data type |
+     |---|---|---|
+     | `intervention_slug` | `ready-set-dedicate` | System Default |
+     | `external_ref` | `${rm://Field/ResponseID}` | System Default |
+     | `max_uses` | `1` | **Number** |
+     | `cohort_label` | `beta-2026-08` | System Default |
+
+### 10.2 Where it stopped
+
+**Both "Run test" and "Save" are greyed out**, with the inline message
+*"Complete the request, headers, and body section if necessary to perform
+a test."* No field shows a validation error, and every visible required
+field is populated. Cause not yet identified.
+
+Things worth trying next, roughly in order:
+
+1. Set an explicit **Data type** (String) on the three System Default rows
+   instead of leaving them defaulted.
+2. Re-enter the `external_ref` value by hand as literal text rather than
+   through the `{a}` picker, in case the inserted token leaves the field
+   in an invalid state.
+3. Use **Import cURL** at the top of the task editor to populate method,
+   URL, headers and body in one shot — auth is configured separately, so
+   it should survive. Equivalent cURL:
+   ```
+   curl -X POST https://fflezknnpmbemeqyqxml.supabase.co/functions/v1/mint-access-code \
+     -H 'Content-Type: application/json' \
+     -d '{"intervention_slug":"ready-set-dedicate","external_ref":"PLACEHOLDER","max_uses":1,"cohort_label":"beta-2026-08"}'
+   ```
+   then swap `PLACEHOLDER` for the ResponseID token.
+
+### 10.3 Still to build after the task saves
+
+- Duplicate the task for `rsd-follow-up-90d`.
+- Decide where the codes go. Two options:
+  - **(a)** Write them back to embedded data, then let the existing
+    Qualtrics email machinery send them. Keeps the response record
+    complete for export.
+  - **(b)** Skip embedded data and put the codes straight into Email tasks
+    inside this same workflow, piping from the WebService responses.
+    Fewer moving parts; the response record then has no copy of the code.
+    **(a) is probably right** — Jessica will want the codes on the
+    response row for linking, per the SPSS export requirements.
+- Two emails: consent receipt → Block 2 address; program link → Block 3
+  daily-caregiver address.
+- **Delete the two Web Service elements from the Survey Flow.** They are
+  inert today, but if they ever start firing alongside a working Workflow
+  every consent would mint four codes instead of two.
+- Publish the workflow AND flip the Enabled toggle. Note that the older
+  `WF_JFIOeoc0oOU3G4T` completion-webhook workflow is also still Draft /
+  Disabled / never published — it needs the same treatment.
+
+### 10.4 Environment notes for whoever picks this up
+
+- The workflow task editor renders in a **cross-origin iframe**
+  (`xm-apps-static.com`), so it can only be driven by coordinate clicks —
+  no DOM scripting. The classic Survey Flow editor is same-origin but
+  exposes no delete control for embedded-data rows.
+- The Survey Flow page reflows at different zoom levels between actions,
+  which makes coordinate clicks unreliable there; take a fresh screenshot
+  immediately before each click.

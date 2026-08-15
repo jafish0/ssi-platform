@@ -16,7 +16,10 @@
 //   SUPABASE URL + anon key are read from .env.local.
 //
 // What it verifies, in order:
-//   1. mint-access-code rejects a missing and a wrong x-partner-key (401).
+//   1. mint-access-code rejects a missing key, a wrong x-partner-key, a
+//      wrong Authorization token, and the PUBLIC anon JWT (all 401).
+//      The real key is NEVER sent in Authorization — see the note at the
+//      mint leg for why (the gateway logs a prefix of it).
 //   2. (key only) two mint calls — intervention + follow-up — return
 //      code/url/slug and round-trip the fake external_ref.
 //   3. validate-code creates a session on first entry (resumed: false)
@@ -103,6 +106,20 @@ console.log('1. mint-access-code auth enforcement')
     { intervention_slug: 'ready-set-dedicate' },
     { 'x-partner-key': 'not-the-key' },
   )
+  // Draft 84: the key is also accepted from Authorization, because that is
+  // the header a Qualtrics Workflow WebService credential sends and its
+  // name can't be changed there. Probe that path too — a wrong value must
+  // still 401, and the PUBLIC anon JWT must never authorize.
+  const badAuth = await fn(
+    'mint-access-code',
+    { intervention_slug: 'ready-set-dedicate' },
+    { Authorization: 'Bearer not-the-key' },
+  )
+  const anonAuth = await fn(
+    'mint-access-code',
+    { intervention_slug: 'ready-set-dedicate' },
+    { Authorization: `Bearer ${ANON}` },
+  )
   if (noKey.status === 500 && badKey.status === 500) {
     failures++
     console.error(
@@ -112,14 +129,30 @@ console.log('1. mint-access-code auth enforcement')
         '    Qualtrics mint calls will fail until it is. Set it, then re-run.',
     )
   } else {
-    check(noKey.status === 401, 'missing x-partner-key rejected (401)', `got ${noKey.status}`)
+    check(noKey.status === 401, 'missing partner key rejected (401)', `got ${noKey.status}`)
     check(badKey.status === 401, 'wrong x-partner-key rejected (401)', `got ${badKey.status}`)
+    check(badAuth.status === 401, 'wrong Authorization token rejected (401)', `got ${badAuth.status}`)
+    check(
+      anonAuth.status === 401,
+      'public anon JWT in Authorization does NOT authorize (401)',
+      `got ${anonAuth.status} — SECURITY: the public key must never mint codes`,
+    )
   }
 }
 
 // ---- 2. mint (with key) ----
 console.log('\n2. mint calls (as Qualtrics fires them)')
 if (PARTNER_KEY) {
+  // Both positive mints go via x-partner-key, deliberately — NOT via
+  // Authorization, even though Authorization is the header the Qualtrics
+  // Workflow uses. The Supabase gateway parses Authorization and writes
+  // the first 10 characters of an unrecognized value into
+  // `function_edge_logs`; x-partner-key is never captured. Sending the
+  // REAL key in Authorization would deposit a prefix of it into project
+  // logs on every harness run. The Authorization path gets negative-only
+  // coverage above (wrong token + public anon JWT, neither of which is
+  // secret), and its positive proof is the Qualtrics Workflow's own test
+  // run — which has to send the real key that way regardless.
   const bodies = [
     { intervention_slug: 'ready-set-dedicate', external_ref: EXTERNAL_REF, max_uses: 1, cohort_label: 'smoke-harness' },
     { intervention_slug: 'rsd-follow-up-90d', external_ref: EXTERNAL_REF, max_uses: 1, cohort_label: 'smoke-harness' },
