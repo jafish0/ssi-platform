@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import SessionGuard from '../components/SessionGuard.jsx'
 import { SessionProvider, useSession } from '../engine/SessionEngine.jsx'
+import TreeProgress from '../components/TreeProgress.jsx'
 
 function ProgressBar() {
   const { progressFraction } = useSession()
@@ -18,12 +19,63 @@ function ProgressBar() {
   )
 }
 
+// First-completion celebration (Draft 74). The engine already carries
+// enough state to tell the moment apart without a new flag:
+//   - just finished THIS session → `completed` true but `sessionMeta.status`
+//     is still 'in_progress' (sessionMeta is set once at bootstrap and
+//     never mutated) and no exitInfo → celebrate.
+//   - exit_on hard branch (e.g. assent "No") → exitInfo set → its own
+//     friendly exit copy, no celebration.
+//   - re-entering an already-completed session → bootstrap saw
+//     status 'completed' → the original revisit copy.
+// Copy is deliberately self-contained: no emails / gift cards / follow-up
+// timing (the incentive workflow is Qualtrics-side). Team may reword.
+function CelebrationScreen({ onBackToStart }) {
+  // TreeProgress only animates on a FORWARD stage change after mount, so
+  // mount at seed and grow to full bloom for the payoff moment.
+  const [stage, setStage] = useState(0)
+  useEffect(() => {
+    const t = setTimeout(() => setStage(5), 400)
+    return () => clearTimeout(t)
+  }, [])
+  return (
+    <main className="min-h-screen flex items-start justify-center px-4 py-10 bg-ctac-teal-50">
+      <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
+        <div className="mx-auto w-full max-w-[240px] mb-4">
+          <TreeProgress stage={stage} animated />
+        </div>
+        <h1 className="text-[28px] font-bold leading-tight mb-3 text-ctac-navy">
+          You did it — you finished the whole program.
+        </h1>
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
+          You built a plan, and it&apos;s yours to keep.
+        </p>
+        <p className="text-[15px] leading-relaxed text-slate-600 mb-6">
+          You&apos;re all set — you can close this window whenever you&apos;re
+          ready.
+        </p>
+        <button
+          type="button"
+          onClick={onBackToStart}
+          className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-[14px] min-h-[48px]"
+        >
+          ← Back to start
+        </button>
+      </div>
+    </main>
+  )
+}
+
 function CompletedScreen() {
-  const { exitInfo } = useSession()
+  const { exitInfo, sessionMeta } = useSession()
   const navigate = useNavigate()
   function handleStart() {
     sessionStorage.removeItem('session_id')
     navigate('/', { replace: true })
+  }
+  const firstCompletion = !exitInfo && sessionMeta?.status !== 'completed'
+  if (firstCompletion) {
+    return <CelebrationScreen onBackToStart={handleStart} />
   }
   const title = exitInfo?.title || "You've already finished this one."
   const message =
