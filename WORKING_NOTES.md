@@ -110,6 +110,52 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`9c41cbc` · 2026-08-14** — **Draft 67 — Sam variant selection: choice item + variant-dependent video playback (ship dark).** The one genuinely new engine capability on the 8/28 critical path, prototyped with placeholder framing copy (team rewords at the 8/17 meeting; copy is data). **Part A resolved with the draft's preferred "lighter mechanism":** no `session_variables` column — the existing token/pull-forward system already satisfies "choice made once early, readable by every later item, survives resume." A choice item with `token_key: "sam_variant"` saves `{ selected: <key> }` as a normal response row via `save-response`; `get-session-responses` restores it on resume keyed by token_key; every item renderer already receives that map as `sessionData`. Zero schema or edge-function changes (confirmed `update-session-progress` v2 has no client metadata path anyway). **Part C:** `VideoPlayer` gains, additively: variant-aware config `{ variant_key, variants: {key: youtube-id}, fallback }` resolved against `sessionData` (unset/unknown selection or a variant with no cut yet → fallback, covering preview mode, old sessions, and the pre-Female/GN window); single-source YouTube via new `youtube_id` (the item type was Vimeo-only — flagged in AUDIT_2026-08.md A.4 — while all nine produced videos are YouTube); `orientation: "portrait"` for the vertical 9:16 cuts (constrained 360px 9:16 box instead of letterboxed 16:9). YouTube saves record `{ source: "youtube", video_id, variant_used }` for analysis; the Vimeo path, its exact payload shape, and its completion gating are untouched (`required_completion` fails open on YouTube — no IFrame API; gating parity is audit open question #4). **Part B:** the selection item is pure authoring data (existing Choice renderer needs nothing) plus additive card_grid thumbnail support (`option.image` — assets `sam-16.png` / `sam-female-v3.png` / `kai-variant-2.png`); optionless cards render exactly as before, so the live assent choice is unaffected. **Part D (ship dark):** nothing authored into the live intervention; demo at **`/demo/variant-preview`** (TEMP, unlisted) mounts the REAL Choice + VideoPlayer over a sessionStorage mini-session with live resolution readouts — Sam's Story in production config (only `male: eEgHiFWatA0` mapped, so picking Female/GN visibly demonstrates fallback), a mechanism item mapping all three keys to three distinct stand-in Kai videos to prove per-key resolution, and single-source YouTube + Vimeo regression items. Verified in-browser: all three keys resolve correctly; fallback works unset AND when the selected variant lacks a cut; reload ("simulate resume") persists the pick and re-selects the choice card via `existingResponse`; video save payload records `variant_used: "gender_neutral"`; single-source items unaffected; console + build clean. No version bump (engine capability; no published intervention change).
+
+  <details>
+  <summary>Draft 67 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 67 — Sam variant selection: choice item + variant-dependent video playback
+
+**Context.** Sam's Story exists in three variants (Male done; Female + Gender-Neutral in production next week). The participant should choose which Sam they want to see near the start of the session, and every Sam's Story video slot should then play that variant's cut. This is the one genuinely NEW engine capability on the 8/28 critical path, so it should be prototyped ahead of the content crunch. **How the choice is framed/worded is a team discussion point at the 2026-08-17 meeting** — build the mechanism now with placeholder framing copy, and the copy gets swapped after Monday.
+
+**Part A — Session-level variant state.**
+
+The SessionEngine needs a way to store a participant-level selection that downstream items can read. Suggested: a `session_variables` JSONB column on the session row (nullable, default `{}`), written by a new choice-item behavior and read by the video renderer. If a lighter mechanism already exists (e.g., deriving from the saved response of the choice item at render time), prefer that — you know the engine internals; the requirement is only: **choice made once early, readable by every later item, survives resume.**
+
+**Part B — The variant-selection item.**
+
+A `choice` item (or a new item type if `choice` can't carry side effects cleanly) placed right after the assent:
+
+- Three options: Sam (Male) / Sam (Female) / Sam (Gender Neutral) — placeholder framing copy: *"Sam's story can be told a few different ways. Pick the Sam you'd like to follow today."* (Team will reword Monday — make the copy data, not code.)
+- Optionally show the three character thumbnails (assets exist: `sam-16.png`, `sam-female-v3.png`, `kai-variant-2.png`) — nice-to-have, not required for the prototype.
+- Selection stores the variant key (`male` / `female` / `gender_neutral`) into the session-level state from Part A.
+- Response also saves as a normal response row (analysis may want to know who picked which variant).
+
+**Part C — Variant-aware video item.**
+
+Extend the `video` item config to optionally carry a variant map instead of a single source:
+
+```
+{ "variant_key": "sam_variant",
+  "variants": { "male": "<yt-id>", "female": "<yt-id>", "gender_neutral": "<yt-id>" },
+  "fallback": "male" }
+```
+
+Renderer resolves: session variable → variant ID → play. Missing/unset variable → `fallback` (covers preview mode, old sessions, and the window where Female/GN cuts don't exist yet — point all three at the Male ID initially and swap as cuts land; IDs are data).
+
+Single-source `video` items keep working exactly as today — this is additive.
+
+**Part D — Ship dark.**
+
+Do NOT add the selection item to the live intervention yet (that's part of the post-audit authoring, after Monday's framing decision). Ship the capability + a sandbox/preview route demonstration so Josh can click through: pick a variant → subsequent variant-aware video plays the right ID → resume mid-session → variant persists.
+
+**Verification:** choice writes the session variable; variant-aware video resolves correctly for all three keys; fallback works when unset; single-source videos unaffected; selection survives resume; response row records the pick; live intervention untouched; build + console clean.
+
+**Version bump:** none (engine capability; no published intervention change).
+
+  </details>
+
 - **`3b814c8` · 2026-08-14** — **Draft 66 — Live-intervention audit: diff `ready-set-dedicate` v5 against current demo state.** Read-only reconnaissance; deliverable is **`AUDIT_2026-08.md`** at repo root (ran long, per the draft's own either/or). Pulled the published v5 snapshot (14 sections / 57 items) straight from `intervention_versions` via SQL and verified the working builder tables are **byte-identical** to it (clean baseline). Confirmed all six live `custom_activity` items resolve through `ACTIVITY_REGISTRY` at runtime, so SelfReflection v1.6 / GU v5.9 / ASN v5.9 / BSS v3.5 / Poem v2.6 / Letter v2.3 — including the in-activity Kai narration gates — are already live-effective with **no republish needed**. Headline gaps: (F1) live section 10 still has the pre-Plan placeholder `structured_activity` — Plan v3.1 isn't in the registry and still renders synthetic `planDemoData.js` data, making real pull-forward wiring the biggest 8/28 code task; (F2/F3) two outro pull-forward tokens are broken in production today (`full_letter_text` / `full_poem_text` don't exist in current payloads → kids see empty keepsake boxes); (A.4) the `video` item type is **Vimeo-only** while all nine produced videos are YouTube (both live video items are `_placeholder` Vimeo stubs); (F5) live activity order differs from Adrienne's script order (the Kai handoffs encode SelfRefl → Poem → ASN → bridge → BSS → GU → Letter → Plan), so the video insertion implies a section reorder with knock-on page_break copy edits; (F6) live pre/post psychometrics drifted from the locked instruments (missing demographics + PDW, an extra 9-item 0–10 appraisal VAS the locked design dropped, 7-item vs locked 3-item acceptability set, min/max-only anchor labels). Part B maps all 10 video slots to exact positions with current YouTube IDs (Scene 4 flagged pending-replacement, Sam's Story flagged variant-dependent per Draft 67). Part C classifies execution: what flows through free, what's data-only after Draft 67, what needs code (Plan wiring, poem payload key, psychometric renderer gaps), plus six open questions for the team. No schema/intervention/activity changes.
 
   <details>
@@ -9269,46 +9315,6 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > test. Do not build the PID design.
 
 
----
-
-### Draft 67 — Sam variant selection: choice item + variant-dependent video playback
-
-**Context.** Sam's Story exists in three variants (Male done; Female + Gender-Neutral in production next week). The participant should choose which Sam they want to see near the start of the session, and every Sam's Story video slot should then play that variant's cut. This is the one genuinely NEW engine capability on the 8/28 critical path, so it should be prototyped ahead of the content crunch. **How the choice is framed/worded is a team discussion point at the 2026-08-17 meeting** — build the mechanism now with placeholder framing copy, and the copy gets swapped after Monday.
-
-**Part A — Session-level variant state.**
-
-The SessionEngine needs a way to store a participant-level selection that downstream items can read. Suggested: a `session_variables` JSONB column on the session row (nullable, default `{}`), written by a new choice-item behavior and read by the video renderer. If a lighter mechanism already exists (e.g., deriving from the saved response of the choice item at render time), prefer that — you know the engine internals; the requirement is only: **choice made once early, readable by every later item, survives resume.**
-
-**Part B — The variant-selection item.**
-
-A `choice` item (or a new item type if `choice` can't carry side effects cleanly) placed right after the assent:
-
-- Three options: Sam (Male) / Sam (Female) / Sam (Gender Neutral) — placeholder framing copy: *"Sam's story can be told a few different ways. Pick the Sam you'd like to follow today."* (Team will reword Monday — make the copy data, not code.)
-- Optionally show the three character thumbnails (assets exist: `sam-16.png`, `sam-female-v3.png`, `kai-variant-2.png`) — nice-to-have, not required for the prototype.
-- Selection stores the variant key (`male` / `female` / `gender_neutral`) into the session-level state from Part A.
-- Response also saves as a normal response row (analysis may want to know who picked which variant).
-
-**Part C — Variant-aware video item.**
-
-Extend the `video` item config to optionally carry a variant map instead of a single source:
-
-```
-{ "variant_key": "sam_variant",
-  "variants": { "male": "<yt-id>", "female": "<yt-id>", "gender_neutral": "<yt-id>" },
-  "fallback": "male" }
-```
-
-Renderer resolves: session variable → variant ID → play. Missing/unset variable → `fallback` (covers preview mode, old sessions, and the window where Female/GN cuts don't exist yet — point all three at the Male ID initially and swap as cuts land; IDs are data).
-
-Single-source `video` items keep working exactly as today — this is additive.
-
-**Part D — Ship dark.**
-
-Do NOT add the selection item to the live intervention yet (that's part of the post-audit authoring, after Monday's framing decision). Ship the capability + a sandbox/preview route demonstration so Josh can click through: pick a variant → subsequent variant-aware video plays the right ID → resume mid-session → variant persists.
-
-**Verification:** choice writes the session variable; variant-aware video resolves correctly for all three keys; fallback works when unset; single-source videos unaffected; selection survives resume; response row records the pick; live intervention untouched; build + console clean.
-
-**Version bump:** none (engine capability; no published intervention change).
 
 ---
 
