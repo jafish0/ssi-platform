@@ -110,6 +110,51 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`e0c830c` · 2026-08-14** — **Draft 71 — Beta quick-wins bundle (six fixes from AUDIT_2026-08 + QA_MOBILE_2026-08, one commit).** **(A)** `TEST-RSD-001` **deactivated** (it was advertised verbatim as the code-entry placeholder — an active, unlimited production code); the placeholder now shows the fake format `e.g. RSD-XXXX-0000`; replacement internal QA code for the team, documented only here per the draft: **`RSD-QAT3-M8XK`** (multi-use/unlimited, cohort "Internal QA (Draft 71)" — multi-use codes mint a fresh session per entry under Draft 69's resume semantics, which is the desired QA behavior; verified it validates). **(B)** Live outro "Your letter" pull-forward token fixed in the builder tables (`{{response.letter_builder.full_letter_text}}` → `{{response.letter_builder.letter}}`) — takes effect at the v6 republish. **(C)** WhoIAmPoem **v2.6 → v2.7**: save payload gains `full_poem_text` via the existing `buildPoemText` helper (byte-identical to the keepsake screen, mirrors + skipped-empty-lines included; verified in the captured sandbox payload), feeding the live outro's poem pull-forward that rendered an empty box. **(D)** Doubled-apostrophe sweep across ALL `ready-set-dedicate` items in the builder tables — 8 items carried literal `won''t` / `don''t` / `can''t` rendered verbatim to participants; zero remain; takes effect at v6. **The same bug exists in 17 GAINS items** — deliberately left for the GAINS track (own working-notes file + draft numbering); flagged as a spin-off task. **(E)** Stale sec-11 letter intro ("we've already started some pieces…" — referencing pull-forward behavior LetterBuilder v2.0 removed) reworded to "This letter is yours to write — say whatever you think another young person needs to hear." — takes effect at v6. **(F)** `KaiNarrationPlayer` gains a small muted hint below the player controls while the gate is locked — *"The Continue button unlocks when Kai finishes."* — hidden once narration completes; shared component so all three narration spots get it; no activity bumps (component-internal, same convention as the portrait). **Verification:** builder-vs-published-v5 diff confirmed to be EXACTLY the ten intended rows (8 apostrophe items + letter token + sec-11 intro — the tables were byte-identical at audit time, so the diff is the checklist); `TEST-RSD-001` now returns the inactive-code message with caregiver guidance; placeholder renders the fake format; poem payload verified; hint verified at 375×667 (shows while gated, disappears on completion, no overflow); build + console clean. **Version bumps:** WhoIAmPoem v2.6 → v2.7 only.
+
+  <details>
+  <summary>Draft 71 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 71 — Beta quick-wins bundle (from AUDIT_2026-08 + QA_MOBILE_2026-08)
+
+Six small, independent fixes. One commit is fine. None require Monday's meeting decisions.
+
+**Part A — Deactivate `TEST-RSD-001` + fix the code-entry placeholder.**
+
+The code-entry placeholder currently advertises `e.g. TEST-RSD-001`, which is an ACTIVE unlimited-use production code (QA P1). (1) Deactivate that code. (2) Change the placeholder to a fake-format example that is not a real code (e.g. `RSD-XXXX-0000`). (3) Mint a replacement internal QA code for the team — single-purpose, not referenced anywhere in the UI — and drop its value in the "Recently shipped" entry so Josh + team can keep testing. Note it may interact with Draft 69's resume semantics if that ships first (multi-use QA codes mint fresh sessions per use — that's the desired QA behavior).
+
+**Part B — Fix the "Your letter" outro token (audit F2).**
+
+Live sec 12 interpolates `{{response.letter_builder.full_letter_text}}`; LetterBuilder saves `{ activity, letter, saved_at }`. Change the token to `{{response.letter_builder.letter}}` in the builder tables. Takes effect at the v6 republish (no real participants yet, so no emergency republish needed — but land it now so v6 picks it up).
+
+**Part C — Add `full_poem_text` to the WhoIAmPoem payload (audit F3).**
+
+WhoIAmPoem saves individual fields but no assembled poem, so sec 12's `{{response.who_i_am_poem.full_poem_text}}` renders an empty box. Add an assembled `full_poem_text` string (the poem as displayed on the activity's own closing screen) to the save payload. Keep the individual fields unchanged. The sec-12 keepsake item itself stays pending Monday's open question 6 — if the team drops the keepsakes, the payload addition is still harmless and useful for export. **WhoIAmPoem v2.6 → v2.7 (MINOR).**
+
+**Part D — Fix doubled apostrophes in live psychometric copy (QA P1).**
+
+Live v5 psychometric items render literal doubled apostrophes to participants ("won''t", "don''t", "can''t") — an authored-data escaping bug. Fix the item copy in the builder tables (find all occurrences across items, not just the spotted ones — a `LIKE '%''''%'` sweep). Takes effect at v6.
+
+**Part E — Refresh the stale sec-11 intro sentence (audit F7).**
+
+Sec 11's intro still says "we've already started some pieces" — referencing LetterBuilder pull-forward behavior that was removed in v2.0. Reword to match current behavior (the letter is written fresh in the activity). Builder tables; takes effect at v6.
+
+**Part F — Kai-gate hint line (QA P2).**
+
+On small screens the narration transcript pushes the disabled Continue below the fold, so the button's disabled state reads as broken rather than waiting. Add one small muted line inside `KaiNarrationPlayer`, below the player controls (above the transcript): *"The Continue button unlocks when Kai finishes."* Shared component — all three narration spots get it; no activity version bumps (component-internal, same as the portrait addition).
+
+**Verification.**
+
+- `TEST-RSD-001` no longer validates; placeholder shows the fake format; new QA code works and is only documented in WORKING_NOTES.
+- Builder-table diffs limited to: sec-12 letter token, apostrophe sweep, sec-11 sentence — confirm builder tables now differ from published v5 ONLY by these intended edits (they were byte-identical at audit time, so the diff is the checklist).
+- Poem payload carries `full_poem_text` matching what the closing screen displays; v2.7 badge renders.
+- Hint line renders in all three narration spots at mobile width and doesn't crowd the player.
+- Build + console clean.
+
+**Version bumps:** WhoIAmPoem v2.6 → v2.7. Nothing else.
+
+  </details>
+
 - **`3a3d172` · 2026-08-14** — **Draft 70 — BSS v3.6: tap-to-place + drag edge auto-scroll (P0-2 fix).** **Part A (tap-to-place, primary):** pointerdown still starts a drag immediately (the existing no-threshold behavior), but a pointer sequence that travels **< 8px** before pointerup now reads as a TAP and opens a **bottom-sheet chooser** — three bucket buttons + Cancel, fixed to the viewport bottom so it's one-thumb reachable no matter where the tapped card sits (the whole point: the first bucket was more than a viewport from the source cards). Choosing places the card through the exact same `placeIntoBucket` path as a drag (same stem-only bucket rendering, same pulse, same aria-live announcement, same payload). Tapping a **placed** card opens the same sheet with the current bucket marked "(it's here now)" plus **Put it back in the list**; its `?` and `×` buttons keep working independently (they already stopPropagation). Chooser buttons are real keyboard-operable `<button>`s with focus moved in on open; Escape/backdrop cancels; the existing Space-pickup keyboard path is untouched; drag-and-drop fully preserved. Directions copy now leads with tap ("Tap each skill below to choose its bucket — or drag it in."). **Part B (edge auto-scroll, kept — it was cheap):** while a drag is active and the pointer is within 70px of the viewport top/bottom, a rAF loop scrolls 14px/frame and **re-hit-tests the hovered bucket each frame** (pointermove stops firing while a finger holds still, and the page scrolling under a stationary finger changes what's beneath it; `bucketAtPoint` reads fresh rects so scrolling can't stale the hit-test). Verified at 375×667: tap chooser opens with focus on the first button; placed into the previously-unreachable "What I'm already doing" bucket; move-between-buckets + put-back verified; **all 7 skills placed via tap** across all three buckets; a real drag (movement > slop) still drops normally and does NOT open the chooser; keyboard pickup → arrow → Enter still places; save payload byte-shape-identical with mixed tap/drag/keyboard placements; v3.6 badge renders; build + console clean. BSS v3.5 → **v3.6** (MINOR — interaction addition, no data-shape change).
 
   <details>
@@ -9428,45 +9473,3 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
-
-
-
----
-
-### Draft 71 — Beta quick-wins bundle (from AUDIT_2026-08 + QA_MOBILE_2026-08)
-
-Six small, independent fixes. One commit is fine. None require Monday's meeting decisions.
-
-**Part A — Deactivate `TEST-RSD-001` + fix the code-entry placeholder.**
-
-The code-entry placeholder currently advertises `e.g. TEST-RSD-001`, which is an ACTIVE unlimited-use production code (QA P1). (1) Deactivate that code. (2) Change the placeholder to a fake-format example that is not a real code (e.g. `RSD-XXXX-0000`). (3) Mint a replacement internal QA code for the team — single-purpose, not referenced anywhere in the UI — and drop its value in the "Recently shipped" entry so Josh + team can keep testing. Note it may interact with Draft 69's resume semantics if that ships first (multi-use QA codes mint fresh sessions per use — that's the desired QA behavior).
-
-**Part B — Fix the "Your letter" outro token (audit F2).**
-
-Live sec 12 interpolates `{{response.letter_builder.full_letter_text}}`; LetterBuilder saves `{ activity, letter, saved_at }`. Change the token to `{{response.letter_builder.letter}}` in the builder tables. Takes effect at the v6 republish (no real participants yet, so no emergency republish needed — but land it now so v6 picks it up).
-
-**Part C — Add `full_poem_text` to the WhoIAmPoem payload (audit F3).**
-
-WhoIAmPoem saves individual fields but no assembled poem, so sec 12's `{{response.who_i_am_poem.full_poem_text}}` renders an empty box. Add an assembled `full_poem_text` string (the poem as displayed on the activity's own closing screen) to the save payload. Keep the individual fields unchanged. The sec-12 keepsake item itself stays pending Monday's open question 6 — if the team drops the keepsakes, the payload addition is still harmless and useful for export. **WhoIAmPoem v2.6 → v2.7 (MINOR).**
-
-**Part D — Fix doubled apostrophes in live psychometric copy (QA P1).**
-
-Live v5 psychometric items render literal doubled apostrophes to participants ("won''t", "don''t", "can''t") — an authored-data escaping bug. Fix the item copy in the builder tables (find all occurrences across items, not just the spotted ones — a `LIKE '%''''%'` sweep). Takes effect at v6.
-
-**Part E — Refresh the stale sec-11 intro sentence (audit F7).**
-
-Sec 11's intro still says "we've already started some pieces" — referencing LetterBuilder pull-forward behavior that was removed in v2.0. Reword to match current behavior (the letter is written fresh in the activity). Builder tables; takes effect at v6.
-
-**Part F — Kai-gate hint line (QA P2).**
-
-On small screens the narration transcript pushes the disabled Continue below the fold, so the button's disabled state reads as broken rather than waiting. Add one small muted line inside `KaiNarrationPlayer`, below the player controls (above the transcript): *"The Continue button unlocks when Kai finishes."* Shared component — all three narration spots get it; no activity version bumps (component-internal, same as the portrait addition).
-
-**Verification.**
-
-- `TEST-RSD-001` no longer validates; placeholder shows the fake format; new QA code works and is only documented in WORKING_NOTES.
-- Builder-table diffs limited to: sec-12 letter token, apostrophe sweep, sec-11 sentence — confirm builder tables now differ from published v5 ONLY by these intended edits (they were byte-identical at audit time, so the diff is the checklist).
-- Poem payload carries `full_poem_text` matching what the closing screen displays; v2.7 badge renders.
-- Hint line renders in all three narration spots at mobile width and doesn't crowd the player.
-- Build + console clean.
-
-**Version bumps:** WhoIAmPoem v2.6 → v2.7. Nothing else.
