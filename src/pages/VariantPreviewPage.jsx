@@ -81,6 +81,23 @@ const VIDEO_ITEMS = [
     },
   },
   {
+    tokenKey: 'variant_vimeo',
+    note:
+      'Variant-aware VIMEO item (Draft 80) — same variants map, Vimeo URLs as the entries (the live placeholder video stands in for all cuts). This one is GATED: required_completion 0.85, so Continue stays locked until 85% watched — the tracking + gating the Vimeo path buys. Gender Neutral has no entry, so picking it shows the missing-cut fallback. Portrait box per the produced cuts.',
+    content: {
+      title: 'Variant-aware Vimeo — gated (Draft 80)',
+      variant_key: VARIANT_TOKEN_KEY,
+      variants: {
+        male: 'https://vimeo.com/76979871',
+        female: 'https://vimeo.com/76979871',
+      },
+      fallback: 'male',
+      required_completion: true,
+      completion_threshold: 0.85,
+      orientation: 'portrait',
+    },
+  },
+  {
     tokenKey: 'single_youtube',
     note: 'Single-source YouTube item (new youtube_id field) — no variant logic involved.',
     content: {

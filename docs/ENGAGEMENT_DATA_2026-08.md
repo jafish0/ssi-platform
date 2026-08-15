@@ -64,6 +64,17 @@ What a video item saves depends entirely on where the video is hosted:
   zero). Which variant played IS captured (`variant_used`, plus the gating
   choice item's own token). `required_completion` is unenforceable — the
   component fails open by design (VideoPlayer.jsx:96–103).
+- **Addendum (2026-08-15, post-Draft 80):** video payloads live in the
+  responses table and the admin Long/Summary exports, but the researcher
+  wide CSV / SPSS syntax / codebook currently emit **no columns for video
+  items at all** — `exportFlatten.js` skips the type despite a comment
+  saying otherwise (pre-existing gap, flagged for a follow-up draft). If
+  the team adopts watch tracking, adding `<tk>_watched` /
+  `<tk>_completion_fraction` / `<tk>_play_count` / `<tk>_variant_used`
+  columns is a small, separate change. Also note: Draft 80 shipped engine
+  parity, so Vimeo watch tracking + gating now work on variant-selected
+  videos too — the "Vimeo has it today" option in §2 covers the Sam
+  variants as well, not just single-source items.
 
 ### 1c. Time on task — DERIVABLE (better than expected)
 

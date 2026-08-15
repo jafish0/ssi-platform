@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { PrimaryButton } from './shared.jsx'
 
 function vimeoIdFromUrl(url) {
@@ -10,13 +10,16 @@ function vimeoIdFromUrl(url) {
 // Resolve the video source for this item (Draft 67 Part C).
 //
 // Config shapes, in precedence order:
-//   1. Variant-aware (new): { variant_key, variants: { <key>: <youtube-id> },
+//   1. Variant-aware (new): { variant_key, variants: { <key>: <source> },
 //      fallback } — looks up the session's saved variant selection
 //      (sessionData[variant_key].selected, written by an earlier choice item
 //      with that token_key) in the variants map. Missing/unset/unknown
 //      selection → the fallback key's entry. This covers preview mode, old
 //      sessions, and the window where some variant cuts don't exist yet —
 //      point missing variants at nothing and they inherit the fallback.
+//      A variant <source> is either a YouTube id (Draft 67) or a Vimeo URL
+//      (Draft 80) — detected per entry, so one map may even mix hosts
+//      during a window where cuts live in different places.
 //   2. Single-source YouTube (new): { youtube_id }
 //   3. Single-source Vimeo (original, unchanged): { vimeo_url }
 //
@@ -27,6 +30,18 @@ function vimeoIdFromUrl(url) {
 // token_key, and every item renderer already receives that map as
 // `sessionData`. Choice made once early, readable by every later item,
 // survives resume — no schema or edge-function changes.
+// Classify one variants-map entry (Draft 80): a Vimeo URL resolves to the
+// vimeo player (with its postMessage watch tracking + gating); any other
+// non-empty string is a YouTube id, exactly as Draft 67 shipped.
+function sourceFromVariantValue(value, variantUsed) {
+  const vimeoId = vimeoIdFromUrl(value)
+  if (vimeoId) return { kind: 'vimeo', id: vimeoId, variantUsed }
+  if (typeof value === 'string' && value) {
+    return { kind: 'youtube', id: value, variantUsed }
+  }
+  return { kind: 'none', id: null, variantUsed: null }
+}
+
 export function resolveSource(content, sessionData) {
   const variants = content?.variants
   if (variants && typeof variants === 'object' && !Array.isArray(variants)) {
@@ -38,7 +53,7 @@ export function resolveSource(content, sessionData) {
         ? content.fallback
         : null
     const used = selected || fallback
-    if (used) return { kind: 'youtube', id: variants[used], variantUsed: used }
+    if (used) return sourceFromVariantValue(variants[used], used)
     return { kind: 'none', id: null, variantUsed: null }
   }
   if (typeof content?.youtube_id === 'string' && content.youtube_id) {
@@ -61,16 +76,42 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
   const portrait = content?.orientation === 'portrait'
 
   const iframeRef = useRef(null)
+  // Unique per-instance player id: pages can mount several Vimeo players
+  // at once (variant preview), and duplicate DOM ids are invalid HTML.
+  // Tracking itself is scoped by e.source, not this id.
+  const reactId = useId()
+  const playerId = `vimeo-player-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`
+  // Rehydrate watch state only when the prior save belongs to the video
+  // THIS mount resolved (Draft 80 review): after a back-navigation variant
+  // change, the remounted player must not inherit another cut's progress —
+  // that would open a required_completion gate for a video the participant
+  // never played and attribute the old cut's watch data to the new one.
+  // Single-source items rehydrate unconditionally: their source can't
+  // change between visits and their payloads carry no provenance fields.
+  const priorMatchesSource = !source.variantUsed
+    ? true
+    : existingResponse?.variant_used === source.variantUsed &&
+      existingResponse?.video_id === source.id
   const [completionFraction, setCompletionFraction] = useState(
-    existingResponse?.completion_fraction ?? 0,
+    priorMatchesSource ? (existingResponse?.completion_fraction ?? 0) : 0,
   )
-  const [playCount, setPlayCount] = useState(existingResponse?.play_count ?? 0)
+  const [playCount, setPlayCount] = useState(
+    priorMatchesSource ? (existingResponse?.play_count ?? 0) : 0,
+  )
+  // Whether the current viewing run has already been counted — see the
+  // 'play' handler. A run ends at 'finish', so play_count reads as
+  // "times the participant played the video through from the start."
+  const runCountedRef = useRef(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Listen to Vimeo postMessage events to track watch progress.
+  // Listen to Vimeo postMessage events to track watch progress. Scoped to
+  // THIS instance's iframe (e.source check, Draft 80) so pages that mount
+  // more than one Vimeo player — the variant preview does — don't cross-feed
+  // each other's play counts and progress.
   useEffect(() => {
     function handleMessage(e) {
-      if (typeof e.data !== 'string' && typeof e.data !== 'object') return
+      if (e.origin !== 'https://player.vimeo.com') return
+      if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return
       let payload = e.data
       if (typeof payload === 'string') {
         try {
@@ -80,14 +121,45 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
         }
       }
       if (!payload || typeof payload !== 'object') return
-      if (payload.event === 'play') setPlayCount((c) => c + 1)
-      if (payload.event === 'timeupdate' && payload.data) {
+      // The player only emits events after an explicit addEventListener
+      // subscription — it announces readiness, we subscribe. Subscribe under
+      // BOTH protocol dialects: the api=1 embed answers a 'timeupdate'
+      // subscription with events named 'playProgress' (and ends with
+      // 'finish'), the modern SDK naming is 'timeupdate'/'ended'. Verified
+      // live 2026-08-15: without the legacy names the progress stream never
+      // matched and completion_fraction stayed 0 forever.
+      if (payload.event === 'ready') {
+        for (const ev of ['play', 'timeupdate', 'playProgress', 'ended', 'finish']) {
+          iframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ method: 'addEventListener', value: ev }),
+            'https://player.vimeo.com',
+          )
+        }
+      }
+      if (payload.event === 'play') {
+        // Count plays-from-the-start, once per viewing run — NOT every
+        // 'play' event: the player fires one on each pause→resume (HTML5
+        // semantics) and its startup jitters play@0/pause@0/play@0
+        // (observed live 2026-08-15), all of which would read as replays
+        // in the engagement analysis. A run is counted at its first
+        // within-a-second play and only re-arms at 'finish', so the field
+        // means "times the participant played the video from the start."
+        const secs = Number(payload?.data?.seconds)
+        if (!runCountedRef.current && (Number.isNaN(secs) || secs <= 1)) {
+          setPlayCount((c) => c + 1)
+          runCountedRef.current = true
+        }
+      }
+      if ((payload.event === 'timeupdate' || payload.event === 'playProgress') && payload.data) {
         const pct = Number(payload.data.percent)
         if (!Number.isNaN(pct)) {
           setCompletionFraction((prev) => Math.max(prev, pct))
         }
       }
-      if (payload.event === 'ended') setCompletionFraction(1)
+      if (payload.event === 'ended' || payload.event === 'finish') {
+        runCountedRef.current = false
+        setCompletionFraction(1)
+      }
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
@@ -115,9 +187,21 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
           video_id: source.id,
           ...(source.variantUsed ? { variant_used: source.variantUsed } : {}),
         })
+      } else if (source.kind === 'vimeo' && source.variantUsed) {
+        // Variant-resolved Vimeo (Draft 80): the real watch fields —
+        // that's the point of the Vimeo path — plus the same provenance
+        // fields the YouTube variant path records.
+        await onSave({
+          watched,
+          completion_fraction: Number(completionFraction.toFixed(2)),
+          play_count: playCount,
+          source: 'vimeo',
+          video_id: source.id,
+          variant_used: source.variantUsed,
+        })
       } else {
-        // Original Vimeo payload shape, byte-for-byte — live analysis
-        // code may depend on it.
+        // Original single-source Vimeo payload shape, byte-for-byte —
+        // live analysis code may depend on it.
         await onSave({
           watched,
           completion_fraction: Number(completionFraction.toFixed(2)),
@@ -136,7 +220,7 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
     source.kind === 'youtube'
       ? `https://www.youtube.com/embed/${source.id}?playsinline=1&rel=0${autoplay ? '&autoplay=1' : ''}`
       : source.kind === 'vimeo'
-        ? `https://player.vimeo.com/video/${source.id}?api=1&player_id=vimeo-player&title=0&byline=0&portrait=0${autoplay ? '&autoplay=1' : ''}${showControls ? '' : '&controls=0'}`
+        ? `https://player.vimeo.com/video/${source.id}?api=1&player_id=${playerId}&title=0&byline=0&portrait=0${autoplay ? '&autoplay=1' : ''}${showControls ? '' : '&controls=0'}`
         : null
 
   const frameWrapperClass = portrait
@@ -156,7 +240,7 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
           style={portrait ? { aspectRatio: '9 / 16' } : undefined}
         >
           <iframe
-            id={source.kind === 'vimeo' ? 'vimeo-player' : undefined}
+            id={source.kind === 'vimeo' ? playerId : undefined}
             ref={iframeRef}
             src={embedUrl}
             title={content?.title || 'Video'}
