@@ -110,6 +110,43 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`6a36f20` · 2026-08-14** — **Draft 68 — Mobile + resumability QA pass on the real participant flow.** Full walkthrough of the LIVE delivery path (code entry → assent → pretest → every activity → wrap-up → completion, published v5, production Supabase) at 375×667 with a 390×844 spot-check, via `TEST-RSD-001`; error states exercised with three temporary QA codes (deleted after); one QA session completed with all 57 items responded, one interruption-demo session marked abandoned; live intervention content untouched. Full report: **`QA_MOBILE_2026-08.md`**. **Prioritized fix list (Part F):** **(P0-1)** resume does NOT survive a browser close — `validate-code` unconditionally inserts a NEW session per call (deployed source verified), `session_id` lives in sessionStorage (dies with the tab), and real participant codes are `max_uses: 1`, so a kid who closes the browser mid-session and re-enters their code gets **"That code has already been used"** and their work is stranded (demonstrated live: fresh session at section 0 while the original held 15 responses at section 3; same-tab reload resume DOES work) → named follow-up draft: **Resume-by-code** (validate-code returns the existing in-progress session + client localStorage). **(P0-2)** BSS's "What I'm already doing" bucket is unreachable by real-finger drag at phone height — the drop zone and the cards are more than one viewport apart and the ghost drag has no edge auto-scroll (verified in source, reproduced empirically: a drop at viewport-edge y≈5 didn't register) → named follow-up draft: **BSS mobile placement** (edge auto-scroll and/or tap-to-place). **(P1)** mid-activity progress is item-granular — a reload mid-Allies (~15 screens) restarts the activity and typed text is lost (demonstrated in Self-Reflection; note: the engine has NO debounced save — the draft's premise doesn't exist) → follow-up candidate **Activity checkpoint saves**; code-entry errors gave no next step → **FIXED this session** (all messages now end with a concrete action, e.g. "ask your caregiver to help you get a new code"); the live placeholder literally advertises `e.g. TEST-RSD-001`, an ACTIVE unlimited production code → deactivate + fake-format placeholder before beta; live v5 psychometric copy renders literal doubled apostrophes to participants ("won''t", "don''t", "can''t") — authored-data bug for the v6 republish. **(P2)** Kai-gate transcript pushes the disabled Continue below the fold (suggest a hint line, bundle with next GU/ASN bumps); first-completion screen shows the revisit copy ("You've already finished this one." — anticlimactic); VAS slider tracks 16px thin; YouTube end-screen wall → **partially FIXED this session** (`rel=0` + `playsinline=1` on the Draft 67 YouTube embed path — playsinline stops iOS forced-fullscreen; rel=0 limits recommendations to same-channel, full removal impossible on YouTube). **Passed:** zero horizontal overflow on every screen type at both viewports; all participant-facing touch targets ≥40px (Likert 70×48); 16px inputs (no iOS zoom); sliders require explicit interaction; Kai narration gates release on genuine audio completion with working touch Replay (real-iPhone autoplay-block check still needed from Josh — emulation can't reproduce it); video boxes reserve space (no layout shift); two-tab clobbering impossible by construction (per-tab sessionStorage); completion status + `completed_at` set correctly and the Qualtrics webhook correctly skipped (no `external_ref`). Shipped fixes: `CodeEntryPage.jsx` error copy + `VideoPlayer.jsx` YouTube params — no activity version bumps (neither touches an activity component).
+
+  <details>
+  <summary>Draft 68 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 68 — Mobile + resumability QA pass on the real participant flow
+
+**Context.** Beta participants (ages 11-17) will run the live `/` flow on PHONES. The team has been reviewing on desktop all summer. Before the 8/28 beta, run a structured QA pass on the real participant delivery path — code entry through completion — at mobile viewport, and produce a fix list. Where a fix is small and safe, fix it in the same session; where it's structural, write it up for a follow-up draft. This pass is against the LIVE flow (a test code + the current published v5), not /demo.
+
+**Part A — Mobile flow walkthrough (375×667 and 390×844 viewports).**
+
+Walk the entire participant path as a kid would experience it: code entry → assent (both branches) → pretest → each activity → posttest → completion screen. At each step check: layout (no horizontal scroll, no clipped controls), touch targets (~44px), text legibility, keyboard behavior on inputs (does the on-screen keyboard cover the field? does the viewport scroll to the focused input?), and any hover-only affordances that have no touch equivalent (tooltips — BSS definitions are known tap-to-toggle since v3.x; verify).
+
+**Part B — KaiNarrationPlayer on mobile Safari-like constraints.**
+
+iOS Safari blocks autoplay-with-audio aggressively. The player already has a Play-button fallback — verify the fallback path is OBVIOUS on a small screen (kid-findable, not a subtle icon), the progress bar and replay work by touch, the Continue gate still releases correctly after playback, and the transcript doesn't push the Continue button below the fold in a confusing way. Emulate via DevTools mobile UA/viewport at minimum; note anything that needs real-device confirmation by Josh.
+
+**Part C — Resumability under interruption.**
+
+A 45-60 minute session WILL get interrupted on a phone. Verify the SessionEngine's resume behavior survives: (1) tab/browser closed mid-activity and code re-entered — lands back at the right section with saved responses intact; (2) closed mid-video — acceptable to restart that video, but the session position must hold; (3) closed mid-Kai-narration-gate — gate state either persists or re-gates cleanly (re-listening is acceptable, a permanently locked Continue is not); (4) two-tabs-open edge case — no response clobbering (or document the behavior). Also verify the debounced response save actually flushed for the last interaction before close (type into a free-text, close immediately, resume — is the text there?).
+
+**Part D — Video items in-session on mobile.**
+
+Whatever video items exist in v5 (plus a scratch variant-aware item if Draft 67 has shipped): YouTube iframe behavior at mobile width — sizing inside the session layout, no layout shift, and note what the end-of-video YouTube UI shows (related-video wall on pause/end is a known concern for this audience; document severity so the team can decide YouTube vs self-hosted with real information).
+
+**Part E — Error-state UX at code entry.**
+
+Try: a used code, an expired code, a mistyped code, an empty submit. Each should produce a kid-friendly, non-technical message that says what to do next (ask your caregiver / re-check the link). Flag any raw error text, silent failures, or dead ends.
+
+**Part F — Deliverable.**
+
+A prioritized fix list appended to this file: (P0) blocks a kid from completing, (P1) confusing but survivable, (P2) polish. Small safe fixes (copy, spacing, touch-target padding) may ship in this same session — one commit, listed in the report. Structural findings become named follow-up draft candidates with a one-line scope each.
+
+**Verification:** the report exists covering Parts A-E; any shipped quick fixes are enumerated with what changed; no activity version bumps unless a shipped fix touches activity behavior (then MINOR bump per convention); live intervention content untouched; build + console clean.
+
+  </details>
+
 - **`9c41cbc` · 2026-08-14** — **Draft 67 — Sam variant selection: choice item + variant-dependent video playback (ship dark).** The one genuinely new engine capability on the 8/28 critical path, prototyped with placeholder framing copy (team rewords at the 8/17 meeting; copy is data). **Part A resolved with the draft's preferred "lighter mechanism":** no `session_variables` column — the existing token/pull-forward system already satisfies "choice made once early, readable by every later item, survives resume." A choice item with `token_key: "sam_variant"` saves `{ selected: <key> }` as a normal response row via `save-response`; `get-session-responses` restores it on resume keyed by token_key; every item renderer already receives that map as `sessionData`. Zero schema or edge-function changes (confirmed `update-session-progress` v2 has no client metadata path anyway). **Part C:** `VideoPlayer` gains, additively: variant-aware config `{ variant_key, variants: {key: youtube-id}, fallback }` resolved against `sessionData` (unset/unknown selection or a variant with no cut yet → fallback, covering preview mode, old sessions, and the pre-Female/GN window); single-source YouTube via new `youtube_id` (the item type was Vimeo-only — flagged in AUDIT_2026-08.md A.4 — while all nine produced videos are YouTube); `orientation: "portrait"` for the vertical 9:16 cuts (constrained 360px 9:16 box instead of letterboxed 16:9). YouTube saves record `{ source: "youtube", video_id, variant_used }` for analysis; the Vimeo path, its exact payload shape, and its completion gating are untouched (`required_completion` fails open on YouTube — no IFrame API; gating parity is audit open question #4). **Part B:** the selection item is pure authoring data (existing Choice renderer needs nothing) plus additive card_grid thumbnail support (`option.image` — assets `sam-16.png` / `sam-female-v3.png` / `kai-variant-2.png`); optionless cards render exactly as before, so the live assent choice is unaffected. **Part D (ship dark):** nothing authored into the live intervention; demo at **`/demo/variant-preview`** (TEMP, unlisted) mounts the REAL Choice + VideoPlayer over a sessionStorage mini-session with live resolution readouts — Sam's Story in production config (only `male: eEgHiFWatA0` mapped, so picking Female/GN visibly demonstrates fallback), a mechanism item mapping all three keys to three distinct stand-in Kai videos to prove per-key resolution, and single-source YouTube + Vimeo regression items. Verified in-browser: all three keys resolve correctly; fallback works unset AND when the selected variant lacks a cut; reload ("simulate resume") persists the pick and re-selects the choice card via `existingResponse`; video save payload records `variant_used: "gender_neutral"`; single-source items unaffected; console + build clean. No version bump (engine capability; no published intervention change).
 
   <details>
@@ -9313,37 +9350,3 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
-
-
-
----
-
-### Draft 68 — Mobile + resumability QA pass on the real participant flow
-
-**Context.** Beta participants (ages 11-17) will run the live `/` flow on PHONES. The team has been reviewing on desktop all summer. Before the 8/28 beta, run a structured QA pass on the real participant delivery path — code entry through completion — at mobile viewport, and produce a fix list. Where a fix is small and safe, fix it in the same session; where it's structural, write it up for a follow-up draft. This pass is against the LIVE flow (a test code + the current published v5), not /demo.
-
-**Part A — Mobile flow walkthrough (375×667 and 390×844 viewports).**
-
-Walk the entire participant path as a kid would experience it: code entry → assent (both branches) → pretest → each activity → posttest → completion screen. At each step check: layout (no horizontal scroll, no clipped controls), touch targets (~44px), text legibility, keyboard behavior on inputs (does the on-screen keyboard cover the field? does the viewport scroll to the focused input?), and any hover-only affordances that have no touch equivalent (tooltips — BSS definitions are known tap-to-toggle since v3.x; verify).
-
-**Part B — KaiNarrationPlayer on mobile Safari-like constraints.**
-
-iOS Safari blocks autoplay-with-audio aggressively. The player already has a Play-button fallback — verify the fallback path is OBVIOUS on a small screen (kid-findable, not a subtle icon), the progress bar and replay work by touch, the Continue gate still releases correctly after playback, and the transcript doesn't push the Continue button below the fold in a confusing way. Emulate via DevTools mobile UA/viewport at minimum; note anything that needs real-device confirmation by Josh.
-
-**Part C — Resumability under interruption.**
-
-A 45-60 minute session WILL get interrupted on a phone. Verify the SessionEngine's resume behavior survives: (1) tab/browser closed mid-activity and code re-entered — lands back at the right section with saved responses intact; (2) closed mid-video — acceptable to restart that video, but the session position must hold; (3) closed mid-Kai-narration-gate — gate state either persists or re-gates cleanly (re-listening is acceptable, a permanently locked Continue is not); (4) two-tabs-open edge case — no response clobbering (or document the behavior). Also verify the debounced response save actually flushed for the last interaction before close (type into a free-text, close immediately, resume — is the text there?).
-
-**Part D — Video items in-session on mobile.**
-
-Whatever video items exist in v5 (plus a scratch variant-aware item if Draft 67 has shipped): YouTube iframe behavior at mobile width — sizing inside the session layout, no layout shift, and note what the end-of-video YouTube UI shows (related-video wall on pause/end is a known concern for this audience; document severity so the team can decide YouTube vs self-hosted with real information).
-
-**Part E — Error-state UX at code entry.**
-
-Try: a used code, an expired code, a mistyped code, an empty submit. Each should produce a kid-friendly, non-technical message that says what to do next (ask your caregiver / re-check the link). Flag any raw error text, silent failures, or dead ends.
-
-**Part F — Deliverable.**
-
-A prioritized fix list appended to this file: (P0) blocks a kid from completing, (P1) confusing but survivable, (P2) polish. Small safe fixes (copy, spacing, touch-target padding) may ship in this same session — one commit, listed in the report. Structural findings become named follow-up draft candidates with a one-line scope each.
-
-**Verification:** the report exists covering Parts A-E; any shipped quick fixes are enumerated with what changed; no activity version bumps unless a shipped fix touches activity behavior (then MINOR bump per convention); live intervention content untouched; build + console clean.
