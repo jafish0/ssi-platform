@@ -110,6 +110,49 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`e8afca7` · 2026-08-14** — **Draft 69 — Resume-by-code (P0-1 fix).** `validate-code` bumped to **v2** (deployed via Supabase MCP — sources live only in the deployed function; full contract change logged in INFRASTRUCTURE.md): for **single-use codes (`max_uses = 1`)**, re-entering the code or re-clicking the emailed `?code=` link now returns the participant's EXISTING session (`resumed: true` + `session_status`) instead of minting a new one — no insert, no `use_count` bump, so `use_count` counts sessions created and `max_uses = 1` means "one participant," not "one browser tab, ever." Completed sessions route to the engine's friendly already-finished screen; abandoned sessions are deliberately not resumed (releases the code to the exhausted check); **multi-use QA codes deliberately keep mint-per-validation** (that's the desired QA behavior, and covers the Draft 71 interaction note); intervention active/published gates don't apply to resumes (frozen `version_id`). Engine-wide — GAINS codes behave identically. Client: `CodeEntryPage` flags a resumed in-progress session; `DeliveryStepPage` shows "Welcome back — picking up where you left off." clearing on first advance (found + fixed a StrictMode dev double-mount bug: consuming the sessionStorage flag inside the `useState` initializer let the remount read it as empty — read and removal now split across `useState`/`useEffect`). **Part C (localStorage pointer) skipped per the draft's own option (a)** — Part A fixes the real-world path (kids re-click their email link) and localStorage would weaken the per-tab isolation. Verified live end-to-end with a temp single-use code: create → partial progress → simulated browser close → re-entry by typed code AND `?code=` link both returned the SAME session at the saved position with the banner showing and `use_count` still 1 after three validations; completed → re-entry shows the finished screen with no banner; multi-use `TEST-RSD-001` still mints distinct fresh sessions (`resumed: false`). Documented behavior change: two tabs on the same single-use code now share one session (last-write-wins per item) — accepted as far better than the lockout it replaces. QA artifacts cleaned up (temp code deactivated, orphan sessions abandoned). No version bump (engine/edge-function change).
+
+  <details>
+  <summary>Draft 69 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 69 — Resume-by-code (P0 from QA_MOBILE_2026-08)
+
+**Context.** QA_MOBILE_2026-08.md P0-1: a participant who closes their browser mid-session and re-enters their code (or re-clicks their emailed link — the same thing, since Qualtrics links carry `?code=...`) gets "That code has already been used" and their work is stranded. Root cause, already verified against deployed source: `validate-code` unconditionally inserts a NEW session on every call; the client keeps `session_id` in sessionStorage (dies with the tab); real participant codes are `max_uses: 1`. Same-tab reload resume works today — browser-close resume does not. This is the most likely single failure mode for a 45-60 minute session on a kid's phone, and re-clicking the email link is the natural recovery action. It must work.
+
+**Part A — Server: `validate-code` returns the existing session.**
+
+New behavior, in order:
+
+1. Look up the code (existing validation: active, not expired — unchanged).
+2. **Check for an existing session tied to this code.** If one exists with `status = 'in_progress'` (or whatever the non-completed status is): return THAT session (id + current position + intervention/version pointers) with a flag like `resumed: true`. Do NOT insert a new session. Do NOT increment `use_count`.
+3. If an existing session is `completed`: return the completed state (client already has a friendly already-finished screen — keep routing to that).
+4. If no session exists: current behavior — mint session, increment `use_count`.
+
+Net effect: `use_count` counts *sessions created*, not validation calls, and `max_uses: 1` means "one participant," not "one browser tab, ever." This is engine-wide — GAINS for Professionals gets the same fix for free.
+
+**Part B — Client: resume into the returned session.**
+
+When `validate-code` returns `resumed: true`, the client enters the session at the saved position (`current_section`) with saved responses hydrated — same path the same-tab reload resume already uses (`get-session-responses`). The participant should land where they left off, with a small acknowledgment (e.g. a brief "Welcome back — picking up where you left off" note on the first screen) rather than silently teleporting mid-flow.
+
+**Part C — Optional client enhancement: localStorage pointer.**
+
+Consider also persisting `{ code → session_id }` in localStorage so a same-device return can offer resume even before code re-entry. **Tradeoff to weigh before implementing:** QA confirmed two-tab clobbering is currently impossible *by construction* because sessionStorage is per-tab. localStorage weakens that. Options: (a) skip Part C entirely — Part A alone fixes the real-world path since kids re-click their email link; (b) implement with a guard (e.g. the localStorage pointer only prefills the code field rather than auto-entering the session). Your call; Part A+B are the requirement, Part C is not.
+
+**Part D — Verification.**
+
+- Enter a fresh single-use code → session created, `use_count` 1.
+- Respond partway, close the browser entirely, reopen, re-enter the same code → SAME session returns, position + responses intact, `use_count` still 1.
+- Repeat via the `?code=` URL param path (the email-link path).
+- Complete a session, re-enter the code → friendly already-finished screen (no new session).
+- Two tabs open simultaneously → behavior documented; no silent response clobbering.
+- Same-tab reload resume still works (regression).
+- GAINS codes behave identically (engine-wide check).
+- `TEST-RSD-001`-style multi-use codes: define + verify sensible behavior (multi-use QA codes should probably still mint fresh sessions per use — spec: resume applies per-code only when `max_uses = 1`; document whatever you implement).
+
+**Version bump:** none (engine/edge-function change, not a versioned activity). Log in INFRASTRUCTURE.md per convention — this changes `validate-code`'s contract.
+
+  </details>
+
 - **`6a36f20` · 2026-08-14** — **Draft 68 — Mobile + resumability QA pass on the real participant flow.** Full walkthrough of the LIVE delivery path (code entry → assent → pretest → every activity → wrap-up → completion, published v5, production Supabase) at 375×667 with a 390×844 spot-check, via `TEST-RSD-001`; error states exercised with three temporary QA codes (deleted after); one QA session completed with all 57 items responded, one interruption-demo session marked abandoned; live intervention content untouched. Full report: **`QA_MOBILE_2026-08.md`**. **Prioritized fix list (Part F):** **(P0-1)** resume does NOT survive a browser close — `validate-code` unconditionally inserts a NEW session per call (deployed source verified), `session_id` lives in sessionStorage (dies with the tab), and real participant codes are `max_uses: 1`, so a kid who closes the browser mid-session and re-enters their code gets **"That code has already been used"** and their work is stranded (demonstrated live: fresh session at section 0 while the original held 15 responses at section 3; same-tab reload resume DOES work) → named follow-up draft: **Resume-by-code** (validate-code returns the existing in-progress session + client localStorage). **(P0-2)** BSS's "What I'm already doing" bucket is unreachable by real-finger drag at phone height — the drop zone and the cards are more than one viewport apart and the ghost drag has no edge auto-scroll (verified in source, reproduced empirically: a drop at viewport-edge y≈5 didn't register) → named follow-up draft: **BSS mobile placement** (edge auto-scroll and/or tap-to-place). **(P1)** mid-activity progress is item-granular — a reload mid-Allies (~15 screens) restarts the activity and typed text is lost (demonstrated in Self-Reflection; note: the engine has NO debounced save — the draft's premise doesn't exist) → follow-up candidate **Activity checkpoint saves**; code-entry errors gave no next step → **FIXED this session** (all messages now end with a concrete action, e.g. "ask your caregiver to help you get a new code"); the live placeholder literally advertises `e.g. TEST-RSD-001`, an ACTIVE unlimited production code → deactivate + fake-format placeholder before beta; live v5 psychometric copy renders literal doubled apostrophes to participants ("won''t", "don''t", "can''t") — authored-data bug for the v6 republish. **(P2)** Kai-gate transcript pushes the disabled Continue below the fold (suggest a hint line, bundle with next GU/ASN bumps); first-completion screen shows the revisit copy ("You've already finished this one." — anticlimactic); VAS slider tracks 16px thin; YouTube end-screen wall → **partially FIXED this session** (`rel=0` + `playsinline=1` on the Draft 67 YouTube embed path — playsinline stops iOS forced-fullscreen; rel=0 limits recommendations to same-channel, full removal impossible on YouTube). **Passed:** zero horizontal overflow on every screen type at both viewports; all participant-facing touch targets ≥40px (Likert 70×48); 16px inputs (no iOS zoom); sliders require explicit interaction; Kai narration gates release on genuine audio completion with working touch Replay (real-iPhone autoplay-block check still needed from Josh — emulation can't reproduce it); video boxes reserve space (no layout shift); two-tab clobbering impossible by construction (per-tab sessionStorage); completion status + `completed_at` set correctly and the Qualtrics webhook correctly skipped (no `external_ref`). Shipped fixes: `CodeEntryPage.jsx` error copy + `VideoPlayer.jsx` YouTube params — no activity version bumps (neither touches an activity component).
 
   <details>
@@ -9350,3 +9393,74 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
+
+
+---
+
+### Draft 70 — BSS mobile placement: tap-to-place + drag edge auto-scroll (P0 from QA_MOBILE_2026-08)
+
+**Context.** QA_MOBILE_2026-08.md P0-2: on a phone, the Belonging Skills Sort's "What I'm already doing" bucket is more than a viewport away from the source cards, and the ghost-chip drag has no edge auto-scroll — so a real finger cannot complete the drop (reproduced empirically; a drop at viewport-edge y≈5 didn't register). The activity is partially unusable on the primary beta device class.
+
+**Part A — Tap-to-place (primary fix).**
+
+Add a tap path that requires no dragging at all:
+
+- Tapping a skill card (in the source pile) opens a compact chooser — three bucket buttons ("Already doing" / "Willing to try" / "Not interested"), plus Cancel. Bottom-sheet or inline popover, whichever fits the existing component structure; must be one-thumb reachable.
+- Choosing a bucket places the card exactly as a drag-drop would (same state update, same stem-only bucket rendering from v3.5, same payload).
+- Tapping a card already in a bucket offers: move to another bucket / return to the pile — same chooser pattern.
+- Drag-and-drop remains fully functional alongside; tap-to-place is additive.
+- Desktop: tap/click-to-place works there too (harmless, and it's an accessibility win — the drag interaction has no keyboard path today; the chooser buttons should be focusable/keyboard-operable).
+
+**Part B — Drag edge auto-scroll (secondary, keep-if-cheap).**
+
+While a ghost-chip drag is active and the pointer is within ~60px of the viewport top/bottom edge, scroll the page in that direction (standard drag auto-scroll). If this fights the current drag implementation or runs long, SKIP it — Part A alone resolves the P0, and the QA report can note drag-on-mobile as "works when bucket is on-screen; use tap-to-place otherwise."
+
+**Part C — Verification.**
+
+- 375×667 viewport: place every one of the 7 skills into each bucket via tap only — all reachable, no scrolling gymnastics.
+- Moved/returned cards behave identically to drag-placed ones (bucket shows bold stem only; summary shows full sentences; payload identical shape).
+- Drag still works on desktop; drag with auto-scroll works on mobile if Part B ships.
+- Keyboard: a card can be placed without a pointer (tab to card, Enter opens chooser, arrow/tab to bucket, Enter places).
+- No payload/data-shape change.
+
+**Version bump:** BSS v3.5 → v3.6 (MINOR — interaction addition, no data-shape change).
+
+---
+
+### Draft 71 — Beta quick-wins bundle (from AUDIT_2026-08 + QA_MOBILE_2026-08)
+
+Six small, independent fixes. One commit is fine. None require Monday's meeting decisions.
+
+**Part A — Deactivate `TEST-RSD-001` + fix the code-entry placeholder.**
+
+The code-entry placeholder currently advertises `e.g. TEST-RSD-001`, which is an ACTIVE unlimited-use production code (QA P1). (1) Deactivate that code. (2) Change the placeholder to a fake-format example that is not a real code (e.g. `RSD-XXXX-0000`). (3) Mint a replacement internal QA code for the team — single-purpose, not referenced anywhere in the UI — and drop its value in the "Recently shipped" entry so Josh + team can keep testing. Note it may interact with Draft 69's resume semantics if that ships first (multi-use QA codes mint fresh sessions per use — that's the desired QA behavior).
+
+**Part B — Fix the "Your letter" outro token (audit F2).**
+
+Live sec 12 interpolates `{{response.letter_builder.full_letter_text}}`; LetterBuilder saves `{ activity, letter, saved_at }`. Change the token to `{{response.letter_builder.letter}}` in the builder tables. Takes effect at the v6 republish (no real participants yet, so no emergency republish needed — but land it now so v6 picks it up).
+
+**Part C — Add `full_poem_text` to the WhoIAmPoem payload (audit F3).**
+
+WhoIAmPoem saves individual fields but no assembled poem, so sec 12's `{{response.who_i_am_poem.full_poem_text}}` renders an empty box. Add an assembled `full_poem_text` string (the poem as displayed on the activity's own closing screen) to the save payload. Keep the individual fields unchanged. The sec-12 keepsake item itself stays pending Monday's open question 6 — if the team drops the keepsakes, the payload addition is still harmless and useful for export. **WhoIAmPoem v2.6 → v2.7 (MINOR).**
+
+**Part D — Fix doubled apostrophes in live psychometric copy (QA P1).**
+
+Live v5 psychometric items render literal doubled apostrophes to participants ("won''t", "don''t", "can''t") — an authored-data escaping bug. Fix the item copy in the builder tables (find all occurrences across items, not just the spotted ones — a `LIKE '%''''%'` sweep). Takes effect at v6.
+
+**Part E — Refresh the stale sec-11 intro sentence (audit F7).**
+
+Sec 11's intro still says "we've already started some pieces" — referencing LetterBuilder pull-forward behavior that was removed in v2.0. Reword to match current behavior (the letter is written fresh in the activity). Builder tables; takes effect at v6.
+
+**Part F — Kai-gate hint line (QA P2).**
+
+On small screens the narration transcript pushes the disabled Continue below the fold, so the button's disabled state reads as broken rather than waiting. Add one small muted line inside `KaiNarrationPlayer`, below the player controls (above the transcript): *"The Continue button unlocks when Kai finishes."* Shared component — all three narration spots get it; no activity version bumps (component-internal, same as the portrait addition).
+
+**Verification.**
+
+- `TEST-RSD-001` no longer validates; placeholder shows the fake format; new QA code works and is only documented in WORKING_NOTES.
+- Builder-table diffs limited to: sec-12 letter token, apostrophe sweep, sec-11 sentence — confirm builder tables now differ from published v5 ONLY by these intended edits (they were byte-identical at audit time, so the diff is the checklist).
+- Poem payload carries `full_poem_text` matching what the closing screen displays; v2.7 badge renders.
+- Hint line renders in all three narration spots at mobile width and doesn't crowd the player.
+- Build + console clean.
+
+**Version bumps:** WhoIAmPoem v2.6 → v2.7. Nothing else.
