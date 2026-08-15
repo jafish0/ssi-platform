@@ -10,6 +10,49 @@ function shuffle(arr) {
   return a
 }
 
+// Sub-item conditional display (Draft 78). A scale item may declare
+//   show_if: { item_id: '<another item in this scale>', operator, value }
+// with operators equals | not_equals | gt | gte | lt | lte | in.
+// Returns one of three states:
+//   'shown'   — no show_if, condition met, or config malformed (fail open:
+//               a broken condition must surface the item, never silently
+//               drop a locked-instrument question)
+//   'hidden'  — gate answered and condition failed. Renders the item's
+//               optional skip_note in its place; excluded from the
+//               Continue gate; its response is pruned from the payload.
+//   'pending' — gate not yet answered. Renders nothing (the dependent
+//               item appears only once the gate has an answer).
+// Conditions are single-level: the gate item must not itself be gated.
+function subItemVisibility(item, allItems, responses) {
+  const cond = item?.show_if
+  if (!cond || !cond.item_id) return 'shown'
+  if (cond.item_id === item.id || !allItems.some((it) => it.id === cond.item_id)) {
+    console.warn('psychometric_scale show_if references a missing/self item:', cond.item_id)
+    return 'shown'
+  }
+  const gate = responses[cond.item_id]
+  if (gate === undefined || gate === null) return 'pending'
+  switch (cond.operator) {
+    case 'equals':
+      return gate === cond.value ? 'shown' : 'hidden'
+    case 'not_equals':
+      return gate !== cond.value ? 'shown' : 'hidden'
+    case 'gt':
+      return gate > cond.value ? 'shown' : 'hidden'
+    case 'gte':
+      return gate >= cond.value ? 'shown' : 'hidden'
+    case 'lt':
+      return gate < cond.value ? 'shown' : 'hidden'
+    case 'lte':
+      return gate <= cond.value ? 'shown' : 'hidden'
+    case 'in':
+      return Array.isArray(cond.value) && cond.value.includes(gate) ? 'shown' : 'hidden'
+    default:
+      console.warn('psychometric_scale show_if has unknown operator:', cond.operator)
+      return 'shown'
+  }
+}
+
 function computeScore(content, scaleResponses) {
   if (!content?.scoring) return null
   const items = content.items || []
@@ -58,22 +101,56 @@ export default function PsychometricScale({ content, onSave, existingResponse })
     }
   }, [existingResponse])
 
+  const visibilityOf = (it, resp = responses) => subItemVisibility(it, items, resp)
+  const visibleOrdered = orderedItems.filter((it) => visibilityOf(it) === 'shown')
+
+  // If an upstream answer change hides items past the cursor in
+  // one-at-a-time mode, keep the cursor on a real item.
+  useEffect(() => {
+    if (oneAtATime && activeIndex > 0 && activeIndex >= visibleOrdered.length) {
+      setActiveIndex(Math.max(0, visibleOrdered.length - 1))
+    }
+  }, [oneAtATime, activeIndex, visibleOrdered.length])
+
   function setItemResponse(itemId, value) {
-    setResponses((prev) => ({ ...prev, [itemId]: value }))
-    if (oneAtATime && activeIndex < orderedItems.length - 1) {
-      setTimeout(() => setActiveIndex((i) => i + 1), 200)
+    const next = { ...responses, [itemId]: value }
+    setResponses(next)
+    if (oneAtATime) {
+      // Advance within the list as it will look AFTER this answer —
+      // a show_if downstream may have just appeared or disappeared.
+      const vis = orderedItems.filter((it) => visibilityOf(it, next) === 'shown')
+      const pos = vis.findIndex((it) => it.id === itemId)
+      if (pos !== -1 && pos < vis.length - 1) {
+        setTimeout(() => setActiveIndex(pos + 1), 200)
+      }
     }
   }
 
-  const allAnswered = items.every((it) => responses[it.id] !== undefined)
+  const allAnswered = items
+    .filter((it) => visibilityOf(it) === 'shown')
+    .every((it) => responses[it.id] !== undefined)
+
+  // Drop responses for items that are hidden (or pending) at save time so
+  // an answer given before an upstream change never rides along as an
+  // orphan — e.g. bw2 answered, then bw1 moved to 0.
+  function pruneToVisible(resp) {
+    const pruned = {}
+    for (const it of items) {
+      if (visibilityOf(it, resp) === 'shown' && resp[it.id] !== undefined) {
+        pruned[it.id] = resp[it.id]
+      }
+    }
+    return pruned
+  }
 
   async function handleContinue() {
     if (!allAnswered || submitting) return
     setSubmitting(true)
-    const computed = computeScore(content, responses)
+    const pruned = pruneToVisible(responses)
+    const computed = computeScore(content, pruned)
     const willDisplay = content?.mode === 'display_score'
     const payload = {
-      scale_responses: responses,
+      scale_responses: pruned,
       computed_score: willDisplay ? computed : null,
       display_shown: willDisplay && !!content?.scoring,
     }
@@ -87,10 +164,12 @@ export default function PsychometricScale({ content, onSave, existingResponse })
     }
   }
 
-  const itemsToRender = oneAtATime ? [orderedItems[activeIndex]].filter(Boolean) : orderedItems
+  const itemsToRender = oneAtATime
+    ? [visibleOrdered[activeIndex]].filter(Boolean)
+    : orderedItems
 
   if (showScore) {
-    const score = computeScore(content, responses)
+    const score = computeScore(content, pruneToVisible(responses))
     const band = getInterpretation(content, score)
     return (
       <div>
@@ -122,7 +201,7 @@ export default function PsychometricScale({ content, onSave, existingResponse })
 
       {showProgress && oneAtATime && (
         <div className="flex justify-center gap-2 mb-6">
-          {orderedItems.map((_, i) => (
+          {visibleOrdered.map((_, i) => (
             <span
               key={i}
               className={
@@ -139,17 +218,36 @@ export default function PsychometricScale({ content, onSave, existingResponse })
       )}
 
       <div className="space-y-6 mb-6">
-        {itemsToRender.map((it) => (
-          <ScaleItemRow
-            key={it.id}
-            item={it}
-            format={format}
-            anchors={content?.anchors}
-            vasConfig={content?.vas_config}
-            value={responses[it.id]}
-            onChange={(v) => setItemResponse(it.id, v)}
-          />
-        ))}
+        {itemsToRender.map((it) => {
+          const vis = visibilityOf(it)
+          if (vis === 'pending') return null
+          if (vis === 'hidden') {
+            // Skipped by show_if. Show the authored note (styled to match
+            // the survey-mirror skip notice) or nothing at all.
+            if (!it.skip_note) return null
+            return (
+              <div key={it.id} className="border-b border-slate-200 pb-5 last:border-b-0">
+                <div
+                  className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-[13px] text-slate-600 italic"
+                  aria-live="polite"
+                >
+                  {it.skip_note}
+                </div>
+              </div>
+            )
+          }
+          return (
+            <ScaleItemRow
+              key={it.id}
+              item={it}
+              format={format}
+              anchors={content?.anchors}
+              vasConfig={content?.vas_config}
+              value={responses[it.id]}
+              onChange={(v) => setItemResponse(it.id, v)}
+            />
+          )
+        })}
       </div>
 
       <div className="flex justify-end">

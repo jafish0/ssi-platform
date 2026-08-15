@@ -201,6 +201,49 @@ export const TEST_REGISTRY = [
       },
     },
   },
+  // TEMP (Draft 78 verification surface) — unlisted ('internal QA'
+  // category matches no /demo filter; direct URL only:
+  // /demo/sandbox/scale-conditional-preview). Mirrors the live follow-up
+  // Belonging Worries config: bw2 is gated on bw1 > 0 via the new
+  // sub-item show_if, with the survey-mirror skip note when bw1 = 0.
+  // No live items are changed.
+  {
+    id: 'scale-conditional-preview',
+    displayName: 'Psychometric scale — conditional sub-item (QA)',
+    category: 'internal QA',
+    description:
+      'Scratch item demonstrating the Draft 78 show_if capability: bw2 appears only after bw1 is answered above 0; answering 0 shows the skip note instead.',
+    component: PsychometricScale,
+    mockProps: {
+      content: {
+        instructions: 'Please answer the following. (Scratch item — Draft 78 demo.)',
+        format: 'vas',
+        items: [
+          {
+            id: 'bw1',
+            text: 'To what degree do you have worries about belonging (e.g., fitting in, being understood or accepted)?',
+            reverse_scored: false,
+          },
+          {
+            id: 'bw2',
+            text: 'To what degree do your worries about belonging interfere with your desire to stay in your current home?',
+            reverse_scored: false,
+            show_if: { item_id: 'bw1', operator: 'gt', value: 0 },
+            skip_note:
+              "Since you said you don't have worries about belonging right now, we'll skip the next question.",
+          },
+        ],
+        vas_config: {
+          step: 1,
+          min_value: 0,
+          max_value: 10,
+          min_label: 'Not at all',
+          max_label: 'A lot',
+        },
+        show_progress: false,
+      },
+    },
+  },
   {
     id: 'pretest',
     displayName: 'Pretest',
