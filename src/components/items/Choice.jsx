@@ -195,7 +195,9 @@ export default function Choice({ content, onSave, existingResponse }) {
               </button>
             )
           }
-          // card_grid
+          // card_grid — an option may carry an optional `image` (Draft 67
+          // Part B, variant thumbnails); options without one render exactly
+          // as before.
           return (
             <button
               key={opt.id}
@@ -209,6 +211,14 @@ export default function Choice({ content, onSave, existingResponse }) {
                     : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300'))
               }
             >
+              {opt.image && (
+                <img
+                  src={opt.image}
+                  alt=""
+                  aria-hidden="true"
+                  className="w-16 h-16 rounded-full object-cover object-top border border-slate-200 mb-2"
+                />
+              )}
               {opt.text}
             </button>
           )
