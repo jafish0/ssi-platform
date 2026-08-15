@@ -3,12 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { callEdgeFunction } from '../lib/api.js'
 import LogoStrip from '../components/LogoStrip.jsx'
 
+// Every message ends with a concrete next step a kid can act on (Draft 68
+// Part E — "kid-friendly and says what to do next").
 const ERROR_MESSAGES = {
-  invalid_code: "That code didn't work — try again?",
-  expired_code: 'That code has expired.',
-  exhausted_code: 'That code has already been used.',
-  inactive_code: "That code isn't active right now.",
-  inactive_intervention: "This program isn't open yet.",
+  invalid_code: "That code didn't work — check it and try again? Codes look like the one on your link.",
+  expired_code: 'That code has expired. Ask your caregiver to help you get a new one.',
+  exhausted_code: 'That code has already been used. If that was you and you got interrupted, ask your caregiver to help you get a new code.',
+  inactive_code: "That code isn't active right now. Ask your caregiver to check on it.",
+  inactive_intervention: "This program isn't open yet. Check back soon, or ask your caregiver.",
   unpublished_intervention: "This program isn't ready yet — check back soon.",
 }
 

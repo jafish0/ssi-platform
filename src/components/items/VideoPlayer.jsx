@@ -129,9 +129,12 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
     }
   }
 
+  // playsinline keeps iOS Safari from forcing fullscreen on play; rel=0
+  // limits the end-of-video recommendation wall to same-channel videos
+  // (YouTube no longer allows disabling it entirely) — Draft 68 Part D.
   const embedUrl =
     source.kind === 'youtube'
-      ? `https://www.youtube.com/embed/${source.id}${autoplay ? '?autoplay=1' : ''}`
+      ? `https://www.youtube.com/embed/${source.id}?playsinline=1&rel=0${autoplay ? '&autoplay=1' : ''}`
       : source.kind === 'vimeo'
         ? `https://player.vimeo.com/video/${source.id}?api=1&player_id=vimeo-player&title=0&byline=0&portrait=0${autoplay ? '&autoplay=1' : ''}${showControls ? '' : '&controls=0'}`
         : null
