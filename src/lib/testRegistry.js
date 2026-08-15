@@ -23,6 +23,9 @@ const Assent = lazy(() => import('../activities/Assent.jsx'))
 const Pretest = lazy(() => import('../activities/Pretest.jsx'))
 const Posttest = lazy(() => import('../activities/Posttest.jsx'))
 const FollowUp = lazy(() => import('../activities/FollowUp.jsx'))
+// TEMP (Draft 73 demonstration) — the engine's psychometric_scale item
+// renderer, mounted directly with a scratch labeled-anchors config.
+const PsychometricScale = lazy(() => import('../components/items/PsychometricScale.jsx'))
 
 // --- Registry ---
 export const TEST_REGISTRY = [
@@ -156,6 +159,45 @@ export const TEST_REGISTRY = [
         },
         who_i_am_poem: { characteristics: 'brave', full_poem_text: 'I am brave\nI am from here\nI am brave\nI am brave' },
         self_reflection: { inclusion: { memory: '' }, exclusion: { memory: 'x' } },
+      },
+    },
+  },
+  // TEMP (Draft 73 verification surface) — unlisted ('internal QA'
+  // category matches no /demo filter; direct URL only:
+  // /demo/sandbox/scale-anchors-preview). A scratch psychometric_scale
+  // item with 5 per-point anchor labels (the locked acceptability
+  // anchors incl. Jessica's "Neither Agree nor Disagree" middle), for
+  // checking the labeled-likert rendering at mobile widths. No live
+  // items are changed.
+  {
+    id: 'scale-anchors-preview',
+    displayName: 'Psychometric scale — per-point anchors (QA)',
+    category: 'internal QA',
+    description:
+      'Scratch item demonstrating the Draft 73 anchor_labels capability: every point labeled, selected meaning echoed, min/max row hidden.',
+    component: PsychometricScale,
+    mockProps: {
+      content: {
+        instructions: 'Please answer the following. (Scratch item — Draft 73 demo.)',
+        format: 'likert',
+        items: [
+          { id: 'qa1', text: 'I enjoyed the program.', reverse_scored: false },
+          { id: 'qa2', text: 'I understood the program.', reverse_scored: false },
+        ],
+        anchors: {
+          min_value: 0,
+          max_value: 4,
+          min_label: 'Really Disagree',
+          max_label: 'Really Agree',
+          anchor_labels: [
+            'Really Disagree',
+            'Disagree',
+            'Neither Agree nor Disagree',
+            'Agree',
+            'Really Agree',
+          ],
+        },
+        show_progress: false,
       },
     },
   },

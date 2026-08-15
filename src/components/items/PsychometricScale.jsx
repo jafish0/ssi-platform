@@ -183,6 +183,19 @@ function LikertRow({ anchors, value, onChange }) {
   const max = anchors?.max_value ?? 4
   const values = []
   for (let v = min; v <= max; v++) values.push(v)
+  // Per-point anchor labels (Draft 73, additive). Optional
+  // anchors.anchor_labels array, index 0 = the min point. When present:
+  // every point renders its label under the number (small, wraps —
+  // buttons grow taller, never shrink below the 48px touch target), the
+  // selected point's meaning is echoed prominently under the row, the
+  // now-redundant min/max end-label row is hidden, and each radio gets
+  // an aria-label carrying its anchor text. When absent, rendering is
+  // pixel-identical to the original min/max-only behavior.
+  const pointLabels =
+    Array.isArray(anchors?.anchor_labels) && anchors.anchor_labels.length > 0
+      ? anchors.anchor_labels
+      : null
+  const labelFor = (v) => (pointLabels ? pointLabels[v - min] || '' : '')
   return (
     <div>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(48px,1fr))] gap-2 mb-2" role="radiogroup">
@@ -194,23 +207,47 @@ function LikertRow({ anchors, value, onChange }) {
               type="button"
               role="radio"
               aria-checked={selected}
+              aria-label={pointLabels ? `${v} — ${labelFor(v)}` : undefined}
               onClick={() => onChange(v)}
               className={
                 'min-h-[48px] rounded-2xl border text-[16px] font-medium transition-colors ' +
+                (pointLabels ? 'px-1 py-2 flex flex-col items-center justify-center gap-1 ' : '') +
                 (selected
                   ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
                   : 'bg-white border-slate-200 text-slate-700 hover:border-ctac-teal-300')
               }
             >
-              {v}
+              {pointLabels ? (
+                <>
+                  <span>{v}</span>
+                  <span
+                    className={
+                      'text-[10px] leading-tight font-normal text-center ' +
+                      (selected ? 'text-ctac-teal-900' : 'text-slate-500')
+                    }
+                  >
+                    {labelFor(v)}
+                  </span>
+                </>
+              ) : (
+                v
+              )}
             </button>
           )
         })}
       </div>
-      <div className="flex justify-between text-[13px] text-slate-500">
-        <span>{anchors?.min_label || ''}</span>
-        <span>{anchors?.max_label || ''}</span>
-      </div>
+      {pointLabels ? (
+        value != null && (
+          <p className="text-[13px] font-medium text-ctac-teal-800" aria-live="polite">
+            Your answer: {value} — {labelFor(value)}
+          </p>
+        )
+      ) : (
+        <div className="flex justify-between text-[13px] text-slate-500">
+          <span>{anchors?.min_label || ''}</span>
+          <span>{anchors?.max_label || ''}</span>
+        </div>
+      )}
     </div>
   )
 }
