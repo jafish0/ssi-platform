@@ -30,10 +30,17 @@ function ProgressBar() {
 //     status 'completed' → the original revisit copy.
 // Copy is deliberately self-contained: no emails / gift cards / follow-up
 // timing (the incentive workflow is Qualtrics-side). Team may reword.
-function CelebrationScreen({ onBackToStart }) {
+//
+// Draft 75: the copy (and the tree visual) are overridable per
+// intervention via the LAST section's config_json.celebration —
+// { heading, line1, line2, show_tree } — so the 90-day follow-up can say
+// "thanks for checking back in" instead of "you finished the whole
+// program". Defaults preserve the Draft 74 main-program copy.
+function CelebrationScreen({ onBackToStart, config }) {
   // TreeProgress only animates on a FORWARD stage change after mount, so
   // mount at seed and grow to full bloom for the payoff moment.
   const [stage, setStage] = useState(0)
+  const showTree = config?.show_tree !== false
   useEffect(() => {
     const t = setTimeout(() => setStage(5), 400)
     return () => clearTimeout(t)
@@ -41,18 +48,20 @@ function CelebrationScreen({ onBackToStart }) {
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-10 bg-ctac-teal-50">
       <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
-        <div className="mx-auto w-full max-w-[240px] mb-4">
-          <TreeProgress stage={stage} animated />
-        </div>
+        {showTree && (
+          <div className="mx-auto w-full max-w-[240px] mb-4">
+            <TreeProgress stage={stage} animated />
+          </div>
+        )}
         <h1 className="text-[28px] font-bold leading-tight mb-3 text-ctac-navy">
-          You did it — you finished the whole program.
+          {config?.heading || 'You did it — you finished the whole program.'}
         </h1>
         <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
-          You built a plan, and it&apos;s yours to keep.
+          {config?.line1 || "You built a plan, and it's yours to keep."}
         </p>
         <p className="text-[15px] leading-relaxed text-slate-600 mb-6">
-          You&apos;re all set — you can close this window whenever you&apos;re
-          ready.
+          {config?.line2 ||
+            "You're all set — you can close this window whenever you're ready."}
         </p>
         <button
           type="button"
@@ -67,7 +76,7 @@ function CelebrationScreen({ onBackToStart }) {
 }
 
 function CompletedScreen() {
-  const { exitInfo, sessionMeta } = useSession()
+  const { exitInfo, sessionMeta, sections } = useSession()
   const navigate = useNavigate()
   function handleStart() {
     sessionStorage.removeItem('session_id')
@@ -75,7 +84,11 @@ function CompletedScreen() {
   }
   const firstCompletion = !exitInfo && sessionMeta?.status !== 'completed'
   if (firstCompletion) {
-    return <CelebrationScreen onBackToStart={handleStart} />
+    const celebrationConfig =
+      sections[sections.length - 1]?.config_json?.celebration || null
+    return (
+      <CelebrationScreen onBackToStart={handleStart} config={celebrationConfig} />
+    )
   }
   const title = exitInfo?.title || "You've already finished this one."
   const message =

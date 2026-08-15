@@ -207,7 +207,13 @@ function LikertRow({ anchors, value, onChange }) {
               type="button"
               role="radio"
               aria-checked={selected}
-              aria-label={pointLabels ? `${v} — ${labelFor(v)}` : undefined}
+              aria-label={
+                pointLabels
+                  ? labelFor(v)
+                    ? `${v} — ${labelFor(v)}`
+                    : String(v)
+                  : undefined
+              }
               onClick={() => onChange(v)}
               className={
                 'min-h-[48px] rounded-2xl border text-[16px] font-medium transition-colors ' +

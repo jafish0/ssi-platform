@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { callEdgeFunction } from '../lib/api.js'
 import LogoStrip from '../components/LogoStrip.jsx'
@@ -28,10 +28,16 @@ export default function CodeEntryPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
-  // Auto-submit if a code was provided in the URL
+  // Auto-submit if a code was provided in the URL. Ref-guarded (Draft 75
+  // fix): the `!submitting` state check can't stop a double-fire because
+  // the state hasn't flushed between StrictMode's dev double-effect runs —
+  // two racing validate-code calls each minted a session (caught in QA:
+  // two sessions 21ms apart on a single-use code). A ref is synchronous.
+  const autoSubmittedRef = useRef(false)
   useEffect(() => {
     const urlCode = params.get('code')
-    if (urlCode && !submitting) {
+    if (urlCode && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true
       submit(urlCode)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
