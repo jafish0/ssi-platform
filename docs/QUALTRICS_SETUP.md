@@ -147,9 +147,11 @@ service) trigger:
    webhook POST. If no auth is required, leave `QUALTRICS_API_TOKEN`
    unset (the header is simply omitted).
 3. The inbound payload ctac.app sends (exact shape, from
-   `update-session-progress` v2 — fired once, on the FIRST transition to
-   completed, only for codes that carry an `external_ref`; one retry after
-   2s on 5xx/network errors, never on 4xx):
+   `update-session-progress` v3 — fired once, on the FIRST transition to
+   completed, only for codes that carry an `external_ref`; up to 3 attempts
+   with 2s/4s backoff on 5xx/network errors, never on 4xx; runs in the
+   background so it never delays the participant's completion screen; the
+   outcome is recorded on the session — see "Delivery records" below):
 
 ```json
 {
@@ -169,6 +171,39 @@ service) trigger:
        the incentive workflow (separate), and arm the 90-day timer.
      - `rsd-follow-up-90d` → set `followup_completed` = true, send the
        second confirmation email, hand off to the second incentive.
+   - **Recommended guard:** condition the email/incentive steps on the
+     flag NOT already being set. Flag-setting is naturally idempotent, but
+     a duplicate delivery (e.g. a manual re-fire after a delivery that
+     failed to record) would otherwise re-send the confirmation email.
+
+### Delivery records + recovery (Draft 82)
+
+Every completion's webhook outcome is persisted to
+`sessions.metadata_json.webhook`:
+`{ status: 'delivered'|'failed'|'skipped', at, attempts, reason?,
+last_error?, last_http_status? }` — `skipped` means there was nothing to
+send (`no_external_ref` on QA/admin codes, or `webhook_not_configured`
+while the URL secret is unset). Recovery at study scale is one query plus
+one script — no queue, no admin UI:
+
+```sql
+SELECT s.id, s.completed_at, ac.code, ac.external_ref,
+       s.metadata_json->'webhook' AS webhook
+FROM sessions s
+JOIN access_codes ac ON ac.id = s.access_code_id
+WHERE s.status = 'completed'
+  AND ac.external_ref IS NOT NULL
+  AND (s.metadata_json->'webhook'->>'status' IS DISTINCT FROM 'delivered');
+```
+
+then, per session id it returns:
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=... QUALTRICS_COMPLETION_WEBHOOK_URL=... node scripts/refire-webhook.mjs <session_id>
+```
+
+(`--dry-run` prints the rebuilt payload without sending; see the script
+header for the idempotency notes.)
 
 ## 5. The 90-day follow-up email
 
@@ -195,9 +230,12 @@ green the mint legs end to end:
 PARTNER_API_KEY_QUALTRICS=<the-key> node scripts/qualtrics-smoke.mjs
 ```
 
-Until the webhook URL is set, completions are safe: the webhook is a
-**silent no-op** (verified in source) — sessions still complete and stamp
-`completed_at`; Qualtrics just doesn't hear about them.
+Until the webhook URL is set, completions are safe: sessions still
+complete and stamp `completed_at`; Qualtrics just doesn't hear about
+them. As of `update-session-progress` v3 this is no longer silent — the
+session records `webhook: { status: 'skipped', reason:
+'webhook_not_configured' }`, so these are queryable later (and
+recoverable with `scripts/refire-webhook.mjs` once the URL is set).
 
 ## 7. Joint end-to-end test script (run Thursday, both sides live)
 
@@ -218,8 +256,12 @@ in another tab.
       off." at the right spot (not "already been used").
 - [ ] **Full completion** — finish the program → celebration screen.
 - [ ] **Webhook received** — the Qualtrics JSON event fired once;
-      `[qualtrics-webhook try1] ok` in the function logs;
+      `[qualtrics-webhook] delivered` in the function logs;
       `study_completed` = true on the response.
+- [ ] **Delivery record** — the session row shows
+      `metadata_json->'webhook'` = `{"status":"delivered","attempts":1,…}`
+      (SQL editor:
+      `SELECT metadata_json->'webhook' FROM sessions WHERE id = '<session_id>';`).
 - [ ] **Caregiver confirmation email** arrives.
 - [ ] **(Optional now / required before real 90-day sends)** — manually
       trigger the follow-up email step, click the follow-up link,
@@ -229,5 +271,8 @@ in another tab.
 - [ ] **Cleanup** — deactivate the two test codes in `/admin/codes`.
 
 If any webhook step fails: check the function logs for
-`[qualtrics-webhook try1] non-ok` (the log line includes Qualtrics's
-response status + first 500 chars of its body).
+`[qualtrics-webhook] non-ok` (the log line includes Qualtrics's response
+status + the first 300 chars of its body), and the session's
+`metadata_json->'webhook'` record for the persisted outcome
+(`failed` + `last_error`/`last_http_status`). Recover with
+`scripts/refire-webhook.mjs` once the receiver side is fixed.
