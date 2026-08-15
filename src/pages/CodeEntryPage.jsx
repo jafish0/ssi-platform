@@ -100,7 +100,7 @@ export default function CodeEntryPage() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               disabled={submitting}
-              placeholder="e.g. TEST-RSD-001"
+              placeholder="e.g. RSD-XXXX-0000"
               className="w-full text-[16px] font-mono tracking-wider px-4 py-3 min-h-[52px] bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white disabled:opacity-60"
             />
           </div>

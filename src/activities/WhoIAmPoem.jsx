@@ -73,6 +73,11 @@ export default function WhoIAmPoem({ onSave = console.log }) {
         believe: (vals.believe || '').trim(),
         dream: (vals.dream || '').trim(),
         going: (vals.going || '').trim(),
+        // Assembled poem exactly as the keepsake screen displays it
+        // (v2.7, Draft 71 C) — feeds the live outro's
+        // {{response.who_i_am_poem.full_poem_text}} pull-forward and the
+        // export.
+        full_poem_text: buildPoemText(vals),
         saved_at: new Date().toISOString(),
       })
       setDone(true)

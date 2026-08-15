@@ -149,6 +149,16 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
             />
           </div>
 
+          {/* On small screens the transcript pushes the parent's gated
+              Continue button below the fold, so its disabled state reads
+              as broken rather than waiting — say what unlocks it
+              (Draft 71 F). Hidden once the gate has released. */}
+          {!completed && (
+            <p className="text-[12px] text-amber-700/80 italic mb-3">
+              The Continue button unlocks when Kai finishes.
+            </p>
+          )}
+
           <div className="flex items-center gap-3 mb-4">
             {autoplayBlocked && !playing && !completed && (
               <button
