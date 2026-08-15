@@ -110,6 +110,35 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`d47c764` · 2026-08-15** — **Draft 82 — Completion-webhook delivery: record outcomes + re-fire path.** **`update-session-progress` v3** (MCP deploy, `verify_jwt` unchanged). **Part A:** every completion's webhook outcome persists to `sessions.metadata_json.webhook` — `{status: 'delivered'|'failed'|'skipped', at, attempts, reason?, last_error?, last_http_status?}`; the two previously-silent skips are now visible (`no_external_ref` for QA/admin codes, `webhook_not_configured` while the URL secret is unset — precedence verified live). **Part B:** 3 attempts with 2s/4s backoff on 5xx/network, NEVER on 4xx (a rejection won't succeed on retry) — and the whole send+record moved to the background via `EdgeRuntime.waitUntil`: v2 actually awaited the webhook inline before responding, so a flaky receiver could have added seconds to the kid's completion POST; v3 responds in ~450ms with the record landing ~1s later. **Part C:** new **`scripts/refire-webhook.mjs <session_id> [--dry-run]`** — rebuilds the exact original payload from the session row, re-POSTs with the same retry algorithm (verbatim port, sync note in both headers), updates the record with `refired: true`; needs `SUPABASE_SERVICE_ROLE_KEY` + `QUALTRICS_COMPLETION_WEBHOOK_URL` in env. The recovery procedure = the one query in the script header (completed + external_ref + record not 'delivered' — also catches pre-v3 completions with no record) + the script. **Idempotency verified against the runbook's receiver design, with one honest caveat:** flag-setting is idempotent but the confirmation EMAIL could re-send on a true duplicate — QUALTRICS_SETUP now recommends conditioning the email/incentive steps on the flag not already being set, and the script warns before re-firing an already-delivered record. **Part D verified:** delivery algorithm 14/14 local checks against a scripted receiver (200 → delivered/1 attempt; 500×3 → failed/3 with measured 2s+4s backoff; 400 → failed immediately, no retry; connection refused → failed/3); both `skipped` reasons recorded correctly by the DEPLOYED v3 on two temp codes (one with a SQL-authored `external_ref`), completion POSTs 414–510ms; re-fire script 10/10 end-to-end against a REST stub serving the real session rows (payload byte-shape matches the edge function, PATCH record shape, exit codes, `--dry-run`; also hardened its exit path — `process.exit()` with live keep-alive sockets crashes Node on Windows with 0xC0000409). Real `delivered`/`failed` against actual Qualtrics remains exactly where it was: Thursday's joint test (URL secret still unset). QUALTRICS_SETUP.md §4 updated to v3 semantics + a "Delivery records + recovery" section; §7 gains the delivery-record pass condition; INFRASTRUCTURE logged. Temp codes deactivated. No version bump.
+
+  <details>
+  <summary>Draft 82 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 82 — Completion-webhook delivery: record outcomes + re-fire path
+
+**Context.** The Qualtrics completion webhook (fired by `update-session-progress` on first completion) is fire-and-forget: one retry on 5xx, nothing recorded either way. Downstream of that webhook: `study_completed`, the caregiver confirmation email, the gift-card workflow, and the 90-day follow-up scheduling. A silently dropped webhook = a kid completed the study and the study doesn't know — no incentive, no follow-up. For a 20-participant beta this must be observable and recoverable, not perfect. Monday-independent.
+
+**Part A — Record the outcome.**
+
+On every completion, persist the webhook result to the session's `metadata_json` (the natural home per ENGAGEMENT_DATA — no migration): something like `webhook: { status: 'delivered'|'failed'|'skipped', at, attempts, last_error?, last_http_status? }`. `skipped` = no `external_ref` (QA sessions — current silent-skip behavior, now visible). Keep the send fire-and-forget from the participant's perspective — recording must never delay or fail the kid's completion screen.
+
+**Part B — Harden the retry, modestly.**
+
+Current: one retry on 5xx after 2s. Bump to a total of 3 attempts with short backoff, still fire-and-forget, never on 4xx (a 4xx means the receiver rejected it — retrying won't help, record and move on). Don't build a queue; three tries then an honest `failed` record is the right size for this study.
+
+**Part C — Re-fire path.**
+
+`scripts/refire-webhook.mjs <session_id>`: re-POSTs the exact original payload for a completed session (rebuild from the session row — same shape Draft 76 documented), updates the metadata record on success. Safe to re-run: the Qualtrics side keys on `external_ref` and sets flags, so duplicate delivery is naturally idempotent — verify that assumption against the runbook's receiver design and note it in the script header. Document a one-line SQL to list sessions with `failed` (or missing) webhook records — that query + the script IS the recovery procedure at this scale; no admin UI needed.
+
+**Part D — Verify.**
+
+Using the Draft 76 harness receiver: happy path records `delivered` with timestamp; a receiver forced to 500 exhausts 3 attempts and records `failed` + error; re-fire script delivers and flips the record; a no-external_ref session records `skipped`; completion screen timing unaffected in all cases. Update QUALTRICS_SETUP.md §7 (joint test now also checks the delivery record) and INFRASTRUCTURE.md.
+
+**Version bump:** none (edge function + script). `update-session-progress` version note in INFRASTRUCTURE.
+
+  </details>
+
 - **`ccadd29` · 2026-08-15** — **Draft 80 — Vimeo parity for variant-aware video playback.** `resolveSource` now classifies each `variants` map entry per host: a Vimeo URL resolves to the Vimeo player, any other non-empty string stays a YouTube id (Draft 67 behavior, untouched) — one map may even mix hosts. A variant-resolved Vimeo play saves the single-source watch fields PLUS provenance: `{watched, completion_fraction, play_count, source: 'vimeo', video_id, variant_used}`; `required_completion` gating works identically on variant items; single-source Vimeo payload stays byte-for-byte; the portrait 9:16 wrapper was already source-agnostic. **Big catch while verifying against a real live player: Vimeo watch tracking has been DEAD since it shipped.** The `api=1` embed emits progress events named `playProgress` (legacy Froogaloop dialect) and ends with `finish` — never the `timeupdate`/`ended` the handler listened for — and emits nothing at all until an `addEventListener` handshake the code never sent. The handler now subscribes on `ready` and speaks both dialects, so `completion_fraction`/`watched` record real values for the FIRST time (this also quietly turns tracking on for the two live placeholder Kai items — payload keys unchanged, values now real). Message handling is scoped to the instance's own iframe (`e.origin` + `e.source`) so multi-player pages can't cross-feed counters, with per-instance player ids via `useId`. **Adversarially reviewed (7-agent panel), two confirmed findings fixed before ship:** (1) *cross-variant rehydration* — a gated video remounted after a back-nav variant change inherited the old cut's progress, opening the gate for a never-played video and mis-attributing its watch data; watch state now rehydrates only when the prior save's `variant_used` AND `video_id` match the resolved source (single-source rehydration unchanged). (2) *play_count inflation* — the player fires `play` on every pause→resume plus a startup `play@0/pause@0/play@0` jitter (observed live); the counter now counts once per viewing run (first within-a-second play, re-armed at `finish`), so the field honestly means plays-from-the-start. **Also confirmed by the review, NOT fixed here (pre-existing, outside the diff):** the wide CSV/SPSS export emits **zero columns for video items** — `exportFlatten` skips the type despite its own comment — so watch fields and `variant_used` live only in the DB + admin Long/Summary exports; flagged in an ENGAGEMENT_DATA addendum + a spawned follow-up task (matters for the fallback case, where the choice column records the PICK but only `variant_used` records what actually played). **Verified live at the demo (`/demo/variant-preview`, new gated 0.85 portrait variant-Vimeo item):** all three keys resolve; unset + missing-cut fallback; resume re-resolution; gate locked at 0% → released at threshold → payload `{watched:true, completion_fraction:0.99, play_count:1, source:'vimeo', video_id, variant_used:'male'}` with a pause/resume mid-run counted once; switching to female re-locks the gate at 0% (guard holds even with identical stand-in URLs) and switching back to male rehydrates; single-source Vimeo saves exactly the original three fields; YouTube items regression-clean; build + console clean. Scope note honored: engine parity only — Vimeo account/plan logistics stay a Monday question. No version bump (engine capability).
 
   <details>
@@ -9751,3 +9780,44 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
+
+---
+
+### Draft 81 — Wide export: emit video-item columns (gap confirmed by Draft 80's review)
+
+**Context.** Draft 80's adversarial review confirmed (pre-existing, not introduced there): `exportFlatten` skips `video` items entirely despite its own comment, so the wide CSV/SPSS export — the analysis pipeline — carries ZERO columns for any video item. Watch data (`watched`, `completion_fraction`, `play_count`) and `variant_used` live only in the DB and the admin Long/Summary exports. Once v6 authors nine video items, the study's video engagement data and the record of WHICH Sam variant actually played (distinct from which was picked — the fallback case makes these differ) would be invisible to the analyst. Monday-independent: whatever hosting the team picks, the export must carry the columns.
+
+**Change.** `exportFlatten` emits per-video-item columns in the wide export:
+
+- Column set per video item: `watched`, `completion_fraction`, `play_count`, `variant_used` (the last only for variant-aware items — or emitted empty for single-source, your call for column-stability; lean toward always-present for a stable codebook).
+- **Naming per Jessica's SPSS rules** (short, no spaces, `<timepoint>_<scale>_<item#>`-spirit): derive from the item's `token_key` the way other item types do — e.g. `sams_story_watched`, `sams_story_completion`, `sams_story_plays`, `sams_story_variant`. Match whatever prefixing convention the surrounding columns already use so the codebook reads uniformly. Keep names ≤ 32 chars for SPSS comfort.
+- **Missing-data semantics per the ENGAGEMENT_DATA framing:** YouTube plays (nulls) export as SPSS missing (empty cells), NOT zeros — "shown, not measured" must stay distinguishable from "played 0%." Vimeo click-pasts export their honest zeros. A video item with no response row at all (never reached) exports empty like any unreached item.
+- Long/Summary admin exports: unchanged (they already carry the payloads).
+- Update the `.sps` syntax generator if it enumerates columns (Draft 6 built it — check whether it derives from the same flatten logic or needs a parallel edit).
+
+**Verification:** wide export from the Draft 68 QA session + a `/demo/variant-preview`-style session with a variant Vimeo play shows the new columns with correct values (real fractions on Vimeo, empties on YouTube, `variant_used` populated on variant plays); column names SPSS-legal and convention-consistent; existing columns byte-identical (order + names unchanged — analysts may have syntax referencing them); `.sps` generator consistent; build clean.
+
+**Version bump:** none (export pipeline). Note it in the ENGAGEMENT_DATA addendum (closes the flagged gap).
+
+
+---
+
+### Draft 83 — Locked-instrument alignment, decision-independent slice (pre/post anchor labels + BW conditional)
+
+**Context.** Audit F6's pre/post drift is mostly gated on Monday (Q1 appraisal VAS, Q2 acceptability set, Q3 demographics/PDW). But one slice is untouched by ANY open question and can be authored now, shrinking the post-Monday v6 bundle: (a) the locked instruments label EVERY scale point on the core scales, and the live items carry min/max only — Draft 73's `anchor_labels` capability is shipped and waiting; (b) the bw1→bw2 conditional exists identically in the locked Pretest and Posttest (Draft 78's enumeration: Pretest ¶63, Posttest ¶26) and is currently live only on the follow-up.
+
+**Scope guard — do NOT touch:** the 9-item appraisal VAS (Q1), the acceptability items (Q2), anything demographics/PDW (Q3). If any anchor-label authoring would require touching those items, leave those items alone and note it. This draft is ONLY the core locked scales both the live flow and the locked docs agree on: BHS, ASCS, UCLA, NB, BPB, and the belonging-worry VAS pair, in both pretest and posttest sections.
+
+**Part A — Author anchor labels.**
+
+From the locked Pretest/Posttest docs (same .docx extraction approach as Draft 78 Part A), author `anchor_labels` for every core-scale item in the builder tables, verbatim per the locked anchors (including reverse-scored items' labels as printed — labels follow the printed page, reverse flags handle scoring). Sparse labeling where the doc is sparse (the 78 pattern). Builder-tables only; effective at v6.
+
+**Part B — Author the BW conditional.**
+
+Mirror follow-up v2's `show_if` (bw1 gt 0 → bw2, else skip_note) onto the pretest and posttest BW items, copy per the locked docs' parenthetical.
+
+**Part C — Verify.**
+
+Builder preview at 375×667: labeled points render on the core scales in both pre and post sections, no overflow (Draft 73's verified pattern); BW branch behaves both ways; the builder-vs-published-v5 diff = prior intended rows (71 + 72's item) PLUS exactly this enumerated set — list every changed item id in the shipped notes as the checklist. No live effect until v6; /demo and live untouched.
+
+**Version bump:** none (authoring, effective at the v6 republish).
