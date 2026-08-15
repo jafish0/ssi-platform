@@ -110,6 +110,39 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`76bf63e` · 2026-08-15** — **Draft 75 — `rsd-follow-up-90d` created, authored, and published as v1 (gap fix).** The slug was allow-listed in `mint-access-code` and routed in the participant flow, but the intervention never existed — every follow-up link would have dead-ended. Now live in production: **5 sections / 12 items** authored in the builder tables from the LOCKED FollowUp instrument (`FollowUp Survey Draft Belongingness_5.2.26.docx` via the Draft 16 sandbox mirror, verbatim — with the source doc's doubled-word "of this of the" typo corrected, **pending sign-off**): Welcome (locked intro incl. the $25 gift-card line, `Begin →`) → "How you feel" (BHS 0–3, ASCS 1–5, UCLA 1–3, NB 1–5 with reverse flags on nb1/nb2) → "Your skills and thoughts" (BPB 0–3, the 6 locked Appraisals 0–4, Belonging Worries as two 0–10 VAS) → "Your placement" (permanency `choice` with the four locked options + optional other-text `free_text` + disruption worry 0–4, all five anchors labeled) → "All done" (thanks). **Every likert uses Draft 73's `anchor_labels`** (sparse on Appraisals — only 0/2/4 labeled, matching the locked doc); token keys `*_fu` mirror the pre/post convention (`hopelessness_fu`, `appraisals_fu`, …). Snapshot assembled in SQL matching `builderUtils.assembleSnapshot` field-for-field; published v1; `current_version_id` flipped; `mint-access-code` needs zero changes (slug already allow-listed). **Celebration override capability** added to `DeliveryShellPage`: the last section's `config_json.celebration` (`{heading, line1, line2, show_tree}`) overrides the Draft 74 copy — the follow-up celebrates with *"That's everything — thanks for checking back in."* instead of "you finished the whole program"; defaults unchanged for the main program. **QA caught a real race and it's fixed:** the `?code=` auto-submit double-fired (StrictMode dev double-effect; the same race exists for real double-taps), minting two sessions **21ms apart** on a single-use code — and resume then picked the empty newest-started twin, stranding the kid's work. `validate-code` → **v3** (resume lookup orders by `last_active_at DESC` — the worked-in session is always fresher since save-response and update-session-progress both touch it; reconciliation verified live with the twin still present) + `CodeEntryPage`'s auto-submit is now ref-guarded (the `!submitting` state check can't stop a same-tick double-fire). Plus a PsychometricScale a11y nit: unlabeled sparse points announce just the number, not "1 — " with a dangling dash. **Verified end-to-end** on a temp single-use code at 375×667: entry → all 12 items (labels render incl. sparse; permanency auto-advance; optional other-text; zero overflow) → follow-up celebration with tree → completion stamped with 12/12 responses; resume-by-code regression passed on this slug; webhook branch confirmed slug-generic from deployed source (silent no-op until the Qualtrics secret is set — the harness draft covers the rest). QA artifacts cleaned up. **Open flags for the team:** (1) re-assent at follow-up — confirm with Jessica (flow doc says none); (2) intro typo fix sign-off; (3) display name ("Ready for Roots — 90-Day Check-In"); (4) Monday's psychometric decisions may touch this instrument too; (5) known limitations: no bw2 conditional skip (renderer limitation, same as live pre/post) and other-text as a separate optional item. Logged in INFRASTRUCTURE.md.
+
+  <details>
+  <summary>Draft 75 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 75 — Create, author, and publish the `rsd-follow-up-90d` intervention (gap found 2026-08-15)
+
+**Context.** Verified against production: the `interventions` table holds only `gains` and `ready-set-dedicate`. **The 90-day follow-up intervention does not exist** — yet `mint-access-code` allow-lists the `rsd-follow-up-90d` slug, the participant-flow doc mints a follow-up code for every consent (expires ~120 days), and flow steps 9-11 route the participant to it. Today that link would dead-end. Nothing in the 8/28 plan had scoped this.
+
+**Part A — Create the intervention.**
+
+New `rsd-follow-up-90d` intervention row (user-facing name along the lines of "Ready for Roots — 90-Day Check-In"; Josh/team can rename later, name is data). Minimal structure:
+
+1. **Welcome section** — one short text_prompt: warm, brief, re-orienting ("It's been about three months since you finished Ready for Roots. A few quick questions about how things are going. This takes about X minutes."). Per the flow doc there is NO re-assent at follow-up (steps 9-11 go straight to the survey) — but **flag this in the shipped notes as a confirm-with-Jessica item**, since it's an IRB-protocol read, not our call.
+2. **Follow-up survey section(s)** — authored as native `psychometric_scale` / `free_text` items from the LOCKED FollowUp instrument (`Final Measures/` — authoritative per 2026-05-18 lock). Use Draft 73's `anchor_labels` capability where the locked doc labels every point. The existing FollowUp sandbox activity (Draft 16) is the rendering reference, but live authoring should follow the same native-items pattern the main intervention's pre/post use. SPSS-convention variable naming on every item (`<timepoint>_<scale>_<item#>` — Jessica's rules).
+3. **Completion** — standard completion path. Verify `update-session-progress` fires the Qualtrics webhook for THIS slug too (flow step 11 requires it; the payload already carries `intervention_slug`, so it should be generic — confirm, don't assume).
+
+**Part B — Entry behavior checks.**
+
+- Follow-up codes are single-use → Draft 69's resume-by-code applies engine-wide; verify resume works on this intervention as a regression check.
+- Codes minted at consent expire ~120 days out; entry after expiry should show the kid-friendly expired-code message (Draft 68's copy fix) — verify it reads sensibly in the follow-up context.
+- The Draft 74 celebration screen will fire on completion here too — check the copy reads sensibly for a follow-up ("You did it — you finished the whole program." is wrong for a check-in). If the celebration copy is per-intervention data, author a follow-up-appropriate variant ("That's everything — thanks for checking back in."); if it's hardcoded, make it configurable enough for this case.
+
+**Part C — Publish + verify.**
+
+Publish version 1. End-to-end QA with a temp single-use code on the new slug: entry → welcome → all items (mobile viewport spot-check; anchor labels render) → completion → webhook payload carries `intervention_slug: "rsd-follow-up-90d"` (to a stand-in receiver if the Qualtrics secret isn't set yet — coordinate with Draft 76's harness if that's shipped). Confirm /demo and the main intervention are untouched.
+
+**Open flags for Josh/team (ship the build; note these):** (1) re-assent at follow-up — confirm with Jessica; (2) whether any of Monday's psychometric decisions (appraisal VAS, acceptability set) also appear in the locked FollowUp doc — if so, author per the locked doc now and adjust with the v6-era edits; (3) intervention display name.
+
+**Version bump:** n/a (new intervention, published as its v1). Log in INFRASTRUCTURE.md.
+
+  </details>
+
 - **`4777b2c` · 2026-08-15** — **Draft 74 — First-completion celebration screen.** The first thing a kid saw after finishing the whole 45–60 minute program was the revisit copy ("You've already finished this one.") — the emotional payoff moment read like an error. The engine already carried enough state to tell the moment apart with **no new flags**: `sessionMeta` is set once at bootstrap and never mutated, so first-completion-this-session = `completed && !exitInfo && sessionMeta.status !== 'completed'`. New `CelebrationScreen` in `DeliveryShellPage.jsx`: the **TreeProgress visual at full growth** (mounted at seed and advanced to stage 5 shortly after mount, because its animation only fires on a forward stage change — a static stage-5 mount renders inert), *"You did it — you finished the whole program."* / *"You built a plan, and it's yours to keep."* / a low-key *"You're all set — you can close this window whenever you're ready."* No emails, gift cards, or follow-up timing promised (Qualtrics-side workflow) — **copy is flagged reviewable for the team**. The exit_on hard-branch (assent "No") keeps its own friendly-exit copy and does NOT celebrate; the revisit path keeps the original copy. Verified against REAL sessions on the internal QA code: fast-forwarded a real session to the wrap-up via the engine's own `update-session-progress` call, answered all 10 wrap-up items, clicked "All done" → the celebration rendered at the true completion transition (tree present, no overflow at mobile width); reloading that completed session → revisit copy, no celebration; a fresh session declining assent → exit copy, no celebration; `completeSession`/webhook path untouched. No version bump (delivery-flow screen, not a versioned activity).
 
   <details>
@@ -9563,3 +9596,56 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
+
+
+---
+
+### Draft 76 — Qualtrics integration runbook + smoke-test harness
+
+**Context.** Josh builds the Qualtrics consent survey Thursday 8/20 and Friday 8/21. The ctac.app side of the handshake is built (mint-access-code with partner-key auth; completion webhook in update-session-progress), but the end-to-end smoke test has been pending since May because the Qualtrics side never existed. Two deliverables so Thursday is assembly-by-checklist instead of discovery: a runbook for Josh, and a harness that verifies the ctac.app side NOW, before Qualtrics exists.
+
+**Part A — `docs/QUALTRICS_SETUP.md` (the runbook).**
+
+Written for Josh following along inside the Qualtrics survey builder, in flow order. You own the edge-function contracts — every request/response below should be exact, copy-pasteable, and match the deployed source:
+
+1. **Embedded-data fields** to create on the survey flow (code + URL for both intervention and follow-up, and anything else the flow doc's "stored as embedded data" line implies).
+2. **The two mint calls** (Qualtrics Web Service elements, fired on consent submission): exact URL, method, headers (`x-partner-key` — reference where the key lives, do NOT print the secret in the doc), exact JSON body for each call (`ready-set-dedicate` / `rsd-follow-up-90d`, `external_ref` piped from the Qualtrics ResponseID — show the Qualtrics piped-text syntax), and how to map each JSON response field back into the embedded-data fields. Include the constructed participant URL format (`https://ssi.ctac.app/?code=...`).
+3. **The two triggered emails** (consent receipt to caregiver; intervention link to the delivery email) — where the embedded-data URL pipes into the message body. Plain-HTML button guidance per the known Outlook `linear-gradient` landmine (STATE_OF_THE_PLATFORM) — point at `docs/supabase_invite_email_template.html` for the safe pattern.
+4. **The completion-webhook receiver** (Qualtrics workflow with a JSON-event inbound task): how to create it, where its URL appears, and the reminder that this URL becomes the `QUALTRICS_COMPLETION_WEBHOOK_URL` secret (plus `QUALTRICS_API_TOKEN` if Qualtrics requires header auth — document both cases). What the inbound payload looks like (exact JSON), and the follow-on workflow steps: match on `external_ref`, set `study_completed`, fire the caregiver confirmation email.
+5. **The 90-day scheduled workflow** — fires 90 days after `completed_at`, emails the caregiver the pre-minted follow-up URL.
+6. **Secrets checklist** — the three Edge Function secrets, where each is set, which are already in place, which Thursday produces.
+7. **Joint test script** — the ordered end-to-end test Josh runs Thursday once both sides exist: fake consent → verify codes minted (SQL or /admin/codes) → emails arrive → link entry → partial completion + resume check → full completion → webhook received in Qualtrics → `study_completed` set → confirmation email. With expected-result checkboxes.
+
+**Part B — Smoke-test harness (verify OUR side now).**
+
+A small script (or documented curl sequence) in `scripts/` that simulates Qualtrics exactly:
+
+1. Calls `mint-access-code` twice as Qualtrics would (same headers, same bodies, a fake `external_ref`) — asserts both codes mint with the right slugs/expiries and shared `external_ref`.
+2. Temporarily points `QUALTRICS_COMPLETION_WEBHOOK_URL` at a stand-in receiver you control for the test (document the mechanism; restore state after), completes a session on the minted intervention code end-to-end, and asserts the webhook fires with the exact expected payload (`external_ref` round-trips).
+3. Same completion assertion for the follow-up slug **if Draft 75 has shipped** (coordinate; if not, note it as pending and the harness gains that leg later).
+4. Leaves no test residue: codes deactivated, sessions marked abandoned/cleaned, secret restored — enumerate the cleanup in the shipped notes.
+
+Run it and report results in the shipped notes — this retires the "smoke test pending since May" line on our side, leaving only the joint test for Thursday.
+
+**Verification:** runbook complete and matching deployed contracts (cite the function versions checked); harness run green with output pasted/summarized; no lingering test codes or secret changes; INFRASTRUCTURE.md updated (smoke-test status + runbook location).
+
+**Version bump:** none.
+
+---
+
+### Draft 77 — Rate limiting on public edge functions (pre-distribution hardening)
+
+**Context.** STATE_OF_THE_PLATFORM has carried this since May: `mint-access-code`, `validate-code`, `submit-feedback`, and `get-rsd-snapshot` have no rate limiting. That was acceptable while the audience was the named team; it stops being acceptable the day codes go out to real caregivers (beta, ~2 weeks). The threat is modest (leaked partner key minting unlimited codes; validate-code brute-forcing; feedback spam) but the insurance is cheap, so buy it now while nothing is urgent.
+
+**Scope — keep it simple:**
+
+- Per-IP counters with per-function daily caps, sized generously against legitimate use (a family retrying a code a dozen times must NEVER hit a limit; suggested starting points — `validate-code` ~50/day/IP, `mint-access-code` ~100/day/IP since it's server-to-server from Qualtrics's IPs, `submit-feedback` ~40/day/IP, `get-rsd-snapshot` ~200/day/IP — tune to your read of the traffic).
+- Storage: a small counters table or whatever lightweight mechanism fits the edge-function runtime — your call; no new infrastructure for its own sake.
+- On limit: 429 with a kid-friendly message on participant-facing functions ("Too many tries — take a break and try again later, or ask your caregiver for help."), plain 429 on the server-to-server one.
+- Log limit-hits so a real incident is visible in function logs.
+- **Must-not-break:** Qualtrics's mint calls (two per consent, batched consents on one Qualtrics IP could be N×2/day — size accordingly or key mint's limit on the partner key rather than IP), the Draft 69 resume path (repeated validate calls from one household), and the team's QA code usage.
+- New table (if used) follows the CLAUDE.md grants pattern (service_role only — no anon/authenticated access).
+
+**Verification:** normal flows unaffected (mint two codes, validate + resume repeatedly at household-realistic volume, submit feedback — none throttled); exceeding a cap returns the 429 + message; counters reset daily; limit-hit logged; INFRASTRUCTURE.md change-log entry.
+
+**Version bump:** none (edge-function change).
