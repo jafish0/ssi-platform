@@ -83,9 +83,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'belonging-skills-sort': {
-    version: 'v3.5',
-    updated: '2026-08-03',
+    version: 'v3.6',
+    updated: '2026-08-14',
     changelog: [
+      '2026-08-14 · v3.6 — Draft 70 (MINOR — interaction addition; fixes QA_MOBILE_2026-08 P0-2, where the "What I\'m already doing" bucket was unreachable by finger drag at phone height). (A) Tap-to-place: tapping a source card (a pointer sequence that moves < 8px) opens a bottom-sheet chooser — three bucket buttons + Cancel, one-thumb reachable regardless of where the card sits; choosing places the card exactly as a drag-drop would (same placeIntoBucket path, same stem-only bucket rendering, same payload). Tapping a placed card offers move-to-another-bucket / put-back-in-the-list via the same sheet (its ? and × buttons still work independently). Chooser buttons are real keyboard-operable <button>s; Escape/backdrop cancels; drag-and-drop is fully preserved alongside. (B) Drag edge auto-scroll: while a drag is active and the pointer is within 70px of the viewport top/bottom, a rAF loop scrolls the page 14px/frame and re-hit-tests the hovered bucket (the page moving under a stationary finger changes what\'s beneath it). Directions copy updated to lead with tap ("Tap each skill below to choose its bucket — or drag it in."). No data-shape change.',
       '2026-08-03 · v3.5 — Draft 58 Part A (2026-08-03 meeting; Bianca). Draft 55\'s bold `stem` prefix fixed the crowding on the sort page itself, but the buckets still rendered the FULL sentence once a card was dropped in. Buckets now show ONLY the bold stem — the source pile of cards (before dragging) and the end-of-activity summary/PNG both still show stem + full sentence, unchanged. Presentation only — no data-shape change.',
       '2026-07-27 · v3.4 — Draft 55 Part A (2026-07-27 meeting; Bianca crowding note). Each of the 7 behaviors gains a short bold `stem` label; the sort-page cards now lead with the bold stem then the rest of the sentence, so the buckets read as chunky labels instead of a wall of sentences. The drag ghost-chip uses the stem too. Full sentences still show on the cards and in the end-of-activity summary/PNG. Presentation only — no data-shape change.',
       '2026-06-29 · v3.3 — Draft 36 Part C. Directions copy now points the kid at the skill list below the buckets (Adrienne): "Drag each skill into a bucket" → "From the list of skills below, drag each one into a bucket." No data-shape change.',

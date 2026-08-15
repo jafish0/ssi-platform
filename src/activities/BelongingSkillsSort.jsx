@@ -137,6 +137,19 @@ const GHOST_LABEL_MAX = 30
 const GHOST_OFFSET_TOUCH = -56 // px above the finger
 const GHOST_OFFSET_MOUSE = -14 // px above the cursor
 
+// Tap-vs-drag threshold (Draft 70 / v3.6). pointerdown starts a drag
+// immediately (no movement threshold), so a plain tap used to be a drag
+// that spring-backed. If the pointer travels less than this between down
+// and up, treat it as a tap and open the placement chooser instead.
+const TAP_SLOP_PX = 8
+
+// Drag edge auto-scroll (Draft 70 Part B): while a drag is active and the
+// pointer is within EDGE px of the viewport top/bottom, scroll STEP px per
+// frame. Without this, buckets more than a viewport away from the source
+// cards are unreachable by a real finger on a phone (QA P0-2).
+const AUTOSCROLL_EDGE_PX = 70
+const AUTOSCROLL_STEP_PX = 14
+
 // Drop-animation duration. Brief asks for ~250ms ease-out on settle,
 // ~200ms on spring-back. Close enough — using 240ms either way for
 // simpler CSS.
@@ -204,9 +217,11 @@ function SkillCard({
   onPointerDownStart,
   onRemove,
   onKeyboardActivate,
+  onOpenChooser, // Draft 70: placed-card tap → move/return chooser
   index, // for the small leading "1." / "2." badge in unplaced
 }) {
   const isUnplaced = context === 'unplaced'
+  const placedTappable = !isUnplaced && !!onOpenChooser
 
   // Pointerdown handler — kicks off a drag. Only on unplaced cards.
   // We let buttons inside (the "?" affordance) stopPropagation in
@@ -219,30 +234,45 @@ function SkillCard({
   }
 
   function handleKeyDown(e) {
-    if (!isUnplaced || !onKeyboardActivate) return
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    if (isUnplaced && onKeyboardActivate) {
       e.preventDefault()
       onKeyboardActivate(behavior.id)
+    } else if (placedTappable) {
+      e.preventDefault()
+      onOpenChooser(behavior.id)
     }
+  }
+
+  // Placed-card tap opens the move/return chooser (Draft 70). Safe as a
+  // plain onClick: the inner × button stops click propagation and the ?
+  // button stops both pointerdown and click.
+  function handlePlacedClick() {
+    if (placedTappable) onOpenChooser(behavior.id)
   }
 
   return (
     <div
-      role={isUnplaced ? 'button' : 'group'}
-      tabIndex={isUnplaced ? 0 : -1}
+      role={isUnplaced || placedTappable ? 'button' : 'group'}
+      tabIndex={isUnplaced || placedTappable ? 0 : -1}
       aria-pressed={isKeyboardPicked || undefined}
       aria-label={
         isUnplaced
           ? `Skill ${index ?? ''}: ${behavior.text}`
-          : behavior.text
+          : placedTappable
+            ? `${behavior.text} — move to another bucket or put back`
+            : behavior.text
       }
       onPointerDown={handlePointerDown}
+      onClick={placedTappable ? handlePlacedClick : undefined}
       onKeyDown={handleKeyDown}
       className={
         'relative select-none rounded-2xl px-4 py-3 min-h-[52px] text-[14px] shadow-card transition-all ' +
         (isUnplaced
           ? 'bg-white text-slate-800 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-ctac-teal-200 '
-          : 'bg-white/95 text-slate-800 ') +
+          : placedTappable
+            ? 'bg-white/95 text-slate-800 cursor-pointer hover:ring-2 hover:ring-ctac-teal-200 '
+            : 'bg-white/95 text-slate-800 ') +
         (isBeingDragged ? ' opacity-40 ' : '') +
         (isKeyboardPicked
           ? ' ring-2 ring-ctac-teal-500 shadow-lg scale-[1.02] '
@@ -315,6 +345,7 @@ function Bucket({
   defOpenId,
   onToggleDef,
   onRemove,
+  onOpenChooser,
   isHovered,
   isKeyboardTarget,
   bucketRef,
@@ -367,10 +398,98 @@ function Bucket({
                 defOpen={defOpenId === b.id}
                 onToggleDef={() => onToggleDef(b.id)}
                 onRemove={onRemove}
+                onOpenChooser={onOpenChooser}
               />
             ))
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------- Tap-to-place chooser (Draft 70 / v3.6) ----------
+//
+// Bottom sheet opened by tapping a card: pick a bucket (placing exactly
+// as a drag-drop would), or — for a card already in a bucket — move it
+// or return it to the list. Fixed to the viewport bottom so it's
+// one-thumb reachable regardless of where the tapped card sits, which
+// is the whole point: on a phone the first bucket can be more than a
+// viewport away from the source cards (QA P0-2). Buttons are real
+// <button>s (keyboard-operable); Escape or the backdrop cancels.
+
+function PlacementChooser({ behavior, currentBucket, onPlace, onReturn, onCancel }) {
+  const firstBtnRef = useRef(null)
+
+  useEffect(() => {
+    firstBtnRef.current?.focus()
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onCancel()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={`Choose a bucket for ${behavior.text}`}>
+      <div
+        className="absolute inset-0 bg-slate-900/30"
+        onClick={onCancel}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-2xl p-5 pb-6 max-w-[560px] mx-auto">
+        <p className="text-[15px] leading-snug text-slate-800 mb-4">
+          Where does{' '}
+          <span className="font-semibold text-ctac-navy">{behavior.stem || behavior.text}</span>{' '}
+          go?
+        </p>
+        <div className="flex flex-col gap-2 mb-3">
+          {BUCKETS.map((b, i) => {
+            const isCurrent = b.id === currentBucket
+            return (
+              <button
+                key={b.id}
+                ref={i === 0 ? firstBtnRef : undefined}
+                type="button"
+                disabled={isCurrent}
+                onClick={() => onPlace(b.id)}
+                className={
+                  'w-full min-h-[48px] rounded-2xl border px-4 py-3 text-[15px] text-left transition-colors ' +
+                  (isCurrent
+                    ? 'bg-ctac-teal-100 border-ctac-teal-300 text-ctac-teal-900'
+                    : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-400 hover:bg-ctac-teal-50')
+                }
+              >
+                {b.label}
+                {isCurrent && (
+                  <span className="ml-2 text-[12px] italic text-ctac-teal-700">
+                    (it&apos;s here now)
+                  </span>
+                )}
+              </button>
+            )
+          })}
+          {onReturn && (
+            <button
+              type="button"
+              onClick={onReturn}
+              className="w-full min-h-[48px] rounded-2xl border border-slate-200 px-4 py-3 text-[15px] text-left text-slate-700 hover:border-ctac-teal-400 hover:bg-ctac-teal-50 transition-colors"
+            >
+              Put it back in the list
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full min-h-[44px] rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[14px] font-semibold"
+        >
+          Cancel
+        </button>
       </div>
     </div>
   )
@@ -440,6 +559,13 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
 
   // Which skill's definition tooltip is open. One at a time.
   const [defOpenId, setDefOpenId] = useState(null)
+
+  // Tap-to-place chooser (Draft 70 / v3.6). Holds the skill id whose
+  // bucket chooser is open, or null. Opened by tapping a source card
+  // (a pointer sequence that moved less than TAP_SLOP_PX) or a placed
+  // card; renders as a bottom sheet so it's one-thumb reachable no
+  // matter where the tapped card sits on the page.
+  const [chooserSkillId, setChooserSkillId] = useState(null)
 
   // aria-live status text — announced to screen readers on every
   // pickup / placement / removal.
@@ -541,6 +667,10 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
       skillId: behavior.id,
       pointerX: e.clientX,
       pointerY: e.clientY,
+      // Pointer-down coordinates, for tap-vs-drag detection on pointerup
+      // (Draft 70 — origin X/Y below are the card CENTER, not the pointer).
+      startX: e.clientX,
+      startY: e.clientY,
       ghostX: e.clientX,
       ghostY: e.clientY + offsetY,
       offsetY,
@@ -569,9 +699,22 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
         }
       })
     }
-    function handleUp() {
+    function handleUp(e) {
       setDrag((d) => {
         if (!d) return d
+        // Tap, not a drag (Draft 70): the pointer barely moved between
+        // down and up. Open the placement chooser for this skill instead
+        // of spring-backing, and drop the ghost immediately (return null
+        // clears the drag with no animation).
+        const upX = e?.clientX ?? d.pointerX
+        const upY = e?.clientY ?? d.pointerY
+        if (
+          !d.hoveredBucket &&
+          Math.hypot(upX - d.startX, upY - d.startY) < TAP_SLOP_PX
+        ) {
+          setChooserSkillId(d.skillId)
+          return null
+        }
         // Resolve the drop. If a bucket is hovered, settle; else
         // spring back. We immediately commit the placement (or no-op
         // on spring), then animate the ghost to its visual resting
@@ -599,11 +742,42 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
         return d
       })
     }
-    window.addEventListener('pointermove', handleMove)
+    // Edge auto-scroll (Draft 70 Part B): pointermove stops firing while
+    // the finger holds still at a screen edge, so a rAF loop does the
+    // scrolling. It tracks the latest pointer position via closure vars
+    // updated in handleMove, and re-hit-tests the hovered bucket each
+    // frame — the page moving under a stationary finger changes what's
+    // beneath it. bucketAtPoint reads fresh rects, so scrolling can't
+    // stale the hit-test. The identity-return in setDrag keeps no-change
+    // frames render-free.
+    let lastX = drag.pointerX
+    let lastY = drag.pointerY
+    function trackedMove(e) {
+      lastX = e.clientX
+      lastY = e.clientY
+      handleMove(e)
+    }
+    let rafId = null
+    function autoScrollLoop() {
+      if (lastY < AUTOSCROLL_EDGE_PX) {
+        window.scrollBy(0, -AUTOSCROLL_STEP_PX)
+      } else if (lastY > window.innerHeight - AUTOSCROLL_EDGE_PX) {
+        window.scrollBy(0, AUTOSCROLL_STEP_PX)
+      }
+      const hovered = bucketAtPoint(lastX, lastY)
+      setDrag((d) =>
+        d && d.hoveredBucket !== hovered ? { ...d, hoveredBucket: hovered } : d,
+      )
+      rafId = requestAnimationFrame(autoScrollLoop)
+    }
+    rafId = requestAnimationFrame(autoScrollLoop)
+
+    window.addEventListener('pointermove', trackedMove)
     window.addEventListener('pointerup', handleUp)
     window.addEventListener('pointercancel', handleUp)
     return () => {
-      window.removeEventListener('pointermove', handleMove)
+      cancelAnimationFrame(rafId)
+      window.removeEventListener('pointermove', trackedMove)
       window.removeEventListener('pointerup', handleUp)
       window.removeEventListener('pointercancel', handleUp)
     }
@@ -754,15 +928,15 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
 
       <h2 className="text-[22px] font-semibold mb-2">Belonging skills</h2>
       <p className="text-[15px] leading-relaxed text-slate-700 mb-1">
-        From the list of skills below, drag each one into a bucket. If a
-        skill isn&apos;t for you right now, drop it in{' '}
+        Tap each skill below to choose its bucket — or drag it in. If a
+        skill isn&apos;t for you right now, put it in{' '}
         <em>Not interested right now</em> — that&apos;s a real answer, not a
         wrong one.
       </p>
       <p className="text-[12px] text-slate-500 mb-5">
         Tap <span className="font-semibold">?</span> for a quick definition.
-        Tap <span className="font-semibold">×</span> on a placed card to send
-        it back.
+        Tap a placed card to move it, or its{' '}
+        <span className="font-semibold">×</span> to send it back.
       </p>
 
       {/* Buckets — three across on desktop, stacked on mobile */}
@@ -781,6 +955,7 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
                 setDefOpenId((prev) => (prev === id ? null : id))
               }
               onRemove={removeFromBuckets}
+              onOpenChooser={setChooserSkillId}
               isHovered={drag?.hoveredBucket === bucket.id}
               isKeyboardTarget={
                 keyboardPickup && keyboardTargetBucket === bucket.id
@@ -842,6 +1017,34 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
           targetY={dropAnim?.targetY}
         />
       )}
+
+      {/* Tap-to-place chooser (Draft 70 / v3.6) */}
+      {chooserSkillId && (() => {
+        const b = lookupBehavior(chooserSkillId)
+        if (!b) return null
+        const currentBucket =
+          BUCKETS.find((bk) => placement[bk.id].includes(chooserSkillId))?.id ||
+          null
+        return (
+          <PlacementChooser
+            behavior={b}
+            currentBucket={currentBucket}
+            onPlace={(bucketId) => {
+              placeIntoBucket(chooserSkillId, bucketId)
+              setChooserSkillId(null)
+            }}
+            onReturn={
+              currentBucket
+                ? () => {
+                    removeFromBuckets(chooserSkillId)
+                    setChooserSkillId(null)
+                  }
+                : null
+            }
+            onCancel={() => setChooserSkillId(null)}
+          />
+        )
+      })()}
     </div>
   )
 }
