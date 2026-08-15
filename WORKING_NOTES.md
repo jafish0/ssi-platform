@@ -110,6 +110,51 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`3b814c8` · 2026-08-14** — **Draft 66 — Live-intervention audit: diff `ready-set-dedicate` v5 against current demo state.** Read-only reconnaissance; deliverable is **`AUDIT_2026-08.md`** at repo root (ran long, per the draft's own either/or). Pulled the published v5 snapshot (14 sections / 57 items) straight from `intervention_versions` via SQL and verified the working builder tables are **byte-identical** to it (clean baseline). Confirmed all six live `custom_activity` items resolve through `ACTIVITY_REGISTRY` at runtime, so SelfReflection v1.6 / GU v5.9 / ASN v5.9 / BSS v3.5 / Poem v2.6 / Letter v2.3 — including the in-activity Kai narration gates — are already live-effective with **no republish needed**. Headline gaps: (F1) live section 10 still has the pre-Plan placeholder `structured_activity` — Plan v3.1 isn't in the registry and still renders synthetic `planDemoData.js` data, making real pull-forward wiring the biggest 8/28 code task; (F2/F3) two outro pull-forward tokens are broken in production today (`full_letter_text` / `full_poem_text` don't exist in current payloads → kids see empty keepsake boxes); (A.4) the `video` item type is **Vimeo-only** while all nine produced videos are YouTube (both live video items are `_placeholder` Vimeo stubs); (F5) live activity order differs from Adrienne's script order (the Kai handoffs encode SelfRefl → Poem → ASN → bridge → BSS → GU → Letter → Plan), so the video insertion implies a section reorder with knock-on page_break copy edits; (F6) live pre/post psychometrics drifted from the locked instruments (missing demographics + PDW, an extra 9-item 0–10 appraisal VAS the locked design dropped, 7-item vs locked 3-item acceptability set, min/max-only anchor labels). Part B maps all 10 video slots to exact positions with current YouTube IDs (Scene 4 flagged pending-replacement, Sam's Story flagged variant-dependent per Draft 67). Part C classifies execution: what flows through free, what's data-only after Draft 67, what needs code (Plan wiring, poem payload key, psychometric renderer gaps), plus six open questions for the team. No schema/intervention/activity changes.
+
+  <details>
+  <summary>Draft 66 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 66 — Live-intervention audit: diff `ready-set-dedicate` v5 against current demo state
+
+**Context.** The 8/28 goal is a distributable beta of the full Ready for Roots app. The live delivery machinery already exists (code entry at `/`, SessionEngine, snapshot versioning, completion webhook), but the live `ready-set-dedicate` intervention was last published as **version 5** on 2026-07-22 (the assent republish), and the demo activities have moved substantially since: Plan v3.1, Getting Unstuck v5.9 (zero-endorsement fallback + Kai narration gate), Allies/Safety Net v5.9 (Kai narration + dedup), BSS v3.5 (stems + bucket-stem display). Nine videos now exist that the live intervention has no items for.
+
+This draft is **pure reconnaissance — read-only, no schema changes, no republish.** Produce the diff + insertion plan that later drafts execute against. Output is a report appended to this file (or a separate `AUDIT_2026-08.md` at repo root if it runs long — your call).
+
+**Part A — Structural audit of live v5 vs. current demo.**
+
+1. Pull the current published snapshot (version 5) for `ready-set-dedicate` (via `get-version-snapshot` or straight SQL against `intervention_versions`).
+2. For each of the 14 sections / 57 items: identify item type, what it references, and whether its behavior/copy has drifted from the current demo equivalent. Specifically:
+   - `custom_activity` items — do they render the same components the demo sandbox uses (same registry)? If yes, the activity-level changes (Plan v3.1, GU v5.9, etc.) flow through automatically at runtime and need **no** section/item edits — confirm or refute this per activity.
+   - `text_prompt` / `choice` items — flag any whose copy has drifted from what the team has since approved (the assent title fix already shipped in v5; anything else?).
+   - Kai narration — GU + Safety Net gained in-activity Kai audio gates. Confirm these live inside the activity components (so they need no items) rather than needing section-level items.
+3. Flag anything in the live flow that the demo has since REMOVED (e.g., if any live item references content the team retired).
+
+**Part B — Video insertion plan.**
+
+Map where the 9 video items get authored into the live section order, per Adrienne's script sequence + the 2026-07-27 meeting decision (Sam's Story = the entrée, before psychoeducation):
+
+1. AI-transparency intro (video not yet produced — plan the slot, mark TBD)
+2. Sam's Story (variant-dependent — see Draft 67; plan the slot)
+3. Kai Part 1 Scene 1 → then Self-Reflection
+4. Kai Part 1 Scene 2 → then Who I Am Poem
+5. Kai Part 1 Scene 3 → then Allies/Safety Net
+6. Kai Part 1 Scene 4 (bridge, no activity)
+7. Kai Part 2 Scene 1 → then Belonging Skills Sort
+8. Kai Part 2 Scene 2 → then Getting Unstuck
+9. Kai Part 2 Scene 3 → then Letter to Another Youth
+10. Kai Conclusion → then The Plan
+
+For each: which existing live section it lands in (or whether it needs a new section), what the `video` item's config looks like in this schema (YouTube ID? URL? check how the existing `video` item type is shaped), and current YouTube IDs as placeholders — flag Scene 4's ID (`hTgGTKsx2Oo`) as pending-replacement (known audio fix in progress) and Sam's Story as variant-dependent.
+
+**Part C — Report.**
+
+Deliverable: ordered list of (1) items needing NO change (flow through via components), (2) items needing copy/config edits, (3) new items to author with exact positions, (4) open questions for Josh. Estimate which parts can be executed as data-only authoring vs. anything needing code changes. No changes in this draft — the follow-up drafts execute.
+
+**Verification:** the report exists, is complete against all 14 sections/57 items + the 9 planned videos, and does not modify the live intervention, any activity, or the schema.
+
+  </details>
+
 - **`6b66ae8` · 2026-08-13** — **/demo: fix Sam's Story thumbnail photos cropping off faces (in-conversation, no draft, Josh caught this on the deployed site).** The 2026-08-13 photo-shrink change left `CastCard`'s portrait images with a fixed 96×70 box and `object-cover` but no `object-position` override, so the default center crop cut heads off on the shorter-than-tall thumbnail (root cause: the earlier code relied on flexbox stretch giving the image an actual `height:70px` rather than `height:auto`, which made `object-cover` crop hard instead of just proportionally scaling). Added `object-top` so the crop anchors to the top of the frame, keeping faces in view; landscape Sam 14 crops on the sides as before and is unaffected since it isn't vertically constrained. Verified via computed styles in the local dev preview: `object-position` is now `50% 0%` on all five Sam's Story cards, box dimensions unchanged (96×70, matching the intended compact size), console + build clean.
 
 - **`640805e` · 2026-08-13** — **Draft 65 — Kai portrait in the narration player + dedupe the narration screens.** Three related polish changes now that the Kai narration audio has landed. **(A)** `KaiNarrationPlayer` gains a small circular Kai portrait (`/cast/images/kai-man.png`, `object-cover object-top` so his face fills the circle) to the left of the existing speaker icon, so participants see who is talking — a shared-component change picked up by all three narration spots automatically. **(B)** Removed body copy on the two Allies/Safety Net narration screens that duplicated Kai's transcript almost verbatim: the intro screen's opening ally-definition sentence and its closing "Let's build your safety net." line are gone (the additive "They might not always get it right..." sentence and the three color-coded support-type bullets stay, since those aren't in the narration); the Inspect-education screen's four red-flag bullets below the player are gone (the same four warning signs are already verbatim in the transcript) — the intro paragraph above the player and the closing "On the next screen..." paragraph stay, and the stale "Stephanie's PPT phrasing, don't edit without sign-off" code comment was updated to explain where the content now lives. Getting Unstuck's `kai_strategy_intro` phase needed no changes, confirmed by reading it directly — it only renders the `h2`, the player, and nav buttons. **(C)** Color-coded "practical support" / "emotional support" / "social support" inside the Kai intro transcript (amber/rose/sky, matching `TONE_TOKENS`) to match the `SUPPORT_TYPES` bullets below it. Allies / Safety Net v5.8 → v5.9 (MINOR). Verified in-browser end to end: Kai portrait renders on both Allies/Safety Net narration screens; old duplicate intro sentence and closing line gone, kept sentence + bullets present; transcript color-coding matches (amber/rose/sky `<strong>` classes confirmed); Inspect screen's red-flag bullets gone, intro/closing paragraphs intact; Continue-gating genuinely works off real audio completion (`audio.ended === true` confirmed, not just the fail-open path); version badge shows v5.9; console clean aside from the pre-existing unrelated Supabase snapshot-fetch error in this local dev sandbox; build clean.
@@ -9206,3 +9251,93 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 
 **Version bump:** none — demo content swap, not a versioned activity.
 -->
+
+---
+
+> **📌 Superseded note (2026-08-14, Claude Cowork):** The "Pending requirement — PID
+> linking between Qualtrics consent and ctac.app surveys" block further up this file
+> (dated ~2026-05) is **superseded** by the access-code architecture documented in
+> `RSD_Participant_Flow_updated.docx` and STATE_OF_THE_PLATFORM.md. There is no PID
+> and no `participants` table holding caregiver emails in Supabase. Instead: two
+> single-use access codes are minted at consent time via the already-built
+> `mint-access-code` edge function, linked by `external_ref` (= Qualtrics response
+> ID); Qualtrics remains the source of truth for participant identity; ctac.app
+> stores no caregiver emails. Completion webhooks (already built in
+> `update-session-progress`) close the loop back to Qualtrics. Remaining work is
+> Qualtrics-side survey wiring + setting the two TBD edge-function secrets
+> (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
+> test. Do not build the PID design.
+
+
+---
+
+### Draft 67 — Sam variant selection: choice item + variant-dependent video playback
+
+**Context.** Sam's Story exists in three variants (Male done; Female + Gender-Neutral in production next week). The participant should choose which Sam they want to see near the start of the session, and every Sam's Story video slot should then play that variant's cut. This is the one genuinely NEW engine capability on the 8/28 critical path, so it should be prototyped ahead of the content crunch. **How the choice is framed/worded is a team discussion point at the 2026-08-17 meeting** — build the mechanism now with placeholder framing copy, and the copy gets swapped after Monday.
+
+**Part A — Session-level variant state.**
+
+The SessionEngine needs a way to store a participant-level selection that downstream items can read. Suggested: a `session_variables` JSONB column on the session row (nullable, default `{}`), written by a new choice-item behavior and read by the video renderer. If a lighter mechanism already exists (e.g., deriving from the saved response of the choice item at render time), prefer that — you know the engine internals; the requirement is only: **choice made once early, readable by every later item, survives resume.**
+
+**Part B — The variant-selection item.**
+
+A `choice` item (or a new item type if `choice` can't carry side effects cleanly) placed right after the assent:
+
+- Three options: Sam (Male) / Sam (Female) / Sam (Gender Neutral) — placeholder framing copy: *"Sam's story can be told a few different ways. Pick the Sam you'd like to follow today."* (Team will reword Monday — make the copy data, not code.)
+- Optionally show the three character thumbnails (assets exist: `sam-16.png`, `sam-female-v3.png`, `kai-variant-2.png`) — nice-to-have, not required for the prototype.
+- Selection stores the variant key (`male` / `female` / `gender_neutral`) into the session-level state from Part A.
+- Response also saves as a normal response row (analysis may want to know who picked which variant).
+
+**Part C — Variant-aware video item.**
+
+Extend the `video` item config to optionally carry a variant map instead of a single source:
+
+```
+{ "variant_key": "sam_variant",
+  "variants": { "male": "<yt-id>", "female": "<yt-id>", "gender_neutral": "<yt-id>" },
+  "fallback": "male" }
+```
+
+Renderer resolves: session variable → variant ID → play. Missing/unset variable → `fallback` (covers preview mode, old sessions, and the window where Female/GN cuts don't exist yet — point all three at the Male ID initially and swap as cuts land; IDs are data).
+
+Single-source `video` items keep working exactly as today — this is additive.
+
+**Part D — Ship dark.**
+
+Do NOT add the selection item to the live intervention yet (that's part of the post-audit authoring, after Monday's framing decision). Ship the capability + a sandbox/preview route demonstration so Josh can click through: pick a variant → subsequent variant-aware video plays the right ID → resume mid-session → variant persists.
+
+**Verification:** choice writes the session variable; variant-aware video resolves correctly for all three keys; fallback works when unset; single-source videos unaffected; selection survives resume; response row records the pick; live intervention untouched; build + console clean.
+
+**Version bump:** none (engine capability; no published intervention change).
+
+---
+
+### Draft 68 — Mobile + resumability QA pass on the real participant flow
+
+**Context.** Beta participants (ages 11-17) will run the live `/` flow on PHONES. The team has been reviewing on desktop all summer. Before the 8/28 beta, run a structured QA pass on the real participant delivery path — code entry through completion — at mobile viewport, and produce a fix list. Where a fix is small and safe, fix it in the same session; where it's structural, write it up for a follow-up draft. This pass is against the LIVE flow (a test code + the current published v5), not /demo.
+
+**Part A — Mobile flow walkthrough (375×667 and 390×844 viewports).**
+
+Walk the entire participant path as a kid would experience it: code entry → assent (both branches) → pretest → each activity → posttest → completion screen. At each step check: layout (no horizontal scroll, no clipped controls), touch targets (~44px), text legibility, keyboard behavior on inputs (does the on-screen keyboard cover the field? does the viewport scroll to the focused input?), and any hover-only affordances that have no touch equivalent (tooltips — BSS definitions are known tap-to-toggle since v3.x; verify).
+
+**Part B — KaiNarrationPlayer on mobile Safari-like constraints.**
+
+iOS Safari blocks autoplay-with-audio aggressively. The player already has a Play-button fallback — verify the fallback path is OBVIOUS on a small screen (kid-findable, not a subtle icon), the progress bar and replay work by touch, the Continue gate still releases correctly after playback, and the transcript doesn't push the Continue button below the fold in a confusing way. Emulate via DevTools mobile UA/viewport at minimum; note anything that needs real-device confirmation by Josh.
+
+**Part C — Resumability under interruption.**
+
+A 45-60 minute session WILL get interrupted on a phone. Verify the SessionEngine's resume behavior survives: (1) tab/browser closed mid-activity and code re-entered — lands back at the right section with saved responses intact; (2) closed mid-video — acceptable to restart that video, but the session position must hold; (3) closed mid-Kai-narration-gate — gate state either persists or re-gates cleanly (re-listening is acceptable, a permanently locked Continue is not); (4) two-tabs-open edge case — no response clobbering (or document the behavior). Also verify the debounced response save actually flushed for the last interaction before close (type into a free-text, close immediately, resume — is the text there?).
+
+**Part D — Video items in-session on mobile.**
+
+Whatever video items exist in v5 (plus a scratch variant-aware item if Draft 67 has shipped): YouTube iframe behavior at mobile width — sizing inside the session layout, no layout shift, and note what the end-of-video YouTube UI shows (related-video wall on pause/end is a known concern for this audience; document severity so the team can decide YouTube vs self-hosted with real information).
+
+**Part E — Error-state UX at code entry.**
+
+Try: a used code, an expired code, a mistyped code, an empty submit. Each should produce a kid-friendly, non-technical message that says what to do next (ask your caregiver / re-check the link). Flag any raw error text, silent failures, or dead ends.
+
+**Part F — Deliverable.**
+
+A prioritized fix list appended to this file: (P0) blocks a kid from completing, (P1) confusing but survivable, (P2) polish. Small safe fixes (copy, spacing, touch-target padding) may ship in this same session — one commit, listed in the report. Structural findings become named follow-up draft candidates with a one-line scope each.
+
+**Verification:** the report exists covering Parts A-E; any shipped quick fixes are enumerated with what changed; no activity version bumps unless a shipped fix touches activity behavior (then MINOR bump per convention); live intervention content untouched; build + console clean.
