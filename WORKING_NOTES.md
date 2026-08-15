@@ -110,6 +110,56 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`5c9a0cc` · 2026-08-15** — **Draft 72 — The Plan: real cross-activity pull-forward (audit F1 — the big one). Plan v3.1 → v4.0 (MAJOR).** Closes the flow-integration item deferred since Draft 21. **Part A:** `Plan` added to `ACTIVITY_REGISTRY`; live sec-10's placeholder `structured_activity` swapped to `custom_activity {component_name: "Plan"}` (token_key `plan`) in the builder tables — effective at the v6 republish; the builder-vs-published-v5 diff re-verified to be exactly Draft 71's ten rows + this one item. **Part B:** new `src/lib/planRealData.js` maps the engine's token_key-keyed `sessionData` into the exact planData contract the screens/review/keepsake already rendered: BSS willing-to-try ids resolved through the shared skills set with per-skill how-example seeds for all 7; GU worked thoughts including the v5.9 randomly-selected fallback pair (challenge → `response`; both_and → `both_and_root` + " AND " + `and_statement`, matching GU's own builder; `a_other` uses its payload text); ASN kept allies post-Inspect (`removed_via_inspect` filtered) + non-skipped non-empty Strengthen entries; `letter_builder.letter`; `who_i_am_poem.full_poem_text` (v2.7+ — older payloads collapse the poem section); Self-Reflection inclusion memory. `planDemoData.js` is now strictly the sandbox/IRB-preview fallback and the Draft 49 caveat renders only in that mode. **Part C (empty states):** an empty willing-to-try bucket offers the FULL skills list with the draft's copy ("You didn't put anything in your willing-to-try bucket — no problem…"), and the for-later + radar lists are suppressed rather than mislabeled; empty thoughts/letter/poem sections collapse cleanly from BOTH the review and the PNG/PDF keepsake; the Plan is always completable (skill save payload shape unchanged: `skill_commitment` / `inclusion_reflection`). **Part D/E verification:** the mapper is unit-tested with 24 assertions against REAL payloads captured from the completed Draft-68 live QA session (including the pre-v2.7 poem payload and the GU randomly-selected pair) plus a sparse fixture; TEMP unlisted in-browser QA surfaces added at **`/demo/sandbox/plan-real-preview`** (full real data: caveat suppressed, exactly the 6 real skills with bs7 absent, real ally in the who-dropdown, real thoughts/people/letter, poem collapsed, save payload verified, PNG + PDF keepsakes generated clean) and **`/demo/sandbox/plan-sparse-preview`** (BSS + Letter skipped: full-list fallback + copy, both_and composition, removed-ally filtering, single surviving strengthen entry, letter section collapsed, poem via full_poem_text, skip-to-review completable, sparse keepsake clean) — both reachable only by direct URL (their 'internal QA' category matches no /demo section filter). Plain sandbox regression: synthetic data + caveat + v4.0 badge, unchanged behavior. Build + console clean.
+
+  <details>
+  <summary>Draft 72 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 72 — The Plan: real cross-activity pull-forward (audit F1 — the big one)
+
+**Context.** AUDIT_2026-08.md F1: live sec 10 still renders the pre-Plan placeholder, and Plan v3.1 itself still reads synthetic content from `planDemoData.js` — real cross-activity integration has been deferred since Draft 21. This is the largest remaining code task before 8/28, and it does NOT depend on Monday's open questions (the Plan is last in both the live and script orderings; its upstream sources are unaffected). Draft 71 Part C just landed the missing poem key (`full_poem_text`), so every source payload the Plan needs now exists.
+
+**Part A — Registry + item edit.**
+
+1. Add `Plan` to `ACTIVITY_REGISTRY` (the one-liner from F1a).
+2. Builder tables: replace sec 10's placeholder `structured_activity` item with `custom_activity { component_name: "Plan" }`, and remove that section's stale placeholder pull-forward items (F4 noted their raw-id interpolation is moot once this lands). Effective at the v6 republish, same pattern as Draft 71 B/D/E.
+
+**Part B — Real-data mode.**
+
+When the Plan renders in-session (real `sessionData` present), build its data model from the actual upstream payloads instead of `planDemoData.js`. Derive the exact payload keys by reading each source component — you own both sides. The section → source map:
+
+- **Skills to Try (pick-one screen + "for later" list):** BSS payload's willing-to-try ids, mapped to full sentence text + stems via the shared behaviors registry (do NOT duplicate the text — import the registry). Audit F4 confirmed the payload carries raw ids like `bs3`.
+- **Thoughts to Practice (display-only):** Getting Unstuck's worked thoughts + the kid's reframes (challenge answers / both-and statements), including the v5.9 randomly-selected fallback pair when that path fired.
+- **Your People (display-only):** Allies/Safety Net's allies + strengthening entries ({type, person, action}, color-coded per support type as v3.0 spec'd).
+- **Words of Wisdom (display-only):** LetterBuilder's `letter` key (the real key, per audit F2).
+- **Who You Are (display-only):** WhoIAmPoem's `full_poem_text` (new in v2.7).
+- **When You Felt Included:** stays an in-Plan question — unchanged.
+
+`planDemoData.js` becomes strictly the sandbox/preview fallback: used ONLY when no real sessionData exists (/demo sandbox, /irb-preview). Keep the Draft 49 caveat note on Screen 2 for that mode; suppress it in real-data mode. Update the lifecycle comments accordingly.
+
+**Part C — Empty-state handling (the design work).**
+
+A kid can reach the Plan having skipped or half-done any upstream activity. Every section needs a graceful empty state — never a crash, never a silent empty box (that's exactly the F2/F3 failure mode we just fixed):
+
+- **No willing-to-try skills:** show the full skills list to browse and pick one from (mirrors GU v5.9's spirit — the kid still does the practice; copy along the lines of "You didn't put anything in your willing-to-try bucket — no problem. Pick one from the full list that feels worth a try.")
+- **No GU reframes / no allies / no letter / no poem:** the display-only section renders an encouraging one-liner or collapses cleanly — your judgment per section, with the rule that the Plan must always be completable and the keepsake must never look broken.
+
+**Part D — Keepsake parity.**
+
+`buildPlanModel()` and the PNG + single-page PDF render from the same real-data model. Verify the export with real payloads end-to-end, including a sparse session (some sections empty) — layout must not break.
+
+**Part E — Verification.**
+
+- Builder preview (renders from builder tables): full run-through with a session that completed all upstream activities — every Plan section shows that session's real content; payload saves with the v3.1 shape (`skill_commitment` etc. — save-shape unchanged).
+- Sparse session: skip BSS + Letter entirely → Plan still completable, empty states render per Part C, PNG/PDF clean.
+- Sandbox + /irb-preview regression: still render synthetic planDemoData with the caveat note, unchanged behavior.
+- Live v5 untouched until republish; builder diff = sec 10 item edits only (beyond Draft 71's already-confirmed rows).
+- Build + console clean.
+
+**Version bump:** Plan v3.1 → **v4.0 (MAJOR)** — the data source changes structurally (synthetic → real cross-activity integration), per the bump convention. This closes the deferred-since-Draft-21 item.
+
+  </details>
+
 - **`e0c830c` · 2026-08-14** — **Draft 71 — Beta quick-wins bundle (six fixes from AUDIT_2026-08 + QA_MOBILE_2026-08, one commit).** **(A)** `TEST-RSD-001` **deactivated** (it was advertised verbatim as the code-entry placeholder — an active, unlimited production code); the placeholder now shows the fake format `e.g. RSD-XXXX-0000`; replacement internal QA code for the team, documented only here per the draft: **`RSD-QAT3-M8XK`** (multi-use/unlimited, cohort "Internal QA (Draft 71)" — multi-use codes mint a fresh session per entry under Draft 69's resume semantics, which is the desired QA behavior; verified it validates). **(B)** Live outro "Your letter" pull-forward token fixed in the builder tables (`{{response.letter_builder.full_letter_text}}` → `{{response.letter_builder.letter}}`) — takes effect at the v6 republish. **(C)** WhoIAmPoem **v2.6 → v2.7**: save payload gains `full_poem_text` via the existing `buildPoemText` helper (byte-identical to the keepsake screen, mirrors + skipped-empty-lines included; verified in the captured sandbox payload), feeding the live outro's poem pull-forward that rendered an empty box. **(D)** Doubled-apostrophe sweep across ALL `ready-set-dedicate` items in the builder tables — 8 items carried literal `won''t` / `don''t` / `can''t` rendered verbatim to participants; zero remain; takes effect at v6. **The same bug exists in 17 GAINS items** — deliberately left for the GAINS track (own working-notes file + draft numbering); flagged as a spin-off task. **(E)** Stale sec-11 letter intro ("we've already started some pieces…" — referencing pull-forward behavior LetterBuilder v2.0 removed) reworded to "This letter is yours to write — say whatever you think another young person needs to hear." — takes effect at v6. **(F)** `KaiNarrationPlayer` gains a small muted hint below the player controls while the gate is locked — *"The Continue button unlocks when Kai finishes."* — hidden once narration completes; shared component so all three narration spots get it; no activity bumps (component-internal, same convention as the portrait). **Verification:** builder-vs-published-v5 diff confirmed to be EXACTLY the ten intended rows (8 apostrophe items + letter token + sec-11 intro — the tables were byte-identical at audit time, so the diff is the checklist); `TEST-RSD-001` now returns the inactive-code message with caregiver guidance; placeholder renders the fake format; poem payload verified; hint verified at 375×667 (shows while gated, disappears on completion, no overflow); build + console clean. **Version bumps:** WhoIAmPoem v2.6 → v2.7 only.
 
   <details>
@@ -9473,3 +9523,34 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
+
+
+---
+
+### Draft 73 — `psychometric_scale`: per-point anchor labels
+
+**Context.** AUDIT_2026-08.md A.3/F6: the renderer supports only `{min_label, max_label}`, but the locked instruments label every scale point (including Jessica's "Neither Agree nor Disagree" middle anchor on the acceptability items). Whatever Monday decides about WHICH items survive in pre/post, the v6 authoring will need per-point labels — so build the capability now, author later.
+
+**Change.** `psychometric_scale` config gains an optional `anchor_labels` array (length = number of scale points). When present, each point renders its label; when absent, current min/max-only behavior is unchanged (fully additive — zero live items change appearance).
+
+**Mobile is the design constraint:** five multi-word labels under five touch targets at 375px won't fit side by side. Pick a pattern that stays readable — e.g. labels stacked under each point at a small size only where they fit, plus the selected point's label echoed prominently near the control; or per-point labels revealed on the selected state with min/max always visible. Your call; the requirements are (1) a kid can see what a point means BEFORE selecting it, (2) the selected meaning is unmistakable after, (3) no horizontal overflow at 375px, (4) touch targets stay ≥44px (QA baseline was 70×48 — don't shrink them to make room).
+
+**Verification:** a scratch item with 5 labeled anchors renders correctly at 375×667 and 390×844 (both requirements above); existing min/max items pixel-unchanged; keyboard + screen-reader labels correct (each radio/point announces its anchor text); build + console clean. Demonstrate in the builder preview or a sandbox scratch item — no live authoring in this draft.
+
+**Version bump:** none (engine item-type capability; no live items changed).
+
+---
+
+### Draft 74 — First-completion celebration screen
+
+**Context.** QA_MOBILE_2026-08.md P2: the first thing a kid sees after finishing the entire 45-60 minute program is the revisit copy — "You've already finished this one." Anticlimactic is underselling it; this is the emotional payoff moment of the whole intervention and currently reads like an error.
+
+**Change.** Differentiate first completion from revisit in the delivery flow:
+
+- **First completion** (the transition where `completed_at` gets stamped): a warm congratulatory screen. Elements: a real congratulation ("You did it — you finished the whole program."), a line honoring the work ("You built a plan, and it's yours to keep."), and a low-key what-happens-next note ("You're all set — you can close this window whenever you're ready."). Ready-for-Roots warm styling; if the tree-progress visual is cheap to reuse here at full growth, it's the perfect image for this moment — include it if it drops in cleanly, skip if it fights the layout.
+- **Revisit** (re-entering a completed session later): current already-finished copy stays as-is.
+- **Copy constraints:** do NOT promise emails, gift cards, or follow-up timing — the incentive workflow is Qualtrics-side and its participant-facing comms aren't ours to promise. Keep it warm and self-contained. Copy is data-adjacent; the team may reword after seeing it — flag it in the shipped notes as reviewable.
+
+**Verification:** complete a QA session end-to-end → celebration screen renders at the completion transition (mobile viewport check, no overflow); re-enter the same code → revisit copy, not the celebration; completion stamping + webhook behavior unchanged (the Draft 68 pass verified the webhook skip without `external_ref` — don't disturb that path); build + console clean.
+
+**Version bump:** none (delivery-flow screen, not a versioned activity).
