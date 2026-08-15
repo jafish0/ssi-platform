@@ -110,6 +110,27 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`4777b2c` · 2026-08-15** — **Draft 74 — First-completion celebration screen.** The first thing a kid saw after finishing the whole 45–60 minute program was the revisit copy ("You've already finished this one.") — the emotional payoff moment read like an error. The engine already carried enough state to tell the moment apart with **no new flags**: `sessionMeta` is set once at bootstrap and never mutated, so first-completion-this-session = `completed && !exitInfo && sessionMeta.status !== 'completed'`. New `CelebrationScreen` in `DeliveryShellPage.jsx`: the **TreeProgress visual at full growth** (mounted at seed and advanced to stage 5 shortly after mount, because its animation only fires on a forward stage change — a static stage-5 mount renders inert), *"You did it — you finished the whole program."* / *"You built a plan, and it's yours to keep."* / a low-key *"You're all set — you can close this window whenever you're ready."* No emails, gift cards, or follow-up timing promised (Qualtrics-side workflow) — **copy is flagged reviewable for the team**. The exit_on hard-branch (assent "No") keeps its own friendly-exit copy and does NOT celebrate; the revisit path keeps the original copy. Verified against REAL sessions on the internal QA code: fast-forwarded a real session to the wrap-up via the engine's own `update-session-progress` call, answered all 10 wrap-up items, clicked "All done" → the celebration rendered at the true completion transition (tree present, no overflow at mobile width); reloading that completed session → revisit copy, no celebration; a fresh session declining assent → exit copy, no celebration; `completeSession`/webhook path untouched. No version bump (delivery-flow screen, not a versioned activity).
+
+  <details>
+  <summary>Draft 74 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 74 — First-completion celebration screen
+
+**Context.** QA_MOBILE_2026-08.md P2: the first thing a kid sees after finishing the entire 45-60 minute program is the revisit copy — "You've already finished this one." Anticlimactic is underselling it; this is the emotional payoff moment of the whole intervention and currently reads like an error.
+
+**Change.** Differentiate first completion from revisit in the delivery flow:
+
+- **First completion** (the transition where `completed_at` gets stamped): a warm congratulatory screen. Elements: a real congratulation ("You did it — you finished the whole program."), a line honoring the work ("You built a plan, and it's yours to keep."), and a low-key what-happens-next note ("You're all set — you can close this window whenever you're ready."). Ready-for-Roots warm styling; if the tree-progress visual is cheap to reuse here at full growth, it's the perfect image for this moment — include it if it drops in cleanly, skip if it fights the layout.
+- **Revisit** (re-entering a completed session later): current already-finished copy stays as-is.
+- **Copy constraints:** do NOT promise emails, gift cards, or follow-up timing — the incentive workflow is Qualtrics-side and its participant-facing comms aren't ours to promise. Keep it warm and self-contained. Copy is data-adjacent; the team may reword after seeing it — flag it in the shipped notes as reviewable.
+
+**Verification:** complete a QA session end-to-end → celebration screen renders at the completion transition (mobile viewport check, no overflow); re-enter the same code → revisit copy, not the celebration; completion stamping + webhook behavior unchanged (the Draft 68 pass verified the webhook skip without `external_ref` — don't disturb that path); build + console clean.
+
+**Version bump:** none (delivery-flow screen, not a versioned activity).
+
+  </details>
+
 - **`cf64300` · 2026-08-15** — **Draft 73 — `psychometric_scale`: per-point anchor labels (additive engine capability).** Config gains an optional **`anchors.anchor_labels`** array (index 0 = the min point). When present: every likert point renders its label under the number at a small wrapping size — the buttons GROW taller (56×96 at 375px) and never shrink below the 48px touch floor, satisfying see-it-before-you-select; the selected point's meaning echoes prominently under the row ("Your answer: 2 — Neither Agree nor Disagree", `aria-live`); the now-redundant min/max end-label row is hidden; and each radio carries an `aria-label` with its anchor text (screen readers announce "2 — Neither Agree nor Disagree", not just "2"). When absent, the rendering branch is the original markup **character-for-character** — zero live items change appearance. Demonstrated on a TEMP unlisted scratch surface at **`/demo/sandbox/scale-anchors-preview`** ('internal QA' category → appears in no /demo section; two acceptability items with the locked 5-label set incl. Jessica's "Neither Agree nor Disagree" middle): verified at 375×667 AND 390×844 — all five labels visible pre-selection, zero horizontal overflow, targets 56×96 / 59×84, aria-labels + aria-checked correct, echo renders on select. No live authoring in this draft; the v6 authoring adds the labels item-by-item once Monday settles which items survive. No version bump (engine item-type capability).
 
   <details>
@@ -9542,21 +9563,3 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
-
-
-
----
-
-### Draft 74 — First-completion celebration screen
-
-**Context.** QA_MOBILE_2026-08.md P2: the first thing a kid sees after finishing the entire 45-60 minute program is the revisit copy — "You've already finished this one." Anticlimactic is underselling it; this is the emotional payoff moment of the whole intervention and currently reads like an error.
-
-**Change.** Differentiate first completion from revisit in the delivery flow:
-
-- **First completion** (the transition where `completed_at` gets stamped): a warm congratulatory screen. Elements: a real congratulation ("You did it — you finished the whole program."), a line honoring the work ("You built a plan, and it's yours to keep."), and a low-key what-happens-next note ("You're all set — you can close this window whenever you're ready."). Ready-for-Roots warm styling; if the tree-progress visual is cheap to reuse here at full growth, it's the perfect image for this moment — include it if it drops in cleanly, skip if it fights the layout.
-- **Revisit** (re-entering a completed session later): current already-finished copy stays as-is.
-- **Copy constraints:** do NOT promise emails, gift cards, or follow-up timing — the incentive workflow is Qualtrics-side and its participant-facing comms aren't ours to promise. Keep it warm and self-contained. Copy is data-adjacent; the team may reword after seeing it — flag it in the shipped notes as reviewable.
-
-**Verification:** complete a QA session end-to-end → celebration screen renders at the completion transition (mobile viewport check, no overflow); re-enter the same code → revisit copy, not the celebration; completion stamping + webhook behavior unchanged (the Draft 68 pass verified the webhook skip without `external_ref` — don't disturb that path); build + console clean.
-
-**Version bump:** none (delivery-flow screen, not a versioned activity).
