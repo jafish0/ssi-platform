@@ -110,6 +110,38 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`d61ace4` · 2026-08-15** — **Draft 78 — Conditional item display (bw2 + locked-instrument conditionals).** **Part A enumeration (from the locked docs themselves, extracted from the .docx XML):** exactly ONE display-logic conditional exists across all three instruments, and it appears in all three — Pretest ¶63, Posttest ¶26, FollowUp ¶52 all carry "To what degree do you have worries about belonging…? *(If they select “0” on the slider, Q2 will be skipped)*", i.e. **bw1 gates bw2**. The FollowUp permanency "Other: (please specify)" is an inline specify affordance on a choice option, NOT display logic — the current choice + optional free_text authoring already records it, so per the draft’s own guard ("build exactly that much") nothing was built for it. **The capability is intra-scale, not engine-level:** bw1/bw2 live inside ONE `psychometric_scale` item’s `items` array (`belong_stress_fu`, format vas — matching the doc’s "slider"), so an engine-level item `show_if` could never express it. Built the smallest correct thing: **sub-item `show_if`** in `PsychometricScale` — `{ item_id, operator (equals|not_equals|gt|gte|lt|lte|in), value }` referencing another item in the same scale, evaluated live against in-scale responses. Gate unanswered → dependent renders nothing (progressive disclosure); condition met → normal item; condition failed → the optional authored `skip_note` renders in its place (survey-mirror styling + copy, `aria-live=polite`). Hidden items are excluded from the Continue gate, and **responses are pruned to visible items at save** — bw2 answered, then bw1 moved to 0, saves `{bw1:0}` only (proven in sandbox). Malformed conditions fail OPEN (a broken condition must never silently drop a locked-instrument question). One-at-a-time mode navigates/paginates over the visible list. **Export verified, not assumed:** `exportFlatten`’s scale extractor emits `''` for an absent `scale_responses` key → skipped bw2 lands as an SPSS missing cell while the column stays in the codebook; builder round-trips the new fields untouched (`patchItem` spreads). **Applied + republished:** bw2’s `show_if` (gt 0) + skip note authored in the builder tables; **`rsd-follow-up-90d` republished as v2** (snapshot assembled matching `assembleSnapshot`; v1→v2 diff verified to be exactly the one `belong_stress_fu` item). Verified live at 375×812 on two temp single-use codes, both completing on v2: **bw1=3 → bw2 appears, payload `{bw1:3, bw2:7}`**; **bw1=0 → skip note, Continue enabled, payload `{bw1:0}` with no bw2 key, 12/12 responses, completion clean**. Unconditioned scales regression-checked (anchors preview identical). Temp codes deactivated after. Sandbox QA surface: `/demo/sandbox/scale-conditional-preview` (unlisted, internal QA). Ready for v6: the same mechanism covers the identical BW conditional in the locked Pretest/Posttest. No version bumps (engine + authoring).
+
+  <details>
+  <summary>Draft 78 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 78 — Conditional item display (bw2 + locked-instrument conditionals)
+
+**Context.** Draft 75 shipped the follow-up with a flagged known limitation: the renderer has no conditional skip, so bw2 (Belonging Worries item 2) shows unconditionally even where the locked instrument conditions it. AUDIT_2026-08.md F6 lists "no conditional skip" as one of the renderer gaps behind the pre/post drift too — so the v6 authoring may hit the same wall on the locked Pretest/Posttest. Build the capability once, fix the live follow-up, and have it ready for v6.
+
+**Part A — Scope the need from the locked docs first.**
+
+Before building: enumerate EVERY conditional in the locked instruments (`Final Measures/` — FollowUp, Pretest, Posttest). For each: the gating item, the condition, and the dependent item(s). If it turns out bw2 is the ONLY conditional across all three docs, say so and build exactly that much. Do not build a general rules engine for one use case — build the smallest capability the enumerated conditionals require.
+
+**Part B — The capability.**
+
+Item-level `show_if` config (shape to your judgment; something like `{ "token_key": "...", "item_id": "...", "operator": "equals|gte|in", "value": ... }`), evaluated against the session's saved responses at render time:
+
+- Hidden items are SKIPPED cleanly: no gap in the visible flow, no response row created, progress/completion counting treats them as not-required.
+- Answer changes upstream re-evaluate downstream visibility within the same section (if the kid changes bw1, bw2 appears/disappears coherently; an orphaned bw2 response from a since-hidden state must not persist into the payload).
+- Export/SPSS convention: a skipped conditional item exports as missing per Jessica's rules — confirm the export pipeline treats absent-response-by-design sensibly (likely already does; verify, don't assume).
+- Sandbox/preview: works identically from synthetic responses.
+
+**Part C — Apply + republish the follow-up.**
+
+Author bw2's `show_if` per the locked doc in the builder tables, republish `rsd-follow-up-90d` as v2 (no participants exist — cheap), and re-verify the Draft 75 end-to-end pass on the affected section (both branches: condition met → bw2 shows and saves; not met → skipped, completion still clean, payload carries no bw2).
+
+**Verification:** Part A enumeration in the shipped notes; both branches verified live on a temp code at mobile viewport; no change to any unconditioned item's behavior; main intervention untouched; build + console clean. Log the capability in INFRASTRUCTURE.md (engine change).
+
+**Version bump:** follow-up intervention republished v1 → v2. No activity bumps (engine + authoring).
+
+  </details>
+
 - **`aa6ecb1` · 2026-08-15** — **Draft 77 — Rate limiting on public edge functions (pre-distribution hardening).** New `edge_rate_limits` migration: a **service_role-only** counters table (`bucket` PK = `<function>:<key>:<YYYY-MM-DD>` → counters reset daily by construction; RLS on with zero policies, invisible to the public Data API) + an atomic `bump_rate_limit()` upsert-increment. **Every limiter fails OPEN on counter errors** — a hiccup must never block a kid. Deployed: **`validate-code` v4** (100/day/IP, counted on EVERY request BEFORE the code lookup so brute-forcing is bounded; 429 with the draft's kid-friendly copy), **`submit-feedback` v6** (40/day/IP), **`get-rsd-snapshot` v2** (200/day/IP; heads-up: the MCP redeploy flipped its `verify_jwt` false→true — same landmine INFRASTRUCTURE documented for submit-feedback v5 — verified harmless since /demo always sends the anon JWT, and bare unauthenticated GETs now 401, which is a tightening). **`mint-access-code` was deliberately NOT redeployed via MCP:** an MCP deploy would flip `verify_jwt` to true and break Qualtrics (which sends no JWT) before the partner-key check even runs. Its rate-limited v2 source is **repo-tracked at `supabase/functions/mint-access-code/index.ts`** with the limit keyed on the PARTNER KEY (1000/day, counted post-auth — per the draft's note that batched consents can share one Qualtrics egress IP) — **Josh ships it with `supabase functions deploy mint-access-code --no-verify-jwt`** (one line, noted in the file header and INFRASTRUCTURE). Verified live against production: normal validate/feedback/snapshot flows unaffected at realistic volume; counter seeded to 99 → the 100th validate passed and the **101st returned the 429 + caregiver-help message**; deleting the bucket restored normal flow immediately; limit-hits logged (`[rate-limit] limit hit`). Sizing honors the must-not-break list: household retries, Draft 69 resume revalidation, team QA on the multi-use code, and Qualtrics consent bursts all sit far below the caps. No version bump.
 
   <details>
@@ -9658,3 +9690,34 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > Qualtrics-side survey wiring + setting the two TBD edge-function secrets
 > (`QUALTRICS_COMPLETION_WEBHOOK_URL`, `QUALTRICS_API_TOKEN`) + the end-to-end smoke
 > test. Do not build the PID design.
+
+
+---
+
+### Draft 79 — Engagement-data recon: what the study promises vs. what the app records (read-only)
+
+**Context.** The participant-flow doc promises the IRB "intervention engagement data (activity content, video watch, time on task)." Draft 67's YouTube path records `{ source, video_id, variant_used }` — no watch progress (no IFrame API). Time-on-task exists, if at all, only as response timestamps. Before Monday's meeting (whose open question #4 is video gating — the same IFrame API decision) and before v6 authors nine video items, establish the facts. **Read-only recon; no code changes.**
+
+**Part A — Enumerate what one completed session actually captures today.**
+
+Using a completed QA session (the Draft 68 one, or run a fresh one on the internal QA code): list every piece of engagement-relevant data that lands in the database, per category —
+
+1. **Activity content:** per-activity payloads (rich — inventory which activities capture what, one line each).
+2. **Video engagement:** exactly what a YouTube video item saves (and what the Vimeo path WOULD save, for contrast — it has progress events + completion thresholds).
+3. **Time on task:** what timestamps exist (`created_at`/`updated_at` per response, `last_active_at`, section transitions via update-session-progress, `completed_at`) and what can honestly be derived from them (per-item dwell? per-section duration? total session time? idle-vs-active can't be distinguished — say so).
+4. **Navigation/attrition:** what's knowable about where a kid stopped, abandoned sessions, resume counts.
+
+**Part B — Gap analysis against the flow-doc promise.**
+
+For each promised category: recorded today / derivable with analysis effort / NOT recorded. For gaps, the options with honest cost:
+
+- **Video watch:** the YouTube IFrame API route (what it buys: play/pause/percent-watched events + would also enable Monday's Q4 gating; what it costs: real implementation + the gating UX decision), vs. a cheap proxy (timestamp delta across the video item — time-on-screen, not watch), vs. accepting "video shown, variant recorded" as the beta-level answer.
+- **Time on task:** whether a lightweight per-item-render timestamp would materially improve on response-timestamp deltas, or whether derived deltas suffice for the study's needs.
+
+**Part C — Deliverable.**
+
+Short report (`docs/ENGAGEMENT_DATA_2026-08.md` or appended here — your call): the inventory table, the gap list, and a recommendation per gap sized for a 20-participant beta. Framed so Josh can hand the video-watch section directly into Monday's Q4 discussion — the team should decide gating and watch-tracking as ONE decision, with the costs in front of them.
+
+**Verification:** report exists, grounded in actual queried session data (cite the session), zero production changes.
+
+**Version bump:** none (read-only).
