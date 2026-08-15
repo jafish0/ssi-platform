@@ -110,6 +110,33 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`7d2f644` · 2026-08-15** — **Draft 83 — Locked-instrument alignment, decision-independent slice (pre/post anchor labels + BW conditional).** Builder tables only — **no publish; live v5 verified untouched** (zero new fields in the current snapshot, `current_version_id` unchanged). Effective at the v6 republish. **Part A (from the locked docs' .docx XML, Draft 5.11.26):** verbatim `anchor_labels` authored on every core-scale item — BHS 0–3 ("Absolutely disagree / Somewhat disagree / Somewhat agree / Absolutely agree", pre+post), ASCS 1–5 ("Never / Rarely / Sometimes / Often / Always", pre+post), UCLA 1–3 ("Hardly ever / Some of the time / Often", pre only — the posttest doesn't carry UCLA), NB 1–5 ("Strongly disagree / Moderately disagree / Neither agree nor disagree / Moderately agree / Strongly agree", pre+post, labels as printed with the nb1/nb2 reverse flags untouched), BPB 0–3 ("Never / Sometimes / Often / Always", pre only). The locked docs label every point on these scales, so no sparse arrays were needed. **Part B:** the bw1→bw2 `show_if` (gt 0) + skip note authored on BOTH BW pairs (`belong_stress_pre`, `belong_stress_post`) — SQL-asserted **byte-identical to follow-up v2's config**. All ten edits via `jsonb_set`, composing with the pending Draft 71/72 builder edits rather than overwriting them. **Scope guard honored:** appraisals (Q1), program helpfulness + acceptability (Q2), demographics/PDW (Q3) untouched. **Part C checklist — the ten authored item ids:** BHS `106fef64`/`983ed115` · ASCS `3b0077de`/`aee35777` · UCLA `5cc6837a` · NB `e10a0017`/`4032db48` · BPB `5d2b2245` · BW `d18ee378`/`bd56a665`. Builder-vs-published-v5 diff moved from the 11 prior intended rows to **exactly 16** — the 5 newly-differing are self_agency_pre/post, loneliness_pre, belong_stress_pre/post; the other 5 in-scope items were already in the diff from D71/72 and just changed hash. Verified: every label array's length matches its scale's range with verbatim endpoints (SQL); rendering checked at a REAL 375px viewport by temporarily mounting the exact authored rows in the sandbox — labels under every point, aria-labels ("3 — Neither agree nor disagree"), selected-echo line, no horizontal overflow; BW behaves both ways (note + enabled Continue at 0, bw2 appears above 0). Throwaway sandbox entries reverted before commit — nothing shipped but the INFRASTRUCTURE entry. **Noted (not built):** the locked BW header prints a mid-anchor ("Moderately" at ~5) that the VAS renderer can't show (min/max labels only) — a tiny `vas_config.mid_label` capability if the team wants it, flagged for a future draft. No version bump.
+
+  <details>
+  <summary>Draft 83 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 83 — Locked-instrument alignment, decision-independent slice (pre/post anchor labels + BW conditional)
+
+**Context.** Audit F6's pre/post drift is mostly gated on Monday (Q1 appraisal VAS, Q2 acceptability set, Q3 demographics/PDW). But one slice is untouched by ANY open question and can be authored now, shrinking the post-Monday v6 bundle: (a) the locked instruments label EVERY scale point on the core scales, and the live items carry min/max only — Draft 73's `anchor_labels` capability is shipped and waiting; (b) the bw1→bw2 conditional exists identically in the locked Pretest and Posttest (Draft 78's enumeration: Pretest ¶63, Posttest ¶26) and is currently live only on the follow-up.
+
+**Scope guard — do NOT touch:** the 9-item appraisal VAS (Q1), the acceptability items (Q2), anything demographics/PDW (Q3). If any anchor-label authoring would require touching those items, leave those items alone and note it. This draft is ONLY the core locked scales both the live flow and the locked docs agree on: BHS, ASCS, UCLA, NB, BPB, and the belonging-worry VAS pair, in both pretest and posttest sections.
+
+**Part A — Author anchor labels.**
+
+From the locked Pretest/Posttest docs (same .docx extraction approach as Draft 78 Part A), author `anchor_labels` for every core-scale item in the builder tables, verbatim per the locked anchors (including reverse-scored items' labels as printed — labels follow the printed page, reverse flags handle scoring). Sparse labeling where the doc is sparse (the 78 pattern). Builder-tables only; effective at v6.
+
+**Part B — Author the BW conditional.**
+
+Mirror follow-up v2's `show_if` (bw1 gt 0 → bw2, else skip_note) onto the pretest and posttest BW items, copy per the locked docs' parenthetical.
+
+**Part C — Verify.**
+
+Builder preview at 375×667: labeled points render on the core scales in both pre and post sections, no overflow (Draft 73's verified pattern); BW branch behaves both ways; the builder-vs-published-v5 diff = prior intended rows (71 + 72's item) PLUS exactly this enumerated set — list every changed item id in the shipped notes as the checklist. No live effect until v6; /demo and live untouched.
+
+**Version bump:** none (authoring, effective at the v6 republish).
+
+  </details>
+
 - **`d47c764` · 2026-08-15** — **Draft 82 — Completion-webhook delivery: record outcomes + re-fire path.** **`update-session-progress` v3** (MCP deploy, `verify_jwt` unchanged). **Part A:** every completion's webhook outcome persists to `sessions.metadata_json.webhook` — `{status: 'delivered'|'failed'|'skipped', at, attempts, reason?, last_error?, last_http_status?}`; the two previously-silent skips are now visible (`no_external_ref` for QA/admin codes, `webhook_not_configured` while the URL secret is unset — precedence verified live). **Part B:** 3 attempts with 2s/4s backoff on 5xx/network, NEVER on 4xx (a rejection won't succeed on retry) — and the whole send+record moved to the background via `EdgeRuntime.waitUntil`: v2 actually awaited the webhook inline before responding, so a flaky receiver could have added seconds to the kid's completion POST; v3 responds in ~450ms with the record landing ~1s later. **Part C:** new **`scripts/refire-webhook.mjs <session_id> [--dry-run]`** — rebuilds the exact original payload from the session row, re-POSTs with the same retry algorithm (verbatim port, sync note in both headers), updates the record with `refired: true`; needs `SUPABASE_SERVICE_ROLE_KEY` + `QUALTRICS_COMPLETION_WEBHOOK_URL` in env. The recovery procedure = the one query in the script header (completed + external_ref + record not 'delivered' — also catches pre-v3 completions with no record) + the script. **Idempotency verified against the runbook's receiver design, with one honest caveat:** flag-setting is idempotent but the confirmation EMAIL could re-send on a true duplicate — QUALTRICS_SETUP now recommends conditioning the email/incentive steps on the flag not already being set, and the script warns before re-firing an already-delivered record. **Part D verified:** delivery algorithm 14/14 local checks against a scripted receiver (200 → delivered/1 attempt; 500×3 → failed/3 with measured 2s+4s backoff; 400 → failed immediately, no retry; connection refused → failed/3); both `skipped` reasons recorded correctly by the DEPLOYED v3 on two temp codes (one with a SQL-authored `external_ref`), completion POSTs 414–510ms; re-fire script 10/10 end-to-end against a REST stub serving the real session rows (payload byte-shape matches the edge function, PATCH record shape, exit codes, `--dry-run`; also hardened its exit path — `process.exit()` with live keep-alive sockets crashes Node on Windows with 0xC0000409). Real `delivered`/`failed` against actual Qualtrics remains exactly where it was: Thursday's joint test (URL secret still unset). QUALTRICS_SETUP.md §4 updated to v3 semantics + a "Delivery records + recovery" section; §7 gains the delivery-record pass condition; INFRASTRUCTURE logged. Temp codes deactivated. No version bump.
 
   <details>
@@ -9798,26 +9825,3 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 **Verification:** wide export from the Draft 68 QA session + a `/demo/variant-preview`-style session with a variant Vimeo play shows the new columns with correct values (real fractions on Vimeo, empties on YouTube, `variant_used` populated on variant plays); column names SPSS-legal and convention-consistent; existing columns byte-identical (order + names unchanged — analysts may have syntax referencing them); `.sps` generator consistent; build clean.
 
 **Version bump:** none (export pipeline). Note it in the ENGAGEMENT_DATA addendum (closes the flagged gap).
-
-
----
-
-### Draft 83 — Locked-instrument alignment, decision-independent slice (pre/post anchor labels + BW conditional)
-
-**Context.** Audit F6's pre/post drift is mostly gated on Monday (Q1 appraisal VAS, Q2 acceptability set, Q3 demographics/PDW). But one slice is untouched by ANY open question and can be authored now, shrinking the post-Monday v6 bundle: (a) the locked instruments label EVERY scale point on the core scales, and the live items carry min/max only — Draft 73's `anchor_labels` capability is shipped and waiting; (b) the bw1→bw2 conditional exists identically in the locked Pretest and Posttest (Draft 78's enumeration: Pretest ¶63, Posttest ¶26) and is currently live only on the follow-up.
-
-**Scope guard — do NOT touch:** the 9-item appraisal VAS (Q1), the acceptability items (Q2), anything demographics/PDW (Q3). If any anchor-label authoring would require touching those items, leave those items alone and note it. This draft is ONLY the core locked scales both the live flow and the locked docs agree on: BHS, ASCS, UCLA, NB, BPB, and the belonging-worry VAS pair, in both pretest and posttest sections.
-
-**Part A — Author anchor labels.**
-
-From the locked Pretest/Posttest docs (same .docx extraction approach as Draft 78 Part A), author `anchor_labels` for every core-scale item in the builder tables, verbatim per the locked anchors (including reverse-scored items' labels as printed — labels follow the printed page, reverse flags handle scoring). Sparse labeling where the doc is sparse (the 78 pattern). Builder-tables only; effective at v6.
-
-**Part B — Author the BW conditional.**
-
-Mirror follow-up v2's `show_if` (bw1 gt 0 → bw2, else skip_note) onto the pretest and posttest BW items, copy per the locked docs' parenthetical.
-
-**Part C — Verify.**
-
-Builder preview at 375×667: labeled points render on the core scales in both pre and post sections, no overflow (Draft 73's verified pattern); BW branch behaves both ways; the builder-vs-published-v5 diff = prior intended rows (71 + 72's item) PLUS exactly this enumerated set — list every changed item id in the shipped notes as the checklist. No live effect until v6; /demo and live untouched.
-
-**Version bump:** none (authoring, effective at the v6 republish).
