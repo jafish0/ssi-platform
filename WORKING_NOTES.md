@@ -110,6 +110,25 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`cf64300` · 2026-08-15** — **Draft 73 — `psychometric_scale`: per-point anchor labels (additive engine capability).** Config gains an optional **`anchors.anchor_labels`** array (index 0 = the min point). When present: every likert point renders its label under the number at a small wrapping size — the buttons GROW taller (56×96 at 375px) and never shrink below the 48px touch floor, satisfying see-it-before-you-select; the selected point's meaning echoes prominently under the row ("Your answer: 2 — Neither Agree nor Disagree", `aria-live`); the now-redundant min/max end-label row is hidden; and each radio carries an `aria-label` with its anchor text (screen readers announce "2 — Neither Agree nor Disagree", not just "2"). When absent, the rendering branch is the original markup **character-for-character** — zero live items change appearance. Demonstrated on a TEMP unlisted scratch surface at **`/demo/sandbox/scale-anchors-preview`** ('internal QA' category → appears in no /demo section; two acceptability items with the locked 5-label set incl. Jessica's "Neither Agree nor Disagree" middle): verified at 375×667 AND 390×844 — all five labels visible pre-selection, zero horizontal overflow, targets 56×96 / 59×84, aria-labels + aria-checked correct, echo renders on select. No live authoring in this draft; the v6 authoring adds the labels item-by-item once Monday settles which items survive. No version bump (engine item-type capability).
+
+  <details>
+  <summary>Draft 73 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 73 — `psychometric_scale`: per-point anchor labels
+
+**Context.** AUDIT_2026-08.md A.3/F6: the renderer supports only `{min_label, max_label}`, but the locked instruments label every scale point (including Jessica's "Neither Agree nor Disagree" middle anchor on the acceptability items). Whatever Monday decides about WHICH items survive in pre/post, the v6 authoring will need per-point labels — so build the capability now, author later.
+
+**Change.** `psychometric_scale` config gains an optional `anchor_labels` array (length = number of scale points). When present, each point renders its label; when absent, current min/max-only behavior is unchanged (fully additive — zero live items change appearance).
+
+**Mobile is the design constraint:** five multi-word labels under five touch targets at 375px won't fit side by side. Pick a pattern that stays readable — e.g. labels stacked under each point at a small size only where they fit, plus the selected point's label echoed prominently near the control; or per-point labels revealed on the selected state with min/max always visible. Your call; the requirements are (1) a kid can see what a point means BEFORE selecting it, (2) the selected meaning is unmistakable after, (3) no horizontal overflow at 375px, (4) touch targets stay ≥44px (QA baseline was 70×48 — don't shrink them to make room).
+
+**Verification:** a scratch item with 5 labeled anchors renders correctly at 375×667 and 390×844 (both requirements above); existing min/max items pixel-unchanged; keyboard + screen-reader labels correct (each radio/point announces its anchor text); build + console clean. Demonstrate in the builder preview or a sandbox scratch item — no live authoring in this draft.
+
+**Version bump:** none (engine item-type capability; no live items changed).
+
+  </details>
+
 - **`5c9a0cc` · 2026-08-15** — **Draft 72 — The Plan: real cross-activity pull-forward (audit F1 — the big one). Plan v3.1 → v4.0 (MAJOR).** Closes the flow-integration item deferred since Draft 21. **Part A:** `Plan` added to `ACTIVITY_REGISTRY`; live sec-10's placeholder `structured_activity` swapped to `custom_activity {component_name: "Plan"}` (token_key `plan`) in the builder tables — effective at the v6 republish; the builder-vs-published-v5 diff re-verified to be exactly Draft 71's ten rows + this one item. **Part B:** new `src/lib/planRealData.js` maps the engine's token_key-keyed `sessionData` into the exact planData contract the screens/review/keepsake already rendered: BSS willing-to-try ids resolved through the shared skills set with per-skill how-example seeds for all 7; GU worked thoughts including the v5.9 randomly-selected fallback pair (challenge → `response`; both_and → `both_and_root` + " AND " + `and_statement`, matching GU's own builder; `a_other` uses its payload text); ASN kept allies post-Inspect (`removed_via_inspect` filtered) + non-skipped non-empty Strengthen entries; `letter_builder.letter`; `who_i_am_poem.full_poem_text` (v2.7+ — older payloads collapse the poem section); Self-Reflection inclusion memory. `planDemoData.js` is now strictly the sandbox/IRB-preview fallback and the Draft 49 caveat renders only in that mode. **Part C (empty states):** an empty willing-to-try bucket offers the FULL skills list with the draft's copy ("You didn't put anything in your willing-to-try bucket — no problem…"), and the for-later + radar lists are suppressed rather than mislabeled; empty thoughts/letter/poem sections collapse cleanly from BOTH the review and the PNG/PDF keepsake; the Plan is always completable (skill save payload shape unchanged: `skill_commitment` / `inclusion_reflection`). **Part D/E verification:** the mapper is unit-tested with 24 assertions against REAL payloads captured from the completed Draft-68 live QA session (including the pre-v2.7 poem payload and the GU randomly-selected pair) plus a sparse fixture; TEMP unlisted in-browser QA surfaces added at **`/demo/sandbox/plan-real-preview`** (full real data: caveat suppressed, exactly the 6 real skills with bs7 absent, real ally in the who-dropdown, real thoughts/people/letter, poem collapsed, save payload verified, PNG + PDF keepsakes generated clean) and **`/demo/sandbox/plan-sparse-preview`** (BSS + Letter skipped: full-list fallback + copy, both_and composition, removed-ally filtering, single surviving strengthen entry, letter section collapsed, poem via full_poem_text, skip-to-review completable, sparse keepsake clean) — both reachable only by direct URL (their 'internal QA' category matches no /demo section filter). Plain sandbox regression: synthetic data + caveat + v4.0 badge, unchanged behavior. Build + console clean.
 
   <details>
@@ -9525,19 +9544,6 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 > test. Do not build the PID design.
 
 
----
-
-### Draft 73 — `psychometric_scale`: per-point anchor labels
-
-**Context.** AUDIT_2026-08.md A.3/F6: the renderer supports only `{min_label, max_label}`, but the locked instruments label every scale point (including Jessica's "Neither Agree nor Disagree" middle anchor on the acceptability items). Whatever Monday decides about WHICH items survive in pre/post, the v6 authoring will need per-point labels — so build the capability now, author later.
-
-**Change.** `psychometric_scale` config gains an optional `anchor_labels` array (length = number of scale points). When present, each point renders its label; when absent, current min/max-only behavior is unchanged (fully additive — zero live items change appearance).
-
-**Mobile is the design constraint:** five multi-word labels under five touch targets at 375px won't fit side by side. Pick a pattern that stays readable — e.g. labels stacked under each point at a small size only where they fit, plus the selected point's label echoed prominently near the control; or per-point labels revealed on the selected state with min/max always visible. Your call; the requirements are (1) a kid can see what a point means BEFORE selecting it, (2) the selected meaning is unmistakable after, (3) no horizontal overflow at 375px, (4) touch targets stay ≥44px (QA baseline was 70×48 — don't shrink them to make room).
-
-**Verification:** a scratch item with 5 labeled anchors renders correctly at 375×667 and 390×844 (both requirements above); existing min/max items pixel-unchanged; keyboard + screen-reader labels correct (each radio/point announces its anchor text); build + console clean. Demonstrate in the builder preview or a sandbox scratch item — no live authoring in this draft.
-
-**Version bump:** none (engine item-type capability; no live items changed).
 
 ---
 
