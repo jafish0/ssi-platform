@@ -66,15 +66,19 @@ What a video item saves depends entirely on where the video is hosted:
   component fails open by design (VideoPlayer.jsx:96–103).
 - **Addendum (2026-08-15, post-Draft 80):** video payloads live in the
   responses table and the admin Long/Summary exports, but the researcher
-  wide CSV / SPSS syntax / codebook currently emit **no columns for video
-  items at all** — `exportFlatten.js` skips the type despite a comment
-  saying otherwise (pre-existing gap, flagged for a follow-up draft). If
-  the team adopts watch tracking, adding `<tk>_watched` /
+  wide CSV / SPSS syntax / codebook emitted **no columns for video items
+  at all** — `exportFlatten.js` skipped the type despite a comment saying
+  otherwise (pre-existing gap found in the Draft 80 review). **Closed
+  same day:** `exportFlatten.js` now emits `<tk>_watched` /
   `<tk>_completion_fraction` / `<tk>_play_count` / `<tk>_variant_used`
-  columns is a small, separate change. Also note: Draft 80 shipped engine
-  parity, so Vimeo watch tracking + gating now work on variant-selected
-  videos too — the "Vimeo has it today" option in §2 covers the Sam
-  variants as well, not just single-source items.
+  for every token_key'd video item, blank-safe — YouTube's deliberate
+  nulls, pre-variant rows, and unreached items all export as blanks,
+  which SPSS reads as missing (never zero). `variant_used` in the wide
+  CSV is the cut that *actually played* (fallback-resolved), so analysts
+  no longer have to infer it from the choice item's pick. Also note:
+  Draft 80 shipped engine parity, so Vimeo watch tracking + gating now
+  work on variant-selected videos too — the "Vimeo has it today" option
+  in §2 covers the Sam variants as well, not just single-source items.
 
 ### 1c. Time on task — DERIVABLE (better than expected)
 

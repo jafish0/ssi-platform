@@ -29,9 +29,11 @@ const sanitizeCol = (s) =>
     .replace(/^_|_$/g, '')
     .toLowerCase()
 
-const SKIP_TYPES = new Set(['page_break', 'text_prompt', 'video'])
-// We DO emit columns for video items only when they have a token_key (rare
-// but possible). For text_prompt / page_break there's no research signal.
+const SKIP_TYPES = new Set(['page_break', 'text_prompt'])
+// No research signal in page_break / text_prompt rows (they save only
+// {advanced} / {viewed}). Video items DO emit watch-tracking columns when
+// they carry a token_key — see the 'video' case below. (Videos without a
+// token_key are already dropped by the `if (!tk) continue` guard.)
 
 function joinList(arr, sep = ';') {
   if (!Array.isArray(arr)) return ''
@@ -267,6 +269,85 @@ export function planWideColumns(snapshot) {
               })
             }
           }
+          break
+        }
+        case 'video': {
+          // Vimeo-hosted plays record real watch data ({watched,
+          // completion_fraction, play_count} — Drafts 67/80); YouTube-hosted
+          // plays save explicit nulls ("shown, not measured" — no IFrame
+          // API), which export as blanks so SPSS reads them as missing, not
+          // zero. variant_used is blank for single-source items and for rows
+          // saved before Draft 67 introduced variants.
+          const threshold = c.completion_threshold ?? 0.85
+          const variantKeys =
+            c.variants && typeof c.variants === 'object' && !Array.isArray(c.variants)
+              ? Object.keys(c.variants)
+              : []
+          cols.push(
+            {
+              name: sanitizeCol(`${tk}_watched`),
+              source_token_key: tk,
+              item_type: item.type,
+              sub_id: 'watched',
+              prompt: `Video ${tk}: watched to the ${Math.round(threshold * 100)}% completion threshold?`,
+              anchor_min: 0,
+              anchor_max: 1,
+              anchor_min_label: 'below threshold',
+              anchor_max_label: 'reached threshold',
+              reverse_scored: false,
+              allowed_values: '0 or 1',
+              notes: 'Vimeo watch tracking; blank = not measured (YouTube-hosted) or item not reached',
+              extract: (rv) => (rv?.watched == null ? '' : rv.watched ? 1 : 0),
+            },
+            {
+              name: sanitizeCol(`${tk}_completion_fraction`),
+              source_token_key: tk,
+              item_type: item.type,
+              sub_id: 'completion_fraction',
+              prompt: `Video ${tk}: max fraction of the video reached`,
+              anchor_min: 0,
+              anchor_max: 1,
+              anchor_min_label: 'never played',
+              anchor_max_label: 'played to end',
+              reverse_scored: false,
+              allowed_values: 'fraction 0–1',
+              notes: 'Monotonic max percent-watched, 2 decimals; blank = not measured (YouTube-hosted) or item not reached',
+              extract: (rv) => (rv?.completion_fraction == null ? '' : rv.completion_fraction),
+            },
+            {
+              name: sanitizeCol(`${tk}_play_count`),
+              source_token_key: tk,
+              item_type: item.type,
+              sub_id: 'play_count',
+              prompt: `Video ${tk}: number of play starts`,
+              anchor_min: 0,
+              anchor_max: '',
+              anchor_min_label: '',
+              anchor_max_label: '',
+              reverse_scored: false,
+              allowed_values: 'integer',
+              notes: 'A run ends at finish, so replays count; blank = not measured (YouTube-hosted) or item not reached',
+              extract: (rv) => (rv?.play_count == null ? '' : rv.play_count),
+            },
+            {
+              name: sanitizeCol(`${tk}_variant_used`),
+              source_token_key: tk,
+              item_type: item.type,
+              sub_id: 'variant_used',
+              prompt: `Video ${tk}: which variant cut actually played (fallback-resolved)`,
+              anchor_min: '',
+              anchor_max: '',
+              anchor_min_label: '',
+              anchor_max_label: '',
+              reverse_scored: false,
+              allowed_values: variantKeys.length
+                ? variantKeys.join(' | ')
+                : 'variant key or blank',
+              notes:
+                'The cut that played, which may be the fallback rather than the choice item\'s pick; blank for single-source items and pre-variant rows',
+              extract: (rv) => rv?.variant_used ?? '',
+            },
+          )
           break
         }
         case 'structured_activity': {
