@@ -114,6 +114,19 @@ export function SessionProvider({ sessionId, children }) {
           setCurrentSectionIndex(resumeSection)
           setCurrentItemIndex(0)
           lastSyncedSectionRef.current = resumeSection
+          // Draft 88 Part A: an 'exited' session (rule-based early exit,
+          // e.g. assent "No") is deliberately re-enterable — flip it back
+          // to in_progress so the status stays truthful while they retry.
+          // An assent decline left current_section at 0, so the resume
+          // above lands them back on the assent question. Fire-and-forget:
+          // a hiccup here must not block the resume itself.
+          if (snap?.session?.status === 'exited') {
+            callEdgeFunction('update-session-progress', {
+              session_id: sessionId,
+              current_section: resumeSection,
+              status: 'in_progress',
+            }).catch((err) => console.error('exited→in_progress flip failed', err))
+          }
         }
         setLoading(false)
       })
@@ -201,10 +214,17 @@ export function SessionProvider({ sessionId, children }) {
             })
             setCompleted(true)
             try {
+              // Draft 88 Part A: rule-based early exit writes 'exited', not
+              // 'completed' — a youth who declines assent on screen one must
+              // be distinguishable from one who finished all sections. The
+              // completion webhook keys on 'completed', so it correctly does
+              // NOT fire here; and an 'exited' session can be re-entered
+              // (see the bootstrap resume branch) per Josh's decision that
+              // an accidental "No" tap must not end participation for good.
               await callEdgeFunction('update-session-progress', {
                 session_id: sessionId,
                 current_section: currentSectionIndex,
-                status: 'completed',
+                status: 'exited',
               })
             } catch (err) {
               console.error('exit progress update failed', err)

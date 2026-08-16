@@ -1058,7 +1058,7 @@ export function buildCodebookRows(snapshot) {
     { name: 'cohort', source_token_key: '', item_type: 'session', prompt: 'Cohort label on the access code', allowed_values: '' },
     { name: 'intervention_slug', source_token_key: '', item_type: 'session', prompt: 'Slug of the intervention', allowed_values: '' },
     { name: 'version_number', source_token_key: '', item_type: 'session', prompt: 'Snapshot version the session ran on', allowed_values: 'integer' },
-    { name: 'status', source_token_key: '', item_type: 'session', prompt: 'Session status', allowed_values: 'in_progress | completed | abandoned' },
+    { name: 'status', source_token_key: '', item_type: 'session', prompt: 'Session status', allowed_values: 'in_progress | completed | exited | abandoned' },
     { name: 'started_at', source_token_key: '', item_type: 'session', prompt: 'When the session was started', allowed_values: 'ISO 8601 timestamp' },
     { name: 'completed_at', source_token_key: '', item_type: 'session', prompt: 'When the session was completed (null if not)', allowed_values: 'ISO 8601 timestamp' },
     { name: 'last_active_at', source_token_key: '', item_type: 'session', prompt: 'Last activity timestamp', allowed_values: 'ISO 8601 timestamp' },

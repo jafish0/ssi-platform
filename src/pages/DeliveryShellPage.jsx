@@ -3,6 +3,15 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import SessionGuard from '../components/SessionGuard.jsx'
 import { SessionProvider, useSession } from '../engine/SessionEngine.jsx'
 import TreeProgress from '../components/TreeProgress.jsx'
+// Draft 88 Part B: the post-posttest completion screen is the ONE place a
+// participant can save their keepsake — the five mid-flow download buttons
+// are gone, so nothing invites them out of the app before the posttest.
+import {
+  Keepsake,
+  PlanDownloads,
+  PlanReview,
+  buildSavedPlanModel,
+} from '../activities/Plan.jsx'
 
 function ProgressBar() {
   const { progressFraction } = useSession()
@@ -36,7 +45,7 @@ function ProgressBar() {
 // { heading, line1, line2, show_tree } — so the 90-day follow-up can say
 // "thanks for checking back in" instead of "you finished the whole
 // program". Defaults preserve the Draft 74 main-program copy.
-function CelebrationScreen({ onBackToStart, config }) {
+function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
   // TreeProgress only animates on a FORWARD stage change after mount, so
   // mount at seed and grow to full bloom for the payoff moment.
   const [stage, setStage] = useState(0)
@@ -47,7 +56,7 @@ function CelebrationScreen({ onBackToStart, config }) {
   }, [])
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-10 bg-ctac-teal-50">
-      <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
+      <div className="w-full max-w-[640px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
         {showTree && (
           <div className="mx-auto w-full max-w-[240px] mb-4">
             <TreeProgress stage={stage} animated />
@@ -63,6 +72,25 @@ function CelebrationScreen({ onBackToStart, config }) {
           {config?.line2 ||
             "You're all set — you can close this window whenever you're ready."}
         </p>
+        {/* Draft 88 Part B: the real keepsake, rendered from the saved
+            payloads, with the program's only download actions. Absent
+            (null model) for interventions without a plan activity — the
+            90-day follow-up keeps the plain celebration. */}
+        {keepsakeModel && (
+          <div className="mt-2 mb-6 text-left">
+            <h2 className="text-[18px] font-semibold text-ctac-navy text-center mb-4">
+              Here&apos;s everything you made today.
+            </h2>
+            <Keepsake>
+              <PlanReview model={keepsakeModel} />
+            </Keepsake>
+            <PlanDownloads model={keepsakeModel} />
+            <p className="text-[13px] text-slate-500 text-center mt-3">
+              Or just take a screenshot — whatever&apos;s easiest for keeping
+              it with you.
+            </p>
+          </div>
+        )}
         <button
           type="button"
           onClick={onBackToStart}
@@ -76,18 +104,25 @@ function CelebrationScreen({ onBackToStart, config }) {
 }
 
 function CompletedScreen() {
-  const { exitInfo, sessionMeta, sections } = useSession()
+  const { exitInfo, sessionMeta, sections, responses } = useSession()
   const navigate = useNavigate()
   function handleStart() {
     sessionStorage.removeItem('session_id')
     navigate('/', { replace: true })
   }
+  // Note: an 'exited' session never reaches this screen on revisit — the
+  // engine resumes it instead (Draft 88 Part A). exitInfo covers the
+  // exit-screen-this-visit case; 'completed' covers genuine revisits.
   const firstCompletion = !exitInfo && sessionMeta?.status !== 'completed'
   if (firstCompletion) {
     const celebrationConfig =
       sections[sections.length - 1]?.config_json?.celebration || null
     return (
-      <CelebrationScreen onBackToStart={handleStart} config={celebrationConfig} />
+      <CelebrationScreen
+        onBackToStart={handleStart}
+        config={celebrationConfig}
+        keepsakeModel={buildSavedPlanModel(responses)}
+      />
     )
   }
   const title = exitInfo?.title || "You've already finished this one."

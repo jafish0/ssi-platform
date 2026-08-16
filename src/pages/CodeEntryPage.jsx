@@ -60,8 +60,10 @@ export default function CodeEntryPage() {
       // Resume-by-code (Draft 69): a single-use code with an existing
       // in-progress session returns that session with resumed: true —
       // flag it so the delivery page can greet the participant instead
-      // of silently teleporting them mid-flow.
-      if (data.resumed && data.session_status === 'in_progress') {
+      // of silently teleporting them mid-flow. Draft 88: 'exited'
+      // sessions (rule-based early exit, e.g. assent "No") resume the
+      // same way — the engine flips them back to in_progress.
+      if (data.resumed && ['in_progress', 'exited'].includes(data.session_status)) {
         sessionStorage.setItem('resumed_notice', '1')
       }
       navigate(`/session/${data.session_id}`, { replace: true })

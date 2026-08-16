@@ -144,7 +144,9 @@ function NavFooter({ onBack, onNext, nextLabel = 'Continue', nextDisabled = fals
 }
 
 // Warm cream keepsake surface (complements the teal UI; "this is yours").
-function Keepsake({ children, className = '' }) {
+// Exported (Draft 88): the post-posttest completion screen renders the
+// same surface around the saved plan.
+export function Keepsake({ children, className = '' }) {
   return (
     <div className={`bg-amber-50 border border-amber-200 rounded-3xl shadow-card p-6 ${className}`}>
       {children}
@@ -512,17 +514,20 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
     )
   }
 
-  // screen === 5 — Saved
+  // screen === 5 — Saved. Draft 88 Part B: the download buttons moved to
+  // the post-posttest completion screen (DeliveryShellPage), so nothing
+  // can pull the participant out of the app before the post-measures. In
+  // the live flow this screen is never reached anyway (the engine
+  // advances as soon as onSave resolves) — it exists for the sandbox.
   return (
     <ScreenShell heading="Saved." sub="This is yours. Come back to it any time.">
       <p className="text-[14px] text-slate-600 mb-5">
-        You can save your plan as an image (PNG) or PDF — or just take a
-        screenshot of this page. Whatever’s easiest for keeping it with you.
+        You&apos;ll get to save your plan at the very end, after the last few
+        questions.
       </p>
       <Keepsake>
         <PlanReview model={model} />
       </Keepsake>
-      <PlanDownloads model={model} />
       <div className="text-center mt-5">
         <Link to="/demo" className="inline-flex items-center gap-1 text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px] font-medium">
           <ArrowLeft size={14} strokeWidth={1.5} />
@@ -573,6 +578,49 @@ function buildPlanModel(
   }
 }
 
+// Rebuild the review/keepsake model for a SAVED plan from the engine's
+// token_key-keyed responses map (Draft 88 Part B). Used by the post-
+// posttest completion screen: the kid already saved their plan during
+// the activity; this reconstructs the same model shape buildPlanModel
+// produces, but from the saved payload (skill_commitment /
+// inclusion_reflection) plus the upstream activity payloads via
+// buildRealPlanData. Returns null when there is nothing real to show
+// (e.g. the 90-day follow-up has no plan activity) — callers fall back
+// to the plain celebration.
+export function buildSavedPlanModel(sessionData) {
+  const d = buildRealPlanData(sessionData)
+  const saved = sessionData?.plan || null
+  if (!d && !saved) return null
+  const sc = saved?.skill_commitment || null
+  const skill = sc
+    ? { text: sc.skill_text || '', how: sc.how || '', who: sc.who || '', when: sc.when || '' }
+    : null
+  const otherSkills =
+    !d || d.skillsFromFullList
+      ? []
+      : d.willingToTrySkills.filter((s) => s.id !== sc?.skill_id).map((s) => s.text)
+  const ir = saved?.inclusion_reflection || null
+  const people = TYPE_ORDER.map((t) => (d?.strengthening || []).find((x) => x.type === t))
+    .filter((x) => x && ((x.person || '').trim() || (x.action || '').trim()))
+    .map((x) => ({ typeKey: x.type, label: TONE[x.type].label, person: x.person, action: x.action }))
+  return {
+    skill,
+    otherSkills,
+    thoughts: (d?.pickedThoughts || []).map((t) => t.tellYourself),
+    people,
+    inclusionText: ir ? d?.inclusionText || null : null,
+    behaviorsUsed: ALL_BELONGING_SKILLS.filter((s) =>
+      (ir?.behaviors_used || []).includes(s.id),
+    ).map((s) => s.text),
+    inclusionOther: ir?.other_used ? ir.other_text || null : null,
+    notTried: ALL_BELONGING_SKILLS.filter((s) => (d?.notTriedYetIds || []).includes(s.id)).map(
+      (s) => s.text,
+    ),
+    letter: d?.letter || null,
+    poemLines: d?.poemLines || [],
+  }
+}
+
 // ---------- Review summary (rich final plan) ----------
 
 function Section({ title, children }) {
@@ -586,7 +634,7 @@ function Section({ title, children }) {
   )
 }
 
-function PlanReview({ model }) {
+export function PlanReview({ model }) {
   const m = model
   const showBpb = m.behaviorsUsed.length > 0 || m.inclusionOther || m.notTried.length > 0
   return (
@@ -715,7 +763,7 @@ function PlanReview({ model }) {
 
 // ---------- Downloads (PNG + single-page PDF) ----------
 
-function PlanDownloads({ model }) {
+export function PlanDownloads({ model }) {
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState(null)
 

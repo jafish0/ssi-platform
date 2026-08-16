@@ -8,6 +8,7 @@ function StatusBadge({ status }) {
   const map = {
     completed: 'bg-emerald-100 text-emerald-800',
     in_progress: 'bg-ctac-teal-100 text-ctac-teal-800',
+    exited: 'bg-amber-100 text-amber-800',
     abandoned: 'bg-slate-200 text-slate-700',
   }
   return (
@@ -117,9 +118,12 @@ export default function ResearcherDashboardPage() {
     const total = sessions.length
     const completed = sessions.filter((s) => s.status === 'completed').length
     const inProgress = sessions.filter((s) => s.status === 'in_progress').length
+    // Draft 88: rule-based early exits (e.g. assent declines) — counted
+    // separately so they neither inflate completions nor silently vanish.
+    const exited = sessions.filter((s) => s.status === 'exited').length
     const abandoned = sessions.filter((s) => s.status === 'abandoned').length
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0
-    return { total, completed, inProgress, abandoned, completionRate }
+    return { total, completed, inProgress, exited, abandoned, completionRate }
   }, [sessions])
 
   const interventionMap = useMemo(() => {
@@ -376,10 +380,11 @@ export default function ResearcherDashboardPage() {
 
   return (
     <AdminLayout title="Dashboard">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <StatCard label="Total sessions" value={stats.total} />
         <StatCard label="In progress" value={stats.inProgress} />
         <StatCard label="Completed" value={stats.completed} />
+        <StatCard label="Exited" value={stats.exited} hint="early exit (e.g. assent no)" />
         <StatCard label="Abandoned" value={stats.abandoned} />
         <StatCard
           label="Completion rate"
@@ -437,6 +442,7 @@ export default function ResearcherDashboardPage() {
             <option value="all">All statuses</option>
             <option value="completed">Completed</option>
             <option value="in_progress">In progress</option>
+            <option value="exited">Exited</option>
             <option value="abandoned">Abandoned</option>
           </select>
           <input

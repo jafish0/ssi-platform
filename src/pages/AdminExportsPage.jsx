@@ -494,6 +494,7 @@ export default function AdminExportsPage() {
               <option value="all">All statuses</option>
               <option value="completed">Completed only</option>
               <option value="in_progress">In progress</option>
+              <option value="exited">Exited (early exit)</option>
               <option value="abandoned">Abandoned</option>
             </select>
           </div>

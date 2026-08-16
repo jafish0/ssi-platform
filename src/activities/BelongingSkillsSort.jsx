@@ -44,9 +44,7 @@
 // this skill" from "kid actively chose Not Interested."
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Download } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
-import { downloadSvgElementAsPng } from '../lib/imageDownload.js'
 
 // Skill labels match the locked pretest doc (set in commit `7b7046e`,
 // Draft 3). bs1–bs7 IDs are stable; the meaning of each ID is preserved
@@ -1083,50 +1081,21 @@ function ReconsiderScreen({ unplaced, onYes, onNo, submitting }) {
 // ---------- Saved snapshot keepsake ----------
 //
 // Renders the kid's three sorted buckets (skill names inside each) as an
-// SVG, with a Save-as-image button (downloadSvgElementAsPng, same path
-// as Allies / Safety Net + Who I Am Poem). Unsorted skills are excluded.
+// SVG. v4.0 (Draft 88 Part B): the Save-as-image button moved to the
+// post-posttest completion screen — nothing may invite the participant
+// out of the app before the post-measures. (In the live flow this screen
+// was never reached anyway: the engine advances as soon as onSave
+// resolves. It renders in the sandbox.)
 
 function SortSnapshotScreen({ placement, lookup }) {
-  const wrapRef = useRef(null)
-  const [downloading, setDownloading] = useState(false)
-  const [error, setError] = useState(null)
-
-  async function handleDownload() {
-    setError(null)
-    setDownloading(true)
-    try {
-      const svg = wrapRef.current?.querySelector('svg')
-      if (!svg) throw new Error('No snapshot to download.')
-      const stamp = new Date().toISOString().slice(0, 10)
-      await downloadSvgElementAsPng(svg, `belonging-skills-${stamp}.png`)
-    } catch (err) {
-      console.error(err)
-      setError(err?.message || 'Could not save the image.')
-    } finally {
-      setDownloading(false)
-    }
-  }
-
   return (
     <div className="text-center">
       <h2 className="text-[22px] font-semibold mb-2">Nice work!</h2>
       <p className="text-[15px] text-slate-700 mb-5">
         Think about when you could try out one of these skills.
       </p>
-      <div ref={wrapRef} className="mb-4 mx-auto w-full max-w-[560px]">
+      <div className="mb-4 mx-auto w-full max-w-[560px]">
         <SortSnapshotSvg placement={placement} lookup={lookup} />
-      </div>
-      <div className="flex flex-col items-center gap-2">
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={downloading}
-          className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
-        >
-          <Download size={14} strokeWidth={2} />
-          {downloading ? 'Saving image…' : 'Save as image'}
-        </button>
-        {error && <p role="alert" className="text-[12px] text-rose-600">{error}</p>}
       </div>
     </div>
   )

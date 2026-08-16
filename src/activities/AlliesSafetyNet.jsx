@@ -55,12 +55,11 @@
 // null now (a type the kid passed through untouched saves empty strings,
 // skipped:false).
 
-import { useMemo, useRef, useState } from 'react'
-import { Check, Download } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Check } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
 import TrampolineNet from '../components/TrampolineNet.jsx'
-import { downloadSvgElementAsPng } from '../lib/imageDownload.js'
 import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
 
 // Which tile ids are custom-name-entry tiles. ALLY_TILES is the source
@@ -599,36 +598,21 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
   )
 }
 
-// ---------- Post-save confirmation (with downloadable keepsake) ----------
+// ---------- Post-save confirmation ----------
+// v6.0 (Draft 88 Part B): the "Save as image" download moved to the
+// post-posttest completion screen — nothing may invite the participant
+// out of the app before the post-measures. (In the live flow this screen
+// was never reached anyway: the engine advances as soon as onSave
+// resolves. It renders in the sandbox.)
 
 function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds, lowSupport }) {
-  const wrapRef = useRef(null)
-  const [downloading, setDownloading] = useState(false)
-  const [error, setError] = useState(null)
-
-  async function handleDownload() {
-    setError(null)
-    setDownloading(true)
-    try {
-      const svg = wrapRef.current?.querySelector('svg')
-      if (!svg) throw new Error('No safety-net visual to download.')
-      const stamp = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
-      await downloadSvgElementAsPng(svg, `my-safety-net-${stamp}.png`)
-    } catch (err) {
-      console.error(err)
-      setError(err?.message || 'Could not save the image.')
-    } finally {
-      setDownloading(false)
-    }
-  }
-
   return (
     <div className="text-center py-2">
       <h2 className="text-[22px] font-semibold mb-2">Saved</h2>
       <p className="text-[15px] text-slate-700 mb-5">
         Your safety net is captured. You can come back to it any time.
       </p>
-      <div ref={wrapRef} className="mb-4">
+      <div className="mb-4">
         <NetWithListToggle
           allies={allies}
           noneFor={noneFor}
@@ -639,20 +623,6 @@ function SavedConfirmation({ allies, noneFor, strengthened, strengthenTypeIds, l
         strengthened={strengthened}
         strengthenTypeIds={strengthenTypeIds}
       />
-      <div className="flex flex-col items-center gap-2">
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={downloading}
-          className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 disabled:opacity-50 text-white font-semibold rounded-full px-5 py-2 min-h-[44px] text-[14px]"
-        >
-          <Download size={14} strokeWidth={2} />
-          {downloading ? 'Saving image…' : 'Save as image'}
-        </button>
-        {error && (
-          <p role="alert" className="text-[12px] text-rose-600">{error}</p>
-        )}
-      </div>
     </div>
   )
 }
