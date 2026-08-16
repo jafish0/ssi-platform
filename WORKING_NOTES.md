@@ -110,6 +110,73 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`5f94413` · 2026-08-16** — **Draft 88 — Consolidated: the live intervention structure wired up right (Parts A+B+C; `ready-set-dedicate` republished v6).** The Draft 86/87 reasoning + decisions stay above in Ideas as this draft's source context; Draft 85 (completion-email fork) remains open and untouched, as do the two meeting-gated intro-video notes. **Part A — `exited`.** The `exit_on` branch (assent "No") now writes `status: 'exited'`, not `'completed'` — a decliner was indistinguishable from a finisher, sat inside the default export, and would have fired the completion webhook telling Qualtrics the child completed. `sessions_status_check` CHECK widened by migration (**caught live: without it the newly deployed functions 500'd — the draft's consumer audit missed the DB constraint**). `update-session-progress` v4 + `validate-code` v6 deployed (the latter adds `exited` to resume eligibility — the draft's own catch that re-entry would otherwise be blocked at the code level was real). Per Josh's decision, exited sessions are re-enterable: the engine resumes them and flips them back to `in_progress`; welcome-back banner shows; dashboard gains an Exited count/badge/filter; codebook + exports list the new value. Backfilled **3** mislabeled test rows (the draft said 5 — the data says 3: `8aae139b` rsd@0 decline, `a1498ccb` rsd@1 D69-QA artifact, `ca7b2cf2` gains@1 demo). The abandoned-with-completed_at rows: all 6 are the smoke-harness cleanup convention (`current_section=99`); nothing in the app can set `abandoned` — not a bug. **Part B — the ending moved after the posttest.** Section 12 lost "You did it.", both pull-forwards, the "Thank you for your participation!" opener, AND its title (now "Almost done" — the title shows in the delivery header, so it was an ending signal too). `CompletedScreen`'s first-completion celebration now renders the **consolidated Plan keepsake from the SAVED payloads** (new `buildSavedPlanModel` + exported `PlanReview`/`PlanDownloads`/`Keepsake` from Plan.jsx) with the program's ONLY download actions — **Josh confirmed in-session: one consolidated keepsake, not four extra downloads**. The follow-up (no plan) keeps its plain celebration. All five mid-flow "Save as image" buttons removed (MAJOR bumps: allies v6.0, sort v4.0, poem v3.0, letter v3.0, plan v5.0). **Honest finding:** those five screens were never reachable in live delivery anyway — the engine advances the instant `onSave` resolves, so participants never saw them; the removal aligns the sandbox with live, and the real participant-facing gain is the keepsake screen itself. Welcome heading → "Welcome to Ready for Roots". **Part C — script order.** Sections 6↔9 and 10↔11 swapped → SelfReflection → Poem → Safety Net → BSS → Getting Unstuck → Letter → **Plan last**, matching the psychoeducation script. This also fixes the real data bug Draft 87's re-verify caught: Plan read `letter_builder.letter` but Letter ran AFTER Plan, so the letter was guaranteed empty for any real participant. Three direction-dependent inter-section bridges were rewritten as a necessary consequence (poem→safety-net, letter→plan, plan→wrap-up) — the old copy pointed at the wrong next activity. **Republish discipline:** the full builder-vs-v5 diff (31 rows) was audited line-by-line before publishing — today's edits plus the *intended* pending changes ride in together: D71/72's appraisals/acceptability edits + the Plan `custom_activity` swap, and D83's anchor labels + BW conditionals, now live in pre AND post. The 3 deleted items carried 9 QA-only `{viewed}` response rows (3 QA sessions), removed with them. In-progress v5 sessions keep their frozen snapshot. **Verified live end-to-end at 375×812, one temp single-use code, one session exercising every piece:** assent decline → `exited` with NO `completed_at` and NO webhook → re-entry resumes at the assent question with the banner, status flips to `in_progress`, `use_count` stays 1 → full completion through the NEW order (anchor labels + bw2-gt-0 conditional confirmed live in pretest and posttest; section 12 free of ending language; zero download buttons anywhere mid-flow) → completion screen shows celebration + keepsake with the participant's REAL skill/thoughts/allies/**letter**/poem and a working PNG export → session `completed` on **v6** with 54/54 responses (exactly 3 fewer than v5 — the removed items) and webhook record `skipped/no_external_ref` (proving the exited→completed transition correctly entered the webhook branch) → revisit shows the revisit copy, no celebration, no downloads. Temp code deactivated. Build + console clean. INFRASTRUCTURE logged.
+
+  <details>
+  <summary>Draft 88 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 88 — Consolidated: get the live intervention structure wired up right
+
+**Josh:** *"can you write a prompt to code to make sure that the actual intervention is wired up right?"*
+
+This consolidates today's decisions (Draft 86, all of Draft 87's entries above, and the activity-reorder correction) into one executable prompt, so Code has a single starting point instead of stitching together five appended notes. Full reasoning for each piece is above, under its original heading — this is the checklist to execute against.
+
+**Explicitly OUT of scope, on purpose:** the intro-video / pretest / Sam's Story sequencing (the two "Note —" entries above). That's still gated on tomorrow's (2026-08-17) meeting and on Sam's Story Female/Gender-Neutral cuts still being in production. Don't touch that yet — Parts A/B/C below don't depend on it.
+
+### Part A — Genuine completion vs. rule-based exit (Draft 86)
+
+1. `SessionEngine.jsx`'s `exit_on` branch (~line 204–211) sends `status: 'exited'` instead of `'completed'`. `completeSession()` is unchanged.
+2. `update-session-progress` — add `'exited'` to `VALID_STATUSES`. `verify_jwt: true`, MCP-deployable, normal deploy path.
+3. Confirm the completion webhook still fires only when `nextStatus === 'completed'` — should be automatic once (1) lands, but assert it explicitly.
+4. Re-entry: landing on an `exited` session must resume it (set back to `in_progress`), not show a locked-out/revisit screen — this was Josh's explicit decision (an accidental "No" tap must not permanently end participation). Update:
+   - `SessionEngine.jsx:106` — revisit branch keyed on `status === 'completed'`; must not treat `exited` the same way.
+   - `DeliveryShellPage.jsx`'s `CompletedScreen` — revisit copy keyed on `sessionMeta?.status !== 'completed'`; confirm `exited` renders the normal resume flow, not the "you already did this" screen.
+   - `src/components/SessionGuard.jsx` — confirm `exited` isn't caught by the `abandoned` check.
+   - `validate-code`'s resume-eligibility list — currently `.in(['in_progress', 'completed'])`; add `'exited'` or re-entry is blocked at the code level even after the app-level fix.
+5. Audit remaining consumers: `src/lib/exportFlatten.js:1061` (codebook `allowed_values` string — list the new value), `src/pages/AdminExportsPage.jsx:107` (default `statusFilter`), `src/pages/CodeEntryPage.jsx:64` (resume check), `src/pages/ResearcherDashboardPage.jsx:118-120` (dashboard counts — add an "exited" count rather than letting it vanish).
+6. Backfill the 4 mislabeled `ready-set-dedicate` test sessions at `current_section` 0/1, plus the 1 `gains` session at 1 — all test data, but list the ids in the commit message rather than updating blind.
+7. While in here: the 10 sessions with `status='abandoned'` where 6 also have a non-null `completed_at` is incoherent — investigate rather than assume (smoke-harness residue is likely, but confirm nothing in the app can set `abandoned` after a completion stamp).
+8. This touches an edge function — append the change to `INFRASTRUCTURE.md`'s change log per repo convention.
+
+### Part B — Post-posttest keepsake screen (Draft 87, finalized)
+
+1. **No engine change needed for the trigger itself** — confirmed today: `completeSession()` already fires only when advancing past the last item of the live posttest section. Don't touch this.
+2. Section 12 ("You did it"): remove item 0 (heading "You did it.") entirely, remove item 1 (poem pull-forward), remove item 2 (letter pull-forward). Reword item 3 to drop its opening line ("Thank you for your participation in this program!") — keep the rest of the bridge into the wrap-up questions. Item 4 (the "Almost done" page break) is unchanged.
+3. Extend `CompletedScreen` (`src/pages/DeliveryShellPage.jsx`) to render the actual keepsake on genuine first completion, instead of just the tree-animation congratulations. Reuse `Plan.jsx`'s Review-screen rendering (extract to a shared component if that's cleaner) plus its PNG/PDF export, fed by `buildRealPlanData(sessionData)` from `src/lib/planRealData.js`. This is where the real download action now lives.
+4. Remove the five mid-flow "Save as image" buttons and their confirmation screens from `AlliesSafetyNet`, `BelongingSkillsSort`, `WhoIAmPoem`, `Plan`, `LetterBuilder`. Each activity keeps saving its response data exactly as today — only the download UI moves. **Recommendation, not a firm decision:** consolidate to the one Plan-style keepsake rather than also offering four separate downloads on the same final screen — Plan's aggregation already includes all four. Confirm with Josh before assuming this is final; flagged as an open product call in the notes above.
+5. While in this neighborhood: live section 1 ("Welcome") item 0's heading still reads "Welcome to Ready! Set! Dedicate!" — update to Ready for Roots.
+6. Per repo convention, every touched file under `src/activities/` needs its version bumped in `src/lib/activityVersions.js` in the same commit, with `updated` set to today and a new changelog line prepended. Removing a whole mid-flow screen is a structural flow change, not copy/styling — treat as a MAJOR bump for each of the five activities, not MINOR.
+
+### Part C — Activity order matches the psychoeducation script
+
+Currently: `SelfReflection(4) → Getting Unstuck(6) → Safety Net(7) → Belonging Skills Sort(8) → Poem(9) → Plan(10) → Letter(11)`.
+
+Target, matching `Belonging Psychoeducation Script Parts I & II` exactly: `SelfReflection(4) → Poem → Safety Net → Belonging Skills Sort → Getting Unstuck → Letter → Plan`.
+
+Worked out precisely against the current index assignments, this is only **two swaps**, not a full reshuffle:
+
+- **Swap sections 6 ↔ 9** — "Getting unstuck" and "Who I am" (poem) trade places.
+- **Swap sections 10 ↔ 11** — "Your plan" and "A letter" trade places.
+- Sections 7 ("Your safety net") and 8 ("Belonging skills") are **already correct** — leave them alone.
+
+Verified today: none of these six activity components read each other's `sessionData` (grepped `src/activities/` directly, no cross-references) — only `Plan` reads from the other five, which is exactly why it has to stay last. So this is a pure content/order change with no data-timing risk, safe to do alongside Part B.
+
+**What this does not do:** true scene-by-scene Kai narration (Scene 1 → Self-Reflection → Scene 2 → Poem → …) — the live snapshot still has only two monolithic video placeholders (`kai_video_1` for all of Part I, `kai_video_2` for all of Part II) rather than one clip per scene. That's a bigger, separately-tracked authoring task (Draft 66 Part B). This reorder is a real improvement on its own — it gets the activities into the intended psychological sequence — but it isn't the full picture, and shouldn't be presented to the team as "done" on the video-interleaving question.
+
+### Sequencing across Parts A/B/C
+
+Parts A and B touch different mechanisms (A: `SessionEngine.jsx` + edge functions + status enums; B: section content + a UI component + five activity files) and don't block each other technically, per the reasoning already logged above. Part C is a content-only reorder inside the same published snapshot that Part B is also editing (section 12's items, sections 10/11's content) — **do B and C as one republish** of the intervention version rather than two, since a partial republish would leave the snapshot in an inconsistent in-between state. A can ship independently of B/C, in either order.
+
+### Verification
+
+- Full test session end to end: activities occur in the new order; section 12 shows only the neutral bridge; no download button appears before the posttest; the post-completion screen shows the real aggregated keepsake (including real letter text, not empty/demo fallback) and is the only place a file download is offered.
+- An assent decline now writes `exited`, not `completed`; the session can be re-entered and resumes at the assent question; a second, genuine completion still shows the correct one-time celebration and the correct revisit copy on a later visit.
+- All five touched activity files show a version bump in `activityVersions.js` with today's date and a new changelog line.
+- `INFRASTRUCTURE.md` has a new entry for the `update-session-progress` change.
+- Build + console clean; existing single-source (non-reordered) behavior for anything not touched above is unaffected.
+
+  </details>
+
 - **`255decb` · 2026-08-16** — **Draft 84 (P0) — `mint-access-code` v3 accepts the partner key from `Authorization`.** The consent → access-code pipeline is unblocked on our side. The Workflow WebService credential always sends `Authorization: <token>` and its editor exposes only Name / API Token / mTLS, so the header can't be renamed; the function now reads the shared secret from **`x-partner-key`** (primary, wins if both present) or **`Authorization`** (optional `Bearer ` stripped, value trimmed). Comparison unchanged (constant-time explicitly out of scope). **Deployed CLI-only with `--no-verify-jwt`** — live version **7**, `verify_jwt` confirmed still `false` (it is the only function in the project with JWT verification off). **Pre-flight that de-risked the whole approach:** before touching anything I probed whether the gateway would even pass a non-JWT `Authorization` through to a `verify_jwt=false` function — a raw token, `Bearer <garbage>`, and the **public anon JWT** all reached the function and got its own `{"error":"Invalid partner key"}`, never a gateway error. Same probe confirmed `PARTNER_API_KEY_QUALTRICS` is now genuinely set (401, not the Draft-76-era 500). Then 22/22 local header-resolution checks (public anon JWT does NOT authorize; precedence holds even when `x-partner-key` is wrong; only one `Bearer` stripped; `Basic` rejected), and a post-deploy regression probe: all six unauthorized shapes still 401, zero `access_codes` rows created. **A 12-agent adversarial security review confirmed three findings — all fixed before this landed, and one of them was mine.** (1) **Confidentiality regression:** the gateway doesn't *enforce* Authorization here but it does *parse* it, and writes the **first 10 characters** of an unrecognized value into `function_edge_logs` (`request.sb.apikey.authorization.prefix`) — measured with a 32-char sentinel — while `x-partner-key` appears nowhere in the log schema. So every consent authenticating that way deposits a partial copy of the live secret into project logs. Not a bypass (~130 bits remain, the 1000/day post-auth cap holds), but real: I corrected the function header's now-disproven "Supabase never tries to interpret that value" claim, switched the smoke harness to send the REAL key **only** via `x-partner-key` (Authorization keeps negative-only coverage — wrong token + anon JWT, neither secret), and documented "prefer `x-partner-key` wherever the name is settable; treat the Authorization-borne key as lower-trust, on rotation." (2) **A generated partner key was sitting in cleartext in INFRASTRUCTURE.md's open follow-ups** (committed May, `4862350`), reading as a live instruction to install it — now placeholdered and marked **burned**. It was never the live secret (Draft 76 proved the secret was unset until Josh generated a fresh one) so nothing needs rotating for this system, **but it is permanent in git history and must never be installed.** (3) **QUALTRICS_SETUP §8.2 was revert-bait for this very P0:** it still prescribed renaming the credential parameter to `x-partner-key` as "the fix" — now both unnecessary and impossible in the Workflow editor — and it is the single place a future debugger grepping `"Invalid partner key"` would land, under a heading reading "READ THIS". §8.2/§8.3 are marked HISTORICAL with pointers to §2/§9/§10, §8's heading warns that the later-numbered sections supersede it, and §8.1's "✅ Built + proven live" was corrected — those two real codes came from builder **Test** clicks, which proved the endpoint, not the delivery. **Also corrected** §2 of the runbook, which still instructed building the Survey Flow web service elements that provably never fire, and the stale secrets-checklist row that still said the partner key was NOT SET. **Josh's next step is the Qualtrics-side verify:** open `WF_lFfvg4FT5Ltm9SA` → the WebService task → **Run test**, expect `200` with `code`/`url`, confirm the row lands with `cohort_label = beta-2026-08` / `external_ref = WF-TEST-2026-08-15`, then deactivate that test code. Everything else in the draft's "NOT in this draft" list stays with Cowork — including **deleting the two dead Survey Flow elements**, without which every consent would mint four codes instead of two. No version bump.
 
   <details>
@@ -9943,3 +10010,514 @@ The Sam's Story cut currently on /demo (Sam's Story V3, YouTube `1Rg2zMDmqsQ`) i
 **Verification:** wide export from the Draft 68 QA session + a `/demo/variant-preview`-style session with a variant Vimeo play shows the new columns with correct values (real fractions on Vimeo, empties on YouTube, `variant_used` populated on variant plays); column names SPSS-legal and convention-consistent; existing columns byte-identical (order + names unchanged — analysts may have syntax referencing them); `.sps` generator consistent; build clean.
 
 **Version bump:** none (export pipeline). Note it in the ENGAGEMENT_DATA addendum (closes the flagged gap).
+
+---
+
+## Draft 85 — DECIDE: who sends the completion confirmation email? (blocks the completion half of the loop)
+
+**Status: not a build task yet — a design fork that needs Josh's call before
+anything gets built.** Logged 2026-08-16 so it doesn't evaporate. The
+minting half of the pipeline went live tonight; this is the other half.
+
+### Where things stand
+
+Live and working as of 2026-08-16:
+
+- Workflow `WF_lFfvg4FT5Ltm9SA` "Mint access codes on consent (to ctac.app)"
+  is **Active: Version 1**. Consent = Yes mints two linked codes and sends
+  the consent receipt (QID16) + program link (QID17) emails from
+  `noreply@uky.edu`.
+- The two dead Survey Flow web service elements are **deleted and
+  published**, so there is exactly one minting mechanism.
+
+Still dark:
+
+- Workflow `WF_JFIOeoc0oOU3G4T` "Completion webhook receiver (from ctac.app)"
+  — JSON trigger with auth ON, **no downstream tasks**, never published,
+  Disabled. `QUALTRICS_COMPLETION_WEBHOOK_URL` and `QUALTRICS_API_TOKEN`
+  are both set as Supabase secrets, and `update-session-progress` v6 is
+  deployed and firing correctly on first transition to completed.
+
+### Why this can't just be finished in Qualtrics
+
+`update-session-progress` posts exactly this, with `X-API-TOKEN`:
+
+```json
+{
+  "external_ref":      "<Qualtrics ResponseID>",
+  "code":              "RSD-XXXX-XXXX",
+  "intervention_slug": "ready-set-dedicate",
+  "session_id":        "<uuid>",
+  "completed_at":      "<iso>"
+}
+```
+
+Two hard blocks on the Qualtrics side:
+
+1. **No email address in the payload.** ctac.app doesn't have one — the
+   mint call never received it.
+2. **A JSON-event workflow has no response context.** `${q://QID17/...}`
+   piping only resolves on survey-response events, so the caregiver
+   address can't be pulled from the consent response.
+
+And the obvious workaround fails: Qualtrics has **no simple synchronous
+"get one response with answers" API**. Retrieval is an async export job
+(create export → poll status → download file), which is not something a
+Workflow task does cleanly.
+
+### The fork
+
+**Option A — ctac.app sends it (recommended).**
+Pass the caregiver address through at mint time and store it, so the app
+that already knows about completion also knows where to write.
+
+- Add `delivery_email` to the mint request body (Qualtrics already has
+  `${q://QID17/ChoiceTextEntryValue}` available in the *consent* workflow,
+  where piping works fine).
+- Store it on `access_codes` (column exists? verify — the Survey Flow's
+  unused embedded-data list included `delivery_email`, which suggests this
+  was the original intent).
+- On first transition to completed, `update-session-progress` sends the
+  confirmation via **Resend**, which the platform already uses.
+- Qualtrics webhook workflow then needs **no downstream tasks at all** —
+  or is deleted outright.
+
+Upside: one email system, full logging on our side, no Qualtrics API
+token in a workflow, no async-export nonsense. Downside: PII (caregiver
+email) now lives in `access_codes` — needs a look at RLS and at what the
+consent says about data storage.
+
+**Option B — Qualtrics sends it, via a contact list.**
+At consent time, also add the caregiver to an XM Directory contact list
+with the ResponseID as an external reference; the completion workflow
+looks the contact up and emails them.
+
+Upside: keeps participant email inside Qualtrics, which is arguably the
+cleaner story for the IRB. Downside: a whole contact-list mechanism to
+build and maintain, and XM Directory lookup-by-external-ref in a workflow
+is its own adventure.
+
+**Option C — no completion email at all for the beta.**
+Trish reconciles completions from the `access_codes` / `sessions` join and
+sends gift cards manually. N=20. Least work, and arguably right for a
+beta.
+
+### What to decide
+
+1. Which option.
+2. If A: does the consent language cover storing the caregiver email in
+   ctac.app? The consent already says data is "delivered through ctac.app,
+   a secure web application maintained by the Center on Trauma and
+   Children," which reads like it covers this — but Jessica should confirm
+   rather than us assuming.
+3. Whether the completion email is even needed for beta, or whether the
+   gift-card trigger is the actual requirement hiding behind it.
+
+### Do NOT do in the meantime
+
+Do **not** publish/enable `WF_JFIOeoc0oOU3G4T` as-is. An Active workflow
+with zero downstream tasks reads as "done" on the Workflows list and will
+be mistaken for working. Leave it Draft/Disabled until the fork is
+settled.
+
+---
+
+## Draft 85 — REVISED 2026-08-16 after reading RSD_Completion_GiftCard_Flow.md
+
+**Supersedes the fork as written above. Option A in that draft is WRONG and
+must not be built.** Josh asked whether the design docs specified who the
+completion email goes to and why; they do, and the answer inverts the
+recommendation.
+
+### What the design doc actually specifies
+
+`RSD_Completion_GiftCard_Flow.md` (rev 5, 2026-05-06), steps 7–9:
+
+- ctac.app fires the completion webhook to Qualtrics.
+- **Qualtrics updates the consent record** — `intervention_completed = true`,
+  completion code stored.
+- Qualtrics emails the caregiver: *"Your child completed the program. We've
+  sent the request for your gift card."*
+- **Trish works a saved Qualtrics view** — *"Completed, gift card #1 not yet
+  requested"* — where each row already holds caregiver name, email, amount,
+  study ID and completion code. She submits to UK Treasury and stamps
+  `giftcard_1_requested`.
+
+### Correction 1 — the email is not the requirement
+
+The operational dependency is **Trish's filtered Qualtrics view**, which
+only populates if the response is stamped. The caregiver email is a
+courtesy layered on top. Draft 85 as originally written treated the email
+as the goal and the response update as optional; that is backwards, and
+Option C ("skip the completion email for beta") is therefore *less* viable
+than it looked — skipping the email is fine, skipping the response stamp
+breaks gift-card operations.
+
+### Correction 2 — ctac.app must NOT hold the caregiver email
+
+The same doc, "Systems and roles":
+
+> **ctac.app** — Owns intervention delivery, custom activities, the 90-day
+> follow-up survey... **De-identified by design — only ever sees the study
+> ID.**
+
+And "What's stored where" lists caregiver email as Qualtrics ✓ / ctac.app —.
+
+So the original Option A — pass `delivery_email` at mint time, store it on
+`access_codes`, send via Resend — **breaks the de-identification
+architecture** the IRB approved and cuts against the consent language about
+identifiers being removed from ctac.app data. Do not build it. The unused
+`delivery_email` embedded-data field in the old Survey Flow was a Qualtrics-
+side field, not a signal that ctac.app should hold the address.
+
+### The actual open question, now much narrower
+
+**Can a JSON-triggered Qualtrics workflow write embedded data back to the
+originating survey response?**
+
+- The payload already carries the identifier: `external_ref` = ResponseID.
+- Downstream tasks on webhook receipt are **proven** — validated 2026-05-05
+  ("Downstream Workflow tasks fire correctly on webhook receipt — confirmed
+  with a triggered email task").
+- What is unproven: a task that updates a *recorded response*.
+
+Paths to investigate, in order:
+
+1. A native Qualtrics workflow task for updating a response (check the task
+   picker under "Actions in Qualtrics" — "Transfer and update data" or
+   similar).
+2. A **Web Service task calling the Qualtrics API** to set embedded data on
+   the response by ID, authenticating with `QUALTRICS_API_TOKEN` (already a
+   Supabase secret; would need to exist Qualtrics-side too). Verify the API
+   supports updating a recorded response's embedded data — do **not** assume.
+   Note Qualtrics has no simple synchronous *read* of a single response
+   (retrieval is an async export job); writing may or may not be similarly
+   awkward.
+3. If neither works: ask Qualtrics support. This is a supported-pattern
+   question, not something to reverse-engineer under deadline.
+
+### If the response cannot be updated from a JSON workflow
+
+Fallback that preserves de-identification: Trish reconciles completions from
+the ctac.app side instead of a Qualtrics view. `access_codes.external_ref`
+joins to the Qualtrics ResponseID, and `sessions.status = 'completed'` gives
+the completion set — so the join exists, it just isn't a saved Qualtrics
+view. At N=20 that is a spreadsheet, not a system. **Trish should be asked
+whether that is workable before anyone builds around it** — it changes her
+process, and she is not currently in these conversations.
+
+### Standing instruction
+
+`WF_JFIOeoc0oOU3G4T` stays **Draft / Disabled** until this is resolved.
+
+---
+
+## Draft 86 — P0: `completed` currently means "session ended," not "child finished the program"
+
+**Found 2026-08-16 while answering "how do we identify when a child has
+actually completed?" The answer today is: we can't, reliably.**
+
+### The defect
+
+`src/engine/SessionEngine.jsx` marks `status: 'completed'` from **two**
+different places:
+
+1. `completeSession()` (line ~221) — the participant reached the end of the
+   last item. **Genuine completion.**
+2. The `exit_on` hard-branch in `saveResponse()` (line ~204) — a `choice`
+   item matched an exit rule. **Early exit**, and the live use of this is
+   the **assent "No" path** (`src/activities/Assent.jsx` — the first section
+   of `ready-set-dedicate` is a Yes/No choice whose `content_json.exit_on`
+   ends the session on "no").
+
+Both write the same `status` and both stamp `completed_at`. A youth who
+declines assent on screen one is **indistinguishable in the database** from
+a youth who finished all 14 sections.
+
+### Proof from production
+
+`ready-set-dedicate` has 14 sections. Sessions currently `status='completed'`:
+
+| `current_section` | n | what it really is |
+|---|---|---|
+| 0 | 1 | ended at the start (assent decline) |
+| 1 | 1 | ended at the start (assent decline) |
+| 12 | 2 | genuine completion |
+| 13 | 2 | genuine completion |
+
+`gains` shows the same shape (one at section 1, two at section 13).
+
+### Why this matters beyond tidiness
+
+- **Gift cards.** The assent text promises: *"If you complete all parts of
+  the program and surveys today, you will receive a $25 e-gift card."*
+  Paying a decliner is both a money problem and a protocol problem.
+- **The completion webhook** (`update-session-progress` v6) fires on first
+  transition to `completed` — so it would currently fire for an assent
+  decline, telling Qualtrics the child completed.
+- **Analysis.** N of completers is inflated by every decline and every
+  future exit rule.
+- **`AdminExportsPage`** defaults its filter to `status === 'completed'`,
+  so decliners are silently inside the default export.
+
+### The change
+
+Introduce a distinct terminal status for rule-based early exit. Proposed
+value: **`exited`** (not `declined` — the mechanism is general; assent
+decline is just its first use).
+
+1. **`SessionEngine.jsx`** — the `exit_on` branch sends `status: 'exited'`
+   instead of `'completed'`. `completeSession()` is unchanged.
+2. **`update-session-progress`** — add `'exited'` to `VALID_STATUSES`.
+   **Deploy note:** this function has `verify_jwt: true` and is MCP-deployed
+   (unlike `mint-access-code`) — normal deploy path is fine.
+3. **Webhook guard** — the completion webhook must fire only on genuine
+   `completed`. It keys off `nextStatus === 'completed'`, so this is
+   automatic once (1) lands, but assert it in the change.
+4. **Audit every status consumer** before changing anything. Known set:
+   - `src/components/SessionGuard.jsx` (abandoned check)
+   - `src/engine/SessionEngine.jsx:106` (revisit path on `completed`)
+   - `src/lib/exportFlatten.js:1061` (codebook `allowed_values` string —
+     must list the new value)
+   - `src/pages/AdminExportsPage.jsx:107` (default `statusFilter`)
+   - `src/pages/CodeEntryPage.jsx:64` (resume check)
+   - `src/pages/DeliveryShellPage.jsx` (revisit copy)
+   - `src/pages/ResearcherDashboardPage.jsx:118-120` (dashboard counts —
+     add an "exited" count rather than letting it vanish)
+5. **Backfill the existing rows.** The four mislabeled `ready-set-dedicate`
+   sessions at `current_section` 0 and 1, plus the `gains` one at 1. All
+   are test data, so a targeted `UPDATE ... SET status='exited'` is fine —
+   but **list the ids in the commit message** rather than updating blind.
+
+### Also worth fixing while in here
+
+**10 sessions have `status='abandoned'` but 6 of them have a non-null
+`completed_at`.** That combination is incoherent. Likely smoke-harness or
+manual-update residue, but confirm before assuming — if something in the
+app can set `abandoned` after a completion stamp, that's a second bug.
+
+### Open question for Josh (do not decide in code)
+
+An `exited` session that is revisited: should the youth be able to re-enter
+and change their mind, or stay on the exit screen? Today they are locked out
+(because `exited` was `completed`, which routes to the revisit screen), so
+keeping that behaviour is **not a regression** — but an accidental "No" tap
+currently ends a participant's involvement permanently. Flag it; don't
+silently change it.
+
+### Draft 86 — DECIDED 2026-08-16: an `exited` session must allow re-entry
+
+Josh's call: **yes, a youth who exits should be able to come back in.** An
+accidental "No" tap must not permanently end their participation.
+
+This makes `exited` behave differently from `completed` on revisit, so it is
+part of the change, not a follow-up:
+
+- `src/engine/SessionEngine.jsx:106` — the revisit branch currently triggers
+  on `status === 'completed'`. It must **not** treat `exited` the same way.
+- On re-entry to an `exited` session: set the session back to `in_progress`
+  and resume normally. Since an assent decline leaves `current_section` at 0,
+  resuming naturally returns them to the assent question, which is the
+  correct place to land.
+- `src/pages/DeliveryShellPage.jsx` — the revisit copy is keyed on
+  `sessionMeta?.status !== 'completed'`; confirm an `exited` session renders
+  the normal entry experience rather than the "you already did this" screen.
+- `src/components/SessionGuard.jsx` — make sure `exited` is not caught by the
+  `abandoned` block.
+
+Note this is a genuine behaviour change, not just a relabel: today an assent
+decline locks the youth out permanently (because `exited` was `completed`,
+which routes to the revisit screen). After this change they can return.
+That is the intent.
+
+**Access-code interaction to verify:** the intervention code is
+`max_uses = 1` and the decline already consumed `use_count = 1`. Tonight's
+live test proved `max_uses` gates *starting a new session*, not resuming an
+existing one — so re-entry should work on the same session. **Confirm this
+explicitly in testing**, because if re-entry is blocked by the code rather
+than by the session, the fix above achieves nothing for the person it is
+meant to protect.
+
+---
+
+## Draft 87 — No ending signals and no off-ramps before the posttest
+
+**Josh's decision, 2026-08-16:** *"any you did it screen has to come after
+the post test, definitely. We only want completion to be possible after that
+last posttest question is answered... they should have to complete the post
+test before downloading their plan or doing anything that might take them off
+the program."*
+
+This is a sequencing principle, not a single fix: **nothing that reads as an
+ending, and nothing that can send the participant out of the app, may appear
+before the posttest is submitted.**
+
+### What section 12 actually is (read it before changing it)
+
+`ready-set-dedicate` section 12 "You did it" is **not** a pure celebration —
+an earlier characterisation in this session was wrong. Its five items are:
+
+| item | type | content |
+|---|---|---|
+| 0 | text_prompt | heading **"You did it."** — *"That was real work. Whatever came up for you today — keep what helps. Leave what doesn't."* |
+| 1 | text_prompt | **"Your poem"** — pull-forward of `who_i_am_poem.full_poem_text` |
+| 2 | text_prompt | **"Your letter"** — pull-forward of `letter_builder.letter` |
+| 3 | text_prompt | *"Thank you for your participation... Now, we would like to ask you some questions about what you are thinking and feeling right now..."* |
+| 4 | page_break | **"Almost done."** / *"Last set of questions."* |
+
+So it **does** bridge into the posttest. The problem is narrower and real:
+**the strongest ending signal — the heading "You did it." — is item 0**, and
+the poem/letter reveals read as a finale. A participant who stops at item 0
+never reaches the bridge at item 3.
+
+### The off-ramp problem is bigger than the plan
+
+Five activities ship a **"Save as image"** download, and every one of them
+sits before the posttest:
+
+| section | activity | component |
+|---|---|---|
+| 7 | Your safety net | `AlliesSafetyNet` |
+| 8 | Belonging skills | `BelongingSkillsSort` |
+| 9 | Who I am | `WhoIAmPoem` |
+| 10 | Your plan | `Plan` |
+| 11 | A letter | `LetterBuilder` |
+
+On a phone, saving an image raises a system share sheet or a Downloads
+notification — five separate invitations to leave the app, each landing
+before the only measurement that can't be recovered.
+
+### Proposed restructure
+
+**Minimum (cheap, do this regardless):**
+
+- Section 12 keeps items 3 and 4 (the bridge) and **loses the "You did it."
+  heading**. Reword item 0 as a transition, not an ending — the body copy
+  (*"That was real work..."*) is good and can stay under a non-terminal
+  heading.
+- Move items 1 and 2 (poem + letter reveals) to **after** the posttest, where
+  they become the emotional payoff of a true finale rather than a false one.
+- New final section after the posttest: **"You did it."** + poem + letter.
+
+**Fuller (needs scoping):** relocate the five "Save as image" buttons out of
+their activities and into that final keepsake section, so no download exists
+before the posttest.
+
+### Cost of the fuller version — partially unknown, needs Code to confirm
+
+The keepsake PNGs are produced from SVG **rendered in the DOM at the moment
+of creation** (`downloadSvgElementAsPng` / `downloadSvgStringAsPng` in
+`src/lib/imageDownload.js`). Rendering them later means re-rendering each
+visual from stored responses.
+
+Encouraging signs, not verified end to end:
+
+- `AlliesSafetyNet` already has a `review` screen type (`isReviewScreen` /
+  `isReview` props ~lines 406, 593, 686), so read-only rendering exists at
+  least there.
+- `Plan` v4.0 (Draft 72) already reads **real cross-activity payloads**
+  in-session via `src/lib/planRealData.js`, mapping token_key-keyed session
+  data from five other activities — including `who_i_am_poem.full_poem_text`
+  and `letter_builder.letter` — and already produces a PNG/PDF keepsake.
+
+**That last point may make this much cheaper than it looks:** The Plan
+already aggregates and renders the other activities' content. A post-posttest
+keepsake screen might be closer to "show the Plan keepsake plus two more" than
+to "rebuild five renderers." **Claude Code should assess before anyone
+commits to scope.**
+
+### Open question for the team, not for Code
+
+Deferring the downloads trades a therapeutic beat for data integrity. Saving
+your safety net *in the moment you make it* probably lands better than saving
+it ten minutes later in a batch. Holly and Stephanie should weigh that —
+the counter-argument is that one consolidated "here's everything you made"
+screen is arguably a stronger ending than five scattered saves, and it is the
+only version that protects the post-measures.
+
+### Sequencing note
+
+Do **not** ship this before Draft 86. Reordering sections changes
+`current_section` indices, and the interim "who completed" query keyed on
+`current_section >= 12` breaks. Draft 86 makes `status` trustworthy so no
+index-based heuristic is needed.
+
+---
+
+### Draft 87 — FINALIZED 2026-08-16: keepsakes move to a single post-posttest screen
+
+**Josh's decision, confirmed:** *"the child completes the post test, then they get to their keepsakes, the plan and they can download it then. The trigger for completing the intervention should be the completion of the last post test question."* This resolves the "Open question for the team" above in Josh's favor: the **fuller restructure ships**, not the minimum.
+
+It also confirms something worth stating plainly: **the completion trigger needs no engine change.** `SessionEngine.jsx`'s `goNext()` already calls `completeSession()` only when advancing past the last item of the last section (~line 244), and live section 13 ("Wrap-up questions," the posttest) is already the last section in the array — confirmed just now by querying the published `ready-set-dedicate` snapshot directly (14 sections, order_index 0–13, "Wrap-up questions" is index 13). So "completion = last posttest question answered" is already true in the code today. Nothing below changes *when* completion fires — only what happens before and after it.
+
+**New finding — a real data bug, independent of the off-ramp problem, caught while re-verifying this draft rather than assumed.** Live section order is `... 9 Who I am (Poem) → 10 Your plan (Plan) → 11 A letter (LetterBuilder) → 12 You did it → 13 Wrap-up questions`. `Plan.jsx`'s own header comment documents its Screen 4 ("Review") and final keepsake as showing "Words of Wisdom" — the letter — read-only, and `src/lib/planRealData.js` reads `sessionData.letter_builder?.letter` to populate it. But **Letter (section 11) runs after Plan (section 10)**, so at the moment a real participant reaches Plan today, `letter_builder` cannot exist in `sessionData` yet — that field is guaranteed empty. The earlier version of this draft called Plan's real-data wiring "encouraging" without catching this; that was my own oversight, corrected now. This is a live bug today, entirely separate from anything Josh raised — the restructure below fixes it as a side effect, which is a real reason to do the reorder, not just a nice-to-have.
+
+**What ships:**
+
+1. **Swap the order of "Your plan" and "A letter"** — Letter becomes section 10, Plan becomes section 11. Plan's Review screen and keepsake can then actually see real letter text, for the first time. (This doc doesn't know the authoring/publish mechanism well enough to prescribe how the reorder gets made — Code's call.)
+2. **Section 12 ("You did it") loses its ending signal, per the original minimum fix, plus one more line caught on re-read just now:** item 3's opening sentence — *"Thank you for your participation in this program!"* — also reads as terminal and should go the same direction as the "You did it." heading. Net: section 12 keeps only a neutral bridge ("you've done all the activities, a few more questions") plus the "Almost done" page break. Items 0 ("You did it."), 1 (poem pull-forward), and 2 (letter pull-forward) come out of this section — not because the pull-forward is bad, but because it becomes the payoff of the real ending instead of a rehearsal for one. (Item 2's token is also just wrong — `letter_builder.full_letter_text` isn't a real field; `planRealData.js` documents the actual saved key as `letter_builder.letter`. Moot if the item is removed rather than fixed, but flagging the bug in case it surfaces elsewhere.)
+3. **Extend `CompletedScreen` (`src/pages/DeliveryShellPage.jsx`) to render the actual keepsake, not just the tree-animation congratulations.** This is the natural home for "here's everything you made" — it already exists, already renders exactly once on genuine first completion (`firstCompletion = !exitInfo && sessionMeta?.status !== 'completed'`), and the data it needs is already one destructure away: `useSession()` exposes `responses` and `resolveToken` alongside what `CompletedScreen` currently reads. No new section, no new `current_section` index, no interaction with Draft 86's status values. Concretely: reuse `Plan.jsx`'s Review rendering (or extract it into a shared component) plus its PNG/PDF export function, fed by `buildRealPlanData(sessionData)` from `planRealData.js` — that function already assembles poem, letter, safety net, belonging skills, and Getting Unstuck content into one payload. Likely the "show the Plan keepsake plus two more" shortcut the original draft hoped for, now with the Letter-timing bug fixed as a prerequisite so it's actually true.
+4. **Remove all five mid-flow "Save as image" buttons** (`AlliesSafetyNet`, `BelongingSkillsSort`, `WhoIAmPoem`, `Plan`, `LetterBuilder`) — per Josh: *"before... doing anything that might take them off the program (like check if it downloaded)."* Each activity keeps saving its response data exactly as today; only the download action and its confirmation screen move. **Open question for Code/Josh, not decided here:** does the one consolidated Plan-style keepsake at the end fully replace the four other individual images, or do participants still get four separate downloads (moved to the same post-completion screen, just delayed)? Plan's aggregation already includes poem lines, letter text, kept allies, and skills-to-try, so one consolidated keepsake seems like the simpler and more consistent answer — but this is a product-scope call, not a technical one, and it's Josh's/the clinical team's to make explicitly rather than have inferred.
+
+**Small thing found in the same neighborhood, low priority:** live section 1 ("Welcome"), item 0's heading still reads *"Welcome to Ready! Set! Dedicate!"* — the old name, not Ready for Roots. Since this draft already touches adjacent sections, worth a one-line fix while in there; not urgent enough to justify its own draft.
+
+**Small thing found, optional polish, not required:** the very last item of the posttest itself (section 13, item 9) is a "Thank you for completing Ready! Set! Dedicate!... All done" text_prompt with its own continue button — so a participant will see that, then immediately see the new post-completion keepsake screen right after. Slightly redundant back-to-back, but harmless. Flagging in case Code wants to fold one into the other while already in this code — not requesting it.
+
+**Sequencing note, revised:** the original note said not to ship before Draft 86, because a new section 14 would shift `current_section` math that an interim SQL heuristic depended on. That reasoning doesn't apply the way this is now scoped — the keepsake lives inside `CompletedScreen`, not a new section, so the section count never changes and no index-based heuristic is touched. Sections 10 and 11 swap *content*, not count. **Draft 86 and this draft now look independent and could ship in either order, or together** — but that reading hasn't been re-verified against the actual code by anyone other than this read-through, so Code should confirm rather than take it on faith.
+
+**Verification:** a full test session confirms (a) Letter's content is visible in Plan's review before it's visible anywhere else — i.e., Plan genuinely reads real letter text, not empty or demo fallback; (b) section 12 no longer contains any "you did it" or "thank you for participating" language; (c) none of the five activities show a download button mid-flow; (d) the post-completion screen — reached only after the true last posttest item — shows the aggregated keepsake and is the only place a file download is offered; (e) resuming a session that's genuinely `completed` still shows the correct revisit copy, not the celebration, on a second visit.
+
+---
+
+### Note — Sam's Story / intro-video sequencing, ahead of the 2026-08-17 meeting
+
+Not a Code-executable draft. Draft 67's variant-choice item is explicitly shipped dark, the AI-transparency intro video isn't produced yet, and the Female/Gender-Neutral Sam's Story cuts are still in production. This is a planning correction for whoever authors the video insertion once those pieces are ready, timed to land before tomorrow's meeting since Draft 67 flagged "how the choice is framed" as exactly what that meeting is for.
+
+**Josh, 2026-08-16:** *"I have been assuming the wrong spot for the Sam's Story Video. It is actually first up. It would be after the intro video. It would make sense in our 'intro video' that orients the child to the intervention, that Kai does that and then introduces the Sam's story video and tells them they have a choice to choose who the main character is."*
+
+**This isn't a correction to anything shipped.** Nothing in the live intervention has Sam's Story, an intro video, or the variant-choice item yet — confirmed just now: live section 1 ("Welcome") is plain text today with no video item, and per Draft 66's audit the only two video items anywhere in the live snapshot are placeholder Vimeo stubs elsewhere in the psychoeducation sections. So there's no live mistake to fix. What Josh is correcting is his own mental model against the actual documented plan — and the documented plan (Draft 66 Part B, from the 2026-07-27 meeting) already has this right: slot 1 is the intro video, slot 2 is Sam's Story, both ahead of any Kai psychoeducation. The sequencing itself was already decided correctly; what's new is specific content guidance for slot 1 that wasn't nailed down before.
+
+**New, and genuinely new:** the intro video's job is now spelled out as three things in order — Kai orients the child to the intervention generally, Kai introduces Sam's Story specifically as what's coming next, and Kai tells them they'll get to choose which version of Sam (the character variant) they follow. That last piece directly answers Draft 67's own open question ("how the choice is framed... team discussion point at the 2026-08-17 meeting") — the answer is: Kai frames it narratively inside the intro video, ahead of whatever the actual selection screen (Draft 67's `choice` item) ends up saying.
+
+**Two things worth confirming at tomorrow's meeting, not decided here:**
+
+1. **Is "the intro video" the same video as Draft 66's "AI-transparency intro" slot, or a second, separate video?** An AI-content disclosure and "Kai welcomes you and hands off to Sam's Story" are different communicative jobs — one sounds like a fixed-language ethics/transparency disclosure, the other is narrative framing. Checked `IRB_Feedback_Notes.md` for anything pinning down required wording for an AI disclosure — it doesn't address this at all, so there's no documentation basis to say combining them is fine or a problem. Worth a direct answer at the meeting rather than a guess here.
+2. **Where does this sequence sit relative to the pretest?** Today, live section order is Assent → Welcome → pretest ("A few quick questions," section 2) → psychoeducation (section 3 on). Draft 66 describes Sam's Story as landing "before psychoeducation," which — since pretest already precedes psychoeducation today — most naturally reads as *after* pretest, not before it. That relationship wasn't made explicit at the time, though, and whether a participant takes the pretest before or after an emotionally-loaded narrative video is the kind of thing that could matter for measurement. Worth a one-line confirmation rather than an assumption.
+
+---
+
+### Draft 87 — correction, later on 2026-08-16: the Plan/Letter swap alone is not enough
+
+Josh confirmed the intended activity order directly, attaching the authoritative script document (`Belonging Psychoeducation Script Parts I & II revisedAW with activities.docx`): *"the assent, Introduction Video, Sam's Story. Then the Kai Psychoeducation Videos interspersed with the activites with the plan being the last activity... then the post test, then the opportunity to print/save your plan."*
+
+The script pairs each Kai scene with one activity, in this order: Scene 1 (The Scan) → **Self-Reflection**; Scene 2 (The Why) → **Who I Am Poem**; Scene 3 (Building a Safety Net) → **Allies/Safety Net**; Scene 4 (The Foster Care "Extra Level") → bridge, no activity; Part II Scene 1 (Building Skills for Belonging) → **Belonging Skills Sort**; Part II Scene 2 (The Roadblocks) → **Getting Unstuck**; Part II Scene 3 (Putting It All Together) → **Letter to Another Youth**; Conclusion → leads into **The Plan** as the final activity, not paired to a scene of its own. This matches Draft 66's Part B plan exactly (written 2026-08-14 from this same script) — it's been the documented target for two days; it just hadn't been cross-checked against the Draft 87 entries above before now.
+
+**Correction: the "swap Letter and Plan" fix specified in the Draft 87 entries above is necessary but not sufficient.** Live order today is SelfReflection(4) → Getting Unstuck(6) → Safety Net(7) → Belonging Skills Sort(8) → Poem(9) → Plan(10) → Letter(11) — which differs from the target in more than the Plan/Letter pair alone. The actual target, matching the script exactly:
+
+**SelfReflection → Poem → Safety Net → Belonging Skills Sort → Getting Unstuck → Letter → Plan**
+
+So alongside the Plan/Letter swap already specified, **Poem needs to move earlier (before Safety Net) and Getting Unstuck needs to move later (after Belonging Skills Sort)**. Checked just now: none of these six activity components read each other's `sessionData` — grepped `src/activities/` directly, no matches — only `Plan` reads from the other five (already covered above). So reordering the remaining five relative to each other carries no data-timing risk analogous to the Plan/Letter bug; it's a pure content/sequencing change, safe to do at the same time.
+
+**Still true and unchanged by today's message:** per Draft 66's own finding, the live snapshot currently has only two monolithic Kai video placeholders (`kai_video_1` covering all of Part I, in section 3; `kai_video_2` covering all of Part II, in section 5) rather than one clip per scene interspersed with its paired activity — confirmed again just now via direct query. Individually-produced scene clips already exist per this file's own production history (Scene 1 "The Scan" and others were each produced and reviewed separately). Bringing the live build to true scene-by-scene interleaving is a bigger authoring task than the activity reorder above — the reorder is worth doing on its own first, but doesn't by itself finish what the script describes.
+
+**Confirmed by today's message:** Plan is the final activity, full stop — not tied to a specific Kai scene the way the other six are. That resolves the one soft edge in Draft 66's own list (it had tentatively paired Plan with "Kai Conclusion").
+
+**Still open, not resolved by today's message:** where this whole sequence (Introduction Video → Sam's Story → interspersed psychoeducation) sits relative to the pretest. Today's message lists "assent, Introduction Video, Sam's Story" with no mention of pretest in between — which leans toward pretest coming *after* Sam's Story, not before — but that's a read of an omission, not a direct statement, on something with real measurement implications. Also still open: is "Introduction Video" the same single video as the previously-planned "AI-transparency intro," or a separate one — today's message names only two videos before the psychoeducation content (Introduction Video, Sam's Story), which leans toward "same video" but doesn't say so directly. Both still slated for the 2026-08-17 meeting per the note above.
+
+---
+
+### Note — Sam's Story / intro-video sequencing, REVISED 2026-08-16 (later same day): pretest sits between the two intro beats
+
+Josh, revising the sequence above: *"It goes assent, then intro video about the program ending with Kai telling them about the pretest, pretest, written intro (or video) introducing sams story....then the rest is the same."*
+
+This resolves the first open question from the note above: **pretest comes after the general intro video, but before Sam's Story** — not before everything, not after Sam's Story. There are two distinct intro beats, not one:
+
+- **Beat A — general intro video.** Orients the child to the program broadly, ends with Kai handing off into the pretest. Committed to being a video.
+- *(pretest — unchanged, already live section 2, "A few quick questions")*
+- **Beat B — Sam's-Story-specific intro.** Introduces Sam's Story specifically. Josh is not committed to this being a video — *"written intro (or video)"* — could be a text bridge, matching the pattern already used elsewhere in the live build (e.g., the existing "Now back to Kai for one more piece" bridge in section 4).
+
+**Concrete mapping onto the live build, for whoever authors this:** live section 1 ("Welcome") is already positioned exactly where Beat A belongs — it already orients the child and already ends with a bridge into pretest ("Let's start with a few quick questions"). It's plain text today; per Josh's message it should become a video (or stay text with a video added — his call). No new section needed for Beat A. Pretest (section 2) doesn't move. Beat B, the Sam's Story video, and Draft 67's variant-choice item need a new section (or a couple of small ones) inserted between pretest (2) and the start of Kai psychoeducation (currently section 3, "All About Belonging").
+
+**Inference, not confirmed — flagging rather than assuming silently:** with Beat A now scoped as general program orientation ending in a pretest handoff, the character-choice explanation ("you'll get to pick which Sam") most likely belongs in Beat B instead, immediately before Sam's Story plays, rather than in Beat A as the original note assumed. Reads as the better fit given this new structure, but Josh didn't restate this piece directly — worth a one-line confirmation.
+
+**Still open for the 2026-08-17 meeting:** whether Beat A doubles as the previously-planned "AI-transparency intro" or is a third, separate video. Beat A's scope as described today — general orientation + pretest handoff — sounds like even less of a natural home for an AI-content disclosure than before, which if anything argues for these being separate. Not resolved here.
