@@ -88,6 +88,11 @@ const FIXED_COLS = [
 const STATUS_VALUE_LABELS = {
   in_progress: 'In progress',
   completed: 'Completed',
+  // 'exited' added when Draft 88 introduced the status (rule-based early
+  // exit, e.g. an assent decline) — that change updated exportFlatten's
+  // codebook allowed_values string but missed this SPSS label map. Found
+  // while merging Draft 81.
+  exited: 'Exited (early exit)',
   abandoned: 'Abandoned',
 }
 
@@ -145,6 +150,10 @@ function inferFormat(col) {
   if (av === 'integer count' || av === 'integer' || av === '0 or 1') {
     return 'F4'
   }
+  if (av.startsWith('fraction')) {
+    // video completion_fraction — 0–1 with 2 decimals
+    return 'F6.2'
+  }
   // psychometric ranges like "0–3", "1–5", "0–10". Single digit fits F1,
   // double digit fits F2. Default to F2 — wider is safe for likert too.
   if (/^\d+[–-]\d+$/.test(av)) {
@@ -201,6 +210,11 @@ function groupVariableLevels(allCols) {
       buckets.scale.push(c.name)
     } else if (c.item_type === 'choice' || c.item_type === 'choice_quiz') {
       buckets.nominal.push(c.name)
+    } else if (c.item_type === 'video') {
+      // completion_fraction / play_count are continuous; watched (binary)
+      // and variant_used (category) are nominal.
+      const isScale = c.sub_id === 'completion_fraction' || c.sub_id === 'play_count'
+      buckets[isScale ? 'scale' : 'nominal'].push(c.name)
     } else {
       // free_text, custom_activity, structured_activity_field — call them
       // nominal so SPSS treats them as strings/categorical by default.
