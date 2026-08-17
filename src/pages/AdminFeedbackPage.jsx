@@ -36,6 +36,7 @@ const PROGRAMS = [
 // sections first; older slugs kept below so historical rows still label.
 const SECTION_LABELS = {
   // Ideas & Demos for Review (proposals staged above the official breakdown)
+  'review-finalboss': 'Review: Final Boss summit script',
   'review-exposition': 'Review: Exposition',
   'review-character': 'Review: Character progression',
   'review-arcades': 'Review: Arcade ideas',

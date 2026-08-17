@@ -20,6 +20,7 @@ import BodyMapping from '../components/BodyMapping.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
+  { value: 'review-finalboss', label: 'Review: Final Boss summit script' },
   { value: 'review-character', label: 'Review: Character progression' },
   // Retired as their proposals were adopted (labels are kept in
   // AdminFeedbackPage so existing rows still read correctly):
@@ -173,6 +174,39 @@ const REVIEW_ARCADES = [
 const REVIEW_GEAR_POINTS = [
   'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Glass. In the Mistfields it grows bird-of-light wings (a reskin of the existing bird traversal, with no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
   'Intent for comment: tools grow stronger the more they’re used (practice), and the real power is in combining them. That is the coping-skills-toolbox idea.',
+]
+
+// Holly's first-draft summit script (Draft 30). VERBATIM — every `text` value
+// below is copied exactly from her draft, including its punctuation and
+// smart quotes; don't reword it. Bracketed stage directions in her draft
+// (e.g. "*Player puts on goggles*") become `direction` entries rendered in
+// italics instead of literal asterisks; where two directions sat back to
+// back on one line, they are kept as two separate entries rather than joined
+// with punctuation of our own. The numbered options are their own type so
+// they can render as a list instead of running into the surrounding prose.
+const FINAL_BOSS_SCRIPT = [
+  { type: 'direction', text: 'Growth mindset script ends, player has earned the night vision goggles' },
+  { type: 'spark', text: 'Congratulations, you’re ready to climb the final summit!' },
+  { type: 'direction', text: 'steps onto staircase, lanterns go out on the staircase or everything just goes dark. Player can’t move forwards.' },
+  { type: 'spark', text: '“Oh, this happens sometimes when you feel hopeful about trauma therapy, but you’re also not sure whether it’s worth trying because you worry it may not help. Let’s revisit the gear you’ve earned to see if we can overcome these mixed feelings. First, you need to put on your growth mindset goggles to see more clearly.”' },
+  { type: 'direction', text: 'Player puts on goggles' },
+  { type: 'direction', text: 'Vision returns and two signposts (or floating bubbles or something) are now visible on the staircase:' },
+  { type: 'choices', items: [
+    'I have the power to change my thoughts and feelings, and therapy can help me learn how to do this',
+    'Research shows that trauma therapy is very likely to help me feel better',
+  ] },
+  { type: 'spark', text: '“Can you see more clearly now? Select the message that you want to carry with you when you need a reminder”' },
+  { type: 'direction', text: 'Player chooses message (saved for action plan/summary at the end)' },
+  { type: 'spark', text: 'Great job! Let’s keep climbing!' },
+  { type: 'direction', text: 'Regular game lighting returns and player removes goggles and continues up the stairs' },
+  { type: 'direction', text: 'Now, dark fog obscures the path and the player cannot advance' },
+  { type: 'spark', text: 'I see! It can be hard to start something like trauma therapy if you’re remembering bad experiences you’ve had in therapy in the past, or if you’ve heard others talk about negative experiences. Let’s try using your wingsuit to get over this fog.' },
+  { type: 'direction', text: 'Player puts on wingsuit and flies. In the fog, comes across a character who can provide a positive testimonial from a teen. This clears the fog and allows the player to land on the cleared staircase' },
+  { type: 'spark', text: 'Fantastic! It’s important to remember that just because you or someone you know has had a bad experience in the past, that doesn’t mean that others haven’t had good experiences or that you can’t have good experiences in the future! You’re almost there now, keep going!' },
+  { type: 'direction', text: 'Now, the light from the tower is close but it’s blinding to the player, the player can no longer see the Spark, and the player cannot proceed' },
+  { type: 'spark', text: 'The light must feel very bright to you! When you experience trauma, it’s normal to feel like you’re the only one going through it and to feel alone or like you’re caught in a spotlight. In reality, before turning 18, three out of every four kids will experience at least one potentially traumatic event. Trauma makes you feel alone, but the truth is: you are not alone. Pull out your lantern to see the truth.' },
+  { type: 'direction', text: 'Player pulls out lantern which allows them to see that the bright light ahead is made up of characters holding their own lanterns. One or two characters come to join the player' },
+  { type: 'spark', text: 'Now you can see that the light was bright because so many other people have walked this same path before you. Your new friends will join you as you make the final steps of this journey.' },
 ]
 
 const REVIEW_GEAR_THEME =
@@ -414,9 +448,52 @@ export default function GainsDemoPage() {
                   the arcade ideas and the gear toolbox (both now under
                   Prototypes and In Development). */}
 
-              {/* 1 — How the character changes */}
+              {/* 1 — Holly's first-draft summit script (Draft 30). Text only,
+                  nothing built yet. */}
               <ReviewItem
                 n={1}
+                title="Final Boss: the summit script (first draft)"
+                section="review-finalboss"
+              >
+                <p className="mb-3 italic text-slate-600">
+                  First-draft script for the final summit: the last climb to
+                  the Beacon, where the gear you’ve earned helps you move past
+                  mixed feelings about starting therapy. Shown verbatim for
+                  review.
+                </p>
+                <div className="space-y-2">
+                  {FINAL_BOSS_SCRIPT.map((line, i) => {
+                    if (line.type === 'direction') {
+                      return (
+                        <p key={i} className="italic text-slate-500">
+                          {line.text}
+                        </p>
+                      )
+                    }
+                    if (line.type === 'choices') {
+                      return (
+                        <ol key={i} className="list-decimal pl-5 space-y-1">
+                          {line.items.map((item, j) => (
+                            <li key={j}>{item}</li>
+                          ))}
+                        </ol>
+                      )
+                    }
+                    return (
+                      <p key={i}>
+                        <span className="font-semibold text-slate-800">
+                          Spark:
+                        </span>{' '}
+                        {line.text}
+                      </p>
+                    )
+                  })}
+                </div>
+              </ReviewItem>
+
+              {/* 2 — How the character changes */}
+              <ReviewItem
+                n={2}
                 title="How the character changes"
                 section="review-character"
               >
@@ -432,11 +509,11 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 2 — Spark's voice. (The zone-rename proposal that used to
+              {/* 3 — Spark's voice. (The zone-rename proposal that used to
                   sit here was accepted at the Aug 11 meeting and is now canon:
                   the opening zone reads "The Dark Abyss" in the breakdown.) */}
               <ReviewItem
-                n={2}
+                n={3}
                 title="Spark’s voice (three options)"
                 section="review-spark-voice"
               >
@@ -476,9 +553,9 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 3 — Body Mapping activity (playable) */}
+              {/* 4 — Body Mapping activity (playable) */}
               <ReviewItem
-                n={3}
+                n={4}
                 title="Body Mapping activity (playable)"
                 section="review-bodymap"
               >
