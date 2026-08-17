@@ -132,6 +132,27 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **ee5aea4** (2026-08-14) — Draft 30: **Holly's Final Boss summit script is up for
+  review.** Text-only, nothing built yet: her first-draft script for the final climb to
+  the Beacon, where the earned gear helps the player move past mixed feelings about
+  starting therapy. Placed as the new **first item** with its own comment thread
+  (`review-finalboss`), pushing the other three down to 2–4 (character progression,
+  Spark's voice, Body Mapping).
+  The script renders from a typed array (direction / spark / choices) rather than one
+  prose blob, so "stage directions in italics, Spark's lines intact" is structural instead
+  of a parser guessing at asterisks. Every line is copied exactly from Holly's draft,
+  smart quotes and all; bracketed directions become italic entries with the asterisks
+  stripped (they were her markup for "italicize this," not literal characters), and where
+  two directions sat back to back on one line they stay as two separate entries rather than
+  joined with punctuation of our own.
+  The one-line intro above the script is new framing copy, not Holly's script, so the
+  standing no-em-dash rule applies there; used a colon instead of a dash.
+  **Verified:** item order is 1 Final Boss, 2 character progression, 3 Spark's voice, 4 Body
+  Mapping; the rendered script has zero literal asterisk characters; direction count (11)
+  and Spark-line count (8) match the source array; the two choices render as a numbered
+  list; the comment thread opens preset to `review-finalboss`; no console errors. No
+  `src/activities` changes, so no version bumps.
+
 - **b4f7465** (2026-08-14) — Draft 29: **the three Spark voice mixes are refreshed.**
   Same filenames, new audio, mirrored from `long-light-site/audio/` into `public/`.
   Asset-only: the A/B/C players already point at these paths, so no wiring change and no
@@ -1528,3 +1549,36 @@ The three Spark voice mp3s in `long-light-site/audio/` — `spark-voice-a.mp3`, 
 **Verify.** On a hard refresh, all three review-section players play the NEW audio (not stale cached versions). No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 29.*
+
+
+### Draft 30 — Review section: add "Final Boss" summit script (VERBATIM, text-only), at the top — ✅ SHIPPED ee5aea4 (2026-08-14)
+
+Add a new item to the **"Ideas & Demos for Review"** section, placed as the **first item** (top of the section). It's Holly's first-draft script for the final summit sequence — **text only, no mechanics to build yet**, up for the team to read and comment on today. Its own comment thread, tag `review-finalboss`.
+
+Short framing line above the copy: *"First-draft script for the final summit — the last climb to the Beacon, where the gear you've earned helps you move past mixed feelings about starting therapy. Shown verbatim for review."*
+
+Then render the following **verbatim** (keep wording exactly; show the *stage directions* in italics and Spark's lines as written):
+
+*Growth mindset script ends, player has earned the night vision goggles*
+Spark: Congratulations, you’re ready to climb the final summit!
+*steps onto staircase, lanterns go out on the staircase or everything just goes dark. Player can’t move forwards.*
+Spark: “Oh, this happens sometimes when you feel hopeful about trauma therapy, but you’re also not sure whether it’s worth trying because you worry it may not help. Let’s revisit the gear you’ve earned to see if we can overcome these mixed feelings. First, you need to put on your growth mindset goggles to see more clearly.”
+*Player puts on goggles* *Vision returns and two signposts (or floating bubbles or something) are now visible on the staircase*:
+1. I have the power to change my thoughts and feelings, and therapy can help me learn how to do this
+2. Research shows that trauma therapy is very likely to help me feel better
+Spark: “Can you see more clearly now? Select the message that you want to carry with you when you need a reminder”
+*Player chooses message (saved for action plan/summary at the end)
+Spark: Great job! Let’s keep climbing!
+*Regular game lighting returns and player removes goggles and continues up the stairs*
+*Now, dark fog obscures the path and the player cannot advance*
+Spark: I see! It can be hard to start something like trauma therapy if you’re remembering bad experiences you’ve had in therapy in the past, or if you’ve heard others talk about negative experiences. Let’s try using your wingsuit to get over this fog.
+*Player puts on wingsuit and flies. In the fog, comes across a character who can provide a positive testimonial from a teen. This clears the fog and allows the player to land on the cleared staircase*
+Spark: Fantastic! It’s important to remember that just because you or someone you know has had a bad experience in the past, that doesn’t mean that others haven’t had good experiences or that you can’t have good experiences in the future! You’re almost there now, keep going!
+*Now, the light from the tower is close but it’s blinding to the player, the player can no longer see the Spark, and the player cannot proceed*
+Spark: The light must feel very bright to you! When you experience trauma, it’s normal to feel like you’re the only one going through it and to feel alone or like you’re caught in a spotlight. In reality, before turning 18, three out of every four kids will experience at least one potentially traumatic event. Trauma makes you feel alone, but the truth is: you are not alone. Pull out your lantern to see the truth.
+*Player pulls out lantern which allows them to see that the bright light ahead is made up of characters holding their own lanterns. One or two characters come to join the player*
+Spark: Now you can see that the light was bright because so many other people have walked this same path before you. Your new friends will join you as you make the final steps of this journey.
+
+**Verify.** The "Final Boss" item appears as the first item in the review section; the copy reads verbatim (stage directions italicized, Spark lines intact); its comment thread works (`review-finalboss`). Text only — no new game mechanics. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 30.*
