@@ -580,7 +580,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
             onClick={handleOtherContinue}
             disabled={otherChoice == null || !yesPathReady}
           >
-            Keep going →
+            Let's practice →
           </PrimaryButton>
         </div>
       </div>
