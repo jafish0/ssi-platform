@@ -110,6 +110,53 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`0f346d6` · 2026-08-19** — **Draft 90 — /demo reshuffle: intro video + Sam's Story Female into review, Kai Part 2 graduates, retire the old cast cards.** The rule behind it, per Josh: *"For Review This Week" holds only what's currently awaiting feedback; once something's reviewed/finalized, it graduates down into its permanent section.* Verified the current state directly against `DemoPage.jsx`/`castData.js` before editing, per the draft's own instruction. **"For Review This Week" now holds exactly three cards:** Intro Video (new, `PQMnbd1NuJ8`) and Sam's Story — Female Version (new, `Ughh-3a8Urs`) at the top, then Kai Part 2 Scene 3 — held back pending Adrienne's script rewrite (the "moob" line + growth-mindset gap logged in the notes above), so its `youtubeId` is intentionally omitted. `ReviewCard` didn't have a shape for "neither `youtubeId` nor `imageSrc`" — added a third branch (a dashed "in production" placeholder, reusing the `knownIssue` field for the note text) so this renders cleanly instead of a broken embed. Sam's Story V5 and Kai Part 2 Scenes 1–2 + Conclusion cleared review and graduated out; the Kai (Gender Neutral) — 14yo card is retired outright, per Josh, nothing to graduate it to. **Sam's Story section reframed** from a character-design cast preview (Holly's pre-animation Script 2.0) to finished narrative video by variant — the graduated **Male Version** is now its first `ReviewCard`; Female and eventually Non-binary join the same way once each clears review above. The script-download link and the five character cast cards are gone — Josh: *"we no longer need the script and all those associated images."* **Found while removing them:** `CastCard` (a ~270-line component) had zero remaining call sites anywhere in the file once this section's only caller was gone, so it was deleted along with the now-unused `CAST` import; `castData.js`'s `CAST` is now an empty array (kept exported since `IRBPreviewPage.jsx` still imports it — for an `id: 'kai'` lookup that, checked directly, was never actually present in this array either; a pre-existing no-op left untouched, out of scope here). **Learning Skills for Belonging** picks up the three graduated Part 2 videos after the existing four Part 1 scenes; the group subheading's copy corrected — *"Part 2 completes the psychoeducation series. All eight scenes across both parts are now produced"* was no longer true with Scene 3 held back, reworded to *"Part 2 continues the psychoeducation series — Scene 3 is being revised and will join once it's ready."* **Verified live at 375×812:** "For Review This Week" shows exactly the three intended cards in order; the Scene 3 placeholder renders correctly (checked the DOM directly — 10 real YouTube embeds, zero with `undefined`/`null` src, exactly one correctly-labeled production placeholder); Learning Skills shows Part 1 then the corrected subheading then Part 2's three graduated videos; Sam's Story shows only the Male Version, no download link, no leftover cast cards; all 11 feedback buttons present and wired to their correct area (confirmed one opens with "Intro Video" pre-filled). Console + build clean. No version bump (no `src/activities` files touched).
+
+  <details>
+  <summary>Draft 90 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 90 — /demo reshuffle: intro video + Sam's Story Female into review, Kai Part 2 graduates, retire the old cast cards
+
+Josh's ask, 2026-08-19. The rule behind all of this: **"For Review This Week" holds only what's currently awaiting feedback; once something's reviewed/finalized, it graduates down into its permanent section.** Verified the current state directly against `src/pages/DemoPage.jsx` and `src/lib/castData.js` before writing this — exact line numbers below are from that read, confirm they still match before editing.
+
+**1. Add two new cards to `REVIEW_CARDS` (`DemoPage.jsx`, currently lines 47-95):**
+
+- **Intro Video** — YouTube ID `PQMnbd1NuJ8` (https://youtube.com/shorts/PQMnbd1NuJ8). Title "Ready for Roots — Intro Video", `feedbackArea: "Intro Video"`. Add at the top of the array.
+- **Sam's Story — Female Version** — YouTube ID `Ughh-3a8Urs` (https://youtu.be/Ughh-3a8Urs). Title "Sam's Story — Female Version", `feedbackArea: "Sam's Story — Female Version"`. Add right after the Intro Video card.
+
+**2. Remove the existing "Sam's Story V5" card from `REVIEW_CARDS`** (lines 49-54, YouTube `eEgHiFWatA0`) — it graduates to the Sam's Story cast section as the Male Version (see #5 below), not deleted.
+
+**3. Remove three Kai Part 2 cards from `REVIEW_CARDS`** — they've cleared review and move down into `LEARNING_SKILLS_CARDS` (see #4):
+   - Part 2 Scene 1: Building Skills for Belonging (line 56-67, YouTube `mHiQ6lTi1R8`)
+   - Part 2 Scene 2: The Roadblocks (line 68-74, YouTube `BV4cOda5on4`)
+   - Conclusion (line 82-88, YouTube `GIxBJpD6O-E`)
+
+**Leave Part 2 Scene 3 ("Putting it All Together," line 75-81, YouTube `GAXfgODSEbw`) in `REVIEW_CARDS`, but replace its video with a placeholder** — this is the one being reworked (see the "Kai psychoeducation video fixes" note logged 2026-08-18 above: the "moob"-sounding line and the growth-mindset/self-regulation gap are the same passage, Adrienne is rewriting it, not yet delivered). Swap `youtubeId: 'GAXfgODSEbw'` for a "video in production" placeholder state — reuse whatever placeholder pattern `ReviewCard`/ `LEARNING_SKILLS_CARDS` already has (the `knownIssue` field used on Part 1 Scene 4 is the closest existing precedent; if `ReviewCard` doesn't yet support a card with no `youtubeId`/`imageSrc` at all, add minimal support for that rather than leaving a broken video embed). Suggested note text: *"New version in production — the script is being revised to fix a pronunciation issue and add a fuller explanation of self-regulation and growth mindset."* Keep the same `feedbackArea` so existing feedback threads on this scene stay attributable.
+
+**Net result for `REVIEW_CARDS` after 1-3:** Intro Video, Sam's Story — Female Version, Part 2 Scene 3 (placeholder). Three cards, down from six.
+
+**4. Add the three graduated Kai Part 2 videos to `LEARNING_SKILLS_CARDS`** (`DemoPage.jsx`, currently lines 103-134, holds only Part 1 Scenes 1-4), after the existing four:
+
+   - Carry forward the "Learning Skills for Belonging — Part 2" grouping subheading that currently sits on the Part 2 Scene 1 card in `REVIEW_CARDS` (lines 56-58) — but **update its copy**, since *"Part 2 completes the psychoeducation series. All eight scenes across both parts are now produced"* is no longer true with Scene 3 held back. Rewrite to something like *"Part 2 continues the psychoeducation series — Scene 3 is being revised and will join once it's ready."* (wording is Josh's call, just flagging the stale claim rather than carrying it over silently).
+   - Part 2 Scene 1: Building Skills for Belonging (`mHiQ6lTi1R8`)
+   - Part 2 Scene 2: The Roadblocks (`BV4cOda5on4`)
+   - Conclusion (`GIxBJpD6O-E`)
+   - (Scene 3 joins this list in a future draft once its rewrite lands and it moves out of "For Review This Week.")
+
+**5. Remove the "Kai (Gender Neutral) — 14 years old" card entirely** (`DemoPage.jsx` lines 88-94, image `/cast/images/kai-gender-neutral-14.png`). Straight deletion, nothing to graduate it to — Josh: *"This image no longer needs to be on the demo."* Leave the underlying image file alone (not a code task); just remove the card.
+
+**6. Retire the Sam's Story cast section's current cards, replace with the graduated Male Version video.** In `castData.js`, the five entries tagged `shows: ['sams-story']` — `sam-16` (Sam 18yo, line 93), `sam-14` (line 101), `sam-female` (line 115), `sam-female-14` (line 132), `sam-nonbinary` (line 143) — lose that tag (check each one's `shows` array first; only hard-delete the entry if `'sams-story'` is its only tag, otherwise just drop the tag and leave the entry for whatever other section still needs it). Also remove the "Download Script 2.0 (.docx)" link and its surrounding copy in `DemoPage.jsx` (lines 536-543) — Josh: *"We no longer need the script and all those associated images."*
+
+   In that section's place, add the graduated **Sam's Story — Male Version** card (the former "Sam's Story V5," YouTube `eEgHiFWatA0`), using whichever card shape (`ReviewCard` or a `CAST`/`CastCard` video shape) fits this section's existing rendering — Code's call given how the section is currently wired. Update the section's intro copy so it describes finished narrative videos by variant rather than character-design cast cards (current copy talks about "cast," which no longer fits) — Code should draft something reasonable here; not dictating exact wording.
+
+   **Note for a near-future draft, not this one:** once Sam's Story — Female Version (and eventually Non-binary) also clear review, they'll graduate into this same section alongside the Male Version, matching the same pattern. Not doing that yet since Female is only just entering review today.
+
+**Verify.** "For Review This Week" shows exactly three cards (Intro Video, Sam's Story — Female Version, Part 2 Scene 3 placeholder) in that order, all with working feedback buttons. "Learning Skills for Belonging" shows Part 1 Scenes 1-4 then the Part 2 subheading then Part 2 Scenes 1-2 and Conclusion, all videos play. The old "Kai (Gender Neutral) — 14yo" card is gone. The Sam's Story section shows only the Male Version video, no script download link, no leftover character-design cards. No broken image/video embeds anywhere on `/demo`. Console + build clean. Log Recently-shipped.
+
+*End of Draft 90.*
+
+  </details>
+
 - **`41b3ed9` · 2026-08-18** — **Draft 89 — Getting Unstuck button rename + Maggie added to feedback.** Two small, unrelated pieces shipped together. **Part 1:** Holly's 2026-08-17 ask — the "One more." screen's continue button (gated by `handleOtherContinue`, leading into the pick/zero-endorsement branch) now reads **"Let's practice →"** instead of "Keep going →". Checked directly against the file rather than guessing which of `GettingUnstuck.jsx`'s five independently-hardcoded "Keep going →" buttons Holly meant — matched her own description of scanning past several before landing on the one right before the picking screen. The other four instances are untouched. Verified live: the "One more." screen shows the new label; the very next screen (pick)'s "Keep going →" is unchanged. **Part 2 (addendum):** added **Maggie** to `FeedbackButton.jsx`'s submitter dropdown. Since GAINS reuses this same shared component, this closes GAINS Draft 31 as well as this draft's Ready for Roots ask in one edit. **Two more allow-lists gated the value beyond the client dropdown, found live rather than assumed:** the `submit-feedback` edge function's own server-side `SUBMITTERS` Set (bumped to **v10**, MCP-deployed, `verify_jwt` unchanged) — without this, picking Maggie would have silently stored every submission as `anonymous` — and a **database CHECK constraint** (`feedback_submitter_check`) that doesn't derive from the edge function's Set at all, caught only by actually submitting and hitting a live 500 — the identical landmine pattern as Draft 88's `sessions_status_check`. Widened via migration. **Verified end-to-end:** submitted a real test comment as Maggie through the live demo UI, confirmed it landed with `submitter='maggie'` (not silently `anonymous`), then removed the QA row. Build clean. No version bump (Part 1 is a single hardcoded string, not tracked in `activityVersions.js`; Part 2 touches no `src/activities` file).
 
   <details>
@@ -10770,3 +10817,52 @@ tasks)" section above (bones→bonds, the "moob" line, growth-mindset rewrite,
 box breathing) was a mistake — that content got pulled over from feedback on
 a different project and doesn't belong in this file. Disregard it; it is not
 a real 8/17 meeting or feedback item for Ready for Roots.
+
+### Correction — 2026-08-18 (later): the retracted Kai items were real, just misfiled
+
+Following up on the "video/content production items" retraction above: those
+four items (bones→bonds, "moob", growth-mindset rewrite, box breathing) are
+real 2026-08-17 feedback after all — they're GAINS for Teens (Kai / Learning
+Skills for Belonging) content, corroborated by this file's own history
+(Drafts 35/45/63) and by `Gains for Teens/WORKING_NOTES.md`. The actual
+mistake was filing GAINS content in the Ready for Roots notes. They're now
+logged properly in `Gains for Teens/WORKING_NOTES.md`. Nothing here in root
+changes — this file stays Ready for Roots only, per the CLAUDE.md split.
+
+### Correction — 2026-08-18 (final): the prior correction was backwards — Kai IS Ready for Roots
+
+The note two corrections up ("the retracted Kai items were real, just
+misfiled ... into `Gains for Teens/WORKING_NOTES.md`") had it backwards.
+Kai is Ready for Roots' "Learning Skills for Belonging" narrator, confirmed
+directly by Josh and independently by the codebase: Kai's narration wires
+into `src/activities/GettingUnstuck.jsx` and `AlliesSafetyNet.jsx`, both
+Ready for Roots activities. GAINS's narrator is Spark, a different
+character in a different world ("The Long Light"). The corresponding note
+in the GAINS file has been struck.
+
+**The four 2026-08-17 items, logged correctly here this time:**
+
+1. **Kai Part 2 Scene 1 ("Building Skills for Belonging"):** caption/audio
+   says "deepen our bones," should be "deepen our bonds." Checked the
+   source script (`Video Content/Kais_Lines.docx`) — it already says
+   "bonds" correctly, so this is purely a recorded-asset error (audio/video
+   caption), not a script fix. Needs a re-record of that line/clip.
+
+2. **Kai Part 2 Scene 3 ("Putting It All Together") — one combined fix, not
+   two.** Checked the source script directly: the "moob"-sounding line
+   ("...she **moved** homes because she thought, 'they're just going to
+   **move** me again anyway'") and the growth-mindset/self-regulation gap
+   (the "list of skills to practice" + fixed-vs-growth-mindset closer) are
+   the same continuous passage in Scene 3 — Self-Regulation intro → the
+   "move" line → "list of skills" → growth-mindset closer, one unbroken
+   block. **Adrienne's rewrite covers both** — no separate re-record of
+   just the "move" line is needed ahead of the rewrite; wait for the
+   revised script, then redo the whole Scene 3 passage once.
+
+3. **Box-breathing Kai clip:** short addition where Kai models box
+   breathing. Still being scripted (Josh/Adrienne), not yet delivered.
+
+4. **BLOCKED — growth-mindset/self-regulation rewrite** (see #2): Adrienne
+   is rewriting this passage and will send it to Josh. Nothing to
+   build/produce until it lands — and per #2, this rewrite also resolves
+   the Scene 3 "move"/"moob" line, so #2 and #4 ship together.
