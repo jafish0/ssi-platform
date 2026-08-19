@@ -77,6 +77,16 @@ const REVIEW_CARDS = [
       'Self-regulation, the too-heavy-shield metaphor, box breathing, and the shift from a fixed mindset to a growth mindset.',
     feedbackArea: 'Kai Part 2 Scene 3: Putting it All Together',
   },
+  // Draft 92 (2026-08-19): the Assent screen's new optional "read this to
+  // me" narration, previewed here as an audio card (ReviewCard's new
+  // `audioSrc` branch — no video, no image).
+  {
+    title: 'Assent — "Read This to Me" Narration',
+    audioSrc: '/kai-narration/assent.mp3',
+    description:
+      "A narration option on the assent screen, for participants who'd rather listen than read.",
+    feedbackArea: 'Assent Narration',
+  },
 ]
 
 // Kai's four Part 1 scenes (2026-08-13) — pulled out of weekly review and
@@ -148,11 +158,13 @@ const LEARNING_SKILLS_CARDS = [
   },
 ]
 
-// One review card: optional group subheading, then title + media (a 9:16
-// YouTube embed for `youtubeId` cards, a still image for `imageSrc` cards
-// — Draft 61 — or a "video in production" placeholder when a card sets
-// NEITHER, e.g. a cut pulled pending a script rewrite — Draft 90) +
-// description + a dedicated feedback button pinned to this item.
+// One review card: optional group subheading, then media (a 9:16 YouTube
+// embed for `youtubeId` cards, a still image for `imageSrc` cards — Draft
+// 61 —, an inline native player for `audioSrc` cards — Draft 92, no 9:16
+// frame since that shape was designed around video/image — or a "video in
+// production" placeholder when a card sets NONE of the three, e.g. a cut
+// pulled pending a script rewrite — Draft 90) + description + a dedicated
+// feedback button pinned to this item.
 function ReviewCard({ card }) {
   return (
     <>
@@ -172,36 +184,44 @@ function ReviewCard({ card }) {
         <h4 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
           {card.title}
         </h4>
-        <div className="mx-auto w-full max-w-[360px] mb-4">
-          <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-            {card.imageSrc ? (
-              <img
-                src={card.imageSrc}
-                alt={card.title}
-                className="absolute inset-0 h-full w-full object-cover rounded-2xl border border-amber-200"
-              />
-            ) : card.youtubeId ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${card.youtubeId}`}
-                title={card.title}
-                className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            ) : (
-              <div
-                role="img"
-                aria-label={`${card.title} — video in production`}
-                className="absolute inset-0 h-full w-full rounded-2xl border-2 border-dashed border-amber-300 bg-amber-100/50 flex flex-col items-center justify-center text-amber-700"
-              >
-                <svg viewBox="0 0 24 24" className="w-8 h-8 mb-2 opacity-50" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                <span className="text-[13px] italic">In production</span>
-              </div>
-            )}
+        {card.audioSrc ? (
+          <div className="max-w-[420px] mx-auto mb-4">
+            <audio controls preload="none" src={card.audioSrc} className="w-full">
+              Your browser does not support the audio element.
+            </audio>
           </div>
-        </div>
+        ) : (
+          <div className="mx-auto w-full max-w-[360px] mb-4">
+            <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
+              {card.imageSrc ? (
+                <img
+                  src={card.imageSrc}
+                  alt={card.title}
+                  className="absolute inset-0 h-full w-full object-cover rounded-2xl border border-amber-200"
+                />
+              ) : card.youtubeId ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${card.youtubeId}`}
+                  title={card.title}
+                  className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <div
+                  role="img"
+                  aria-label={`${card.title} — video in production`}
+                  className="absolute inset-0 h-full w-full rounded-2xl border-2 border-dashed border-amber-300 bg-amber-100/50 flex flex-col items-center justify-center text-amber-700"
+                >
+                  <svg viewBox="0 0 24 24" className="w-8 h-8 mb-2 opacity-50" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  <span className="text-[13px] italic">In production</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <p className="text-[13px] text-slate-600 leading-relaxed text-center mb-4 max-w-[480px] mx-auto">
           {card.description}
         </p>
@@ -212,7 +232,7 @@ function ReviewCard({ card }) {
         )}
         <div className="text-center">
           <FeedbackButton
-            label="Leave a note on this video"
+            label={`Leave a note on this ${card.audioSrc ? 'audio' : 'video'}`}
             initialArea={card.feedbackArea}
           />
         </div>

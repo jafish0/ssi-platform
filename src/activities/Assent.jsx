@@ -21,6 +21,63 @@
 import { useState } from 'react'
 import { PrimaryButton, SecondaryButton } from '../components/items/shared.jsx'
 
+// "Read this to me" narration (Draft 92) — a collapsed pill, not an
+// always-visible player like `KaiNarrationPlayer`: assent is a decision
+// screen with the full text already on-screen, so the audio is a pure
+// accessibility/support add-on. Deliberately does NOT autoplay on mount
+// and does NOT gate Yes/No on listening — unlike KaiNarrationPlayer's
+// usage elsewhere, there is no Continue button here to gate. Reuses that
+// component's fail-open philosophy (a missing/broken mp3 must never block
+// the child) via the same pattern: onError swaps in a plain "not
+// available yet" message instead of a dead control. A lighter one-off
+// rather than reusing KaiNarrationPlayer directly — its Kai-portrait/
+// speaker-icon narration styling doesn't fit a consent screen, and its
+// always-playing + gating behavior is wrong here.
+function AssentNarration() {
+  const [revealed, setRevealed] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
+
+  if (!revealed) {
+    return (
+      <div className="text-center mb-5">
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          className="inline-flex items-center gap-2 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+        >
+          🔊 Read this to me
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-5 rounded-2xl border border-ctac-teal-200 bg-ctac-teal-50 p-4 text-center">
+      {loadFailed ? (
+        <p className="text-[13px] text-slate-600 italic">
+          The audio isn&apos;t available yet — you can keep reading below.
+        </p>
+      ) : (
+        // autoPlay here is a direct response to the click above (a user
+        // gesture), not autoplay-on-mount of the whole screen — browsers
+        // allow it in that window. `controls` stays on regardless, so if
+        // a stricter browser blocks it silently, the child still has a
+        // visible play button rather than nothing happening.
+        <audio
+          autoPlay
+          controls
+          preload="auto"
+          src="/kai-narration/assent.mp3"
+          onError={() => setLoadFailed(true)}
+          className="w-full"
+        >
+          Your browser does not support the audio element.
+        </audio>
+      )}
+    </div>
+  )
+}
+
 // Body paragraphs, verbatim from the assent document (internal spacing and
 // curly quotes preserved).
 const BODY = [
@@ -81,6 +138,8 @@ export default function Assent({ onSave }) {
 
   return (
     <div className="max-w-[620px] mx-auto">
+      <AssentNarration />
+
       {/* Title block — verbatim from the assent document. */}
       <div className="text-center mb-6">
         <h1 className="text-[22px] font-bold text-ctac-navy leading-snug mb-2">
