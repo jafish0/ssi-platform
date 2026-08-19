@@ -132,6 +132,48 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **(check, no new work)** Draft 31 (add Maggie to the feedback dropdown) turned out to
+  already be shipped: Maggie was added to the shared `SUBMITTERS` list in
+  `src/components/FeedbackButton.jsx` back in **41b3ed9** (2026-08-06, Draft 89, a Ready for
+  Roots draft), and that component is shared across both demos, so GAINS already had her.
+  Confirmed live on ssi.ctac.app before marking the draft shipped; no commit needed.
+
+- **72af0ff** (2026-08-19) — Draft 32: **Body Mapping's reveal/closing race bug is fixed,
+  and the figure is redrawn torso-focused with a tap-reaction pulse.** From 2026-08-17 team
+  feedback plus the 2026-08-19 art/copy follow-up.
+  **The bug (Stephanie's report):** tapping the last unrevealed region sometimes showed the
+  closing line instead of that region's own line. Revealing the 5th region set `showClosing`
+  true in the *same* state update that revealed it, so the region's own panel never
+  rendered, not even for a frame. Not specific to any one region, it happened to whichever
+  one was tapped 5th, but testers experienced it as "the body map bug" because the
+  whole-body hit-target is largest and drawn underneath the other four, so it's naturally
+  the one left for last. **Fixed:** the just-completed region shows its own panel first, and
+  a ref-tracked timer hands the panel to the closing line ~1.1s later instead of in the same
+  tick; the timer cancels if the participant re-taps a region to re-read it, advances to
+  Part 2, or restarts.
+  **Tap reaction (Ginny's ask):** ships inside the redrawn asset, not as separate code, each
+  un-tapped region idle-pulses (staggered per region) to invite a tap, settling to a steady
+  glow once active or selected. Respects prefers-reduced-motion.
+  **Torso-focused reposition (Holly's ask):** the full-body silhouette is replaced with a
+  torso-focused figure (head, torso, both arms with real hands) so heart and lungs sit
+  anatomically closer together, and the body/lightning-bolt icon moves onto the hand, off
+  its old spot. This also satisfies Bianca's separate "more realistic, with hands" ask as a
+  byproduct, no extra code needed. The crop was measured with `getBBox()` in a live render,
+  not guessed, with asymmetric padding since the padding need is asymmetric (Head's glow can
+  extend past the canvas top; the Body/hand region sits close to the left edge).
+  **Copy:** Stephanie's final wording for all five regions, verbatim. Body overtook Head as
+  the longest text with this revision (254 vs 223 chars), so the "longest region" spacer is
+  now found by `reduce()` rather than hardcoded to Head, since the worst case isn't stable
+  across copy revisions.
+  **Verified:** revealed all five with the whole-body/hand region LAST (the exact reported
+  scenario) — its own panel shows immediately, holds the full window, then the closing
+  takes over; re-tapping afterward restores cleanly. Panel stays 8px above the CTA at both
+  375px and 1280px with the new longer copy; body height/position spread is **0.00px**
+  across the full sequence at both widths; no overflow. Active/selected styling confirmed
+  correct by rasterizing the live SVG and sampling pixels, after `getComputedStyle` reads
+  proved unreliable in this environment. Keyboard activation still works; the comment
+  thread still opens preset to `review-bodymap`; no console errors.
+
 - **ee5aea4** (2026-08-14) — Draft 30: **Holly's Final Boss summit script is up for
   review.** Text-only, nothing built yet: her first-draft script for the final climb to
   the Beacon, where the earned gear helps the player move past mixed feelings about
@@ -1582,3 +1624,117 @@ Spark: Now you can see that the light was bright because so many other people ha
 **Verify.** The "Final Boss" item appears as the first item in the review section; the copy reads verbatim (stage directions italicized, Spark lines intact); its comment thread works (`review-finalboss`). Text only — no new game mechanics. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 30.*
+
+
+### Draft 31 — Add new team member "Maggie" to the feedback comment dropdown — ✅ ALREADY SHIPPED 41b3ed9 (2026-08-06, Draft 89)
+
+A new team member, **Maggie**, needs to be added to the **submitter dropdown** on the feedback/comment form (the same list that currently has Stephanie, Ginny, Holly, Bianca, Josh). Add **"Maggie"** as an option, matching however the existing names are defined (same casing/format for the stored `submitter` value, e.g. `maggie`).
+
+If that dropdown is shared across both demos, adding her once covers both `/gains-demo` and Ready for Roots; if the lists are separate, add her to the **GAINS** one at minimum (and Ready for Roots too if that's where she's commenting).
+
+**Verify.** The comment form's submitter dropdown now lists Maggie; selecting her and submitting stores the comment under her name; existing names still work. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 31.*
+
+### Draft 32 — Body Mapping fixes: reveal/closing race bug, tap animation, torso-focused repositioning — ✅ SHIPPED 72af0ff (2026-08-19)
+
+From 2026-08-17 team feedback on the `review-bodymap` demo (Drafts 26/27). Four changes, one file: `src/components/BodyMapping.jsx` (rendered via `src/pages/GainsDemoPage.jsx`).
+
+**1. Real bug, found and diagnosed (Stephanie's report): tapping the last unrevealed region sometimes shows the closing line instead of that region's own line.** This isn't specific to the lightning-bolt/body icon — it happens to whichever region is tapped 5th, but testers experience it as "the body map bug" because the whole-body hit-target is the largest and drawn underneath the other four, so it's naturally the one people leave for last. Root cause, confirmed by reading `tapRegion()` (lines 145–159): revealing the 5th region sets `showClosing` to `true` in the *same* state update that reveals it, so the render branch's `allRevealed && showClosing` check wins outright on that exact tap — the just-revealed region's own `PanelBox` never renders, even for a frame. Fix: don't let `showClosing` become true on the same tap that reveals the last region — show that region's own panel first (as every other region gets), and only surface the closing line on the *next* interaction (e.g. a "Continue" tap, or a brief delay) rather than instantly replacing the content the participant just asked to see.
+
+**2. New ask (Ginny): make the tapped region visibly react** — "is it possible for these areas to enlarge or pulse to show action" — admin decision: **yes, build it.** A brief scale-up or pulse animation on tap (before/alongside the copy panel appearing) for all five regions, reveal and select modes both.
+
+**3. Reposition symbols, torso-focused (Holly, admin-decided):** *"Let's make the body map focused on the torso, that way Holly's comments about area placement can be accommodated."* Holly's specific asks were (a) move the lightning-bolt/body icon somewhere other than its current spot, and (b) place the heart and lungs icons closer to their real anatomical positions (acknowledged as tricky since they sit close together). Concretely: recenter the icon layout around the torso rather than the current full-figure spread, and nudge heart/lungs into biologically closer positions within that torso focus.
+
+**4. Copy update (Ginny, admin-decided — merge into the existing "Body" line):** current verbatim (from the canonical copy block above) is *"Our body heats up, leading to more sweating. Our muscles also get tense, and we might feel shaky or tingly."* Ginny's ask: fold in "shaky or heavy limbs, feeling like you need to sit or you will fall." Suggested merged wording, **flagged for Stephanie/Sprang sign-off before shipping** since this is clinical verbatim content, not ours to phrase unilaterally: *"Our body heats up, leading to more sweating. Our muscles also get tense, and we might feel shaky or tingly, or feel weak in our legs — like we need to sit down or we might fall."* Do not ship new clinical wording without that confirmation; if it hasn't arrived, ship items 1–3 alone and leave the copy as-is.
+
+**Not in this draft — flagged, not actioned:** Bianca's ask to make the body shape "more realistic, with hands" is an art-asset change (a new/edited SVG or illustration), not a code change — needs new artwork before there's anything for Code to wire in.
+
+**Verify.** Reveal mode: tapping the 5th region (whichever one it is) shows that region's own copy first, not the closing line; closing line still appears correctly once the participant moves on. All five regions show a visible tap reaction (pulse/scale) in both reveal and select modes. Layout is torso-focused; heart/lungs sit closer together and closer to anatomically correct positions; the body/lightning-bolt icon has moved off its old spot. If the copy update has Stephanie/Sprang sign-off by the time this ships, the Body line reads the merged wording; otherwise unchanged. Still fits the 9:16 frame on mobile, no overflow. Log Recently-shipped + mark shipped.
+
+---
+
+**UPDATE 2026-08-19 — new art + final copy now in hand (resolves items 3 & 4 above):**
+
+- **Item 3 (realism / torso / reposition) is now handled by ART, not manual code repositioning.** A new realistic torso SVG is staged at `Gains for Teens/Activities/body-map.svg` (viewBox 700×780 — torso + head + arms, real hands; `region-body` lightning-bolt is now on the **hand**; heart/lungs repositioned to anatomically closer spots; region ids unchanged). It already ships the `.region / .region.active / .region.selected` styles AND `idlePulse` / `idleIcon` idle animations — so **item 2's tap/pulse affordance ships inside the asset**: keep it and have it settle on `active`/`selected`. **Swap the inlined SVG for this file** rather than hand-nudging icon coordinates.
+- **Item 4 (copy) is resolved — Stephanie sent the revised copy; use it verbatim (no placeholder / no pending sign-off):**
+  - Lungs — "We start breathing faster, to help our body take in more oxygen which prepares your muscles to respond to a danger or threat"
+  - Head — "Thoughts begin to race through our heads to allow us to make quick decisions, but this also makes it hard to think clearly, can cause us to feel dizzy, and can even make us feel detached or like things around us aren’t real"
+  - Heart — "Our hearts start beating faster to pump blood and oxygen to all our muscles, so they are ready to react"
+  - Stomach — "Our stomach might feel upset or we might feel nauseous because blood is moving away from our stomach and into our arms and legs because those muscles may need it more-to run away or fight"
+  - Body — "Our body heats up, leading to more sweating. Our muscles get tense, and we might feel shaky or tingly. Our arms and legs can also start to feel heavy. Each of these reactions is because our body is using a LOT of energy at once to be able to act quickly."
+  - Closing (only AFTER all five revealed) — "Each of these things help us respond to danger, but these responses can stick around even after the danger has passed or can pop up if something reminds us of the danger or trauma."
+- **Item 1 (the reveal/closing race bug) still applies** — fix as diagnosed (don't flip `showClosing` on the same tap that reveals the 5th region; show that region's own panel first, closing only on the next interaction).
+- **Panel sizing:** the revised Stomach and Body lines are longer than before — make sure the copy panel fits them in the 9:16 frame without clipping.
+
+*End of Draft 32.*
+
+---
+
+### Note — Character Zone 1: mixed signal, confirm before treating as resolved
+
+2026-08-17 feedback on `review-character`: Ginny ("better") and Holly ("I think the new Zone 1 design is perfect!") both read as approving a Zone 1 design already in front of them. Stephanie's comment — "I wonder if the traveler's skin tone in Zone 1 could more similarly match the other Zones" — has no admin resolution recorded and could go either way: it may be about the SAME design Ginny/Holly are approving (in which case it's a live, unresolved note worth a real answer), or it may be about a design that's since been superseded by whatever Ginny/Holly are reacting to (in which case it's already moot). Worth a one-line confirmation from Stephanie against the current Zone 1 art before deciding there's nothing to do here.
+
+---
+
+### Open question for Josh (do not decide in code) — Spark voice A/B/C, no clear winner yet
+
+2026-08-17 feedback on `review-spark-voice` (Drafts 28/29's three loudness-matched contenders): opinions split, no majority —
+
+- **Ginny:** Option A ("sounds a little older but could pass as adolescent")
+- **Bianca:** Option A ("voice B has a louder echo, and voice C sounds a little off")
+- **Stephanie:** leaning B or C
+- **Holly:** C first, B second
+
+2 votes for A, the other 2 split between B and C with no second choice in common. This needs an actual team decision (or Josh breaking the tie), not something to resolve by picking the loudest opinion in the sheet.
+
+**Separately, a production note regardless of which voice wins (Stephanie):** reduce the echo on the voice track and lower the background music slightly — an audio-mix task on whichever file(s) survive the decision above, not a code change.
+
+---
+
+### Note — "Add Maggie" is already covered by Draft 31, still pending
+
+The 2026-08-17 feedback sheet's unattributed row ("Add Maggie as a review name option") is the same ask as **Draft 31** above (add Maggie to the feedback/comment submitter dropdown), which is already written and waiting — it just hasn't shipped yet. No new draft needed; this is a pointer so it doesn't get drafted twice.
+
+### Correction — 2026-08-18: retracting three items from the 8/17 notes above
+
+Three items logged above were a mistake — that content got pulled over from
+feedback on a different project and doesn't belong in this file. Disregard:
+
+- "Open question for Josh — Spark voice A/B/C, no clear winner yet"
+- "Note — Character Zone 1: mixed signal, confirm before treating as resolved"
+- Draft 32, item 4 (the body-map copy addition + its Stephanie/Sprang
+  sign-off flag) — not a real pending item. Draft 32's items 1-3 (the
+  reveal/closing race fix, tap animation, torso-focused repositioning) are
+  unaffected and still stand as written.
+
+### Note — Kai psychoeducation video fixes from the 2026-08-17 meeting + feedback (misfiled into root notes, now logged here correctly)
+
+Four items, three ready to build/produce now, one blocked:
+
+1. **Kai Part 2 Scene 1 ("Building Skills for Belonging"):** caption/audio
+   says "deepen our bones," should be "deepen our bonds" — needs redo
+   line/video generation.
+2. **Kai Part 2 Scene 3 ("Putting It All Together"):** around 20 seconds,
+   "move" reads/sounds like "moob" — needs redo line/video generation.
+3. **Box-breathing Kai clip:** the team wants a short addition — Kai briefly
+   models a box-breathing technique — to give participants something
+   concrete beyond "here's a list of skills." Still being scripted
+   (Josh/Adrienne), not yet delivered.
+4. **BLOCKED — growth-mindset / self-regulation script gap:** the team
+   agreed the current script introduces "we can give you a list of skills to
+   try" and a fixed-vs-growth-mindset reference without ever following up or
+   fully explaining either. Adrienne is rewriting this section (reinstating
+   a growth-mindset definition cut for length, plus new content on
+   self-regulation/affect-regulation) and will send it to Josh. **Not yet
+   delivered — nothing to build until the revised script lands.**
+
+### Correction — 2026-08-18 (later still): the Kai note above was misfiled too — Kai is Ready for Roots, not GAINS
+
+The "Note — Kai psychoeducation video fixes from the 2026-08-17 meeting..."
+section above was itself a misfiling, going the other direction. Kai is the
+Ready for Roots "Learning Skills for Belonging" narrator (confirmed by Josh
+directly, and independently by the codebase — Kai's narration wires into
+`src/activities/GettingUnstuck.jsx` and `AlliesSafetyNet.jsx`, both Ready
+for Roots activities; GAINS's narrator is Spark). Disregard that whole note
+here — it's now logged correctly in root `WORKING_NOTES.md`.
