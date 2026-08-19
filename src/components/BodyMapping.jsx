@@ -1,4 +1,4 @@
-// Body Mapping (GAINS Activity 1) — Draft 27.
+// Body Mapping (GAINS Activity 1) — Draft 27, revised Draft 32.
 //
 // Stephanie's activity, built from the blueprint in
 // `Gains for Teens/Activities/` (body-map.svg + the vanilla-JS prototype).
@@ -17,13 +17,16 @@
 // flex-1, so a long region text stole its space). Region copy is VERBATIM
 // from Stephanie; don't reword it.
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
+// Copy revised 2026-08-19 (Draft 32) — Stephanie's final wording, all five
+// regions. Body overtook Head as the longest text with this revision (254 vs
+// 223 chars), so the worst-case spacer below now measures off Body.
 const REGIONS = [
   {
     id: 'lungs',
     label: 'Lungs',
-    text: 'We start breathing faster, to help our body take in more oxygen',
+    text: 'We start breathing faster, to help our body take in more oxygen which prepares your muscles to respond to a danger or threat',
   },
   {
     id: 'head',
@@ -33,29 +36,26 @@ const REGIONS = [
   {
     id: 'heart',
     label: 'Heart',
-    text: 'Our hearts start beating faster because it is harder to pump blood to all our muscles',
+    text: 'Our hearts start beating faster to pump blood and oxygen to all our muscles, so they are ready to react',
   },
   {
     id: 'stomach',
     label: 'Stomach',
-    text: 'Our stomach might feel upset or we might feel nauseous because blood is moving away from our stomach and into our arms and legs',
+    text: 'Our stomach might feel upset or we might feel nauseous because blood is moving away from our stomach and into our arms and legs because those muscles may need it more-to run away or fight',
   },
   {
     id: 'body',
     label: 'Body',
-    text: 'Our body heats up, leading to more sweating. Our muscles also get tense, and we might feel shaky or tingly.',
+    text: 'Our body heats up, leading to more sweating. Our muscles get tense, and we might feel shaky or tingly. Our arms and legs can also start to feel heavy. Each of these reactions is because our body is using a LOT of energy at once to be able to act quickly.',
   },
 ]
 
-// The tallest the copy panel can ever be. Head is not just the longest of the
-// five by a little, it is ~55% longer than the next one, so it wraps tallest at
-// every width and is a safe stand-in for "worst case" without hardcoding a
-// pixel height. If a region's copy is ever rewritten longer than Head's, this
-// needs to follow it.
-const LONGEST_REGION_TEXT = REGIONS.reduce(
-  (a, b) => (b.text.length > a.text.length ? b : a),
-  REGIONS[0]
-).text
+// The tallest the copy panel can ever be, and which region that is — found
+// dynamically rather than hardcoded, because the "worst case" region isn't
+// stable across copy revisions (Head was longest pre-Draft-32; Body is now).
+const LONGEST_REGION = REGIONS.reduce((a, b) =>
+  b.text.length > a.text.length ? b : a
+)
 
 const INSTRUCTIONS = {
   reveal: 'Click to reveal different areas of the body that react during and after a trauma.',
@@ -67,27 +67,82 @@ const CLOSING =
   'Each of these things help us respond to danger, but these responses can stick around even after the danger has passed or can pop up if something reminds us of the danger or trauma.'
 
 // Scoped so the region styles can't collide with anything else on the page.
+// Ported from the redrawn asset (Draft 32, 2026-08-19), which added the idle
+// pulse/glow so each un-tapped region visibly invites a tap (Ginny's ask:
+// "is it possible for these areas to enlarge or pulse to show action").
+// Selectors target `.bm-icon` itself, not `.bm-icon path` — the source art's
+// icon paths carry no fill/stroke of their own and inherit from their parent
+// `<g class="bm-icon">`, so styling the child paths directly would do nothing.
 const SVG_CSS = `
-.bm-region { cursor: pointer; }
-.bm-region .bm-target { fill:#334155; fill-opacity:0; transition:fill-opacity .25s, fill .25s; }
-.bm-region .bm-icon path { fill:none; stroke:#334155; stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; transition:stroke .25s; }
-.bm-region .bm-check { opacity:0; transition:opacity .2s; }
-.bm-region:hover .bm-target { fill:#334155; fill-opacity:.06; }
-.bm-region:focus { outline:none; }
-.bm-region:focus-visible .bm-target { fill:#334155; fill-opacity:.12; }
-.bm-region.is-active .bm-target { fill:#F59E0B; fill-opacity:.20; filter:url(#bmAmberGlow); }
-.bm-region.is-active .bm-icon path { stroke:#B45309; }
-.bm-region.is-selected .bm-target { fill:#F59E0B; fill-opacity:.24; }
-.bm-region.is-selected .bm-icon path { stroke:#B45309; }
-.bm-region.is-selected .bm-check { opacity:1; }
+.bm-region { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bm-region .bm-target {
+  fill: #334155; fill-opacity: .04;
+  stroke: #334155; stroke-opacity: .32; stroke-width: 1.6; stroke-dasharray: 5 5;
+  transform-box: fill-box; transform-origin: center;
+  transition: fill .3s ease, fill-opacity .3s ease, stroke .3s ease,
+              stroke-opacity .3s ease, stroke-width .3s ease;
+  animation: bmIdlePulse 2.6s ease-in-out infinite;
+}
+.bm-region .bm-icon {
+  fill: none; stroke: #334155; stroke-opacity: .5; stroke-width: 3.2;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: stroke .3s ease, stroke-opacity .3s ease, stroke-width .3s ease;
+  animation: bmIdleIcon 2.6s ease-in-out infinite;
+}
+.bm-region .bm-check { opacity: 0; transition: opacity .25s ease; }
+
+/* Staggered so the five idle pulses don't all beat in lockstep. */
+#bm-region-head    .bm-target, #bm-region-head    .bm-icon { animation-delay: 0s; }
+#bm-region-lungs   .bm-target, #bm-region-lungs   .bm-icon { animation-delay: .35s; }
+#bm-region-heart   .bm-target, #bm-region-heart   .bm-icon { animation-delay: .7s; }
+#bm-region-stomach .bm-target, #bm-region-stomach .bm-icon { animation-delay: 1.05s; }
+#bm-region-body    .bm-target, #bm-region-body    .bm-icon { animation-delay: 1.4s; }
+
+@keyframes bmIdlePulse {
+  0%, 100% { transform: scale(1);    stroke-opacity: .32; }
+  50%      { transform: scale(1.07); stroke-opacity: .6;  }
+}
+@keyframes bmIdleIcon {
+  0%, 100% { stroke-opacity: .5; }
+  50%      { stroke-opacity: .8; }
+}
+
+.bm-region:hover .bm-target { fill-opacity: .11; stroke-opacity: .55; }
+.bm-region:hover .bm-icon { stroke-opacity: .85; }
+.bm-region:focus { outline: none; }
+.bm-region:focus-visible .bm-target { stroke-opacity: .9; stroke-width: 2.4; }
+
+.bm-region.is-active .bm-target {
+  fill: #F59E0B; fill-opacity: .22;
+  stroke: #F59E0B; stroke-opacity: .95; stroke-width: 2.6; stroke-dasharray: none;
+  filter: url(#bmAmberGlow);
+  animation: none; transform: scale(1);
+}
+.bm-region.is-active .bm-icon { stroke: #B45309; stroke-opacity: 1; stroke-width: 3.6; animation: none; }
+
+.bm-region.is-selected .bm-target {
+  fill: #F59E0B; fill-opacity: .4;
+  stroke: #B45309; stroke-opacity: 1; stroke-width: 3; stroke-dasharray: none;
+  animation: none; transform: scale(1);
+}
+.bm-region.is-selected .bm-icon { stroke: #78350F; stroke-opacity: 1; stroke-width: 3.6; animation: none; }
+.bm-region.is-selected .bm-check { opacity: 1; }
+
 @media (prefers-reduced-motion: reduce) {
-  .bm-region .bm-target, .bm-region .bm-icon path, .bm-region .bm-check { transition: none; }
+  .bm-region .bm-target, .bm-region .bm-icon { animation: none; }
 }
 `
 
-// Silhouette bounds are x 140..460, y 32..933 within the source's 600x1000
-// box; this trims the dead margin and keeps ~24 units of padding for the glow.
-const VIEW_BOX = '116 8 368 949'
+// Redrawn torso-focused asset (Draft 32, 2026-08-19): source viewBox is
+// 0 0 700 780. Measured via getBBox() in the browser (not guessed), the drawn
+// content (base outline + all five regions) occupies x 116..561, y 44..711.
+// The crop below pads that out asymmetrically rather than centering on it,
+// because the padding need is asymmetric: the Head region's glow filter
+// extends ~60% of its own bounding box beyond its edge when active, and Head
+// sits close to the top (its own top edge is at y=68) while the Body/hand
+// region sits close to the left (its own left edge is at x=116) — so top and
+// left need the most slack, not a uniform margin.
+const VIEW_BOX = '56 0 545 760'
 
 // Shared by the live CTA and by the invisible spacer that reserves its slot.
 const CTA_CLASS =
@@ -139,18 +194,42 @@ export default function BodyMapping() {
   const [lastRevealed, setLastRevealed] = useState(null)
   // Whether the panel is currently given over to the closing line.
   const [showClosing, setShowClosing] = useState(false)
+  // Bug fix (Draft 32, Stephanie's report 2026-08-17): revealing the 5th
+  // region used to flip showClosing to true in the SAME state update that
+  // revealed it, so that region's own PanelBox never rendered, not even for a
+  // frame — the closing line silently replaced it. This wasn't specific to
+  // any one region; it happened to whichever one was tapped 5th. Testers
+  // experienced it as "the body map bug" because the whole-body hit-target is
+  // the largest and drawn underneath the other four, so it's naturally the
+  // one people leave for last. Fix: the just-completed region gets its own
+  // panel like every other region did, and the closing only takes over on a
+  // short delay afterward, tracked in this ref so it can be cancelled if the
+  // participant taps a region again (to re-read it) or moves on to Part 2
+  // before it fires.
+  const closingTimerRef = useRef(null)
 
   const allRevealed = revealed.length === REGIONS.length
+
+  useEffect(() => () => clearTimeout(closingTimerRef.current), [])
 
   function tapRegion(id) {
     if (mode === 'reveal') {
       setLastRevealed(id)
+      if (revealed.includes(id)) {
+        // Re-tapping an already-revealed region (most often the whole-body
+        // one, since it's drawn underneath and left for last) always shows
+        // that region's own description, cancelling any pending flip to the
+        // closing line so it doesn't cut off mid-read.
+        clearTimeout(closingTimerRef.current)
+        setShowClosing(false)
+        return
+      }
       setRevealed((r) => {
-        const next = r.includes(id) ? r : [...r, id]
-        // Completing the set swaps the panel over to the closing line; tapping
-        // a region again afterwards swaps back to that region's description, so
-        // nothing is stranded once the closing takes the panel over.
-        setShowClosing(next.length === REGIONS.length && !r.includes(id))
+        const next = [...r, id]
+        if (next.length === REGIONS.length) {
+          clearTimeout(closingTimerRef.current)
+          closingTimerRef.current = setTimeout(() => setShowClosing(true), 1100)
+        }
         return next
       })
     } else if (mode === 'select') {
@@ -159,11 +238,13 @@ export default function BodyMapping() {
   }
 
   function advance() {
+    clearTimeout(closingTimerRef.current)
     if (mode === 'reveal') setMode('select')
     else if (mode === 'select') setMode('done')
   }
 
   function restart() {
+    clearTimeout(closingTimerRef.current)
     setMode('reveal')
     setRevealed([])
     setSelected([])
@@ -295,125 +376,103 @@ export default function BodyMapping() {
             </filter>
           </defs>
 
-          <g id="bm-base">
-            <path
-              d="M320,150 C340,140 352,122 352,98 C352,46 330,32 300,32 C270,32 248,46 248,98 C248,122 260,140 280,150 L280,176 C280,198 266,206 246,216 C230,224 222,232 216,248 Q196,300 176,356 Q158,420 146,486 C142,508 140,528 150,538 C160,548 170,542 172,530 Q178,510 184,492 Q200,424 214,360 Q222,308 236,266 Q238,320 240,362 Q232,400 224,442 Q232,530 238,622 Q243,662 245,702 Q247,790 251,882 L237,916 C232,927 237,933 247,933 L263,933 C271,933 274,927 273,916 Q277,808 281,702 Q288,610 296,522 L300,514 L304,522 Q312,610 319,702 Q323,808 327,916 C326,927 329,933 337,933 L353,933 C363,933 368,927 363,916 L349,882 Q353,790 355,702 Q357,662 362,622 Q368,530 376,442 Q368,400 360,362 Q362,320 364,266 Q378,308 386,360 Q400,424 416,492 Q422,510 428,530 C430,542 440,548 450,538 C460,528 458,508 454,486 Q442,420 424,356 Q404,300 384,248 C378,232 370,224 354,216 C334,206 320,198 320,176 Z"
-              fill="#334155"
-              fillOpacity="0.045"
-              stroke="#334155"
-              strokeWidth="5"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-            <path
-              d="M282,182 Q300,192 318,182"
-              fill="none"
-              stroke="#334155"
-              strokeOpacity="0.35"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-            />
+          {/* Redrawn torso-focused figure (Draft 32, 2026-08-19): head, torso
+              and both arms/hands, real hands rather than a full-body outline.
+              Replaces the old full-figure silhouette per the team's request
+              to bring heart/lungs closer to anatomically correct spots and
+              move the body/lightning-bolt icon off its old spot (it's now on
+              the hand). Ported 1:1 from
+              Gains for Teens/Activities/body-map.svg; only ids/classNames
+              were namespaced (bm- prefix) and attributes converted to JSX. */}
+          <g id="bm-base" fill="none" stroke="#334155" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M350,44 C394,44 420,79 420,124 C420,152 413,171 404,186 C395,202 378,216 350,216 C322,216 305,202 296,186 C287,171 280,152 280,124 C280,79 306,44 350,44 Z" fill="#334155" fillOpacity="0.045" />
+            <path d="M281,120 C272,118 268,126 271,136 C274,146 281,148 284,145" strokeWidth="3.4" />
+            <path d="M419,120 C428,118 432,126 429,136 C426,146 419,148 416,145" strokeWidth="3.4" />
+
+            <path d="M322,198 C318,228 314,246 304,258 C266,268 232,280 214,302 C222,324 232,338 244,350 C250,394 254,432 256,472 C258,508 252,542 248,574 C244,608 246,642 248,700 L452,700 C454,642 456,608 452,574 C448,542 442,508 444,472 C446,432 450,394 456,350 C468,338 478,324 486,302 C468,280 434,268 396,258 C386,246 382,228 378,198 Z" fill="#334155" fillOpacity="0.045" />
+
+            <path d="M214,302 C192,314 180,340 176,372 C170,412 165,452 160,492 C155,530 150,568 146,604 C143,626 138,646 139,664 C140,684 146,700 154,708 C159,713 167,711 169,703 C171,694 169,684 170,674 C172,660 178,650 182,638 C186,620 190,600 194,578 C200,540 208,498 214,456 C220,414 228,376 244,350 C232,338 222,324 214,302 Z" fill="#334155" fillOpacity="0.045" />
+            <path d="M141,652 C152,644 164,640 176,642" strokeWidth="3" />
+            <path d="M147,703 C150,690 151,678 150,666" strokeWidth="2.8" />
+            <path d="M158,709 C161,696 162,684 161,672" strokeWidth="2.8" />
+            <path d="M170,674 C175,668 179,658 180,648" strokeWidth="2.8" />
+
+            <path d="M486,302 C508,314 520,340 524,372 C530,412 535,452 540,492 C545,530 550,568 554,604 C557,626 562,646 561,664 C560,684 554,700 546,708 C541,713 533,711 531,703 C529,694 531,684 530,674 C528,660 522,650 518,638 C514,620 510,600 506,578 C500,540 492,498 486,456 C480,414 472,376 456,350 C468,338 478,324 486,302 Z" fill="#334155" fillOpacity="0.045" />
+            <path d="M559,652 C548,644 536,640 524,642" strokeWidth="3" />
+            <path d="M553,703 C550,690 549,678 550,666" strokeWidth="2.8" />
+            <path d="M542,709 C539,696 538,684 539,672" strokeWidth="2.8" />
+            <path d="M530,674 C525,668 521,658 520,648" strokeWidth="2.8" />
+
+            <g strokeOpacity="0.32" strokeWidth="3.2">
+              <path d="M308,262 C330,278 370,278 392,262" />
+              <path d="M286,300 C312,344 388,344 414,300" />
+              <path d="M350,286 L350,352" />
+              <path d="M288,404 C316,446 384,446 412,404" />
+              <path d="M350,432 L350,556" />
+              <path d="M338,556 C346,562 354,562 362,556" />
+              <path d="M262,644 C300,656 400,656 438,644" />
+            </g>
           </g>
 
           <g id="bm-regions">
-            {/* whole body sits first so the smaller targets stack above it */}
-            <g {...regionProps('body', 'Whole body: sweat, tension, shakiness')}>
-              <path
-                className="bm-target"
-                d="M320,150 C340,140 352,122 352,98 C352,46 330,32 300,32 C270,32 248,46 248,98 C248,122 260,140 280,150 L280,176 C280,198 266,206 246,216 C230,224 222,232 216,248 Q196,300 176,356 Q158,420 146,486 C142,508 140,528 150,538 C160,548 170,542 172,530 Q178,510 184,492 Q200,424 214,360 Q222,308 236,266 Q238,320 240,362 Q232,400 224,442 Q232,530 238,622 Q243,662 245,702 Q247,790 251,882 L237,916 C232,927 237,933 247,933 L263,933 C271,933 274,927 273,916 Q277,808 281,702 Q288,610 296,522 L300,514 L304,522 Q312,610 319,702 Q323,808 327,916 C326,927 329,933 337,933 L353,933 C363,933 368,927 363,916 L349,882 Q353,790 355,702 Q357,662 362,622 Q368,530 376,442 Q368,400 360,362 Q362,320 364,266 Q378,308 386,360 Q400,424 416,492 Q422,510 428,530 C430,542 440,548 450,538 C460,528 458,508 454,486 Q442,420 424,356 Q404,300 384,248 C378,232 370,224 354,216 C334,206 320,198 320,176 Z"
-              />
-              <circle className="bm-target" cx="300" cy="672" r="44" />
-              <g className="bm-icon" transform="translate(300,672) scale(1.15)">
-                <path d="M-3,-20 L-15,2 L-3,2 L-7,20 L15,-4 L3,-4 L7,-20 Z" />
-              </g>
-              <g className="bm-check" transform="translate(334,706)">
-                <circle r="14" fill="#B45309" />
-                <path
-                  d="M-6,0 L-1.5,5 L6.5,-5"
-                  fill="none"
-                  stroke="#FFFBEB"
-                  strokeWidth="3.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-            </g>
-
-            <g {...regionProps('head', 'Head: brain and thoughts')}>
-              <circle className="bm-target" cx="300" cy="96" r="46" />
-              <g className="bm-icon" transform="translate(300,96) scale(1.25)">
+            <g {...regionProps('head', 'Head: racing thoughts, dizziness, feeling detached')} id="bm-region-head">
+              <circle className="bm-target" cx="350" cy="122" r="54" />
+              <g className="bm-icon" transform="translate(350,122) scale(1.3)">
                 <path d="M-1,-16 C-9,-19 -17,-13 -15,-5 C-20,0 -17,9 -9,11 C-6,17 4,18 8,13 C17,12 20,3 15,-3 C17,-12 8,-19 0,-15" />
                 <path d="M0,-15 L0,13" />
                 <path d="M-8,-6 L-2,-3" />
                 <path d="M8,4 L1,6" />
               </g>
-              <g className="bm-check" transform="translate(336,130)">
+              <g className="bm-check" transform="translate(390,162)">
                 <circle r="14" fill="#B45309" />
-                <path
-                  d="M-6,0 L-1.5,5 L6.5,-5"
-                  fill="none"
-                  stroke="#FFFBEB"
-                  strokeWidth="3.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
               </g>
             </g>
 
-            <g {...regionProps('lungs', 'Lungs: breathing')}>
-              <circle className="bm-target" cx="300" cy="240" r="42" />
-              <g className="bm-icon" transform="translate(300,240) scale(1.1)">
+            <g {...regionProps('lungs', 'Lungs: breathing')} id="bm-region-lungs">
+              <circle className="bm-target" cx="352" cy="296" r="48" />
+              <g className="bm-icon" transform="translate(352,296) scale(1.25)">
                 <path d="M0,-18 L0,-2" />
                 <path d="M-1,-4 C-11,-6 -18,3 -16,13 C-15,19 -6,19 -4,12 C-1,4 -1,-1 -1,-4 Z" />
                 <path d="M1,-4 C11,-6 18,3 16,13 C15,19 6,19 4,12 C1,4 1,-1 1,-4 Z" />
               </g>
-              <g className="bm-check" transform="translate(332,272)">
+              <g className="bm-check" transform="translate(387,331)">
                 <circle r="14" fill="#B45309" />
-                <path
-                  d="M-6,0 L-1.5,5 L6.5,-5"
-                  fill="none"
-                  stroke="#FFFBEB"
-                  strokeWidth="3.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
               </g>
             </g>
 
-            <g {...regionProps('heart', 'Heart: heartbeat')}>
-              <circle className="bm-target" cx="258" cy="322" r="38" />
-              <g className="bm-icon" transform="translate(258,322) scale(1.05)">
+            <g {...regionProps('heart', 'Heart: heartbeat')} id="bm-region-heart">
+              <circle className="bm-target" cx="294" cy="380" r="40" />
+              <g className="bm-icon" transform="translate(294,380) scale(1.15)">
                 <path d="M0,13 C-15,3 -19,-6 -13,-12 C-8,-17 -1,-15 0,-9 C1,-15 8,-17 13,-12 C19,-6 15,3 0,13 Z" />
               </g>
-              <g className="bm-check" transform="translate(286,350)">
+              <g className="bm-check" transform="translate(323,409)">
                 <circle r="13" fill="#B45309" />
-                <path
-                  d="M-5.5,0 L-1.5,4.5 L6,-4.5"
-                  fill="none"
-                  stroke="#FFFBEB"
-                  strokeWidth="3.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M-5.5,0 L-1.5,4.5 L6,-4.5" fill="none" stroke="#FFFBEB" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
               </g>
             </g>
 
-            <g {...regionProps('stomach', 'Stomach: gut feelings')}>
-              <circle className="bm-target" cx="302" cy="418" r="40" />
-              <g className="bm-icon" transform="translate(302,418) scale(1.1)">
+            <g {...regionProps('stomach', 'Stomach: gut feelings')} id="bm-region-stomach">
+              <circle className="bm-target" cx="352" cy="478" r="46" />
+              <g className="bm-icon" transform="translate(352,478) scale(1.25)">
                 <path d="M-8,-17 C-6,-9 -8,-5 -11,-1 C-15,6 -12,15 -4,17 C5,19 13,12 13,2 C13,-8 5,-16 -5,-16" />
                 <path d="M-8,-17 L-1,-19" />
               </g>
-              <g className="bm-check" transform="translate(332,448)">
-                <circle r="13" fill="#B45309" />
-                <path
-                  d="M-5.5,0 L-1.5,4.5 L6,-4.5"
-                  fill="none"
-                  stroke="#FFFBEB"
-                  strokeWidth="3.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+              <g className="bm-check" transform="translate(385,511)">
+                <circle r="14" fill="#B45309" />
+                <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
+              </g>
+            </g>
+
+            <g {...regionProps('body', 'Body: sweat, tension, shaky or heavy limbs')} id="bm-region-body">
+              <circle className="bm-target" cx="162" cy="616" r="46" />
+              <g className="bm-icon" transform="translate(162,616) scale(1.3)">
+                <path d="M-3,-20 L-15,2 L-3,2 L-7,20 L15,-4 L3,-4 L7,-20 Z" />
+              </g>
+              <g className="bm-check" transform="translate(195,649)">
+                <circle r="14" fill="#B45309" />
+                <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
               </g>
             </g>
           </g>
@@ -434,18 +493,19 @@ export default function BodyMapping() {
             it, and it is shorter than the longest panel, so this spacer covers
             every state. */}
         <div className="col-start-1 row-start-1 invisible" aria-hidden="true">
-          <PanelBox label="Head" text={LONGEST_REGION_TEXT} />
+          <PanelBox label={LONGEST_REGION.label} text={LONGEST_REGION.text} />
           <ProgressLine revealed={REGIONS.length} />
         </div>
 
         <div className="col-start-1 row-start-1 flex flex-col justify-end">
-          {/* Completing the set gives the panel over to the closing line
-              alone: it is the payoff, and keeping the last region's
-              description on screen under it was the single biggest block of
-              text in the activity (Josh, 2026-08-13). Tapping any region
-              afterwards brings its description back, so nothing is stranded.
-              The counter stops once it would read 5 of 5, since the closing and
-              the enabled Continue already say you're done. */}
+          {/* Once all five are revealed, the panel gives itself over to the
+              closing line alone (a beat after the 5th reveal — see
+              closingTimerRef above): it is the payoff, and keeping the last
+              region's description on screen under it was the single biggest
+              block of text in the activity (Josh, 2026-08-13). Tapping any
+              region afterwards brings its description back, so nothing is
+              stranded. The counter stops once it would read 5 of 5, since the
+              closing and the enabled Continue already say you're done. */}
           {mode === 'reveal' && allRevealed && showClosing ? (
             <ClosingBox />
           ) : (
