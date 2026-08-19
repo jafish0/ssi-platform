@@ -49,9 +49,13 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // Scenes 1-2 + Conclusion graduated to LEARNING_SKILLS_CARDS having
 // cleared review; the Kai (Gender Neutral) — 14yo card was retired
 // outright (no longer needed on the demo, per Josh). Part 2 Scene 3
-// stays here but its video is pulled pending Adrienne's script rewrite
-// (see the "Kai psychoeducation video fixes" notes above) — `youtubeId`
-// intentionally omitted so ReviewCard renders its production placeholder.
+// stayed here as a placeholder pending Adrienne's script rewrite.
+//
+// Draft 91 (2026-08-19): the rewrite landed and the redo is in — Scene
+// 3 now has a real youtubeId, so it plays like every other card. Stays
+// in REVIEW_CARDS for a round of team feedback (Josh's call) rather
+// than graduating straight to LEARNING_SKILLS_CARDS; that's a follow-up
+// draft once/if it clears review, same as Scenes 1-2 + Conclusion.
 const REVIEW_CARDS = [
   {
     title: 'Ready for Roots — Intro Video',
@@ -68,11 +72,10 @@ const REVIEW_CARDS = [
   },
   {
     title: 'Learning Skills for Belonging — Part 2, Scene 3: Putting it All Together',
+    youtubeId: 'PPKC4yGSiGQ',
     description:
-      'Self-regulation, the too-heavy-shield metaphor, and the shift from a fixed mindset to a growth mindset.',
+      'Self-regulation, the too-heavy-shield metaphor, box breathing, and the shift from a fixed mindset to a growth mindset.',
     feedbackArea: 'Kai Part 2 Scene 3: Putting it All Together',
-    knownIssue:
-      'New version in production — the script is being revised to fix a pronunciation issue and add a fuller explanation of self-regulation and growth mindset.',
   },
 ]
 
