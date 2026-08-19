@@ -110,6 +110,42 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`56c201f` · 2026-08-19** — **Draft 91 — Kai Part 2 Scene 3 redo fills the Draft 90 placeholder.** Adrienne's script rewrite (self-regulation, the Ash/heavy-shield metaphor, embedded box-breathing with Kai demonstrating on camera, the fuller fixed-vs-growth-mindset closer — full script logged in the "Scene 3 script finalized" note above) is produced: **`PPKC4yGSiGQ`**. Added `youtubeId` to the Scene 3 card — `ReviewCard`'s existing branch order (`imageSrc` → `youtubeId` → placeholder, built in Draft 90) flips it from the "in production" dashed placeholder to a real embed with zero other rendering change needed. Removed the now-stale `knownIssue` note; description updated to mention box breathing, which it never covered before. The comment block above `REVIEW_CARDS` updated to match. **Per Josh, stays in `REVIEW_CARDS`** for a round of team feedback rather than graduating straight to `LEARNING_SKILLS_CARDS` — graduating it is a follow-up draft once/if it clears review, same pattern as Scenes 1–2 + Conclusion in Draft 90. **Verified live at 375×812:** "For Review This Week" still shows exactly three cards; Scene 3 plays the real video (checked the DOM directly — 11 total embeds, zero broken, zero placeholders remaining, up from Draft 90's 10/1); no `knownIssue` text renders; the feedback button opens pre-filled with "Kai Part 2 Scene 3: Putting it All Together". Console + build clean. No version bump (no `src/activities` files touched).
+
+  <details>
+  <summary>Draft 91 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 91 — Kai Part 2 Scene 3 redo is ready: fill the Draft 90 placeholder
+
+Verified directly against `src/pages/DemoPage.jsx` before writing this. The Scene 3 card is the third and last entry in `REVIEW_CARDS` (lines 69-76):
+
+```
+{
+  title: 'Learning Skills for Belonging — Part 2, Scene 3: Putting it All Together',
+  description:
+    'Self-regulation, the too-heavy-shield metaphor, and the shift from a fixed mindset to a growth mindset.',
+  feedbackArea: 'Kai Part 2 Scene 3: Putting it All Together',
+  knownIssue:
+    'New version in production — the script is being revised to fix a pronunciation issue and add a fuller explanation of self-regulation and growth mindset.',
+},
+```
+
+The redo is done — new video: **`PPKC4yGSiGQ`** (https://youtube.com/shorts/PPKC4yGSiGQ), covering the finalized script logged in the "Kai Part 2 Scene 3 script finalized" note above (self-regulation, the Ash/heavy-shield metaphor, the embedded box-breathing sequence with Kai demonstrating on camera, and the fuller fixed-vs-growth-mindset closer).
+
+**Change:**
+
+1. Add `youtubeId: 'PPKC4yGSiGQ'` to the card above. `ReviewCard`'s branch order (`imageSrc` → `youtubeId` → placeholder, `DemoPage.jsx` lines 172-201) means this alone flips it from the "in production" placeholder to a real embed — no other rendering change needed.
+2. **Remove the `knownIssue` line** — it describes the video as still pending, which is no longer true now that this version exists. Update `description` too if it undersells the new content (box breathing isn't mentioned in the current description at all) — suggested: *"Self-regulation, the too-heavy-shield metaphor, box breathing, and the shift from a fixed mindset to a growth mindset."* Wording is Josh's call.
+3. Also update the comment block above the array (lines 47-54) — it currently says Scene 3's video "is pulled pending Adrienne's script rewrite," which is stale once this ships.
+
+**Not part of this draft, flagging per Draft 90's own note:** whether this card now graduates straight into `LEARNING_SKILLS_CARDS` alongside its Part 2 siblings, or sits in "For Review This Week" for a round of team feedback first (like every other new video has). Josh asked specifically to "put it in the placeholder we already made" — so this draft keeps it in `REVIEW_CARDS` for now. Moving it down to `LEARNING_SKILLS_CARDS` is a follow-up draft once/if it clears review, same pattern as Scenes 1-2 + Conclusion in Draft 90.
+
+**Verify.** "For Review This Week" still shows exactly three cards, but Scene 3 now plays the real video instead of the dashed placeholder; no `knownIssue` note renders on that card; feedback button still opens pre-filled with "Kai Part 2 Scene 3: Putting it All Together". Console + build clean. Log Recently-shipped.
+
+*End of Draft 91.*
+
+  </details>
+
 - **`0f346d6` · 2026-08-19** — **Draft 90 — /demo reshuffle: intro video + Sam's Story Female into review, Kai Part 2 graduates, retire the old cast cards.** The rule behind it, per Josh: *"For Review This Week" holds only what's currently awaiting feedback; once something's reviewed/finalized, it graduates down into its permanent section.* Verified the current state directly against `DemoPage.jsx`/`castData.js` before editing, per the draft's own instruction. **"For Review This Week" now holds exactly three cards:** Intro Video (new, `PQMnbd1NuJ8`) and Sam's Story — Female Version (new, `Ughh-3a8Urs`) at the top, then Kai Part 2 Scene 3 — held back pending Adrienne's script rewrite (the "moob" line + growth-mindset gap logged in the notes above), so its `youtubeId` is intentionally omitted. `ReviewCard` didn't have a shape for "neither `youtubeId` nor `imageSrc`" — added a third branch (a dashed "in production" placeholder, reusing the `knownIssue` field for the note text) so this renders cleanly instead of a broken embed. Sam's Story V5 and Kai Part 2 Scenes 1–2 + Conclusion cleared review and graduated out; the Kai (Gender Neutral) — 14yo card is retired outright, per Josh, nothing to graduate it to. **Sam's Story section reframed** from a character-design cast preview (Holly's pre-animation Script 2.0) to finished narrative video by variant — the graduated **Male Version** is now its first `ReviewCard`; Female and eventually Non-binary join the same way once each clears review above. The script-download link and the five character cast cards are gone — Josh: *"we no longer need the script and all those associated images."* **Found while removing them:** `CastCard` (a ~270-line component) had zero remaining call sites anywhere in the file once this section's only caller was gone, so it was deleted along with the now-unused `CAST` import; `castData.js`'s `CAST` is now an empty array (kept exported since `IRBPreviewPage.jsx` still imports it — for an `id: 'kai'` lookup that, checked directly, was never actually present in this array either; a pre-existing no-op left untouched, out of scope here). **Learning Skills for Belonging** picks up the three graduated Part 2 videos after the existing four Part 1 scenes; the group subheading's copy corrected — *"Part 2 completes the psychoeducation series. All eight scenes across both parts are now produced"* was no longer true with Scene 3 held back, reworded to *"Part 2 continues the psychoeducation series — Scene 3 is being revised and will join once it's ready."* **Verified live at 375×812:** "For Review This Week" shows exactly the three intended cards in order; the Scene 3 placeholder renders correctly (checked the DOM directly — 10 real YouTube embeds, zero with `undefined`/`null` src, exactly one correctly-labeled production placeholder); Learning Skills shows Part 1 then the corrected subheading then Part 2's three graduated videos; Sam's Story shows only the Male Version, no download link, no leftover cast cards; all 11 feedback buttons present and wired to their correct area (confirmed one opens with "Intro Video" pre-filled). Console + build clean. No version bump (no `src/activities` files touched).
 
   <details>
@@ -10866,3 +10902,24 @@ in the GAINS file has been struck.
    is rewriting this passage and will send it to Josh. Nothing to
    build/produce until it lands — and per #2, this rewrite also resolves
    the Scene 3 "move"/"moob" line, so #2 and #4 ship together.
+
+### Note — Kai Part 2 Scene 3 script finalized, 2026-08-19 (resolves the pending item from Draft 90)
+
+The rewrite flagged in Draft 90 as "not yet delivered" has landed. Final script text (from `Belonging Psychoeducation_Group Edits.docx`, after a team email thread Aug 17-19 — Adrienne authored, Sprang/Holly/Jessica/Josh commented):
+
+> And another potential roadblock? *Self-Regulation or Self-Control.* The challenge is to be able to feel that sting of "maybe they don't like me" and be able to breathe through it so you don't just bail or shut down when things get awkward or scary. My friend Ash used to go silent every time she moved homes because she thought, "they're just going to move me again anyway." Her silence was like a shield that's too heavy (show image of a girl struggling to pick up a huge, heavy shield) — it kept her safe from getting hurt, but it also kept her totally alone.
+>
+> Do you have some good strategies to keep yourself calm in these moments? At the end of this program, we will provide you with a list of strategies and skills to practice in case you need ideas. One of the easiest skills to use whenever you need to keep calm is box breathing. Let's take a minute and practice this one together. Once we start, try to imagine in your mind that your breath is tracing the four equal sides of a square box with each side taking a count of 4 seconds (show image of a box and an arrow tracing the sides while he says this; show Kai demonstrating breathing while narrating next part). First, breathe in slowly for 4 seconds... Hold for four... breathe out slowly for 4... Now hold for four... You may need to repeat this a few times whenever you feel overwhelmed, stressed or need to refocus. Why does this work? It's like a reset button for your nervous system and helps our bodies act like they do when they are calm, which can help us clear our minds.
+>
+> And speaking of our minds and trying to think clearly, it's important to realize that a lot of belonging happens in our own heads. If things get tough, instead of a fixed mindset or thinking you're stuck with the skills or difficulties you're born with, try a *growth* mindset and remember that you can always learn and improve. Just like acting, playing the trumpet or shooting hoops, making friends and connections is a skill you practice. Try to remember, if one placement or social situation doesn't work out, it's not a permanent fail, it's just one data point and you can keep working on it. Now that you've learned more about how you can take charge of how you belong in a place or group of people, what might you tell another kid worried about whether they belong?
+
+Scene is now timed at ~2.5 minutes (up from the original shorter cut) — box breathing is embedded here, not a separate video, per the team's final call in the email thread.
+
+**Two production notes, not code tasks:**
+
+1. **The "moob"-causing line is unchanged in this rewrite** — "she moved homes... they're just going to move me again anyway" is still there verbatim. Confirms the original issue was a pronunciation/generation artifact on that specific phrase, not a script problem — worth extra care re-recording that exact line so it doesn't recur.
+2. **Two new visual cues embedded in the script** that the redo needs to cover: (a) an image of a girl struggling to lift a too-heavy shield, for the metaphor; (b) an image of a box with an arrow tracing its sides during the breathing count, plus a shot of Kai demonstrating the breathing himself while narrating (Josh's call, per the email thread, over introducing a separate character to demonstrate).
+
+**Still open, per Adrienne's email:** she's separately compiling "a list of a few simple regulation skills to practice and links to videos or resources" for the team to consider for what actually gets shown/handed out at the end of the program (the "list of strategies" this scene promises). Not part of this scene's script — a separate deliverable, not yet delivered.
+
+**Not yet done:** the actual video/audio redo for this scene, and updating the Draft 90 "For Review This Week" placeholder once it's ready to swap back in.
