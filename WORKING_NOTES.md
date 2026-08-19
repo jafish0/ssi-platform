@@ -110,6 +110,57 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`4cf3476` + `53261c1` · 2026-08-19** — **Draft 92 — "Read this to me" narration option on the Assent screen.** Josh recorded a full narration of the assent document. A collapsed **"🔊 Read this to me"** pill sits above the title block; clicking it reveals a native `<audio controls autoPlay>` player (the click itself is the user gesture, so autoplay isn't blocked — no need to replicate `KaiNarrationPlayer`'s autoplay-blocked-fallback state machinery, since `controls` is always visible regardless). **Deliberately does NOT autoplay on mount and does NOT gate Yes/No on listening** — unlike `KaiNarrationPlayer`'s usage in `GettingUnstuck`/`AlliesSafetyNet`, assent is a decision screen with the full text already on-screen; the audio is a pure accessibility add-on, always optional. **New `AssentNarration` component in `Assent.jsx`** — a lighter one-off rather than reusing `KaiNarrationPlayer` directly (its Kai-portrait/speaker-icon styling doesn't fit a consent screen, and its gating/always-playing behavior is wrong here), but reusing its fail-open philosophy: `onError` swaps the player for a plain "not available yet" message rather than a dead control. **Copied `Assent/Assent narration.mp3` to `public/kai-narration/assent.mp3` and explicitly `git add`ed it** — three earlier narration mp3s (Draft 64) landed in this same folder untracked and silently failed to deploy; confirmed this one staged as `A`, not left implicit in a bulk add. **Review card added.** `ReviewCard` had no audio-only rendering path (its 9:16 frame was built for video/image) — added a new `audioSrc` branch that skips that frame for a plain inline `<audio>` player, and made the feedback-button label ("...this video" vs "...this audio") conditional on the card type. New card appended to `REVIEW_CARDS`. **Process correction, logged rather than hidden:** the first commit's message incorrectly claimed `Assent.jsx` wasn't a tracked activity and skipped the required version bump — caught immediately after push and fixed with a same-session follow-up commit (`v1.2` → `v1.3`, MINOR, no save-payload change) rather than amending the already-pushed commit. **Verified live at 375×812:** zero `<audio>` elements before any click (no autoplay-on-mount); Yes/No both immediately clickable; clicking the pill plays the real file (duration 121s, `readyState 4`); swapping in a broken `src` shows the fail-open message with Yes still clickable; Yes still correctly reaches the confirmation screen. "For Review This Week" shows exactly 4 cards, the new one plays real audio inline, its feedback button reads "...this audio" and opens pre-filled with "Assent Narration"; sandbox badge confirmed at v1.3. Console + build clean.
+
+  <details>
+  <summary>Draft 92 (verbatim, Claude Cowork → Claude Code)</summary>
+
+### Draft 92 — Add a "read this to me" narration option to the Assent screen, review card at the end of this week's batch
+
+Josh recorded a narration of the full assent document — `Assent/Assent narration.mp3` (in the repo root's `Assent/` folder, not yet under `public/`). Two parts:
+
+**Part 1 — the Assent screen itself.** File: `src/activities/Assent.jsx`. This only matters for the main "deciding" branch (the `decision === null` default return, lines 82-120) — the two confirmation branches (`'yes'`/`'no'`, lines 47-80) don't need it.
+
+Add a narration option as the very first element inside the outer wrapper, above the existing title block:
+
+```jsx
+return (
+  <div className="max-w-[620px] mx-auto">
+    {/* NEW — narration option goes here, before the title block */}
+
+    {/* Title block — verbatim from the assent document. */}
+    <div className="text-center mb-6">
+      ...
+```
+
+**Requirements, not exact JSX (Code's call on implementation):**
+
+- A single button/pill, not an always-visible player — this is a support option, not a required step. Suggested label: **"🔊 Read this to me"** (Josh's own suggestion) — alternatives if that reads oddly at implementation: "Listen instead of reading," "Have this read aloud." Josh's call on final copy.
+- **Do NOT autoplay on mount** and **do NOT gate the Yes/No decision** on listening — unlike `KaiNarrationPlayer`'s usage in `GettingUnstuck.jsx`/`AlliesSafetyNet.jsx` (which autoplays and the surrounding activity sometimes waits on `onComplete`), assent is a decision screen where the full text is already on-screen; the audio is a pure accessibility/support add-on, always optional.
+- Reuse `src/components/KaiNarrationPlayer.jsx`'s underlying `<audio>` patterns rather than writing new audio-handling logic — specifically its fail-open error handling (`onError` → shows "audio not available yet" copy rather than a dead control, so a broken/missing mp3 never blocks the child from reading and proceeding) and its autoplay-blocked-by-browser fallback logic. Whether to literally reuse the component (with its Kai-portrait styling stripped out) or write a lighter one-off using the same patterns is Code's call — the existing component's visual design (Kai portrait, speaker icon, amber "narration" styling) doesn't fit an assent/consent screen, so don't render it as-is.
+- **Asset path:** copy `Assent/Assent narration.mp3` into `public/kai-narration/assent.mp3` (reusing the existing narration-audio folder convention, despite the folder's Kai-specific name — it's just the established public path for narration mp3s, not literal ownership by the Kai character; rename the folder later in a separate draft if that naming bothers anyone). **Remember to `git add` the new file** — three earlier narration mp3s landed in this same folder untracked and didn't deploy (see the incident logged earlier in this file, ~line 1140).
+
+**Part 2 — add a review card for this to the end of `REVIEW_CARDS`** (`src/pages/DemoPage.jsx`, currently 3 cards, ends line 80). This is an **audio** card, not video or image — `ReviewCard` (lines 156-222) doesn't have an audio branch yet. Add one:
+
+- New optional field: `card.audioSrc`. Add a new branch to `ReviewCard`'s three-way ternary (currently `imageSrc` → `youtubeId` → placeholder) — check `audioSrc` too, rendering a plain `<audio controls src={card.audioSrc} className="w-full">` inside the existing 9:16 media box (or just inline without forcing the 9:16 frame if that reads better for an audio-only card — Code's call, since the fixed aspect-ratio box was designed around video/image, not audio).
+- New card object, appended after the current three:
+
+```jsx
+{
+  title: 'Assent — "Read This to Me" Narration',
+  audioSrc: '/kai-narration/assent.mp3',
+  description:
+    'A narration option on the assent screen, for participants who\'d rather listen than read.',
+  feedbackArea: 'Assent Narration',
+},
+```
+
+**Verify.** Assent screen shows the narration button above the title, doesn't autoplay, doesn't block Yes/No; clicking it plays `Assent narration.mp3` with working pause/resume; a deliberately-broken src still lets the child proceed (fail-open, matching `KaiNarrationPlayer`'s existing pattern). "For Review This Week" shows 4 cards now, the new one plays audio inline with working controls, feedback button opens pre-filled with "Assent Narration". Console + build clean. Log Recently-shipped.
+
+*End of Draft 92.*
+
+  </details>
+
 - **`56c201f` · 2026-08-19** — **Draft 91 — Kai Part 2 Scene 3 redo fills the Draft 90 placeholder.** Adrienne's script rewrite (self-regulation, the Ash/heavy-shield metaphor, embedded box-breathing with Kai demonstrating on camera, the fuller fixed-vs-growth-mindset closer — full script logged in the "Scene 3 script finalized" note above) is produced: **`PPKC4yGSiGQ`**. Added `youtubeId` to the Scene 3 card — `ReviewCard`'s existing branch order (`imageSrc` → `youtubeId` → placeholder, built in Draft 90) flips it from the "in production" dashed placeholder to a real embed with zero other rendering change needed. Removed the now-stale `knownIssue` note; description updated to mention box breathing, which it never covered before. The comment block above `REVIEW_CARDS` updated to match. **Per Josh, stays in `REVIEW_CARDS`** for a round of team feedback rather than graduating straight to `LEARNING_SKILLS_CARDS` — graduating it is a follow-up draft once/if it clears review, same pattern as Scenes 1–2 + Conclusion in Draft 90. **Verified live at 375×812:** "For Review This Week" still shows exactly three cards; Scene 3 plays the real video (checked the DOM directly — 11 total embeds, zero broken, zero placeholders remaining, up from Draft 90's 10/1); no `knownIssue` text renders; the feedback button opens pre-filled with "Kai Part 2 Scene 3: Putting it All Together". Console + build clean. No version bump (no `src/activities` files touched).
 
   <details>
