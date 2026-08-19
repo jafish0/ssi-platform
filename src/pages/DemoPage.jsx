@@ -19,7 +19,6 @@ import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
 import { buildSpssSyntax } from '../lib/spssSyntax.js'
 import { buildRsdDemoDataset } from '../lib/demoDataset.js'
-import { CAST } from '../lib/castData.js'
 import TreeProgress from '../components/TreeProgress.jsx'
 import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // SessionSummary still exists in the codebase but is no longer rendered in
@@ -44,53 +43,36 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // permanently in the "Learning Skills for Belonging" section instead of
 // here. The Sam Female Adult/14 image cards moved down into the Sam's
 // Story cast section for the same reason (both already had a home there).
+//
+// Draft 90 (2026-08-19): Sam's Story V5 graduated to the Sam's Story
+// section as the Male Version (its own ReviewCard there now); Part 2
+// Scenes 1-2 + Conclusion graduated to LEARNING_SKILLS_CARDS having
+// cleared review; the Kai (Gender Neutral) — 14yo card was retired
+// outright (no longer needed on the demo, per Josh). Part 2 Scene 3
+// stays here but its video is pulled pending Adrienne's script rewrite
+// (see the "Kai psychoeducation video fixes" notes above) — `youtubeId`
+// intentionally omitted so ReviewCard renders its production placeholder.
 const REVIEW_CARDS = [
   {
-    title: "Sam's Story V5",
-    youtubeId: 'eEgHiFWatA0',
+    title: 'Ready for Roots — Intro Video',
+    youtubeId: 'PQMnbd1NuJ8',
     description:
-      "V5 cut with Jessica's Foster Mom audio cleaned up — volume lowered to match Sam's narration level, background hum removed.",
-    feedbackArea: "Sam's Story V5",
+      "The program's opening video — orients participants before the pretest.",
+    feedbackArea: 'Intro Video',
   },
   {
-    title: 'Learning Skills for Belonging — Part 2, Scene 1: Building Skills for Belonging',
-    youtubeId: 'mHiQ6lTi1R8',
-    description:
-      'Kai introduces the five core belonging skills — Active Listening, Conflict Resolution, Inclusive Language, Provide Support, and Express Gratitude.',
-    feedbackArea: 'Kai Part 2 Scene 1: Building Skills for Belonging',
-    groupSubheading: {
-      title: 'Learning Skills for Belonging — Part 2',
-      intro:
-        'Part 2 completes the psychoeducation series. All eight scenes across both parts are now produced.',
-    },
-  },
-  {
-    title: 'Learning Skills for Belonging — Part 2, Scene 2: The Roadblocks',
-    youtubeId: 'BV4cOda5on4',
-    description:
-      'Two unhelpful thinking patterns that block belonging — All-or-Nothing Thinking and Holding onto the Past.',
-    feedbackArea: 'Kai Part 2 Scene 2: The Roadblocks',
+    title: "Sam's Story — Female Version",
+    youtubeId: 'Ughh-3a8Urs',
+    description: "The female cut of Sam's Story, up for review.",
+    feedbackArea: "Sam's Story — Female Version",
   },
   {
     title: 'Learning Skills for Belonging — Part 2, Scene 3: Putting it All Together',
-    youtubeId: 'GAXfgODSEbw',
     description:
       'Self-regulation, the too-heavy-shield metaphor, and the shift from a fixed mindset to a growth mindset.',
     feedbackArea: 'Kai Part 2 Scene 3: Putting it All Together',
-  },
-  {
-    title: 'Learning Skills for Belonging — Conclusion',
-    youtubeId: 'GIxBJpD6O-E',
-    description:
-      "Kai's closing encouragement — your story isn't over just because the current chapter has been chaotic.",
-    feedbackArea: 'Kai Conclusion',
-  },
-  {
-    title: 'Kai (Gender Neutral) — 14 years old',
-    imageSrc: '/cast/images/kai-gender-neutral-14.png',
-    description:
-      'A 14-year-old version of the gender-neutral Kai design, up for review.',
-    feedbackArea: 'Kai (Gender Neutral) — 14 years old',
+    knownIssue:
+      'New version in production — the script is being revised to fix a pronunciation issue and add a fuller explanation of self-regulation and growth mindset.',
   },
 ]
 
@@ -131,12 +113,43 @@ const LEARNING_SKILLS_CARDS = [
     knownIssue:
       'Known issue: the opening line’s "foster or relative care" pronunciation is being re-recorded. A new cut will replace this one.',
   },
+  // Part 2 Scenes 1-2 + Conclusion graduated out of weekly review here
+  // (Draft 90, 2026-08-19) — cleared review. Scene 3 stays in
+  // REVIEW_CARDS (placeholder) pending its script rewrite; it joins this
+  // list once that rewrite lands and it graduates in turn.
+  {
+    title: 'Learning Skills for Belonging — Part 2, Scene 1: Building Skills for Belonging',
+    youtubeId: 'mHiQ6lTi1R8',
+    description:
+      'Kai introduces the five core belonging skills — Active Listening, Conflict Resolution, Inclusive Language, Provide Support, and Express Gratitude.',
+    feedbackArea: 'Kai Part 2 Scene 1: Building Skills for Belonging',
+    groupSubheading: {
+      title: 'Learning Skills for Belonging — Part 2',
+      intro:
+        'Part 2 continues the psychoeducation series — Scene 3 is being revised and will join once it’s ready.',
+    },
+  },
+  {
+    title: 'Learning Skills for Belonging — Part 2, Scene 2: The Roadblocks',
+    youtubeId: 'BV4cOda5on4',
+    description:
+      'Two unhelpful thinking patterns that block belonging — All-or-Nothing Thinking and Holding onto the Past.',
+    feedbackArea: 'Kai Part 2 Scene 2: The Roadblocks',
+  },
+  {
+    title: 'Learning Skills for Belonging — Conclusion',
+    youtubeId: 'GIxBJpD6O-E',
+    description:
+      "Kai's closing encouragement — your story isn't over just because the current chapter has been chaotic.",
+    feedbackArea: 'Kai Conclusion',
+  },
 ]
 
 // One review card: optional group subheading, then title + media (a 9:16
-// YouTube embed for `youtubeId` cards, or a still image for `imageSrc`
-// cards — Draft 61) + description + a dedicated feedback button pinned to
-// this item.
+// YouTube embed for `youtubeId` cards, a still image for `imageSrc` cards
+// — Draft 61 — or a "video in production" placeholder when a card sets
+// NEITHER, e.g. a cut pulled pending a script rewrite — Draft 90) +
+// description + a dedicated feedback button pinned to this item.
 function ReviewCard({ card }) {
   return (
     <>
@@ -164,7 +177,7 @@ function ReviewCard({ card }) {
                 alt={card.title}
                 className="absolute inset-0 h-full w-full object-cover rounded-2xl border border-amber-200"
               />
-            ) : (
+            ) : card.youtubeId ? (
               <iframe
                 src={`https://www.youtube.com/embed/${card.youtubeId}`}
                 title={card.title}
@@ -172,6 +185,17 @@ function ReviewCard({ card }) {
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
+            ) : (
+              <div
+                role="img"
+                aria-label={`${card.title} — video in production`}
+                className="absolute inset-0 h-full w-full rounded-2xl border-2 border-dashed border-amber-300 bg-amber-100/50 flex flex-col items-center justify-center text-amber-700"
+              >
+                <svg viewBox="0 0 24 24" className="w-8 h-8 mb-2 opacity-50" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <span className="text-[13px] italic">In production</span>
+              </div>
             )}
           </div>
         </div>
@@ -505,49 +529,33 @@ export default function DemoPage() {
         </section>
       )}
 
-      {/* Meet the cast — preview of Holly's video script (Script 2.0)
-          before animation. Sits between Tests and Data export so the
-          reviewer flows sandbox → surveys → cast → export. Cards render
-          as a compact 2-up grid (2026-08-13) — Foster Mom/Dad retired
-          (their one scene is fully covered by the assembled Sam's Story
-          video above), voice-sample audio removed from the remaining Sam
-          variants for the same reason, the Sam Female cards moved down
-          here from the weekly review section since this is their
-          permanent home, and (2026-08-13) Mrs. Johnson and the closing
-          Family Photo removed — down to just the five Sam variants. */}
-      {/* Sam's Story — the narrative-video cast (Holly's Script 2.0). */}
+      {/* Sam's Story — the narrative video, by variant. Was a
+          character-design cast preview (Holly's Script 2.0, pre-
+          animation); retired that framing (Draft 90, 2026-08-19) now
+          that finished narrative videos exist per variant — Male
+          graduated out of weekly review here, Female/Non-binary follow
+          the same path once each clears review (see REVIEW_CARDS). The
+          script download + character cast cards are gone with it —
+          Josh: "we no longer need the script and all those associated
+          images." */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           Sam&apos;s Story
         </h2>
         <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
-          Preview of the cast for Holly&apos;s video script (Script 2.0).
+          The finished narrative video, by character variant. Female and
+          Non-binary versions join here once they clear review above.
         </p>
 
-        {/* Sam's Story V3 video moved to the top-of-page Video Preview
-            section (Draft 57) — no longer rendered here. */}
-
-        {/* Full-script download — so reviewers can read along while they
-            listen. The `download` attr sets a clean saved filename. */}
-        <div className="mb-6">
-          <p className="text-[13px] text-slate-500 italic mb-2">
-            Want the full script while you listen? Grab it here.
-          </p>
-          <a
-            href="/cast/script/ready-for-roots-script-v2.docx"
-            download="Ready for Roots — Script 2.0.docx"
-            className="inline-flex items-center gap-2 rounded-full bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white px-5 py-2 text-sm font-semibold"
-          >
-            <Download size={16} strokeWidth={2} />
-            Download Script 2.0 (.docx)
-          </a>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {CAST.filter((c) => c.shows.includes('sams-story')).map((character) => (
-            <CastCard key={character.id} character={character} />
-          ))}
-        </div>
+        <ReviewCard
+          card={{
+            title: "Sam's Story — Male Version",
+            youtubeId: 'eEgHiFWatA0',
+            description:
+              "V5 cut with Jessica's Foster Mom audio cleaned up — volume lowered to match Sam's narration level, background hum removed.",
+            feedbackArea: "Sam's Story — Male Version",
+          }}
+        />
       </section>
 
       {/* Learning Skills for Belonging — the psychoeducation track that
@@ -878,278 +886,5 @@ function ExportFileBlock({
       </div>
       {children}
     </div>
-  )
-}
-
-// ---------- Reusable: cast character card ----------
-//
-// Small fixed-width image thumbnail on the left, text on the right — sized
-// (2026-08-13) so two cards fit side by side in the Sam's Story 2-up grid.
-// Image column: a variant gallery when the card has an `images` array,
-// else the single `image`. Text column shows name + role, then whichever
-// of these the card sets, in precedence order: `scenes` (longer-form
-// narrator audio by scene — label + duration/handoff + script + <audio>),
-// `lines` (per-line scene cue + quoted text; native <audio> if the line
-// has an `audio` clip), or `description` (a paragraph for cast who don't
-// speak). `voiceSamples` (labeled audio players) and `videos` (9:16
-// animation previews) render as their own blocks above the main content
-// when present. None of the current cast cards use `scenes`, `lines`,
-// `voiceSamples`, `videos`, or `description` as of Draft 63 + the
-// 2026-08-13 cast cleanup (Kai's audio scenes, Foster Mom/Dad, Mrs.
-// Johnson, and all Sam-variant voice samples were retired once the
-// psychoeducation and Sam's Story tracks existed as finished video) — the
-// shapes stay documented here for whenever new cast content needs them. See
-// src/lib/castData.js.
-
-function CastCard({ character }) {
-  const {
-    name,
-    image,
-    images,
-    alt,
-    role,
-    roleNote,
-    lines,
-    description,
-    landscape,
-    videos,
-    voiceSamples,
-    scenes,
-    scenesIntro,
-    placeholder,
-  } = character
-  return (
-    <article
-      tabIndex={0}
-      className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-4 flex flex-row gap-4"
-    >
-      {/* Image column — a "coming soon" placeholder when `placeholder` is
-          set (Draft 42, Sam — Female), a gallery of design variants when
-          `images` is present (Kai), else the single character image.
-          Fixed small width (2026-08-13, ~75% smaller than the original
-          full-width photo) so two cards sit comfortably side by side in
-          the 2-up grid. */}
-      <div className="w-20 sm:w-24 flex-shrink-0">
-        {placeholder ? (
-          <div
-            role="img"
-            aria-label={alt || `${name} — character not yet built`}
-            className="w-full aspect-[3/4] max-h-[80px] bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500"
-          >
-            <svg viewBox="0 0 40 40" className="w-6 h-6 mb-1 opacity-40">
-              <circle cx="20" cy="14" r="6" fill="currentColor" />
-              <path d="M 8 36 Q 8 24, 20 24 Q 32 24, 32 36 Z" fill="currentColor" />
-            </svg>
-            <span className="text-[10px] italic">Soon</span>
-          </div>
-        ) : images && images.length > 0 ? (
-          <div className="grid grid-cols-1 gap-2">
-            {images.map((img, i) => (
-              <figure key={i}>
-                <img
-                  src={img.src}
-                  alt={img.alt || `${name} — ${img.label || `variant ${i + 1}`}`}
-                  className="w-full h-auto rounded-xl shadow-card"
-                />
-                {img.label && (
-                  <figcaption className="text-xs text-slate-600 italic mt-1 text-center">
-                    {img.label}
-                  </figcaption>
-                )}
-              </figure>
-            ))}
-          </div>
-        ) : (
-          <img
-            src={image}
-            alt={alt}
-            className={
-              'w-full rounded-xl shadow-card object-cover object-top ' +
-              // Sam 14 is landscape — crop to a gentle ~4:3 box (faces stay
-              // centered horizontally). Portrait images crop to the small
-              // fixed thumbnail height instead; `object-top` keeps the
-              // crop anchored to the face rather than the vertical center,
-              // which otherwise cuts heads off at this thumbnail size.
-              (landscape ? 'aspect-[4/3] max-h-[80px]' : 'h-[70px]')
-            }
-          />
-        )}
-      </div>
-
-      {/* Text column */}
-      <div className="flex-1 min-w-0">
-        <h3 className="text-base font-bold text-slate-700 mb-1">{name}</h3>
-        <p className={'text-xs italic text-slate-500 ' + (roleNote ? 'mb-1' : 'mb-2')}>{role}</p>
-        {roleNote && <p className="text-xs italic text-slate-400 mb-2">{roleNote}</p>}
-
-        {/* Voice samples render as their own block ABOVE the
-            videos/lines/description content (Draft 34) — a card can have
-            both (Sam 14: voice sample + lines). */}
-        {voiceSamples && voiceSamples.length > 0 && (
-          <div className="mx-auto w-full max-w-[320px] mb-6">
-            {voiceSamples.map((vs, i) => (
-              <div key={i}>
-                {vs.label && (
-                  <p
-                    className={
-                      'text-sm font-semibold text-slate-700 mb-2 ' +
-                      (i === 0 ? '' : 'mt-4')
-                    }
-                  >
-                    {vs.label}
-                  </p>
-                )}
-                <audio
-                  controls
-                  preload="metadata"
-                  src={vs.src}
-                  aria-label={`Voice sample: ${name} — ${vs.label || 'voice model'}`}
-                  className="w-full"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Featured animation clips (Draft 41) — rendered as their own
-            bordered block ABOVE the main content so a card can show both
-            animation previews AND its voiceover scenes (Kai). Supports
-            self-hosted mp4 (`src`) or a YouTube embed (`youtubeId`). */}
-        {videos && videos.length > 0 && (
-          <div className="border-t border-b border-ctac-teal-200 py-5 mb-2">
-            {videos.map((v, i) => (
-              <div key={i} className={i === 0 ? '' : 'mt-6'}>
-                {v.label && (
-                  <h4 className="text-base font-semibold text-ctac-navy mb-3">{v.label}</h4>
-                )}
-                <div className="mx-auto w-full max-w-[320px]">
-                  <div className="relative w-full" style={{ aspectRatio: '9 / 16' }}>
-                    {v.src ? (
-                      <video
-                        src={v.src}
-                        title={`${name} — animation preview`}
-                        controls
-                        playsInline
-                        preload="metadata"
-                        className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200 bg-black object-cover"
-                      />
-                    ) : (
-                      <iframe
-                        src={`https://www.youtube.com/embed/${v.youtubeId}`}
-                        title={`${name} — animation preview`}
-                        className="absolute inset-0 h-full w-full rounded-2xl border border-ctac-teal-200"
-                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                      />
-                    )}
-                  </div>
-                  {v.caption && (
-                    <p className="mt-2 text-center text-sm text-slate-600 italic">{v.caption}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {scenes && scenes.length > 0 ? (
-          (() => {
-            // Total runtime computed from the per-scene durationSeconds so
-            // it stays correct if scenes are added/removed (Draft 40 D).
-            const totalSecs = scenes.reduce((s, sc) => s + (sc.durationSeconds || 0), 0)
-            const fmt = (t) => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0')
-            const hasMeta = totalSecs > 0
-            return (
-              <div>
-                {hasMeta && (
-                  <div className="border-t border-ctac-teal-200 pt-5 mb-1">
-                    <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-                      <h4 className="text-lg font-semibold text-ctac-navy">
-                        {name}’s voiceover ({scenes.length} scenes)
-                      </h4>
-                      <div className="text-sm text-slate-600 italic">
-                        Total runtime:{' '}
-                        <span className="font-semibold text-ctac-navy not-italic">{fmt(totalSecs)}</span>
-                      </div>
-                    </div>
-                    {scenesIntro && (
-                      <p className="text-sm text-slate-600 mb-2">{scenesIntro}</p>
-                    )}
-                  </div>
-                )}
-                <div className="divide-y divide-slate-100">
-                  {scenes.map((sc, i) => (
-                    <div key={i} className="py-4 first:pt-2">
-                      <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
-                        <p className="text-base font-semibold text-ctac-navy">{sc.label}</p>
-                        <div className="text-sm text-slate-600">
-                          {sc.duration && <span className="font-medium">{sc.duration}</span>}
-                          {sc.handoff && <span className="ml-3 text-slate-500">→ {sc.handoff}</span>}
-                        </div>
-                      </div>
-                      {sc.text ? (
-                        <p className="text-sm text-slate-700 leading-relaxed italic mb-3">“{sc.text}”</p>
-                      ) : (
-                        sc.description && (
-                          <p className="text-xs italic text-slate-500 mb-1">{sc.description}</p>
-                        )
-                      )}
-                      <audio
-                        controls
-                        preload="metadata"
-                        src={sc.audio}
-                        aria-label={`Audio: ${name} — ${sc.label}`}
-                        className="w-full max-w-md mt-1"
-                      />
-                    </div>
-                  ))}
-                </div>
-                {hasMeta && (
-                  <div className="mt-4 pt-4 border-t border-ctac-teal-200 text-sm text-slate-600 italic text-center">
-                    Total runtime:{' '}
-                    <span className="font-semibold text-ctac-navy not-italic">{fmt(totalSecs)}</span>
-                    {' '}· {scenes.length} scenes wrapping the 6 activities.
-                  </div>
-                )}
-              </div>
-            )
-          })()
-        ) : lines && lines.length > 0 ? (
-          <div className="space-y-7">
-            {lines.map((line, i) => (
-              <div key={i}>
-                <p className="text-sm italic text-slate-500 leading-tight mb-1">
-                  {line.scene}
-                </p>
-                <p className="text-base text-slate-700 leading-relaxed mb-2">
-                  &ldquo;{line.text}&rdquo;
-                </p>
-                {line.audio ? (
-                  <audio
-                    controls
-                    preload="metadata"
-                    src={line.audio}
-                    aria-label={`Audio: ${name} — ${line.scene}`}
-                    className="w-full mt-1"
-                  />
-                ) : voiceSamples && voiceSamples.length > 0 ? (
-                  // Voice sample is shown above — suppress the stale
-                  // "coming soon" note for this card's lines (Draft 34).
-                  null
-                ) : (
-                  <p className="mt-1 text-sm italic text-slate-400">
-                    Voice model coming soon
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : description ? (
-          <p className="text-base text-slate-700 leading-relaxed">
-            {description}
-          </p>
-        ) : null}
-      </div>
-    </article>
   )
 }

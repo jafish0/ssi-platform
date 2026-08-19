@@ -20,20 +20,14 @@
 // Every card carries a `shows` array placing it in one or more parallel
 // /demo sections (Draft 35; array form since Draft 42 so a card could
 // appear in multiple sections at once — no current card does):
-//   - `'sams-story'` — the narrative-video cast (Holly's Script 2.0): five
-//     Sam variants — Sam (18 years old), Sam (Female) and Sam (Female, 14
-//     years old), Sam (Gender Neutral), and Sam (14 years old). (Sam
-//     Female's image is LOCKED as of Draft 56 B (2026-07-28): a single
-//     composite — V1 face/jawline + V2 skin tone + V1 softer hair, per
-//     the 2026-07-27 meeting — renders on the card; the earlier Draft
-//     50 B "pick between" candidates and the Draft 48 images are retired
-//     to disk-only. Foster Mom, Foster Dad, and Mrs. Johnson were
-//     retired 2026-08-13 — the dining-table scene (Foster Mom/Dad) is
-//     fully covered by the assembled Sam's Story video above this
-//     section, and Josh wanted the section trimmed to just the Sam
-//     variants. Sam variants' voice-sample audio was removed the same
-//     day for the same reason: the finished Sam's Story video supersedes
-//     it. The closing Family Photo was removed the same day too.)
+//   - `'sams-story'` — retired (Draft 90, 2026-08-19). The five character-
+//     design Sam variants that carried this tag (18yo, 14yo, Female,
+//     Female 14yo, Gender Neutral) are gone from CAST entirely — Sam's
+//     Story on /demo now renders finished narrative VIDEOS by variant
+//     (ReviewCard, in DemoPage.jsx) as each cut clears review, rather
+//     than character-design preview cards from here. No card currently
+//     carries this tag; kept as documentation in case a future variant
+//     needs a pre-video design-preview card again.
 //   - `'learning-skills'` — the psychoeducation track that wraps the six
 //     activities (Adrienne's script; Kai narrates). Used to carry a
 //     single Kai card (photo + all 8 scenes of narrator audio); retired
@@ -82,69 +76,10 @@
 //     as label + duration/handoff + text + native <audio>.
 //   - `description`: a paragraph for characters who don't speak yet.
 
-export const CAST = [
-  {
-    // id + asset filenames stay `sam-16` — internal identifiers, not
-    // user-visible. Only the display strings age the character up to 18
-    // (Draft 42, 2026-07-01): a design decision to read as a young adult
-    // with more distance from adolescence. Holly's Script 2.0 still
-    // narratively references "16-year-old Sam" internally — unchanged.
-    // Paired with Sam (14) below in the 2-up grid (2026-08-13).
-    id: 'sam-16',
-    shows: ['sams-story'],
-    name: 'Sam (18 years old)',
-    image: '/cast/images/sam-16.png',
-    alt: 'Sam at 18 — the narrator, four years later',
-    role: 'Our narrator — Sam four years later.',
-  },
-  {
-    id: 'sam-14',
-    shows: ['sams-story'],
-    name: 'Sam (14 years old)',
-    image: '/cast/images/sam-14.png',
-    alt: 'Sam at 14 — the 14-year-old version of the main character',
-    role: 'The 14-year-old version — at the heart of every flashback.',
-    // Sam 14 image is landscape (2304×1296) — crop to a gentle ~4:3 so
-    // faces stay centered (see `landscape` flag, handled in the view).
-    landscape: true,
-  },
-  {
-    // Sam (Female) — Draft 48, 2026-07-10. Completes the three-variant
-    // Sam 18 set (Male / Female / Gender Neutral). Paired with Sam
-    // (Female) — 14 years old below in the 2-up grid (2026-08-13).
-    id: 'sam-female',
-    shows: ['sams-story'],
-    name: 'Sam (Female)',
-    alt: 'Sam, female variant — 18-year-old young woman narrator, same character as Sam Male',
-    // Draft 56 B (2026-07-28): Female Sam is now LOCKED as a single
-    // composite — Version 1's face/jawline + Version 2's skin tone +
-    // Version 1's softer hair, per the team decision at the 2026-07-27
-    // meeting. Replaces the two Draft 50 B "pick between" candidates
-    // (sam-female-v2-version-1/2.png) and the Draft 48 files
-    // (sam-female-variant-1*.png), all of which stay on disk unreferenced.
-    image: '/cast/images/sam-female-v3.png',
-    role: 'The female variant of Sam — now locked as a single composite (Version 1 face/jawline + Version 2 skin tone + Version 1 softer hair, per the 2026-07-27 meeting).',
-  },
-  {
-    // Sam (Female) — 14 years old. Added 2026-08-13, moved down from the
-    // weekly review section (Draft 61) now that it has a permanent home
-    // paired next to the Sam (Female) adult card above.
-    id: 'sam-female-14',
-    shows: ['sams-story'],
-    name: 'Sam (Female) — 14 years old',
-    image: '/cast/images/sam-female-14.png',
-    alt: 'Sam, female variant — 14-year-old, the younger companion to the adult female narrator',
-    role: 'The 14-year-old female variant of Sam — the younger companion to the adult female narrator.',
-  },
-  {
-    // Sam (Gender Neutral) — promoted out of Proposed Alternative Cast
-    // (Draft 46, 2026-07-10). Design reuses the blonde Kai Variant 2
-    // visual, differentiating from dark-haired Sam Male.
-    id: 'sam-nonbinary',
-    shows: ['sams-story'],
-    name: 'Sam (Gender Neutral)',
-    image: '/cast/images/kai-variant-2.png',
-    alt: 'Sam, gender-neutral variant',
-    role: 'The gender-neutral variant of Sam — same character, different presentation. Character design reuses the current Kai visual (blonde).',
-  },
-]
+// Empty as of Draft 90 (2026-08-19) — the last cards standing (the five
+// Sam's Story character-design variants) graduated to finished-video
+// ReviewCards in DemoPage.jsx and were removed from here. Still exported
+// (and still imported by IRBPreviewPage.jsx) so nothing needs the file
+// deleted; the shape documentation above stays for whenever new
+// pre-video cast content needs a home again.
+export const CAST = []
