@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>frog</title>
+  <desc>Frog on a lily pad. Hop by transforming #frog around its base at 400,1806. #frog-tap is a 228x200 invisible tap target. Pair with motion.css (#frog-body) for the idle breath.</desc>
+  <defs>
+    <radialGradient id="frogGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd79a" stop-opacity="0.30"></stop>
+      <stop offset="1" stop-color="#ffd79a" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="padG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7f9a67"></stop><stop offset="1" stop-color="#41563f"></stop>
+    </linearGradient>
+    <linearGradient id="bodyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fc47e"></stop><stop offset="1" stop-color="#5c8360"></stop>
+    </linearGradient>
+  </defs>
+  <g id="frog">
+    <rect id="frog-tap" x="286" y="1668" width="228" height="200" rx="40" fill="none" pointer-events="all" style="cursor:pointer"></rect>
+    <ellipse cx="400" cy="1808" rx="190" ry="70" fill="url(#frogGlow)"></ellipse>
+    <g id="frog-pad">
+      <ellipse cx="400" cy="1806" rx="132" ry="34" fill="url(#padG)"></ellipse>
+      <path d="M400 1806 L470 1782 A132 34 0 0 0 452 1774 Z" fill="#2f4436" opacity="0.55"></path>
+      <ellipse cx="400" cy="1798" rx="132" ry="34" fill="none" stroke="#b9d69a" stroke-opacity="0.35" stroke-width="3"></ellipse>
+    </g>
+    <g id="frog-body" style="transform-origin:400px 1806px">
+      <ellipse cx="336" cy="1794" rx="26" ry="12" fill="#4e7355"></ellipse>
+      <ellipse cx="464" cy="1794" rx="26" ry="12" fill="#4e7355"></ellipse>
+      <ellipse cx="400" cy="1758" rx="72" ry="52" fill="url(#bodyG)"></ellipse>
+      <ellipse cx="400" cy="1782" rx="46" ry="22" fill="#d8e6b4" opacity="0.55"></ellipse>
+      <circle cx="371" cy="1722" r="21" fill="#8fb673"></circle>
+      <circle cx="429" cy="1722" r="21" fill="#8fb673"></circle>
+      <circle cx="371" cy="1720" r="14" fill="#fdf6e3"></circle>
+      <circle cx="429" cy="1720" r="14" fill="#fdf6e3"></circle>
+      <circle cx="373" cy="1722" r="7" fill="#2b3452"></circle>
+      <circle cx="431" cy="1722" r="7" fill="#2b3452"></circle>
+      <circle cx="369" cy="1717" r="2.6" fill="#fff"></circle>
+      <circle cx="427" cy="1717" r="2.6" fill="#fff"></circle>
+      <path d="M382 1762 q18 14 36 0" fill="none" stroke="#3f5c47" stroke-width="4" stroke-linecap="round"></path>
+      <circle cx="352" cy="1756" r="7" fill="#f0a9a0" opacity="0.45"></circle>
+      <circle cx="448" cy="1756" r="7" fill="#f0a9a0" opacity="0.45"></circle>
+    </g>
+  </g>
+</svg>

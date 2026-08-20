@@ -17,6 +17,7 @@ import { HardHat, Film, Play } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
 import BodyMapping from '../components/BodyMapping.jsx'
+import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
@@ -30,6 +31,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   //   review-gear       — adopted 2026-08-13, now under Prototypes and In Development
   { value: 'review-spark-voice', label: "Review: Spark's voice" },
   { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
+  { value: 'review-mindfulness', label: 'Review: Mindfulness Calm Place' },
   // The official breakdown
   { value: 'assent-measures', label: 'Child Assent / Measures' },
   { value: 'exposition', label: 'Exposition' },
@@ -568,7 +570,7 @@ export default function GainsDemoPage() {
                 </p>
                 <p className="mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2.5 text-[13px] text-slate-700">
                   <strong className="font-semibold">Reading it for now.</strong>{' '}
-                  Once we settle on Spark&apos;s voice (item 5 above), we will
+                  Once we settle on Spark&apos;s voice (item 3 above), we will
                   add audio narration so each of these lines is read aloud
                   instead.
                 </p>
@@ -590,6 +592,35 @@ export default function GainsDemoPage() {
                     style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
                   >
                     <BodyMapping />
+                  </div>
+                </div>
+              </ReviewItem>
+
+              {/* 5 — Mindfulness "Calm Place" activity (playable) */}
+              <ReviewItem
+                n={5}
+                title="Mindfulness: Calm Place (playable)"
+                section="review-mindfulness"
+              >
+                <p className="mb-3">
+                  A Zone 4 grounding activity: Spark leads a calm-place
+                  visualization that doubles as the 3-3-3 technique. See three
+                  things, hear three things, then breathe with a soft amber
+                  glow. Earns the Oxygen Mask for the climb ahead. Has sound
+                  (tap Begin to start it) and works best with headphones or
+                  the volume up.
+                </p>
+                <p className="mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2.5 text-[13px] text-slate-700">
+                  <strong className="font-semibold">First-draft script.</strong>{' '}
+                  Spark&apos;s lines here are a first pass, meant to be refined
+                  with Stephanie and Holly. Rendered cleanly below for review.
+                </p>
+                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
+                  <div
+                    className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
+                  >
+                    <MindfulnessCalmPlace />
                   </div>
                 </div>
               </ReviewItem>

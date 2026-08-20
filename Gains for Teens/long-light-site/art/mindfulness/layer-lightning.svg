@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-lightning</title>
+  <desc>Soft distant flash. Static opacity 0.4; pair with motion.css (#layer-lightning) for the double-blink loop.</desc>
+  <defs>
+    <radialGradient id="flashCore" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fffaf0" stop-opacity="1"></stop>
+      <stop offset="0.32" stop-color="#ffe9c4" stop-opacity="0.68"></stop>
+      <stop offset="0.68" stop-color="#d6c6ff" stop-opacity="0.3"></stop>
+      <stop offset="1" stop-color="#a89bec" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="flashSheet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff3dc" stop-opacity="0.6"></stop>
+      <stop offset="0.55" stop-color="#eaddff" stop-opacity="0.26"></stop>
+      <stop offset="1" stop-color="#b9a9ee" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+  <g id="layer-lightning" opacity="0.4">
+    <rect x="0" y="0" width="1080" height="1300" fill="url(#flashSheet)"></rect>
+    <ellipse cx="700" cy="470" rx="520" ry="370" fill="url(#flashCore)"></ellipse>
+    <ellipse cx="330" cy="690" rx="380" ry="240" fill="url(#flashCore)" opacity="0.65"></ellipse>
+  </g>
+</svg>

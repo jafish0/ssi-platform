@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-reeds</title>
+  <desc>Foreground reed clumps; each blade's transform-origin sits at its base. Pair with motion.css (.reed) to sway.</desc>
+  <g id="layer-reeds">
+    <path class="reed" d="M123 1935 C89.28081832202724 1752 51 1609 27 1528 C70 1618 82 1772 116 1935 Z" fill="#38455c" opacity="0.85" style="transform-origin:123px 1935px;animation-duration:5.60s;animation-delay:-2.02s"></path>
+    <path class="reed" d="M109 1935 C87.68568146230609 1734 63 1578 48 1489 C76 1587 79 1757 101 1935 Z" fill="#5c7150" opacity="0.82" style="transform-origin:109px 1935px;animation-duration:6.45s;animation-delay:-2.98s"></path>
+    <path class="reed" d="M98 1935 C74.13870985724816 1773 47 1648 30 1576 C61 1655 64 1791 88 1935 Z" fill="#38455c" opacity="0.87" style="transform-origin:98px 1935px;animation-duration:6.93s;animation-delay:-2.96s"></path>
+    <path class="reed" d="M74 1935 C39.90784140038522 1771 1 1643 -23 1570 C20 1650 30 1789 64 1935 Z" fill="#5c7150" opacity="0.77" style="transform-origin:74px 1935px;animation-duration:5.68s;animation-delay:-3.03s"></path>
+    <path class="reed" d="M56 1935 C16.030706703313626 1787 -30 1673 -58 1607 C-7 1679 5 1804 45 1935 Z" fill="#38455c" opacity="0.77" style="transform-origin:56px 1935px;animation-duration:5.81s;animation-delay:-1.15s"></path>
+    <path class="reed" d="M25 1935 C0.2510120409860974 1806 -28 1705 -46 1648 C-14 1711 -9 1820 16 1935 Z" fill="#5c7150" opacity="0.73" style="transform-origin:25px 1935px;animation-duration:6.43s;animation-delay:-1.31s"></path>
+    <path class="reed" d="M4 1935 C-22.416698445373186 1803 -53 1701 -71 1642 C-38 1706 -32 1818 -5 1935 Z" fill="#38455c" opacity="0.68" style="transform-origin:4px 1935px;animation-duration:6.42s;animation-delay:-0.28s"></path>
+    <path class="reed" d="M219 1930 C194.2510120409861 1819 166 1733 148 1684 C180 1738 187 1832 212 1930 Z" fill="#38455c" opacity="0.85" style="transform-origin:219px 1930px;animation-duration:6.45s;animation-delay:-2.98s"></path>
+    <path class="reed" d="M214 1930 C187.58330155462681 1746 157 1602 139 1520 C172 1610 179 1766 206 1930 Z" fill="#5c7150" opacity="0.82" style="transform-origin:214px 1930px;animation-duration:6.93s;animation-delay:-2.96s"></path>
+    <path class="reed" d="M182 1930 C148.06699343856417 1786 109 1675 85 1611 C129 1681 138 1802 172 1930 Z" fill="#38455c" opacity="0.87" style="transform-origin:182px 1930px;animation-duration:5.68s;animation-delay:-3.03s"></path>
+    <path class="reed" d="M162 1930 C128.18900422783918 1778 90 1660 65 1592 C109 1666 118 1795 152 1930 Z" fill="#5c7150" opacity="0.77" style="transform-origin:162px 1930px;animation-duration:5.81s;animation-delay:-1.15s"></path>
+    <path class="reed" d="M148 1930 C113.67675107562354 1745 74 1600 50 1518 C94 1609 103 1765 137 1930 Z" fill="#38455c" opacity="0.77" style="transform-origin:148px 1930px;animation-duration:6.43s;animation-delay:-1.31s"></path>
+    <path class="reed" d="M130 1930 C110.45208126365469 1725 88 1566 74 1475 C99 1575 101 1748 121 1930 Z" fill="#5c7150" opacity="0.73" style="transform-origin:130px 1930px;animation-duration:6.42s;animation-delay:-0.28s"></path>
+    <path class="reed" d="M97 1930 C76.21966092267166 1775 52 1655 38 1586 C64 1662 67 1792 88 1930 Z" fill="#38455c" opacity="0.68" style="transform-origin:97px 1930px;animation-duration:6.47s;animation-delay:-3.76s"></path>
+    <path class="reed" d="M951 1935 C970.5479187363453 1775 993 1650 1007 1579 C982 1657 964 1793 944 1935 Z" fill="#38455c" opacity="0.85" style="transform-origin:951px 1935px;animation-duration:6.93s;animation-delay:-2.96s"></path>
+    <path class="reed" d="M962 1935 C982.7803390773283 1750 1007 1606 1021 1524 C995 1614 974 1771 954 1935 Z" fill="#5c7150" opacity="0.82" style="transform-origin:962px 1935px;animation-duration:5.68s;animation-delay:-3.03s"></path>
+    <path class="reed" d="M985 1935 C997.7008115968638 1751 1012 1607 1021 1525 C1005 1615 987 1771 975 1935 Z" fill="#38455c" opacity="0.87" style="transform-origin:985px 1935px;animation-duration:5.81s;animation-delay:-1.15s"></path>
+    <path class="reed" d="M1001 1935 C1041.1484830959237 1749 1087 1604 1116 1521 C1064 1612 1031 1769 991 1935 Z" fill="#5c7150" opacity="0.77" style="transform-origin:1001px 1935px;animation-duration:6.43s;animation-delay:-1.31s"></path>
+    <path class="reed" d="M1044 1935 C1067.7835169565733 1797 1095 1690 1112 1629 C1081 1696 1057 1813 1033 1935 Z" fill="#38455c" opacity="0.77" style="transform-origin:1044px 1935px;animation-duration:6.42s;animation-delay:-0.28s"></path>
+    <path class="reed" d="M1053 1935 C1082.5305618877383 1793 1116 1683 1137 1620 C1099 1689 1073 1809 1044 1935 Z" fill="#5c7150" opacity="0.73" style="transform-origin:1053px 1935px;animation-duration:6.47s;animation-delay:-3.76s"></path>
+    <path class="reed" d="M1079 1935 C1093.8100463074443 1820 1111 1730 1121 1679 C1102 1735 1085 1833 1070 1935 Z" fill="#38455c" opacity="0.68" style="transform-origin:1079px 1935px;animation-duration:5.25s;animation-delay:-1.69s"></path>
+    <path class="reed" d="M867 1930 C896.5305618877383 1725 930 1565 951 1474 C913 1574 890 1748 860 1930 Z" fill="#38455c" opacity="0.85" style="transform-origin:867px 1930px;animation-duration:5.68s;animation-delay:-3.03s"></path>
+    <path class="reed" d="M877 1930 C891.8100463074443 1778 909 1660 919 1593 C900 1667 884 1795 869 1930 Z" fill="#5c7150" opacity="0.82" style="transform-origin:877px 1930px;animation-duration:5.81s;animation-delay:-1.15s"></path>
+    <path class="reed" d="M899 1930 C922.9004088976253 1759 950 1627 967 1551 C937 1634 913 1778 889 1930 Z" fill="#38455c" opacity="0.87" style="transform-origin:899px 1930px;animation-duration:6.43s;animation-delay:-1.31s"></path>
+    <path class="reed" d="M932 1930 C957.2257152680359 1808 986 1713 1004 1659 C972 1719 947 1822 922 1930 Z" fill="#5c7150" opacity="0.77" style="transform-origin:932px 1930px;animation-duration:6.42s;animation-delay:-0.28s"></path>
+    <path class="reed" d="M945 1930 C980.3895277969241 1778 1021 1660 1046 1592 C1001 1666 970 1795 934 1930 Z" fill="#38455c" opacity="0.77" style="transform-origin:945px 1930px;animation-duration:6.47s;animation-delay:-3.76s"></path>
+    <path class="reed" d="M962 1930 C982.2379481625649 1773 1005 1652 1020 1582 C994 1659 973 1791 953 1930 Z" fill="#5c7150" opacity="0.73" style="transform-origin:962px 1930px;animation-duration:5.25s;animation-delay:-1.69s"></path>
+    <path class="reed" d="M980 1930 C999.7903247358008 1740 1022 1592 1037 1508 C1011 1601 991 1761 971 1930 Z" fill="#38455c" opacity="0.68" style="transform-origin:980px 1930px;animation-duration:5.35s;animation-delay:-2.42s"></path>
+  </g>
+</svg>

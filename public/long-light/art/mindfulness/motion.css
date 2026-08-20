@@ -1,0 +1,51 @@
+/* motion.css — idle loops for the pond overlay layers.
+   Inline the SVGs into the page (fetch + innerHTML, or paste the markup),
+   then include this file. Per-element durations/delays live in each
+   SVG's style attributes; these rules only supply the keyframes. */
+
+.drop{animation-name:om-rain;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes om-rain{from{transform:translate(0,-200px)}to{transform:translate(-56px,420px)}}
+
+#layer-lightning{animation:om-flash 6s linear infinite}
+@keyframes om-flash{
+  0%,50%{opacity:0}
+  53%{opacity:.9} 57%{opacity:.25} 60%{opacity:1}
+  65%{opacity:.35} 68%{opacity:.75} 80%{opacity:.05}
+  88%,100%{opacity:0}
+}
+
+.ring{animation:om-ripple 2.2s ease-out infinite}
+@keyframes om-ripple{
+  0%{transform:scale(.35);opacity:0;stroke-width:4.2}
+  15%{opacity:.85}
+  100%{transform:scale(3);opacity:0;stroke-width:1.2}
+}
+
+.reed{animation-name:om-sway;animation-timing-function:ease-in-out;animation-iteration-count:infinite;will-change:transform}
+@keyframes om-sway{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(2deg)}}
+
+.fly{animation-name:om-drift-a;animation-timing-function:ease-in-out;animation-iteration-count:infinite;will-change:transform}
+.fly--b{animation-name:om-drift-b}
+@keyframes om-drift-a{
+  0%,100%{transform:translate(0,0)}
+  20%{transform:translate(46px,-34px)}
+  45%{transform:translate(18px,-72px)}
+  70%{transform:translate(-40px,-46px)}
+  85%{transform:translate(-22px,-12px)}
+}
+@keyframes om-drift-b{
+  0%,100%{transform:translate(0,0)}
+  22%{transform:translate(-52px,-26px)}
+  48%{transform:translate(-14px,-66px)}
+  72%{transform:translate(38px,-40px)}
+  88%{transform:translate(20px,-10px)}
+}
+.fly-core,.fly-glow{animation-name:om-blink;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
+@keyframes om-blink{0%{opacity:.1}18%{opacity:1}42%{opacity:.35}60%{opacity:1}85%{opacity:.05}100%{opacity:.1}}
+
+#frog-body{animation:om-breathe 4.6s ease-in-out infinite}
+@keyframes om-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.015)}}
+
+@media (prefers-reduced-motion:reduce){
+  .drop,#layer-lightning,.ring,.reed,.fly,.fly-core,.fly-glow,#frog-body{animation:none}
+}

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-fireflies</title>
+  <desc>Glowing motes along the banks. Pair with motion.css (.fly / .fly-core / .fly-glow) to drift and blink. Screen-blend for the warmest result.</desc>
+  <defs>
+    <radialGradient id="flyGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff0bd" stop-opacity="0.8"></stop>
+      <stop offset="0.4" stop-color="#ffcf7a" stop-opacity="0.34"></stop>
+      <stop offset="1" stop-color="#ffbe63" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+  <g id="layer-fireflies">
+    <g class="fly" style="transform-origin:150px 1330px;animation-duration:10.1s;animation-delay:-1.9s">
+      <circle class="fly-glow" cx="150" cy="1330" r="41" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.81s;animation-delay:-1.03s"></circle>
+      <circle class="fly-core" cx="150" cy="1330" r="5.8" fill="#fff6d6" opacity="0.9" style="animation-duration:2.81s;animation-delay:-1.03s"></circle>
+    </g>
+    <g class="fly fly--b" style="transform-origin:268px 1252px;animation-duration:10.3s;animation-delay:-2.1s">
+      <circle class="fly-glow" cx="268" cy="1252" r="45" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.06s;animation-delay:-1.27s"></circle>
+      <circle class="fly-core" cx="268" cy="1252" r="6.4" fill="#fff6d6" opacity="0.9" style="animation-duration:2.06s;animation-delay:-1.27s"></circle>
+    </g>
+    <g class="fly" style="transform-origin:420px 1400px;animation-duration:9.3s;animation-delay:-0.2s">
+      <circle class="fly-glow" cx="420" cy="1400" r="36" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.12s;animation-delay:-2.25s"></circle>
+      <circle class="fly-core" cx="420" cy="1400" r="5.1" fill="#fff6d6" opacity="0.9" style="animation-duration:2.12s;animation-delay:-2.25s"></circle>
+    </g>
+    <g class="fly fly--b" style="transform-origin:560px 1290px;animation-duration:8.2s;animation-delay:-6.6s">
+      <circle class="fly-glow" cx="560" cy="1290" r="37" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:1.71s;animation-delay:-2.81s"></circle>
+      <circle class="fly-core" cx="560" cy="1290" r="5.2" fill="#fff6d6" opacity="0.9" style="animation-duration:1.71s;animation-delay:-2.81s"></circle>
+    </g>
+    <g class="fly" style="transform-origin:712px 1200px;animation-duration:8.4s;animation-delay:-3.1s">
+      <circle class="fly-glow" cx="712" cy="1200" r="33" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:3.11s;animation-delay:-1.36s"></circle>
+      <circle class="fly-core" cx="712" cy="1200" r="4.6" fill="#fff6d6" opacity="0.9" style="animation-duration:3.11s;animation-delay:-1.36s"></circle>
+    </g>
+    <g class="fly fly--b" style="transform-origin:818px 1352px;animation-duration:7.2s;animation-delay:-3.8s">
+      <circle class="fly-glow" cx="818" cy="1352" r="29" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.27s;animation-delay:-1.52s"></circle>
+      <circle class="fly-core" cx="818" cy="1352" r="4.1" fill="#fff6d6" opacity="0.9" style="animation-duration:2.27s;animation-delay:-1.52s"></circle>
+    </g>
+    <g class="fly" style="transform-origin:940px 1268px;animation-duration:11.4s;animation-delay:-6.7s">
+      <circle class="fly-glow" cx="940" cy="1268" r="30" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.57s;animation-delay:-2.23s"></circle>
+      <circle class="fly-core" cx="940" cy="1268" r="4.1" fill="#fff6d6" opacity="0.9" style="animation-duration:2.57s;animation-delay:-2.23s"></circle>
+    </g>
+    <g class="fly fly--b" style="transform-origin:352px 1160px;animation-duration:9.1s;animation-delay:-8.4s">
+      <circle class="fly-glow" cx="352" cy="1160" r="25" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:1.82s;animation-delay:-2.22s"></circle>
+      <circle class="fly-core" cx="352" cy="1160" r="3.4" fill="#fff6d6" opacity="0.9" style="animation-duration:1.82s;animation-delay:-2.22s"></circle>
+    </g>
+    <g class="fly" style="transform-origin:640px 1450px;animation-duration:9.5s;animation-delay:-4.1s">
+      <circle class="fly-glow" cx="640" cy="1450" r="42" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.28s;animation-delay:-2.27s"></circle>
+      <circle class="fly-core" cx="640" cy="1450" r="5.8" fill="#fff6d6" opacity="0.9" style="animation-duration:2.28s;animation-delay:-2.27s"></circle>
+    </g>
+    <g class="fly fly--b" style="transform-origin:1010px 1420px;animation-duration:11.5s;animation-delay:-4.5s">
+      <circle class="fly-glow" cx="1010" cy="1420" r="32" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.35s;animation-delay:-0.86s"></circle>
+      <circle class="fly-core" cx="1010" cy="1420" r="4.5" fill="#fff6d6" opacity="0.9" style="animation-duration:2.35s;animation-delay:-0.86s"></circle>
+    </g>
+    <g class="fly" style="transform-origin:210px 1470px;animation-duration:12.6s;animation-delay:-6.7s">
+      <circle class="fly-glow" cx="210" cy="1470" r="34" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.86s;animation-delay:-0.98s"></circle>
+      <circle class="fly-core" cx="210" cy="1470" r="4.8" fill="#fff6d6" opacity="0.9" style="animation-duration:2.86s;animation-delay:-0.98s"></circle>
+    </g>
+    <g class="fly fly--b" style="transform-origin:880px 1160px;animation-duration:9.7s;animation-delay:-6.7s">
+      <circle class="fly-glow" cx="880" cy="1160" r="42" fill="url(#flyGlow)" opacity="0.75" style="animation-duration:2.09s;animation-delay:-0.21s"></circle>
+      <circle class="fly-core" cx="880" cy="1160" r="5.9" fill="#fff6d6" opacity="0.9" style="animation-duration:2.09s;animation-delay:-0.21s"></circle>
+    </g>
+  </g>
+</svg>
