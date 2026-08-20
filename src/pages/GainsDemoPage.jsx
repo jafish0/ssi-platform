@@ -606,16 +606,12 @@ export default function GainsDemoPage() {
               >
                 <p className="mb-3">
                   A Zone 4 grounding activity: Spark leads a calm-place
-                  visualization that doubles as the 3-3-3 technique. See three
-                  things, hear three things, then breathe with a soft amber
-                  glow. Earns the Oxygen Mask for the climb ahead. Has sound
-                  (tap Begin to start it) and works best with headphones or
-                  the volume up.
-                </p>
-                <p className="mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2.5 text-[13px] text-slate-700">
-                  <strong className="font-semibold">First-draft script.</strong>{' '}
-                  Spark&apos;s lines here are a first pass, meant to be refined
-                  with Stephanie and Holly. Rendered cleanly below for review.
+                  visualization that doubles as the 3-3-3 technique. Pick
+                  three things you can see, then three things you can hear,
+                  then follow a guided box-breath with Spark. Earns the
+                  Oxygen Mask for the climb ahead, with a chance to practice
+                  again and upgrade it. Has sound (tap Begin to start it) and
+                  works best with headphones or the volume up.
                 </p>
                 <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
                   <div

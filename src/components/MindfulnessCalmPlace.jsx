@@ -16,8 +16,10 @@
 //   hear    — pick any 3 of 4 predefined sound chips (rain, thunder, frogs,
 //             music).
 //   breathe — a guided box-breath: in (4) - hold (4) - out (4) - hold (4),
-//             for 3 cycles, paced by a large glow and an on-screen count.
-//   close   — Oxygen Mask earned; "do it again?" strengthens the practice.
+//             for 2 cycles, paced by a large glow and an on-screen count.
+//   close   — Oxygen Mask earned; can practice the breath again (up to 2
+//             more times) to "upgrade" it, a reinforcing message only —
+//             no mechanical difference in the mask itself.
 //
 // Draft 33 had SEE/HEAR as scene-tapping (invisible hotspots over the art).
 // Two problems surfaced in testing: the hotspots (and the bottom panel bar
@@ -153,11 +155,18 @@ const HEAR_ITEMS = [
 ]
 
 const BASE_VOLUME = { music: 0.35, rain: 0.12, frog: 0.12 }
+// Draft 37: rain/frog used to sit at a whisper (0.12) the whole time, so
+// "find three things you can hear" was really "find the one thing already
+// audible, then tap blind for the other two." All three sit at one shared,
+// clearly audible level for the duration of the Hear step, then drop back to
+// BASE_VOLUME's quiet background once the step ends.
+const HEAR_AMBIENT_VOLUME = 0.4
 const NUDGE_VOLUME = 0.85
 const NUDGE_MS = 2400
 const PULSE_MS = 900
 
-// Box breathing: 4 phases x 4 one-second counts each = 16s/cycle, x 3 cycles.
+// Box breathing: 4 phases x 4 one-second counts each = 16s/cycle, x 2 cycles
+// (Draft 37: was 3, testing feedback said 2).
 const BREATHE_PHASES = [
   { key: 'in', label: 'Breathe in' },
   { key: 'hold1', label: 'Hold' },
@@ -165,7 +174,7 @@ const BREATHE_PHASES = [
   { key: 'hold2', label: 'Hold' },
 ]
 const COUNTS_PER_PHASE = 4
-const BREATHE_CYCLES = 3
+const BREATHE_CYCLES = 2
 const TICK_MS = 1000
 const TICKS_PER_CYCLE = BREATHE_PHASES.length * COUNTS_PER_PHASE
 const TOTAL_BREATHE_TICKS = BREATHE_CYCLES * TICKS_PER_CYCLE
@@ -224,6 +233,11 @@ export default function MindfulnessCalmPlace() {
   // ready (Spark's lead-in, not yet started) | active (timer running) | done
   const [breatheStage, setBreatheStage] = useState('ready')
   const [breatheTicks, setBreatheTicks] = useState(0) // 1..TOTAL_BREATHE_TICKS while active
+  // How many times the box-breath has been re-run from the close screen's
+  // "practice again" offer (capped at 2), and whether the offer's been
+  // turned down -- either one stops the offer from showing again.
+  const [practiceCount, setPracticeCount] = useState(0)
+  const [practiceDeclined, setPracticeDeclined] = useState(false)
 
   const containerRef = useRef(null)
   const musicRef = useRef(null)
@@ -232,6 +246,14 @@ export default function MindfulnessCalmPlace() {
   const nudgeTimers = useRef({})
   const pulseTimers = useRef({})
   const breatheTimerRef = useRef(null)
+  // A pending nudge's setTimeout reads this to pick its revert target -- mode
+  // itself is stale inside that closure by the time it fires (up to 2.4s
+  // later, easily long enough to have left Hear).
+  const modeRef = useRef(mode)
+
+  useEffect(() => {
+    modeRef.current = mode
+  }, [mode])
 
   useEffect(() => {
     let cancelled = false
@@ -257,7 +279,8 @@ export default function MindfulnessCalmPlace() {
     el.volume = NUDGE_VOLUME
     clearTimeout(nudgeTimers.current[audioKey])
     nudgeTimers.current[audioKey] = setTimeout(() => {
-      if (ref.current) ref.current.volume = BASE_VOLUME[audioKey]
+      if (!ref.current) return
+      ref.current.volume = modeRef.current === 'hear' ? HEAR_AMBIENT_VOLUME : BASE_VOLUME[audioKey]
     }, NUDGE_MS)
   }
 
@@ -305,8 +328,25 @@ export default function MindfulnessCalmPlace() {
     if (item.glowLayer) flashLayer(item.glowLayer)
   }
 
+  // All three tracks come up to one shared, clearly audible level for the
+  // duration of Hear (see HEAR_AMBIENT_VOLUME); tapping a chip nudges its
+  // track further forward on top of that baseline.
+  function enterHear() {
+    setMode('hear')
+    if (musicRef.current) musicRef.current.volume = HEAR_AMBIENT_VOLUME
+    if (rainRef.current) rainRef.current.volume = HEAR_AMBIENT_VOLUME
+    if (frogRef.current) frogRef.current.volume = HEAR_AMBIENT_VOLUME
+  }
+
   function startBreathe() {
     clearInterval(breatheTimerRef.current)
+    // Leaving Hear: drop back to the quiet background bed rather than
+    // carrying its louder, "genuinely hearable" mix into the rest of the
+    // activity.
+    Object.values(nudgeTimers.current).forEach(clearTimeout)
+    if (musicRef.current) musicRef.current.volume = BASE_VOLUME.music
+    if (rainRef.current) rainRef.current.volume = BASE_VOLUME.rain
+    if (frogRef.current) frogRef.current.volume = BASE_VOLUME.frog
     setBreatheStage('ready')
     setBreatheTicks(0)
     setMode('breathe')
@@ -333,6 +373,19 @@ export default function MindfulnessCalmPlace() {
     }, TICK_MS)
   }
 
+  // "Practice again" (close screen, up to 2 times): re-runs just the
+  // box-breath, not the whole activity. Purely a reinforcing message once it
+  // finishes -- no mechanical change to the Oxygen Mask, there's no
+  // "un-upgraded" state anywhere to reference.
+  function practiceAgain() {
+    setPracticeCount((c) => c + 1)
+    startBreathe()
+  }
+
+  function declinePractice() {
+    setPracticeDeclined(true)
+  }
+
   function again() {
     clearInterval(breatheTimerRef.current)
     setSeen([])
@@ -341,6 +394,8 @@ export default function MindfulnessCalmPlace() {
     setLastHeard(null)
     setBreatheStage('ready')
     setBreatheTicks(0)
+    setPracticeCount(0)
+    setPracticeDeclined(false)
     setMode('see')
   }
 
@@ -353,6 +408,8 @@ export default function MindfulnessCalmPlace() {
     setLastHeard(null)
     setBreatheStage('ready')
     setBreatheTicks(0)
+    setPracticeCount(0)
+    setPracticeDeclined(false)
     ;[musicRef, rainRef, frogRef].forEach((ref) => {
       const el = ref.current
       if (!el) return
@@ -405,9 +462,13 @@ export default function MindfulnessCalmPlace() {
         ? 'Beautifully done.'
         : 'Now, let’s feel. Feel your lungs fill as you breathe with me.'
   } else if (mode === 'close') {
-    panelLabel = 'You did it'
-    panelText =
-      'That’s your calm place. You can come back any time you need a moment. Take this with you: an Oxygen Mask. It’ll help you breathe easy on the climb ahead.'
+    if (practiceCount === 0) {
+      panelLabel = 'You did it'
+      panelText =
+        'That’s your calm place. You can come back any time you need a moment. Take this with you: an Oxygen Mask. It’ll help you breathe easy on the climb ahead.'
+    } else {
+      panelText = 'Your practice made this tool stronger. It should work really well on the climb ahead.'
+    }
   }
 
   const showScene = mode !== 'intro'
@@ -528,7 +589,7 @@ export default function MindfulnessCalmPlace() {
           {((mode === 'see' && seeAllFound) || (mode === 'hear' && hearAllFound)) && (
             <button
               type="button"
-              onClick={() => (mode === 'see' ? setMode('hear') : startBreathe())}
+              onClick={() => (mode === 'see' ? enterHear() : startBreathe())}
               className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
             >
               Continue
@@ -598,7 +659,36 @@ export default function MindfulnessCalmPlace() {
             </button>
           )}
 
-          {mode === 'close' && (
+          {/* Practice-to-upgrade the Oxygen Mask (Draft 37), up to 2 times.
+              A distinct, narrower loop from "Do it again" below -- this one
+              only re-runs the breath, not the whole activity -- so it's
+              offered first and gates on its own counter rather than sharing
+              state with the full-activity repeat. */}
+          {mode === 'close' && practiceCount < 2 && !practiceDeclined && (
+            <div className="space-y-2">
+              <p className="text-[12px] text-amber-100/90 text-center">
+                Want to practice again to upgrade your mask?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={practiceAgain}
+                  className="flex-1 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[14px] font-extrabold"
+                >
+                  Practice again
+                </button>
+                <button
+                  type="button"
+                  onClick={declinePractice}
+                  className="flex-1 py-2.5 rounded-full bg-white/90 hover:bg-white text-amber-700 text-[14px] font-extrabold"
+                >
+                  No, I’m ready
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mode === 'close' && (practiceCount >= 2 || practiceDeclined) && (
             <div className="space-y-2">
               <p className="text-[12px] text-amber-100/90 text-center">Want to stay a little longer?</p>
               <div className="flex gap-2">
