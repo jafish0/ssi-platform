@@ -447,57 +447,15 @@ export default function GainsDemoPage() {
             </p>
 
             <div className="space-y-4">
-              {/* Adopted at the 2026-08-13 review and moved out of this
-                  section: the Exposition (now its own section under The climb),
-                  the arcade ideas and the gear toolbox (both now under
-                  Prototypes and In Development). */}
+              {/* Adopted and moved out of this section: the Exposition (now
+                  its own section under The climb), the arcade ideas and the
+                  gear toolbox (both now under Prototypes and In Development),
+                  and the Final Boss summit script (now in the new In
+                  Development section below, since the team adopted it). */}
 
-              {/* 1 — Holly's first-draft summit script (Draft 30). Text only,
-                  nothing built yet. */}
+              {/* 1 — How the character changes */}
               <ReviewItem
                 n={1}
-                title="Final Boss: the summit script (first draft)"
-                section="review-finalboss"
-              >
-                <p className="mb-3 italic text-slate-600">
-                  First-draft script for the final summit: the last climb to
-                  the Beacon, where the gear you’ve earned helps you move past
-                  mixed feelings about starting therapy. Shown verbatim for
-                  review.
-                </p>
-                <div className="space-y-2">
-                  {FINAL_BOSS_SCRIPT.map((line, i) => {
-                    if (line.type === 'direction') {
-                      return (
-                        <p key={i} className="italic text-slate-500">
-                          {line.text}
-                        </p>
-                      )
-                    }
-                    if (line.type === 'choices') {
-                      return (
-                        <ol key={i} className="list-decimal pl-5 space-y-1">
-                          {line.items.map((item, j) => (
-                            <li key={j}>{item}</li>
-                          ))}
-                        </ol>
-                      )
-                    }
-                    return (
-                      <p key={i}>
-                        <span className="font-semibold text-slate-800">
-                          Spark:
-                        </span>{' '}
-                        {line.text}
-                      </p>
-                    )
-                  })}
-                </div>
-              </ReviewItem>
-
-              {/* 2 — How the character changes */}
-              <ReviewItem
-                n={2}
                 title="How the character changes"
                 section="review-character"
               >
@@ -517,7 +475,7 @@ export default function GainsDemoPage() {
                   sit here was accepted at the Aug 11 meeting and is now canon:
                   the opening zone reads "The Dark Abyss" in the breakdown.) */}
               <ReviewItem
-                n={3}
+                n={2}
                 title="Spark’s voice (three options)"
                 section="review-spark-voice"
               >
@@ -559,7 +517,7 @@ export default function GainsDemoPage() {
 
               {/* 4 — Body Mapping activity (playable) */}
               <ReviewItem
-                n={4}
+                n={3}
                 title="Body Mapping activity (playable)"
                 section="review-bodymap"
               >
@@ -572,7 +530,7 @@ export default function GainsDemoPage() {
                 </p>
                 <p className="mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2.5 text-[13px] text-slate-700">
                   <strong className="font-semibold">Reading it for now.</strong>{' '}
-                  Once we settle on Spark&apos;s voice (item 3 above), we will
+                  Once we settle on Spark&apos;s voice (item 2 above), we will
                   add audio narration so each of these lines is read aloud
                   instead.
                 </p>
@@ -600,7 +558,7 @@ export default function GainsDemoPage() {
 
               {/* 5 — Mindfulness "Calm Place" activity (playable) */}
               <ReviewItem
-                n={5}
+                n={4}
                 title="Mindfulness: Calm Place (playable)"
                 section="review-mindfulness"
               >
@@ -625,7 +583,7 @@ export default function GainsDemoPage() {
 
               {/* 6 — Zone 3 "Elevator Pitch" message-builder (playable) */}
               <ReviewItem
-                n={6}
+                n={5}
                 title="Zone 3: Message to Your Guardian (playable)"
                 section="review-zone3pitch"
               >
@@ -646,6 +604,69 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* In Development — the pipeline stage between "under review" and "the
+          official zones." Items here have been adopted by the team (no
+          longer soliciting comment) but aren't built yet. Review → In
+          Development → the official zones/canon below. */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          In Development
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+          Adopted by the team and moving toward being built, but not part of
+          the official breakdown yet.
+        </p>
+        <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
+          <div className="mb-3">
+            <Pill icon={HardHat}>In development</Pill>
+          </div>
+          <h3 className="text-[15px] font-bold text-slate-800 mb-2">
+            Final Boss: the summit script
+          </h3>
+          <p className="mb-3 italic text-slate-600 text-[14px]">
+            Holly’s first-draft script for the final summit: the last climb
+            to the Beacon, where the gear you’ve earned helps you move past
+            mixed feelings about starting therapy. Adopted; the actual
+            summit sequence isn’t built yet.
+          </p>
+          <div className="space-y-2 text-[14px] text-slate-700 leading-relaxed">
+            {FINAL_BOSS_SCRIPT.map((line, i) => {
+              if (line.type === 'direction') {
+                return (
+                  <p key={i} className="italic text-slate-500">
+                    {line.text}
+                  </p>
+                )
+              }
+              if (line.type === 'choices') {
+                return (
+                  <ol key={i} className="list-decimal pl-5 space-y-1">
+                    {line.items.map((item, j) => (
+                      <li key={j}>{item}</li>
+                    ))}
+                  </ol>
+                )
+              }
+              return (
+                <p key={i}>
+                  <span className="font-semibold text-slate-800">Spark:</span>{' '}
+                  {line.text}
+                </p>
+              )
+            })}
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <FeedbackButton
+              program="gains-teens"
+              sections={GAINS_FEEDBACK_SECTIONS}
+              defaultSection="review-finalboss"
+              label="Comment on this"
+              subtle
+            />
           </div>
         </div>
       </section>
