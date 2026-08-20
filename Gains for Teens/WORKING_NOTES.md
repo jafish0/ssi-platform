@@ -132,6 +132,33 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **6438889** (2026-08-19) — Draft 36: **the Zone 3 "Elevator Pitch" message-builder is
+  playable.** Holly's end-of-Zone-3 activity, built over a full-bleed Mistfields bridge
+  backdrop: the teen assembles a short message asking a guardian for trauma therapy one
+  step at a time (greeting, situation, request, how it'll help), reviews it, sends it, and
+  earns the Wingsuit. No-fail throughout, every pick can be revisited before sending.
+  Every prompt and option is Holly's wording, kept exactly as written — her three
+  select-one sets are punctuated inconsistently in the draft (some end with a period, most
+  don't), so they render byte-for-byte as given while selecting. Assembly adds terminal
+  punctuation only where a line doesn't already have it, which is what produces one
+  naturally-punctuated paragraph without ever rewording her actual text; checked the
+  assembled result against her own worked example and it stitches identically.
+  **Per the draft's own note**, there's no shared "action plan" collector yet for the short
+  pieces of player-authored text these reflective activities produce (this message,
+  eventually the Final Boss growth-mindset choice). Stubbed a minimal shared module
+  (`src/lib/gainsActionPlan.js`, in-memory only) that Send It saves into, so the message
+  isn't silently dropped and a later activity can push into the same list. Wiring this into
+  a real end-of-game summary is flagged as separate, larger work — not attempted here.
+  The card sits in a translucent scrim near the **top** of the frame rather than
+  lower-center, since the draft calls out the bridge art as busiest there.
+  **Verified:** intro renders verbatim; Continue disables on an empty greeting and enables
+  once text is typed; all four option sets (4/3/5 choices) render with Holly's exact
+  wording; "Change something" returns with the prior pick still selected; the assembled
+  message matches Holly's punctuation pattern exactly; "Send it" reaches the Wingsuit close
+  with "Start over" available; the longest step (5 options) still fits with no overflow at
+  375px or 1280px; item numbering across the section (1–6) is correct; comment thread opens
+  preset to `review-zone3pitch`; no console errors from this component.
+
 - **bba5ecb** (2026-08-19) — Draft 35: **Mindfulness's breathing step is now a directive
   box-breath.** From testing feedback: the old subtle glow-pulse gave no direction.
   Spark now introduces it explicitly ("Now, let's feel. Feel your lungs fill as you breathe
@@ -1934,3 +1961,40 @@ Testing feedback: the breathing step (Step 3) is too subtle and gives the partic
 **Verify.** Step 3 shows a large, prominent Spark glow that visibly expands on the inhale, holds, contracts on the exhale, and holds again — in time with an on-screen count; the phase words and counts are clearly legible; Spark's box-breath direction reads; runs ~3 cycles then closes to the Oxygen Mask reward; still 9:16, no-fail. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
 
 *End of Draft 35.*
+
+
+### Draft 36 — Build the Zone 3 "Elevator Pitch" activity (message to your guardian), 9:16 — ✅ SHIPPED 6438889 (2026-08-19)
+
+Build Holly's end-of-Zone-3 activity as a real interactive component for `/gains-demo`, placed as a **playable demo in the "Ideas & Demos for Review" section** (new item "Zone 3: Message to Your Guardian", tag `review-zone3pitch`). It's a guided **message-builder**: the teen assembles a short "elevator pitch" asking a guardian for trauma therapy, then earns the **Wingsuit** to cross the bridge (the Mistfields → Bright Reaches flight).
+
+**Format:** the activity plays over a **full-screen Mistfields bridge backdrop** — `/long-light/art/zone3/bridge-bg.webp` (a rope bridge reaching toward a far cliff that drops into the mist = the impassable bridge; the Wingsuit lets you fly the gap). The message-builder UI sits in cards on top; because the art is busiest in the lower-center, put the cards on a soft translucent scrim/panel so the text stays readable. Amber/slate styling, 9:16, no-fail.
+
+**Flow (Holly's copy — verbatim):**
+- **Spark intro:** "Sometimes things feel like a dead end. For some teens, getting their parents or caregivers on board with trauma therapy feels like a bridge that can’t be crossed. But with a little preparation and courage, you can overcome any obstacle. Take this time to plan out a message for your guardians."
+- **Step 1 — Greeting (free text):** prompt "Start with a greeting" with placeholder e.g. "hey Dad". A text input.
+- **Step 2 — Describe the situation (select one):** prompt "Next, describe the situation."
+  - "I’ve been having a hard time lately."
+  - "Something has been bothering me for a while"
+  - "I don’t feel like myself right now"
+  - "I’m struggling with what happened"
+- **Step 3 — Make your request (select one):** prompt "Now make your request."
+  - "I would like to talk with a trauma therapist."
+  - "I want to start trauma therapy."
+  - "Can we talk about finding me a trauma therapist?"
+- **Step 4 — How it'll help (select one):** prompt "And finally, finish with how this will help you."
+  - "I think this will help me feel better"
+  - "I think this will help me feel like myself again"
+  - "I think this will help me understand what happened"
+  - "I think this will help me get along with people better"
+  - "I think this will help me to be able to reach my goals at school"
+- **Assemble:** stitch the four parts into a natural message and present it back — greeting + comma, then the three picks as sentences. Example: *"Hey Dad, I’ve been having a hard time lately. I would like to talk with a trauma therapist. I think this will help me feel better."*
+- **Save + reward:** save the assembled message for the end-of-game **action plan / summary**, and award the **Wingsuit** ("to cross the bridge"). Spark closes warmly.
+
+**Notes:**
+- No-fail; the teen can change selections before finalizing. A "Continue" / "Send it" button assembles + saves.
+- Keep Holly's prompts and all option text **exactly** as written.
+- **Action-plan collector:** if a saved-items store doesn't exist yet, stub it (a shared "action plan items" list) so this message is retained — the same collector the Final Boss growth-mindset message will use. The full end-of-game action-plan aggregation is a separate future item; flag if it needs a broader build.
+
+**Verify.** Renders 9:16; Spark intro shows; greeting free-text works; each select-one step shows the exact options and requires a pick; the assembled message reads naturally with the chosen parts; the message is saved/retained and the Wingsuit is awarded; strictly no-fail; appears in the review section with a working comment thread (`review-zone3pitch`). No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
+
+*End of Draft 36.*
