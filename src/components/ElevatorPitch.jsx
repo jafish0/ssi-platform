@@ -1,4 +1,4 @@
-// Zone 3 "Elevator Pitch" (GAINS Zone 3 activity) — Draft 36, revised Draft 38.
+// Zone 3 "Elevator Pitch" (GAINS Zone 3 activity) — Draft 36, revised Drafts 38, 41.
 //
 // Holly's end-of-Zone-3 activity: the teen assembles a short message asking
 // a guardian for trauma therapy, then earns the Wingsuit to cross the bridge
@@ -16,16 +16,23 @@
 // still shows the right view without extra wiring.
 //
 // Flow: intro (Spark) -> greeting (free text) -> situation (pick 1 of 4) ->
-// request (pick 1 of 3) -> help (pick 1 of 5) -> review (assembled message) ->
-// done (Wingsuit earned, message saved to the shared action-plan collector).
+// normalize (pick 1 of 4) -> offer (pick 1 of 4) -> request (pick 1 of 3) ->
+// help (pick 1 of 5) -> review (assembled message) -> done (Wingsuit earned,
+// message saved to the shared action-plan collector).
 //
-// Prompts and every option's wording are Holly's, kept exactly as written.
-// The three select-one option sets are punctuated inconsistently in her
-// draft (some end with a period, most don't) -- shown here exactly as given
-// while selecting, since the instruction is to keep the option text exact.
-// Assembly adds terminal punctuation only where a line doesn't already have
-// it, so the combined message reads as one natural paragraph (matching
-// Holly's own worked example, which does the same).
+// Prompts and every option's wording are Holly's (situation/request/help) or
+// Dr. Sprang's (normalize/offer, added in Draft 41), kept exactly as written.
+// The five select-one option sets are punctuated inconsistently in the
+// source drafts (some end with a period, most don't) -- shown here exactly
+// as given while selecting, since the instruction is to keep the option text
+// exact. Assembly adds terminal punctuation only where a line doesn't
+// already have it, so the combined message reads as one natural paragraph
+// (matching Holly's own worked example, which does the same).
+//
+// Draft 41 also added two pieces of verbatim safety/reassurance copy from
+// Dr. Sprang, rendered exactly as written including her informal em-dash-
+// without-a-following-space punctuation ("off- you", "parents- reach") --
+// this is clinical wording from a named source, not ours to re-typeset.
 
 import { useState } from 'react'
 import { addActionPlanItem } from '../lib/gainsActionPlan.js'
@@ -42,6 +49,20 @@ const SITUATION_OPTIONS = [
   'I’m struggling with what happened',
 ]
 
+const NORMALIZE_OPTIONS = [
+  'Therapy isn’t just for when things are in crisis',
+  'A lot of kids my age use therapy to feel better',
+  'Therapy is a good place to think things through',
+  'Therapy can also help me sleep better, make better grades, improve my connection to people',
+]
+
+const OFFER_OPTIONS = [
+  'I know some people I can ask to find out the best person to go to that is nearby',
+  'There is a counselor at school that I could talk to',
+  'If you can’t take me, we could check into telehealth options',
+  'I am willing to call a few places and check to see if they take our insurance',
+]
+
 const REQUEST_OPTIONS = [
   'I would like to talk with a trauma therapist.',
   'I want to start trauma therapy.',
@@ -56,7 +77,15 @@ const HELP_OPTIONS = [
   'I think this will help me to be able to reach my goals at school',
 ]
 
-const STEPS = ['intro', 'greeting', 'situation', 'request', 'help', 'review', 'done']
+const STEPS = ['intro', 'greeting', 'situation', 'normalize', 'offer', 'request', 'help', 'review', 'done']
+
+// Verbatim, Dr. Sprang (Draft 41) -- see the header comment on why the
+// punctuation stays exactly as written.
+const REASSURANCE =
+  'If asking directly feels hard, how about writing this in a note first to take the pressure off- you will get a copy of this message in your action plan to make it easier'
+
+const SAFETY_DISCLAIMER =
+  'Note: if what is going on feels urgent, like you are struggling to cope or having thoughts of hurting yourself or someone else, don’t wait to convince your parents- reach out immediately to a school counselor, you family physician or call or text 988 immediately.'
 
 // Adds terminal punctuation only if the line doesn't already have some --
 // preserves Holly's exact wording while giving the assembled message
@@ -133,6 +162,8 @@ export default function ElevatorPitch() {
   const [step, setStep] = useState('intro')
   const [greeting, setGreeting] = useState('')
   const [situation, setSituation] = useState(null)
+  const [normalize, setNormalize] = useState(null)
+  const [offer, setOffer] = useState(null)
   const [request, setRequest] = useState(null)
   const [help, setHelp] = useState(null)
   const [saved, setSaved] = useState(false)
@@ -141,8 +172,10 @@ export default function ElevatorPitch() {
   const next = () => setStep(STEPS[stepIdx + 1])
 
   const message =
-    greeting.trim() && situation && request && help
-      ? `${endGreeting(greeting)} ${endSentence(situation)} ${endSentence(request)} ${endSentence(help)}`
+    greeting.trim() && situation && normalize && offer && request && help
+      ? [greeting, situation, normalize, offer, request, help]
+          .map((part, i) => (i === 0 ? endGreeting(part) : endSentence(part)))
+          .join(' ')
       : ''
 
   function save() {
@@ -155,6 +188,8 @@ export default function ElevatorPitch() {
     setStep('intro')
     setGreeting('')
     setSituation(null)
+    setNormalize(null)
+    setOffer(null)
     setRequest(null)
     setHelp(null)
     setSaved(false)
@@ -168,11 +203,17 @@ export default function ElevatorPitch() {
   } else if (step === 'situation') {
     promptLabel = 'Step 2'
     promptText = 'Next, describe the situation.'
-  } else if (step === 'request') {
+  } else if (step === 'normalize') {
     promptLabel = 'Step 3'
+    promptText = 'Normalize it'
+  } else if (step === 'offer') {
+    promptLabel = 'Step 4'
+    promptText = 'Offer to make it easy'
+  } else if (step === 'request') {
+    promptLabel = 'Step 5'
     promptText = 'Now make your request.'
   } else if (step === 'help') {
-    promptLabel = 'Step 4'
+    promptLabel = 'Step 6'
     promptText = 'And finally, finish with how this will help you.'
   }
 
@@ -199,7 +240,7 @@ export default function ElevatorPitch() {
 
           {promptLabel && (
             <p className="text-[11px] font-bold uppercase tracking-wide text-amber-600 mb-1">
-              {promptLabel} of 4
+              {promptLabel} of 6
             </p>
           )}
 
@@ -220,6 +261,20 @@ export default function ElevatorPitch() {
             <>
               <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
               <SelectStep options={SITUATION_OPTIONS} selected={situation} onChange={setSituation} />
+            </>
+          )}
+
+          {step === 'normalize' && (
+            <>
+              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <SelectStep options={NORMALIZE_OPTIONS} selected={normalize} onChange={setNormalize} />
+            </>
+          )}
+
+          {step === 'offer' && (
+            <>
+              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <SelectStep options={OFFER_OPTIONS} selected={offer} onChange={setOffer} />
             </>
           )}
 
@@ -246,6 +301,9 @@ export default function ElevatorPitch() {
               <p className="text-[12px] text-slate-500 mt-2">
                 You can go back and change any part before you save it.
               </p>
+              <p className="text-[12px] text-slate-600 mt-2 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2">
+                {REASSURANCE}
+              </p>
             </>
           )}
 
@@ -256,6 +314,9 @@ export default function ElevatorPitch() {
                 That’s a strong message to carry with you. When the moment feels
                 right, you’ll know just what to say. Take this with you: a
                 Wingsuit. It’ll help you cross the bridge ahead.
+              </p>
+              <p className="text-[12.5px] text-slate-700 leading-relaxed mt-3 bg-amber-50 border border-amber-300 rounded-2xl px-3 py-2.5">
+                {SAFETY_DISCLAIMER}
               </p>
             </>
           )}
@@ -287,6 +348,8 @@ export default function ElevatorPitch() {
             disabled={
               (step === 'greeting' && !greeting.trim()) ||
               (step === 'situation' && !situation) ||
+              (step === 'normalize' && !normalize) ||
+              (step === 'offer' && !offer) ||
               (step === 'request' && !request) ||
               (step === 'help' && !help)
             }
