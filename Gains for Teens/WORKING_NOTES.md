@@ -132,6 +132,38 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **46c4c7d** (2026-08-19) — Draft 37: **four fixes to Mindfulness — no more disclaimer,
+  Hear is actually hearable, 2 breath rounds, practice-to-upgrade the mask.**
+  **1.** Removed the "First-draft script... for review" disclaimer from the review-item
+  description. Draft 33's own instruction had already said "no disclaimers" for this one;
+  this reaffirms the standing rule that the demo must never show draft/for-review/
+  placeholder text. While there, also updated the description itself, which had gone stale
+  after Drafts 34–35 replaced scene-tapping with chips and the subtle pulse with a box-breath.
+  **2.** Hear step audio: music played from the start, but rain and frog sat at a whisper
+  (0.12) until tapped, so "find three things you can hear" was really "find the one thing
+  already audible, then tap blind." All three now come up to one shared, clearly audible
+  level (0.4) for the duration of the Hear step specifically, dropping back to the quiet
+  background once the step ends; a tapped chip still nudges its own track further forward
+  on top of that. Went with the draft's stated preferred interpretation (ambient bed on
+  entry, tap to select) over its flagged alternative, since consistency across all four
+  chips was the actual requirement either way.
+  **3.** Breathing runs **2 cycles** now, not 3 — one constant changed.
+  **4.** Oxygen Mask practice-to-upgrade loop: after breathing completes, the close screen
+  now offers "Want to practice again to upgrade your mask?" instead of going straight to
+  "Do it again / I'm all set." Accepting re-runs just the box-breath and returns to the
+  same offer, up to 2 accepted practices total; declining, or reaching that cap, falls
+  through to the original close screen. Purely a reinforcing message as specified — no
+  mechanical change, no different mask state exists to switch to. (The draft's suggested
+  reinforcing line used an em dash; rewrote it as two sentences per the standing style
+  rule, since this line isn't attributed to Stephanie or Holly by name.)
+  **Verified live:** the disclaimer and stale description are gone; entering Hear jumps all
+  three tracks to 0.4 together, a tap nudges to 0.85, and leaving Hear correctly drops all
+  three back to their original levels; ran two full practice rounds back to back (each
+  timing out at 2 cycles, ~32–34s real time) — the first ends at the Oxygen Mask message
+  with the offer, the second (practiceCount 1) shows the reinforcing message and offers
+  again, and declining there falls through to the original screen correctly. No overflow
+  at 375px; comment thread still opens preset to `review-mindfulness`; no console errors.
+
 - **6438889** (2026-08-19) — Draft 36: **the Zone 3 "Elevator Pitch" message-builder is
   playable.** Holly's end-of-Zone-3 activity, built over a full-bleed Mistfields bridge
   backdrop: the teen assembles a short message asking a guardian for trauma therapy one
@@ -1998,3 +2030,40 @@ Build Holly's end-of-Zone-3 activity as a real interactive component for `/gains
 **Verify.** Renders 9:16; Spark intro shows; greeting free-text works; each select-one step shows the exact options and requires a pick; the assembled message reads naturally with the chosen parts; the message is saved/retained and the Wingsuit is awarded; strictly no-fail; appears in the review section with a working comment thread (`review-zone3pitch`). No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
 
 *End of Draft 36.*
+
+
+### Draft 37 — Mindfulness "Calm Place" fixes: remove disclaimer text, Hear-step audio, 2 breath rounds, practice-to-upgrade the Oxygen Mask — ✅ SHIPPED 46c4c7d (2026-08-19)
+
+Revisions to the shipped Mindfulness activity (Drafts 33–35).
+
+**1. Remove the first-draft disclaimer text.** Delete any on-screen lines like *"First-draft script. Spark's lines here are a first pass, meant to be refined with Stephanie and Holly. Rendered cleanly below for review."* — and anything similar. The demo must never show "draft / for-review / placeholder" disclaimers; render Spark's lines cleanly with no meta text. (Reaffirms the standing rule.)
+
+**2. Hear step — make the sounds actually hearable and consistent.** Right now the music auto-plays but Rain / Thunder / Frogs only make sound when their chip is clicked — inconsistent, and it makes "find three things you can hear" hard because the other sounds aren't audible until tapped. Fix so all four behave consistently. **Preferred behavior:** when the Hear step begins, a soft ambient bed of the sounds plays so the player can genuinely hear them, and tapping a chip **selects** it (and brings that sound forward); advance when three are selected. (If Josh prefers the opposite — nothing plays until tapped, music included — do that instead; the requirement is **consistency** so it's a real listening task, not music-only. Flagging this as an interpretation to confirm.)
+
+**3. Breathing — two rounds, not three.** The box-breath runs **two** full cycles (in–hold–out–hold ×2), then stops.
+
+**4. Oxygen Mask → "practice again to upgrade" loop.** After the breathing completes and the player earns the **Oxygen Mask**, offer: **"Want to practice again to upgrade your mask?"**
+- If yes → run the breathing again (two rounds) → then show a reinforcing message: **"Your practice made this tool stronger — it should work really well on the climb ahead."**
+- They can practice again up to **two times** total. After the second practice (or if they decline), continue / close.
+- This is **purely a reinforcing message** — the point is to teach that practicing makes a coping tool stronger. **No actual gameplay change**: there is no "un-upgraded" state referenced anywhere and the mask is not mechanically different. Just the prompt + the message.
+
+**Keep everything else:** the scene + animated layers, the See/Hear chips at the top, the Spark-glow breathing visual, 9:16, no-fail, and the `review-mindfulness` placement.
+
+**Verify.** No disclaimer / "for review" / "first-draft" text anywhere in the activity; on the Hear step the sounds are audible and all four chips behave consistently, advancing after any three; the breathing runs exactly two rounds; on completion the Oxygen Mask is earned, then "Want to practice again to upgrade your mask?" appears, re-running the breathing (max two practices) and showing the "Your practice made this tool stronger…" message; no mechanical gameplay change; still 9:16, no-fail. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
+
+*End of Draft 37.*
+
+
+### Draft 38 — Zone 3 "Message to Your Guardian": add "Write your own" to every step + rename final button to "Save It"
+
+Tweaks to the Zone 3 elevator-pitch activity (Draft 36).
+
+**1. "Write your own" on every select step.** Each of the three select-one steps — Describe the situation, Make your request, How it'll help — gets an additional **"Write your own"** option that reveals a text box for the teen to type their own line. So every step lets them use their own words instead of a preset (the greeting is already free text). A typed custom line flows into the assembled message exactly like a preset selection would.
+
+**2. Rename the final button** from "Send it" to **"Save It"** — it saves the message to the action plan, it isn't sent anywhere.
+
+**Keep everything else:** the verbatim preset options, the message assembly, the Mistfields bridge backdrop, the Wingsuit reward, save-to-action-plan, 9:16, no-fail, and the `review-zone3pitch` placement.
+
+**Verify.** Each select step shows a "Write your own" choice that opens a text input; a typed custom line flows into the assembled message correctly; the final button reads "Save It"; the message still saves and the Wingsuit is still awarded. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
+
+*End of Draft 38.*
