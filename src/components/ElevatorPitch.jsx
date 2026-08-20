@@ -1,10 +1,19 @@
-// Zone 3 "Elevator Pitch" (GAINS Zone 3 activity) — Draft 36.
+// Zone 3 "Elevator Pitch" (GAINS Zone 3 activity) — Draft 36, revised Draft 38.
 //
 // Holly's end-of-Zone-3 activity: the teen assembles a short message asking
 // a guardian for trauma therapy, then earns the Wingsuit to cross the bridge
 // (the Mistfields -> Bright Reaches flight). A guided message-builder over a
 // full-bleed bridge backdrop, no-fail — the teen can change any pick before
-// sending.
+// saving.
+//
+// Draft 38: each select-one step also offers "Write your own", so a preset
+// isn't the only option (the greeting was already free text). Picking it
+// swaps the option list for a text input; the typed line becomes that step's
+// value exactly as a preset would, so assembly doesn't need to know or care
+// which kind it is -- SelectStep derives "currently in custom mode" from the
+// value itself (non-null but not one of the presets) rather than tracking a
+// separate flag, so a value set via "Change something" on the review screen
+// still shows the right view without extra wiring.
 //
 // Flow: intro (Spark) -> greeting (free text) -> situation (pick 1 of 4) ->
 // request (pick 1 of 3) -> help (pick 1 of 5) -> review (assembled message) ->
@@ -62,14 +71,42 @@ function endGreeting(s) {
   return /,$/.test(t) ? t : t + ','
 }
 
-function OptionList({ options, selected, onSelect }) {
+// `selected` is the step's actual value: null (nothing chosen), one of
+// `options` verbatim, or arbitrary custom text. Whether that's "custom mode"
+// is derived from the value rather than tracked separately -- see the
+// header comment.
+function SelectStep({ options, selected, onChange }) {
+  const customMode = selected !== null && !options.includes(selected)
+
+  if (customMode) {
+    return (
+      <div className="space-y-2">
+        <input
+          type="text"
+          value={selected}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Write your own"
+          autoFocus
+          className="w-full text-[14px] px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+        />
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-[12px] font-semibold text-amber-700 hover:text-amber-900 underline"
+        >
+          Choose from the list instead
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-2">
       {options.map((opt) => (
         <button
           key={opt}
           type="button"
-          onClick={() => onSelect(opt)}
+          onClick={() => onChange(opt)}
           aria-pressed={selected === opt}
           className={
             'w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border transition-colors ' +
@@ -81,6 +118,13 @@ function OptionList({ options, selected, onSelect }) {
           {opt}
         </button>
       ))}
+      <button
+        type="button"
+        onClick={() => onChange('')}
+        className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border border-dashed border-slate-300 text-slate-500 hover:border-amber-300"
+      >
+        Write your own
+      </button>
     </div>
   )
 }
@@ -101,7 +145,7 @@ export default function ElevatorPitch() {
       ? `${endGreeting(greeting)} ${endSentence(situation)} ${endSentence(request)} ${endSentence(help)}`
       : ''
 
-  function send() {
+  function save() {
     addActionPlanItem({ source: 'zone3-elevator-pitch', text: message })
     setSaved(true)
     next()
@@ -175,21 +219,21 @@ export default function ElevatorPitch() {
           {step === 'situation' && (
             <>
               <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
-              <OptionList options={SITUATION_OPTIONS} selected={situation} onSelect={setSituation} />
+              <SelectStep options={SITUATION_OPTIONS} selected={situation} onChange={setSituation} />
             </>
           )}
 
           {step === 'request' && (
             <>
               <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
-              <OptionList options={REQUEST_OPTIONS} selected={request} onSelect={setRequest} />
+              <SelectStep options={REQUEST_OPTIONS} selected={request} onChange={setRequest} />
             </>
           )}
 
           {step === 'help' && (
             <>
               <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
-              <OptionList options={HELP_OPTIONS} selected={help} onSelect={setHelp} />
+              <SelectStep options={HELP_OPTIONS} selected={help} onChange={setHelp} />
             </>
           )}
 
@@ -200,7 +244,7 @@ export default function ElevatorPitch() {
                 {message}
               </p>
               <p className="text-[12px] text-slate-500 mt-2">
-                You can go back and change any part before you send it.
+                You can go back and change any part before you save it.
               </p>
             </>
           )}
@@ -228,10 +272,10 @@ export default function ElevatorPitch() {
             </button>
             <button
               type="button"
-              onClick={send}
+              onClick={save}
               className="flex-1 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[14px] font-extrabold"
             >
-              Send it
+              Save It
             </button>
           </div>
         )}
