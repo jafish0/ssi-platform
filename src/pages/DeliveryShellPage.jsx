@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import SessionGuard from '../components/SessionGuard.jsx'
 import { SessionProvider, useSession } from '../engine/SessionEngine.jsx'
 import TreeProgress from '../components/TreeProgress.jsx'
+import SplashScreen from '../components/SplashScreen.jsx'
 // Draft 88 Part B: the post-posttest completion screen is the ONE place a
 // participant can save their keepsake — the five mid-flow download buttons
 // are gone, so nothing invites them out of the app before the posttest.
@@ -188,19 +189,41 @@ function ShellInner() {
   const location = useLocation()
   const { sessionId } = useParams()
 
+  // Draft 93: a genuinely new session (flagged by CodeEntryPage, never set
+  // on a resume) shows the splash before anything else. Read once at mount
+  // — sessionStorage is only ever cleared by clicking Begin below, so a
+  // reload of the shell route before Begin correctly re-shows the splash,
+  // and a reload anywhere past it (flag already cleared) never does.
+  const splashKey = `splash_pending_${sessionId}`
+  const [showSplash, setShowSplash] = useState(
+    () => sessionStorage.getItem(splashKey) === '1',
+  )
+
   // Auto-redirect /session/:id to /session/:id/step once content is loaded
   useEffect(() => {
     if (loading || error || completed) return
     if (!sections.length) return
+    if (showSplash) return
     const onShellRoute = location.pathname === `/session/${sessionId}`
     if (onShellRoute) {
       navigate(`/session/${sessionId}/step`, { replace: true })
     }
-  }, [loading, error, completed, sections.length, location.pathname, navigate, sessionId])
+  }, [loading, error, completed, sections.length, showSplash, location.pathname, navigate, sessionId])
 
   if (loading) return <LoadingScreen />
   if (error) return <ErrorScreen error={error} />
   if (completed) return <CompletedScreen />
+  if (showSplash) {
+    return (
+      <SplashScreen
+        onBegin={() => {
+          sessionStorage.removeItem(splashKey)
+          setShowSplash(false)
+          navigate(`/session/${sessionId}/step`, { replace: true })
+        }}
+      />
+    )
+  }
   if (!sections.length) {
     return (
       <main className="min-h-screen flex items-start justify-center px-4 py-10">

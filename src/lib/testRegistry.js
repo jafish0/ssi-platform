@@ -20,6 +20,7 @@ const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
 const Plan = lazy(() => import('../activities/Plan.jsx'))
 const Assent = lazy(() => import('../activities/Assent.jsx'))
+const SplashScreen = lazy(() => import('../components/SplashScreen.jsx'))
 const Pretest = lazy(() => import('../activities/Pretest.jsx'))
 const Posttest = lazy(() => import('../activities/Posttest.jsx'))
 const FollowUp = lazy(() => import('../activities/FollowUp.jsx'))
@@ -29,6 +30,15 @@ const PsychometricScale = lazy(() => import('../components/items/PsychometricSca
 
 // --- Registry ---
 export const TEST_REGISTRY = [
+  {
+    id: 'splash',
+    displayName: 'Splash / Landing',
+    category: 'Ready for Roots assent',
+    description:
+      'The first-start-only landing screen (Draft 93) shown before the assent: tree image, "Ready for Roots" title, ambient looping music with a mute toggle, and a Begin button. Begin is mocked to just log here.',
+    component: SplashScreen,
+    mockProps: { onBegin: () => console.log('[sandbox] SplashScreen Begin clicked') },
+  },
   {
     id: 'assent',
     displayName: 'Child Assent',

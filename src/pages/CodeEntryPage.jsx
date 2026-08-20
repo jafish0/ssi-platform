@@ -65,6 +65,12 @@ export default function CodeEntryPage() {
       // same way — the engine flips them back to in_progress.
       if (data.resumed && ['in_progress', 'exited'].includes(data.session_status)) {
         sessionStorage.setItem('resumed_notice', '1')
+      } else {
+        // Draft 93: the splash screen is first-start only — flag a
+        // genuinely new session (not a resume) so DeliveryShellPage shows
+        // it before the normal flow, then clears the flag once Begin is
+        // clicked. Keyed by session_id, same spirit as `resumed_notice`.
+        sessionStorage.setItem(`splash_pending_${data.session_id}`, '1')
       }
       navigate(`/session/${data.session_id}`, { replace: true })
     } catch (err) {
