@@ -132,6 +132,37 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **e7f2ffe** (2026-08-19) — Draft 34: **Mindfulness's See/Hear steps are chips at the top
+  now, and the Hear dead end is fixed.** From testing feedback on Draft 33: the SEE/HEAR
+  scene-tapping hotspots (and the bottom panel bar sharing space with them) covered too
+  much of the scene, including the frog, and HEAR only had one reliably selectable option
+  ("Music"), a dead end since the step needs three picks to advance.
+  **Root cause of the Hear bug:** "Music" was a full-frame catch-all layered on top of the
+  whole scene, so a tap anywhere else counted as hearing the music — including taps meant
+  for the frog or rain areas, since the catch-all sat on top of them in paint order. My own
+  automated testing during Draft 33 missed this: it called `.click()` directly on specific
+  DOM nodes, which always fires that node's handler regardless of what visually overlaps it
+  on screen, unlike a real tap which hit-tests at a screen coordinate.
+  **Fix:** dropped scene-tapping entirely. SEE and HEAR are now predefined chip rows in a
+  bar at the **top** of the frame, over the open sky; the scene — the frog especially —
+  stays fully visible below at all times (verified by hit-testing the frog's exact screen
+  coordinates during See and confirming the topmost element there is the frog itself, not
+  any UI). The bottom panel bar (Spark's script) is suppressed during See/Hear so the two
+  never compete for space.
+  **SEE** is six options (Frog, Lightning, Pond, Fireflies, Trees, Clouds), pick any 3.
+  **HEAR** is four (Rain, Thunder, Frogs, Music), pick any 3. Rain and Thunder both nudge
+  the same `rain.mp3` (light rain and gentle thunder are one recording); Thunder
+  additionally pulses the lightning layer so it reads as its own element despite sharing
+  audio with Rain. Selecting Frog/Lightning/Fireflies (the three with an animated overlay
+  layer) briefly bumps that layer's brightness as a non-blocking nicety; Pond/Trees/Clouds
+  live only in the static background image, so they have none.
+  **Verified:** all 6 See chips and 4 Hear chips are independently selectable; Frog/
+  Lightning pulse correctly and clear themselves after ~900ms; Thunder nudges rain.mp3's
+  volume to 0.85 AND pulses the lightning layer; Hear now reaches 3/3 using Rain + Thunder
+  + Frogs alone, without ever touching Music — closing the exact dead end that was
+  reported. No overflow at 375px; chips wrap and stay inside the frame; comment thread
+  still opens preset to `review-mindfulness`; no console errors.
+
 - **79e0aec** (2026-08-19) — Draft 33: **the Mindfulness "Calm Place" activity is
   playable.** Zone 4's grounding activity: Spark leads a calm-place visualization that
   does double duty, teaching the 3-3-3 technique (see / hear / breathe) while earning the
@@ -1822,3 +1853,20 @@ Build the mindfulness / visualization activity as a real interactive component f
 **Verify.** Full 9:16 scene renders with animated layers (rain, lightning flashes, reed sway, firefly drift, frog hop); music bed plays after the first tap; See 3 → Hear 3 (three sounds) → Breathe (Spark glow) → earn Oxygen Mask → repeat option; strictly no-fail; lightweight on mobile; appears in the review section with a working comment thread (`review-mindfulness`). No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
 
 *End of Draft 33.*
+
+
+### Draft 34 — Mindfulness activity: move selections to the top as chips (stop blocking the scene) + fix the Hear step — ✅ SHIPPED e7f2ffe (2026-08-19)
+
+Testing feedback on Draft 33: the selection UI covers too much of the scene (including the frog), and the Hear step only exposed one selectable sound (music), so it couldn't be completed. Rework the two selection steps.
+
+**General layout.** Move the selection UI to the **TOP of the screen**, over the open sky (there's empty space up there). The scene and its animated layers (especially the frog and foreground) stay fully visible below. Selections should never cover the frog or the pond.
+
+**Step 1 — SEE (predefined option chips, not scene-tapping).** Drop the "tap elements in the scene and the app names them" approach. Instead show a row/grid of **predefined option chips at the top**: **Frog, Lightning, Pond, Fireflies, Trees, Clouds** (things visible in the scene). The player taps to pick **three**; selected chips highlight (amber). When three are selected, advance. (Optional, non-blocking nicety: selecting a chip that has a matching animated layer — frog, lightning, fireflies — can briefly pulse/glow that element in the scene. Skip for pond/trees/clouds, which live in the background image.)
+
+**Step 2 — HEAR (predefined sound chips — and fix the progression bug).** Same pattern: **sound chips at the top** — **Rain, Thunder, Frogs, Music** (four options; pick any **three**). Tapping a chip brings that sound forward/plays it and selects it; when three are selected, advance. **Fix the bug:** every chip must be individually selectable — the current build only surfaced Music, which blocked progress. Audio-file mapping: **Rain and Thunder both come from the one `rain.mp3`** (light rain + gentle thunder are in the same recording) — selecting either starts/holds that bed, and **Thunder** additionally syncs to the lightning-flash visual so it reads as its own element; **Frogs** = `frog.mp3`; **Music** = `music.mp3`. Picking three of the four completes the step; by the end they layer into a calm soundscape.
+
+**Keep everything else:** the immersive background + animated overlay layers + ambient audio bed, Spark's script, Step 3 breathing (Spark glow expand/contract), the Oxygen Mask reward + "do it again," 9:16, strictly no-fail, and the `review-mindfulness` placement.
+
+**Verify.** Selection chips sit at the top over the sky and never cover the frog/scene; SEE shows the six options and advances after any three; HEAR shows the four sound chips (Rain, Thunder, Frogs, Music), each plays when tapped, and advances after any three (progression works now — the music-only dead end is gone); breathing → Oxygen Mask → repeat all still work; still 9:16 and lightweight. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
+
+*End of Draft 34.*
