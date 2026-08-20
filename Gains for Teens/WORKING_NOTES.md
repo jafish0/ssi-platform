@@ -132,6 +132,24 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **ea6c111** (2026-08-19) — Draft 39: **Mindfulness Hear-step taps are select-only now,
+  no more doubled audio.** Follow-up to Draft 37: the ambient bed plays all three tracks
+  correctly, but tapping a chip still briefly nudged that track's own volume up (0.4 → 0.85,
+  easing back after 2.4s) on top of the bed already playing underneath — reported as
+  sounding like a second copy of the same file starting.
+  Removed the nudge mechanism entirely. Tapping a chip now only updates state (selects it,
+  counts it toward the three needed) and, for Frog/Lightning/Thunder, pulses the matching
+  overlay layer — nothing touches an audio element's volume on tap anymore. The only place
+  Hear's volumes change is `enterHear()` (up on arrival) and `startBreathe()` (back down on
+  the way out), both already in place from Draft 37. Also dropped the now-orphaned
+  `audioKey` field and `audioRefFor()` helper, which existed solely to tell the removed
+  nudge which ref to touch.
+  **Verified:** tapping Rain, then Thunder, then Frogs during Hear leaves all three tracks
+  flat at the ambient 0.4 the whole time — no volume change, no doubled playback — while
+  Thunder still correctly pulses the lightning layer and the count still advances to 3 of
+  3; leaving Hear still correctly drops all three back down. No overflow at 375px; comment
+  thread still opens preset to `review-mindfulness`; no console errors.
+
 - **93a8f9b** (2026-08-19) — Draft 38: **Elevator Pitch gets "Write your own" on every
   select step, and the final button now reads "Save It."** Each of the three select-one
   steps (situation, request, help) offers a "Write your own" option that swaps the preset
@@ -2087,3 +2105,14 @@ Tweaks to the Zone 3 elevator-pitch activity (Draft 36).
 **Verify.** Each select step shows a "Write your own" choice that opens a text input; a typed custom line flows into the assembled message correctly; the final button reads "Save It"; the message still saves and the Wingsuit is still awarded. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
 
 *End of Draft 38.*
+
+
+### Draft 39 — Mindfulness Hear step: tapping a chip should only select it (no second audio playback) — ✅ SHIPPED ea6c111 (2026-08-19)
+
+Follow-up to Draft 37. The Hear-step ambient bed now plays correctly, but tapping a sound chip still starts a **new** playback of that sound on top of the already-playing bed, so two copies of the same file overlap.
+
+**Fix:** remove the play-on-click trigger. Tapping a chip only **selects** it (highlights it, counts it toward the three needed) — it must not start, instantiate, or replay an audio element. The sound the player is "noticing" is the one already playing in the ambient bed.
+
+**Verify.** On the Hear step, all sounds are audible via the ambient bed; tapping a chip selects/highlights it and advances the count with **no doubled or echoed audio** (no second instance of the same file); advancing after any three still works; the rest of the activity is unchanged. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 39.*
