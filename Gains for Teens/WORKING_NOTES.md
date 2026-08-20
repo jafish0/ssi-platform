@@ -132,6 +132,27 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **a7a56a2** (2026-08-19) — Draft 41: **Elevator Pitch gets Dr. Sprang's Normalize/Offer
+  steps and safety copy.** Two new select-one steps inserted between situation and
+  request: **Normalize it** (4 options) and **Offer to make it easy** (4 options), both
+  keeping "Write your own" from Draft 38. The activity goes from 4 steps to **6**; the
+  "STEP X of N" indicator and every step's number updated to match.
+  Assembly now stitches all six parts in order — greeting, situation, normalize, offer,
+  request, help — via a small map/join rather than the old four-part template literal,
+  since spelling out six positions inline was getting unwieldy.
+  Also added two pieces of **verbatim** safety/reassurance copy from Dr. Sprang: a
+  reassurance line on the review screen (write it as a note first; it's saved to the
+  action plan either way) and a **988 crisis-line safety disclaimer** on the done screen —
+  both rendered exactly as written, including her informal punctuation ("off- you",
+  "parents- reach") and an apparent "you family physician" wording, since this is
+  clinical/safety wording from a named source, not ours to re-typeset.
+  **Verified:** all six steps show the right "Step N of 6" label and exact option wording;
+  "Write your own" still works on the two new steps; the assembled message includes all
+  six parts in order with correct punctuation; the reassurance line and safety disclaimer
+  both appear verbatim; "Save It" still saves and the Wingsuit is still awarded. No
+  overflow at 375px across every step including the longest option and both new copy
+  blocks; comment thread still opens preset to `review-zone3pitch`; no console errors.
+
 - **ab997df** (2026-08-19) — Draft 40: **a new "In Development" section, and the Final
   Boss script moves into it.** Sits between "Ideas & Demos for Review" and the official
   zone breakdown — a pipeline stage for things the team has adopted but hasn't built yet
@@ -2149,7 +2170,7 @@ With the Final Boss gone from review, the remaining review items shift up with n
 *End of Draft 40.*
 
 
-### Draft 41 — Zone 3 "Message to Your Guardian": Dr. Sprang's two new steps + safety disclaimer
+### Draft 41 — Zone 3 "Message to Your Guardian": Dr. Sprang's two new steps + safety disclaimer — ✅ SHIPPED a7a56a2 (2026-08-19)
 
 Dr. Sprang expanded Holly's Zone 3 activity (builds on Drafts 36 + 38). Insert two new select-one steps and add closing safety copy. The activity goes from 4 steps to **6** — update the "STEP X OF N" indicator to /6. All select steps, including the two new ones, keep the **"Write your own"** option from Draft 38.
 
