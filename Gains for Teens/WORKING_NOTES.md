@@ -132,6 +132,48 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **79e0aec** (2026-08-19) — Draft 33: **the Mindfulness "Calm Place" activity is
+  playable.** Zone 4's grounding activity: Spark leads a calm-place visualization that
+  does double duty, teaching the 3-3-3 technique (see / hear / breathe) while earning the
+  Oxygen Mask gear for the climb ahead.
+  Built from the staged assets (dusk pond background, five layered overlay SVGs — rain,
+  lightning, fireflies, reeds, frog — with idle animations from the staged motion.css, and
+  three looping ambient tracks). **Flow:** intro (Begin gesture, for audio autoplay) →
+  arrive → **see** (tap any 3 of 5 living elements) → **hear** (tap all 3 sound sources) →
+  **breathe** (an amber glow paces 3 slow breaths) → **close** (Oxygen Mask earned, "do it
+  again?"). Repeating strengthens the glow (brighter, larger) up to a cap.
+  **Four of the five overlay SVGs don't ship their own tap targets**, so this adds
+  invisible hotspots as percentages of the art's native 1080×1920 space, positioned
+  non-overlapping; `frog.svg` already has its own `#frog-tap` hit rect, handled by event
+  delegation instead. **Layers are fetched at runtime and inlined**, not hand-transcribed
+  into JSX — `rain.svg` alone has ~90 generated `<line>` elements, and copying that by hand
+  risks silent errors. Each fetched SVG's `preserveAspectRatio` is rewritten to
+  `xMidYMid slice` so every layer crops-to-fill like the background image instead of
+  letterboxing, keeping them pixel-aligned.
+  **Audio** starts synchronously inside the Begin tap (satisfies the browser's autoplay
+  policy) at a quiet ambient volume for all three tracks; during Hear, tapping a sound's
+  source briefly raises that track's volume then eases it back, so "that sound comes
+  forward" is audible, not just narrated. **The breathing glow** is a CSS animation with a
+  fixed iteration-count of 3, so `animationend` marks it done with no manual counting;
+  `prefers-reduced-motion` swaps it for a 3-tap manual breathe-through so the step stays
+  completable rather than just skipping the animation. **Hear reuses two of See's
+  hotspots** (rain, frog); music has no single visual source, so it's a full-frame
+  catch-all layered behind the other two.
+  **Also fixed a real bug** found while touching this file: Body Mapping's "Reading it for
+  now" note pointed at "Spark's voice (item 5 above)," stale from before Draft 30 inserted
+  Final Boss as item 1 and pushed everything down — Spark's voice is item 3 now.
+  **Verified:** all ten assets serve; Begin starts all three tracks at the correct ambient
+  volumes; the full sequence works end to end, including each Hear tap nudging its
+  track's volume to 0.85 and back; "Do it again" resets to See while audio keeps playing
+  and measurably increases the glow's intensity (1.15/.85 → 1.20/.88); "I'm all set" fully
+  stops and resets all three tracks. No overflow at 375px or 1280px; comment thread opens
+  preset to `review-mindfulness`; item numbering across the section (1–5) is correct; no
+  console errors.
+  *The CSS-animation completion path couldn't be watched running live in this headless
+  preview pane (it never reports non-hidden visibility, the same constraint noted earlier
+  for Phaser's rAF loops), so its handler was verified with a synthetic `animationend`
+  event instead, confirming the completion logic independent of the compositor.*
+
 - **(check, no new work)** Draft 31 (add Maggie to the feedback dropdown) turned out to
   already be shipped: Maggie was added to the shared `SUBMITTERS` list in
   `src/components/FeedbackButton.jsx` back in **41b3ed9** (2026-08-06, Draft 89, a Ready for
@@ -1738,3 +1780,45 @@ directly, and independently by the codebase — Kai's narration wires into
 `src/activities/GettingUnstuck.jsx` and `AlliesSafetyNet.jsx`, both Ready
 for Roots activities; GAINS's narrator is Spark). Disregard that whole note
 here — it's now logged correctly in root `WORKING_NOTES.md`.
+
+
+### Draft 33 — Build the Mindfulness "Calm Place" activity (Zone 4), 9:16, immersive layered scene — ✅ SHIPPED 79e0aec (2026-08-19)
+
+Build the mindfulness / visualization activity as a real interactive component for `/gains-demo`, placed as a **playable demo in the "Ideas & Demos for Review" section** (new item "Mindfulness: Calm Place", tag `review-mindfulness`). Spark leads a **"calm place" visualization** — double duty: it teaches grounding (3-3-3: see / hear / breathe) AND calm-place visualization.
+
+**Assets (all staged):**
+- Background: `/long-light/art/mindfulness/pond-bg.webp` (full-screen dusk pond scene, 9:16).
+- Overlay layers (transparent SVGs, 1080×1920 to match): `layer-rain.svg`, `layer-lightning.svg`, `layer-fireflies.svg`, `layer-reeds.svg`, `frog.svg` — in `/long-light/art/mindfulness/`.
+- Animations: `/long-light/art/mindfulness/motion.css` — idle keyframes for rain fall, gentle lightning flash, reed sway, firefly drift. **Inline the SVGs** (fetch+innerHTML or paste the markup) and include this CSS so the animations run. (NOTE: ripples were intentionally removed — ignore the `om-ripple`/`.ring` keyframe.)
+- Audio: `/long-light/audio/mindfulness/` → `music.mp3` (ambient bed, ~20s loop), `rain.mp3` (light rain + gentle thunder, ~60s loop), `frog.mp3` (frogs + brook, ~60s loop).
+
+**Composition & animation:**
+- Full-screen 9:16 scene: background at the base, overlay layers stacked on top — airborne pieces (rain, lightning, fireflies) over the sky; foreground pieces (reeds, frog) low. Keep it lightweight for mobile.
+- Layers animate continuously via `motion.css` (rain falling, occasional soft distant lightning flash, reeds swaying, fireflies drifting; frog idle with a periodic hop).
+- The music bed loops softly from the start (see autoplay note).
+
+**Flow (guided, no-fail):**
+- **Spark intro** (visualization framing) — script below.
+- **STEP 1 — SEE 3:** "Find three things you can see." Player taps three living elements in the scene (frog, rain, fireflies, reeds, lightning). Each tapped element gives a soft glow/scale acknowledgment + a brief Spark affirmation; progress "N of 3."
+- **STEP 2 — HEAR 3:** "Find three things you can hear." Three sounds are available — **rain, frog/brook, and the music**. As the player taps each (or taps its source in the scene), that sound comes forward and Spark names it. (There are exactly three, so they'll notice all three.)
+- **STEP 3 — FEEL / BREATHE:** an on-brand **Spark glow** (warm amber light) expands and contracts to pace ~3 slow breaths ("breathe in as the light grows… and out as it fades"), with a soft cue.
+- **CLOSE:** Spark affirms; player earns the **Oxygen Mask** (the gear that unlocks the Ascent climb). Offer **"Would you like to do it again?"** → repeating strengthens (brighter light / mask upgrade), per the practice mechanic.
+
+**Spark script (FIRST-DRAFT copy — to be refined per Stephanie/Holly; render it cleanly in the demo, no disclaimers):**
+- Intro: "Before we climb on, let's try something you can use whenever things feel like too much. It's called finding your calm place. Take a slow breath… and let's step in."
+- Arrive: "This is a calm place. Any time you feel overwhelmed, you can close your eyes and come back here in your mind. Let's use our senses to really arrive."
+- See: "First — look around. Tap three things you can see." → (after 3) "Noticing what's around you brings you back to right now."
+- Hear: "Now — listen. Tap three things you can hear." → (after 3) "Sound can anchor you, even when your thoughts are racing."
+- Breathe: "Last — let's breathe together. Breathe in as the light grows… and out as it fades." → (after 3 cycles) "Beautifully done."
+- Close: "That's your calm place — you can come back any time you need a moment. Take this with you: an Oxygen Mask. It'll help you breathe easy on the climb ahead."
+- Repeat prompt: "Want to stay a little longer?"
+
+**System / UI:** amber/slate for Spark's text panel + buttons (amber-500 `rounded-full` CTA), but keep UI minimal so the scene breathes. Mobile 9:16.
+
+**Notes / handle:**
+- **Autoplay:** browsers block audio autoplay — start the ambient bed on the first user gesture (an "Enter your calm place" / "Begin" tap).
+- **"Write your own" for See:** Josh floated tap OR free-text for the See step; for this first pass do **tap-only** (simpler; the scene is the point) — free-text can come later.
+
+**Verify.** Full 9:16 scene renders with animated layers (rain, lightning flashes, reed sway, firefly drift, frog hop); music bed plays after the first tap; See 3 → Hear 3 (three sounds) → Breathe (Spark glow) → earn Oxygen Mask → repeat option; strictly no-fail; lightweight on mobile; appears in the review section with a working comment thread (`review-mindfulness`). No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
+
+*End of Draft 33.*
