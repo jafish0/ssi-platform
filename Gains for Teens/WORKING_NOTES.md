@@ -132,6 +132,45 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **bba5ecb** (2026-08-19) — Draft 35: **Mindfulness's breathing step is now a directive
+  box-breath.** From testing feedback: the old subtle glow-pulse gave no direction.
+  Spark now introduces it explicitly ("Now, let's feel. Feel your lungs fill as you breathe
+  with me.") behind a **"Start breathing"** tap, rather than dropping the participant
+  straight into ambiguous motion. The exercise is a standard box breath — **in (4) → hold
+  (4) → out (4) → hold (4)**, for 3 cycles — paced by a large amber glow that's now clearly
+  the focal point, with the phase word ("Breathe in" / "Hold" / "Breathe out" / "Hold") and
+  a live 1–4 count shown large and centered on it. The bottom panel bar is hidden outright
+  while it's running, so the glow has the whole frame to itself; it returns for the lead-in
+  and closing message either side of it.
+  **Pacing** is a plain 1-second `setInterval` counting total elapsed ticks (0–48), with
+  phase, cycle, and the in-phase count all **derived** from that one number by division
+  rather than tracked as separate incrementing state — avoids the bug class where advancing
+  the count also has to remember to advance the phase, which also has to remember to
+  advance the cycle, all in one tick handler. The glow's expand/contract is a CSS
+  **transition** (not a keyframe animation) with duration set to the phase's real length
+  (4s), so a phase change that doesn't alter the target (hold following in, hold following
+  out) just arrives and stays, no extra "freeze in place" logic needed; a gentle shimmer
+  layers on top during the post-inhale hold via a separate `filter`-only keyframe so it
+  doesn't fight the transition on `transform`.
+  This ticked-timer design also sidesteps the Draft 33 limitation where this headless
+  preview pane never reports the page visible and CSS `animationend` didn't reliably fire —
+  a plain JS interval isn't tied to compositing the same way, so the **entire 3-cycle
+  sequence could be watched running and completing in real time** this time.
+  Also removed now-dead code the rework left behind: the old `manualBreath()` reduced-motion
+  tap-through fallback (the phase/count text paces identically regardless of motion
+  preference now, so a separate path isn't needed — only the glow's transition/shimmer are
+  what `prefers-reduced-motion` now suppresses), and `repCount`, which existed only to
+  intensify the old glow's pulse and had no reader left once the box-breath's targets became
+  fixed values.
+  **Verified over the real ~48-second sequence, twice** (including once via "Do it again",
+  confirming the full loop back through See/Hear into a fresh session): phase and count
+  progress correctly tick by tick into cycle 2 at exactly the 17th tick; the glow's style
+  matches the correct target at every phase; the shimmer applies exactly on the first
+  hold-after-inhale tick; the bottom bar is absent throughout and returns correctly either
+  side; the sequence auto-completes to "Beautifully done." with no manual counting. No
+  overflow at 375px; comment thread still opens preset to `review-mindfulness`; no console
+  errors.
+
 - **e7f2ffe** (2026-08-19) — Draft 34: **Mindfulness's See/Hear steps are chips at the top
   now, and the Hear dead end is fixed.** From testing feedback on Draft 33: the SEE/HEAR
   scene-tapping hotspots (and the bottom panel bar sharing space with them) covered too
@@ -1870,3 +1909,28 @@ Testing feedback on Draft 33: the selection UI covers too much of the scene (inc
 **Verify.** Selection chips sit at the top over the sky and never cover the frog/scene; SEE shows the six options and advances after any three; HEAR shows the four sound chips (Rain, Thunder, Frogs, Music), each plays when tapped, and advances after any three (progression works now — the music-only dead end is gone); breathing → Oxygen Mask → repeat all still work; still 9:16 and lightweight. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
 
 *End of Draft 34.*
+
+
+### Draft 35 — Mindfulness "Calm Place": make the breathing step directive (box-breath counts + a bigger, count-timed Spark glow) — ✅ SHIPPED bba5ecb (2026-08-19)
+
+Testing feedback: the breathing step (Step 3) is too subtle and gives the participant no direction. Rework it into a clearly **guided box-breathing** exercise.
+
+**Direction / copy.** Spark introduces and counts it, and the phase shows prominently on screen. Replace the current breathe copy:
+- Lead-in (Spark): "Now, let's feel. Feel your lungs fill as you breathe with me."
+- Guide a box breath for ~3 full cycles: **Breathe in (2, 3, 4) → Hold (2, 3, 4) → Breathe out (2, 3, 4) → Hold (2, 3, 4)**, repeated.
+- Close (after the cycles): "Beautifully done."
+
+**The Spark glow — much more pronounced and timed to the counts.** Keep the amber Spark glow, but make it large and clearly the focal point (not the current subtle pulse), animated in lockstep with the box count:
+- **Inhale (4 counts):** the glow smoothly **expands and brightens** to full.
+- **Hold (4 counts):** it holds at full with a gentle shimmer.
+- **Exhale (4 counts):** it smoothly **contracts and dims**.
+- **Hold (4 counts):** it rests small and dim.
+- Each count ≈ 1 second (≈4s per phase, 16s/cycle); ~3 cycles (adjustable).
+- Show the current **phase word** ("Breathe in" / "Hold" / "Breathe out" / "Hold") large and centered on/under the glow, with a visible **count (2, 3, 4)** or a filling ring, so the participant always knows exactly what to do.
+- If a soft breath/chime cue gets added later, play a gentle tone at each phase change (no cue file staged yet — fine to ship silent for now).
+
+**Keep everything else** (scene, See/Hear chips, Oxygen Mask reward + "do it again," 9:16, no-fail) unchanged — this only reworks the breathe step.
+
+**Verify.** Step 3 shows a large, prominent Spark glow that visibly expands on the inhale, holds, contracts on the exhale, and holds again — in time with an on-screen count; the phase words and counts are clearly legible; Spark's box-breath direction reads; runs ~3 cycles then closes to the Oxygen Mask reward; still 9:16, no-fail. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
+
+*End of Draft 35.*
