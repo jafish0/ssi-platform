@@ -132,6 +132,26 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **93a8f9b** (2026-08-19) — Draft 38: **Elevator Pitch gets "Write your own" on every
+  select step, and the final button now reads "Save It."** Each of the three select-one
+  steps (situation, request, help) offers a "Write your own" option that swaps the preset
+  list for a text input. Whether a step is in custom mode is derived from its value itself
+  (non-null but not one of the presets), not tracked as a separate flag, so returning to a
+  step via "Change something" shows the right view — input with the typed text, or the
+  preset list with the right one highlighted — with no extra state to keep in sync. A typed
+  line flows into the assembled message exactly like a preset would. Added a "Choose from
+  the list instead" link back out of custom mode, a small addition beyond the letter of the
+  draft but consistent with how flexible the rest of this activity already is.
+  Renamed "Send it" → **"Save It"** (it saves to the action-plan collector, nothing is
+  actually sent), including the internal handler name and the review screen's helper text.
+  **Verified:** "Write your own" appears on all three steps; Continue stays disabled until
+  custom text is typed; a custom answer assembles identically to a preset (punctuation
+  still comes out right); "Change something" correctly re-shows custom text rather than the
+  preset list; "Choose from the list instead" correctly reverts; the flow still completes
+  to the Wingsuit reward. The tallest step (6 buttons: 5 presets + Write your own) still
+  fits with no overflow at 375px; comment thread still opens preset to `review-zone3pitch`;
+  no console errors.
+
 - **46c4c7d** (2026-08-19) — Draft 37: **four fixes to Mindfulness — no more disclaimer,
   Hear is actually hearable, 2 breath rounds, practice-to-upgrade the mask.**
   **1.** Removed the "First-draft script... for review" disclaimer from the review-item
@@ -2054,7 +2074,7 @@ Revisions to the shipped Mindfulness activity (Drafts 33–35).
 *End of Draft 37.*
 
 
-### Draft 38 — Zone 3 "Message to Your Guardian": add "Write your own" to every step + rename final button to "Save It"
+### Draft 38 — Zone 3 "Message to Your Guardian": add "Write your own" to every step + rename final button to "Save It" — ✅ SHIPPED 93a8f9b (2026-08-19)
 
 Tweaks to the Zone 3 elevator-pitch activity (Draft 36).
 
