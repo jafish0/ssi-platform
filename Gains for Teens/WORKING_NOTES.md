@@ -132,6 +132,24 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **ab997df** (2026-08-19) — Draft 40: **a new "In Development" section, and the Final
+  Boss script moves into it.** Sits between "Ideas & Demos for Review" and the official
+  zone breakdown — a pipeline stage for things the team has adopted but hasn't built yet
+  (Review → In Development → the official zones/canon), distinct from "Prototypes and In
+  Development" further down (specifically the playable traversals plus the arcade/gear
+  proposals adopted in the 2026-08-13 review).
+  Moved Holly's Final Boss summit script (Ginny approved it) out of the numbered review
+  list and into the new section, verbatim, unchanged. Kept its `review-finalboss` comment
+  thread since the draft said doing so is harmless — it just no longer sits in this week's
+  review queue. The remaining review items renumber 1–5 with no gap.
+  Also fixed a stale cross-reference the renumbering created: Body Mapping's narration
+  note pointed at "Spark's voice (item 3 above)" — Spark's voice is item 2 now.
+  **Verified:** In Development renders in the right spot (Review → In Development → World
+  and Development Map onward, ending with Prototypes and In Development); the Final Boss
+  script is gone from review and appears verbatim in the new section; the review list
+  renumbers cleanly; the comment thread still opens preset to `review-finalboss`. No
+  overflow at 375px; no console errors.
+
 - **ea6c111** (2026-08-19) — Draft 39: **Mindfulness Hear-step taps are select-only now,
   no more doubled audio.** Follow-up to Draft 37: the ambient bed plays all three tracks
   correctly, but tapping a chip still briefly nudged that track's own volume up (0.4 → 0.85,
@@ -2116,3 +2134,49 @@ Follow-up to Draft 37. The Hear-step ambient bed now plays correctly, but tappin
 **Verify.** On the Hear step, all sounds are audible via the ambient bed; tapping a chip selects/highlights it and advances the count with **no doubled or echoed audio** (no second instance of the same file); advancing after any three still works; the rest of the activity is unchanged. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 39.*
+
+
+### Draft 40 — Demo: add an "In Development" section; move the Final Boss out of review into it — ✅ SHIPPED ab997df (2026-08-19)
+
+Add a new **"In Development"** section to `/gains-demo`, placed **below the "Ideas & Demos for Review" section** and above the official Zone breakdown. It holds items the team has **adopted** and that are moving toward being built — no longer soliciting review, but visible in the pipeline (Review → In Development → the official zones/canon).
+
+**Move the Final Boss summit script** (currently the first item in "Ideas & Demos for Review", tag `review-finalboss`) OUT of the review section and INTO the new "In Development" section. Keep Holly's script text **verbatim**. It's adopted (Ginny approved it), pending the build of the actual summit sequence. Keep its comment thread if that's easy (harmless) — it just no longer sits in this week's review list.
+
+With the Final Boss gone from review, the remaining review items shift up with no gap.
+
+**Verify.** A new "In Development" section renders below the review section; the Final Boss summit script now appears there (verbatim) and is gone from "Ideas & Demos for Review"; the review section's remaining items reflow cleanly; no broken links or threads. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 40.*
+
+
+### Draft 41 — Zone 3 "Message to Your Guardian": Dr. Sprang's two new steps + safety disclaimer
+
+Dr. Sprang expanded Holly's Zone 3 activity (builds on Drafts 36 + 38). Insert two new select-one steps and add closing safety copy. The activity goes from 4 steps to **6** — update the "STEP X OF N" indicator to /6. All select steps, including the two new ones, keep the **"Write your own"** option from Draft 38.
+
+**New step order:**
+1. Greeting (write-in) — unchanged
+2. Describe the situation (select 1 of 4) — unchanged
+3. **Normalize it — NEW (select 1 of 4):** prompt "Normalize it"
+   - "Therapy isn’t just for when things are in crisis"
+   - "A lot of kids my age use therapy to feel better"
+   - "Therapy is a good place to think things through"
+   - "Therapy can also help me sleep better, make better grades, improve my connection to people"
+4. **Offer to make it easy — NEW (select 1 of 4):** prompt "Offer to make it easy"
+   - "I know some people I can ask to find out the best person to go to that is nearby"
+   - "There is a counselor at school that I could talk to"
+   - "If you can’t take me, we could check into telehealth options"
+   - "I am willing to call a few places and check to see if they take our insurance"
+5. Make your request (select 1 of 3) — unchanged
+6. And finally, finish with how this will help you (select 1 of 5) — unchanged
+
+**Assembled message** now includes the two new parts in this order: greeting, situation, normalize, offer, request, benefit — stitched into a natural paragraph.
+
+**Add two pieces of closing copy (verbatim):**
+- Reassurance line near the finish/save: "If asking directly feels hard, how about writing this in a note first to take the pressure off- you will get a copy of this message in your action plan to make it easier"
+- **Safety disclaimer** shown at the end — this is a real, keep-it disclaimer (crisis resources), NOT a for-review note; render it clearly: "Note: if what is going on feels urgent, like you are struggling to cope or having thoughts of hurting yourself or someone else, don’t wait to convince your parents- reach out immediately to a school counselor, you family physician or call or text 988 immediately."
+
+**Keep everything else:** the bridge backdrop, the "Save It" button, the Wingsuit reward, save-to-action-plan, 9:16, no-fail, and the `review-zone3pitch` placement.
+
+**Verify.** 6 steps with a correct "STEP X OF 6" indicator; the two new steps show the exact options plus a "Write your own" box; the assembled message includes the normalize + offer lines in order and reads naturally; the "write it as a note" line and the 988 safety disclaimer both appear (disclaimer clearly legible at the end); "Save It" saves and the Wingsuit is awarded. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
+
+*End of Draft 41.*
