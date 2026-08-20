@@ -110,6 +110,81 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`a3423cc` · 2026-08-19** — **Draft 93 — new splash/landing screen before the assent (first-start only).** A full-bleed `SplashScreen` — the calm tree/roots image, "Ready for Roots" title, and a single **Begin** button — shows once before a genuinely new participant sees anything else, including the assent (section 0). **Assets:** the source PNG (5.5MB) was converted to a JPEG (`public/splash/tree.jpg`, ~690KB, quality 85, no visible artifacts) rather than committed as-is; the ambient loop was copied in as its original `.wav` (`public/splash/ambient.wav`) per the draft's own "simpler to leave as-is" allowance — no `ffmpeg` available in this environment to transcode to mp3. **First-start gating:** `CodeEntryPage.jsx` sets a `splash_pending_<session_id>` sessionStorage flag only on the non-resumed branch (mirroring the existing `resumed_notice` flag one `if`-branch over); `DeliveryShellPage.jsx`'s `ShellInner` reads it once at mount, suppresses its normal auto-redirect to `/step` while set, and renders `SplashScreen` instead — Begin's `onBegin` clears the flag and does the redirect itself. **Music:** autoplay attempted on mount with the same fail-open philosophy as `KaiNarrationPlayer` (attempt `play()`, swallow a block silently — no error state, since this is ambient, not required content); a small mute/unmute icon is the only control, and clicking it while blocked also retries `play()` (the click is a user gesture). Per Josh's addendum, Begin fades the loop's volume out over 500ms (not an abrupt stop) before pausing and advancing. **Sandbox:** added at `/demo/sandbox/splash` in `testRegistry.js`, Begin mocked to `console.log`. No version bump (delivery-flow chrome, not a tracked activity — same precedent as `CelebrationScreen`). **Verified live against a real single-use QA code** (`RSD-QA93-AAAA`, minted and retired in this same session): splash renders first with the image/title/Begin and the ambient track autoplaying; Begin fades the audio to silence and advances into the real assent unchanged; reloading mid-flow stays on the assent (splash does not reappear); re-entering the same code once it had a session in progress hits the resume path ("Welcome back") straight to the assent, never the splash. Build + console clean.
+
+  <details>
+  <summary>Draft 93 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 93 — New splash/landing screen before the assent (first-start only)
+
+**What:** A new static, full-bleed landing screen — calm tree/roots image,
+"Ready for Roots" title, ambient background music, and a single "Begin"
+button — shown once, before the participant sees anything else (including
+the assent, which is currently section `order_index 0`). Clicking Begin
+advances into the normal flow exactly where it starts today.
+
+**Assets (already produced, source paths below — copy into the repo,
+don't reference from outside `public`/`src`):**
+- Image: `C:\Users\jafish0\Documents\Claude\SSI App\SSI Platform A\Splash Image.png`
+  — a calm, warm-lit illustrated tree with visible roots, clear sky, deliberately
+  composed with open negative space in the top third (for the title) and
+  bottom third (for the button) so text/UI sits on plain sky/ground, not on
+  busy foliage.
+- Music: `C:\Users\jafish0\Documents\Claude\SSI App\SSI Platform A\Video Content\Kai and Belonginess\video 1\Trigubovich_White_Chocolate_loop_1.wav`
+  — a loopable ambient bed. It's a `.wav`; consider transcoding to `.mp3`
+  for size (the other audio in the app — Kai narration, assent narration —
+  is mp3), but `.wav` will also work if simpler to leave as-is.
+
+**Where it lives in the flow:** `CodeEntryPage.jsx` navigates straight to
+`/session/:sessionId` on a successful `validate-code`, and `DeliveryShellPage.jsx`'s
+`ShellInner` auto-redirects `/session/:sessionId` → `/session/:sessionId/step`
+once sections load — there's currently no pre-flow screen; section 0 (assent)
+renders immediately via the ordinary `DeliveryStepPage`/`ItemRenderer` path.
+The splash needs to intercept that auto-redirect: show the splash first, and
+only navigate to `/step` after Begin is clicked.
+
+**First-start only, not on resume.** Only show this for a genuinely new
+session with no saved responses yet — not when resuming an in-progress
+session (which already shows its own "Welcome back" banner and should go
+straight to where the participant left off, unchanged). Whatever
+first-start signal is used, guard it so a reload/back-navigation on the
+splash itself doesn't get stuck or re-show it after Begin has already been
+clicked once this session (a sessionStorage flag keyed by `sessionId`,
+similar in spirit to the existing resume-banner flag, is probably the
+simplest correct approach — but use judgment on the exact mechanism).
+
+**Music behavior:** autoplay the loop on mount using the same
+autoplay-blocked fallback philosophy as `KaiNarrationPlayer.jsx` (attempt
+`play()`, catch rejection, offer a small mute/unmute control rather than
+blocking anything — this is ambient, not required content, so fail open
+silently rather than showing an error state). Stop or fade the music out
+when Begin is clicked and the participant advances into the flow.
+
+**Copy:** Title "Ready for Roots" over the image, button reads "Begin".
+Styling per house conventions: primary CTA `bg-amber-500 hover:bg-amber-600
+text-white rounded-full`. No other copy needed — keep it as calm and
+uncluttered as the image itself.
+
+**Sandbox entry:** add a `TEST_REGISTRY` entry (`src/lib/testRegistry.js`)
+so this previews standalone at `/demo/sandbox/splash`, matching the
+existing convention for every other activity/screen — mock the Begin
+button to just log or no-op in the sandbox context, same pattern as other
+entries with `mockProps`.
+
+**No version bump** — this is a delivery-flow screen (like `CelebrationScreen`
+in `DeliveryShellPage.jsx`), not a versioned activity in `activityVersions.js`.
+
+**Verify:** a fresh single-use code lands on the splash first (image,
+title, Begin button, music attempts to play with graceful fallback if
+blocked) → clicking Begin advances into the assent exactly as today →
+reloading mid-flow or resuming an in-progress session does NOT re-show the
+splash → build + console clean.
+
+**Addendum to Draft 93 — music behavior decided.** Fade the music out when
+Begin is clicked (not an abrupt stop).
+
+  </details>
+
 - **`4cf3476` + `53261c1` · 2026-08-19** — **Draft 92 — "Read this to me" narration option on the Assent screen.** Josh recorded a full narration of the assent document. A collapsed **"🔊 Read this to me"** pill sits above the title block; clicking it reveals a native `<audio controls autoPlay>` player (the click itself is the user gesture, so autoplay isn't blocked — no need to replicate `KaiNarrationPlayer`'s autoplay-blocked-fallback state machinery, since `controls` is always visible regardless). **Deliberately does NOT autoplay on mount and does NOT gate Yes/No on listening** — unlike `KaiNarrationPlayer`'s usage in `GettingUnstuck`/`AlliesSafetyNet`, assent is a decision screen with the full text already on-screen; the audio is a pure accessibility add-on, always optional. **New `AssentNarration` component in `Assent.jsx`** — a lighter one-off rather than reusing `KaiNarrationPlayer` directly (its Kai-portrait/speaker-icon styling doesn't fit a consent screen, and its gating/always-playing behavior is wrong here), but reusing its fail-open philosophy: `onError` swaps the player for a plain "not available yet" message rather than a dead control. **Copied `Assent/Assent narration.mp3` to `public/kai-narration/assent.mp3` and explicitly `git add`ed it** — three earlier narration mp3s (Draft 64) landed in this same folder untracked and silently failed to deploy; confirmed this one staged as `A`, not left implicit in a bulk add. **Review card added.** `ReviewCard` had no audio-only rendering path (its 9:16 frame was built for video/image) — added a new `audioSrc` branch that skips that frame for a plain inline `<audio>` player, and made the feedback-button label ("...this video" vs "...this audio") conditional on the card type. New card appended to `REVIEW_CARDS`. **Process correction, logged rather than hidden:** the first commit's message incorrectly claimed `Assent.jsx` wasn't a tracked activity and skipped the required version bump — caught immediately after push and fixed with a same-session follow-up commit (`v1.2` → `v1.3`, MINOR, no save-payload change) rather than amending the already-pushed commit. **Verified live at 375×812:** zero `<audio>` elements before any click (no autoplay-on-mount); Yes/No both immediately clickable; clicking the pill plays the real file (duration 121s, `readyState 4`); swapping in a broken `src` shows the fail-open message with Yes still clickable; Yes still correctly reaches the confirmation screen. "For Review This Week" shows exactly 4 cards, the new one plays real audio inline, its feedback button reads "...this audio" and opens pre-filled with "Assent Narration"; sandbox badge confirmed at v1.3. Console + build clean.
 
   <details>
