@@ -1,4 +1,4 @@
-// Mindfulness "Calm Place" (GAINS Zone 4 activity) — Draft 33, reworked Drafts 34-35.
+// Mindfulness "Calm Place" (GAINS Zone 4 activity) — Draft 33, reworked Drafts 34-35, 37-39.
 //
 // Spark leads a guided calm-place visualization that does double duty:
 // grounding (the 3-3-3 technique: see / hear / breathe) AND calm-place
@@ -42,6 +42,15 @@
 // (not a keyframe animation) timed to each phase's real 4-second duration,
 // which lets a phase change that doesn't alter the target (hold following
 // in, hold following out) simply hold still without any extra logic.
+//
+// Draft 37 brought all three Hear tracks up to one shared, clearly audible
+// ambient level for the step's duration (see enterHear/HEAR_AMBIENT_VOLUME)
+// and, on top of that, briefly nudged a tapped chip's own track louder.
+// Draft 39: that nudge read, in practice, as a second copy of the same
+// sound starting on top of the ambient bed. Tapping a chip is select-only
+// now -- it updates state and (for Frog/Lightning/Thunder) pulses the
+// matching overlay layer, nothing more; the sound the player is "noticing"
+// is only ever the one already playing in the ambient bed.
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -143,15 +152,15 @@ const SEE_ITEMS = [
 ]
 
 // HEAR step: four predefined sound options, any three unlock Continue.
-// `audioKey` maps to the actual audio ref/volume to nudge — Rain and Thunder
-// are the same recording (light rain + gentle thunder together), so both
-// nudge `rain`; Thunder additionally pulses the lightning layer so it reads
-// as its own distinct element despite sharing audio with Rain.
+// Rain and Thunder are the same recording (light rain + gentle thunder
+// together) -- both are just selections against the one ambient bed, not
+// separate playbacks -- so Thunder additionally pulses the lightning layer
+// (its `glowLayer`) to still read as its own distinct element.
 const HEAR_ITEMS = [
-  { id: 'rain', label: 'Rain', affirm: 'The rain, tapping softly.', audioKey: 'rain' },
-  { id: 'thunder', label: 'Thunder', affirm: 'A low rumble of distant thunder.', audioKey: 'rain', glowLayer: 'lightning' },
-  { id: 'frogs', label: 'Frogs', affirm: 'Frogs and the brook, murmuring together.', audioKey: 'frog' },
-  { id: 'music', label: 'Music', affirm: 'A quiet melody, drifting through the air.', audioKey: 'music' },
+  { id: 'rain', label: 'Rain', affirm: 'The rain, tapping softly.' },
+  { id: 'thunder', label: 'Thunder', affirm: 'A low rumble of distant thunder.', glowLayer: 'lightning' },
+  { id: 'frogs', label: 'Frogs', affirm: 'Frogs and the brook, murmuring together.' },
+  { id: 'music', label: 'Music', affirm: 'A quiet melody, drifting through the air.' },
 ]
 
 const BASE_VOLUME = { music: 0.35, rain: 0.12, frog: 0.12 }
@@ -159,10 +168,10 @@ const BASE_VOLUME = { music: 0.35, rain: 0.12, frog: 0.12 }
 // "find three things you can hear" was really "find the one thing already
 // audible, then tap blind for the other two." All three sit at one shared,
 // clearly audible level for the duration of the Hear step, then drop back to
-// BASE_VOLUME's quiet background once the step ends.
+// BASE_VOLUME's quiet background once the step ends. (Draft 37 also nudged a
+// tapped chip's own track louder on top of this; Draft 39 removed that --
+// see the file header comment -- so tapping no longer touches volume at all.)
 const HEAR_AMBIENT_VOLUME = 0.4
-const NUDGE_VOLUME = 0.85
-const NUDGE_MS = 2400
 const PULSE_MS = 900
 
 // Box breathing: 4 phases x 4 one-second counts each = 16s/cycle, x 2 cycles
@@ -243,17 +252,8 @@ export default function MindfulnessCalmPlace() {
   const musicRef = useRef(null)
   const rainRef = useRef(null)
   const frogRef = useRef(null)
-  const nudgeTimers = useRef({})
   const pulseTimers = useRef({})
   const breatheTimerRef = useRef(null)
-  // A pending nudge's setTimeout reads this to pick its revert target -- mode
-  // itself is stale inside that closure by the time it fires (up to 2.4s
-  // later, easily long enough to have left Hear).
-  const modeRef = useRef(mode)
-
-  useEffect(() => {
-    modeRef.current = mode
-  }, [mode])
 
   useEffect(() => {
     let cancelled = false
@@ -264,25 +264,10 @@ export default function MindfulnessCalmPlace() {
     })
     return () => {
       cancelled = true
-      Object.values(nudgeTimers.current).forEach(clearTimeout)
       Object.values(pulseTimers.current).forEach(clearTimeout)
       clearInterval(breatheTimerRef.current)
     }
   }, [])
-
-  const audioRefFor = (key) => (key === 'rain' ? rainRef : key === 'frog' ? frogRef : musicRef)
-
-  function nudge(audioKey) {
-    const ref = audioRefFor(audioKey)
-    const el = ref.current
-    if (!el) return
-    el.volume = NUDGE_VOLUME
-    clearTimeout(nudgeTimers.current[audioKey])
-    nudgeTimers.current[audioKey] = setTimeout(() => {
-      if (!ref.current) return
-      ref.current.volume = modeRef.current === 'hear' ? HEAR_AMBIENT_VOLUME : BASE_VOLUME[audioKey]
-    }, NUDGE_MS)
-  }
 
   // Non-blocking visual nicety: briefly bumps brightness on the named overlay
   // layer when a chip that maps to it is selected (see SEE_ITEMS/HEAR_ITEMS'
@@ -324,13 +309,12 @@ export default function MindfulnessCalmPlace() {
     if (mode !== 'hear') return
     setLastHeard(item.id)
     setHeard((h) => (h.includes(item.id) ? h : [...h, item.id]))
-    nudge(item.audioKey)
     if (item.glowLayer) flashLayer(item.glowLayer)
   }
 
   // All three tracks come up to one shared, clearly audible level for the
-  // duration of Hear (see HEAR_AMBIENT_VOLUME); tapping a chip nudges its
-  // track further forward on top of that baseline.
+  // duration of Hear (see HEAR_AMBIENT_VOLUME). Tapping a chip only selects
+  // it -- see tapHear -- so this is the only place Hear's volumes change.
   function enterHear() {
     setMode('hear')
     if (musicRef.current) musicRef.current.volume = HEAR_AMBIENT_VOLUME
@@ -343,7 +327,6 @@ export default function MindfulnessCalmPlace() {
     // Leaving Hear: drop back to the quiet background bed rather than
     // carrying its louder, "genuinely hearable" mix into the rest of the
     // activity.
-    Object.values(nudgeTimers.current).forEach(clearTimeout)
     if (musicRef.current) musicRef.current.volume = BASE_VOLUME.music
     if (rainRef.current) rainRef.current.volume = BASE_VOLUME.rain
     if (frogRef.current) frogRef.current.volume = BASE_VOLUME.frog
