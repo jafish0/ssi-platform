@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { Play, Download, AlertCircle } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
+import SplashScreen from '../components/SplashScreen.jsx'
 import { TEST_REGISTRY } from '../lib/testRegistry.js'
 import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
@@ -57,6 +58,20 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // than graduating straight to LEARNING_SKILLS_CARDS; that's a follow-up
 // draft once/if it clears review, same as Scenes 1-2 + Conclusion.
 const REVIEW_CARDS = [
+  // Draft 93 follow-up (2026-08-19): the new splash/landing screen, live
+  // and interactive (real autoplay/mute/fade-out behavior, not a static
+  // screenshot) inside the same 9:16 frame every other card uses —
+  // ReviewCard's new `component` branch, with `fill: 'container'` so
+  // SplashScreen fills that frame exactly instead of sizing itself off the
+  // real viewport (which is what it does everywhere else it's used).
+  {
+    title: 'Splash / Landing Screen — "Ready for Roots"',
+    component: SplashScreen,
+    componentProps: { onBegin: () => {}, fill: 'container' },
+    description:
+      'The first-start-only landing screen shown before the assent — tree image, title, ambient looping music (mute icon top-right), and a Begin button. Begin is a no-op here; the audio truly autoplays. Also live at /demo/sandbox/splash.',
+    feedbackArea: 'Splash Screen',
+  },
   {
     title: 'Ready for Roots — Intro Video',
     youtubeId: 'PQMnbd1NuJ8',
@@ -160,11 +175,13 @@ const LEARNING_SKILLS_CARDS = [
 
 // One review card: optional group subheading, then media (a 9:16 YouTube
 // embed for `youtubeId` cards, a still image for `imageSrc` cards — Draft
-// 61 —, an inline native player for `audioSrc` cards — Draft 92, no 9:16
-// frame since that shape was designed around video/image — or a "video in
-// production" placeholder when a card sets NONE of the three, e.g. a cut
-// pulled pending a script rewrite — Draft 90) + description + a dedicated
-// feedback button pinned to this item.
+// 61 —, a live React component for `component` cards inside that same 9:16
+// frame — Draft 93 follow-up, for reviewing an interactive screen rather
+// than a video/image cut —, an inline native player for `audioSrc` cards —
+// Draft 92, no 9:16 frame since that shape was designed around video/image
+// — or a "video in production" placeholder when a card sets NONE of the
+// four, e.g. a cut pulled pending a script rewrite — Draft 90) +
+// description + a dedicated feedback button pinned to this item.
 function ReviewCard({ card }) {
   return (
     <>
@@ -199,6 +216,10 @@ function ReviewCard({ card }) {
                   alt={card.title}
                   className="absolute inset-0 h-full w-full object-cover rounded-2xl border border-amber-200"
                 />
+              ) : card.component ? (
+                <div className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200 overflow-hidden">
+                  <card.component {...(card.componentProps || {})} />
+                </div>
               ) : card.youtubeId ? (
                 <iframe
                   src={`https://www.youtube.com/embed/${card.youtubeId}`}
@@ -232,7 +253,7 @@ function ReviewCard({ card }) {
         )}
         <div className="text-center">
           <FeedbackButton
-            label={`Leave a note on this ${card.audioSrc ? 'audio' : 'video'}`}
+            label={`Leave a note on this ${card.audioSrc ? 'audio' : card.component ? 'screen' : 'video'}`}
             initialArea={card.feedbackArea}
           />
         </div>
