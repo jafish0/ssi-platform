@@ -1,4 +1,4 @@
-// Mindfulness "Calm Place" (GAINS Zone 4 activity) — Draft 33, reworked Draft 34.
+// Mindfulness "Calm Place" (GAINS Zone 4 activity) — Draft 33, reworked Drafts 34-35.
 //
 // Spark leads a guided calm-place visualization that does double duty:
 // grounding (the 3-3-3 technique: see / hear / breathe) AND calm-place
@@ -15,7 +15,8 @@
 //             fireflies, trees, clouds).
 //   hear    — pick any 3 of 4 predefined sound chips (rain, thunder, frogs,
 //             music).
-//   breathe — an amber glow expands/contracts for 3 slow breaths.
+//   breathe — a guided box-breath: in (4) - hold (4) - out (4) - hold (4),
+//             for 3 cycles, paced by a large glow and an on-screen count.
 //   close   — Oxygen Mask earned; "do it again?" strengthens the practice.
 //
 // Draft 33 had SEE/HEAR as scene-tapping (invisible hotspots over the art).
@@ -28,6 +29,17 @@
 // matching animated layer (frog, lightning, fireflies) briefly pulses that
 // layer as a non-blocking nicety; pond/trees/clouds live in the static
 // background image, so they have no layer to pulse.
+//
+// Draft 35 reworked breathe: the original subtle pulse gave no direction, so
+// it's now a directive box-breath. Pacing is driven by a plain 1-second
+// setInterval counting elapsed ticks, with phase/cycle/count derived by
+// simple division rather than tracked as separate incrementing state — this
+// sidesteps the coordination bugs a naive "increment count, and if it
+// overflows also increment phase, and if THAT overflows also increment
+// cycle" approach invites. The glow's expand/contract is a CSS transition
+// (not a keyframe animation) timed to each phase's real 4-second duration,
+// which lets a phase change that doesn't alter the target (hold following
+// in, hold following out) simply hold still without any extra logic.
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -96,21 +108,22 @@ const SCENE_CSS = `
 .om-pulse { animation: omPulseFlash .9s ease-out; }
 @keyframes omPulseFlash { 0% { filter: brightness(1); } 30% { filter: brightness(1.85); } 100% { filter: brightness(1); } }
 @media (prefers-reduced-motion: reduce) { .om-pulse { animation: none; } }
-.om-glow {
+.om-glow-breath {
   position: absolute; left: 50%; top: 50%; border-radius: 9999px;
   background: radial-gradient(circle, rgba(253,230,138,.95) 0%, rgba(245,158,11,.55) 45%, rgba(245,158,11,0) 72%);
-  transform: translate(-50%, -50%) scale(0.55);
-  width: 46%; aspect-ratio: 1 / 1;
+  width: 68%; aspect-ratio: 1 / 1;
+  transition: transform 4s linear, opacity 4s linear, filter 4s linear;
 }
-.om-glow.is-breathing {
-  animation: omBreatheGlow var(--om-cycle, 6s) ease-in-out var(--om-cycles, 3);
-}
-@keyframes omBreatheGlow {
-  0%, 100% { transform: translate(-50%, -50%) scale(0.55); opacity: .4; }
-  50% { transform: translate(-50%, -50%) scale(var(--om-max-scale, 1.15)); opacity: var(--om-max-opacity, .85); }
+/* Gentle shimmer layered on top while holding at full (post-inhale). Applies
+   to filter, not transform, so it doesn't fight the phase transition above. */
+.om-glow-breath.om-shimmer { animation: omShimmer 1.1s ease-in-out infinite; }
+@keyframes omShimmer {
+  0%, 100% { filter: brightness(1.08); }
+  50% { filter: brightness(1.25); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .om-glow.is-breathing { animation: none; }
+  .om-glow-breath { transition: none; }
+  .om-glow-breath.om-shimmer { animation: none; }
 }
 `
 
@@ -144,12 +157,36 @@ const NUDGE_VOLUME = 0.85
 const NUDGE_MS = 2400
 const PULSE_MS = 900
 
+// Box breathing: 4 phases x 4 one-second counts each = 16s/cycle, x 3 cycles.
+const BREATHE_PHASES = [
+  { key: 'in', label: 'Breathe in' },
+  { key: 'hold1', label: 'Hold' },
+  { key: 'out', label: 'Breathe out' },
+  { key: 'hold2', label: 'Hold' },
+]
+const COUNTS_PER_PHASE = 4
+const BREATHE_CYCLES = 3
+const TICK_MS = 1000
+const TICKS_PER_CYCLE = BREATHE_PHASES.length * COUNTS_PER_PHASE
+const TOTAL_BREATHE_TICKS = BREATHE_CYCLES * TICKS_PER_CYCLE
+
+// Glow target per phase. hold1 repeats `in`'s target (holds at full) and
+// hold2 repeats `out`'s (holds small); since the CSS value doesn't change
+// between in->hold1 or out->hold2, the transition just arrives and stays,
+// with no extra "hold in place" logic needed.
+const GLOW_TARGETS = {
+  in: { scale: 1.4, opacity: 1, brightness: 1.15 },
+  hold1: { scale: 1.4, opacity: 1, brightness: 1.15 },
+  out: { scale: 0.5, opacity: 0.45, brightness: 0.85 },
+  hold2: { scale: 0.5, opacity: 0.45, brightness: 0.85 },
+}
+
 const INSTRUCTIONS = {
   intro: 'Tap to begin.',
   arrive: 'Let’s use our senses to really arrive.',
   see: 'Find three things you can see.',
   hear: 'Find three things you can hear.',
-  breathe: 'Breathe in as the light grows, and out as it fades.',
+  breathe: 'Follow Spark’s count.',
   close: 'That’s your calm place.',
 }
 
@@ -184,10 +221,9 @@ export default function MindfulnessCalmPlace() {
   const [heard, setHeard] = useState([])
   const [lastSeen, setLastSeen] = useState(null)
   const [lastHeard, setLastHeard] = useState(null)
-  const [breatheDone, setBreatheDone] = useState(false)
-  const [repCount, setRepCount] = useState(0)
-  const [reducedMotion, setReducedMotion] = useState(false)
-  const [manualBreaths, setManualBreaths] = useState(0)
+  // ready (Spark's lead-in, not yet started) | active (timer running) | done
+  const [breatheStage, setBreatheStage] = useState('ready')
+  const [breatheTicks, setBreatheTicks] = useState(0) // 1..TOTAL_BREATHE_TICKS while active
 
   const containerRef = useRef(null)
   const musicRef = useRef(null)
@@ -195,6 +231,7 @@ export default function MindfulnessCalmPlace() {
   const frogRef = useRef(null)
   const nudgeTimers = useRef({})
   const pulseTimers = useRef({})
+  const breatheTimerRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -203,15 +240,11 @@ export default function MindfulnessCalmPlace() {
       const keys = Object.keys(LAYER_URLS)
       setLayers(Object.fromEntries(keys.map((k, i) => [k, results[i]])))
     })
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReducedMotion(mq.matches)
-    const onChange = (e) => setReducedMotion(e.matches)
-    mq.addEventListener('change', onChange)
     return () => {
       cancelled = true
-      mq.removeEventListener('change', onChange)
       Object.values(nudgeTimers.current).forEach(clearTimeout)
       Object.values(pulseTimers.current).forEach(clearTimeout)
+      clearInterval(breatheTimerRef.current)
     }
   }, [])
 
@@ -273,39 +306,53 @@ export default function MindfulnessCalmPlace() {
   }
 
   function startBreathe() {
-    setBreatheDone(false)
-    setManualBreaths(0)
+    clearInterval(breatheTimerRef.current)
+    setBreatheStage('ready')
+    setBreatheTicks(0)
     setMode('breathe')
   }
 
-  function manualBreath() {
-    setManualBreaths((n) => {
-      const next = n + 1
-      if (next >= 3) setBreatheDone(true)
-      return next
-    })
+  // Ticks once per second regardless of phase/cycle boundaries; phase, cycle
+  // and the on-screen count are all derived from this single number (see
+  // below), rather than tracked as separate state that would need to be kept
+  // in sync with each other on every tick.
+  function beginBreathing() {
+    setBreatheStage('active')
+    setBreatheTicks(1)
+    clearInterval(breatheTimerRef.current)
+    breatheTimerRef.current = setInterval(() => {
+      setBreatheTicks((t) => {
+        const next = t + 1
+        if (next > TOTAL_BREATHE_TICKS) {
+          clearInterval(breatheTimerRef.current)
+          setBreatheStage('done')
+          return t
+        }
+        return next
+      })
+    }, TICK_MS)
   }
 
   function again() {
-    setRepCount((c) => c + 1)
+    clearInterval(breatheTimerRef.current)
     setSeen([])
     setHeard([])
     setLastSeen(null)
     setLastHeard(null)
-    setBreatheDone(false)
-    setManualBreaths(0)
+    setBreatheStage('ready')
+    setBreatheTicks(0)
     setMode('see')
   }
 
   function restart() {
+    clearInterval(breatheTimerRef.current)
     setMode('intro')
     setSeen([])
     setHeard([])
     setLastSeen(null)
     setLastHeard(null)
-    setBreatheDone(false)
-    setManualBreaths(0)
-    setRepCount(0)
+    setBreatheStage('ready')
+    setBreatheTicks(0)
     ;[musicRef, rainRef, frogRef].forEach((ref) => {
       const el = ref.current
       if (!el) return
@@ -317,6 +364,13 @@ export default function MindfulnessCalmPlace() {
   const seeAllFound = seen.length >= 3
   const hearAllFound = heard.length >= 3
   const inSelectionStep = mode === 'see' || mode === 'hear'
+
+  // Phase/cycle/count-in-phase, all derived from the single elapsed-ticks
+  // counter rather than tracked separately.
+  const tickIdx0 = Math.max(0, breatheTicks - 1)
+  const withinCycle = tickIdx0 % TICKS_PER_CYCLE
+  const breathePhase = BREATHE_PHASES[Math.floor(withinCycle / COUNTS_PER_PHASE)]
+  const breatheCount = (withinCycle % COUNTS_PER_PHASE) + 1
 
   // ---- panel copy per mode ----
   let instruction = INSTRUCTIONS[mode]
@@ -346,9 +400,10 @@ export default function MindfulnessCalmPlace() {
       panelText = 'Tap a sound to bring it forward.'
     }
   } else if (mode === 'breathe') {
-    panelText = breatheDone
-      ? 'Beautifully done.'
-      : 'Breathe in as the light grows… and out as it fades.'
+    panelText =
+      breatheStage === 'done'
+        ? 'Beautifully done.'
+        : 'Now, let’s feel. Feel your lungs fill as you breathe with me.'
   } else if (mode === 'close') {
     panelLabel = 'You did it'
     panelText =
@@ -356,10 +411,11 @@ export default function MindfulnessCalmPlace() {
   }
 
   const showScene = mode !== 'intro'
-  const glowIntensity = Math.min(repCount, 3)
+  const breatheTarget = GLOW_TARGETS[breathePhase.key]
   const glowStyle = {
-    '--om-max-scale': (1.15 + glowIntensity * 0.05).toFixed(2),
-    '--om-max-opacity': (0.85 + glowIntensity * 0.03).toFixed(2),
+    transform: `translate(-50%, -50%) scale(${breatheTarget.scale})`,
+    opacity: breatheTarget.opacity,
+    filter: `brightness(${breatheTarget.brightness})`,
   }
 
   return (
@@ -402,12 +458,23 @@ export default function MindfulnessCalmPlace() {
             dangerouslySetInnerHTML={{ __html: layers.frog }}
           />
 
-          {mode === 'breathe' && !reducedMotion && (
-            <div
-              className="om-glow is-breathing"
-              style={glowStyle}
-              onAnimationEnd={() => setBreatheDone(true)}
-            />
+          {mode === 'breathe' && breatheStage === 'active' && (
+            <>
+              <div
+                className={
+                  'om-glow-breath' + (breathePhase.key === 'hold1' ? ' om-shimmer' : '')
+                }
+                style={glowStyle}
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="text-white text-[22px] font-extrabold drop-shadow-lg mb-1">
+                  {breathePhase.label}
+                </div>
+                <div className="text-white text-[52px] font-extrabold drop-shadow-lg leading-none">
+                  {breatheCount}
+                </div>
+              </div>
+            </>
           )}
         </>
       )}
@@ -472,8 +539,12 @@ export default function MindfulnessCalmPlace() {
 
       {/* Spark's panel for the non-selection steps: a floating bar rather
           than a separate card below the scene, so the artwork fills nearly
-          the whole frame ("keep UI minimal so the scene breathes"). */}
-      {!inSelectionStep && (
+          the whole frame ("keep UI minimal so the scene breathes"). Hidden
+          outright while breathing is active: the glow + phase/count overlay
+          IS the UI for that stretch (Draft 35 — "make it large and clearly
+          the focal point"), and a panel competing for the same space would
+          undercut that. */}
+      {!inSelectionStep && !(mode === 'breathe' && breatheStage === 'active') && (
         <div className="relative mt-auto px-4 pb-4 pt-10 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-transparent">
           <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase text-amber-300 mb-1">
             Zone 4 · Mindfulness
@@ -486,12 +557,6 @@ export default function MindfulnessCalmPlace() {
           </div>
 
           <div className="text-[12px] text-amber-100/90 mb-2 min-h-[16px]">{instruction}</div>
-
-          {mode === 'breathe' && reducedMotion && !breatheDone && (
-            <div className="text-[12px] text-amber-100/70 text-center mb-1.5">
-              {manualBreaths} of 3 breaths
-            </div>
-          )}
 
           {mode === 'intro' && (
             <button
@@ -513,17 +578,17 @@ export default function MindfulnessCalmPlace() {
             </button>
           )}
 
-          {mode === 'breathe' && reducedMotion && !breatheDone && (
+          {mode === 'breathe' && breatheStage === 'ready' && (
             <button
               type="button"
-              onClick={manualBreath}
+              onClick={beginBreathing}
               className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
             >
-              Breathe
+              Start breathing
             </button>
           )}
 
-          {mode === 'breathe' && breatheDone && (
+          {mode === 'breathe' && breatheStage === 'done' && (
             <button
               type="button"
               onClick={() => setMode('close')}
