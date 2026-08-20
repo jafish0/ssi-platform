@@ -18,6 +18,7 @@ import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
 import BodyMapping from '../components/BodyMapping.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
+import ElevatorPitch from '../components/ElevatorPitch.jsx'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
@@ -32,6 +33,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-spark-voice', label: "Review: Spark's voice" },
   { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
   { value: 'review-mindfulness', label: 'Review: Mindfulness Calm Place' },
+  { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
   // The official breakdown
   { value: 'assent-measures', label: 'Child Assent / Measures' },
   { value: 'exposition', label: 'Exposition' },
@@ -621,6 +623,29 @@ export default function GainsDemoPage() {
                     style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
                   >
                     <MindfulnessCalmPlace />
+                  </div>
+                </div>
+              </ReviewItem>
+
+              {/* 6 — Zone 3 "Elevator Pitch" message-builder (playable) */}
+              <ReviewItem
+                n={6}
+                title="Zone 3: Message to Your Guardian (playable)"
+                section="review-zone3pitch"
+              >
+                <p className="mb-3">
+                  Holly&apos;s end-of-Zone-3 activity: the teen builds a short
+                  message asking a guardian for trauma therapy, one step at a
+                  time (greeting, situation, request, how it&apos;ll help),
+                  then sends it and earns the Wingsuit to cross the bridge.
+                  No-fail; every pick can be changed before sending.
+                </p>
+                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
+                  <div
+                    className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
+                  >
+                    <ElevatorPitch />
                   </div>
                 </div>
               </ReviewItem>

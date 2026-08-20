@@ -45,6 +45,7 @@ const SECTION_LABELS = {
   'review-spark-voice': "Review: Spark's voice",
   'review-bodymap': 'Review: Body Mapping activity',
   'review-mindfulness': 'Review: Mindfulness Calm Place',
+  'review-zone3pitch': 'Review: Zone 3 Elevator Pitch',
   'assent-measures': 'Child Assent / Measures',
   exposition: 'Exposition',
   npcs: 'NPCs',
