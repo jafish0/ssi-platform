@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { Play, Download, AlertCircle } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
+import SplashScreen from '../components/SplashScreen.jsx'
 import { TEST_REGISTRY } from '../lib/testRegistry.js'
 import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
@@ -57,15 +58,22 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // than graduating straight to LEARNING_SKILLS_CARDS; that's a follow-up
 // draft once/if it clears review, same as Scenes 1-2 + Conclusion.
 //
-// Draft 95 (2026-08-20): removed two redundant cards Josh flagged —
-// the splash/landing screen (added as a Draft 93 follow-up, one week
-// earlier) and the Assent "Read this to me" narration (Draft 92). Both
-// are already reviewable in context elsewhere on this page (the splash
-// at /demo/sandbox/splash, the narration live on the real Assent
-// sandbox in "Start here — Child Assent" below), so a standalone card
-// here was redundant. That was also the only user of ReviewCard's
-// `component` media branch, so it's removed along with the card rather
-// than left as unused infrastructure.
+// Draft 95 (2026-08-20): removed the Assent "Read this to me" narration
+// card — it's already reviewable in context on the real Assent sandbox,
+// which now lives in this section too (see below).
+//
+// 2026-08-20 follow-up: Draft 95 also removed the splash/landing screen
+// card, on the read that it duplicated /demo/sandbox/splash. Turned out
+// that "duplicate" was really a bug — the splash TEST_REGISTRY entry
+// shared the Assent card's category, so it was ALSO rendering in a
+// separate "Start here — Child Assent" section further down the page
+// (fixed by giving it its own category). The card up here was wanted —
+// restored below, still muted by default. The Child Assent card moved up
+// from that now-empty "Start here" section to join it, rendered directly
+// rather than through `ReviewCard` (neither is a video/image/audio cut):
+// the splash is the live component itself, full-size, not squeezed into
+// ReviewCard's shared 9:16 frame; Assent keeps its plain launch-test card
+// look since it's a "go try this yourself" link, not a "watch this" cut.
 const REVIEW_CARDS = [
   {
     title: 'Ready for Roots — Intro Video',
@@ -415,7 +423,7 @@ export default function DemoPage() {
     }
   }
 
-  const assent = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots assent')
+  const assentEntry = TEST_REGISTRY.find((e) => e.id === 'assent')
   const activities = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots activity')
   const tests = TEST_REGISTRY.filter((e) => e.category === 'Ready for Roots test')
 
@@ -446,50 +454,59 @@ export default function DemoPage() {
           they&apos;re ready.
         </p>
 
+        {/* Splash / Landing Screen — the live component itself, full-size,
+            not squeezed into ReviewCard's shared 9:16 frame (see the
+            2026-08-20 follow-up note above REVIEW_CARDS). Begin is a no-op
+            here; the ambient loop truly autoplays, muted by default. */}
+        <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
+          <h4 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
+            Splash / Landing Screen — &quot;Ready for Roots&quot;
+          </h4>
+          <div className="mb-4">
+            <SplashScreen onBegin={() => {}} />
+          </div>
+          <p className="text-[13px] text-slate-600 leading-relaxed text-center mb-4 max-w-[480px] mx-auto">
+            The first-start-only landing screen shown before the assent —
+            tree image, title, ambient looping music (muted by default —
+            tap the mute icon to hear it), and a Begin button. Also live at
+            /demo/sandbox/splash.
+          </p>
+          <div className="text-center">
+            <FeedbackButton
+              label="Leave a note on this screen"
+              initialArea="Splash Screen"
+            />
+          </div>
+        </div>
+
+        {/* Child Assent — the very first thing a participant sees, before
+            the pretest. Kept as a plain launch-test card (not a
+            ReviewCard) since it's a "go try this yourself" link rather
+            than a cut to watch. */}
+        {assentEntry && (
+          <div className="max-w-[420px] mx-auto mb-8">
+            <article className="bg-white rounded-2xl shadow-card p-4">
+              <h3 className="text-[16px] font-semibold text-slate-800 mb-2">
+                {assentEntry.displayName}
+              </h3>
+              <p className="text-[13px] text-slate-600 leading-relaxed mb-4">
+                {assentEntry.description}
+              </p>
+              <Link
+                to={`/demo/sandbox/${assentEntry.id}`}
+                className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+              >
+                <Play size={14} strokeWidth={2} />
+                Launch test
+              </Link>
+            </article>
+          </div>
+        )}
+
         {REVIEW_CARDS.map((card) => (
           <ReviewCard key={card.title} card={card} />
         ))}
       </section>
-
-      {/* Child Assent — the very first thing a participant sees, before the
-          pretest. Surfaced first so reviewers hit it in program order. */}
-      {assent.length > 0 && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
-              Start here — Child Assent
-            </h2>
-            <span className="text-[12px] text-slate-500">
-              The first screen of the program.
-            </span>
-          </div>
-          <p className="text-[14px] text-slate-700 leading-relaxed mb-4 max-w-[760px]">
-            <strong>Assent.</strong> Before anything else, the child reads the
-            assent and chooses whether to take part. Selecting{' '}
-            <strong>No</strong> ends the session on a friendly exit screen;{' '}
-            <strong>Yes</strong> leads into the pretest.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {assent.map((entry) => (
-              <article key={entry.id} className="bg-white rounded-2xl shadow-card p-4 flex flex-col">
-                <h3 className="text-[16px] font-semibold text-slate-800 mb-2">
-                  {entry.displayName}
-                </h3>
-                <p className="text-[13px] text-slate-600 leading-relaxed flex-1 mb-4">
-                  {entry.description}
-                </p>
-                <Link
-                  to={`/demo/sandbox/${entry.id}`}
-                  className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
-                >
-                  <Play size={14} strokeWidth={2} />
-                  Launch test
-                </Link>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Activities */}
       <section className="mb-10">

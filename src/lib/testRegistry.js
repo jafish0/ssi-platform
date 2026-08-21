@@ -33,9 +33,15 @@ export const TEST_REGISTRY = [
   {
     id: 'splash',
     displayName: 'Splash / Landing',
-    category: 'Ready for Roots assent',
+    // Its own category (2026-08-20 fix) — 'Ready for Roots assent' put it
+    // in the "Start here — Child Assent" grid on /demo alongside the real
+    // Assent card, which Josh flagged as an unwanted duplicate (it's
+    // already featured live at the top of "For Review This Week"). Doesn't
+    // match any of /demo's three category filters (assent/activity/test),
+    // so it now only appears there and via this direct sandbox route.
+    category: 'Ready for Roots delivery-flow',
     description:
-      'The first-start-only landing screen (Draft 93) shown before the assent: tree image, "Ready for Roots" title, ambient looping music with a mute toggle, and a Begin button. Begin is mocked to just log here.',
+      'The first-start-only landing screen (Draft 93) shown before the assent: tree image, "Ready for Roots" title, ambient looping music (muted by default) with a mute toggle, and a Begin button. Begin is mocked to just log here.',
     component: SplashScreen,
     mockProps: { onBegin: () => console.log('[sandbox] SplashScreen Begin clicked') },
   },
