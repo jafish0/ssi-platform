@@ -132,6 +132,24 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **5314073** (2026-08-20) — Draft 43: **six new Spark voice contenders (A–F), plain
+  labels only.** Goes from three players to six — A/B/C replaced with new audio (same
+  filenames), D/E/F are new. Labels are plain "Spark A" through "Spark F" with no
+  per-voice description or commentary anywhere, matching the existing neutral-labeling
+  intent from Draft 28 so the team keeps picking blind. Kept the shared intro script and
+  the `review-spark-voice` comment thread.
+  Added a `?v=3` cache-bust to all six URLs. Re-verified against the live host that
+  `Cache-Control` is still `max-age=0, must-revalidate` with an ETag (so browsers already
+  get fresh bytes without it) before adding it anyway — zero-cost, and it turns "no stale
+  audio plays" from something that follows from Cache-Control semantics into something
+  the URL itself guarantees.
+  Also cleaned up a stale comment on this item left over from the zone-rename proposal
+  that used to share this space (accepted back in Draft 25).
+  **Verified:** all six players show plain labels with no commentary anywhere; all six
+  decode with distinct durations and audibly play; all six URLs carry `?v=3` and serve
+  200 with correct file sizes; the shared intro script and comment thread are intact. No
+  page overflow at 375px; no console errors.
+
 - **784327c** (2026-08-20) — Draft 42: **the final Zone 1 traveler art is live.** The
   skin-tone-matched final version was already sitting in the working tree at both
   `traveler-stage1-hallow.webp` paths — committed here for the first time.
@@ -2227,7 +2245,7 @@ The Zone 1 / stage-1 traveler art has been updated to the skin-tone-matched **fi
 *End of Draft 42.*
 
 
-### Draft 43 — Review section: replace the Spark voices with the new six (A–F), plain labels only
+### Draft 43 — Review section: replace the Spark voices with the new six (A–F), plain labels only — ✅ SHIPPED 5314073 (2026-08-20)
 
 In the "Ideas & Demos for Review" section's **Spark's voice** item (`review-spark-voice`): take down the current voices and replace them with **six** new contenders, labeled only **"Spark A" through "Spark F"** — **no descriptions or commentary** about any voice (no "old man," "young male," etc.).
 
