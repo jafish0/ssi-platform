@@ -454,16 +454,20 @@ export default function DemoPage() {
           they&apos;re ready.
         </p>
 
-        {/* Splash / Landing Screen — the live component itself, full-size,
-            not squeezed into ReviewCard's shared 9:16 frame (see the
-            2026-08-20 follow-up note above REVIEW_CARDS). Begin is a no-op
-            here; the ambient loop truly autoplays, muted by default. */}
+        {/* Splash / Landing Screen — the live component itself (not
+            squeezed into ReviewCard's shared media-frame markup, per Josh's
+            "just the page" ask), but sized to the same phone-screen
+            max-w-[360px] column every other card's media uses via
+            `standalone={false}` — the default `standalone` wrapper is
+            min-h-[100dvh], which rendered nearly full-screen-tall
+            regardless of column width. Begin is a no-op here; the ambient
+            loop truly autoplays, muted by default. */}
         <div className="mb-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 max-w-[760px] mx-auto">
           <h4 className="text-[18px] font-bold text-ctac-navy mb-4 text-center">
             Splash / Landing Screen — &quot;Ready for Roots&quot;
           </h4>
-          <div className="mb-4">
-            <SplashScreen onBegin={() => {}} />
+          <div className="mx-auto w-full max-w-[360px] mb-4">
+            <SplashScreen onBegin={() => {}} standalone={false} />
           </div>
           <p className="text-[13px] text-slate-600 leading-relaxed text-center mb-4 max-w-[480px] mx-auto">
             The first-start-only landing screen shown before the assent —

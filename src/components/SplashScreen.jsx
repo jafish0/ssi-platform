@@ -23,17 +23,24 @@
 // the sandbox's own layout — with height derived from that width via
 // `aspect-ratio: 9/16` (same convention `ReviewCard` uses). Since the
 // source image's native ratio IS exactly 9:16, that frame never needs to
-// crop the image — it's centered in a `min-h-[100dvh]` flex wrapper, so on
-// a real phone (usually a little taller than 9:16) the frame spans the
-// full device width with a thin, on-brand letterbox strip top and bottom,
-// never a cropped composition.
+// crop the image.
+//
+// `standalone` (default true — the real delivery flow and the direct
+// sandbox route) wraps the frame in a `min-h-[100dvh]` flex-centered
+// wrapper, so on a real phone (usually a little taller than 9:16) the
+// frame spans the full device width with a thin, on-brand letterbox strip
+// top and bottom. `standalone={false}` skips that wrapper and returns just
+// the frame — for embedding somewhere already sized to a specific width,
+// like the `max-w-[360px]` phone-sized column on /demo's "For Review This
+// Week" (2026-08-20) — without which the `min-h-[100dvh]` wrapper made it
+// render nearly full-screen-tall regardless of how narrow its column was.
 import { useEffect, useRef, useState } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 
 const FADE_MS = 500
 const FADE_STEPS = 10
 
-export default function SplashScreen({ onBegin }) {
+export default function SplashScreen({ onBegin, standalone = true }) {
   const audioRef = useRef(null)
   const [muted, setMuted] = useState(true)
   const [autoplayBlocked, setAutoplayBlocked] = useState(false)
@@ -130,6 +137,8 @@ export default function SplashScreen({ onBegin }) {
       </div>
     </div>
   )
+
+  if (!standalone) return frame
 
   return (
     <main className="min-h-[100dvh] w-full flex items-center justify-center bg-[#2b2417]">
