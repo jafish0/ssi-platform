@@ -132,6 +132,30 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **b50d520** (2026-08-20) — Drafts 44–45: **World & Development Map moves up, zone cards
+  sync to the grid, "Focusing Glass" → "Focusing Lens."** Implemented together since 45
+  syncs to 44's grid.
+  **Draft 44:** moved "World and Development Map" to render directly after "Ideas & Demos
+  for Review," ahead of "In Development" (new order: Review → World & Development Map →
+  In Development → the official breakdown). Filled in the grid: Zone 1 gear → **Lantern**;
+  Zone 2 gear → **Focusing Lens (in development)**; Zone 3 activity → **Message to Your
+  Guardian** (gear stays A Wingsuit); Zone 4 activity → **Mindfulness: Calm Place (3-3-3)**
+  (gear stays Oxygen Mask); Zone 5 gear → **Goggles (growth mindset) (in development)**.
+  **Draft 45:** renamed "Focusing Glass" → "Focusing Lens" everywhere it appeared. Synced
+  the per-zone breakdown cards to the grid — Zone 3's activity dropped its `pending: true`
+  flag now that it's adopted and built (matching Zone 1's Body Mapping convention); Zone
+  4's description was rewritten to describe the actual built Mindfulness activity rather
+  than the generic pre-build 3-3-3 text. Added a Final Boss synopsis to the Zone 5 card via
+  a new optional `zone.synopsis` field, rendered as its own "In development" Beat —
+  summarizing the adopted script (three barriers, each cleared with an earned tool, ending
+  at lighting the Beacon). This is Cowork's own summary, not Holly's verbatim script, so
+  its one em dash got rewritten as two sentences per the standing style rule; the "→"
+  connectors aren't covered by that rule and stayed.
+  **Verified:** section order is exactly Review → World & Development Map → In
+  Development → the rest; every grid cell matches; every synced zone card field matches
+  the grid; Zone 5 shows the Final Ascent synopsis with its own pill; no "Focusing Glass"
+  remains anywhere. No overflow at 375px; no console errors.
+
 - **5314073** (2026-08-20) — Draft 43: **six new Spark voice contenders (A–F), plain
   labels only.** Goes from three players to six — A/B/C replaced with new audio (same
   filenames), D/E/F are new. Labels are plain "Spark A" through "Spark F" with no
@@ -2275,3 +2299,42 @@ Show six players labeled Spark A–F. Keep Spark's Option-2 intro text as the sh
   Spark F = spark-voice-f.mp3 <- "Spark F Spark 5 on eleven labs.mp3"         (ElevenLabs: spark 5)
   Sources: Gains for Teens/Voices/Spark with Music/New Sparks/
 -->
+
+
+### Draft 44 — Demo: move the World & Development Map up + fill in the Zone Map grid — ✅ SHIPPED b50d520 (2026-08-20)
+
+**1. Move the section.** Move the **World & Development Map** section (the Zone Map roadmap table + the `map-and-world.webp` image, driven by `ZONE_MAP_ROWS`) so it renders as the **first section after "Ideas & Demos for Review"** — above the "In Development" section and everything else. New page order: Ideas & Demos for Review → World & Development Map → In Development → (Child Assent & Measures, Playable Character, zones, Prototypes…).
+
+**2. Update the grid cells (`ZONE_MAP_ROWS`):**
+- **Zone 1 · The Dark Abyss** — gear `TBD` → **"Lantern"**.
+- **Zone 2 · The Lantern Path** — gear `TBD` → **"Focusing Lens (in development)"**.
+- **Zone 3 · The Mistfields** — activity `Bridge beat (TBD)` → **"Message to Your Guardian"** (Holly's elevator-pitch, now adopted). Gear stays **"A Wingsuit"** (earned by that activity to cross the bridge).
+- **Zone 4 · The Bright Reaches** — activity → **"Mindfulness: Calm Place (3-3-3)"** (built). Gear stays **"Oxygen Mask."**
+- **Zone 5 · The Threshold** — gear `Final gear / full toolkit` → **"Goggles (growth mindset) (in development)"**. Activity can stay as the pending Part 2 / Growth Mindset; if you want, note the **Final Boss summit (in development)** there since the team adopted it.
+
+Leave the rest of each row (scene, video, goal) as-is.
+
+**Naming flag:** Josh's latest term is **"Focusing Lens"**, but our gear/toolbox canon + the transition-phrases draft used **"Focusing Glass."** Using "Focusing Lens" here per Josh; we may want to reconcile to one name across the exposition/transition copy later.
+
+**Verify.** The World & Development Map is the first section after "Ideas & Demos for Review"; the grid shows Lantern (Z1), Focusing Lens (in development) (Z2), Message to Your Guardian + Wingsuit (Z3), Mindfulness: Calm Place + Oxygen Mask (Z4), Goggles (growth mindset) (in development) (Z5); no layout breaks; the world-map image still renders. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 44.*
+
+
+### Draft 45 — "Focusing Lens" rename + sync the Zone breakdown cards to the grid + Final Boss synopsis on Zone 5 — ✅ SHIPPED b50d520 (2026-08-20)
+
+**1. Rename "Focusing Glass" → "Focusing Lens"** everywhere it appears in the demo/app (all user-facing copy; update comments where it aids clarity). "Focusing Lens" is now the canonical gear name.
+
+**2. Sync the per-zone breakdown cards (the detailed Zone sections below the map) to Draft 44's grid** so the cards and the grid agree:
+- Zone 1 · The Dark Abyss — gear: **Lantern**
+- Zone 2 · The Lantern Path — gear: **Focusing Lens (in development)**
+- Zone 3 · The Mistfields — activity: **Message to Your Guardian** (Holly's elevator-pitch, adopted); gear: **Wingsuit**
+- Zone 4 · The Bright Reaches — activity: **Mindfulness: Calm Place (3-3-3)**; gear: **Oxygen Mask**
+- Zone 5 · The Threshold — gear: **Goggles (growth mindset) (in development)**
+
+**3. Add a Final Boss synopsis to the Zone 5 card** (short summary of the adopted summit script; mark it in development):
+> **The Final Ascent (in development).** Three barriers block the last climb, each a mixed feeling about starting therapy, each cleared with a tool you've earned. Darkness (mixed feelings) → the growth-mindset goggles reveal a message to carry. Fog (past bad experiences) → the wingsuit carries you to a teen's positive testimonial. A blinding light (feeling alone) → your lantern shows the light is really many others holding their own lanterns — you're not alone. Then you light the Beacon at the summit of Mount Hope.
+
+**Verify.** No "Focusing Glass" remains in user-facing copy (all read "Focusing Lens"); each Zone card's gear/activity matches the World & Development Map grid; the Zone 5 card shows the Final Boss synopsis marked in development. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 45.*
