@@ -110,6 +110,76 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`c7db336` · 2026-08-20** — **Draft 94 + 95 — Sam's Story Gender-Neutral review card, splash muted by default, trim two redundant review cards.** **Draft 94 Part A:** added the Gender-Neutral cut of Sam's Story to "For Review This Week" (`youtubeId uOvuJrOV7RA`), same shape as the existing Female Version card, placed immediately after it. **Draft 94 Part B:** the splash screen's ambient loop now starts muted (still autoplays, just silently) rather than playing audibly on mount — a participant opts in to sound via the existing mute/unmute icon, which now reflects that starting state. The autoplay-blocked fail-open logic, fade-out-on-Begin, and unmute-on-click paths were already state-driven off `muted`/`autoplayBlocked`, so flipping the initial `muted` state to `true` was the only code change needed. **Draft 95:** removed the splash and Assent-narration cards from `REVIEW_CARDS` — both were redundant with content already reviewable elsewhere on `/demo` (the splash at `/demo/sandbox/splash`, the narration live on the real Assent sandbox in "Start here"). Since the splash card was the only user of `ReviewCard`'s `component` media branch (added as part of the Draft 93 follow-up fix one week earlier), removed that branch along with it rather than leave it as unused infrastructure — same reasoning applied to `SplashScreen`'s `fill` prop, which existed solely to support that one embedding. **Verified live:** "For Review This Week" now shows exactly 4 cards (Intro Video, Sam's Story Female, Sam's Story Gender-Neutral, Kai Part 2 Scene 3) in the right order, Gender-Neutral's embed loads the correct video; the Assent sandbox still shows the "Read this to me" narration live; `/demo/sandbox/splash` still loads directly and starts muted (`paused: false`, `muted: true`, mute icon reads "Turn music on"); unmuting and the Begin fade-and-advance both still work in the sandbox and against a real single-use QA code through the actual delivery flow. Build + console clean.
+
+  <details>
+  <summary>Draft 94 + 95 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 94 — Sam's Story Gender-Neutral review card + splash music muted by default
+
+**Part A — add the Gender-Neutral Sam's Story cut to "For Review This Week."**
+Same pattern as Draft 90's Female Version card in `REVIEW_CARDS`
+(`src/pages/DemoPage.jsx`). New card, placed immediately **after** the
+Sam's Story — Female Version card and before whatever currently follows it:
+
+- `youtubeId: 'uOvuJrOV7RA'`
+- Heading/label: "Sam's Story — Gender-Neutral Version"
+- Same card shape/fields as the Female Version card (title, short intro
+  line, embed) — no new fields needed.
+
+**Part B — splash screen music: muted by default.** Draft 93 shipped the
+splash (`SplashScreen`, live via `a3423cc`) with the ambient loop
+attempting autoplay-with-sound on mount. Change: the loop should start
+**muted** by default (audio still plays/loops, just silent), with the
+existing mute/unmute icon reflecting that starting state so a participant
+can turn sound ON if they want it, rather than the track playing audibly
+and requiring them to turn it off. This is a **behavior change**, not a
+new capability — the play/pause and autoplay-blocked fail-open logic
+Draft 93 already built stays the same; only the initial muted state
+flips. Same fade-out-on-Begin behavior as before, just fading from
+whatever volume is currently active (0 if still muted, so no audible
+change if the participant never unmuted).
+
+**Verify:** fresh single-use code → splash renders, ambient track is
+playing but silent by default, mute icon shows the muted state → tapping
+unmute produces audible sound → Begin still fades and advances correctly
+→ `/demo/sandbox/splash` and the new "For Review This Week" splash card
+(from the Draft 93 follow-up fix) reflect the same muted-by-default
+behavior → Gender-Neutral card renders correctly positioned after Female
+Version, embed plays → build + console clean.
+
+## Draft 95 — Remove two redundant "For Review This Week" cards (splash + assent narration)
+
+Two `REVIEW_CARDS` entries in `src/pages/DemoPage.jsx` are redundant now
+that other parts of `/demo` already cover what they show, and Josh wants
+both removed from that list (nothing else about `/demo` changes):
+
+**1. Remove the `'Assent — "Read This to Me" Narration'` card entirely**
+(the `audioSrc: '/kai-narration/assent.mp3'` entry). The "Start here —
+Child Assent" section further down the page already renders the real,
+live `Assent.jsx` sandbox — which already has the "Read this to me"
+narration option built into it (shipped in Draft 92) — so reviewers can
+already experience the narration in context, on the actual assent screen,
+rather than as an isolated audio player. No need for the standalone card.
+
+**2. Remove the `'Splash / Landing Screen — "Ready for Roots"'` card
+entirely** (the `component: SplashScreen` entry, currently first in the
+array). Per Josh: "we don't need it there." Leave the splash screen's
+existing `/demo/sandbox/splash` `TEST_REGISTRY` entry untouched — it stays
+reachable there, this only removes it as a featured review card.
+
+**Net result:** `REVIEW_CARDS` goes from 5 entries down to 3 (Intro Video,
+Sam's Story — Female Version, Kai Part 2 Scene 3), plus whatever Draft 94
+adds for the Gender-Neutral cut. Order otherwise unchanged. No other
+section of `/demo` (including "Start here — Child Assent") changes.
+
+**Verify:** `/demo` no longer shows the splash or assent-narration cards
+in "For Review This Week"; `/demo/sandbox/splash` still loads directly;
+the "Start here — Child Assent" sandbox still shows the narration option
+live on the real assent screen; build + console clean.
+
+  </details>
+
 - **`90ea28d` · 2026-08-20** — **Splash image: re-cropped so the trunk lines up with the Begin button.** Josh flagged the trunk as sitting noticeably right of the (centered) Begin button. Measured it directly by sampling pixel luminance across the trunk band rather than eyeballing — it sat consistently 9-11% right of the image's horizontal center. Re-cropped from the original PNG (1.3x zoom centered on the trunk's actual position, still ~9:16) rather than a CSS-side pan, so the frame's existing sizing logic needed no changes. Verified via canvas pixel sampling on the actual rendered `<img>`: Begin's center sits at exactly 50% of the frame width, trunk samples land between 50.3-52.1% across four heights.
 
 - **`21cca18` · 2026-08-19** — **Splash screen: fixed a bad crop Josh caught live, added it to "For Review This Week."** The frame was sizing itself off the raw viewport (`min-h-screen` + `bg-cover`), so nested inside the demo sandbox's wide card it cropped almost the whole tree image down to a sliver — fixed with `w-full` + `aspect-ratio: 9/16` (matching `ReviewCard`'s own convention) so it's always an exact 9:16 box, no crop ever needed. Separately found the title/button overlay wasn't actually landing near the top/bottom (a `justify-between` flex layout floats the middle child toward center, not top) — switched to `top`/`bottom` percentage positioning, verified live that the title sits in the image's open-sky band and Begin in the open-ground band. Also added it as the first live, interactive card in "For Review This Week" on `/demo` (`ReviewCard`'s new `component` branch), not just reachable via the separate sandbox link. Verified live on production at both mobile- and desktop-shaped viewports plus the real delivery flow — frame ratio exactly 0.5625 in all three.
