@@ -7,36 +7,35 @@
 // `play()` on mount, catch a block silently, and never let ambient audio
 // gate anything — the mute/unmute control is the only feedback, there's no
 // error state to show. Fades the loop out (rather than cutting it) when
-// Begin is clicked, per Josh's addendum to the draft.
+// Begin is clicked, per Josh's addendum to the draft. Draft 94 Part B
+// (2026-08-20): starts muted rather than playing audibly — the loop still
+// autoplays (silently) on mount, and the mute icon reflects that starting
+// state, so a participant opts IN to sound rather than having to opt out.
 //
 // Sizing (fixed after Josh flagged the sandbox preview as badly cropped —
 // the original `bg-cover` over a raw `min-h-screen` box stretched the 9:16
 // tree image to whatever shape the surrounding page happened to be, cropping
 // away the deliberately-composed sky/ground margins whenever that shape
 // wasn't close to portrait, e.g. the sandbox's wide, non-full-viewport-height
-// card). `fill="screen"` (the default — the real delivery flow and the
-// direct sandbox route) makes the frame `w-full` — always the actual
-// available width, whatever that is, so it's never fighting a flex/shrink
-// ancestor the way a viewport-unit-based width would be once nested a few
-// levels deep inside the sandbox's own layout — with height derived from
-// that width via `aspect-ratio: 9/16` (same convention `ReviewCard` uses).
-// Since the source image's native ratio IS exactly 9:16, that frame never
-// needs to crop the image — it's centered in a `min-h-[100dvh]` flex
-// wrapper, so on a real phone (usually a little taller than 9:16) the
-// frame spans the full device width with a thin, on-brand letterbox strip
-// top and bottom, never a cropped composition. `fill="container"` skips
-// all of that and simply fills 100% of the parent — for embedding inside
-// another element that already guarantees a 9:16 box, like `ReviewCard`'s
-// frame.
+// card). The frame is `w-full` — always the actual available width,
+// whatever that is, so it's never fighting a flex/shrink ancestor the way a
+// viewport-unit-based width would be once nested a few levels deep inside
+// the sandbox's own layout — with height derived from that width via
+// `aspect-ratio: 9/16` (same convention `ReviewCard` uses). Since the
+// source image's native ratio IS exactly 9:16, that frame never needs to
+// crop the image — it's centered in a `min-h-[100dvh]` flex wrapper, so on
+// a real phone (usually a little taller than 9:16) the frame spans the
+// full device width with a thin, on-brand letterbox strip top and bottom,
+// never a cropped composition.
 import { useEffect, useRef, useState } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 
 const FADE_MS = 500
 const FADE_STEPS = 10
 
-export default function SplashScreen({ onBegin, fill = 'screen' }) {
+export default function SplashScreen({ onBegin }) {
   const audioRef = useRef(null)
-  const [muted, setMuted] = useState(false)
+  const [muted, setMuted] = useState(true)
   const [autoplayBlocked, setAutoplayBlocked] = useState(false)
   const [fading, setFading] = useState(false)
 
@@ -85,25 +84,8 @@ export default function SplashScreen({ onBegin, fill = 'screen' }) {
     }, FADE_MS / FADE_STEPS)
   }
 
-  // fill="container": 100% of a parent that already guarantees a 9:16 box
-  // (ReviewCard's frame). fill="screen" (default): full device width always
-  // (true full-bleed horizontally, matching the original full-bleed intent)
-  // with height derived from that width via the SAME aspect-ratio
-  // `ReviewCard` itself uses — container-relative, not raw vw/vh units,
-  // so it isn't at the mercy of flexbox shrinking it to fit a narrower
-  // ancestor (that's what produced the badly-cropped sandbox preview this
-  // replaces: a `min-h-screen` + `bg-cover` box took on whatever stray
-  // shape its wrapping page happened to be, cropping into the image's
-  // deliberately-composed sky/ground margins). Most phones are a little
-  // taller than 9:16, so this leaves a thin, on-brand letterbox strip top
-  // and bottom rather than ever cropping the image.
-  const frameStyle =
-    fill === 'container' ? { width: '100%', height: '100%' } : { aspectRatio: '9 / 16' }
-  const frameClassName =
-    fill === 'container' ? 'relative overflow-hidden' : 'relative overflow-hidden w-full'
-
   const frame = (
-    <div className={frameClassName} style={frameStyle}>
+    <div className="relative overflow-hidden w-full" style={{ aspectRatio: '9 / 16' }}>
       <img
         src="/splash/tree.jpg"
         alt=""
@@ -148,8 +130,6 @@ export default function SplashScreen({ onBegin, fill = 'screen' }) {
       </div>
     </div>
   )
-
-  if (fill === 'container') return frame
 
   return (
     <main className="min-h-[100dvh] w-full flex items-center justify-center bg-[#2b2417]">
