@@ -133,7 +133,7 @@ const ZONE_MAP_ROWS = [
     scene: 'darkest; candle, beacon far above',
     video: 'Video 1 — what trauma is',
     activity: 'Body Mapping',
-    gear: 'TBD',
+    gear: 'Lantern',
     goal: 'Understand trauma; normalize bodily responses.',
   },
   {
@@ -141,14 +141,14 @@ const ZONE_MAP_ROWS = [
     scene: 'brightening slopes; lanterns to relight',
     video: 'Video 2 — the four reactions',
     activity: 'Character Examples',
-    gear: 'TBD',
+    gear: 'Focusing Lens (in development)',
     goal: 'Recognize and name common trauma reactions.',
   },
   {
     zone: '3 · The Mistfields',
     scene: 'above first clouds; light breaks through',
     video: 'Video 3 — these are normal; help works + Getting the best trauma therapy',
-    activity: 'Bridge beat (TBD)',
+    activity: 'Message to Your Guardian',
     gear: 'A Wingsuit',
     goal: 'Normalize + instill hope; bridge to getting help.',
   },
@@ -156,7 +156,7 @@ const ZONE_MAP_ROWS = [
     zone: '4 · The Bright Reaches',
     scene: 'above the clouds; warm, open',
     video: 'What to Expect from Therapy — ends with the 3-3-3 rule',
-    activity: 'Mindfulness: 3-3-3 (see / hear / feel + breathing)',
+    activity: 'Mindfulness: Calm Place (3-3-3)',
     gear: 'Oxygen Mask — helps you breathe',
     goal: 'Demystify therapy; teach grounding.',
   },
@@ -165,7 +165,7 @@ const ZONE_MAP_ROWS = [
     scene: 'the Beacon; door opens into light',
     video: 'Part 2 (pending): shame/reluctance + Growth Mindset',
     activity: 'TBD (CTAC)',
-    gear: 'Final gear / full toolkit',
+    gear: 'Goggles (growth mindset) (in development)',
     goal: 'Address shame; commit; readiness.',
   },
 ]
@@ -187,7 +187,7 @@ const REVIEW_ARCADES = [
 ]
 
 const REVIEW_GEAR_POINTS = [
-  'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Glass. In the Mistfields it grows bird-of-light wings (a reskin of the existing bird traversal, with no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
+  'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Lens. In the Mistfields it grows bird-of-light wings (a reskin of the existing bird traversal, with no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
   'Intent for comment: tools grow stronger the more they’re used (practice), and the real power is in combining them. That is the coping-skills-toolbox idea.',
 ]
 
@@ -225,7 +225,7 @@ const FINAL_BOSS_SCRIPT = [
 ]
 
 const REVIEW_GEAR_THEME =
-  'Every activity earns a tool. The tools combine and grow. A lantern becomes a Focusing Glass, and the Glass grows wings, so you reach the summit carrying everything you’ve learned.'
+  'Every activity earns a tool. The tools combine and grow. A lantern becomes a Focusing Lens, and the Lens grows wings, so you reach the summit carrying everything you’ve learned.'
 
 // ---------- Playable character ----------
 // One protagonist (the team dropped the choose-your-character set), shown as
@@ -289,7 +289,7 @@ const ZONES = [
         </>
       ),
     },
-    gear: 'TBD.',
+    gear: 'Lantern.',
     traversal: { text: 'Traversal to Zone 2.', pending: true },
     goal: 'Understand what trauma is; normalize the body’s responses.',
   },
@@ -312,7 +312,7 @@ const ZONES = [
         </>
       ),
     },
-    gear: 'TBD.',
+    gear: 'Focusing Lens (in development).',
     traversal: { text: 'Traversal to Zone 3.', pending: true },
     goal: 'Recognize and name common trauma reactions.',
   },
@@ -327,9 +327,16 @@ const ZONES = [
       { title: 'Getting the best trauma therapy', duration: '~60 sec (est.)', script: TIPS },
     ],
     activity: {
-      title: 'Bridge beat',
-      pending: true,
-      desc: 'A light, reflective bridge beat (TBD). A message, not a drill.',
+      title: 'Message to Your Guardian',
+      desc: (
+        <>
+          Holly’s and Dr. Sprang’s message-builder, step by step: greeting,
+          describe the situation, normalize it, offer to make it easy, make
+          your request, then how it’ll help. The six steps assemble into
+          one message to a guardian, with a “Write your own” option at
+          every step. Saved to the action plan; earns the Wingsuit.
+        </>
+      ),
     },
     gear: 'A Wingsuit — lets you take flight.',
     traversal: {
@@ -348,27 +355,13 @@ const ZONES = [
       { title: 'What to Expect from Therapy', duration: '47 sec', script: WHAT_TO_EXPECT },
     ],
     activity: {
-      title: 'Mindfulness — the 3-3-3 rule',
+      title: 'Mindfulness: Calm Place (3-3-3)',
       desc: (
         <>
-          <p>
-            Try it right now if you’re feeling panicky or overwhelmed. It’s
-            called the 3-3-3 rule. Identify each of these in your surroundings:
-          </p>
-          <ul className="list-disc pl-5 mt-2 space-y-1">
-            <li>
-              <strong>3 things you see</strong> — look around and name three
-              objects you can see.
-            </li>
-            <li>
-              <strong>3 sounds you hear</strong> — close your eyes and tune in to
-              three different sounds around you.
-            </li>
-            <li>
-              <strong>3 deep breaths</strong> — breathe along with an expanding
-              circle that guides a long, slow inhale and exhale.
-            </li>
-          </ul>
+          Spark leads a calm-place visualization that doubles as the 3-3-3
+          technique: pick three things you can see, then three things you
+          can hear, then follow a guided box-breath with Spark. Earns the
+          Oxygen Mask, with a chance to practice again and upgrade it.
         </>
       ),
     },
@@ -397,7 +390,27 @@ const ZONES = [
       { title: 'Growth Mindset — Choosing your mindset', duration: '~55 sec', script: GROWTH },
     ],
     activity: { title: 'Activity', pending: true, desc: 'To be designed with CTAC.' },
-    gear: 'Final gear / full toolkit.',
+    // Draft 45: a short synopsis of the adopted Final Boss summit script
+    // (FINAL_BOSS_SCRIPT, in the In Development section) — this is the
+    // encounter that follows the Part 2 growth-mindset activity above,
+    // ending in the Arrival below. Our own summary, not Holly's verbatim
+    // script, so it follows the standing no-em-dash style rule.
+    synopsis: {
+      title: 'The Final Ascent',
+      desc: (
+        <>
+          Three barriers block the last climb, each a mixed feeling about
+          starting therapy, each cleared with a tool you’ve earned.
+          Darkness (mixed feelings) → the growth-mindset goggles reveal a
+          message to carry. Fog (past bad experiences) → the wingsuit
+          carries you to a teen’s positive testimonial. A blinding light
+          (feeling alone) → your lantern shows the light is really many
+          others holding their own lanterns. You’re not alone. Then you
+          light the Beacon at the summit of Mount Hope.
+        </>
+      ),
+    },
+    gear: 'Goggles (growth mindset) (in development).',
     traversal: { text: 'Arrival at the Beacon. The journey’s end.', end: true },
     goal: 'Address shame; end on readiness to commit and go.',
   },
@@ -620,10 +633,62 @@ export default function GainsDemoPage() {
         </div>
       </section>
 
+      {/* A. World & Development Map — the living roadmap. Moved up (Draft 44)
+          to sit directly after the review section, ahead of In Development,
+          so the roadmap is the first thing after "what's up for discussion"
+          rather than being buried below it. */}
+      <section className="mb-10">
+        <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
+          <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
+            World and Development Map
+          </h2>
+          <span className="text-[12px] text-slate-400 italic">updated as we go</span>
+        </div>
+        <div className="bg-white rounded-2xl shadow-card p-5">
+          <div className="flex flex-col lg:flex-row gap-5">
+            <div className="lg:w-[220px] flex-shrink-0 mx-auto lg:mx-0 w-[180px]">
+              <img
+                src={`${ART}/map-and-world.webp`}
+                alt="The world of The Long Light — the climb from the dark valley to the Beacon"
+                loading="lazy"
+                className="w-full rounded-2xl"
+              />
+            </div>
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full min-w-[720px] text-[13px] leading-relaxed border-collapse">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Zone &amp; scenery</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Video</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Activity</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Gear</th>
+                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Clinical goal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ZONE_MAP_ROWS.map((r) => (
+                    <tr key={r.zone} className="align-top">
+                      <td className="px-3 py-2.5 border-b border-slate-200">
+                        <span className="font-semibold whitespace-nowrap text-slate-800">{r.zone}</span>
+                        <span className="block text-[12px] text-slate-500">{r.scene}</span>
+                      </td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.video}</td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.activity}</td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.gear}</td>
+                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.goal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* In Development — the pipeline stage between "under review" and "the
           official zones." Items here have been adopted by the team (no
-          longer soliciting comment) but aren't built yet. Review → In
-          Development → the official zones/canon below. */}
+          longer soliciting comment) but aren't built yet. Review → World &
+          Development Map → In Development → the official zones/canon below. */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
           In Development
@@ -679,55 +744,6 @@ export default function GainsDemoPage() {
               label="Comment on this"
               subtle
             />
-          </div>
-        </div>
-      </section>
-
-      {/* A. Zone Map — the living roadmap */}
-      <section className="mb-10">
-        <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
-          <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
-            World and Development Map
-          </h2>
-          <span className="text-[12px] text-slate-400 italic">updated as we go</span>
-        </div>
-        <div className="bg-white rounded-2xl shadow-card p-5">
-          <div className="flex flex-col lg:flex-row gap-5">
-            <div className="lg:w-[220px] flex-shrink-0 mx-auto lg:mx-0 w-[180px]">
-              <img
-                src={`${ART}/map-and-world.webp`}
-                alt="The world of The Long Light — the climb from the dark valley to the Beacon"
-                loading="lazy"
-                className="w-full rounded-2xl"
-              />
-            </div>
-            <div className="flex-1 overflow-x-auto">
-              <table className="w-full min-w-[720px] text-[13px] leading-relaxed border-collapse">
-                <thead>
-                  <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Zone &amp; scenery</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Video</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Activity</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Gear</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Clinical goal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ZONE_MAP_ROWS.map((r) => (
-                    <tr key={r.zone} className="align-top">
-                      <td className="px-3 py-2.5 border-b border-slate-200">
-                        <span className="font-semibold whitespace-nowrap text-slate-800">{r.zone}</span>
-                        <span className="block text-[12px] text-slate-500">{r.scene}</span>
-                      </td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.video}</td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.activity}</td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.gear}</td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.goal}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       </section>
@@ -1073,6 +1089,15 @@ function ZoneSection({ zone }) {
             </div>
             <div className="text-[13px] text-slate-700 leading-relaxed">{zone.activity.desc}</div>
           </Beat>
+
+          {zone.synopsis && (
+            <Beat label={zone.synopsis.title}>
+              <div className="mb-1.5">
+                <Pill icon={HardHat}>In development</Pill>
+              </div>
+              <div className="text-[13px] text-slate-700 leading-relaxed">{zone.synopsis.desc}</div>
+            </Beat>
+          )}
 
           <Beat label="Gear earned">{zone.gear}</Beat>
 
