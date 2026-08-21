@@ -224,7 +224,10 @@ const REVIEW_GEAR_THEME =
 // placeholder copy from Draft 23. The old avatar files stay in the repo.
 const TRAVELER_STAGES = [
   {
-    src: `${ART}/traveler-stage1-hallow.webp`,
+    // ?v=2: skin-tone-matched final art (Draft 42), same filename as the
+    // pre-final version — cache-bust so browsers/CDN don't keep serving the
+    // old bytes now that the file's been updated in place.
+    src: `${ART}/traveler-stage1-hallow.webp?v=2`,
     name: 'Zone 1 — The Dark Abyss',
     blurb: 'Arrives wrapped in shadow.',
   },
