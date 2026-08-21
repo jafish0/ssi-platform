@@ -132,6 +132,18 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **784327c** (2026-08-20) — Draft 42: **the final Zone 1 traveler art is live.** The
+  skin-tone-matched final version was already sitting in the working tree at both
+  `traveler-stage1-hallow.webp` paths — committed here for the first time.
+  Added a `?v=2` cache-bust to the image URL. This one genuinely needed it: unlike the mp3
+  audio files (served `max-age=0, must-revalidate`, so an ETag change alone gets browsers
+  the new bytes), `.webp` is served `public, max-age=31536000, immutable` — browsers are
+  told never to revalidate for a year, so overwriting the file at the same URL without a
+  version bump would have left it stale for a long time.
+  **Verified:** the versioned URL serves 200 with the new file's exact byte size (32050,
+  matching the updated webp); the two committed copies are byte-identical; no console
+  errors.
+
 - **a7a56a2** (2026-08-19) — Draft 41: **Elevator Pitch gets Dr. Sprang's Normalize/Offer
   steps and safety copy.** Two new select-one steps inserted between situation and
   request: **Normalize it** (4 options) and **Offer to make it easy** (4 options), both
@@ -2201,3 +2213,47 @@ Dr. Sprang expanded Holly's Zone 3 activity (builds on Drafts 36 + 38). Insert t
 **Verify.** 6 steps with a correct "STEP X OF 6" indicator; the two new steps show the exact options plus a "Write your own" box; the assembled message includes the normalize + offer lines in order and reads naturally; the "write it as a note" line and the 988 safety disclaimer both appear (disclaimer clearly legible at the end); "Save It" saves and the Wingsuit is awarded. No `src/activities` changes → no version bumps (unless registered as a versioned activity). Log Recently-shipped + mark shipped.
 
 *End of Draft 41.*
+
+
+### Draft 42 — Ship the final Zone 1 traveler art (commit + deploy + cache-bust) — ✅ SHIPPED 784327c (2026-08-20)
+
+The Zone 1 / stage-1 traveler art has been updated to the skin-tone-matched **final** version (from `Gains for Teens/ZONE 1 TRAVELER FINAL.png`) at both `public/long-light/art/traveler-stage1-hallow.webp` (the copy the demo actually serves) and the `long-light-site/art/` source copy. **These are uncommitted working-tree changes, so they aren't live yet** — that's why the new art isn't showing.
+
+- **Commit and deploy** the updated `traveler-stage1-hallow.webp` (both the `public/long-light/art/` served copy and the `long-light-site/art/` source copy).
+- Because the filename is unchanged, **add a cache-bust** so browsers/CDN stop serving the old image: append a version query to the Zone 1 traveler image URL in `src/pages/GainsDemoPage.jsx` (the `traveler-stage1-hallow.webp` entry, ~line 227) — e.g. `traveler-stage1-hallow.webp?v=2` — or your preferred cache-busting method.
+
+**Verify.** On the live demo after a hard refresh, the Zone 1 traveler in the progression strip shows the new skin-tone-matched art (warmer/darker skin, visible sad face, hood up, dark cloak/aura); the other stages are unchanged. Log Recently-shipped + mark shipped.
+
+*End of Draft 42.*
+
+
+### Draft 43 — Review section: replace the Spark voices with the new six (A–F), plain labels only
+
+In the "Ideas & Demos for Review" section's **Spark's voice** item (`review-spark-voice`): take down the current voices and replace them with **six** new contenders, labeled only **"Spark A" through "Spark F"** — **no descriptions or commentary** about any voice (no "old man," "young male," etc.).
+
+Files (all staged in `public/long-light/audio/` and `long-light-site/audio/`):
+- Spark A → `/long-light/audio/spark-voice-a.mp3`
+- Spark B → `/long-light/audio/spark-voice-b.mp3`
+- Spark C → `/long-light/audio/spark-voice-c.mp3`
+- Spark D → `/long-light/audio/spark-voice-d.mp3`
+- Spark E → `/long-light/audio/spark-voice-e.mp3`
+- Spark F → `/long-light/audio/spark-voice-f.mp3`
+
+Show six players labeled Spark A–F. Keep Spark's Option-2 intro text as the shared reference script and keep the `review-spark-voice` comment thread (ask which they prefer).
+
+**Cache-bust:** a/b/c reuse existing filenames with NEW audio, so append a version query (e.g. `?v=3`) to all six audio URLs (or your preferred cache-bust) so no stale audio plays. Commit + deploy.
+
+**Verify.** Six players Spark A–F, each plays its (new) audio; no per-voice descriptions/commentary anywhere; the intro text and comment thread are intact; a/b/c play the NEW files, not cached old ones. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 43.*
+
+<!-- REFERENCE (not a draft) — Spark voice A–F source map (2026-08-20), for tracing a winner. Demo shows plain labels only. -->
+<!--
+  Spark A = spark-voice-a.mp3 <- "Spark A uses spark 7 in 11 labs.mp3"        (ElevenLabs: spark 7)
+  Spark B = spark-voice-b.mp3 <- "Spark B Uses spark 6 on eleven labs.mp3"    (ElevenLabs: spark 6)
+  Spark C = spark-voice-c.mp3 <- "Spark C not sure the eleven model.mp3"       (ElevenLabs: unknown)
+  Spark D = spark-voice-d.mp3 <- "Spark D Old Man Spark.mp3"                   (the old-man/wizard voice)
+  Spark E = spark-voice-e.mp3 <- "Spark E Male Young.mp3"                      (young male)
+  Spark F = spark-voice-f.mp3 <- "Spark F Spark 5 on eleven labs.mp3"         (ElevenLabs: spark 5)
+  Sources: Gains for Teens/Voices/Spark with Music/New Sparks/
+-->
