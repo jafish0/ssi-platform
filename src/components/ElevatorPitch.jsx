@@ -77,7 +77,12 @@ const HELP_OPTIONS = [
   'I think this will help me to be able to reach my goals at school',
 ]
 
-const STEPS = ['intro', 'greeting', 'situation', 'normalize', 'offer', 'request', 'help', 'review', 'done']
+// Draft 48 (Stephanie + Holly, 2026-08-24): request moved up to right after
+// situation -- it should come before normalize/offer, not after them. A new
+// `safety` step sits between review (save) and done: the 988 disclaimer gets
+// its own screen, shown after the message is saved but before the Wingsuit
+// award.
+const STEPS = ['intro', 'greeting', 'situation', 'request', 'normalize', 'offer', 'help', 'review', 'safety', 'done']
 
 // Verbatim, Dr. Sprang (Draft 41) -- see the header comment on why the
 // punctuation stays exactly as written.
@@ -173,7 +178,7 @@ export default function ElevatorPitch() {
 
   const message =
     greeting.trim() && situation && normalize && offer && request && help
-      ? [greeting, situation, normalize, offer, request, help]
+      ? [greeting, situation, request, normalize, offer, help]
           .map((part, i) => (i === 0 ? endGreeting(part) : endSentence(part)))
           .join(' ')
       : ''
@@ -203,15 +208,15 @@ export default function ElevatorPitch() {
   } else if (step === 'situation') {
     promptLabel = 'Step 2'
     promptText = 'Next, describe the situation.'
-  } else if (step === 'normalize') {
+  } else if (step === 'request') {
     promptLabel = 'Step 3'
+    promptText = 'Now make your request.'
+  } else if (step === 'normalize') {
+    promptLabel = 'Step 4'
     promptText = 'Normalize it'
   } else if (step === 'offer') {
-    promptLabel = 'Step 4'
-    promptText = 'Offer to make it easy'
-  } else if (step === 'request') {
     promptLabel = 'Step 5'
-    promptText = 'Now make your request.'
+    promptText = 'Offer to make it easy'
   } else if (step === 'help') {
     promptLabel = 'Step 6'
     promptText = 'And finally, finish with how this will help you.'
@@ -264,6 +269,13 @@ export default function ElevatorPitch() {
             </>
           )}
 
+          {step === 'request' && (
+            <>
+              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <SelectStep options={REQUEST_OPTIONS} selected={request} onChange={setRequest} />
+            </>
+          )}
+
           {step === 'normalize' && (
             <>
               <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
@@ -275,13 +287,6 @@ export default function ElevatorPitch() {
             <>
               <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
               <SelectStep options={OFFER_OPTIONS} selected={offer} onChange={setOffer} />
-            </>
-          )}
-
-          {step === 'request' && (
-            <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
-              <SelectStep options={REQUEST_OPTIONS} selected={request} onChange={setRequest} />
             </>
           )}
 
@@ -307,6 +312,16 @@ export default function ElevatorPitch() {
             </>
           )}
 
+          {/* Draft 48 (Holly/admin, 2026-08-24): the 988 disclaimer gets its
+              own screen now, shown after the message is saved but before the
+              Wingsuit award -- it used to sit alongside the Wingsuit message
+              on `done`, below. */}
+          {step === 'safety' && (
+            <p className="text-[13px] text-slate-700 leading-relaxed bg-amber-50 border border-amber-300 rounded-2xl px-3 py-2.5">
+              {SAFETY_DISCLAIMER}
+            </p>
+          )}
+
           {step === 'done' && (
             <>
               <p className="font-extrabold text-amber-700 text-[13px] mb-1">You did it</p>
@@ -314,9 +329,6 @@ export default function ElevatorPitch() {
                 That’s a strong message to carry with you. When the moment feels
                 right, you’ll know just what to say. Take this with you: a
                 Wingsuit. It’ll help you cross the bridge ahead.
-              </p>
-              <p className="text-[12.5px] text-slate-700 leading-relaxed mt-3 bg-amber-50 border border-amber-300 rounded-2xl px-3 py-2.5">
-                {SAFETY_DISCLAIMER}
               </p>
             </>
           )}
