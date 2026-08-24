@@ -136,6 +136,10 @@ const SCENE_CSS = `
   .om-glow-breath { transition: none; }
   .om-glow-breath.om-shimmer { animation: none; }
 }
+/* Draft 47: suspends the frog's own idle om-breathe loop while it's instead
+   being driven inline, in time with the box count (see FROG_BREATHE_TARGETS
+   above). */
+.om-breathing-along #frog-body { animation: none; }
 `
 
 // SEE step: six predefined options, any three unlock Continue. `glowLayer`
@@ -199,12 +203,33 @@ const GLOW_TARGETS = {
   hold2: { scale: 0.5, opacity: 0.45, brightness: 0.85 },
 }
 
+// Draft 47 (Maggie/Holly, 2026-08-24): the frog "breathes along" with the
+// box count during the active breathing stage -- same shape as its own idle
+// om-breathe wobble (translateY paired with scale, so it moves the way the
+// source asset already expects), just larger and tied to the count instead
+// of running on its own independent 4.6s loop. Subtler than the big glow
+// (whose scale swings 1.4/0.5): this is a frog, not a balloon. The idle
+// keyframe is suspended for the duration via the .om-breathing-along class
+// below, since a running CSS animation would otherwise fight this inline
+// transform every frame.
+const FROG_BREATHE_TARGETS = {
+  in: { translateY: -6, scale: 1.08 },
+  hold1: { translateY: -6, scale: 1.08 },
+  out: { translateY: 2, scale: 0.94 },
+  hold2: { translateY: 2, scale: 0.94 },
+}
+
 const INSTRUCTIONS = {
   intro: 'Tap to begin.',
   arrive: 'Let’s use our senses to really arrive.',
-  see: 'Find three things you can see.',
+  see: 'What are three things you can see',
   hear: 'Find three things you can hear.',
-  breathe: 'Follow Spark’s count.',
+  // Draft 47 (2026-08-24): shown before breathing starts, so it orients the
+  // player to what's coming rather than describing the breathing itself.
+  breatheReady: 'On the next page, you’ll see a count from Spark to follow along with.',
+  // Draft 47 (Holly): the final breathe screen used to reuse `breatheReady`
+  // ("follow Spark's count"), which is stale once the breathing is over.
+  breatheDone: 'Ready to keep going?',
   close: 'That’s your calm place.',
 }
 
@@ -252,6 +277,7 @@ export default function MindfulnessCalmPlace() {
   const musicRef = useRef(null)
   const rainRef = useRef(null)
   const frogRef = useRef(null)
+  const frogLayerRef = useRef(null)
   const pulseTimers = useRef({})
   const breatheTimerRef = useRef(null)
 
@@ -411,9 +437,38 @@ export default function MindfulnessCalmPlace() {
   const withinCycle = tickIdx0 % TICKS_PER_CYCLE
   const breathePhase = BREATHE_PHASES[Math.floor(withinCycle / COUNTS_PER_PHASE)]
   const breatheCount = (withinCycle % COUNTS_PER_PHASE) + 1
+  const breathingAlong = mode === 'breathe' && breatheStage === 'active'
+
+  // Draft 47: drives the frog's scale/lift straight onto its own #frog-body
+  // element (reached via the ref, since it arrived as raw injected SVG
+  // rather than React-owned markup -- same technique as flashLayer above).
+  // Only takes over while breathingAlong; the .om-breathing-along class
+  // handles suspending the idle keyframe, and clearing the inline style on
+  // exit lets that keyframe resume from its own natural state.
+  useEffect(() => {
+    const wrap = frogLayerRef.current
+    const body = wrap && wrap.querySelector('#frog-body')
+    if (!body) return
+    if (breathingAlong) {
+      const t = FROG_BREATHE_TARGETS[breathePhase.key]
+      body.style.transition = 'transform 4s ease-in-out'
+      body.style.transform = `translateY(${t.translateY}px) scale(${t.scale})`
+    } else {
+      body.style.transition = ''
+      body.style.transform = ''
+    }
+  }, [breathingAlong, breathePhase.key])
 
   // ---- panel copy per mode ----
-  let instruction = INSTRUCTIONS[mode]
+  // Draft 47: breathe's caption differs by sub-stage (the ready orientation
+  // line doesn't apply anymore once breathing is done), so it can't be a
+  // single INSTRUCTIONS[mode] lookup the way every other mode is.
+  let instruction =
+    mode === 'breathe'
+      ? breatheStage === 'done'
+        ? INSTRUCTIONS.breatheDone
+        : INSTRUCTIONS.breatheReady
+      : INSTRUCTIONS[mode]
   let panelLabel = null
   let panelText = 'Take a slow breath, and let’s step in.'
 
@@ -497,7 +552,8 @@ export default function MindfulnessCalmPlace() {
           />
           <div className="om-layer" dangerouslySetInnerHTML={{ __html: layers.reeds }} />
           <div
-            className="om-layer"
+            ref={frogLayerRef}
+            className={'om-layer' + (breathingAlong ? ' om-breathing-along' : '')}
             data-layer="frog"
             dangerouslySetInnerHTML={{ __html: layers.frog }}
           />
@@ -628,7 +684,7 @@ export default function MindfulnessCalmPlace() {
               onClick={beginBreathing}
               className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
             >
-              Start breathing
+              Begin box breathing
             </button>
           )}
 
