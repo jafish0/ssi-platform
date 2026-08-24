@@ -17,7 +17,7 @@
 // flex-1, so a long region text stole its space). Region copy is VERBATIM
 // from Stephanie; don't reword it.
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 // Copy revised 2026-08-19 (Draft 32) — Stephanie's final wording, all five
 // regions. Body overtook Head as the longest text with this revision (254 vs
@@ -179,6 +179,33 @@ function ProgressLine({ revealed }) {
   )
 }
 
+// Draft 46 (Holly/Ginny, 2026-08-24): the write-in "another area" option for
+// Part 2. Collapsed to a dashed prompt button until tapped, then becomes a
+// text input — same reveal-on-tap shape as ElevatorPitch's "Write your own".
+function OtherAreaField({ value, onChange }) {
+  if (value === null) {
+    return (
+      <button
+        type="button"
+        onClick={() => onChange('')}
+        className="w-full text-left mt-1.5 px-3.5 py-2.5 rounded-2xl text-[12px] leading-snug border border-dashed border-slate-300 text-slate-500 hover:border-amber-300 hover:text-amber-700"
+      >
+        Is there another area you feel it in your body? (write it in)
+      </button>
+    )
+  }
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="e.g., sweating, clenching jaw"
+      autoFocus
+      className="w-full mt-1.5 text-[12.5px] px-3.5 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+    />
+  )
+}
+
 function ClosingBox() {
   return (
     <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2 text-[11.5px] leading-snug">
@@ -194,23 +221,13 @@ export default function BodyMapping() {
   const [lastRevealed, setLastRevealed] = useState(null)
   // Whether the panel is currently given over to the closing line.
   const [showClosing, setShowClosing] = useState(false)
-  // Bug fix (Draft 32, Stephanie's report 2026-08-17): revealing the 5th
-  // region used to flip showClosing to true in the SAME state update that
-  // revealed it, so that region's own PanelBox never rendered, not even for a
-  // frame — the closing line silently replaced it. This wasn't specific to
-  // any one region; it happened to whichever one was tapped 5th. Testers
-  // experienced it as "the body map bug" because the whole-body hit-target is
-  // the largest and drawn underneath the other four, so it's naturally the
-  // one people leave for last. Fix: the just-completed region gets its own
-  // panel like every other region did, and the closing only takes over on a
-  // short delay afterward, tracked in this ref so it can be cancelled if the
-  // participant taps a region again (to re-read it) or moves on to Part 2
-  // before it fires.
-  const closingTimerRef = useRef(null)
+  // Draft 46 (Holly, 2026-08-24): the write-in "another area" option, added
+  // to Part 2 only. null = not yet engaged (the prompt button shows);
+  // '' or text = engaged (the input shows), and any non-empty value counts
+  // toward the "N selected" total alongside the tapped regions.
+  const [customArea, setCustomArea] = useState(null)
 
   const allRevealed = revealed.length === REGIONS.length
-
-  useEffect(() => () => clearTimeout(closingTimerRef.current), [])
 
   function tapRegion(id) {
     if (mode === 'reveal') {
@@ -218,38 +235,44 @@ export default function BodyMapping() {
       if (revealed.includes(id)) {
         // Re-tapping an already-revealed region (most often the whole-body
         // one, since it's drawn underneath and left for last) always shows
-        // that region's own description, cancelling any pending flip to the
-        // closing line so it doesn't cut off mid-read.
-        clearTimeout(closingTimerRef.current)
+        // that region's own description, even after the closing has taken
+        // over the panel.
         setShowClosing(false)
         return
       }
-      setRevealed((r) => {
-        const next = [...r, id]
-        if (next.length === REGIONS.length) {
-          clearTimeout(closingTimerRef.current)
-          closingTimerRef.current = setTimeout(() => setShowClosing(true), 1100)
-        }
-        return next
-      })
+      setRevealed((r) => [...r, id])
     } else if (mode === 'select') {
       setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
     }
   }
 
   function advance() {
-    clearTimeout(closingTimerRef.current)
     if (mode === 'reveal') setMode('select')
     else if (mode === 'select') setMode('done')
   }
 
+  // Draft 46 (Holly, 2026-08-24): the 5th reveal used to auto-flip to the
+  // closing line on a timer, which meant a well-timed Continue tap right
+  // after the 5th reveal could skip past that region's own copy without ever
+  // showing it. Fixed by making the flip an explicit tap: the SAME Continue
+  // button first reveals the closing line (replacing the 5th region's own
+  // panel), then on a second tap advances to Part 2, exactly like every
+  // other mode transition in this activity.
+  function ctaClick() {
+    if (mode === 'reveal' && allRevealed && !showClosing) {
+      setShowClosing(true)
+      return
+    }
+    advance()
+  }
+
   function restart() {
-    clearTimeout(closingTimerRef.current)
     setMode('reveal')
     setRevealed([])
     setSelected([])
     setLastRevealed(null)
     setShowClosing(false)
+    setCustomArea(null)
   }
 
   const regionClass = (id) => {
@@ -284,12 +307,13 @@ export default function BodyMapping() {
     panel = { muted: false, label: r.label, text: r.text }
   } else if (mode === 'select') {
     instruction = INSTRUCTIONS.select
+    const selectedCount = selected.length + (customArea ? 1 : 0)
     panel =
-      selected.length === 0
+      selectedCount === 0
         ? { muted: true, label: null, text: 'Tap any reaction you’ve felt recently.' }
         : {
             muted: false,
-            label: selected.length + ' selected',
+            label: selectedCount + ' selected',
             text: 'You can pick as many as fit.',
           }
   } else if (mode === 'done') {
@@ -442,24 +466,34 @@ export default function BodyMapping() {
               </g>
             </g>
 
+            {/* Draft 46 (Holly, 2026-08-24): the heart reads more anatomically
+                correct on the body's own left side, which is the viewer's
+                RIGHT (a front-facing figure mirrors left/right) -- it was on
+                the viewer's left (cx 294, left of the torso's x=350
+                centerline). Mirrored across that centerline (350 + (350-294)
+                = 406); the check badge keeps the same +29/+29 offset used by
+                every other region's badge (a uniform down-right convention,
+                not itself anatomically mirrored). */}
             <g {...regionProps('heart', 'Heart: heartbeat')} id="bm-region-heart">
-              <circle className="bm-target" cx="294" cy="380" r="40" />
-              <g className="bm-icon" transform="translate(294,380) scale(1.15)">
+              <circle className="bm-target" cx="406" cy="380" r="40" />
+              <g className="bm-icon" transform="translate(406,380) scale(1.15)">
                 <path d="M0,13 C-15,3 -19,-6 -13,-12 C-8,-17 -1,-15 0,-9 C1,-15 8,-17 13,-12 C19,-6 15,3 0,13 Z" />
               </g>
-              <g className="bm-check" transform="translate(323,409)">
+              <g className="bm-check" transform="translate(435,409)">
                 <circle r="13" fill="#B45309" />
                 <path d="M-5.5,0 L-1.5,4.5 L6,-4.5" fill="none" stroke="#FFFBEB" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
               </g>
             </g>
 
+            {/* Draft 46 (Holly): lowered ~30 units so it isn't floating in
+                empty space beneath the heart/lungs cluster. */}
             <g {...regionProps('stomach', 'Stomach: gut feelings')} id="bm-region-stomach">
-              <circle className="bm-target" cx="352" cy="478" r="46" />
-              <g className="bm-icon" transform="translate(352,478) scale(1.25)">
+              <circle className="bm-target" cx="352" cy="508" r="46" />
+              <g className="bm-icon" transform="translate(352,508) scale(1.25)">
                 <path d="M-8,-17 C-6,-9 -8,-5 -11,-1 C-15,6 -12,15 -4,17 C5,19 13,12 13,2 C13,-8 5,-16 -5,-16" />
                 <path d="M-8,-17 L-1,-19" />
               </g>
-              <g className="bm-check" transform="translate(385,511)">
+              <g className="bm-check" transform="translate(385,541)">
                 <circle r="14" fill="#B45309" />
                 <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
               </g>
@@ -488,24 +522,28 @@ export default function BodyMapping() {
           aligned in the cell so the text sits against the CTA rather than
           floating in the middle (Josh, 2026-08-13). */}
       <div className="flex-none grid">
-        {/* Worst case is the longest region panel plus the counter. The
-            closing now REPLACES the region panel rather than stacking under
-            it, and it is shorter than the longest panel, so this spacer covers
-            every state. */}
+        {/* Worst case is the longest region panel plus the counter, plus the
+            Part-2 write-in field (it never appears alongside the counter, but
+            reserving both keeps this one spacer correct for every mode
+            without needing a second, mode-specific spacer). The closing
+            REPLACES the region panel rather than stacking under it, and it is
+            shorter than the longest panel, so this spacer covers every
+            state. */}
         <div className="col-start-1 row-start-1 invisible" aria-hidden="true">
           <PanelBox label={LONGEST_REGION.label} text={LONGEST_REGION.text} />
           <ProgressLine revealed={REGIONS.length} />
+          <OtherAreaField value="" onChange={() => {}} />
         </div>
 
         <div className="col-start-1 row-start-1 flex flex-col justify-end">
           {/* Once all five are revealed, the panel gives itself over to the
-              closing line alone (a beat after the 5th reveal — see
-              closingTimerRef above): it is the payoff, and keeping the last
-              region's description on screen under it was the single biggest
-              block of text in the activity (Josh, 2026-08-13). Tapping any
-              region afterwards brings its description back, so nothing is
-              stranded. The counter stops once it would read 5 of 5, since the
-              closing and the enabled Continue already say you're done. */}
+              closing line alone once Continue is tapped a first time (Draft
+              46): it is the payoff, and keeping the last region's description
+              on screen under it was the single biggest block of text in the
+              activity (Josh, 2026-08-13). Tapping any region afterwards
+              brings its description back, so nothing is stranded. The
+              counter stops once it would read 5 of 5, since the closing and
+              the enabled Continue already say you're done. */}
           {mode === 'reveal' && allRevealed && showClosing ? (
             <ClosingBox />
           ) : (
@@ -517,6 +555,9 @@ export default function BodyMapping() {
               />
               {mode === 'reveal' && !allRevealed && (
                 <ProgressLine revealed={revealed.length} />
+              )}
+              {mode === 'select' && (
+                <OtherAreaField value={customArea} onChange={setCustomArea} />
               )}
             </>
           )}
@@ -535,7 +576,7 @@ export default function BodyMapping() {
 
         <div className="col-start-1 row-start-1 flex flex-col justify-end">
           {((mode === 'reveal' && allRevealed) || mode === 'select') && (
-            <button type="button" onClick={advance} className={CTA_CLASS}>
+            <button type="button" onClick={ctaClick} className={CTA_CLASS}>
               {mode === 'reveal' ? 'Continue' : 'Done'}
             </button>
           )}
