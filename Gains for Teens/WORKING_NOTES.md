@@ -132,6 +132,33 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **8750b15** (2026-08-24) — Draft 47: **Mindfulness UI/copy fixes, non-audio.**
+  1. The final breathe screen no longer reuses "Follow Spark's count" from the ready
+  screen — `INSTRUCTIONS.breathe` split into `breatheReady`/`breatheDone`, and the
+  instruction lookup is now breatheStage-aware instead of a flat `INSTRUCTIONS[mode]`
+  lookup.
+  2. Confirmed Hear's sound levels were already flat throughout (Draft 39 had already
+  removed the per-tap volume nudge) — no ramp existed to fix, verified via direct
+  `audio.volume` reads before and after tapping chips.
+  3. Reworded the See prompt to "What are three things you can see."
+  4. Added a directive line before breathing ("On the next page, you'll see a count
+  from Spark to follow along with") and renamed the button to "Begin box breathing."
+  5. Wired the frog to breathe along with the box count during the active breathing
+  stage: its own idle `om-breathe` loop is suspended via a new `.om-breathing-along`
+  class, and its `#frog-body` scale/lift is driven inline from a new
+  `FROG_BREATHE_TARGETS` map, phase-synced to the same count as the big glow at a
+  subtler amplitude. The art restyle to match the painterly scene is still pending a
+  new asset from Cowork; this only wires the behavior so it's ready to receive it.
+  **Verified:** stale "follow Spark's count" text gone from the final breathe screen
+  (confirmed live); Hear volumes read identical (0.4) before and after tapping three
+  chips; See prompt reads the new wording (confirmed live); breathe screen shows the
+  new orientation line and "Begin box breathing" button; the frog's inline transform
+  tracked the live phase (`translateY(-6px) scale(1.08)` on Breathe In,
+  `translateY(2px) scale(0.94)` on Breathe Out) with its idle animation suspended
+  during that stretch and correctly resumed afterward; no overflow at 375px; no
+  console errors beyond an unrelated transient Vite HMR reconnect from restarting the
+  dev server mid-session; build clean. No `src/activities` changes → no version bump.
+
 - **721b5f2** (2026-08-24) — Draft 46: **Body Mapping fixes — heart side, stomach
   position, Continue before the closing, write-in area.** All non-audio.
   1. Mirrored the heart marker (target, icon, check badge) from the viewer's left to
@@ -2382,7 +2409,7 @@ Fixes to the Body Mapping activity (inlined SVG + logic). All non-audio.
 *End of Draft 46.*
 
 
-### Draft 47 — Mindfulness UI/copy fixes (Aug 24 feedback), non-audio
+### Draft 47 — Mindfulness UI/copy fixes (Aug 24 feedback), non-audio — ✅ SHIPPED 8750b15 (2026-08-24)
 
 Fixes to the Mindfulness "Calm Place" activity. (The guided **voice** count and any Spark narration are separate — coming in the pre-generated-F-clip narration draft; this draft is text/visual/mix only.)
 
