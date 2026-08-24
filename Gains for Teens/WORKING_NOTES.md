@@ -132,6 +132,34 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **721b5f2** (2026-08-24) — Draft 46: **Body Mapping fixes — heart side, stomach
+  position, Continue before the closing, write-in area.** All non-audio.
+  1. Mirrored the heart marker (target, icon, check badge) from the viewer's left to
+  the viewer's right — the body's own left chest — across the torso's x=350
+  centerline (cx 294 → 406), so it reads anatomically correct and stays clearly
+  distinct from the lungs.
+  2. Lowered the stomach marker ~30 units (cy 478 → 508, icon/check offsets shifted
+  to match) so it isn't floating in empty space beneath the heart/lungs cluster.
+  3. Fixed the 5th-reveal flow: it used to auto-flip to the closing line on a 1.1s
+  timer, which meant a well-timed Continue tap could skip the 5th region's own copy
+  entirely. Now the 5th region's own panel shows first (no timer), and the same
+  Continue button requires an explicit second tap to reveal the closing line, then a
+  third to advance to Part 2 — removed the `closingTimerRef`/`useEffect` cleanup
+  entirely in favor of this tap-driven flow.
+  4. Added a write-in "Is there another area you feel it in your body? (write it in)"
+  option to Part 2 only — a dashed prompt button that expands to a text input on tap
+  (same reveal-on-tap shape as ElevatorPitch's "Write your own"), and counts toward
+  the "N selected" total alongside tapped regions.
+  **Verified:** heart/stomach geometry confirmed via `getBBox`-style attribute checks
+  both locally and live; the 5th reveal shows its own copy with no auto-jump, and the
+  closing/advance now takes two explicit Continue taps (confirmed live on
+  ssi.ctac.app); the write-in field engages, accepts text, and increments the
+  selected count; figure height measured identical (364.3125px) across every mode —
+  reveal, mid-reveal, 5th-reveal, closing shown, select collapsed, select expanded,
+  and done — confirming the invisible-spacer reservation still holds with the new
+  write-in field folded in; no horizontal overflow at 375px; no console errors; build
+  clean. No `src/activities` changes → no version bump.
+
 - **b50d520** (2026-08-20) — Drafts 44–45: **World & Development Map moves up, zone cards
   sync to the grid, "Focusing Glass" → "Focusing Lens."** Implemented together since 45
   syncs to 44's grid.
@@ -2338,3 +2366,46 @@ Leave the rest of each row (scene, video, goal) as-is.
 **Verify.** No "Focusing Glass" remains in user-facing copy (all read "Focusing Lens"); each Zone card's gear/activity matches the World & Development Map grid; the Zone 5 card shows the Final Boss synopsis marked in development. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 45.*
+
+
+### Draft 46 — Body Mapping fixes (Aug 24 feedback): heart side, stomach position, Continue before the closing, write-in area — ✅ SHIPPED 721b5f2 (2026-08-24)
+
+Fixes to the Body Mapping activity (inlined SVG + logic). All non-audio.
+
+1. **Move the heart to the correct side.** Reposition the `region-heart` marker (and its icon) to the character's **left side of the chest — which appears on the viewer's right**, mirrored from where it is now — keeping it clearly distinct from the lungs. (Holly: "the heart will look more normal on the body's left side.")
+2. **Lower the stomach graphic.** Move the `region-stomach` marker down a bit so there isn't a gap of empty space above it. (Holly.)
+3. **Continue before the closing message.** Right now, selecting the 5th part jumps straight to the final/closing message, so you can't read the 5th part's own copy. Fix: after the 5th selection, show **that part's own copy first**, then require a **"Continue"** tap to advance to the closing message. (Holly.)
+4. **Add a write-in "another area" option.** Add a free-text option — "Is there another area you feel it in your body? (write it in)" — so participants can name other symptoms/areas (Ginny gave examples: sweating, clenching jaw). Place it as an extra option in the select pass; the write-in flows through like the other selections.
+
+**Verify.** Heart sits on the body's left (viewer's right), distinct from lungs; stomach graphic lowered with less empty space; selecting the 5th part shows its copy then a Continue → closing (no fast jump); a write-in "another area" option works. No `src/activities` changes → no version bumps. Log + mark shipped.
+
+*End of Draft 46.*
+
+
+### Draft 47 — Mindfulness UI/copy fixes (Aug 24 feedback), non-audio
+
+Fixes to the Mindfulness "Calm Place" activity. (The guided **voice** count and any Spark narration are separate — coming in the pre-generated-F-clip narration draft; this draft is text/visual/mix only.)
+
+1. **Fix the leftover directions text.** On the final screen after the breathing, it still says "follow Spark's count." Replace that with appropriate closing text (it's no longer the breathing screen). (Holly.)
+2. **Keep sound levels consistent.** Don't increase/ramp the ambient sounds during the "what can you hear" section — hold them at a steady level throughout. (Stephanie.)
+3. **Reword the See prompt** to **"What are three things you can see"** (keep the chip selection). (Holly/admin.)
+4. **More directive breathing orientation (text).** Before the breathing, add a short, specific line, e.g. *"On the next page, you'll see a count from Spark to follow along with."* And rename the "start breathing" button to **"Begin box breathing."**
+5. **Frog — breathe-along + restyle.** (a) During the breathing step, have the frog gently **"breathe along"** — scale up on the inhale, hold, scale down on the exhale, in time with the box count. (b) The frog reads as off-style vs. the painterly scene (Maggie + Holly) — it needs an art restyle to match; **new asset pending** (Cowork will provide a painterly frog that fits the scene). Wire the breathe-along now; swap the frog art when the new asset lands.
+
+**Verify.** No "follow Spark's count" text left on the final screen; ambient sound stays level during the Hear step; See prompt reads "What are three things you can see"; breathing has the more directive orientation line + "Begin box breathing" button; the frog breathes along with the box count. No `src/activities` changes → no version bumps. Log + mark shipped.
+
+*End of Draft 47.*
+
+
+### Draft 48 — Zone 3 "Message to Your Guardian": reorder steps + put the 988 safety message on its own page before the gear
+
+Changes from the Aug 24 feedback. (Spark **reading** the final message = audio, coming in the narration draft; this is order + layout only.)
+
+1. **Reorder the steps.** Move "Make your request" up to right after "Describe the situation." New order: **Greeting → Situation → Request → Normalize → Offer → Benefit.** Update the "STEP X OF 6" indicator and the assembled-message order to match this sequence. (Stephanie + Holly: request should come before normalize/offer.)
+2. **988 safety message on its own page, before the gear.** Pull the safety disclaimer ("Note: if what is going on feels urgent… call or text 988 immediately") out of the end block and give it its **own dedicated screen**, shown **after the message is saved but before the Wingsuit award**. Keep the copy verbatim. (Holly/admin: "on its own page, before they get the gear. Gear presentation will come after.")
+
+Open question (Holly, no decision yet): the "write it as a note first" reassurance line could become its own page too, or live in the action plan — leaving it where it is for now unless you say otherwise.
+
+**Verify.** Step order is Greeting → Situation → Request → Normalize → Offer → Benefit with a correct "OF 6" indicator; the assembled message reflects the new order; the 988 safety message appears on its own screen after save and before the Wingsuit award; copy verbatim. No `src/activities` changes → no version bumps. Log + mark shipped.
+
+*End of Draft 48.*
