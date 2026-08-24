@@ -132,6 +132,31 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **7c2ddfe** (2026-08-24) — Draft 48: **Zone 3 "Message to Your Guardian" —
+  reorder steps, 988 safety on its own screen.** Order + layout only (Spark reading
+  the message aloud is still coming in the narration draft).
+  1. Reordered `STEPS` (and the render blocks, for readability) to Greeting →
+  Situation → Request → Normalize → Offer → Benefit — request used to come after
+  normalize/offer, Stephanie + Holly asked for it right after situation instead. The
+  "STEP X OF 6" labels were renumbered to match (Request is now Step 3, Normalize
+  Step 4, Offer Step 5), and the assembled-message array was reordered to
+  `[greeting, situation, request, normalize, offer, help]`.
+  2. The 988 safety disclaimer moved off the `done` step (where it sat beside the
+  Wingsuit award) onto its own new `safety` step in the `STEPS` array, landing right
+  after `review`/Save It and before `done` — Holly/admin wanted it "on its own page,
+  before they get the gear." Copy is unchanged, still verbatim from Dr. Sprang.
+  3. Left the "write it as a note first" reassurance line on `review` untouched —
+  the draft flagged that placement as an open question with no decision yet.
+  **Verified** end-to-end live on ssi.ctac.app: walked greeting → situation → request
+  (confirmed "Step 3 of 6" + "Now make your request" prompt) → normalize → offer →
+  help → review, where the assembled message read in the new order ("hey Mom, I've
+  been having a hard time lately. I would like to talk with a trauma therapist.
+  Therapy isn't just for when things are in crisis. ..."); Save It landed on the new
+  safety screen (disclaimer visible, no Wingsuit/"You did it" yet, single Continue
+  button); tapping Continue there landed on `done` with the Wingsuit message and no
+  disclaimer left behind. No overflow at 375px; no console errors; build clean. No
+  `src/activities` changes → no version bump.
+
 - **8750b15** (2026-08-24) — Draft 47: **Mindfulness UI/copy fixes, non-audio.**
   1. The final breathe screen no longer reuses "Follow Spark's count" from the ready
   screen — `INSTRUCTIONS.breathe` split into `breatheReady`/`breatheDone`, and the
@@ -2424,7 +2449,7 @@ Fixes to the Mindfulness "Calm Place" activity. (The guided **voice** count and 
 *End of Draft 47.*
 
 
-### Draft 48 — Zone 3 "Message to Your Guardian": reorder steps + put the 988 safety message on its own page before the gear
+### Draft 48 — Zone 3 "Message to Your Guardian": reorder steps + put the 988 safety message on its own page before the gear — ✅ SHIPPED 7c2ddfe (2026-08-24)
 
 Changes from the Aug 24 feedback. (Spark **reading** the final message = audio, coming in the narration draft; this is order + layout only.)
 
