@@ -110,6 +110,69 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`19c739d` · 2026-08-24** — **Draft 96 — 988 Suicide & Crisis Lifeline callout (beginning, end, action plan).** Decided at the 2026-08-24 team meeting (Dr. Sprang's ask) — the app only pointed distressed participants to their caregiver or sprang@uky.edu; 988 now shows as its own visible callout, not folded into paragraph text, in three places. New shared `CrisisLifelineNote` component, modeled on `Plan.jsx`'s existing `QualifierNote` pattern — no modal/dialog component exists for participant screens, so this is a persistent amber-toned inline card, not new interaction machinery. Calm, not alarming, per Sprang's own framing ("just a pop-up or something with text"). **Beginning:** `Assent.jsx`, between the body text and the Yes/No decision box (v1.3 → v1.4, MINOR). **End:** `DeliveryShellPage.jsx`'s `CelebrationScreen`, right before "Back to start," shown on every completion. **Action plan:** `Plan.jsx`'s `PlanReview` (v5.0 → v5.1, MINOR) AND the PNG/PDF keepsake export (`buildPlanKeepsakeSvg`) — Sprang was explicit this should be part of what a kid keeps, not just shown once on-screen; both read the same `CRISIS_LIFELINE_TEXT` constant so they can't drift apart. Draft copy — reviewable, Sprang should confirm exact wording before this reaches real participants. **Verified live:** the callout renders on the Assent sandbox (v1.4 badge) and on `PlanReview` via the sandbox's synthetic data; the `CelebrationScreen` placement was confirmed by walking a real single-use QA code through the app's actual `goNext()`/`completeSession()` path to genuine completion (jumped straight to the last section via SQL to skip manually filling 13 prior sections, but completion itself was real, not faked). Separately verified the SVG text-wrapping/XML-escaping logic against the new copy's ampersand — the one edge case no prior keepsake section text exercised — via a standalone Node check of the exact `wrapText`/`escapeXml` functions. Build + console clean. **Draft 97** (Vimeo migration + completion gating) is explicitly blocked pending Josh supplying the Vimeo URLs — left untouched in Ideas/drafts, nothing implemented.
+
+  <details>
+  <summary>Draft 96 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 96 — 988 Suicide & Crisis Lifeline callout: beginning, end, and on the action plan
+
+**Decided at the 2026-08-24 team meeting** (Dr. Sprang's ask, no pushback):
+today the app only tells participants to reach their caregiver or email
+`sprang@uky.edu` if they feel distressed (in the Assent body, and in the
+Pretest/Posttest/FollowUp intro screens). The team wants the **988
+Suicide & Crisis Lifeline** number added as its own visible callout — not
+folded into paragraph text — in three places: near the very beginning of
+the program, near the very end, and on the action plan (the Plan
+keepsake). Per Sprang directly: *"I don't think we need to reshoot, have
+anybody say it... I think it could just be a pop-up or something with
+text."* No narration/video change — text/UI only.
+
+**No existing modal/popup component for participant screens** (checked —
+`Modal`/`Dialog` components only exist in the internal Builder admin
+tool). Build this as a persistent inline callout card, not a true modal —
+matches the existing visual pattern of `Plan.jsx`'s `QualifierNote`
+(amber-toned note card) rather than introducing new interaction
+machinery.
+
+**Placement (three spots):**
+1. **Beginning** — on `Assent.jsx`, in addition to its existing distress
+   sentence (line ~90: *"You can tell your parent, guardian or Dr. Ginny
+   Sprang (sprang@uky.edu) if something makes you feel bad..."*), add the
+   988 callout card on the same screen.
+2. **End** — on `CelebrationScreen` (`DeliveryShellPage.jsx`, lines
+   49–105), the first-completion screen shown after the posttest.
+3. **Action plan** — on the Plan keepsake, **both** the on-screen live
+   review (`PlanReview`) **and** the downloadable PNG/PDF
+   (`buildPlanKeepsakeSvg`) — Sprang was explicit this should be part of
+   what they keep, not just something shown once on-screen. Both surfaces
+   share the same underlying model per prior Plan work, so add it once
+   where both read from.
+
+**Draft copy (reviewable — Sprang should confirm exact wording before this
+ships, same as every other participant-facing copy in this app; this is a
+starting point, not final)::**
+
+> *"If at any time during this program you feel very distressed, please
+> reach out to your parent or guardian. You can also call or text **988**
+> (Suicide & Crisis Lifeline) — free, confidential support, 24/7."*
+
+Keep it visually calm and non-alarming — a quiet, always-there resource
+note, not a warning banner. Same amber/slate palette as the rest of the
+app; no red/urgent styling that could read as alarming for a
+non-distressed participant.
+
+**Not in scope:** no change to the existing caregiver/sprang@uky.edu
+sentences already in Pretest/Posttest/FollowUp — those stay as-is, this
+adds to them, doesn't replace them.
+
+**Verify:** 988 callout renders on the Assent screen (first screen after
+the splash), on the completion celebration screen, and on the Plan
+review + both PNG and PDF exports — copy matches what Sprang confirms,
+styling calm/consistent with the rest of the app, build + console clean.
+
+  </details>
+
 - **`b15594d` · 2026-08-20** — **Splash on /demo: shrunk to phone-screen size, matching the video cards.** Full-size at `max-w-[760px]` (the amber card's own width) plus a `min-h-[100dvh]` wrapper made it render nearly full-screen-tall — `min-height` doesn't care about column width, so capping the width alone wouldn't have fixed it. Added a `standalone` prop to `SplashScreen` (default `true`, unchanged everywhere else — the real delivery flow and the direct sandbox route need the full-screen wrapper since they ARE the whole page); `standalone={false}` skips it and returns just the 9:16 frame, which `/demo` now wraps in the same `max-w-[360px]` column `ReviewCard`'s media uses for every other card. Verified live: the splash frame measures identically to a sibling video card's frame (291x517, ratio 0.5625); `/demo/sandbox/splash` unaffected, still full-screen; muted autoplay and the Begin fade-and-callback both still work at the smaller size.
 
 - **`1845f90` · 2026-08-20** — **Splash on /demo: restored to "For Review This Week," fixed the real duplicate.** Draft 95's removal of the splash card was based on a wrong premise — Josh actually wanted the "up top" placement kept ("that was perfect"), and the real duplicate was a bug: the splash `TEST_REGISTRY` entry shared the Assent card's category, so it was also rendering, unasked, in a separate "Start here — Child Assent" section further down the page. Fixed by giving splash its own category, which empties that section out; moved the real Child Assent card up into "For Review This Week" in its place, as a plain launch-test card (not through `ReviewCard`, since it's a "go try this" link rather than a video/image/audio cut). Restored splash to the top of "For Review This Week," but per Josh's ask this time it's the live `SplashScreen` component itself at full size ("just the page"), not squeezed into `ReviewCard`'s shared 9:16 frame — still inside the same amber title/description/feedback-button wrapper every other card uses. Verified live: "Start here" section is gone; the order is Splash (frame ratio still exactly 0.5625, no border confirms it's unframed) → Child Assent → the video cards; splash still starts muted and autoplays silently; Begin still fades to silence and fires `onBegin`. Build + console clean.
@@ -11127,3 +11190,76 @@ Scene is now timed at ~2.5 minutes (up from the original shorter cut) — box br
 **Still open, per Adrienne's email:** she's separately compiling "a list of a few simple regulation skills to practice and links to videos or resources" for the team to consider for what actually gets shown/handed out at the end of the program (the "list of strategies" this scene promises). Not part of this scene's script — a separate deliverable, not yet delivered.
 
 **Not yet done:** the actual video/audio redo for this scene, and updating the Draft 90 "For Review This Week" placeholder once it's ready to swap back in.
+
+## Draft 97 — Migrate production videos to Vimeo Pro + turn on completion gating for Kai's videos
+
+**Context.** Decided 2026-08-24 (Josh, after a hosting discussion): move the
+final production videos from YouTube (unlisted) to Vimeo Pro, and turn on
+`required_completion` gating for the Kai psychoeducation videos ("Learning
+Skills for Belonging" narration series). `VideoPlayer.jsx` already fully
+supports both hosts (`youtube_id` and `vimeo_url` content shapes) — this
+is a content/authoring change, not new player engineering, EXCEPT that
+completion gating only functions for Vimeo-hosted videos
+(`canContinue = source.kind !== 'vimeo' || !requireCompletion || watched`,
+`VideoPlayer.jsx` line 175) — so Part B is dependent on Part A for
+whichever videos it applies to.
+
+**Part A — BLOCKED, do not start until Josh supplies the Vimeo links.**
+Once Josh has uploaded final cuts to the CTAC Vimeo Pro account, he'll
+provide the new Vimeo video URLs/IDs for: Kai Part 2 Scene 3 (and the
+other Kai narration scenes, if also re-hosted at the same time), Sam's
+Story — Male/Female/Gender-Neutral, and the Intro Video. When those
+arrive: swap each item's `youtube_id` content field for `vimeo_url`
+(or the appropriate variant-map entry for Sam's Story's
+`variant_key`/`variants` shape — `VideoPlayer.jsx` lines 20-22 confirm a
+variant map may mix hosts, though for consistency use Vimeo across all
+three Sam variants together, not a partial swap) in every place these
+currently render: the live authored intervention content, and the
+`REVIEW_CARDS` entries on `/demo` (`src/pages/DemoPage.jsx`) if those
+should also point at the new hosting. **Do not touch anything until the
+actual Vimeo URLs are provided** — there's nothing to migrate to yet.
+
+**Part B — turn on completion gating for the Kai video segments** (the
+"Learning Skills for Belonging" narration series — confirm exact scope
+with Josh if uncertain whether this means every Kai narration scene or
+just the redone Scene 3; default assumption here is the whole series,
+since that matches the original design intent already documented in
+`docs/004_rsd_intervention_flow.md`). Once those items are Vimeo-hosted
+(Part A), set `required_completion: true` in each item's `content_json`.
+Threshold defaults to 0.85 (`completion_threshold` field, optional
+override) — leave at default unless Josh wants a different value.
+
+**Known limitation, not a bug to fix:** gating tracks playhead position
+via Vimeo's `postMessage` events, not cumulative watched time — a
+participant who scrubs directly to the end satisfies the gate without
+watching. This is a real limitation of the mechanism itself, not
+something this draft asks Code to solve.
+
+**Part C — add upfront warning copy.** Today, `VideoPlayer.jsx` only
+shows "Watch the video to continue. (X% watched)" reactively, once
+playback has started and the threshold isn't met yet (lines 258-262) —
+there's no notice *before* playback that a full watch is required. Add a
+short line of copy before the video starts on any gated item (e.g. "This
+video is part of the program — please watch the whole thing before
+continuing."), reusing the existing `content_before` field pattern
+(lines 233-235) so no new component is needed. **Draft copy, reviewable**
+— Josh/team should confirm exact wording before this ships, same as all
+other participant-facing copy in this app.
+
+**Verify:** once Part A lands, confirm the migrated videos play
+correctly from Vimeo (no console errors, correct aspect ratio); once Part
+B lands, confirm a gated Kai video shows the upfront copy, keeps Continue
+disabled with the live percentage readout until 85% watched, then enables
+automatically; confirm ungated videos (Sam's Story, Intro Video) are
+unaffected; build + console clean.
+
+**Addendum to Draft 97 — Sam's Story gets the same treatment as Kai.**
+Confirmed scope: "the Kai videos" = the full Learning Skills for Belonging
+narration series (as defaulted above, no change there). New: **Sam's
+Story (all three variants — Male, Female, Gender-Neutral) also gets
+`required_completion: true`** once migrated to Vimeo (Part A) — same
+0.85 default threshold, same Part C upfront-warning copy treatment,
+same limitation note about scrubbing. Applies per-variant, not just to
+whichever variant a participant happens to pick — each of the three
+Vimeo sources in the `variants` map should carry the gating behavior
+consistently once wired up.
