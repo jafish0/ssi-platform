@@ -20,6 +20,7 @@
 
 import { useState } from 'react'
 import { PrimaryButton, SecondaryButton } from '../components/items/shared.jsx'
+import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 
 // "Read this to me" narration (Draft 92) — a collapsed pill, not an
 // always-visible player like `KaiNarrationPlayer`: assent is a decision
@@ -160,6 +161,11 @@ export default function Assent({ onSave }) {
           </p>
         ))}
       </div>
+
+      {/* 988 Suicide & Crisis Lifeline callout (Draft 96) — its own visible
+          card, not folded into the body paragraphs above (which already
+          have their own caregiver/sprang@uky.edu distress sentence). */}
+      <CrisisLifelineNote className="mb-6" />
 
       {/* Decision */}
       <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-5">

@@ -4,6 +4,7 @@ import SessionGuard from '../components/SessionGuard.jsx'
 import { SessionProvider, useSession } from '../engine/SessionEngine.jsx'
 import TreeProgress from '../components/TreeProgress.jsx'
 import SplashScreen from '../components/SplashScreen.jsx'
+import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 // Draft 88 Part B: the post-posttest completion screen is the ONE place a
 // participant can save their keepsake — the five mid-flow download buttons
 // are gone, so nothing invites them out of the app before the posttest.
@@ -92,6 +93,10 @@ function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
             </p>
           </div>
         )}
+        {/* 988 Suicide & Crisis Lifeline callout (Draft 96) — the "end of
+            the program" placement, shown on every completion (main-program
+            and follow-up alike). */}
+        <CrisisLifelineNote className="mb-6 text-left" />
         <button
           type="button"
           onClick={onBackToStart}

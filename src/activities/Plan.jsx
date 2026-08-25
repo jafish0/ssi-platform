@@ -39,6 +39,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Download, FileText, ArrowLeft } from 'lucide-react'
 import { PrimaryButton } from '../components/items/shared.jsx'
+import CrisisLifelineNote, { CRISIS_LIFELINE_TEXT } from '../components/CrisisLifelineNote.jsx'
 import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
 import { PLAN_DEMO_DATA, ALL_BELONGING_SKILLS } from '../lib/planDemoData.js'
 import { buildRealPlanData } from '../lib/planRealData.js'
@@ -757,6 +758,12 @@ export function PlanReview({ model }) {
           </div>
         </Section>
       )}
+
+      {/* 988 Suicide & Crisis Lifeline callout (Draft 96) — Sprang was
+          explicit this should be part of what they keep, not just shown
+          once on-screen, so it's part of the same model both PlanReview
+          and the PNG/PDF keepsake read from (see buildPlanKeepsakeSvg). */}
+      <CrisisLifelineNote />
     </div>
   )
 }
@@ -931,6 +938,12 @@ function buildPlanKeepsakeSvg(model) {
     heading('Who you are')
     for (const line of m.poemLines) body(line, { italic: true })
   }
+
+  // 988 Suicide & Crisis Lifeline callout (Draft 96) — always present,
+  // not conditional on any upstream content, same as the on-screen
+  // PlanReview above.
+  heading('A note')
+  body(CRISIS_LIFELINE_TEXT)
 
   y += 20
   const height = y + 30
