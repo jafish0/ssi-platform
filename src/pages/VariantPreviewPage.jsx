@@ -42,9 +42,12 @@ const VARIANT_CHOICE_CONTENT = {
   selection_type: 'single',
   display_style: 'card_grid',
   options: [
-    { id: 'male', text: 'Sam (Male)', image: '/cast/images/sam-16.png' },
-    { id: 'female', text: 'Sam (Female)', image: '/cast/images/sam-female-v3.png' },
-    { id: 'gender_neutral', text: 'Sam (Gender Neutral)', image: '/cast/images/kai-variant-2.png' },
+    { id: 'male', text: 'Sam (Male)', image: '/cast/images/sam-male-avatar.png' },
+    { id: 'female', text: 'Sam (Female)', image: '/cast/images/sam-female-avatar.png' },
+    // Was /cast/images/kai-variant-2.png — a leftover Kai (different
+    // character) placeholder, not a Sam asset at all, predating the real
+    // non-binary Sam reference (Draft 98).
+    { id: 'gender_neutral', text: 'Sam (Gender Neutral)', image: '/cast/images/sam-nonbinary-avatar.png' },
   ],
 }
 const VARIANT_TOKEN_KEY = 'sam_variant'
