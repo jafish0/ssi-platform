@@ -110,6 +110,42 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`3ea2380` · 2026-08-25** — **Draft 98 — new Sam variant avatar images for the character-select preview.** New consistent-framing avatars (head-to-mid-chest, 1000×1000) for all three Sam variants in `VariantPreviewPage.jsx`'s demo choice item: `sam-male-avatar.png`, `sam-female-avatar.png`, `sam-nonbinary-avatar.png`. The Gender Neutral option was pointing at `/cast/images/kai-variant-2.png` — a leftover Kai (a different character) placeholder, not a Sam asset at all, predating the real non-binary Sam reference — now replaced with the real one. Demo scaffolding only, not the live app: confirmed via the file's own header comment that the "pick your Sam" choice item isn't authored into the live intervention — it exists solely as ship-dark preview scaffolding at `/demo/variant-preview`. No version bump. **Verified live:** all three avatars load correctly (1000×1000, no broken images); selecting each option still updates the saved response and the downstream video resolution/fallback readouts correctly. Build + console clean.
+
+  <details>
+  <summary>Draft 98 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 98 — New Sam variant avatar images for the character-select preview
+
+**Assets provided** (already cropped, head-to-mid-chest, consistent framing,
+1000×1000): `Video Content/Sams Story/Character Select Avatars/sam-male-avatar.png`,
+`sam-female-avatar.png`, `sam-nonbinary-avatar.png`. Copy all three into
+`public/cast/images/`.
+
+**Context — this only touches demo scaffolding, not the live app.**
+Checked directly: the "pick your Sam" character-select choice item (`card_grid`,
+`token_key: sam_variant`) is **not authored into the live intervention** —
+it only exists as ship-dark preview scaffolding in
+`src/pages/VariantPreviewPage.jsx` (Draft 67 Part D), whose own header
+comment says so explicitly. The real choice item doesn't exist in the
+builder/DB yet; that's separate, bigger work, not part of this draft.
+
+**What to actually change**, in `VariantPreviewPage.jsx`'s
+`VARIANT_CHOICE_CONTENT.options` (lines ~39-50):
+- `male` option's `image`: `/cast/images/sam-16.png` → `/cast/images/sam-male-avatar.png`
+- `female` option's `image`: `/cast/images/sam-female-v3.png` → `/cast/images/sam-female-avatar.png`
+- `gender_neutral` option's `image`: currently **`/cast/images/kai-variant-2.png`** —
+  this is a leftover Kai (different character) placeholder, not a Sam asset
+  at all, predating the real non-binary Sam reference. Replace with
+  `/cast/images/sam-nonbinary-avatar.png`.
+
+**Verify:** `/demo/sandbox/variant-preview` (or wherever this preview is
+reachable) shows all three new Sam avatars correctly, no broken images,
+existing fallback/resolution logic for unset/unknown variants untouched,
+build + console clean. No version bump (demo-only scaffolding).
+
+  </details>
+
 - **`19c739d` · 2026-08-24** — **Draft 96 — 988 Suicide & Crisis Lifeline callout (beginning, end, action plan).** Decided at the 2026-08-24 team meeting (Dr. Sprang's ask) — the app only pointed distressed participants to their caregiver or sprang@uky.edu; 988 now shows as its own visible callout, not folded into paragraph text, in three places. New shared `CrisisLifelineNote` component, modeled on `Plan.jsx`'s existing `QualifierNote` pattern — no modal/dialog component exists for participant screens, so this is a persistent amber-toned inline card, not new interaction machinery. Calm, not alarming, per Sprang's own framing ("just a pop-up or something with text"). **Beginning:** `Assent.jsx`, between the body text and the Yes/No decision box (v1.3 → v1.4, MINOR). **End:** `DeliveryShellPage.jsx`'s `CelebrationScreen`, right before "Back to start," shown on every completion. **Action plan:** `Plan.jsx`'s `PlanReview` (v5.0 → v5.1, MINOR) AND the PNG/PDF keepsake export (`buildPlanKeepsakeSvg`) — Sprang was explicit this should be part of what a kid keeps, not just shown once on-screen; both read the same `CRISIS_LIFELINE_TEXT` constant so they can't drift apart. Draft copy — reviewable, Sprang should confirm exact wording before this reaches real participants. **Verified live:** the callout renders on the Assent sandbox (v1.4 badge) and on `PlanReview` via the sandbox's synthetic data; the `CelebrationScreen` placement was confirmed by walking a real single-use QA code through the app's actual `goNext()`/`completeSession()` path to genuine completion (jumped straight to the last section via SQL to skip manually filling 13 prior sections, but completion itself was real, not faked). Separately verified the SVG text-wrapping/XML-escaping logic against the new copy's ampersand — the one edge case no prior keepsake section text exercised — via a standalone Node check of the exact `wrapText`/`escapeXml` functions. Build + console clean. **Draft 97** (Vimeo migration + completion gating) is explicitly blocked pending Josh supplying the Vimeo URLs — left untouched in Ideas/drafts, nothing implemented.
 
   <details>
