@@ -57,6 +57,14 @@ function normalizeSnapshot(snapshot) {
       order_index: section.order_index ?? 0,
       items: (section.items || [])
         .slice()
+        // Draft 97 restructuring review: `content_json.hidden` excludes an
+        // item from delivery without deleting its row — several items in
+        // this intervention have real (if QA-only) response history
+        // protected by responses.item_id's ON DELETE RESTRICT, so "remove
+        // this screen" has to mean "never render it again," not "delete
+        // it." Filtered here (not at publish time) so it's enforced
+        // regardless of how a snapshot was built.
+        .filter((item) => item.content_json?.hidden !== true)
         .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
         .map((item) => ({
           id: item.id,

@@ -652,7 +652,14 @@ export default function GettingUnstuck({ onSave = console.log }) {
               setPhase('kai_strategy_intro')
               scrollTop()
             }}
-            disabled={selectedCount < 1}
+            // Real bug (Josh, staged-preview review): the copy says "pick
+            // the top two," but this only ever required at least one,
+            // letting a participant continue after selecting just 1.
+            // Requires exactly MAX_PICKS (2) — or the most that's actually
+            // achievable if fewer than 2 thoughts cleared the eligibility
+            // threshold, so this can't lock out a legitimately
+            // 1-eligible-item case.
+            disabled={selectedCount < Math.min(MAX_PICKS, eligibleItems.length)}
           >
             Keep going →
           </PrimaryButton>

@@ -136,7 +136,9 @@ export default function Choice({ content, onSave, existingResponse }) {
 
   return (
     <div>
-      <p className="text-[16px] leading-relaxed text-slate-800 mb-5">{content?.prompt}</p>
+      {content?.prompt && (
+        <p className="text-[16px] leading-relaxed text-slate-800 mb-5">{content.prompt}</p>
+      )}
 
       {feedback === 'correct' && (
         <div className="mb-4 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-800">
@@ -197,14 +199,21 @@ export default function Choice({ content, onSave, existingResponse }) {
           }
           // card_grid — an option may carry an optional `image` (Draft 67
           // Part B, variant thumbnails); options without one render exactly
-          // as before.
+          // as before. `content.hide_option_labels` (staged-preview review,
+          // 2026-08-26 — the Sam's-Story picker) drops the visible text
+          // label under an image option, showing just the portrait, larger
+          // — the label moves to aria-label instead of disappearing, so a
+          // screen reader still announces which option is which.
+          const hideLabel = content?.hide_option_labels === true && !!opt.image
           return (
             <button
               key={opt.id}
               type="button"
               onClick={() => handleClick(opt.id)}
+              aria-label={hideLabel ? opt.text : undefined}
               className={
                 'text-left rounded-2xl border min-h-[80px] px-5 py-4 text-[16px] transition-colors ' +
+                (hideLabel ? 'flex flex-col items-center justify-center text-center ' : '') +
                 (quizCx ||
                   (sel
                     ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
@@ -216,10 +225,14 @@ export default function Choice({ content, onSave, existingResponse }) {
                   src={opt.image}
                   alt=""
                   aria-hidden="true"
-                  className="w-16 h-16 rounded-full object-cover object-top border border-slate-200 mb-2"
+                  className={
+                    hideLabel
+                      ? 'w-24 h-24 rounded-full object-cover object-top border border-slate-200'
+                      : 'w-16 h-16 rounded-full object-cover object-top border border-slate-200 mb-2'
+                  }
                 />
               )}
-              {opt.text}
+              {!hideLabel && opt.text}
             </button>
           )
         })}

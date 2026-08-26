@@ -56,7 +56,13 @@ export default function PreviewPage() {
         setIntervention(ivRes.data)
         setSections(secRes.data || [])
         const sectionIds = new Set((secRes.data || []).map((s) => s.id))
-        setItems((itRes.data || []).filter((it) => sectionIds.has(it.section_id)))
+        // content_json.hidden mirrors SessionEngine.jsx's live-delivery
+        // filter, so this preview shows exactly what a real session will.
+        setItems(
+          (itRes.data || []).filter(
+            (it) => sectionIds.has(it.section_id) && it.content_json?.hidden !== true,
+          ),
+        )
       })
       .catch((err) => {
         if (cancelled) return
