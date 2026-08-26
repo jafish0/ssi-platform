@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import SessionGuard from '../components/SessionGuard.jsx'
 import { SessionProvider, useSession } from '../engine/SessionEngine.jsx'
 import TreeProgress from '../components/TreeProgress.jsx'
+import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 import SplashScreen from '../components/SplashScreen.jsx'
 import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 // Draft 88 Part B: the post-posttest completion screen is the ONE place a
@@ -49,20 +50,30 @@ function ProgressBar() {
 // program". Defaults preserve the Draft 74 main-program copy.
 function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
   // TreeProgress only animates on a FORWARD stage change after mount, so
-  // mount at seed and grow to full bloom for the payoff moment.
+  // the old stage-jump fallback (tree_montage: false) mounts at seed and
+  // grows to full bloom for the payoff moment. The default path instead
+  // hands the "look how far you've come" replay to TreeProgressMontage.
   const [stage, setStage] = useState(0)
   const showTree = config?.show_tree !== false
+  const useMontage = config?.tree_montage !== false
   useEffect(() => {
+    if (useMontage) return
     const t = setTimeout(() => setStage(5), 400)
     return () => clearTimeout(t)
-  }, [])
+  }, [useMontage])
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-10 bg-ctac-teal-50">
       <div className="w-full max-w-[640px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
         {showTree && (
-          <div className="mx-auto w-full max-w-[240px] mb-4">
-            <TreeProgress stage={stage} animated />
-          </div>
+          useMontage ? (
+            <div className="mx-auto w-full max-w-[300px] mb-4">
+              <TreeProgressMontage showClosingCta={false} />
+            </div>
+          ) : (
+            <div className="mx-auto w-full max-w-[240px] mb-4">
+              <TreeProgress stage={stage} animated />
+            </div>
+          )
         )}
         <h1 className="text-[28px] font-bold leading-tight mb-3 text-ctac-navy">
           {config?.heading || 'You did it — you finished the whole program.'}

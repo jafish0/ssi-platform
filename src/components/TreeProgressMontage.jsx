@@ -89,6 +89,7 @@ export default function TreeProgressMontage({
   autoPlay = true,
   skippable = true,
   className = '',
+  showClosingCta = true,
 }) {
   const navigate = useNavigate()
   const [stage, setStage] = useState(0)
@@ -239,7 +240,7 @@ export default function TreeProgressMontage({
             </button>
           </div>
         )}
-        {done && (
+        {done && showClosingCta && (
           <div className="text-center">
             <h3 className="text-2xl font-semibold text-ctac-navy mb-4">Ready for your plan?</h3>
             <button

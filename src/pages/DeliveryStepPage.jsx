@@ -5,6 +5,8 @@ import {
   PrimaryButton,
   GhostButton,
 } from '../components/items/shared.jsx'
+import TreeGrowthInterstitial from '../components/TreeGrowthInterstitial.jsx'
+import { deriveTreeStage, REAL_ACTIVITY_COMPONENT_NAMES } from '../lib/treeProgressStage.js'
 
 function SectionTransition({ section, onContinue }) {
   return (
@@ -44,6 +46,12 @@ export default function DeliveryStepPage() {
   const [showTransition, setShowTransition] = useState(false)
   const lastSectionRef = useRef(currentSectionIndex)
 
+  // Set when saving a real, scored activity's response pushes the tree
+  // (src/lib/treeProgressStage.js) to a new growth stage — holds
+  // { fromStage, toStage, componentName } while the interstitial shows,
+  // null otherwise.
+  const [treeInterstitial, setTreeInterstitial] = useState(null)
+
   // Resume-by-code acknowledgment (Draft 69): when CodeEntryPage flagged
   // this navigation as a resume into an existing session, greet the
   // participant so landing mid-flow reads as intentional. The read and
@@ -69,7 +77,7 @@ export default function DeliveryStepPage() {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     }
-  }, [currentItem?.id, showTransition])
+  }, [currentItem?.id, showTransition, treeInterstitial])
 
   useEffect(() => {
     if (lastSectionRef.current !== currentSectionIndex) {
@@ -89,6 +97,24 @@ export default function DeliveryStepPage() {
     )
   }
 
+  // Checked before showTransition: treeInterstitial is only ever set from
+  // handleItemSave BEFORE goNext() runs, so the section index (and thus
+  // showTransition) can't have advanced yet — the two never overlap, but
+  // this ordering keeps the growth beat as the first thing shown either way.
+  if (treeInterstitial) {
+    return (
+      <TreeGrowthInterstitial
+        fromStage={treeInterstitial.fromStage}
+        toStage={treeInterstitial.toStage}
+        componentName={treeInterstitial.componentName}
+        onContinue={() => {
+          setTreeInterstitial(null)
+          goNext()
+        }}
+      />
+    )
+  }
+
   if (showTransition) {
     return (
       <SectionTransition
@@ -100,6 +126,12 @@ export default function DeliveryStepPage() {
 
   async function handleItemSave(responseValue) {
     try {
+      // Pre-save stage, from the CURRENT (pre-save) responsesByItemId —
+      // React state won't reflect this save until a later render, so the
+      // post-save stage below is computed from an explicitly merged map
+      // rather than re-reading responsesByItemId.
+      const fromStage = deriveTreeStage(sections, responsesByItemId)
+
       const result = await saveResponse(
         currentItem.id,
         currentItem.token_key,
@@ -109,6 +141,24 @@ export default function DeliveryStepPage() {
       // session completed and the shell will swap to the exit screen.
       if (result?.exited) return
       if (resumedNotice) setResumedNotice(false)
+
+      const isRealActivity =
+        currentItem.type === 'custom_activity' &&
+        REAL_ACTIVITY_COMPONENT_NAMES.includes(currentItem.content_json?.component_name)
+      if (isRealActivity) {
+        const toStage = deriveTreeStage(sections, {
+          ...responsesByItemId,
+          [currentItem.id]: responseValue,
+        })
+        if (toStage > fromStage) {
+          setTreeInterstitial({
+            fromStage,
+            toStage,
+            componentName: currentItem.content_json.component_name,
+          })
+          return
+        }
+      }
       goNext()
     } catch (err) {
       console.error('Failed to save response', err)
