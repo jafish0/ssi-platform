@@ -110,6 +110,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`30b35af` · 2026-08-26** — **Draft 97 Part A (demo side only) — migrate 12 production videos to Vimeo, fix a real private-video playback bug.** Migrated `/demo`'s review surface (`REVIEW_CARDS`, `LEARNING_SKILLS_CARDS`, the standalone Sam's Story — Male Version card) from YouTube to the new CTAC Vimeo Pro videos, using the 12 URLs from Draft 97's addenda (cross-checked against `Ready for Roots - Video Library.docx`, identical). **Real bug caught before shipping:** the new videos are unlisted/private (verified live — the bare numeric Vimeo id 403s alone), needing the access hash Vimeo appends after the id (`vimeo.com/{id}/{hash}`) to play — `VideoPlayer.jsx`'s URL parser was silently dropping it, harmless until now since the only video ever used there before was a public Vimeo demo clip. Fixed by threading a `hash` field through `resolveSource`/`sourceFromVariantValue` and appending it to the embed URL; exported the parser so `/demo`'s `ReviewCard` reuses the identical logic instead of duplicating it. Verified live: all 12 `/demo` cards render the correct id+hash (confirmed the exact URL pattern plays via direct navigation — real title/duration/controls), zero YouTube iframes remain, zero console errors on a clean reload, build clean. **NOT shipped — flagged and left in Ideas/drafts below:** the live authored intervention only has 2 generic placeholder video items (no Sam's Story, no Intro, no per-scene Kai breakdown), so Part A's live-content swap, Part B (gating), and Part C (upfront copy) are all blocked on a real structural authoring question, not a simple field swap — see the addendum under Draft 97 below for the full writeup.
+
 - **`3ea2380` · 2026-08-25** — **Draft 98 — new Sam variant avatar images for the character-select preview.** New consistent-framing avatars (head-to-mid-chest, 1000×1000) for all three Sam variants in `VariantPreviewPage.jsx`'s demo choice item: `sam-male-avatar.png`, `sam-female-avatar.png`, `sam-nonbinary-avatar.png`. The Gender Neutral option was pointing at `/cast/images/kai-variant-2.png` — a leftover Kai (a different character) placeholder, not a Sam asset at all, predating the real non-binary Sam reference — now replaced with the real one. Demo scaffolding only, not the live app: confirmed via the file's own header comment that the "pick your Sam" choice item isn't authored into the live intervention — it exists solely as ship-dark preview scaffolding at `/demo/variant-preview`. No version bump. **Verified live:** all three avatars load correctly (1000×1000, no broken images); selecting each option still updates the saved response and the downstream video resolution/fallback readouts correctly. Build + console clean.
 
   <details>
@@ -11299,3 +11301,59 @@ same limitation note about scrubbing. Applies per-variant, not just to
 whichever variant a participant happens to pick — each of the three
 Vimeo sources in the `variants` map should carry the gating behavior
 consistently once wired up.
+
+**Addendum to Draft 97 — naming convention + Vimeo player lockdown confirmed (2026-08-26, Claude Cowork → Claude Code).**
+Josh has started producing the Vimeo migration referenced in Part A. Two things are now settled and worth having on hand once he hands off the actual URLs:
+
+1. **Vimeo file naming.** All 12 production videos live in the CTAC Vimeo account's "Ready for Roots" folder, named with a two-digit order prefix matching authored playback order (no redundant "Ready for Roots" prefix on each file, since the folder already scopes that):
+   - `00 – Intro`
+   - `01 – Sam's Story (Male)`
+   - `01 – Sam's Story (Female)`
+   - `01 – Sam's Story (Gender-Neutral)`
+   - `02 – Kai Part 1 Scene 1`
+   - `03 – Kai Part 1 Scene 2`
+   - `04 – Kai Part 1 Scene 3`
+   - `05 – Kai Part 1 Scene 4`
+   - `06 – Kai Part 2 Scene 1`
+   - `07 – Kai Part 2 Scene 2`
+   - `08 – Kai Part 2 Scene 3`
+   - `09 – Kai Part 2 Scene 4`
+   This list came from this file's own history (Draft 63's "8 scenes total across Part 1 + Part 2" for Kai, the `sam_variant` variant map for Sam's Story) — Josh should be the one to confirm final counts if they've since changed, but this is what's documented as of today.
+
+2. **Player lockdown applies to all 12, not just the Intro.** Josh confirmed: no skip-ahead on any of them (matches Part B's completion-gating intent — a scrub-to-the-end workaround would defeat the gate). Every video should use the "Ready for Roots" Vimeo Embed + Page presets (set up 2026-08-26): Chromecast, AirPlay, picture-in-picture, fullscreen, Vimeo logo, transcript, quality, speed, like, watch later, share, embed, title/profile-picture/byline overlay, and skip-ahead all OFF; progress bar, volume, CC/subtitles, audio tracks, chapters ON; autoplay OFF (participant presses play). This is Vimeo-account-level config Josh is applying himself per-video — nothing for Claude Code to touch until Part A's actual URL swap.
+
+Part A is still blocked pending the real Vimeo URLs — this addendum just locks in the naming/config scheme so the eventual handoff maps cleanly.
+
+**Addendum to Draft 97 — Part A is unblocked, all 12 Vimeo URLs are in hand (2026-08-26, Claude Cowork → Claude Code).**
+Josh finished uploading and naming all 12 production videos to the CTAC Vimeo Pro account, each with the "Ready for Roots" locked-down Embed + Page presets applied (see the addendum above this one for the exact preset settings). Full list, also tracked in `Ready for Roots - Video Library.docx` at the repo root (a living checklist Josh updates as videos land — treat that file as the source of truth if it and this note ever disagree):
+
+- Intro: https://vimeo.com/1221502241/be508ddc9b
+- Sam's Story (Male): https://vimeo.com/1221508114/285e8683cd
+- Sam's Story (Female): https://vimeo.com/1221512613/46502b2007
+- Sam's Story (Gender-Neutral): https://vimeo.com/1221514000/ea3b984d60
+- Kai Part 1 Scene 1: https://vimeo.com/1221515272/1826137966
+- Kai Part 1 Scene 2: https://vimeo.com/1221515437/8a17a050c8
+- Kai Part 1 Scene 3: https://vimeo.com/1221516665/4137a22aca
+- Kai Part 1 Scene 4: https://vimeo.com/1221516709/72f8ac57d9
+- Kai Part 2 Scene 1: https://vimeo.com/1221516868/c790c4a41a
+- Kai Part 2 Scene 2: https://vimeo.com/1221518400/92f0121e83
+- Kai Part 2 Scene 3: https://vimeo.com/1221518456/c2fb47f691
+- Kai Part 2 Scene 4: https://vimeo.com/1221518680/a3cee67761
+
+Part A can now proceed: swap each item's `youtube_id` for the matching `vimeo_url` above (or the appropriate `variants` map entry for Sam's Story) everywhere these currently render — live authored content and `REVIEW_CARDS` on `/demo` per the original draft. Once Part A lands, Part B (completion gating, `required_completion: true` + the Sam's-Story addendum) and Part C (upfront warning copy) can follow per the original draft text above. Note the Intro video is intentionally NOT gated (matches the original draft — gating applies to Kai + Sam's Story only).
+
+**Addendum to Draft 97 — Intro Video is gated too, and the completion threshold changes to 0.99 for every gated video (2026-08-26, Claude Cowork → Claude Code). Supersedes the threshold in Part B and the "ungated" framing in Part B's Verify line and the addendum directly above.**
+Two changes, confirmed with Josh:
+
+1. **Intro Video also gets `required_completion: true`.** Earlier drafts/notes said the Intro stays ungated — that's superseded. All 12 videos (Intro, all 8 Kai scenes, all 3 Sam's Story variants) are now gated, not just Kai + Sam's Story.
+2. **Completion threshold changes from the 0.85 default to 0.99 across the board.** Set `completion_threshold: 0.99` explicitly on every gated item's `content_json` (Intro, Kai, Sam's Story) rather than leaving it at Part B's original default. Part C's upfront-warning copy and the known scrubbing limitation both still apply unchanged.
+
+Net effect once Part A/B/C are implemented: every one of the 12 videos in the addendum above locks the app's "Continue" button until the participant has watched essentially the whole thing (99%), not just Kai/Sam's Story at 85%.
+
+**Addendum to Draft 97 — Part A shipped on the demo side; the live-intervention swap is blocked on a real structural gap, not a field-name question (2026-08-26, Claude Code → Claude Cowork / Josh).**
+
+Before touching anything, checked the live authored intervention directly (`items` table, `ready-set-dedicate`). **It doesn't have 12 video items to retarget.** It has exactly two: `kai_video_1` ("All About Belonging," section 3) and `kai_video_2` ("Skills for Belonging," section 5) — both still today's placeholder `vimeo.com/76979871`, both explicitly marked `_placeholder: true`. There is no Sam's Story item and no Intro Video item authored into the live flow at all, and no per-scene breakdown of Kai's 8 scenes — the "12 individually swappable videos" this draft's Part A assumes only exist in the `/demo` review pipeline, not in what a real participant sees. Swapping either placeholder's URL for one specific scene's URL would leave the other 3-7 scenes of that placeholder's "Part" completely unauthored — an incomplete, misleading outcome I didn't want to guess my way into for a live human-subjects study. **This needs Josh's direction on how the live flow should actually be structured** (one item per scene? new sections? where do Sam's Story and the Intro even go in the section order?) before Part A's live half, Part B (gating), or Part C (upfront copy) can proceed — none of those three currently have anywhere to attach in the live content, since Part B/C both apply to `VideoPlayer`, which only the two untouched placeholders use.
+
+**What DID ship** (`30b35af`, 2026-08-26): the `/demo` review surface — `REVIEW_CARDS`, `LEARNING_SKILLS_CARDS`, and the standalone Sam's Story — Male Version card — migrated from YouTube to the real Vimeo videos, using the URLs from the addendum above (cross-checked against `Ready for Roots - Video Library.docx`, identical). **Real bug caught and fixed first:** the new videos are unlisted (verified live — the bare numeric Vimeo id 403s on its own), which needs the access hash Vimeo appends after the id to play; `VideoPlayer.jsx`'s existing URL parser silently discarded it — harmless until now because the one video ever used there (the placeholder) happens to be a public Vimeo demo clip. Fixed in `VideoPlayer.jsx` (now threads a `hash` field through instead of dropping it) so this is also already correct for whenever the live-content question above gets resolved. Verified live: all 12 `/demo` cards play (confirmed the exact URL+hash pattern works via direct navigation, zero console errors on a clean reload), zero YouTube iframes remain, other cards unaffected, build clean.
+
+Draft 97 stays here, not moved to Recently shipped — only the demo-side piece is actually done.
