@@ -7,6 +7,8 @@ import BelongingSkillsSort from '../activities/BelongingSkillsSort.jsx'
 import WhoIAmPoem from '../activities/WhoIAmPoem.jsx'
 import LetterBuilder from '../activities/LetterBuilder.jsx'
 import Plan from '../activities/Plan.jsx'
+import Demographics from '../activities/Demographics.jsx'
+import PlacementDisruptionWorry from '../activities/PlacementDisruptionWorry.jsx'
 
 export const ACTIVITY_REGISTRY = {
   GettingUnstuck,
@@ -16,4 +18,6 @@ export const ACTIVITY_REGISTRY = {
   WhoIAmPoem,
   LetterBuilder,
   Plan,
+  Demographics,
+  PlacementDisruptionWorry,
 }

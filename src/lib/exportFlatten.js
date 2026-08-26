@@ -98,6 +98,8 @@ const ACTIVITY_PREFIXES = {
   LetterBuilder: 'letter',
   SelfReflection: 'reflect',
   Plan: 'plan',
+  Demographics: 'dem',
+  PlacementDisruptionWorry: 'pdw',
 }
 
 // ---------- Column planning ----------
@@ -1042,6 +1044,182 @@ export function planWideColumns(snapshot) {
                 extract: (rv) => rv?.letter_reflection || '',
               },
             )
+          } else if (componentName === 'Demographics') {
+            // v1.0 — new: demographics screen filling the gap between the
+            // live pretest and the polished /demo Pretest.jsx reference.
+            // Save payload is flat (age, sex, race_*, hispanic, grade,
+            // home_years, home_months, placements). Per this file's header
+            // comment, demographics use BARE column names (no timepoint or
+            // component prefix) since they're captured once, matching the
+            // Pretest.jsx SPSS column convention (age, sex, race_white, ...).
+            cols.push(
+              {
+                name: 'age',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'age',
+                prompt: 'How old are you?',
+                allowed_values: '1–99 (integer)',
+                notes: 'Demographics v1.0',
+                extract: (rv) => rv?.age ?? '',
+              },
+              {
+                name: 'sex',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'sex',
+                prompt: 'What is your sex?',
+                allowed_values: '1=Female | 2=Male | 3=Prefer not to answer',
+                notes: 'Demographics v1.0',
+                extract: (rv) => rv?.sex ?? '',
+              },
+              {
+                name: 'race_white',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_white',
+                prompt: 'Race — White',
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_white ?? '',
+              },
+              {
+                name: 'race_black',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_black',
+                prompt: 'Race — Black/African American',
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_black ?? '',
+              },
+              {
+                name: 'race_amind',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_amind',
+                prompt: 'Race — American Indian',
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_amind ?? '',
+              },
+              {
+                name: 'race_alaskan',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_alaskan',
+                prompt: 'Race — Alaska Native',
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_alaskan ?? '',
+              },
+              {
+                name: 'race_pi',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_pi',
+                prompt: 'Race — Pacific Islander',
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_pi ?? '',
+              },
+              {
+                name: 'race_asian',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_asian',
+                prompt: 'Race — Asian',
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_asian ?? '',
+              },
+              {
+                name: 'race_pna',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_pna',
+                prompt: 'Race — Prefer not to answer',
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_pna ?? '',
+              },
+              {
+                name: 'race_dunno',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'race_dunno',
+                prompt: "Race — I don't know",
+                allowed_values: '0 or 1',
+                notes: 'Demographics v1.0 — multi-select race checkbox',
+                extract: (rv) => rv?.race_dunno ?? '',
+              },
+              {
+                name: 'hispanic',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'hispanic',
+                prompt: 'Are you Hispanic or Latino?',
+                allowed_values: '0=No | 1=Yes',
+                notes: 'Demographics v1.0',
+                extract: (rv) => rv?.hispanic ?? '',
+              },
+              {
+                name: 'grade',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'grade',
+                prompt: 'What grade are you currently in at school?',
+                allowed_values: '1–12 (integer)',
+                notes: 'Demographics v1.0',
+                extract: (rv) => rv?.grade ?? '',
+              },
+              {
+                name: 'home_years',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'home_years',
+                prompt: 'How long have you lived in your current home? (years)',
+                allowed_values: '0–20 (integer)',
+                notes: 'Demographics v1.0',
+                extract: (rv) => rv?.home_years ?? '',
+              },
+              {
+                name: 'home_months',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'home_months',
+                prompt: 'How long have you lived in your current home? (months)',
+                allowed_values: '0–11 (integer)',
+                notes: 'Demographics v1.0',
+                extract: (rv) => rv?.home_months ?? '',
+              },
+              {
+                name: 'placements',
+                source_token_key: tk,
+                item_type: 'custom_activity',
+                sub_id: 'placements',
+                prompt: 'How many out of home placements have you had?',
+                allowed_values: '0–50 (integer)',
+                notes: 'Demographics v1.0',
+                extract: (rv) => rv?.placements ?? '',
+              },
+            )
+          } else if (componentName === 'PlacementDisruptionWorry') {
+            // v1.0 — new: 1-item Placement Disruption Worry scale filling
+            // the gap between the live pretest and the polished /demo
+            // Pretest.jsx reference. Bare column name (matches the
+            // Pretest.jsx SPSS convention pre_disruption_worry), not
+            // prefixed with the component's short prefix.
+            cols.push({
+              name: 'pre_disruption_worry',
+              source_token_key: tk,
+              item_type: 'custom_activity',
+              sub_id: 'pre_disruption_worry',
+              prompt: 'How worried are you right now that this placement will change?',
+              allowed_values: '0–4 (Not at all → Extremely)',
+              notes: 'PlacementDisruptionWorry v1.0 — same 0-4 locked anchors as the FollowUp survey disruption item',
+              extract: (rv) => rv?.pre_disruption_worry ?? '',
+            })
           }
           // Always include a JSON fallback column so nothing is lost.
           cols.push({

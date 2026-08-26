@@ -20,6 +20,8 @@ const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
 const Plan = lazy(() => import('../activities/Plan.jsx'))
 const Assent = lazy(() => import('../activities/Assent.jsx'))
+const Demographics = lazy(() => import('../activities/Demographics.jsx'))
+const PlacementDisruptionWorry = lazy(() => import('../activities/PlacementDisruptionWorry.jsx'))
 const SplashScreen = lazy(() => import('../components/SplashScreen.jsx'))
 const Pretest = lazy(() => import('../activities/Pretest.jsx'))
 const Posttest = lazy(() => import('../activities/Posttest.jsx'))
@@ -281,6 +283,24 @@ export const TEST_REGISTRY = [
       },
       onSave: async () => {},
     },
+  },
+  {
+    id: 'demographics',
+    displayName: 'Demographics',
+    category: 'Ready for Roots activity',
+    description:
+      'New pretest item filling a gap between the live pretest and the polished /demo Pretest.jsx reference: age, sex, race, Hispanic/Latino, grade, time in current home, out-of-home placements.',
+    component: Demographics,
+    mockProps: {},
+  },
+  {
+    id: 'placement-disruption-worry',
+    displayName: 'Placement Disruption Worry',
+    category: 'Ready for Roots activity',
+    description:
+      'New pretest item: a single Likert scale, "How worried are you right now that this placement will change?" — mirrors the FollowUp survey\'s disruption item.',
+    component: PlacementDisruptionWorry,
+    mockProps: {},
   },
   {
     id: 'pretest',

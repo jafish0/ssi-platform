@@ -168,6 +168,20 @@ export const ACTIVITY_VERSIONS = {
       '2026-05-11 · v1.0 — initial sandbox build of the locked Belonging pretest (29 items: 6 demographics + 7 scales). 10-screen paginated flow mirroring the live session layout. Sliders require explicit interaction before counting as answered; pre_bw_2 hidden when pre_bw_1 = 0. Save payload keyed by SPSS column names from Draft 6.',
     ],
   },
+  demographics: {
+    version: 'v1.0',
+    updated: '2026-08-26',
+    changelog: [
+      "2026-08-26 · v1.0 — new: demographics + Placement Disruption Worry items added to fill a gap between the live pretest and the polished /demo Pretest.jsx reference (age/sex/race/hispanic/grade/home time/placements; disruption-worry Likert item as a separate component, see 'placement-disruption-worry').",
+    ],
+  },
+  'placement-disruption-worry': {
+    version: 'v1.0',
+    updated: '2026-08-26',
+    changelog: [
+      "2026-08-26 · v1.0 — new: demographics + Placement Disruption Worry items added to fill a gap between the live pretest and the polished /demo Pretest.jsx reference (age/sex/race/hispanic/grade/home time/placements as a separate component, see 'demographics'; this component is the disruption-worry Likert item).",
+    ],
+  },
 }
 
 // Convenience lookup. Returns null if the id isn't registered (e.g. for
