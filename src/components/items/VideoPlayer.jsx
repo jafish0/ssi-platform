@@ -1,10 +1,20 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { PrimaryButton } from './shared.jsx'
 
-function vimeoIdFromUrl(url) {
+// Draft 97 (2026-08-26): unlisted/private Vimeo videos — which the real
+// production library is (verified live: the numeric id alone 403s) —
+// require the access hash Vimeo appends after the id
+// (vimeo.com/{id}/{hash}) to actually play; the app's earlier placeholder
+// video happened to be a PUBLIC Vimeo demo clip, so this never came up
+// before. Captured separately from `id` (which stays the bare numeric id
+// everywhere else — analytics' `video_id`, etc.) and appended only to the
+// embed URL as `&h=`. Exported — DemoPage.jsx's ReviewCard needs the same
+// parsing for its own (untracked, ungated) Vimeo embeds.
+export function vimeoInfoFromUrl(url) {
   if (typeof url !== 'string') return null
-  const m = url.match(/vimeo\.com\/(\d+)/)
-  return m ? m[1] : null
+  const m = url.match(/vimeo\.com\/(\d+)(?:\/([a-zA-Z0-9]+))?/)
+  if (!m) return null
+  return { id: m[1], hash: m[2] || null }
 }
 
 // Resolve the video source for this item (Draft 67 Part C).
@@ -34,8 +44,8 @@ function vimeoIdFromUrl(url) {
 // vimeo player (with its postMessage watch tracking + gating); any other
 // non-empty string is a YouTube id, exactly as Draft 67 shipped.
 function sourceFromVariantValue(value, variantUsed) {
-  const vimeoId = vimeoIdFromUrl(value)
-  if (vimeoId) return { kind: 'vimeo', id: vimeoId, variantUsed }
+  const vimeo = vimeoInfoFromUrl(value)
+  if (vimeo) return { kind: 'vimeo', id: vimeo.id, hash: vimeo.hash, variantUsed }
   if (typeof value === 'string' && value) {
     return { kind: 'youtube', id: value, variantUsed }
   }
@@ -59,8 +69,8 @@ export function resolveSource(content, sessionData) {
   if (typeof content?.youtube_id === 'string' && content.youtube_id) {
     return { kind: 'youtube', id: content.youtube_id, variantUsed: null }
   }
-  const vimeoId = vimeoIdFromUrl(content?.vimeo_url)
-  if (vimeoId) return { kind: 'vimeo', id: vimeoId, variantUsed: null }
+  const vimeo = vimeoInfoFromUrl(content?.vimeo_url)
+  if (vimeo) return { kind: 'vimeo', id: vimeo.id, hash: vimeo.hash, variantUsed: null }
   return { kind: 'none', id: null, variantUsed: null }
 }
 
@@ -220,7 +230,7 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
     source.kind === 'youtube'
       ? `https://www.youtube.com/embed/${source.id}?playsinline=1&rel=0${autoplay ? '&autoplay=1' : ''}`
       : source.kind === 'vimeo'
-        ? `https://player.vimeo.com/video/${source.id}?api=1&player_id=${playerId}&title=0&byline=0&portrait=0${autoplay ? '&autoplay=1' : ''}${showControls ? '' : '&controls=0'}`
+        ? `https://player.vimeo.com/video/${source.id}?api=1&player_id=${playerId}&title=0&byline=0&portrait=0${source.hash ? `&h=${source.hash}` : ''}${autoplay ? '&autoplay=1' : ''}${showControls ? '' : '&controls=0'}`
         : null
 
   const frameWrapperClass = portrait

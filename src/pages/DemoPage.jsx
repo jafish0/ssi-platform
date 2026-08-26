@@ -15,6 +15,7 @@ import { Play, Download, AlertCircle } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
 import SplashScreen from '../components/SplashScreen.jsx'
+import { vimeoInfoFromUrl } from '../components/items/VideoPlayer.jsx'
 import { TEST_REGISTRY } from '../lib/testRegistry.js'
 import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
 import { buildWideRows, buildCodebookRows } from '../lib/exportFlatten.js'
@@ -74,17 +75,24 @@ import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 // the splash is the live component itself, full-size, not squeezed into
 // ReviewCard's shared 9:16 frame; Assent keeps its plain launch-test card
 // look since it's a "go try this yourself" link, not a "watch this" cut.
+// Draft 97 (2026-08-26): all 12 production videos migrated from YouTube to
+// the CTAC Vimeo Pro account — `youtubeId` → `vimeoUrl` throughout this
+// file. IDs sourced from `Ready for Roots - Video Library.docx` at the
+// repo root (the living checklist Josh updates as videos land — treat
+// that file as the source of truth over this comment if they ever
+// disagree). Only the demo/review surface — see WORKING_NOTES for why the
+// live authored intervention isn't touched by this same draft.
 const REVIEW_CARDS = [
   {
     title: 'Ready for Roots — Intro Video',
-    youtubeId: 'PQMnbd1NuJ8',
+    vimeoUrl: 'https://vimeo.com/1221502241/be508ddc9b',
     description:
       "The program's opening video — orients participants before the pretest.",
     feedbackArea: 'Intro Video',
   },
   {
     title: "Sam's Story — Female Version",
-    youtubeId: 'Ughh-3a8Urs',
+    vimeoUrl: 'https://vimeo.com/1221512613/46502b2007',
     description: "The female cut of Sam's Story, up for review.",
     feedbackArea: "Sam's Story — Female Version",
   },
@@ -92,13 +100,13 @@ const REVIEW_CARDS = [
   // the Female Version card above.
   {
     title: "Sam's Story — Gender-Neutral Version",
-    youtubeId: 'uOvuJrOV7RA',
+    vimeoUrl: 'https://vimeo.com/1221514000/ea3b984d60',
     description: "The gender-neutral cut of Sam's Story, up for review.",
     feedbackArea: "Sam's Story — Gender-Neutral Version",
   },
   {
     title: 'Learning Skills for Belonging — Part 2, Scene 3: Putting it All Together',
-    youtubeId: 'PPKC4yGSiGQ',
+    vimeoUrl: 'https://vimeo.com/1221518456/c2fb47f691',
     description:
       'Self-regulation, the too-heavy-shield metaphor, box breathing, and the shift from a fixed mindset to a growth mindset.',
     feedbackArea: 'Kai Part 2 Scene 3: Putting it All Together',
@@ -114,28 +122,28 @@ const REVIEW_CARDS = [
 const LEARNING_SKILLS_CARDS = [
   {
     title: 'Learning Skills for Belonging — Part 1, Scene 1: The Scan',
-    youtubeId: 'fNSK011fNnI',
+    vimeoUrl: 'https://vimeo.com/1221515272/1826137966',
     description:
       'Kai introduces himself and the concept of the belonging scan — the way our brains constantly evaluate social situations.',
     feedbackArea: 'Kai Part 1 Scene 1: The Scan',
   },
   {
     title: "Learning Skills for Belonging — Part 1, Scene 2: The Why (It's in Your DNA)",
-    youtubeId: 'u1b2FoAwZPs',
+    vimeoUrl: 'https://vimeo.com/1221515437/8a17a050c8',
     description:
       'Why belonging is a survival requirement wired into human biology — from ancient humans around fires to modern families sharing meals.',
     feedbackArea: 'Kai Part 1 Scene 2: The Why',
   },
   {
     title: 'Learning Skills for Belonging — Part 1, Scene 3: Building a Safety Net',
-    youtubeId: 'z9IMWmArols',
+    vimeoUrl: 'https://vimeo.com/1221516665/4137a22aca',
     description:
       'The safety-net metaphor for belonging — you need multiple places to belong. Includes the GPS metaphor for friend groups.',
     feedbackArea: 'Kai Part 1 Scene 3: Building a Safety Net',
   },
   {
     title: 'Learning Skills for Belonging — Part 1, Scene 4: The Foster Care "Extra Level"',
-    youtubeId: 'hTgGTKsx2Oo',
+    vimeoUrl: 'https://vimeo.com/1221516709/72f8ac57d9',
     description:
       'The specific difficulty of building belonging while in foster or relative care — "playing the Belonging Game on Hard Mode."',
     feedbackArea: 'Kai Part 1 Scene 4: The Foster Care Extra Level',
@@ -148,7 +156,7 @@ const LEARNING_SKILLS_CARDS = [
   // list once that rewrite lands and it graduates in turn.
   {
     title: 'Learning Skills for Belonging — Part 2, Scene 1: Building Skills for Belonging',
-    youtubeId: 'mHiQ6lTi1R8',
+    vimeoUrl: 'https://vimeo.com/1221516868/c790c4a41a',
     description:
       'Kai introduces the five core belonging skills — Active Listening, Conflict Resolution, Inclusive Language, Provide Support, and Express Gratitude.',
     feedbackArea: 'Kai Part 2 Scene 1: Building Skills for Belonging',
@@ -160,14 +168,18 @@ const LEARNING_SKILLS_CARDS = [
   },
   {
     title: 'Learning Skills for Belonging — Part 2, Scene 2: The Roadblocks',
-    youtubeId: 'BV4cOda5on4',
+    vimeoUrl: 'https://vimeo.com/1221518400/92f0121e83',
     description:
       'Two unhelpful thinking patterns that block belonging — All-or-Nothing Thinking and Holding onto the Past.',
     feedbackArea: 'Kai Part 2 Scene 2: The Roadblocks',
   },
   {
     title: 'Learning Skills for Belonging — Conclusion',
-    youtubeId: 'GIxBJpD6O-E',
+    // "Kai Part 2 Scene 4" in the video library (Draft 97) — Part 2 has
+    // exactly 4 scenes there (Scenes 1-4) matching this section's 4 cards
+    // (Scene 1, Scene 2, Scene 3 in REVIEW_CARDS above, Conclusion here),
+    // so Conclusion = Scene 4 positionally.
+    vimeoUrl: 'https://vimeo.com/1221518680/a3cee67761',
     description:
       "Kai's closing encouragement — your story isn't over just because the current chapter has been chaotic.",
     feedbackArea: 'Kai Conclusion',
@@ -175,12 +187,13 @@ const LEARNING_SKILLS_CARDS = [
 ]
 
 // One review card: optional group subheading, then media (a 9:16 YouTube
-// embed for `youtubeId` cards, a still image for `imageSrc` cards — Draft
-// 61 —, an inline native player for `audioSrc` cards — Draft 92, no 9:16
-// frame since that shape was designed around video/image — or a "video in
-// production" placeholder when a card sets NONE of the three, e.g. a cut
-// pulled pending a script rewrite — Draft 90) + description + a dedicated
-// feedback button pinned to this item.
+// embed for `youtubeId` cards, a 9:16 Vimeo embed for `vimeoUrl` cards —
+// Draft 97, the production video migration — a still image for `imageSrc`
+// cards — Draft 61 —, an inline native player for `audioSrc` cards — Draft
+// 92, no 9:16 frame since that shape was designed around video/image — or
+// a "video in production" placeholder when a card sets NONE of the four,
+// e.g. a cut pulled pending a script rewrite — Draft 90) + description +
+// a dedicated feedback button pinned to this item.
 function ReviewCard({ card }) {
   return (
     <>
@@ -221,6 +234,17 @@ function ReviewCard({ card }) {
                   title={card.title}
                   className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
                   allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : card.vimeoUrl ? (
+                <iframe
+                  src={(() => {
+                    const v = vimeoInfoFromUrl(card.vimeoUrl)
+                    return `https://player.vimeo.com/video/${v?.id}?title=0&byline=0&portrait=0${v?.hash ? `&h=${v.hash}` : ''}`
+                  })()}
+                  title={card.title}
+                  className="absolute inset-0 h-full w-full rounded-2xl border border-amber-200"
+                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
                   allowFullScreen
                 />
               ) : (
@@ -602,7 +626,7 @@ export default function DemoPage() {
         <ReviewCard
           card={{
             title: "Sam's Story — Male Version",
-            youtubeId: 'eEgHiFWatA0',
+            vimeoUrl: 'https://vimeo.com/1221508114/285e8683cd',
             description:
               "V5 cut with Jessica's Foster Mom audio cleaned up — volume lowered to match Sam's narration level, background hum removed.",
             feedbackArea: "Sam's Story — Male Version",
