@@ -1,6 +1,23 @@
-import { ACTIVITY_REGISTRY } from './activityRegistry.js'
-
-export const REAL_ACTIVITY_COMPONENT_NAMES = Object.keys(ACTIVITY_REGISTRY)
+// The 7 real, scored activities the tree grows across — deliberately NOT
+// derived from Object.keys(ACTIVITY_REGISTRY): that registry also holds
+// Demographics/PlacementDisruptionWorry (pretest items, registered there
+// only so the engine can render them as custom_activity items) and could
+// grow further with non-narrative activities later. Discovered live: with
+// the derived list, completing Demographics during the pretest incorrectly
+// triggered a tree-growth interstitial before the participant had even
+// reached the first real activity. An explicit list is the correct fix,
+// not a workaround — "is this a real scored activity" and "is this
+// rendered via ACTIVITY_REGISTRY" are different questions that happened to
+// have the same answer only until Demographics/PDW were added.
+export const REAL_ACTIVITY_COMPONENT_NAMES = [
+  'SelfReflection',
+  'WhoIAmPoem',
+  'AlliesSafetyNet',
+  'BelongingSkillsSort',
+  'GettingUnstuck',
+  'LetterBuilder',
+  'Plan',
+]
 
 // Derives the tree's growth stage (0-5) from how many of the real,
 // scored activities in this section list have a saved response.
