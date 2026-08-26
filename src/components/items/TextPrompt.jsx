@@ -50,6 +50,26 @@ function TextPromptNarration({ src }) {
   )
 }
 
+// The IRB approval stamp (as it appears on the stamped consent/assent PDF
+// on file) — content_json.irb_stamp is an array of lines, e.g.
+// ['IRB Approval', '8/13/2026', 'IRB # 115131', 'IRB3']. Positioned to sit
+// near the top-right corner of the item card, matching where the stamp
+// appears on the physical document.
+function IRBStamp({ lines }) {
+  return (
+    <div
+      className="absolute -top-2 -right-2 sm:top-0 sm:right-0 border-2 border-orange-600 rounded px-2 py-1 bg-white text-center leading-tight"
+      style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+    >
+      {lines.map((line, i) => (
+        <div key={i} className="text-[10px] text-blue-900 whitespace-nowrap">
+          {line}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function TextPrompt({ content, onSave, sessionData }) {
   const [submitting, setSubmitting] = useState(false)
   const heading = content?.heading
@@ -59,6 +79,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
   const continueLabel = content?.continue_label || 'Keep going →'
   const downloadCfg = content?.download_button
   const audioUrl = content?.audio_url
+  const irbStamp = content?.irb_stamp
 
   async function handleContinue() {
     if (submitting) return
@@ -89,7 +110,8 @@ export default function TextPrompt({ content, onSave, sessionData }) {
   }
 
   return (
-    <div>
+    <div className="relative">
+      {irbStamp?.length > 0 && <IRBStamp lines={irbStamp} />}
       {audioUrl && <TextPromptNarration src={audioUrl} />}
       {heading && <h2 className="text-[22px] font-semibold mb-3">{heading}</h2>}
       <div className={wrapperClass}>
