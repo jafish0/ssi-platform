@@ -11402,3 +11402,106 @@ Every one of the 12 video items carries `required_completion: true` and `complet
 1. **Review the actual copy and titles** — easiest via the admin Builder (`https://ssi.ctac.app/admin/interventions/29294f95-5c46-4d43-8fc5-dea0fa7c63db`) or the draft-state preview (`https://ssi.ctac.app/preview/29294f95-5c46-4d43-8fc5-dea0fa7c63db`, admin-only) — both read the live `items`/`sections` tables directly, so what's staged now shows up there exactly as built, no publish needed to look at it.
 2. **Publish a new version** once the copy's approved — via the Builder's publish button, or ask Code to do it (`intervention_versions` insert + `interventions.current_version_id` update, same as the Builder does) once you've confirmed you're happy with what's staged. Nothing participant-facing changes until this step.
 3. Part C's upfront-warning copy (the "please watch the whole thing" line before a gated video starts) isn't in this pass — the structure and gating are done; that one extra line can go in whenever, on any of the 12 video items' existing `context_before` field (no new field needed, same pattern this addendum already used for duration copy).
+
+**Addendum to Draft 97 — Josh's copy/content review of the staged preview (2026-08-26, Claude Cowork → Claude Code).**
+
+Josh walked the admin preview end to end and sent a full pass of notes. Organized in flow order below. All wording removals/replacements are content-only (no schema change expected) unless noted. One item is a Vimeo production fix, not a Code task — listed separately at the bottom so it doesn't get picked up by mistake.
+
+**Assent & Pretest.**
+1. The assent staged in this intervention is not the audio-read-along version that's live on `/demo` — swap the staged assent item for that version (find whichever `/demo` sandbox entry has the mp3 narration and match its content).
+2. Verify the pretest item wired into this staged flow is the same version currently on `/demo`. Check only — flag if they differ, don't change anything without asking.
+
+**Welcome (Intro Video section).**
+3. Remove the caption "Kai will walk you through what to expect today. Take a breath — this is about a minute and a half."
+4. Remove the "Here's what to expect... You'll answer some quick questions, watch a short video, and try a few activities... Got it →" screen from the participant-facing flow. **Per Josh: don't delete the item or its response rows** (same QA-response-history constraint flagged in the addendum above) — just exclude it from what's actually rendered/reachable, same approach already used for the Welcome-video situation. Item and its response history stay in the database untouched.
+
+**Sam's Story.**
+5. Remove the "One more story before we dive in... Sam has a story about belonging too. You can pick which version..." screen (1 of 4) — redundant with the picker screen right after it.
+6. On the character-picker screen (2 of 4): keep only the three portraits (make them a bit larger), remove all text on that screen.
+7. On screen 3 of 4: remove "Take a breath — this one is about 4 minutes." Replace with: "Closed Captioning is available in the video player below, press play to begin."
+8. Remove the "Now, more from Kai. Kai's got more to share, a little at a time" screen entirely.
+
+**Meet Kai.**
+9. Remove the duplicate small "Meet Kai" sub-heading text (the section shows "Meet Kai" as a title, then repeats "Meet Kai" again in smaller text right below — remove the second instance).
+10. Remove screen 1 of 4 entirely.
+11. Remove screen 3 of 4 ("Hold onto this... What stood out to you? Keep that in mind as we continue.").
+12. Remove screen 4 of 4 entirely.
+13. (Screen 2 of 4, the video itself, is untouched here — see the Vimeo production note at the bottom.)
+
+**Your Story → Who I Am.**
+14. On Your Story's last screen, trim the trailing "...for one more piece" off the end of its closing line — keep the rest of the line, just drop that trailing phrase.
+
+**Who I Am → Safety Net.**
+15. No content change requested here — Josh described the current copy ("That's a poem. Now let's look at the people who have your back.") for context only, not as something to fix. Leave as-is unless he says otherwise.
+
+**Safety Net → Belonging Skills.**
+16. Remove the line after Safety Net that says something like "there are only two more activities" — it's inaccurate, drop it.
+
+**Skills for Belonging → Belonging Skills.**
+17. Remove Skills for Belonging's last screen (3 of 3) entirely.
+18. Remove Belonging Skills' first screen (1 of 3) entirely.
+
+**Getting Unstuck — real bug, not a content edit.** Instructions say "pick the top two thoughts," but Josh was able to continue after selecting only one. Needs validation added so Continue stays disabled until exactly 2 are selected, matching the copy's own instruction.
+
+**Letter → The Plan.**
+19. Remove the "That's a letter. Now let's pull everything together into your plan" transition screen — go straight to the next screen instead of showing this bridge.
+
+**Your Plan.**
+20. Remove screen 1 of 3 ("One concrete plan... You've done a lot today. Let's make one concrete plan — something small you can actually try.") entirely.
+21. **Investigate, don't assume:** Josh says he was never prompted to save or download his plan during this walkthrough. Confirm directly whether the Plan's PNG/PDF keepsake download step is actually present and reachable in this staged build (per Draft 88, this should exist — "the Plan is the one keepsake, downloadable only at the very end"). If it's genuinely missing or unreachable in this staged flow, that's a real bug to flag back, not something to silently patch over. If it's present and Josh just didn't hit it, report that back too rather than assuming either way.
+
+**Wrap-up questions.**
+22. Remove the bridge screen before Wrap-up questions ("Same questions as before" + a Continue prompt) — it's redundant. Go straight into the actual wrap-up questions instead.
+
+**Final "Thank you" screen (10 of 10).**
+23. "Thank you for completing Ready! Set! Dedicate!" → "Thank you for completing Ready for Roots" (old pre-rename branding leaked through — see [[feedback_ssi_naming]] equivalent note earlier in this file about the 2026-05-18 rename).
+24. "The poem and letter are yours to keep" → also cover the plan (e.g. "The poem, letter, and plan are yours to keep") — Josh's own choice on exact wording.
+
+**Not a Code task — Josh's own production todo, logged here so it doesn't get lost:** Meet Kai's video (screen 2 of 4, Kai Part 1 Scene 1, Vimeo 1221515272) has extra blank footage in it. Josh needs to re-clip it in Vimeo and confirm it's the correct cut before this ships. Nothing for Code to do here except leave that video item's URL alone until Josh says it's been fixed.
+
+**All of the above is content/copy/validation work against the already-staged draft tables — same "not published until Josh approves" status as the structural addendum above.** None of it should be published without a final look once applied.
+
+**Addendum to Draft 97 — the 24-point review pass: what shipped, what was found, what's still open (2026-08-26, Claude Code).**
+
+**Code shipped** (`33311fb`, pushed):
+- New `content_json.hidden` mechanism (`SessionEngine.jsx` + `PreviewPage.jsx`) — an item with `hidden: true` in its `content_json` is filtered out of both the real delivery flow and the admin preview, without deleting the row. This is what makes "remove this screen" safe for items with real (QA) response history under `responses.item_id`'s `ON DELETE RESTRICT` — the same problem already flagged once for the Welcome video, now generalized and reused ten more times below.
+- `Choice.jsx`: the `prompt` paragraph now only renders when `content.prompt` is set (previously rendered an empty `<p>` for a blank prompt); new `content.hide_option_labels` flag shows a larger portrait (`w-24 h-24`, up from `w-16 h-16`) with the text label moved to `aria-label` instead of disappearing outright, so a screen reader still announces which option is which. Used for #6 below.
+- `GettingUnstuck.jsx`: real bug, not a content edit — the "pick the top two" screen's Continue button only ever required at least 1 selection despite the copy saying "pick the top two." Now requires exactly `MAX_PICKS` (2), or every eligible item if fewer than 2 cleared the rating threshold. Verified live through the full rate → pick flow. `activityVersions.js` bumped `getting-unstuck` v5.9 → v5.10.
+
+**Database changes (staged, not published)** — applied to the same draft `items`/`sections` tables as the structural restructuring above, verified by re-querying every touched row back:
+
+*Hidden (row + response history kept, just excluded from delivery):*
+- #4 Welcome → "Here's what to expect" screen
+- #5 Sam's Story → "One more story before we dive in" screen
+- #8 Sam's Story → "Now, more from Kai." screen
+- #10 Meet Kai → screen 1 of 4 ("Meet Kai" text)
+- #11 Meet Kai → screen 3 of 4 ("Hold onto this")
+- #12 Meet Kai → screen 4 of 4 ("Your turn.")
+- #17 Skills for Belonging → screen 3 of 3 ("Activity time.")
+- #18 Belonging skills → screen 1 of 3 ("Skills check")
+- #19 A letter → the "That's a letter." Letter→Plan transition screen
+- #20 Your plan → screen 1 of 3 ("One concrete plan")
+
+*Edited (copy changed in place):*
+- #3 Welcome video's caption ("Kai will walk you through...") removed
+- #6 Sam's Story picker: `hide_option_labels: true` added — three portraits only, larger, no visible text
+- #7 Sam's Story video caption → "Closed Captioning is available in the video player below, press play to begin."
+- #9 Meet Kai video's `title` field removed (was duplicating the section heading)
+- #16 Safety Net wrap-up screen: kept the "Nice work." heading, dropped the inaccurate "two more activities" line
+- #22 Almost-done bridge: dropped the "same questions as before" framing, **kept the caregiver/distress safety sentence verbatim** — this was a deliberate edit, not a hide, specifically so the safety-relevant content survives
+- #23/#24 Final Thank-you screen rewritten to "Thank you for completing Ready for Roots / What you did today matters. Hold onto what helps. The poem, letter, and plan are yours to keep."
+- #15 No change — Josh's note was context, not a request.
+
+**#1 — Assent narration swap: deferred, needs a decision, not guessed at.** The live Assent's "No" → friendly-exit path is hard-gated in `SessionEngine.jsx`'s `saveResponse` to `item.type === 'choice'` specifically (`exit_on` rules are only ever checked there). The narrated `/demo` Assent is a full React component, and swapping it in would mean authoring it as `type: 'custom_activity'` — which would silently break the decline/exit flow for a real participant, since `ACTIVITY_REGISTRY` doesn't even have an "Assent" entry yet and custom_activity items aren't wired to `exit_on` at all. This is safety-relevant (it's the assent-decline path), so it's not something to rush past. Two ways to resolve it, need Josh's call: (a) extend `SessionEngine.jsx` to also honor exit intent from a custom_activity, or (b) add narration support directly to the existing text_prompt/choice-pair structure instead of swapping component types. Nothing changed here yet.
+
+**#2 — pretest comparison: investigated, found a real gap, not just a wording drift.** Compared the live "A few quick questions" section (7 `psychometric_scale` items) against `/demo/sandbox/pretest`'s `Pretest.jsx` word-for-word:
+- The five core scales (Beck Hopelessness, Adolescent Sense of Control, UCLA Loneliness, Need to Belong, Belonging Promoting Behaviors) plus Belonging Worries and Program Expectation match `Pretest.jsx` exactly — same item text, same anchor labels, same conditional skip logic on the second Belonging Worries question.
+- The live pretest *also* has a 9-item "Appraisals" scale (`appraisals_pre` — "I will never really feel like I belong," "Everyone will eventually leave me or give up on me," etc., VAS 0–10) that **doesn't exist anywhere in `Pretest.jsx`** — it's authored directly in the database, not reflected in the sandbox component at all.
+- The live pretest is **entirely missing** the demographics screen `Pretest.jsx` has (age, sex, race — 8 options, Hispanic/Latino, grade, home_years/home_months) and the Placement Disruption Worry item (both confirmed-final per `Pretest.jsx`'s own header comment, the disruption item added 6.29.26 per Jessica's review). Checked the whole `public` schema for anything that might be capturing this elsewhere (a demographics table, columns on `access_codes` or a sessions table) — there is none. **No demographic data is being captured anywhere in this live intervention right now.**
+This needs Josh/team to say whether that's intentional (demographics collected some other way, e.g. a separate Qualtrics form) or a real gap that needs the missing items added to the live pretest before real enrollment. Not changed — investigate-only, per the ask.
+
+**#21 — Plan keepsake download: investigated, not a bug.** Confirmed by reading `PreviewPage.jsx`'s `completed` state directly: the admin preview harness only ever renders a generic "End of preview / Responses were not saved (preview mode)" message when a session finishes — it never mounts `CelebrationScreen`, the keepsake screen, or the PNG/PDF download step, by design (preview mode doesn't save responses at all, and the keepsake flow depends on a real completed session via `DeliveryShellPage.jsx`, which the admin preview intentionally bypasses). The real delivery flow does show the keepsake correctly — verified extensively earlier this session for Draft 96 (988 Lifeline callout on the keepsake). So Josh not seeing a save/download prompt while walking the *admin preview* specifically is expected, not a bug — nothing to fix here.
+
+**Cleanup:** the temporary QA access code `RSD-QA99-AAAA` (minted for this review pass, never used — `use_count: 0`) marked `is_active: false`.
+
+**Status — still staged, not published.** Before this can go live: #1 (Assent swap architecture decision), #2 (demographics gap decision), and Part C's upfront gated-video warning copy (still pending from the addendum above) are all open. Everything else in the 24-point pass is applied and ready for a final look in the admin preview.
