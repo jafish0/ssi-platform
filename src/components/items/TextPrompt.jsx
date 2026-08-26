@@ -4,6 +4,52 @@ import { interpolate } from '../../lib/tokens.js'
 import { PrimaryButton } from './shared.jsx'
 import { downloadPdf } from '../../lib/pdf.js'
 
+// "Read this to me" narration — a collapsed pill, not an always-visible
+// player: ported from Assent.jsx's AssentNarration, made src-driven so any
+// text_prompt item can opt in via content_json.audio_url. Does not autoplay
+// on mount and does not gate the Continue button — pure accessibility/
+// support add-on. Fail-open: a missing/broken mp3 swaps in a plain message
+// instead of a dead control.
+function TextPromptNarration({ src }) {
+  const [revealed, setRevealed] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
+
+  if (!revealed) {
+    return (
+      <div className="text-center mb-5">
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          className="inline-flex items-center gap-2 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+        >
+          🔊 Read this to me
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-5 rounded-2xl border border-ctac-teal-200 bg-ctac-teal-50 p-4 text-center">
+      {loadFailed ? (
+        <p className="text-[13px] text-slate-600 italic">
+          The audio isn&apos;t available yet — you can keep reading below.
+        </p>
+      ) : (
+        <audio
+          autoPlay
+          controls
+          preload="auto"
+          src={src}
+          onError={() => setLoadFailed(true)}
+          className="w-full"
+        >
+          Your browser does not support the audio element.
+        </audio>
+      )}
+    </div>
+  )
+}
+
 export default function TextPrompt({ content, onSave, sessionData }) {
   const [submitting, setSubmitting] = useState(false)
   const heading = content?.heading
@@ -12,6 +58,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
   const showButton = content?.show_continue_button !== false
   const continueLabel = content?.continue_label || 'Keep going →'
   const downloadCfg = content?.download_button
+  const audioUrl = content?.audio_url
 
   async function handleContinue() {
     if (submitting) return
@@ -43,6 +90,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
 
   return (
     <div>
+      {audioUrl && <TextPromptNarration src={audioUrl} />}
       {heading && <h2 className="text-[22px] font-semibold mb-3">{heading}</h2>}
       <div className={wrapperClass}>
         {format === 'pull_forward_highlight' && (

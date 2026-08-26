@@ -27,6 +27,9 @@ const FollowUp = lazy(() => import('../activities/FollowUp.jsx'))
 // TEMP (Draft 73 demonstration) — the engine's psychometric_scale item
 // renderer, mounted directly with a scratch labeled-anchors config.
 const PsychometricScale = lazy(() => import('../components/items/PsychometricScale.jsx'))
+// The engine's text_prompt item renderer, mounted directly to verify the
+// audio_url narration field (used live by the Assent screen).
+const TextPrompt = lazy(() => import('../components/items/TextPrompt.jsx'))
 
 // --- Registry ---
 export const TEST_REGISTRY = [
@@ -258,6 +261,25 @@ export const TEST_REGISTRY = [
         },
         show_progress: false,
       },
+    },
+  },
+  // Verification surface for the audio_url narration field (used live on
+  // the Assent screen's opening text_prompt item, unlisted — direct URL
+  // only: /demo/sandbox/text-prompt-narration-preview).
+  {
+    id: 'text-prompt-narration-preview',
+    displayName: 'Text prompt — "Read this to me" narration (QA)',
+    category: 'internal QA',
+    description:
+      'Scratch item demonstrating the audio_url capability: a collapsed "Read this to me" pill that reveals an audio player on tap. Uses the same mp3 as the live Assent screen.',
+    component: TextPrompt,
+    mockProps: {
+      content: {
+        heading: 'A SINGLE SESSION PROGRAM TO FOSTER BELONGINGNESS',
+        body: 'This is scratch body text standing in for the assent copy — the narration pill above should reveal an audio player on tap.',
+        audio_url: '/kai-narration/assent.mp3',
+      },
+      onSave: async () => {},
     },
   },
   {
