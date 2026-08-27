@@ -110,6 +110,24 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **DB only (v9 publish) · 2026-08-26** — **Posttest content fixed: Program Acceptability trimmed 7→3 items, stray `appraisals_post` scale removed.** Josh's direct call: the `/demo` sandbox versions of Pretest/Posttest/FollowUp are authoritative wherever they disagree with the live DB — resolves both Posttest questions flagged in the 24-point-pass addendum. `program_acceptability_post` (7 items, missing per-point anchor labels) replaced with the demo's exact 3 items/wording/anchors ("I would recommend this program to **other kids my age**," not "a friend going through a hard time"); `token_key` renamed `program_acceptability_post` → `program_feedback_post` to match the demo's actual scale identity and get `post_pf_1/2/3` export columns instead of `post_pa_*` (both abbreviations already existed side-by-side in `exportFlatten.js`'s `SCALE_ABBREVIATIONS`, one flagged "legacy alt name" — this was the confirmation to actually converge on the modern one). The stray 9-item `appraisals_post` VAS scale (not in the demo, the locked doc, or the app's own canonical `appraisals.js`) hidden, not deleted (9 QA responses attached). **Standing convention going forward:** demo Pretest/Posttest/FollowUp win on any future live-vs-demo mismatch, not just this one. No code changes — pure content, republished as **v9**. **Verified live:** exactly 3 items with byte-identical wording/anchors/instructions to `Posttest.jsx`; appraisals_post no longer reachable; saved response confirmed under the new `program_feedback_post` token_key with `pf1/pf2/pf3` sub-keys; console clean.
+
+  <details>
+  <summary>Draft (verbatim, Josh → Claude Cowork → Claude Code)</summary>
+
+**Addendum to Draft 97 — Posttest content questions resolved: demo is authoritative (2026-08-26, Josh → Claude Cowork → Claude Code).**
+
+Josh, directly: **the demo's `Pretest.jsx` / `Posttest.jsx` / `FollowUp.jsx` are the authoritative source for measure content** — wherever the live DB's pretest/posttest/follow-up items diverge from their demo counterparts, the demo wins. This resolves both open items from the 24-point-pass addendum's Posttest findings:
+
+1. **Program Acceptability scale:** trim the live "Wrap-up questions" section's version from 7 items down to the 3 items in `Posttest.jsx` (and the locked measures doc, which already agrees with the demo here) — exact wording, including the "recommend to other kids my age" phrasing (not the live version's "a friend going through a hard time"), and add the per-point anchor labels `Posttest.jsx` has that the live version is missing.
+2. **Stray `appraisals_post` scale:** remove it entirely from the live posttest — it's not in the demo, not in the locked doc, and doesn't match the app's actual canonical appraisals scale (`src/lib/appraisals.js`) used elsewhere. Straight removal, no replacement needed.
+
+**Standing convention going forward, not just this one fix:** treat the `/demo` sandbox versions of Pretest/Posttest/FollowUp as ground truth whenever live DB content and the demo disagree, unless Josh says otherwise for a specific case. Saves re-litigating this each time a content-review pass turns up a mismatch.
+
+**Verify:** live Program Acceptability shows exactly 3 items, wording and anchors byte-identical to `Posttest.jsx`; `appraisals_post` no longer appears anywhere in the live posttest or its export columns; re-publish once applied; build/console clean.
+
+  </details>
+
 - **`b0123b3` · 2026-08-26** — **Welcome 988 callout, Who I Am shows the real poem, all Kai video captions removed, Almost-done trimmed, "Complete Program" confirmation screen — Ready for Roots republished as v8.** Six changes from Josh's second copy/content review pass:
   1. Welcome 2 of 3 (`c2bf36d5`) gets `show_crisis_note: true` (new `TextPrompt.jsx` field rendering the shared `CrisisLifelineNote`) right after the existing "if you feel upset..." sentence — original sentence kept, confirmed with Josh.
   2. Welcome 3 of 3 (`9ae2a284`) hidden.
