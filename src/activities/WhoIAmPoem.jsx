@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { PrimaryButton } from '../components/items/shared.jsx'
+import {
+  PrimaryButton,
+  MissingItemsNote,
+  scrollToMissingItem,
+} from '../components/items/shared.jsx'
 
 // "Who I Am" poem — 10-line structure per Ginny's revision
 // (`Poem structure.png` in repo root). 8 kid-filled lines, lines 6 and 10
@@ -47,6 +51,11 @@ export default function WhoIAmPoem({ onSave = console.log }) {
   const [vals, setVals] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  // Draft 100: Continue stays tappable when incomplete; tapping it while
+  // incomplete surfaces what's missing instead of doing nothing (a
+  // disabled native <button> doesn't fire hover in most browsers, and
+  // this is phone-first anyway, so hover was never viable).
+  const [showMissing, setShowMissing] = useState(false)
 
   function update(id, v) {
     setVals((prev) => ({ ...prev, [id]: v }))
@@ -56,9 +65,17 @@ export default function WhoIAmPoem({ onSave = console.log }) {
   // produce a poem with three missing lines). Everything else is optional
   // so the kid isn't punished for having one prompt they can't answer.
   const canSave = (vals.characteristics || '').trim().length > 0
+  const missingMessage = canSave
+    ? null
+    : 'Please fill in the first line ("I am ___") before continuing.'
 
   async function handleSave() {
-    if (!canSave) return
+    if (!canSave) {
+      setShowMissing(true)
+      scrollToMissingItem('item-characteristics')
+      return
+    }
+    setShowMissing(false)
     setSubmitting(true)
     try {
       await onSave({
@@ -98,7 +115,7 @@ export default function WhoIAmPoem({ onSave = console.log }) {
 
       <div className="space-y-4">
         {LINES.map((l) => (
-          <div key={l.id}>
+          <div key={l.id} id={l.id === 'characteristics' ? 'item-characteristics' : undefined}>
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
               {l.starter}
               {l.id === 'characteristics' && <span className="text-rose-400 ml-1">*</span>}
@@ -122,10 +139,11 @@ export default function WhoIAmPoem({ onSave = console.log }) {
       </div>
 
       <div className="flex justify-end mt-6">
-        <PrimaryButton onClick={handleSave} disabled={!canSave || submitting}>
+        <PrimaryButton onClick={handleSave} disabled={submitting}>
           {submitting ? 'Saving…' : 'See your poem'}
         </PrimaryButton>
       </div>
+      <MissingItemsNote message={showMissing ? missingMessage : null} />
     </div>
   )
 }

@@ -44,7 +44,7 @@
 // this skill" from "kid actively chose Not Interested."
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import { PrimaryButton, GhostButton, MissingItemsNote } from '../components/items/shared.jsx'
 
 // Skill labels match the locked pretest doc (set in commit `7b7046e`,
 // Draft 3). bs1–bs7 IDs are stable; the meaning of each ID is preserved
@@ -583,6 +583,10 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
   // leftover unsorted skills) → 'done' (saved snapshot keepsake).
   const [phase, setPhase] = useState('sort')
   const [reconsidered, setReconsidered] = useState(false)
+  // Draft 100: Save stays tappable even with nothing sorted yet; tapping it
+  // in that state surfaces a message instead of doing nothing. Only shown
+  // after a real incomplete tap, not on first render.
+  const [showMissing, setShowMissing] = useState(false)
 
   // Refs for hit-testing against bucket rectangles on pointermove.
   // Keyed by bucket.id; each holds the bucket container's DOM node.
@@ -854,10 +858,19 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
     placement.willing_to_try.length > 0 ||
     placement.not_interested.length > 0
 
-  // Primary-button handler. If the kid still has unsorted skills and we
-  // haven't already offered the reconsider step, surface it once before
-  // saving (Draft 26 Part C). Otherwise save straight through.
+  // Primary-button handler. Draft 100: nothing sorted at all is the one
+  // gate here — this activity's own design lets individual skills stay
+  // unplaced (that's what the reconsider step below is for), so there's
+  // no "list of missing items," just a single "sort at least one" check.
+  // If that passes but the kid still has unsorted skills and we haven't
+  // already offered the reconsider step, surface it once before saving
+  // (Draft 26 Part C). Otherwise save straight through.
   function handlePrimary() {
+    if (!anyPlaced) {
+      setShowMissing(true)
+      return
+    }
+    setShowMissing(false)
     if (unplaced.length > 0 && !reconsidered) {
       setPhase('reconsider')
       if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
@@ -994,10 +1007,13 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
       </div>
 
       <div className="flex justify-end">
-        <PrimaryButton onClick={handlePrimary} disabled={!anyPlaced || submitting}>
+        <PrimaryButton onClick={handlePrimary} disabled={submitting}>
           {submitting ? 'Saving…' : 'Save'}
         </PrimaryButton>
       </div>
+      <MissingItemsNote
+        message={showMissing ? 'Sort at least one skill before continuing.' : null}
+      />
 
       {/* aria-live region for screen readers — visually hidden */}
       <div role="status" aria-live="polite" className="sr-only">

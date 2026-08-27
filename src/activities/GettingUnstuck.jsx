@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
-import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import {
+  PrimaryButton,
+  GhostButton,
+  MissingItemsNote,
+  scrollToMissingItem,
+} from '../components/items/shared.jsx'
 import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
 
@@ -222,6 +227,15 @@ export default function GettingUnstuck({ onSave = console.log }) {
   const [submitting, setSubmitting] = useState(false)
   const [savedDone, setSavedDone] = useState(false)
 
+  // Draft 100 — per-phase "show what's missing" flags. Each starts false
+  // (only flips to true after a real tap on that phase's Continue button
+  // while incomplete), matching PsychometricScale's showMissing pattern.
+  const [showMissingRate, setShowMissingRate] = useState(false)
+  const [showMissingOther, setShowMissingOther] = useState(false)
+  const [showMissingPick, setShowMissingPick] = useState(false)
+  const [showMissingNarration, setShowMissingNarration] = useState(false)
+  const [showMissingStrategy, setShowMissingStrategy] = useState(false)
+
   // ---- Derived sets ----
 
   // All eligible item ids in display order (locked items first, then
@@ -268,10 +282,20 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return out
   }, [eligibleItems, items])
 
-  const allRated = useMemo(
-    () => APPRAISAL_ITEMS.every((it) => items[it.id]?.truth_rating != null),
+  // Draft 100: kept as the subset of unrated items (not just a boolean) so
+  // the rate-phase Continue button can name what's missing and scroll to
+  // the first one, matching PsychometricScale's pattern.
+  const missingRatedItems = useMemo(
+    () => APPRAISAL_ITEMS.filter((it) => items[it.id]?.truth_rating == null),
     [items],
   )
+  const allRated = missingRatedItems.length === 0
+  const missingRatedMessage =
+    missingRatedItems.length === 0
+      ? null
+      : missingRatedItems.length === 1
+        ? 'Please rate the highlighted thought before continuing.'
+        : `Please rate the highlighted thought before continuing (${missingRatedItems.length} left).`
 
   // ---- Mutators ----
 
@@ -401,6 +425,12 @@ export default function GettingUnstuck({ onSave = console.log }) {
   // ---- Phase: rate ----
   if (phase === 'rate') {
     function handleRateContinue() {
+      if (!allRated) {
+        setShowMissingRate(true)
+        scrollToMissingItem(`item-${missingRatedItems[0].id}`)
+        return
+      }
+      setShowMissingRate(false)
       setPhase('other')
       scrollTop()
     }
@@ -418,6 +448,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
             return (
               <div
                 key={it.id}
+                id={`item-${it.id}`}
                 className="rounded-2xl border bg-white border-slate-200 p-4"
               >
                 <div className="text-[15px] leading-relaxed text-slate-800 mb-4">
@@ -434,22 +465,47 @@ export default function GettingUnstuck({ onSave = console.log }) {
         </div>
 
         <div className="flex items-center justify-end">
-          <PrimaryButton onClick={handleRateContinue} disabled={!allRated}>
+          <PrimaryButton onClick={handleRateContinue}>
             Keep going →
           </PrimaryButton>
         </div>
-        {!allRated && (
-          <p className="text-[12px] text-slate-500 italic text-right mt-2">
-            Rate every thought to continue.
-          </p>
-        )}
+        <MissingItemsNote message={showMissingRate ? missingRatedMessage : null} />
       </div>
     )
   }
 
   // ---- Phase: other ----
   if (phase === 'other') {
+    // Draft 100 — what's blocking Continue here, and where to scroll.
+    // Sequential by nature (you can't rate before choosing Yes), so at
+    // most one of these is ever the active blocker.
+    const otherMissing = (() => {
+      if (otherChoice == null) {
+        return { id: 'item-other-choice', message: 'Choose Yes or No before continuing.' }
+      }
+      if (otherChoice === 'yes') {
+        const missingText = otherText.trim().length === 0
+        const missingRating = items[OTHER_ID]?.truth_rating == null
+        if (missingText && missingRating) {
+          return { id: 'item-other-text', message: 'Type your thought and rate it before continuing.' }
+        }
+        if (missingText) {
+          return { id: 'item-other-text', message: 'Type your thought before continuing.' }
+        }
+        if (missingRating) {
+          return { id: 'item-other-rating', message: 'Rate your thought before continuing.' }
+        }
+      }
+      return null
+    })()
+
     function handleOtherContinue() {
+      if (otherMissing) {
+        setShowMissingOther(true)
+        scrollToMissingItem(otherMissing.id)
+        return
+      }
+      setShowMissingOther(false)
       // Decide downstream phase based on eligibility after the Other
       // contribution. If no items (locked or Other) clear the
       // threshold → the v5.9 0-endorsement fallback; otherwise → pick.
@@ -503,12 +559,6 @@ export default function GettingUnstuck({ onSave = console.log }) {
       scrollTop()
     }
 
-    // Yes-path is gated: must type the thought AND rate it before continuing.
-    // (Empty text reduces to a No.)
-    const yesPathReady =
-      otherChoice !== 'yes' ||
-      (otherText.trim().length > 0 && items[OTHER_ID]?.truth_rating != null)
-
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-3">One more.</h2>
@@ -517,7 +567,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
           list here?
         </p>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div id="item-other-choice" className="grid grid-cols-2 gap-3 mb-6">
           <button
             type="button"
             onClick={() => setOtherChoice('no')}
@@ -548,22 +598,26 @@ export default function GettingUnstuck({ onSave = console.log }) {
 
         {otherChoice === 'yes' && (
           <div className="rounded-2xl border border-slate-200 bg-white p-4 mb-6">
-            <label className="block text-[14px] font-medium text-slate-700 mb-2">
-              Type the thought in your own words
-            </label>
-            <textarea
-              rows={3}
-              value={otherText}
-              onChange={(e) => setOtherText(e.target.value)}
-              maxLength={280}
-              placeholder="Whatever comes to mind…"
-              className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white mb-4"
-            />
-            <TruthRatingScale
-              label="How true does this feel for you?"
-              value={items[OTHER_ID]?.truth_rating ?? null}
-              onChange={(v) => setRating(OTHER_ID, v)}
-            />
+            <div id="item-other-text">
+              <label className="block text-[14px] font-medium text-slate-700 mb-2">
+                Type the thought in your own words
+              </label>
+              <textarea
+                rows={3}
+                value={otherText}
+                onChange={(e) => setOtherText(e.target.value)}
+                maxLength={280}
+                placeholder="Whatever comes to mind…"
+                className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white mb-4"
+              />
+            </div>
+            <div id="item-other-rating">
+              <TruthRatingScale
+                label="How true does this feel for you?"
+                value={items[OTHER_ID]?.truth_rating ?? null}
+                onChange={(v) => setRating(OTHER_ID, v)}
+              />
+            </div>
           </div>
         )}
 
@@ -576,13 +630,11 @@ export default function GettingUnstuck({ onSave = console.log }) {
           >
             ← Back
           </GhostButton>
-          <PrimaryButton
-            onClick={handleOtherContinue}
-            disabled={otherChoice == null || !yesPathReady}
-          >
+          <PrimaryButton onClick={handleOtherContinue}>
             Let's practice →
           </PrimaryButton>
         </div>
+        <MissingItemsNote message={showMissingOther ? otherMissing?.message : null} />
       </div>
     )
   }
@@ -590,6 +642,19 @@ export default function GettingUnstuck({ onSave = console.log }) {
   // ---- Phase: pick ----
   if (phase === 'pick') {
     const selectedCount = selectedItems.length
+    // Draft 100 — this gate is a count, not a per-item "answered/unanswered"
+    // list: every unselected thought is an equally valid candidate, so
+    // there's no single "missing item" to scroll to. A simple message
+    // naming how many more to pick is the right fit here (same category as
+    // the narration gate below), not the list+scroll treatment.
+    const pickRequired = Math.min(MAX_PICKS, eligibleItems.length)
+    const pickRemaining = pickRequired - selectedCount
+    const pickMissingMessage =
+      pickRemaining <= 0
+        ? null
+        : pickRemaining === 1
+          ? 'Pick 1 more thought before continuing.'
+          : `Pick ${pickRemaining} more thoughts before continuing.`
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-5">
@@ -649,21 +714,26 @@ export default function GettingUnstuck({ onSave = console.log }) {
           </GhostButton>
           <PrimaryButton
             onClick={() => {
+              // Real bug (Josh, staged-preview review): the copy says "pick
+              // the top two," but this only ever required at least one,
+              // letting a participant continue after selecting just 1.
+              // Requires exactly MAX_PICKS (2) — or the most that's actually
+              // achievable if fewer than 2 thoughts cleared the eligibility
+              // threshold, so this can't lock out a legitimately
+              // 1-eligible-item case.
+              if (pickRemaining > 0) {
+                setShowMissingPick(true)
+                return
+              }
+              setShowMissingPick(false)
               setPhase('kai_strategy_intro')
               scrollTop()
             }}
-            // Real bug (Josh, staged-preview review): the copy says "pick
-            // the top two," but this only ever required at least one,
-            // letting a participant continue after selecting just 1.
-            // Requires exactly MAX_PICKS (2) — or the most that's actually
-            // achievable if fewer than 2 thoughts cleared the eligibility
-            // threshold, so this can't lock out a legitimately
-            // 1-eligible-item case.
-            disabled={selectedCount < Math.min(MAX_PICKS, eligibleItems.length)}
           >
             Keep going →
           </PrimaryButton>
         </div>
+        <MissingItemsNote message={showMissingPick ? pickMissingMessage : null} />
       </div>
     )
   }
@@ -732,15 +802,25 @@ export default function GettingUnstuck({ onSave = console.log }) {
           </GhostButton>
           <PrimaryButton
             onClick={() => {
+              // Draft 100 — single boolean precondition, nothing to
+              // scroll to (the whole screen is "the item"): a plain
+              // message is enough, no list+scroll treatment needed.
+              if (!strategyIntroNarrationDone) {
+                setShowMissingNarration(true)
+                return
+              }
+              setShowMissingNarration(false)
               setThoughtIdx(0)
               setPhase('strategy')
               scrollTop()
             }}
-            disabled={!strategyIntroNarrationDone}
           >
             Keep going →
           </PrimaryButton>
         </div>
+        <MissingItemsNote
+          message={showMissingNarration && !strategyIntroNarrationDone ? 'Finish listening to the narration before continuing.' : null}
+        />
       </div>
     )
   }
@@ -755,6 +835,18 @@ export default function GettingUnstuck({ onSave = console.log }) {
     const r = items[item.id] || {}
     const isLastThought = thoughtIdx === selectedItems.length - 1
     const valid = currentResponseValid(item.id)
+    // Draft 100 — only one thought is on screen at a time here, so at most
+    // one thing can be blocking: either no strategy is picked yet, or a
+    // strategy is picked but its response field is still empty. Static ids
+    // are safe (only one 'strategy' phase screen is ever mounted at once).
+    const strategyMissing = !r.strategy
+      ? { id: 'strategy-picker', message: 'Choose a strategy before continuing.' }
+      : !valid
+        ? {
+            id: r.strategy === 'both_and' ? 'strategy-and-statement' : 'strategy-response',
+            message: 'Finish your response before continuing.',
+          }
+        : null
     // Alternative-thought suggestions for the "I need help" panel. Only
     // the locked appraisal items carry these; a_other has none. As of
     // v5.5 (Draft 27) the content is strategy-keyed — surface the set
@@ -792,7 +884,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
         </div>
 
         <p className="text-[14px] text-slate-600 mb-3">Pick a strategy:</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+        <div id="strategy-picker" className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
           <button
             type="button"
             onClick={() => setStrategy(item.id, 'challenge')}
@@ -827,7 +919,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
         </div>
 
         {r.strategy === 'challenge' && (
-          <div className="mb-5">
+          <div id="strategy-response" className="mb-5">
             <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-3">
               <div className="text-[13px] font-medium text-slate-600 mb-2">
                 Ask yourself:
@@ -854,7 +946,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
         )}
 
         {r.strategy === 'both_and' && (
-          <div className="mb-5">
+          <div id="strategy-and-statement" className="mb-5">
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
               Build the Both/And:
             </label>
@@ -930,6 +1022,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
         <div className="flex items-center justify-between mt-6">
           <GhostButton
             onClick={() => {
+              setShowMissingStrategy(false)
               if (thoughtIdx > 0) {
                 setThoughtIdx((i) => i - 1)
               } else {
@@ -944,7 +1037,12 @@ export default function GettingUnstuck({ onSave = console.log }) {
           </GhostButton>
           <PrimaryButton
             onClick={() => {
-              if (!valid) return
+              if (!valid) {
+                setShowMissingStrategy(true)
+                scrollToMissingItem(strategyMissing.id)
+                return
+              }
+              setShowMissingStrategy(false)
               if (isLastThought) {
                 setPhase('review')
               } else {
@@ -960,11 +1058,11 @@ export default function GettingUnstuck({ onSave = console.log }) {
               }
               scrollTop()
             }}
-            disabled={!valid}
           >
             {isLastThought ? 'Review →' : 'Next thought →'}
           </PrimaryButton>
         </div>
+        <MissingItemsNote message={showMissingStrategy ? strategyMissing?.message : null} />
       </div>
     )
   }
@@ -978,6 +1076,10 @@ export default function GettingUnstuck({ onSave = console.log }) {
         <div className="flex items-center justify-end">
           <PrimaryButton
             onClick={() => {
+              // Reset so the next thought's screen doesn't open already
+              // showing a stale missing-response message from the one
+              // just completed.
+              setShowMissingStrategy(false)
               setThoughtIdx((i) => i + 1)
               setPhase('strategy')
               scrollTop()

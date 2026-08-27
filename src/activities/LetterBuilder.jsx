@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { PrimaryButton } from '../components/items/shared.jsx'
+import {
+  PrimaryButton,
+  MissingItemsNote,
+  scrollToMissingItem,
+} from '../components/items/shared.jsx'
 
 // "Letter to Another Youth" — single-screen free-write activity.
 //
@@ -34,12 +38,25 @@ export default function LetterBuilder({ onSave = console.log }) {
   const [letter, setLetter] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  // Draft 100: Save stays tappable when incomplete; tapping it while
+  // incomplete surfaces what's missing instead of doing nothing (a
+  // disabled native <button> doesn't fire hover in most browsers, and
+  // this is phone-first anyway, so hover was never viable).
+  const [showMissing, setShowMissing] = useState(false)
 
   const trimmed = letter.trim()
   const canSave = trimmed.length > 0
+  const missingMessage = canSave
+    ? null
+    : 'Please write your letter before continuing.'
 
   async function handleSave() {
-    if (!canSave) return
+    if (!canSave) {
+      setShowMissing(true)
+      scrollToMissingItem('item-letter')
+      return
+    }
+    setShowMissing(false)
     setSubmitting(true)
     try {
       await onSave({
@@ -71,23 +88,26 @@ export default function LetterBuilder({ onSave = console.log }) {
         Example: {EXAMPLE}
       </p>
 
-      <textarea
-        rows={12}
-        value={letter}
-        onChange={(e) => setLetter(e.target.value)}
-        placeholder="Write as much or as little as you want. It can sound however you want."
-        maxLength={5000}
-        className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
-      />
-      <div className="text-[12px] text-slate-400 mt-1 text-right">
-        {letter.length} / 5000
+      <div id="item-letter">
+        <textarea
+          rows={12}
+          value={letter}
+          onChange={(e) => setLetter(e.target.value)}
+          placeholder="Write as much or as little as you want. It can sound however you want."
+          maxLength={5000}
+          className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
+        />
+        <div className="text-[12px] text-slate-400 mt-1 text-right">
+          {letter.length} / 5000
+        </div>
       </div>
 
       <div className="flex justify-end mt-6">
-        <PrimaryButton onClick={handleSave} disabled={!canSave || submitting}>
+        <PrimaryButton onClick={handleSave} disabled={submitting}>
           {submitting ? 'Saving…' : 'Save'}
         </PrimaryButton>
       </div>
+      <MissingItemsNote message={showMissing ? missingMessage : null} />
     </div>
   )
 }

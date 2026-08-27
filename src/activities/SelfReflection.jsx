@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import {
+  PrimaryButton,
+  GhostButton,
+  MissingItemsNote,
+  scrollToMissingItem,
+} from '../components/items/shared.jsx'
 
 const SCREENS = {
   inclusion_memory: {
@@ -55,6 +60,11 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
   })
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  // Draft 100: Next/Save stays tappable when incomplete; tapping it while
+  // incomplete surfaces what's missing instead of doing nothing (a
+  // disabled native <button> doesn't fire hover in most browsers, and
+  // this is phone-first anyway, so hover was never viable).
+  const [showMissing, setShowMissing] = useState(false)
 
   const screenKey = ORDER[stepIdx]
   const screen = SCREENS[screenKey]
@@ -67,17 +77,41 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
     }))
   }
 
-  function canAdvance() {
+  // Returns { id, label } for whichever field(s) on the CURRENT screen are
+  // still empty. The twoCol screens (thoughts/feelings) have two
+  // independently-required fields; the memory screens have just one.
+  function computeMissing() {
+    const missing = []
     if (screen.twoCol) {
       const t = data[screen.section].thoughts.trim()
       const f = data[screen.section].feelings.trim()
-      return t.length > 0 && f.length > 0
+      if (t.length === 0) missing.push({ id: 'thoughts', label: 'Thoughts' })
+      if (f.length === 0) missing.push({ id: 'feelings', label: 'Feelings' })
+    } else if (data[screen.section][screen.field].trim().length === 0) {
+      missing.push({ id: screen.field, label: 'your response' })
     }
-    return data[screen.section][screen.field].trim().length > 0
+    return missing
   }
 
+  const missingFields = computeMissing()
+  const canAdvance = missingFields.length === 0
+  const missingMessage =
+    missingFields.length === 0
+      ? null
+      : missingFields.length === 1
+        ? screen.twoCol
+          ? `Please fill in "${missingFields[0].label}" before continuing.`
+          : 'Please write a response before continuing.'
+        : `Please answer the highlighted question before continuing (${missingFields.length} left).`
+
   async function handleNext() {
-    if (!canAdvance()) return
+    if (submitting) return
+    if (!canAdvance) {
+      setShowMissing(true)
+      scrollToMissingItem(`item-${missingFields[0].id}`)
+      return
+    }
+    setShowMissing(false)
     if (!isLast) {
       setStepIdx((i) => i + 1)
       return
@@ -97,6 +131,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
   }
 
   function handleBack() {
+    setShowMissing(false)
     if (stepIdx > 0) setStepIdx((i) => i - 1)
   }
 
@@ -142,7 +177,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
 
       {screen.twoCol ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div id="item-thoughts">
             <label className="block text-[14px] font-medium text-slate-700 mb-1">
               Thoughts
             </label>
@@ -159,7 +194,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
               className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
             />
           </div>
-          <div>
+          <div id="item-feelings">
             <label className="block text-[14px] font-medium text-slate-700 mb-1">
               Feelings
             </label>
@@ -176,13 +211,15 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
           </div>
         </div>
       ) : (
-        <textarea
-          rows={5}
-          value={data[screen.section][screen.field]}
-          onChange={(e) => update(screen.section, screen.field, e.target.value)}
-          placeholder={screen.placeholder}
-          className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
-        />
+        <div id="item-memory">
+          <textarea
+            rows={5}
+            value={data[screen.section][screen.field]}
+            onChange={(e) => update(screen.section, screen.field, e.target.value)}
+            placeholder={screen.placeholder}
+            className="w-full text-[16px] leading-relaxed px-4 py-3 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white"
+          />
+        </div>
       )}
 
       <div className="flex items-center justify-between mt-6">
@@ -191,10 +228,11 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
         ) : (
           <span />
         )}
-        <PrimaryButton onClick={handleNext} disabled={!canAdvance() || submitting}>
+        <PrimaryButton onClick={handleNext} disabled={submitting}>
           {submitting ? 'Saving…' : isLast ? 'Save' : 'Next →'}
         </PrimaryButton>
       </div>
+      <MissingItemsNote message={showMissing ? missingMessage : null} />
     </div>
   )
 }
