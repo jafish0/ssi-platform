@@ -110,6 +110,68 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`49429fc` · 2026-08-27** — **Draft 99 — "Full Intervention Demo" section on `/demo`, linking to the real dogfood flow.** New section between "For Review This Week" and "Activities" — a teal card (matching this page's own "Growing your roots"/"Final reveal preview" treatment, not the amber CLAUDE.md default, for consistency with this page's existing "Launch test" buttons) pointing at `https://ssi.ctac.app/?code=RSD-TEAM-2026`, the shared 50-use team dogfood code. Plain `<a target="_blank" rel="noopener noreferrer">`, not a router `Link` — this leaves the `/demo` SPA entirely for a different app entry point (`?code=` parsing at the root), which client-side routing isn't built for here. Closes the gap where `/demo` itself had no pointer to the real end-to-end flow, only the team email did. **Verified live:** correct placement (right after "For Review This Week," before "Activities"), correct href/target/rel, console clean.
+
+  <details>
+  <summary>Draft 99 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 99 — Add a "Full Intervention Demo" section to /demo, linking out to the live test build
+
+**Context.** The Round 13 team email (2026-08-27) points the team at two
+separate things: `/demo` for reviewing individual video/content cuts, and
+`https://ssi.ctac.app/?code=RSD-TEAM-2026` for running the actual
+end-to-end session (the shared, multi-use dogfood code minted in the
+"Dogfood infrastructure" note above, `access_codes.max_uses: 50,
+is_test: true`). Right now `/demo` has no pointer to that second link at
+all — someone reading only the page, not the email, has no way to find
+it. Add one.
+
+**Where.** `src/pages/DemoPage.jsx`. New `<section>` immediately after the
+"For Review This Week" section closes (currently ends line 537,
+`))}\n      </section>`) and before the "Activities" section opens
+(currently line 540). Top-of-page placement, same as the email's
+ordering — review cards first, then the full-flow link — so don't push it
+further down past Activities/Tests.
+
+**What it should say.** Title **"Full Intervention Demo"**, styled like
+every other section header on this page (`text-[14px] font-semibold
+uppercase tracking-wide text-slate-600 mb-2`), with an italic intro
+paragraph in the same `text-[13px] text-slate-500 italic mb-5
+max-w-[760px]` style as "For Review This Week"'s. Copy is Josh's call, but
+should make clear this is the real, end-to-end delivery flow (assent
+through completion) rather than another set of review cards, and that
+it's a shared multi-use team code (so nobody needs to worry about "using
+it up" — 50 uses on `RSD-TEAM-2026`).
+
+**The link itself.** A single prominent CTA to
+`https://ssi.ctac.app/?code=RSD-TEAM-2026`. Since this leaves the /demo
+SPA route for the real delivery flow (a different app entry point, with
+its own session/localStorage state), use a plain `<a>` tag rather than a
+React Router `<Link>` — `to=` would try to client-side-route a full
+querystring-driven remount that `Link` isn't built for here anyway, since
+every other `Link` on this page targets an internal `/demo/sandbox/:id`
+route, not the app root. Worth opening in a new tab
+(`target="_blank" rel="noopener noreferrer"`) so clicking it doesn't
+navigate the person away from /demo mid-review.
+
+**Styling note:** this page's own established CTA color is
+`bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white` (every "Launch test"
+button uses it) — follow that existing page convention here rather than
+CLAUDE.md's general amber CTA default, for visual consistency with the
+buttons already on this exact page. A simple card shape (white or
+teal-50 background, rounded-2xl, centered) consistent with the "Growing
+your roots" / "Final reveal preview" section treatments below it is
+probably the right weight — bigger and more inviting than a plain text
+link, since this is the headline item in the email, but it doesn't need
+the `ReviewCard` video-frame machinery since there's no media to embed.
+
+**Not in scope:** no changes to the real intervention flow itself, no
+changes to how `?code=` is parsed at the app root, no feedback button on
+this new section (the email already tells people to comment on the demo
+generally or email Josh directly for this build).
+
+  </details>
+
 - **DB only (v9 publish) · 2026-08-26** — **Posttest content fixed: Program Acceptability trimmed 7→3 items, stray `appraisals_post` scale removed.** Josh's direct call: the `/demo` sandbox versions of Pretest/Posttest/FollowUp are authoritative wherever they disagree with the live DB — resolves both Posttest questions flagged in the 24-point-pass addendum. `program_acceptability_post` (7 items, missing per-point anchor labels) replaced with the demo's exact 3 items/wording/anchors ("I would recommend this program to **other kids my age**," not "a friend going through a hard time"); `token_key` renamed `program_acceptability_post` → `program_feedback_post` to match the demo's actual scale identity and get `post_pf_1/2/3` export columns instead of `post_pa_*` (both abbreviations already existed side-by-side in `exportFlatten.js`'s `SCALE_ABBREVIATIONS`, one flagged "legacy alt name" — this was the confirmation to actually converge on the modern one). The stray 9-item `appraisals_post` VAS scale (not in the demo, the locked doc, or the app's own canonical `appraisals.js`) hidden, not deleted (9 QA responses attached). **Standing convention going forward:** demo Pretest/Posttest/FollowUp win on any future live-vs-demo mismatch, not just this one. No code changes — pure content, republished as **v9**. **Verified live:** exactly 3 items with byte-identical wording/anchors/instructions to `Posttest.jsx`; appraisals_post no longer reachable; saved response confirmed under the new `program_feedback_post` token_key with `pf1/pf2/pf3` sub-keys; console clean.
 
   <details>
