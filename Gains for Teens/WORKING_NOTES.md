@@ -132,6 +132,44 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **20082b2** (2026-08-27) — Draft 50: **Roll the Shadowmend design system across
+  the whole /gains-demo page.** Extends Draft 49's foundation (the `.gains-theme`
+  tokens + the `ds/` primitives) to the entire page. Styling only — no activity
+  logic, copy, hit-targets, timing, or feedback wiring changed.
+  **Structural sections** (`src/pages/GainsDemoPage.jsx`): `.gains-theme` now wraps
+  the whole page body instead of just the Exposition card, inside a new dark "world"
+  panel (`var(--sky-abyss)`) so the frosted-glass Card treatment has a twilight
+  backdrop instead of the page's light teal. Restyled: the Ideas & Demos for Review
+  banner and its six item cards, the World & Development Map roadmap card + table,
+  the In Development (Final Boss script) card, the Child Assent placeholder, the
+  Playable Character / NPCs art cards, every Zone 1–5 section card, and the
+  Prototypes and In Development cards (traversal prototype wrapper/chrome only —
+  the Phaser canvas interior is untouched, per the draft's own exception). Shared
+  components restyled once each so every call site cascades: Pill (now composed
+  from a new Badge primitive), Beat, ArtCard, PrototypeCard, CharacterChips,
+  ReviewItem, InDevelopmentCard, ZoneSection. Two new `ds/` primitives (Card, Badge)
+  ported alongside Draft 49's four.
+  **Playable activities** (chrome only, re-tested end-to-end after each):
+  - `BodyMapping.jsx`: dark sky-abyss background, restyled panels/CTA/write-in
+    field. The body diagram's idle-state line art was `#334155` (dark slate) tuned
+    for a light background — switched to a light `#CBD5E1` so it stays visible
+    against the new dark backdrop (a color-only fix, no geometry/hit-target
+    changes). Re-tested: reveal all 5 → region's own copy → Continue → closing →
+    Continue → select mode → write-in field → Done → Start over.
+  - `MindfulnessCalmPlace.jsx`: was already dark-themed, so this was a closer
+    color-only pass (chips, sheet panels, buttons) with no backdrop change.
+    Re-tested: Begin → arrive → see (3) → hear (3) → breathe (ready → active,
+    glow/frog breathe-along untouched → done) → close → practice-decline loop →
+    restart; confirmed all three audio tracks paused after restart.
+  - `ElevatorPitch.jsx`: restyled the message-builder sheet, SelectStep options
+    (including "Write your own" custom mode), and every CTA. Re-tested the full
+    six-step build (including a custom "help" entry) → review (assembled message
+    correct) → Save It → the dedicated 988 safety screen → done (Wingsuit, no
+    disclaimer left behind) → Start over.
+  **Verified:** confirmed live on ssi.ctac.app; Ready for Roots (`/demo`) renders
+  unchanged with no console errors; no overflow at 375px on the restyled page;
+  clean build.
+
 - **1533944** (2026-08-27) — Draft 49: **Adopt the Shadowmend design system into the
   GAINS demo — tokens (scoped) + the Exposition card restyled as proof of concept.**
   Imported from Claude Design (project `08785bf5-7c7a-49df-b4d7-a431c47e345f`,
@@ -2521,3 +2559,24 @@ Bring the **"Shadowmend / The Long Light"** design system into the real GAINS de
 **Verify.** The GAINS demo picks up the tokens (colors, spacing, radii, shadows, eases, Nunito, 48px targets) **scoped to GAINS only** — Ready for Roots and the rest of the app look unchanged; the Exposition card is restyled to the Shadowmend look with its copy intact; no activity logic changed; no console errors. Log Recently-shipped + mark shipped.
 
 *End of Draft 49.*
+
+
+### Draft 50 — Roll the Shadowmend design system across the whole /gains-demo page — ✅ SHIPPED 20082b2 (2026-08-27)
+
+Extend Draft 49's foundation (the `.gains-theme` tokens in `src/styles/gains-tokens.css` + the `ds/` primitives in `src/components/gains/ds/`) to the **entire** `/gains-demo` page. **Styling only — do not change any activity logic, copy, hit-targets, data/feedback wiring, or the flow.** Keep Ready for Roots and all other interventions untouched (tokens stay scoped under `.gains-theme`; no `:root` or bare element-selector rules).
+
+**Do it section by section, in this order, and verify after each** (don't big-bang the whole file blind):
+
+1. **Page root** — wrap the `/gains-demo` page in `.gains-theme` so the tokens apply page-wide. Confirm nothing outside `/gains-demo` is affected.
+2. **Ideas & Demos for Review** section + its cards → SceneFrame/panel styling, Nunito, the amber pill CTA, soft eases.
+3. **World & Development Map** (the roadmap table + world image) → restyle to the twilight/ink palette + type; keep the grid data.
+4. **In Development** section (Final Boss synopsis) → same treatment.
+5. **Per-zone cards** (Zone 1–5: video cards, activity cards, gear, characters) → SceneFrame + SparkDialogue + Button primitives; keep all copy/scripts.
+6. **NPCs** (Spark + the four creatures) and **Playable Character** (the four-stage strip) → restyle chrome only.
+7. **Playable activities** (Body Mapping, Mindfulness: Calm Place, Zone 3 Message to Your Guardian) → restyle **chrome only** (backgrounds, panels, buttons, type). **Do NOT touch their interaction logic, region hit-targets, breathing timing, chip behavior, or copy.** Re-test each after: Body Map reveal→continue→select; Mindfulness see/hear/breathe + practice loop; Zone 3 six steps → safety page → gear.
+
+**Known exceptions:** the traversal prototypes are **Phaser canvases** — restyle only their surrounding wrapper/chrome; the game interior is pixels and stays as-is (it gets the look through its own art, separately). The `.mp3`/`.webp` assets and audio behavior are unchanged.
+
+**Verify.** The whole `/gains-demo` reads as one cohesive Shadowmend/Long Light surface (twilight palette, Nunito, soft-bloom motion, amber pill CTAs, 48px targets); every activity still functions exactly as before (Body Map, Mindfulness, Zone 3 all tested end-to-end); the review comment threads still work; no overflow at 375px; Ready for Roots (`/demo`) is visually and functionally unchanged with no console errors; clean build. Log Recently-shipped + mark shipped.
+
+*End of Draft 50.*
