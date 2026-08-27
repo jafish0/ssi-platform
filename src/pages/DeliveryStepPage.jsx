@@ -51,6 +51,16 @@ export default function DeliveryStepPage() {
   // { fromStage, toStage, componentName } while the interstitial shows,
   // null otherwise.
   const [treeInterstitial, setTreeInterstitial] = useState(null)
+  // Deferred version of the above (2026-08-27, Josh's ask on Who I Am):
+  // when the activity is immediately followed by a `pull_forward_highlight`
+  // text_prompt (i.e. a "here's what you just made" screen, like the real
+  // poem display after WhoIAmPoem), let that screen show FIRST — the
+  // personal reflection should land before the generic tree-growth
+  // celebration, not get bumped behind it. Keyed off the format flag
+  // generically rather than hardcoding a component name, so any future
+  // activity gets the same ordering for free the moment it's given the
+  // same kind of display screen right after it.
+  const [pendingTreeInterstitial, setPendingTreeInterstitial] = useState(null)
 
   // Resume-by-code acknowledgment (Draft 69): when CodeEntryPage flagged
   // this navigation as a resume into an existing session, greet the
@@ -97,10 +107,12 @@ export default function DeliveryStepPage() {
     )
   }
 
-  // Checked before showTransition: treeInterstitial is only ever set from
-  // handleItemSave BEFORE goNext() runs, so the section index (and thus
-  // showTransition) can't have advanced yet — the two never overlap, but
-  // this ordering keeps the growth beat as the first thing shown either way.
+  // Checked before showTransition. treeInterstitial is set from
+  // handleItemSave either immediately (before goNext() runs, so the
+  // section index can't have advanced yet) or, when a pull-forward
+  // display screen deferred it, on the NEXT handleItemSave call — by then
+  // any section transition from the intervening goNext() has already been
+  // dismissed by the participant, so the two still never show at once.
   if (treeInterstitial) {
     return (
       <TreeGrowthInterstitial
@@ -151,13 +163,28 @@ export default function DeliveryStepPage() {
           [currentItem.id]: responseValue,
         })
         if (toStage > fromStage) {
-          setTreeInterstitial({
+          const interstitial = {
             fromStage,
             toStage,
             componentName: currentItem.content_json.component_name,
-          })
+          }
+          const nextItem = currentSection?.items?.[currentItemIndex + 1]
+          const nextIsPullForwardDisplay =
+            nextItem?.type === 'text_prompt' &&
+            nextItem?.content_json?.format === 'pull_forward_highlight'
+          if (nextIsPullForwardDisplay) {
+            setPendingTreeInterstitial(interstitial)
+            goNext()
+            return
+          }
+          setTreeInterstitial(interstitial)
           return
         }
+      }
+      if (pendingTreeInterstitial) {
+        setTreeInterstitial(pendingTreeInterstitial)
+        setPendingTreeInterstitial(null)
+        return
       }
       goNext()
     } catch (err) {

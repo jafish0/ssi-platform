@@ -117,7 +117,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
       {audioUrl && <TextPromptNarration src={audioUrl} />}
       {heading && <h2 className="text-[22px] font-semibold mb-3">{heading}</h2>}
       <div className={wrapperClass}>
-        {format === 'pull_forward_highlight' && (
+        {format === 'pull_forward_highlight' && !content?.hide_pull_forward_label && (
           <div className="text-[13px] font-medium text-ctac-teal-800 mb-1">
             From earlier:
           </div>
