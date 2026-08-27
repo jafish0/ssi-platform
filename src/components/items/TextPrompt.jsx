@@ -3,6 +3,7 @@ import { Download } from 'lucide-react'
 import { interpolate } from '../../lib/tokens.js'
 import { PrimaryButton } from './shared.jsx'
 import { downloadPdf } from '../../lib/pdf.js'
+import CrisisLifelineNote from '../CrisisLifelineNote.jsx'
 
 // "Read this to me" narration — a collapsed pill, not an always-visible
 // player: ported from Assent.jsx's AssentNarration, made src-driven so any
@@ -80,6 +81,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
   const downloadCfg = content?.download_button
   const audioUrl = content?.audio_url
   const irbStamp = content?.irb_stamp
+  const showCrisisNote = content?.show_crisis_note === true
 
   async function handleContinue() {
     if (submitting) return
@@ -122,6 +124,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
         )}
         <p className={bodyClass}>{body}</p>
       </div>
+      {showCrisisNote && <CrisisLifelineNote className="mb-6" />}
       {(downloadCfg || showButton) && (
         <div className="flex flex-wrap justify-end gap-3">
           {downloadCfg && (

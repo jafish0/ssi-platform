@@ -6,6 +6,7 @@ import TreeProgress from '../components/TreeProgress.jsx'
 import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 import SplashScreen from '../components/SplashScreen.jsx'
 import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
+import { PrimaryButton } from '../components/items/shared.jsx'
 // Draft 88 Part B: the post-posttest completion screen is the ONE place a
 // participant can save their keepsake — the five mid-flow download buttons
 // are gone, so nothing invites them out of the app before the posttest.
@@ -61,6 +62,36 @@ function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
     const t = setTimeout(() => setStage(5), 400)
     return () => clearTimeout(t)
   }, [useMontage])
+
+  // "Complete Program" → confirmation screen (2026-08-26, Josh's ask).
+  // Deliberately does NOT claim caregiver notification — no such system
+  // is built (no email/SMS pipeline fires on session completion anywhere
+  // in this app today). If/how to build that is a separate, real scope
+  // decision for Josh, logged in WORKING_NOTES rather than guessed at
+  // here — this confirmation only confirms what actually happened.
+  const [confirmed, setConfirmed] = useState(false)
+  if (confirmed) {
+    return (
+      <main className="min-h-screen flex items-start justify-center px-4 py-10 bg-ctac-teal-50">
+        <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
+          <h1 className="text-[26px] font-bold leading-tight mb-3 text-ctac-navy">
+            Congratulations! You&apos;ve completed Ready for Roots.
+          </h1>
+          <p className="text-[15px] leading-relaxed text-slate-600 mb-6">
+            You can close this window whenever you&apos;re ready.
+          </p>
+          <button
+            type="button"
+            onClick={onBackToStart}
+            className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-[14px] min-h-[48px]"
+          >
+            ← Back to start
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-10 bg-ctac-teal-50">
       <div className="w-full max-w-[640px] bg-white rounded-2xl shadow-card p-6 sm:p-8 text-center">
@@ -108,13 +139,9 @@ function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
             the program" placement, shown on every completion (main-program
             and follow-up alike). */}
         <CrisisLifelineNote className="mb-6 text-left" />
-        <button
-          type="button"
-          onClick={onBackToStart}
-          className="text-ctac-teal-700 hover:text-ctac-teal-900 underline text-[14px] min-h-[48px]"
-        >
-          ← Back to start
-        </button>
+        <PrimaryButton onClick={() => setConfirmed(true)}>
+          Complete Program
+        </PrimaryButton>
       </div>
     </main>
   )

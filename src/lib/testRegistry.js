@@ -281,6 +281,7 @@ export const TEST_REGISTRY = [
         body: 'This is scratch body text standing in for the assent copy — the narration pill above should reveal an audio player on tap. The IRB approval stamp should appear near the top-right corner.',
         audio_url: '/kai-narration/assent.mp3',
         irb_stamp: ['IRB Approval', '8/13/2026', 'IRB # 115131', 'IRB3'],
+        show_crisis_note: true,
       },
       onSave: async () => {},
     },
