@@ -132,6 +132,43 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1533944** (2026-08-27) — Draft 49: **Adopt the Shadowmend design system into the
+  GAINS demo — tokens (scoped) + the Exposition card restyled as proof of concept.**
+  Imported from Claude Design (project `08785bf5-7c7a-49df-b4d7-a431c47e345f`,
+  "Shadow Mend Design System") via the DesignSync connector. Styling only — no
+  activity logic touched.
+  **Part 1 — tokens** ([gains-tokens.css](../src/styles/gains-tokens.css)): colors,
+  spacing, radii, shadows, motion eases, Nunito type scale, 48px tap targets, ported
+  from the design system's `tokens/*.css`. Every custom property is declared under a
+  `.gains-theme` class rather than `:root` — the app also serves Ready for Roots and
+  other interventions on the existing amber/slate Tailwind theme, so nothing outside
+  an element carrying `.gains-theme` can see these variables. Deliberately dropped the
+  source's bare element-selector rules (`h1`/`p`/`button`/etc. from `tokens/base.css`):
+  `.gains-theme h1 {...}` would carry higher CSS specificity than a single Tailwind
+  color/font utility class and could silently reskin sections this draft doesn't
+  touch. Each ported component sets its own font/color/weight inline instead.
+  **Part 2 — one starter screen**
+  ([ExpositionIntro.jsx](../src/components/gains/ExpositionIntro.jsx)): restyled the
+  Exposition card (Spark's intro) as the proof of concept — the Mount Hope twilight
+  backdrop, the Traveler in its dark stage with a soft halo, Spark's glassy dialogue
+  sheet, Nunito narration type, the amber pill CTA at 48px+ with glow/press states,
+  and a soft-bloom acknowledgment on click-through. Composed from four small ported
+  primitives under `src/components/gains/ds/` (Button, SceneFrame, SparkDialogue,
+  CharacterFigure, ParticleField) mirroring the design system's own structure, so
+  future screens can reuse them when we roll the look outward. Reused the app's
+  EXISTING art (`map-and-world.webp`, `narrator-spark.webp`,
+  `traveler-stage1-hallow.webp`) instead of importing the design system's own asset
+  copies — these already match the target look, so this stayed a styling-only change
+  with no new binaries to stage/mirror/cache-bust. `SPARK_INTRO_LINE` stays the single
+  verbatim source in `GainsDemoPage.jsx`; `ExpositionIntro` only restyles its
+  presentation, passed in as a prop.
+  **Verified:** confirmed live on ssi.ctac.app — the restyled card renders (Mount Hope
+  art, Traveler figure, Spark dialogue, amber CTA), the click-through
+  button/acknowledgment transition works, and the page's own `<h1>` and every other
+  GAINS card (NPCs, Zone 1, etc.) kept their original color/font, unaffected by the
+  new tokens. Also spot-checked `/demo` (Ready for Roots) loads with no console
+  errors and no visual change. No overflow at 375px on the restyled card; build clean.
+
 - **7c2ddfe** (2026-08-24) — Draft 48: **Zone 3 "Message to Your Guardian" —
   reorder steps, 988 safety on its own screen.** Order + layout only (Spark reading
   the message aloud is still coming in the narration draft).
@@ -2461,3 +2498,26 @@ Open question (Holly, no decision yet): the "write it as a note first" reassuran
 **Verify.** Step order is Greeting → Situation → Request → Normalize → Offer → Benefit with a correct "OF 6" indicator; the assembled message reflects the new order; the 988 safety message appears on its own screen after save and before the Wingsuit award; copy verbatim. No `src/activities` changes → no version bumps. Log + mark shipped.
 
 *End of Draft 48.*
+
+
+### Draft 49 — Adopt the Shadowmend design system into the GAINS demo (tokens first + one starter screen) — ✅ SHIPPED 1533944 (2026-08-27)
+
+Bring the **"Shadowmend / The Long Light"** design system into the real GAINS demo, incrementally. **Styling only — keep all activity logic intact.** Source of truth: the design system sent to you from Claude Design (if it's been shared with you), plus `Gains for Teens/Design System Assets/Design Tokens.md` and `GAINS Style Guide.md` in the repo.
+
+**SCOPE CAREFULLY — GAINS only.** The SSI platform also hosts Ready for Roots (and others) on the current amber/slate theme. Do **not** change global/app-wide styles. Introduce the design-system tokens **scoped to the GAINS demo** — a GAINS theme wrapper / CSS-variable namespace applied only to `/gains-demo` and its components — so nothing outside GAINS shifts.
+
+**Part 1 — tokens (GAINS-scoped CSS variables):**
+- **Colors:** the palette groups + hexes from the style guide (ink/deep navy, dusk blues, twilight violets, rose & sky, warm light/amber, zone ramp).
+- **Spacing:** 4px base / 8px rhythm; scale 4–80.
+- **Corner radii:** 8 / 14 / 20 / 28 / 36 (nothing sharp).
+- **Shadows:** cool-navy, soft, never black (sm / md / lg / sheet).
+- **Motion:** `--ease-soft` (.4,0,.2,1 · 200ms), `--ease-settle` (.22,1,.36,1 · 340ms), `--ease-bloom` (.16,.84,.44,1 · 600–1200ms), `--ease-drift` (.37,0,.63,1 · ~4.5s). Soft eases only — nothing snaps.
+- **Type:** Nunito, role scale (body/narration, display, eyebrow/meta), sensible line length.
+- **Tap targets:** 48px minimum.
+- **Screen frame:** mobile 9:16; 20px gutters, content pinned to bottom; 12px between choices, 32px between blocks.
+
+**Part 2 — one starter screen.** Restyle just the **Exposition card** (Spark's intro) to the design system as the proof of concept: twilight/ink background with warm accents, Nunito narration type, the spacing/gutters, the amber pill CTA at 48px, soft eases on transitions. Keep the Option-2 exposition copy exactly. Don't touch other screens yet — we'll roll outward once this looks right.
+
+**Verify.** The GAINS demo picks up the tokens (colors, spacing, radii, shadows, eases, Nunito, 48px targets) **scoped to GAINS only** — Ready for Roots and the rest of the app look unchanged; the Exposition card is restyled to the Shadowmend look with its copy intact; no activity logic changed; no console errors. Log Recently-shipped + mark shipped.
+
+*End of Draft 49.*
