@@ -169,9 +169,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   demographics: {
-    version: 'v1.0',
-    updated: '2026-08-26',
+    version: 'v1.1',
+    updated: '2026-08-27',
     changelog: [
+      '2026-08-27 · v1.1 — Draft 100 (MINOR — additive UX, no data-shape change). Continue no longer just sits disabled when a field is missing — it stays tappable, and tapping it while incomplete names which field is missing (or, with several missing, highlights and scrolls to the first) instead of leaving the kid to hunt for it. Save payload unchanged.',
       "2026-08-26 · v1.0 — new: demographics + Placement Disruption Worry items added to fill a gap between the live pretest and the polished /demo Pretest.jsx reference (age/sex/race/hispanic/grade/home time/placements; disruption-worry Likert item as a separate component, see 'placement-disruption-worry').",
     ],
   },

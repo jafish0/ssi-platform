@@ -39,6 +39,36 @@ export function GhostButton({ children, onClick, type = 'button' }) {
   )
 }
 
+// Draft 100 — surfacing what's missing when Continue/Save is tapped while
+// something required is still unanswered. Continue stays tappable rather
+// than `disabled` (a disabled native <button> doesn't fire hover events in
+// most browsers, and this is a phone-first app anyway — hover isn't a real
+// interaction here at all), so a validation message on tap is the only
+// interaction that works identically on phone and desktop.
+export function MissingItemsNote({ message }) {
+  if (!message) return null
+  return (
+    <p
+      className="text-[13px] text-rose-600 text-center mt-3"
+      role="alert"
+      aria-live="assertive"
+    >
+      {message}
+    </p>
+  )
+}
+
+// Scrolls to and briefly highlights the row for the first missing item.
+// Call with the DOM id you gave that row — convention: `item-${id}`.
+export function scrollToMissingItem(domId) {
+  if (typeof document === 'undefined' || !domId) return
+  const el = document.getElementById(domId)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  el.classList.add('ring-2', 'ring-rose-300', 'rounded-2xl')
+  setTimeout(() => el.classList.remove('ring-2', 'ring-rose-300', 'rounded-2xl'), 1500)
+}
+
 export function PullForwardCallout({ label, value, included, onToggle }) {
   if (!value) return null
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { PrimaryButton } from './shared.jsx'
+import { PrimaryButton, MissingItemsNote, scrollToMissingItem } from './shared.jsx'
 
 function shuffle(arr) {
   const a = arr.slice()
@@ -94,6 +94,11 @@ export default function PsychometricScale({ content, onSave, existingResponse })
   const [activeIndex, setActiveIndex] = useState(0)
   const [showScore, setShowScore] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  // Draft 100: Continue stays tappable when incomplete; tapping it while
+  // incomplete surfaces what's missing instead of just doing nothing.
+  // Only shown after a real tap (not on first render) — this is state,
+  // not derived, so it doesn't turn on/off on every keystroke elsewhere.
+  const [showMissing, setShowMissing] = useState(false)
 
   useEffect(() => {
     if (existingResponse?.scale_responses) {
@@ -126,9 +131,16 @@ export default function PsychometricScale({ content, onSave, existingResponse })
     }
   }
 
-  const allAnswered = items
+  const missingItems = items
     .filter((it) => visibilityOf(it) === 'shown')
-    .every((it) => responses[it.id] !== undefined)
+    .filter((it) => responses[it.id] === undefined)
+  const allAnswered = missingItems.length === 0
+  const missingMessage =
+    missingItems.length === 0
+      ? null
+      : missingItems.length === 1
+        ? 'Please answer the highlighted question before continuing.'
+        : `Please answer the highlighted question before continuing (${missingItems.length} left).`
 
   // Drop responses for items that are hidden (or pending) at save time so
   // an answer given before an upstream change never rides along as an
@@ -144,7 +156,13 @@ export default function PsychometricScale({ content, onSave, existingResponse })
   }
 
   async function handleContinue() {
-    if (!allAnswered || submitting) return
+    if (submitting) return
+    if (!allAnswered) {
+      setShowMissing(true)
+      scrollToMissingItem(`item-${missingItems[0].id}`)
+      return
+    }
+    setShowMissing(false)
     setSubmitting(true)
     const pruned = pruneToVisible(responses)
     const computed = computeScore(content, pruned)
@@ -251,17 +269,18 @@ export default function PsychometricScale({ content, onSave, existingResponse })
       </div>
 
       <div className="flex justify-end">
-        <PrimaryButton onClick={handleContinue} disabled={!allAnswered || submitting}>
+        <PrimaryButton onClick={handleContinue} disabled={submitting}>
           {submitting ? 'Saving…' : 'Continue'}
         </PrimaryButton>
       </div>
+      <MissingItemsNote message={showMissing ? missingMessage : null} />
     </div>
   )
 }
 
 function ScaleItemRow({ item, format, anchors, vasConfig, value, onChange }) {
   return (
-    <div className="border-b border-slate-200 pb-5 last:border-b-0">
+    <div id={`item-${item.id}`} className="border-b border-slate-200 pb-5 last:border-b-0">
       <p className="text-[16px] text-slate-800 mb-3">{item.text}</p>
       {format === 'likert' && (
         <LikertRow anchors={anchors} value={value} onChange={onChange} />

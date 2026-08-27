@@ -1,6 +1,11 @@
 import { useMemo, useState } from 'react'
 import { resolveTokenPath, unwrapTokenExpression } from '../../lib/tokens.js'
-import { PrimaryButton, PullForwardCallout } from './shared.jsx'
+import {
+  PrimaryButton,
+  PullForwardCallout,
+  MissingItemsNote,
+  scrollToMissingItem,
+} from './shared.jsx'
 
 // Loose RFC-5322-style validator — accepts most real addresses without
 // rejecting legitimate but unusual ones (`+` aliases, dotted local parts).
@@ -11,6 +16,11 @@ export default function StructuredActivity({ content, onSave, existingResponse, 
   const layout = content?.layout || 'single_column'
   const [submitting, setSubmitting] = useState(false)
   const [saved, setSaved] = useState(false)
+  // Draft 100: Save stays tappable when incomplete; tapping it while
+  // incomplete surfaces which field(s) are missing instead of doing
+  // nothing (a disabled native <button> doesn't fire hover in most
+  // browsers, and this is phone-first anyway, so hover was never viable).
+  const [showMissing, setShowMissing] = useState(false)
 
   // Resolve any field-level pull-forward defaults.
   const initialValues = useMemo(() => {
@@ -65,10 +75,23 @@ export default function StructuredActivity({ content, onSave, existingResponse, 
     return true
   }
 
-  const allComplete = fields.every(isFieldComplete)
+  const missingFields = fields.filter((f) => !isFieldComplete(f))
+  const allComplete = missingFields.length === 0
+  const missingMessage =
+    missingFields.length === 0
+      ? null
+      : missingFields.length === 1
+        ? `Please complete "${missingFields[0].label}" before continuing.`
+        : `Please complete the highlighted field before continuing (${missingFields.length} left).`
 
   async function handleSave() {
-    if (!allComplete || submitting) return
+    if (submitting) return
+    if (!allComplete) {
+      setShowMissing(true)
+      scrollToMissingItem(`item-${missingFields[0].id}`)
+      return
+    }
+    setShowMissing(false)
     setSubmitting(true)
     try {
       await onSave({
@@ -97,15 +120,16 @@ export default function StructuredActivity({ content, onSave, existingResponse, 
 
       <div className={gridClass}>
         {fields.map((f) => (
-          <FieldRenderer
-            key={f.id}
-            field={f}
-            value={values[f.id]}
-            onChange={(v) => setFieldValue(f.id, v)}
-            sessionData={sessionData}
-            pullIncluded={pullIncluded[f.id]}
-            onPullToggle={(b) => setPullIncluded((prev) => ({ ...prev, [f.id]: b }))}
-          />
+          <div key={f.id} id={`item-${f.id}`}>
+            <FieldRenderer
+              field={f}
+              value={values[f.id]}
+              onChange={(v) => setFieldValue(f.id, v)}
+              sessionData={sessionData}
+              pullIncluded={pullIncluded[f.id]}
+              onPullToggle={(b) => setPullIncluded((prev) => ({ ...prev, [f.id]: b }))}
+            />
+          </div>
         ))}
       </div>
 
@@ -116,10 +140,11 @@ export default function StructuredActivity({ content, onSave, existingResponse, 
       )}
 
       <div className="flex justify-end mt-6">
-        <PrimaryButton onClick={handleSave} disabled={!allComplete || submitting}>
+        <PrimaryButton onClick={handleSave} disabled={submitting}>
           {submitting ? 'Saving…' : saved ? 'Saved' : 'Save'}
         </PrimaryButton>
       </div>
+      <MissingItemsNote message={showMissing ? missingMessage : null} />
     </div>
   )
 }

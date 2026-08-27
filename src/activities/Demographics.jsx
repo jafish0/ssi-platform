@@ -15,7 +15,11 @@
 // placements) — that shape is what the export pipeline expects.
 
 import { useState } from 'react'
-import { PrimaryButton } from '../components/items/shared.jsx'
+import {
+  PrimaryButton,
+  MissingItemsNote,
+  scrollToMissingItem,
+} from '../components/items/shared.jsx'
 
 const RACE_OPTIONS = [
   { key: 'race_white',   label: 'White' },
@@ -131,6 +135,11 @@ export default function Demographics({ onSave = console.log }) {
     return init
   })
   const [submitting, setSubmitting] = useState(false)
+  // Draft 100: Continue stays tappable when incomplete; tapping it while
+  // incomplete surfaces which field(s) are missing instead of doing
+  // nothing (a disabled native <button> doesn't fire hover in most
+  // browsers, and this is phone-first anyway, so hover was never viable).
+  const [showMissing, setShowMissing] = useState(false)
 
   function setField(key, value) {
     setData((prev) => ({ ...prev, [key]: value }))
@@ -139,23 +148,44 @@ export default function Demographics({ onSave = console.log }) {
     setData((prev) => ({ ...prev, [key]: prev[key] === 1 ? 0 : 1 }))
   }
 
-  function canAdvance() {
+  function computeMissing() {
     const numericOk = (v) => typeof v === 'number' && !Number.isNaN(v)
-    const raceAny = RACE_OPTIONS.some((r) => data[r.key] === 1)
-    return (
-      numericOk(data.age) &&
-      [1, 2, 3].includes(data.sex) &&
-      raceAny &&
-      [0, 1].includes(data.hispanic) &&
-      numericOk(data.grade) &&
-      numericOk(data.home_years) &&
-      numericOk(data.home_months) &&
-      numericOk(data.placements)
-    )
+    const missing = []
+    if (!numericOk(data.age)) missing.push({ id: 'age', label: 'How old are you?' })
+    if (![1, 2, 3].includes(data.sex)) missing.push({ id: 'sex', label: 'What is your sex?' })
+    if (!RACE_OPTIONS.some((r) => data[r.key] === 1)) {
+      missing.push({ id: 'race', label: 'What race do you consider yourself?' })
+    }
+    if (![0, 1].includes(data.hispanic)) {
+      missing.push({ id: 'hispanic', label: 'Are you Hispanic or Latino?' })
+    }
+    if (!numericOk(data.grade)) missing.push({ id: 'grade', label: 'What grade are you currently in?' })
+    if (!numericOk(data.home_years) || !numericOk(data.home_months)) {
+      missing.push({ id: 'home_time', label: 'How long have you lived in your current home?' })
+    }
+    if (!numericOk(data.placements)) {
+      missing.push({ id: 'placements', label: 'How many out of home placements have you had?' })
+    }
+    return missing
   }
 
+  const missingFields = computeMissing()
+  const canAdvance = missingFields.length === 0
+  const missingMessage =
+    missingFields.length === 0
+      ? null
+      : missingFields.length === 1
+        ? `Please answer "${missingFields[0].label}" before continuing.`
+        : `Please answer the highlighted question before continuing (${missingFields.length} left).`
+
   async function handleContinue() {
-    if (!canAdvance()) return
+    if (submitting) return
+    if (!canAdvance) {
+      setShowMissing(true)
+      scrollToMissingItem(`item-${missingFields[0].id}`)
+      return
+    }
+    setShowMissing(false)
     setSubmitting(true)
     try {
       await onSave({
@@ -186,46 +216,56 @@ export default function Demographics({ onSave = console.log }) {
       <p className="text-[14px] text-slate-600 mb-5">
         A few quick questions before we get started.
       </p>
-      <NumberInput
-        prompt="How old are you?"
-        value={data.age ?? null}
-        onChange={(v) => setField('age', v)}
-        min={1}
-        max={99}
-      />
-      <RadioGroup
-        prompt="What is your sex?"
-        options={[
-          { value: 1, label: 'Female' },
-          { value: 2, label: 'Male' },
-          { value: 3, label: 'Prefer not to answer' },
-        ]}
-        value={data.sex}
-        onChange={(v) => setField('sex', v)}
-      />
-      <CheckboxGroup
-        prompt="What race do you consider yourself (choose all that apply)?"
-        options={RACE_OPTIONS}
-        values={data}
-        onToggle={toggleRace}
-      />
-      <RadioGroup
-        prompt="Are you Hispanic or Latino?"
-        options={[
-          { value: 0, label: 'No' },
-          { value: 1, label: 'Yes' },
-        ]}
-        value={data.hispanic}
-        onChange={(v) => setField('hispanic', v)}
-      />
-      <NumberInput
-        prompt="What grade are you currently in at school?"
-        value={data.grade ?? null}
-        onChange={(v) => setField('grade', v)}
-        min={1}
-        max={12}
-      />
-      <div className="mb-4">
+      <div id="item-age">
+        <NumberInput
+          prompt="How old are you?"
+          value={data.age ?? null}
+          onChange={(v) => setField('age', v)}
+          min={1}
+          max={99}
+        />
+      </div>
+      <div id="item-sex">
+        <RadioGroup
+          prompt="What is your sex?"
+          options={[
+            { value: 1, label: 'Female' },
+            { value: 2, label: 'Male' },
+            { value: 3, label: 'Prefer not to answer' },
+          ]}
+          value={data.sex}
+          onChange={(v) => setField('sex', v)}
+        />
+      </div>
+      <div id="item-race">
+        <CheckboxGroup
+          prompt="What race do you consider yourself (choose all that apply)?"
+          options={RACE_OPTIONS}
+          values={data}
+          onToggle={toggleRace}
+        />
+      </div>
+      <div id="item-hispanic">
+        <RadioGroup
+          prompt="Are you Hispanic or Latino?"
+          options={[
+            { value: 0, label: 'No' },
+            { value: 1, label: 'Yes' },
+          ]}
+          value={data.hispanic}
+          onChange={(v) => setField('hispanic', v)}
+        />
+      </div>
+      <div id="item-grade">
+        <NumberInput
+          prompt="What grade are you currently in at school?"
+          value={data.grade ?? null}
+          onChange={(v) => setField('grade', v)}
+          min={1}
+          max={12}
+        />
+      </div>
+      <div id="item-home_time" className="mb-4">
         <div className="text-[15px] text-slate-800 mb-2">
           How long have you lived in your current home?
         </div>
@@ -246,19 +286,22 @@ export default function Demographics({ onSave = console.log }) {
           />
         </div>
       </div>
-      <NumberInput
-        prompt="How many out of home placements have you had?"
-        value={data.placements ?? null}
-        onChange={(v) => setField('placements', v)}
-        min={0}
-        max={50}
-      />
+      <div id="item-placements">
+        <NumberInput
+          prompt="How many out of home placements have you had?"
+          value={data.placements ?? null}
+          onChange={(v) => setField('placements', v)}
+          min={0}
+          max={50}
+        />
+      </div>
 
       <div className="flex items-center justify-end mt-4">
-        <PrimaryButton onClick={handleContinue} disabled={!canAdvance() || submitting}>
+        <PrimaryButton onClick={handleContinue} disabled={submitting}>
           {submitting ? 'Saving…' : 'Continue →'}
         </PrimaryButton>
       </div>
+      <MissingItemsNote message={showMissing ? missingMessage : null} />
     </div>
   )
 }
