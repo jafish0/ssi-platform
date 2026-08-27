@@ -110,6 +110,8 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`1d20be3` · 2026-08-27** — **Who I Am: poem display now shows before the tree-growth interstitial, not after.** Josh, direct real-time ask (no draft): the real poem should land right after finishing it, not get bumped behind the generic tree celebration. `DeliveryStepPage.jsx` now defers the tree interstitial one step whenever the next item is a `pull_forward_highlight` text_prompt — generic on the format flag, not hardcoded to WhoIAmPoem, so any future activity with the same "show what you just made" screen gets the same ordering for free. Also on the same screen: heading changed to "Who I Am Poem" (was "That's a poem."), the "From earlier:" label suppressed via a new `content_json.hide_pull_forward_label` flag (kept the highlighted-box styling, just dropped the caption). Verified live end-to-end: activity → poem display (correct heading, no label, real poem) → tree interstitial → bridge, in that order. Republished as **v10**.
+
 - **`49429fc` · 2026-08-27** — **Draft 99 — "Full Intervention Demo" section on `/demo`, linking to the real dogfood flow.** New section between "For Review This Week" and "Activities" — a teal card (matching this page's own "Growing your roots"/"Final reveal preview" treatment, not the amber CLAUDE.md default, for consistency with this page's existing "Launch test" buttons) pointing at `https://ssi.ctac.app/?code=RSD-TEAM-2026`, the shared 50-use team dogfood code. Plain `<a target="_blank" rel="noopener noreferrer">`, not a router `Link` — this leaves the `/demo` SPA entirely for a different app entry point (`?code=` parsing at the root), which client-side routing isn't built for here. Closes the gap where `/demo` itself had no pointer to the real end-to-end flow, only the team email did. **Verified live:** correct placement (right after "For Review This Week," before "Activities"), correct href/target/rel, console clean.
 
   <details>
@@ -11680,3 +11682,29 @@ New `src/lib/treeProgressStage.js` derives a 0-5 growth stage from how many of t
 4. When the team's done dogfooding: ask Claude Code to run the purge SQL above, scoped to `is_test = true`.
 
 **Version bump:** Demographics v1.0, PlacementDisruptionWorry v1.0 (new files). No bump for `TreeProgress`/`TreeProgressMontage`/`TextPrompt` — engine/delivery-chrome changes, not versioned activities, per this file's own convention.
+
+## Draft 100 — Show which item(s) are missing when Continue is tapped, not just "disabled"
+
+**Context.** Josh, walking the live dogfood build: every measure page (pretest/posttest/follow-up) and multi-item activity already correctly blocks Continue until everything's answered — that part's working as intended. The ask is to also tell the participant *which* item(s) they're missing, rather than leaving them to hunt for the one unanswered row themselves.
+
+**Interaction, resolved with Josh (AskUserQuestion) before writing this:** not hover — every Continue/Next/Save button in this app is a plain native `disabled` `<button>` (via the shared `PrimaryButton`, `src/components/items/shared.jsx`), and disabled buttons don't fire hover/mouse events in most browsers, so a hover tooltip literally couldn't work here without extra plumbing. More fundamentally, this is a phone-first intervention — phones have no hover concept at all, so even a working desktop tooltip wouldn't reach a real participant. Chosen instead: **Continue stays tappable even when incomplete; tapping it while incomplete does not advance, and instead surfaces which item(s) are still unanswered** (message text, plus scroll-to/highlight the first missing one). Works identically on phone and desktop, no dead-end interaction.
+
+**Existing precedent already in the codebase — follow this shape.** `src/activities/AlliesSafetyNet.jsx` already does the "surface what's missing" half of this: `typesWithNoAllies()` (lines ~190-200) returns the actual missing category list, rendered as an always-visible `MissingTypesCallout` (lines ~205-224) — e.g. "No one named for: emotional support, practical support…". Every other file in scope currently collapses per-item validity into one flat boolean and loses the list; the work here is mostly restoring that list rather than inventing new tracking, since the per-item answered state already exists everywhere (keyed by item id/field id) before it gets `.every()`'d away.
+
+**In scope, by file:**
+
+1. **`src/components/items/PsychometricScale.jsx`** (shared item, renders `psychometric_scale` items via `SessionEngine` — this is what real pretest/posttest/follow-up delivery actually uses live, not the demo-only files below). Currently: `allAnswered = items.filter(visible).every((it) => responses[it.id] !== undefined)` (~lines 129-131). Change to also retain the missing subset (`items.filter(visible).filter(it => responses[it.id] === undefined)`), and on a Continue tap while incomplete: don't advance, show something like "You still need to answer: [item prompts or numbers]," and scroll to / highlight the first missing row. Highest-priority file — covers every psychometric scale in every intervention, not just Ready for Roots.
+
+2. **`src/components/items/StructuredActivity.jsx`** (shared item — Demographics, Placement Disruption Worry). Same shape: `isFieldComplete(f)` (~lines 51-66) already exists per-field; `allComplete = fields.every(isFieldComplete)` (~line 68) currently discards which failed. Same treatment: keep the failing-field list, message + scroll-to/highlight on tap.
+
+3. **`src/activities/GettingUnstuck.jsx`** — `allRated = APPRAISAL_ITEMS.every(...)` (~line 272) plus several other independent single-boolean gates later in the same file (~lines 581, 662, 739, 963) for its other screens. Each needs the same local treatment; they're independent gates so handle them one at a time rather than assuming one fix covers the file.
+
+4. **`src/activities/SelfReflection.jsx`, `BelongingSkillsSort.jsx`, `WhoIAmPoem.jsx`, `LetterBuilder.jsx`, `Plan.jsx`** — same shape in each (`canAdvance()`/`allComplete`/`canSave`/`nextDisabled`, one flat boolean gating one `PrimaryButton`). Apply the same pattern per file.
+
+5. **`src/activities/AlliesSafetyNet.jsx`** — lowest priority, optional polish only. It already surfaces what's missing via the persistent callout, which arguably already satisfies the ask on its own. If it's worth matching the new tap-triggered scroll/highlight behavior for consistency with everywhere else, fine, but don't treat this file as broken — it isn't.
+
+6. **`src/activities/Pretest.jsx`, `Posttest.jsx`, `FollowUp.jsx`** (the `/demo/sandbox/*` preview versions, TEMP demo files per their own header comments — not what real participants see, real delivery goes through #1/#2 above). Same `canAdvance()` switch-per-screen pattern. Lower priority than #1 — up to Code's judgment whether to include these in the same pass for demo/live parity or treat as a quick follow-up, since they're preview-only.
+
+**Mechanical note:** `PrimaryButton` (`src/components/items/shared.jsx`) itself probably doesn't need to change — it already supports a plain `disabled` prop for genuinely-disabled cases (e.g. mid-submit). The fix in each file above is at the call site: stop passing `disabled={!allComplete}`, and instead validate inside the `onClick` handler, blocking `onNext()`/advance and setting local "here's what's missing" state instead when incomplete.
+
+**Not in scope:** no change to what counts as "complete" anywhere — this is purely about surfacing the existing gate, not changing which items are required.
