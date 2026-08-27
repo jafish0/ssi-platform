@@ -1,0 +1,216 @@
+/* Shadowmend / The Long Light design tokens (Draft 49, 2026-08-27).
+ *
+ * Imported from Claude Design (project 08785bf5-7c7a-49df-b4d7-a431c47e345f,
+ * "Shadow Mend Design System") — see tokens/*.css and guidelines/*.html
+ * there for the source. Ported here nearly verbatim; the one change is
+ * scoping: the source declares these on `:root` (global), but this app
+ * also serves Ready for Roots and other interventions on the existing
+ * amber/slate Tailwind theme, so every custom property below is scoped
+ * under `.gains-theme` instead. Nothing outside an element carrying that
+ * class can see or be affected by these variables. Apply `.gains-theme`
+ * once, on the GAINS demo's own content wrapper (see GainsDemoPage.jsx) —
+ * everything under it inherits the scope for free.
+ *
+ * Rolls out screen by screen (Draft 49 restyles only the Exposition card);
+ * a Tailwind-styled card elsewhere on the same page is unaffected, since it
+ * never references a `var(--...)` from here.
+ */
+
+/* Nunito — the one brand typeface. @font-face can't be scoped to a
+ * selector, but declaring it has no effect anywhere `font-family` doesn't
+ * reference "Nunito", so this stays effectively GAINS-only in practice. */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/nunito/v26/XRXV3I6Li01BKofINeaBTMnFcQ.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/nunito/v26/XRXV3I6Li01BKofINeaBTMnFcQ.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/nunito/v26/XRXV3I6Li01BKofINeaBTMnFcQ.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/nunito/v26/XRXV3I6Li01BKofINeaBTMnFcQ.woff2) format('woff2');
+}
+
+.gains-theme {
+  /* ── Base: ink / deep navy (grounds, foregrounds, silhouettes) ── */
+  --ink-900: #021127; --ink-800: #0D1C2A; --ink-700: #151232; --ink-600: #1B2A3F;
+
+  /* ── Base: dusk blues ── */
+  --dusk-700: #114775; --dusk-600: #286086; --dusk-500: #1E608F; --dusk-400: #12647B;
+
+  /* ── Base: twilight violet / mauve ── */
+  --violet-900: #262561; --violet-700: #4D346E; --violet-600: #583889; --violet-500: #694A97; --violet-400: #734493;
+
+  /* ── Base: rose / magenta (sky glow) ── */
+  --rose-600: #A05C96; --rose-500: #DB658C; --rose-400: #D4728B;
+
+  /* ── Base: warm light (sun, lanterns, Spark) ── */
+  --coral-500: #F5996E; --coral-400: #F68F77;
+  --amber-700: #B45309; --amber-500: #F59E0B; --gold-300: #FDE68A;
+  --light-100: #FFF7EA;
+
+  /* ── Base: UI slate + neutrals ── */
+  --slate-800: #1E293B; --slate-600: #334155; --slate-300: #94A3B8; --slate-100: #E2E8F0; --white: #FFFFFF;
+
+  /* ── Semantic: surfaces ── */
+  --surface-abyss: var(--ink-900);
+  --surface-night: var(--ink-800);
+  --surface-dusk: var(--violet-900);
+  --surface-card: rgba(255, 247, 234, .08);
+  --surface-card-raised: rgba(255, 247, 234, .14);
+  --surface-sheet: rgba(2, 17, 39, .72);
+  --surface-light: var(--light-100);
+  --surface-inverse: var(--white);
+
+  /* ── Semantic: text ── */
+  --text-bright: var(--light-100);
+  --text-body: rgba(255, 247, 234, .86);
+  --text-muted: rgba(255, 247, 234, .62);
+  --text-faint: rgba(255, 247, 234, .42);
+  --text-warm: var(--gold-300);
+  --text-on-light: var(--slate-800);
+  --text-on-light-muted: var(--slate-600);
+  --text-on-warm: #3A1D05;
+
+  /* ── Semantic: brand / interaction ── */
+  --brand-glow: var(--gold-300);
+  --brand-flame: var(--amber-500);
+  --brand-ember: var(--coral-500);
+  --accent-sky: var(--rose-500);
+  --accent-water: var(--dusk-500);
+  --action-primary: var(--amber-500);
+  --action-primary-hover: #FFB43D;
+  --action-primary-press: var(--amber-700);
+  --action-quiet: rgba(255, 247, 234, .10);
+  --action-quiet-hover: rgba(255, 247, 234, .18);
+  --focus-ring: var(--gold-300);
+
+  /* ── Semantic: borders ── */
+  --border-soft: rgba(255, 247, 234, .14);
+  --border-strong: rgba(255, 247, 234, .28);
+  --border-warm: rgba(253, 230, 138, .45);
+  --border-on-light: rgba(30, 41, 59, .12);
+
+  /* ── Semantic: the four symptom creatures ── */
+  --creature-emberwick: var(--coral-500);
+  --creature-mirefly: var(--dusk-400);
+  --creature-hollowshell: var(--violet-500);
+  --creature-dimmet: var(--rose-600);
+
+  /* ── Semantic: journey zones, darkest → brightest ── */
+  --zone-1: var(--ink-900); --zone-2: var(--violet-900); --zone-3: var(--violet-600);
+  --zone-4: var(--rose-400); --zone-5: var(--coral-500); --zone-summit: var(--gold-300);
+
+  /* ── Gradients: twilight skies. Light always grows toward the TOP. ── */
+  --sky-abyss: linear-gradient(180deg, #0B2544 0%, #061A33 55%, #021127 100%);
+  --sky-dusk: linear-gradient(180deg, #12647B 0%, #26418C 32%, #583889 62%, #A05C96 84%, #021127 100%);
+  --sky-twilight: linear-gradient(180deg, #1E608F 0%, #4D346E 40%, #A05C96 72%, #F5996E 92%, #0D1C2A 100%);
+  --sky-dawn: linear-gradient(180deg, #FDE68A 0%, #F5996E 26%, #D4728B 52%, #583889 80%, #151232 100%);
+  --sky-beacon: radial-gradient(120% 80% at 50% 8%, #FDE68A 0%, #F5996E 26%, #A05C96 55%, #4D346E 78%, #151232 100%);
+  --glow-warm: radial-gradient(circle at 50% 50%, rgba(253, 230, 138, .55) 0%, rgba(245, 153, 110, .28) 42%, rgba(245, 153, 110, 0) 72%);
+  --veil-bottom: linear-gradient(180deg, rgba(2, 17, 39, 0) 0%, rgba(2, 17, 39, .55) 45%, rgba(2, 17, 39, .92) 100%);
+  --veil-top: linear-gradient(180deg, rgba(2, 17, 39, .78) 0%, rgba(2, 17, 39, 0) 100%);
+
+  /* ── Spacing: 4px base / 8px rhythm ── */
+  --space-0: 0; --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px; --space-20: 80px;
+
+  --gutter-screen: 20px;
+  --gutter-screen-wide: 32px;
+  --stack-tight: 8px; --stack: 12px; --stack-loose: 20px; --stack-section: 32px;
+
+  --tap-min: 48px;
+  --control-h-sm: 40px; --control-h: 52px; --control-h-lg: 60px;
+
+  --screen-w: 420px;
+  --screen-h: 880px;
+  --content-max: 520px;
+
+  /* ── Corner radii — everything rounded, nothing sharp ── */
+  --radius-sm: 8px; --radius-md: 14px; --radius-lg: 20px; --radius-xl: 28px; --radius-2xl: 36px; --radius-pill: 999px;
+
+  /* ── Outer shadows — soft, cool, never black-hard ── */
+  --shadow-sm: 0 2px 8px rgba(2, 17, 39, .28);
+  --shadow-md: 0 8px 24px rgba(2, 17, 39, .38);
+  --shadow-lg: 0 18px 48px rgba(2, 17, 39, .48);
+  --shadow-sheet: 0 -12px 40px rgba(2, 17, 39, .5);
+
+  /* ── Glow — the brand's real "elevation" ── */
+  --glow-sm: 0 0 12px rgba(253, 230, 138, .35);
+  --glow-md: 0 0 24px rgba(253, 230, 138, .42), 0 0 64px rgba(245, 153, 110, .22);
+  --glow-lg: 0 0 40px rgba(253, 230, 138, .55), 0 0 120px rgba(245, 153, 110, .3);
+  --glow-inset: inset 0 1px 0 rgba(255, 247, 234, .22);
+  --glow-amber-ring: 0 0 0 1px rgba(253, 230, 138, .45), 0 0 18px rgba(245, 158, 11, .35);
+
+  /* ── Blur — twilight haze over art ── */
+  --blur-veil: blur(2px);
+  --blur-panel: saturate(120%) blur(14px);
+  --blur-sheet: saturate(115%) blur(22px);
+
+  --focus-ring-width: 3px;
+  --hairline: 1px;
+  --particle-size: 3px;
+  --grain-opacity: .05;
+
+  /* ── Motion: nothing snaps, everything eases ── */
+  --ease-soft: cubic-bezier(.4, 0, .2, 1);
+  --ease-drift: cubic-bezier(.37, 0, .63, 1);
+  --ease-bloom: cubic-bezier(.16, .84, .44, 1);
+  --ease-settle: cubic-bezier(.22, 1, .36, 1);
+
+  --dur-instant: 120ms; --dur-quick: 200ms; --dur-calm: 340ms; --dur-slow: 600ms;
+  --dur-bloom: 1200ms; --dur-drift: 9s; --dur-breathe: 4.5s;
+
+  --lift-hover: -2px; --press-scale: .97;
+  --opacity-hover: .92; --opacity-disabled: .42;
+
+  /* ── Type: Nunito, role scale ── */
+  --font-core: "Nunito", ui-rounded, "Segoe UI Rounded", system-ui, sans-serif;
+  --font-display: var(--font-core);
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --weight-regular: 400; --weight-medium: 600; --weight-bold: 700; --weight-black: 800;
+
+  --text-hero: 48px; --text-display: 36px; --text-title: 28px; --text-heading: 22px;
+  --text-lead: 19px; --text-body-size: 17px; --text-small: 15px; --text-micro: 13px; --text-label: 12px;
+
+  --leading-tight: 1.14; --leading-snug: 1.28; --leading-normal: 1.45; --leading-relaxed: 1.62;
+  --tracking-tight: -.01em; --tracking-normal: 0; --tracking-wide: .04em; --tracking-caps: .12em;
+
+  --measure-narrow: 26ch; --measure-body: 38ch; --measure-wide: 52ch;
+}
+
+/* Deliberately NO bare-element rules here (h1/p/button/etc. from the source
+ * tokens/base.css). `.gains-theme h1 {...}` would carry higher specificity
+ * than a single Tailwind color/font utility class (0,1,1 vs 0,1,0) and
+ * silently reskin every heading under wherever `.gains-theme` is applied --
+ * including sections Draft 49 explicitly says not to touch yet. Every
+ * ported Shadowmend component (Button, SparkDialogue, CharacterFigure, ...)
+ * sets its own font/color/weight inline instead, so it doesn't depend on
+ * element-selector defaults and this file stays safe to apply broadly. */
+
+@keyframes sm-breathe { 0%, 100% { opacity: .72; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes sm-drift { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(0, -70px, 0); } }
+@keyframes sm-bloom { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+@keyframes sm-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gains-theme { --dur-calm: 1ms; --dur-slow: 1ms; --dur-bloom: 1ms; }
+}

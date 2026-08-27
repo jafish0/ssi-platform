@@ -19,6 +19,13 @@ import FeedbackButton from '../components/FeedbackButton.jsx'
 import BodyMapping from '../components/BodyMapping.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 import ElevatorPitch from '../components/ElevatorPitch.jsx'
+import ExpositionIntro from '../components/gains/ExpositionIntro.jsx'
+// Shadowmend design-system tokens (Draft 49). Every variable is declared
+// under `.gains-theme`, applied to this page's own content wrapper below --
+// see the file header comment there. That scoping, not where the CSS is
+// imported from, is what keeps Ready for Roots and the rest of the app
+// unaffected: nothing outside a `.gains-theme` element can see these vars.
+import '../styles/gains-tokens.css'
 
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
@@ -799,28 +806,35 @@ export default function GainsDemoPage() {
       </section>
 
       {/* Exposition — the opening that sets up the world. Stephanie's Option-2
-          text, adopted by the team (2026-08-13) and moved down here from Ideas
-          & Demos for Review. The script is settled; the build is not, hence the
-          in-development pill. SPARK_INTRO_LINE is VERBATIM. */}
+          text, adopted by the team (2026-08-13). Restyled to the Shadowmend
+          design system as Draft 49's proof of concept (2026-08-27): the
+          `.gains-theme` wrapper is this component's only styling
+          dependency, scoped to just this card per the draft (other GAINS
+          screens below stay on the existing amber/slate look until we roll
+          the Shadowmend look outward). SPARK_INTRO_LINE is still VERBATIM
+          and still lives above as the single source — this only restyles
+          its presentation. Flow into a real Zone 1 isn't wired yet, hence
+          the pill. */}
       <section className="mb-8">
         <h3 className="text-[18px] font-bold text-slate-800">Exposition</h3>
         <p className="text-[13px] text-slate-500 mb-3">
-          The opening that sets up the world, before Zone 1.
+          The opening that sets up the world, before Zone 1. Restyled to the
+          Shadowmend design system (Draft 49) as the proof of concept —
+          flow into Zone 1 is still in development.
         </p>
-        <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
-          <div className="mb-4 flex items-center gap-2 flex-wrap">
-            <Pill icon={HardHat}>In development</Pill>
-            <span className="text-[12px] text-slate-500 italic">
-              script adopted, build pending
-            </span>
+        <div className="mb-3 flex items-center gap-2 flex-wrap">
+          <Pill icon={HardHat}>In development</Pill>
+          <span className="text-[12px] text-slate-500 italic">
+            Shadowmend styling adopted, flow to Zone 1 pending
+          </span>
+        </div>
+        <div className="-mx-4 sm:mx-0 sm:w-full sm:max-w-[360px]">
+          <div
+            className="gains-theme relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
+            style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
+          >
+            <ExpositionIntro line={SPARK_INTRO_LINE} />
           </div>
-
-          <p className="text-[13px] font-semibold text-slate-600 mb-1">
-            Spark, to the player
-          </p>
-          <p className="text-[14px] text-slate-700 leading-relaxed">
-            {SPARK_INTRO_LINE}
-          </p>
         </div>
       </section>
 
