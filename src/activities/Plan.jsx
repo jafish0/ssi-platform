@@ -38,8 +38,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Download, FileText, ArrowLeft } from 'lucide-react'
-import { PrimaryButton } from '../components/items/shared.jsx'
-import CrisisLifelineNote, { CRISIS_LIFELINE_TEXT } from '../components/CrisisLifelineNote.jsx'
+import { PrimaryButton, MissingItemsNote, scrollToMissingItem } from '../components/items/shared.jsx'
+import CrisisLifelineNote, { CRISIS_LIFELINE_TEXT_PLAN } from '../components/CrisisLifelineNote.jsx'
 import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
 import { PLAN_DEMO_DATA, ALL_BELONGING_SKILLS } from '../lib/planDemoData.js'
 import { buildRealPlanData } from '../lib/planRealData.js'
@@ -179,6 +179,15 @@ function isComplete(c) {
   return !!(c && (c.how || '').trim()) && !!resolveWho(c) && !!resolveWhen(c)
 }
 
+// Joins short phrases into readable prose: "a", "a and b", "a, b, and c".
+// Used to name more than one missing field at once (Draft 100 — Screen 2's
+// gate can have several of how/who/when missing simultaneously).
+function joinList(items) {
+  if (items.length <= 1) return items[0] || ''
+  if (items.length === 2) return `${items[0]} and ${items[1]}`
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`
+}
+
 // ---------- Component ----------
 
 export default function Plan({ onSave = console.log, planData, sessionData }) {
@@ -197,6 +206,11 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
   const [otherUsed, setOtherUsed] = useState(false)
   const [otherText, setOtherText] = useState('')
   const [saving, setSaving] = useState(false)
+  // Draft 100: Screen 2's Continue stays tappable even when its gate isn't
+  // satisfied; tapping it while incomplete surfaces what's missing instead
+  // of silently doing nothing. Only shown after a real incomplete tap, not
+  // on first render.
+  const [showMissing, setShowMissing] = useState(false)
 
   // Screen 4 only exists when the kid wrote an inclusion memory in
   // Self-Reflection (never reflect on an empty callout).
@@ -210,7 +224,39 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
     setSkillCommits((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }))
   }
 
-  const selectedComplete = !!selectedSkillId && isComplete(skillCommits[selectedSkillId])
+  // Draft 100: Screen 2's gate is genuinely two-part — no skill picked at
+  // all, or a skill picked but its how/who/when commitment isn't fully
+  // filled in. Unlike the single-boolean gates elsewhere, more than one of
+  // how/who/when can be missing at once, so this is a small missing-fields
+  // list (like Demographics.jsx) rather than a single flag — just scoped to
+  // one skill instead of a whole screen of items.
+  const skillCommit = selectedSkillId ? skillCommits[selectedSkillId] : null
+  const missingSkillFields = !selectedSkillId
+    ? []
+    : [
+        !(skillCommit?.how || '').trim() && { id: 'plan-skill-how', label: "how you'll try it" },
+        !resolveWho(skillCommit) && { id: 'plan-skill-who', label: "who's involved" },
+        !resolveWhen(skillCommit) && { id: 'plan-skill-when', label: "when you'll try it" },
+      ].filter(Boolean)
+  const skillMissingMessage = !selectedSkillId
+    ? 'Please pick a skill to focus on before continuing.'
+    : missingSkillFields.length > 0
+      ? `Please finish ${joinList(missingSkillFields.map((f) => f.label))} before continuing.`
+      : null
+
+  // Wraps Screen 2's NavFooter onNext: if the gate isn't satisfied, show
+  // the message (and scroll to the first missing field, when there is a
+  // specific one to point at — there isn't when no skill is picked yet)
+  // instead of advancing.
+  function handleSkillNext() {
+    if (skillMissingMessage) {
+      setShowMissing(true)
+      if (missingSkillFields.length > 0) scrollToMissingItem(missingSkillFields[0].id)
+      return
+    }
+    setShowMissing(false)
+    go(hasInclusion ? 3 : 4)
+  }
 
   const model = useMemo(
     () =>
@@ -349,52 +395,58 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
                 {/* Expanded inputs — only for the actively selected skill */}
                 {selected && (
                   <div className="px-4 pb-4 pt-1">
-                    <label className="block text-[14px] font-medium text-slate-700 mb-1">
-                      How could you demonstrate this skill?
-                    </label>
-                    <input
-                      type="text"
-                      value={c.how || ''}
-                      onChange={(e) => updateSkill(s.id, { how: e.target.value })}
-                      maxLength={160}
-                      placeholder={s.howExample || ''}
-                      className="w-full text-[15px] px-4 py-2.5 bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 mb-3 placeholder:text-slate-400 placeholder:italic"
-                    />
-                    <label className="block text-[14px] font-medium text-slate-700 mb-1">
-                      Who could you try this with?
-                    </label>
-                    <select
-                      value={c.who || ''}
-                      onChange={(e) => updateSkill(s.id, { who: e.target.value })}
-                      className="w-full text-[15px] px-4 py-2.5 bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 mb-1"
-                    >
-                      <option value="">Choose someone…</option>
-                      {allyNames.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                      <option value="__other__">Someone else…</option>
-                    </select>
-                    {c.who === '__other__' && (
+                    <div id="plan-skill-how" className="mb-3">
+                      <label className="block text-[14px] font-medium text-slate-700 mb-1">
+                        How could you demonstrate this skill?
+                      </label>
                       <input
                         type="text"
-                        value={c.whoOther || ''}
-                        onChange={(e) => updateSkill(s.id, { whoOther: e.target.value })}
-                        maxLength={60}
-                        placeholder="Who?"
-                        className="w-full text-[15px] px-4 py-2.5 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white mb-2"
+                        value={c.how || ''}
+                        onChange={(e) => updateSkill(s.id, { how: e.target.value })}
+                        maxLength={160}
+                        placeholder={s.howExample || ''}
+                        className="w-full text-[15px] px-4 py-2.5 bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 placeholder:text-slate-400 placeholder:italic"
                       />
-                    )}
-                    <label className="block text-[14px] font-medium text-slate-700 mt-3 mb-2">
-                      When could you try it?
-                    </label>
-                    <WhenChips
-                      value={c.when}
-                      otherValue={c.whenOther}
-                      onPick={(v) => updateSkill(s.id, { when: v })}
-                      onOther={(v) => updateSkill(s.id, { whenOther: v })}
-                    />
+                    </div>
+                    <div id="plan-skill-who" className="mb-1">
+                      <label className="block text-[14px] font-medium text-slate-700 mb-1">
+                        Who could you try this with?
+                      </label>
+                      <select
+                        value={c.who || ''}
+                        onChange={(e) => updateSkill(s.id, { who: e.target.value })}
+                        className="w-full text-[15px] px-4 py-2.5 bg-white border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400"
+                      >
+                        <option value="">Choose someone…</option>
+                        {allyNames.map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                        <option value="__other__">Someone else…</option>
+                      </select>
+                      {c.who === '__other__' && (
+                        <input
+                          type="text"
+                          value={c.whoOther || ''}
+                          onChange={(e) => updateSkill(s.id, { whoOther: e.target.value })}
+                          maxLength={60}
+                          placeholder="Who?"
+                          className="w-full text-[15px] px-4 py-2.5 bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl focus:outline-none focus:border-ctac-teal-400 focus:bg-white mt-2"
+                        />
+                      )}
+                    </div>
+                    <div id="plan-skill-when" className="mt-3">
+                      <label className="block text-[14px] font-medium text-slate-700 mb-2">
+                        When could you try it?
+                      </label>
+                      <WhenChips
+                        value={c.when}
+                        otherValue={c.whenOther}
+                        onPick={(v) => updateSkill(s.id, { when: v })}
+                        onOther={(v) => updateSkill(s.id, { whenOther: v })}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -412,10 +464,10 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
         )}
         <NavFooter
           onBack={() => go(1)}
-          onNext={() => go(hasInclusion ? 3 : 4)}
-          nextDisabled={!selectedComplete}
+          onNext={handleSkillNext}
           skip={() => go(hasInclusion ? 3 : 4)}
         />
+        <MissingItemsNote message={showMissing ? skillMissingMessage : null} />
       </ScreenShell>
     )
   }
@@ -762,8 +814,11 @@ export function PlanReview({ model }) {
       {/* 988 Suicide & Crisis Lifeline callout (Draft 96) — Sprang was
           explicit this should be part of what they keep, not just shown
           once on-screen, so it's part of the same model both PlanReview
-          and the PNG/PDF keepsake read from (see buildPlanKeepsakeSvg). */}
-      <CrisisLifelineNote />
+          and the PNG/PDF keepsake read from (see buildPlanKeepsakeSvg).
+          "plan" variant (Josh, 2026-08-27): the plan is read back well
+          after the program ends, so wording is "if you ever feel..."
+          rather than "at any time during this program." */}
+      <CrisisLifelineNote variant="plan" />
     </div>
   )
 }
@@ -941,9 +996,9 @@ function buildPlanKeepsakeSvg(model) {
 
   // 988 Suicide & Crisis Lifeline callout (Draft 96) — always present,
   // not conditional on any upstream content, same as the on-screen
-  // PlanReview above.
+  // PlanReview above. "plan" wording (Josh, 2026-08-27) — see PlanReview.
   heading('A note')
-  body(CRISIS_LIFELINE_TEXT)
+  body(CRISIS_LIFELINE_TEXT_PLAN)
 
   y += 20
   const height = y + 30

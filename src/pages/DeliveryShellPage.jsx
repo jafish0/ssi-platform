@@ -137,8 +137,10 @@ function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
         )}
         {/* 988 Suicide & Crisis Lifeline callout (Draft 96) — the "end of
             the program" placement, shown on every completion (main-program
-            and follow-up alike). */}
-        <CrisisLifelineNote className="mb-6 text-left" />
+            and follow-up alike). Skipped when a plan keepsake is shown
+            above: PlanReview already renders its own copy of this note
+            (Josh, 2026-08-27 — it was showing twice on the same screen). */}
+        {!keepsakeModel && <CrisisLifelineNote className="mb-6 text-left" />}
         <PrimaryButton onClick={() => setConfirmed(true)}>
           Complete Program
         </PrimaryButton>

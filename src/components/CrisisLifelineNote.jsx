@@ -20,15 +20,26 @@ import { Phone } from 'lucide-react'
 export const CRISIS_LIFELINE_TEXT =
   'If at any time during this program you feel very distressed, please reach out to your parent or guardian. You can also call or text 988 (Suicide & Crisis Lifeline) — free, confidential support, 24/7.'
 
-export default function CrisisLifelineNote({ className = '' }) {
+// Plan-keepsake variant (Josh, 2026-08-27): the plan is something the kid
+// keeps and may read back well after the program is over, so "at any time
+// during this program" reads wrong there — "if you ever feel..." instead.
+// Used by Plan.jsx's PlanReview (both the on-screen keepsake and the
+// PNG/PDF export) only; every other placement (Assent, Welcome, end-of-
+// program) keeps the original program-scoped wording.
+export const CRISIS_LIFELINE_TEXT_PLAN =
+  'If you ever feel very distressed, please reach out to your parent or guardian. You can also call or text 988 (Suicide & Crisis Lifeline) — free, confidential support, 24/7.'
+
+export default function CrisisLifelineNote({ className = '', variant = 'default' }) {
+  const text = variant === 'plan' ? CRISIS_LIFELINE_TEXT_PLAN : CRISIS_LIFELINE_TEXT
+  const lead = variant === 'plan' ? 'If you ever feel very distressed, please' : 'If at any time during this program you feel very distressed, please'
   return (
     <div
       className={`border-l-4 border-amber-300 bg-amber-50 rounded-r-2xl px-4 py-3 flex items-start gap-2.5 ${className}`}
     >
       <Phone size={16} strokeWidth={2} className="text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
       <p className="text-sm text-slate-700">
-        If at any time during this program you feel very distressed, please
-        reach out to your parent or guardian. You can also call or text{' '}
+        {lead}
+        {' '}reach out to your parent or guardian. You can also call or text{' '}
         <strong className="font-semibold text-amber-800">988</strong>{' '}
         (Suicide &amp; Crisis Lifeline) — free, confidential support, 24/7.
       </p>
