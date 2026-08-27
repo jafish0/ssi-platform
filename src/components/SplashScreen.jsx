@@ -34,6 +34,15 @@
 // like the `max-w-[360px]` phone-sized column on /demo's "For Review This
 // Week" (2026-08-20) — without which the `min-h-[100dvh]` wrapper made it
 // render nearly full-screen-tall regardless of how narrow its column was.
+//
+// Desktop-web fix (2026-08-26): the frame's `w-full` had no upper bound,
+// so on a wide desktop browser it stretched to the full viewport width and,
+// at 9:16, computed a huge height — Josh saw this as the splash taking over
+// the entire browser window. `max-w-[480px]` caps it to a contained
+// portrait card on wide screens; every common real-phone CSS width (up to
+// ~430px on the largest current devices) stays comfortably under that cap,
+// so mobile rendering is unchanged — `w-full` still just fills the device
+// width there, same as before.
 import { useEffect, useRef, useState } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 
@@ -92,7 +101,7 @@ export default function SplashScreen({ onBegin, standalone = true }) {
   }
 
   const frame = (
-    <div className="relative overflow-hidden w-full" style={{ aspectRatio: '9 / 16' }}>
+    <div className="relative overflow-hidden w-full max-w-[480px]" style={{ aspectRatio: '9 / 16' }}>
       <img
         src="/splash/tree.jpg"
         alt=""
@@ -120,12 +129,12 @@ export default function SplashScreen({ onBegin, standalone = true }) {
           regardless of the frame's rendered pixel size — 14% down sits
           inside the sky (open through ~34%), 6% up from the bottom sits
           inside the roots/ground band (open from ~77%). */}
-      <h1
-        className="absolute left-0 right-0 px-6 text-center text-[32px] sm:text-[40px] font-bold leading-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
-        style={{ top: '14%' }}
-      >
-        Ready for Roots
-      </h1>
+      <img
+        src="/splash/wordmark.png"
+        alt="Ready for Roots"
+        className="absolute left-1/2 -translate-x-1/2"
+        style={{ top: '14%', width: '78%', height: 'auto' }}
+      />
       <div className="absolute left-0 right-0 px-6 text-center" style={{ bottom: '6%' }}>
         <button
           type="button"
