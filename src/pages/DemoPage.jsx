@@ -536,6 +536,41 @@ export default function DemoPage() {
         ))}
       </section>
 
+      {/* Full Intervention Demo (Draft 99) — links out to the real,
+          end-to-end delivery flow (assent through completion) using the
+          shared team dogfood code, distinct from everything above/below
+          on this page, which is individual clips/activities in isolation.
+          Plain <a>, not <Link>: this leaves the /demo SPA route entirely
+          for a different app entry point (?code= parsing at the root),
+          which React Router's client-side routing isn't the right tool
+          for here. */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+          Full Intervention Demo
+        </h2>
+        <p className="text-[13px] text-slate-500 italic mb-5 max-w-[760px]">
+          This is the real, end-to-end delivery flow — assent through
+          completion — not another set of review clips. Use the shared
+          team code below any time; it&apos;s good for up to 50 uses, so
+          there&apos;s no need to worry about using it up.
+        </p>
+        <div className="bg-ctac-teal-50 border border-ctac-teal-200 rounded-2xl p-8 max-w-[520px] mx-auto text-center">
+          <p className="text-[15px] text-slate-700 mb-5">
+            Walk the whole program as a participant would, start to
+            finish, on the current build.
+          </p>
+          <a
+            href="https://ssi.ctac.app/?code=RSD-TEAM-2026"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-6 py-3 min-h-[52px] text-[15px]"
+          >
+            <Play size={16} strokeWidth={2} />
+            Start the full demo
+          </a>
+        </div>
+      </section>
+
       {/* Activities */}
       <section className="mb-10">
         <div className="flex items-center justify-between mb-3">
