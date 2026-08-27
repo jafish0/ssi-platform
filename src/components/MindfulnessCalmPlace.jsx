@@ -245,11 +245,11 @@ function Chip({ label, active, onClick }) {
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={
-        'px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ' +
-        (active
-          ? 'bg-amber-500 border-amber-500 text-white'
-          : 'bg-white/15 border-white/30 text-white hover:bg-white/25')
+      className="px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-colors"
+      style={
+        active
+          ? { background: 'var(--action-primary)', borderColor: 'var(--action-primary)', color: 'var(--text-on-warm)' }
+          : { background: 'var(--action-quiet)', borderColor: 'var(--border-soft)', color: 'var(--text-bright)' }
       }
     >
       {label}
@@ -518,7 +518,7 @@ export default function MindfulnessCalmPlace() {
   }
 
   return (
-    <div ref={containerRef} className="relative flex flex-col h-full w-full bg-slate-900 overflow-hidden">
+    <div ref={containerRef} className="relative flex flex-col h-full w-full overflow-hidden" style={{ background: 'var(--surface-abyss)', fontFamily: 'var(--font-core)' }}>
       <style>{SCENE_CSS}</style>
       <style>{MOTION_CSS}</style>
 
@@ -586,10 +586,10 @@ export default function MindfulnessCalmPlace() {
           shared space with, covered too much of the scene). */}
       {inSelectionStep && (
         <div className="relative px-4 pt-4 pb-5 bg-gradient-to-b from-slate-950/90 via-slate-950/70 to-transparent">
-          <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase text-amber-300 mb-1">
+          <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-1" style={{ color: 'var(--text-warm)' }}>
             Zone 4 · Mindfulness
           </div>
-          <div className="text-[12px] text-amber-100/90 mb-2">{instruction}</div>
+          <div className="text-[12px] mb-2" style={{ color: 'var(--text-body)' }}>{instruction}</div>
 
           <div className="flex flex-wrap gap-2 mb-2">
             {mode === 'see' &&
@@ -613,15 +613,18 @@ export default function MindfulnessCalmPlace() {
           </div>
 
           {(lastSeen && mode === 'see') || (lastHeard && mode === 'hear') ? (
-            <div className="bg-white/95 backdrop-blur rounded-2xl px-3.5 py-2.5 mb-2">
+            <div
+              className="rounded-2xl px-3.5 py-2.5 mb-2"
+              style={{ background: 'var(--surface-sheet)', backdropFilter: 'var(--blur-sheet)', border: '1px solid var(--border-soft)' }}
+            >
               {panelLabel && (
-                <div className="font-extrabold text-amber-700 text-[13px] mb-0.5">{panelLabel}</div>
+                <div className="font-extrabold text-[13px] mb-0.5" style={{ color: 'var(--text-warm)' }}>{panelLabel}</div>
               )}
-              <div className="text-[13px] text-slate-700 leading-snug">{panelText}</div>
+              <div className="text-[13px] leading-snug" style={{ color: 'var(--text-bright)' }}>{panelText}</div>
             </div>
           ) : null}
 
-          <div className="text-[12px] text-amber-100/70 text-center mb-1.5">
+          <div className="text-[12px] text-center mb-1.5" style={{ color: 'var(--text-muted)' }}>
             {mode === 'see' ? `${seen.length} of 3 found` : `${heard.length} of 3 heard`}
           </div>
 
@@ -629,7 +632,8 @@ export default function MindfulnessCalmPlace() {
             <button
               type="button"
               onClick={() => (mode === 'see' ? enterHear() : startBreathe())}
-              className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
+              className="w-full py-2.5 rounded-full text-[15px] font-extrabold transition-colors"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
               Continue
             </button>
@@ -646,23 +650,27 @@ export default function MindfulnessCalmPlace() {
           undercut that. */}
       {!inSelectionStep && !(mode === 'breathe' && breatheStage === 'active') && (
         <div className="relative mt-auto px-4 pb-4 pt-10 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-transparent">
-          <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase text-amber-300 mb-1">
+          <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-1" style={{ color: 'var(--text-warm)' }}>
             Zone 4 · Mindfulness
           </div>
-          <div className="bg-white/95 backdrop-blur rounded-2xl px-3.5 py-2.5 mb-2">
+          <div
+            className="rounded-2xl px-3.5 py-2.5 mb-2"
+            style={{ background: 'var(--surface-sheet)', backdropFilter: 'var(--blur-sheet)', border: '1px solid var(--border-soft)' }}
+          >
             {panelLabel && (
-              <div className="font-extrabold text-amber-700 text-[13px] mb-0.5">{panelLabel}</div>
+              <div className="font-extrabold text-[13px] mb-0.5" style={{ color: 'var(--text-warm)' }}>{panelLabel}</div>
             )}
-            <div className="text-[13px] text-slate-700 leading-snug">{panelText}</div>
+            <div className="text-[13px] leading-snug" style={{ color: 'var(--text-bright)' }}>{panelText}</div>
           </div>
 
-          <div className="text-[12px] text-amber-100/90 mb-2 min-h-[16px]">{instruction}</div>
+          <div className="text-[12px] mb-2 min-h-[16px]" style={{ color: 'var(--text-body)' }}>{instruction}</div>
 
           {mode === 'intro' && (
             <button
               type="button"
               onClick={begin}
-              className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
+              className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
               Begin
             </button>
@@ -672,7 +680,8 @@ export default function MindfulnessCalmPlace() {
             <button
               type="button"
               onClick={() => setMode('see')}
-              className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
+              className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
               I’m here
             </button>
@@ -682,7 +691,8 @@ export default function MindfulnessCalmPlace() {
             <button
               type="button"
               onClick={beginBreathing}
-              className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
+              className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
               Begin box breathing
             </button>
@@ -692,7 +702,8 @@ export default function MindfulnessCalmPlace() {
             <button
               type="button"
               onClick={() => setMode('close')}
-              className="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold"
+              className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
               Continue
             </button>
@@ -705,21 +716,23 @@ export default function MindfulnessCalmPlace() {
               state with the full-activity repeat. */}
           {mode === 'close' && practiceCount < 2 && !practiceDeclined && (
             <div className="space-y-2">
-              <p className="text-[12px] text-amber-100/90 text-center">
+              <p className="text-[12px] text-center" style={{ color: 'var(--text-body)' }}>
                 Want to practice again to upgrade your mask?
               </p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={practiceAgain}
-                  className="flex-1 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[14px] font-extrabold"
+                  className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
+                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
                 >
                   Practice again
                 </button>
                 <button
                   type="button"
                   onClick={declinePractice}
-                  className="flex-1 py-2.5 rounded-full bg-white/90 hover:bg-white text-amber-700 text-[14px] font-extrabold"
+                  className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
+                  style={{ background: 'var(--action-quiet)', color: 'var(--text-bright)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}
                 >
                   No, I’m ready
                 </button>
@@ -729,19 +742,21 @@ export default function MindfulnessCalmPlace() {
 
           {mode === 'close' && (practiceCount >= 2 || practiceDeclined) && (
             <div className="space-y-2">
-              <p className="text-[12px] text-amber-100/90 text-center">Want to stay a little longer?</p>
+              <p className="text-[12px] text-center" style={{ color: 'var(--text-body)' }}>Want to stay a little longer?</p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={again}
-                  className="flex-1 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[14px] font-extrabold"
+                  className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
+                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
                 >
                   Do it again
                 </button>
                 <button
                   type="button"
                   onClick={restart}
-                  className="flex-1 py-2.5 rounded-full bg-white/90 hover:bg-white text-amber-700 text-[14px] font-extrabold"
+                  className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
+                  style={{ background: 'var(--action-quiet)', color: 'var(--text-bright)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}
                 >
                   I’m all set
                 </button>

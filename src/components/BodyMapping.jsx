@@ -76,15 +76,15 @@ const CLOSING =
 const SVG_CSS = `
 .bm-region { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .bm-region .bm-target {
-  fill: #334155; fill-opacity: .04;
-  stroke: #334155; stroke-opacity: .32; stroke-width: 1.6; stroke-dasharray: 5 5;
+  fill: #CBD5E1; fill-opacity: .08;
+  stroke: #CBD5E1; stroke-opacity: .4; stroke-width: 1.6; stroke-dasharray: 5 5;
   transform-box: fill-box; transform-origin: center;
   transition: fill .3s ease, fill-opacity .3s ease, stroke .3s ease,
               stroke-opacity .3s ease, stroke-width .3s ease;
   animation: bmIdlePulse 2.6s ease-in-out infinite;
 }
 .bm-region .bm-icon {
-  fill: none; stroke: #334155; stroke-opacity: .5; stroke-width: 3.2;
+  fill: none; stroke: #CBD5E1; stroke-opacity: .65; stroke-width: 3.2;
   stroke-linecap: round; stroke-linejoin: round;
   transition: stroke .3s ease, stroke-opacity .3s ease, stroke-width .3s ease;
   animation: bmIdleIcon 2.6s ease-in-out infinite;
@@ -145,25 +145,30 @@ const SVG_CSS = `
 const VIEW_BOX = '56 0 545 760'
 
 // Shared by the live CTA and by the invisible spacer that reserves its slot.
+// Draft 50: restyled to the Shadowmend amber pill (chrome only -- layout
+// classes are untouched). Tailwind's arbitrary-value syntax
+// (`bg-[var(--x)]`) resolves CSS custom properties directly, so the hover
+// state still works without needing inline styles/JS hover tracking.
 const CTA_CLASS =
-  'w-full mt-2 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-extrabold text-center'
+  'w-full mt-2 py-2.5 rounded-full bg-[var(--action-primary)] hover:bg-[var(--action-primary-hover)] text-[var(--text-on-warm)] text-[15px] font-extrabold text-center transition-colors'
 
 // The three pieces of the copy block. Factored out because the block renders
 // them twice: once invisibly at their worst case to reserve height, once live.
 // Both copies must stay identical or the reservation drifts.
 function PanelBox({ label, text, muted }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5">
+    <div
+      className="rounded-2xl px-3.5 py-2.5"
+      style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}
+    >
       {label && (
-        <div className="font-extrabold text-amber-700 text-[13px] mb-0.5">
+        <div className="font-extrabold text-[13px] mb-0.5" style={{ color: 'var(--text-warm)' }}>
           {label}
         </div>
       )}
       <div
-        className={
-          'text-[12.5px] leading-snug ' +
-          (muted ? 'text-slate-400' : 'text-slate-700')
-        }
+        className="text-[12.5px] leading-snug"
+        style={{ color: muted ? 'var(--text-faint)' : 'var(--text-body)' }}
       >
         {text}
       </div>
@@ -173,7 +178,7 @@ function PanelBox({ label, text, muted }) {
 
 function ProgressLine({ revealed }) {
   return (
-    <div className="text-[12px] text-slate-400 text-center mt-1.5">
+    <div className="text-[12px] text-center mt-1.5" style={{ color: 'var(--text-faint)' }}>
       {revealed} of {REGIONS.length} revealed
     </div>
   )
@@ -188,7 +193,8 @@ function OtherAreaField({ value, onChange }) {
       <button
         type="button"
         onClick={() => onChange('')}
-        className="w-full text-left mt-1.5 px-3.5 py-2.5 rounded-2xl text-[12px] leading-snug border border-dashed border-slate-300 text-slate-500 hover:border-amber-300 hover:text-amber-700"
+        className="w-full text-left mt-1.5 px-3.5 py-2.5 rounded-2xl text-[12px] leading-snug border border-dashed hover:border-[var(--border-warm)] hover:text-[var(--text-warm)] transition-colors"
+        style={{ borderColor: 'var(--border-soft)', color: 'var(--text-faint)' }}
       >
         Is there another area you feel it in your body? (write it in)
       </button>
@@ -201,14 +207,18 @@ function OtherAreaField({ value, onChange }) {
       onChange={(e) => onChange(e.target.value)}
       placeholder="e.g., sweating, clenching jaw"
       autoFocus
-      className="w-full mt-1.5 text-[12.5px] px-3.5 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+      className="w-full mt-1.5 text-[12.5px] px-3.5 py-2.5 rounded-2xl focus:outline-none"
+      style={{ background: 'var(--action-quiet)', border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
     />
   )
 }
 
 function ClosingBox() {
   return (
-    <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2 text-[11.5px] leading-snug">
+    <div
+      className="mt-1.5 rounded-2xl px-3 py-2 text-[11.5px] leading-snug"
+      style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
+    >
       {CLOSING}
     </div>
   )
@@ -326,16 +336,22 @@ export default function BodyMapping() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-slate-50 text-slate-700 px-4 py-3 overflow-hidden">
+    <div
+      className="flex flex-col h-full w-full px-4 py-3 overflow-hidden"
+      style={{ background: 'var(--sky-abyss)', color: 'var(--text-body)', fontFamily: 'var(--font-core)' }}
+    >
       {/* header */}
       <div className="flex-shrink-0">
-        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase text-amber-700">
+        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase" style={{ color: 'var(--text-warm)' }}>
           Activity 1 · Body mapping
         </div>
-        <h3 className="text-[17px] font-extrabold text-slate-800 leading-tight mt-0.5 mb-1.5">
+        <h3 className="text-[17px] font-extrabold leading-tight mt-0.5 mb-1.5" style={{ color: 'var(--text-bright)' }}>
           Where trauma shows up
         </h3>
-        <div className="bg-white border border-slate-200 rounded-2xl px-3 py-2 flex gap-2 items-start">
+        <div
+          className="rounded-2xl px-3 py-2 flex gap-2 items-start"
+          style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}
+        >
           <span
             className="flex-shrink-0 w-[22px] h-[22px] rounded-full mt-0.5"
             style={{
@@ -408,20 +424,20 @@ export default function BodyMapping() {
               the hand). Ported 1:1 from
               Gains for Teens/Activities/body-map.svg; only ids/classNames
               were namespaced (bm- prefix) and attributes converted to JSX. */}
-          <g id="bm-base" fill="none" stroke="#334155" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M350,44 C394,44 420,79 420,124 C420,152 413,171 404,186 C395,202 378,216 350,216 C322,216 305,202 296,186 C287,171 280,152 280,124 C280,79 306,44 350,44 Z" fill="#334155" fillOpacity="0.045" />
+          <g id="bm-base" fill="none" stroke="#CBD5E1" strokeOpacity="0.7" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M350,44 C394,44 420,79 420,124 C420,152 413,171 404,186 C395,202 378,216 350,216 C322,216 305,202 296,186 C287,171 280,152 280,124 C280,79 306,44 350,44 Z" fill="#CBD5E1" fillOpacity="0.08" />
             <path d="M281,120 C272,118 268,126 271,136 C274,146 281,148 284,145" strokeWidth="3.4" />
             <path d="M419,120 C428,118 432,126 429,136 C426,146 419,148 416,145" strokeWidth="3.4" />
 
-            <path d="M322,198 C318,228 314,246 304,258 C266,268 232,280 214,302 C222,324 232,338 244,350 C250,394 254,432 256,472 C258,508 252,542 248,574 C244,608 246,642 248,700 L452,700 C454,642 456,608 452,574 C448,542 442,508 444,472 C446,432 450,394 456,350 C468,338 478,324 486,302 C468,280 434,268 396,258 C386,246 382,228 378,198 Z" fill="#334155" fillOpacity="0.045" />
+            <path d="M322,198 C318,228 314,246 304,258 C266,268 232,280 214,302 C222,324 232,338 244,350 C250,394 254,432 256,472 C258,508 252,542 248,574 C244,608 246,642 248,700 L452,700 C454,642 456,608 452,574 C448,542 442,508 444,472 C446,432 450,394 456,350 C468,338 478,324 486,302 C468,280 434,268 396,258 C386,246 382,228 378,198 Z" fill="#CBD5E1" fillOpacity="0.08" />
 
-            <path d="M214,302 C192,314 180,340 176,372 C170,412 165,452 160,492 C155,530 150,568 146,604 C143,626 138,646 139,664 C140,684 146,700 154,708 C159,713 167,711 169,703 C171,694 169,684 170,674 C172,660 178,650 182,638 C186,620 190,600 194,578 C200,540 208,498 214,456 C220,414 228,376 244,350 C232,338 222,324 214,302 Z" fill="#334155" fillOpacity="0.045" />
+            <path d="M214,302 C192,314 180,340 176,372 C170,412 165,452 160,492 C155,530 150,568 146,604 C143,626 138,646 139,664 C140,684 146,700 154,708 C159,713 167,711 169,703 C171,694 169,684 170,674 C172,660 178,650 182,638 C186,620 190,600 194,578 C200,540 208,498 214,456 C220,414 228,376 244,350 C232,338 222,324 214,302 Z" fill="#CBD5E1" fillOpacity="0.08" />
             <path d="M141,652 C152,644 164,640 176,642" strokeWidth="3" />
             <path d="M147,703 C150,690 151,678 150,666" strokeWidth="2.8" />
             <path d="M158,709 C161,696 162,684 161,672" strokeWidth="2.8" />
             <path d="M170,674 C175,668 179,658 180,648" strokeWidth="2.8" />
 
-            <path d="M486,302 C508,314 520,340 524,372 C530,412 535,452 540,492 C545,530 550,568 554,604 C557,626 562,646 561,664 C560,684 554,700 546,708 C541,713 533,711 531,703 C529,694 531,684 530,674 C528,660 522,650 518,638 C514,620 510,600 506,578 C500,540 492,498 486,456 C480,414 472,376 456,350 C468,338 478,324 486,302 Z" fill="#334155" fillOpacity="0.045" />
+            <path d="M486,302 C508,314 520,340 524,372 C530,412 535,452 540,492 C545,530 550,568 554,604 C557,626 562,646 561,664 C560,684 554,700 546,708 C541,713 533,711 531,703 C529,694 531,684 530,674 C528,660 522,650 518,638 C514,620 510,600 506,578 C500,540 492,498 486,456 C480,414 472,376 456,350 C468,338 478,324 486,302 Z" fill="#CBD5E1" fillOpacity="0.08" />
             <path d="M559,652 C548,644 536,640 524,642" strokeWidth="3" />
             <path d="M553,703 C550,690 549,678 550,666" strokeWidth="2.8" />
             <path d="M542,709 C539,696 538,684 539,672" strokeWidth="2.8" />
@@ -585,7 +601,7 @@ export default function BodyMapping() {
             <button
               type="button"
               onClick={restart}
-              className="w-full mt-2.5 py-2 text-[13px] font-semibold text-amber-700 hover:text-amber-900 underline"
+              className="w-full mt-2.5 py-2 text-[13px] font-semibold underline text-[var(--text-warm)] hover:text-[var(--brand-flame)] transition-colors"
             >
               Start over
             </button>

@@ -20,6 +20,9 @@ import BodyMapping from '../components/BodyMapping.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 import ElevatorPitch from '../components/ElevatorPitch.jsx'
 import ExpositionIntro from '../components/gains/ExpositionIntro.jsx'
+import GainsCard from '../components/gains/ds/Card.jsx'
+import GainsBadge from '../components/gains/ds/Badge.jsx'
+import GainsButton from '../components/gains/ds/Button.jsx'
 // Shadowmend design-system tokens (Draft 49). Every variable is declared
 // under `.gains-theme`, applied to this page's own content wrapper below --
 // see the file header comment there. That scoping, not where the CSS is
@@ -55,6 +58,12 @@ export const GAINS_FEEDBACK_SECTIONS = [
 
 const ART = '/long-light/art'
 const AUDIO = '/long-light/audio'
+
+// Draft 50: shared style for the small uppercase section-eyebrow headings
+// ("World and Development Map", "NPCs", etc.) that repeat throughout this
+// page -- one definition instead of restating the same style object at
+// each of the ~7 call sites.
+const SECTION_LABEL_STYLE = { letterSpacing: 'var(--tracking-caps)', color: 'var(--text-warm)', fontFamily: 'var(--font-core)' }
 
 // Spark's voice contenders (Draft 28, expanded to six in Draft 43). Neutral
 // labels on purpose, no per-voice description or commentary anywhere: the
@@ -441,8 +450,21 @@ export default function GainsDemoPage() {
       feedbackSections={GAINS_FEEDBACK_SECTIONS}
       feedbackDefaultSection="general"
     >
+      {/* Draft 50: the `.gains-theme` token scope now wraps the WHOLE page
+          body (was just the Exposition card under Draft 49), per the
+          draft's step 1. This is safe broadly -- gains-tokens.css declares
+          only custom properties (no bare element-selector rules), so
+          nothing changes for a section that doesn't explicitly reference a
+          `var(--...)`. DemoPageLayout's own chrome (header/banner/footer)
+          is outside this wrapper (it's shared with Ready for Roots) and
+          stays on its own teal theme regardless. The intro blurb just below
+          is inside the scope but not explicitly restyled -- Draft 50's
+          section list starts at "Ideas & Demos for Review"; this is meta
+          commentary about the review page itself, not part of the in-world
+          experience. */}
+      <div className="gains-theme">
       {/* Intro */}
-      <section className="mb-8">
+      <section className="mb-6">
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
           GAINS for Teens — The Long Light
         </h1>
@@ -462,20 +484,32 @@ export default function GainsDemoPage() {
         </p>
       </section>
 
+      {/* Draft 50: everything below is one dark "world" panel -- the
+          Shadowmend frosted-glass Card treatment (rgba cream at low
+          opacity, backdrop-blur) only reads correctly over a twilight
+          backdrop, not the page's light teal. This is the one place the
+          restyle reaches outside an individual section: a shared backdrop
+          so every card below sits on the same surface instead of floating
+          on mismatched ground. */}
+      <div className="rounded-[28px] p-4 sm:p-6" style={{ background: 'var(--sky-abyss)' }}>
+
       {/* Ideas & Demos for Review — staging area above the official
           breakdown. Each item carries its own comment thread. */}
       <section className="mb-12">
-        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/70 overflow-hidden">
-          <div className="bg-amber-400/90 px-5 py-2">
-            <span className="text-[12px] font-bold uppercase tracking-wide text-amber-950">
+        <div className="rounded-[28px] overflow-hidden" style={{ border: '1px solid var(--border-warm)' }}>
+          <div className="px-5 py-2" style={{ background: 'var(--action-primary)' }}>
+            <span
+              className="text-[12px] font-bold uppercase tracking-wide"
+              style={{ letterSpacing: 'var(--tracking-caps)', color: 'var(--text-on-warm)', fontFamily: 'var(--font-core)' }}
+            >
               Proposals — comment before we make them official
             </span>
           </div>
-          <div className="p-5">
-            <h2 className="text-[20px] font-bold text-slate-800 mb-1">
+          <div className="p-5" style={{ background: 'var(--surface-card)', backdropFilter: 'var(--blur-panel)' }}>
+            <h2 className="text-[20px] font-bold mb-1" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
               Ideas &amp; Demos for Review
             </h2>
-            <p className="text-[14px] italic text-slate-600 leading-relaxed mb-5 max-w-[720px]">
+            <p className="text-[14px] italic leading-relaxed mb-5 max-w-[720px]" style={{ color: 'var(--text-muted)' }}>
               These are proposals and previews under discussion. Comment on any
               item below before we fold it into the official zones.
             </p>
@@ -522,13 +556,13 @@ export default function GainsDemoPage() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-slate-700 mb-2">
+                    <p className="text-[13px] font-medium mb-2">
                       Six voices to choose from. All six read the intro below.
                       Have a listen and tell us which one you prefer.
                     </p>
                     {SPARK_VOICE_OPTIONS.map((opt) => (
                       <div key={opt.id}>
-                        <p className="text-[12px] font-semibold text-slate-600 mb-1">
+                        <p className="text-[12px] font-semibold mb-1" style={{ color: 'var(--text-warm)' }}>
                           Spark {opt.id}
                         </p>
                         <audio
@@ -540,7 +574,7 @@ export default function GainsDemoPage() {
                         />
                       </div>
                     ))}
-                    <p className="text-[13px] text-slate-700 leading-relaxed">
+                    <p className="text-[13px] leading-relaxed">
                       {SPARK_INTRO_LINE}
                     </p>
                   </div>
@@ -560,8 +594,11 @@ export default function GainsDemoPage() {
                   No scoring, nothing to get wrong. Try it here in the phone
                   frame.
                 </p>
-                <p className="mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-3.5 py-2.5 text-[13px] text-slate-700">
-                  <strong className="font-semibold">Reading it for now.</strong>{' '}
+                <p
+                  className="mb-3 rounded-2xl px-3.5 py-2.5 text-[13px]"
+                  style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)' }}
+                >
+                  <strong className="font-semibold" style={{ color: 'var(--text-warm)' }}>Reading it for now.</strong>{' '}
                   Once we settle on Spark&apos;s voice (item 2 above), we will
                   add audio narration so each of these lines is read aloud
                   instead.
@@ -580,8 +617,8 @@ export default function GainsDemoPage() {
                     the app. Back to normal from sm: up, where there is room. */}
                 <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
                   <div
-                    className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
+                    className="relative w-full overflow-hidden rounded-3xl"
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
                   >
                     <BodyMapping />
                   </div>
@@ -605,8 +642,8 @@ export default function GainsDemoPage() {
                 </p>
                 <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
                   <div
-                    className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
+                    className="relative w-full overflow-hidden rounded-3xl"
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
                   >
                     <MindfulnessCalmPlace />
                   </div>
@@ -628,8 +665,8 @@ export default function GainsDemoPage() {
                 </p>
                 <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
                   <div
-                    className="relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
+                    className="relative w-full overflow-hidden rounded-3xl"
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
                   >
                     <ElevatorPitch />
                   </div>
@@ -646,12 +683,12 @@ export default function GainsDemoPage() {
           rather than being buried below it. */}
       <section className="mb-10">
         <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
-          <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
+          <h2 className="text-[14px] font-semibold uppercase" style={SECTION_LABEL_STYLE}>
             World and Development Map
           </h2>
-          <span className="text-[12px] text-slate-400 italic">updated as we go</span>
+          <span className="text-[12px] italic" style={{ color: 'var(--text-faint)' }}>updated as we go</span>
         </div>
-        <div className="bg-white rounded-2xl shadow-card p-5">
+        <div className="rounded-[24px] p-5" style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}>
           <div className="flex flex-col lg:flex-row gap-5">
             <div className="lg:w-[220px] flex-shrink-0 mx-auto lg:mx-0 w-[180px]">
               <img
@@ -659,30 +696,31 @@ export default function GainsDemoPage() {
                 alt="The world of The Long Light — the climb from the dark valley to the Beacon"
                 loading="lazy"
                 className="w-full rounded-2xl"
+                style={{ boxShadow: 'var(--shadow-md)' }}
               />
             </div>
             <div className="flex-1 overflow-x-auto">
               <table className="w-full min-w-[720px] text-[13px] leading-relaxed border-collapse">
                 <thead>
-                  <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Zone &amp; scenery</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Video</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Activity</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Gear</th>
-                    <th className="px-3 py-2 border-b-2 border-slate-300 align-bottom">Clinical goal</th>
+                  <tr className="text-left text-[11px] uppercase" style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)' }}>
+                    <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Zone &amp; scenery</th>
+                    <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Video</th>
+                    <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Activity</th>
+                    <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Gear</th>
+                    <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Clinical goal</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ZONE_MAP_ROWS.map((r) => (
                     <tr key={r.zone} className="align-top">
-                      <td className="px-3 py-2.5 border-b border-slate-200">
-                        <span className="font-semibold whitespace-nowrap text-slate-800">{r.zone}</span>
-                        <span className="block text-[12px] text-slate-500">{r.scene}</span>
+                      <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)' }}>
+                        <span className="font-semibold whitespace-nowrap" style={{ color: 'var(--text-bright)' }}>{r.zone}</span>
+                        <span className="block text-[12px]" style={{ color: 'var(--text-faint)' }}>{r.scene}</span>
                       </td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.video}</td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.activity}</td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.gear}</td>
-                      <td className="px-3 py-2.5 border-b border-slate-200 text-slate-700">{r.goal}</td>
+                      <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)', color: 'var(--text-body)' }}>{r.video}</td>
+                      <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)', color: 'var(--text-body)' }}>{r.activity}</td>
+                      <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)', color: 'var(--text-body)' }}>{r.gear}</td>
+                      <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)', color: 'var(--text-body)' }}>{r.goal}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -697,31 +735,34 @@ export default function GainsDemoPage() {
           longer soliciting comment) but aren't built yet. Review → World &
           Development Map → In Development → the official zones/canon below. */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
           In Development
         </h2>
-        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
           Adopted by the team and moving toward being built, but not part of
           the official breakdown yet.
         </p>
-        <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
+        <div
+          className="rounded-[24px] p-5"
+          style={{ background: 'var(--surface-card)', border: '1px dashed var(--border-strong)', backdropFilter: 'var(--blur-panel)' }}
+        >
           <div className="mb-3">
             <Pill icon={HardHat}>In development</Pill>
           </div>
-          <h3 className="text-[15px] font-bold text-slate-800 mb-2">
+          <h3 className="text-[15px] font-bold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
             Final Boss: the summit script
           </h3>
-          <p className="mb-3 italic text-slate-600 text-[14px]">
+          <p className="mb-3 italic text-[14px]" style={{ color: 'var(--text-muted)' }}>
             Holly’s first-draft script for the final summit: the last climb
             to the Beacon, where the gear you’ve earned helps you move past
             mixed feelings about starting therapy. Adopted; the actual
             summit sequence isn’t built yet.
           </p>
-          <div className="space-y-2 text-[14px] text-slate-700 leading-relaxed">
+          <div className="space-y-2 text-[14px] leading-relaxed" style={{ color: 'var(--text-body)' }}>
             {FINAL_BOSS_SCRIPT.map((line, i) => {
               if (line.type === 'direction') {
                 return (
-                  <p key={i} className="italic text-slate-500">
+                  <p key={i} className="italic" style={{ color: 'var(--text-faint)' }}>
                     {line.text}
                   </p>
                 )
@@ -737,13 +778,13 @@ export default function GainsDemoPage() {
               }
               return (
                 <p key={i}>
-                  <span className="font-semibold text-slate-800">Spark:</span>{' '}
+                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>Spark:</span>{' '}
                   {line.text}
                 </p>
               )
             })}
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100">
+          <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-soft)' }}>
             <FeedbackButton
               program="gains-teens"
               sections={GAINS_FEEDBACK_SECTIONS}
@@ -757,7 +798,7 @@ export default function GainsDemoPage() {
 
       {/* B. Child Assent & Measures */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-3">
+        <h2 className="text-[14px] font-semibold uppercase mb-3" style={SECTION_LABEL_STYLE}>
           Child Assent &amp; Measures
         </h2>
         <InDevelopmentCard label="In development." note="Assent flow and pre/post measures not identified yet." />
@@ -765,10 +806,10 @@ export default function GainsDemoPage() {
 
       {/* C. Playable Character (single protagonist) */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
           Playable Character
         </h2>
-        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
           You play as the Traveler.
         </p>
         {/* The four-stage progression is a proposal for now — it lives in
@@ -785,10 +826,10 @@ export default function GainsDemoPage() {
       {/* C2. NPCs — the four symptom creatures. (Spark's card sits in the
           review section at the top while his voice model is under review.) */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
           NPCs
         </h2>
-        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
           The characters you meet along the way. Voice lines to come.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
@@ -800,7 +841,7 @@ export default function GainsDemoPage() {
 
       {/* D. The game flow — Exposition → Zone 1 → Zone 5 */}
       <section className="mb-4">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600">
+        <h2 className="text-[14px] font-semibold uppercase" style={SECTION_LABEL_STYLE}>
           The climb
         </h2>
       </section>
@@ -816,22 +857,22 @@ export default function GainsDemoPage() {
           its presentation. Flow into a real Zone 1 isn't wired yet, hence
           the pill. */}
       <section className="mb-8">
-        <h3 className="text-[18px] font-bold text-slate-800">Exposition</h3>
-        <p className="text-[13px] text-slate-500 mb-3">
+        <h3 className="text-[18px] font-bold" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>Exposition</h3>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--text-muted)' }}>
           The opening that sets up the world, before Zone 1. Restyled to the
           Shadowmend design system (Draft 49) as the proof of concept —
           flow into Zone 1 is still in development.
         </p>
         <div className="mb-3 flex items-center gap-2 flex-wrap">
           <Pill icon={HardHat}>In development</Pill>
-          <span className="text-[12px] text-slate-500 italic">
+          <span className="text-[12px] italic" style={{ color: 'var(--text-faint)' }}>
             Shadowmend styling adopted, flow to Zone 1 pending
           </span>
         </div>
         <div className="-mx-4 sm:mx-0 sm:w-full sm:max-w-[360px]">
           <div
-            className="gains-theme relative w-full overflow-hidden rounded-3xl border border-slate-200 shadow-card"
-            style={{ aspectRatio: '360 / 780', minHeight: '780px' }}
+            className="relative w-full overflow-hidden rounded-3xl"
+            style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
           >
             <ExpositionIntro line={SPARK_INTRO_LINE} />
           </div>
@@ -846,10 +887,10 @@ export default function GainsDemoPage() {
           proposals the team adopted on 2026-08-13 (arcade ideas, gear toolbox)
           which moved down here out of Ideas & Demos for Review. */}
       <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase tracking-wide text-slate-600 mb-2">
+        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
           Prototypes and In Development
         </h2>
-        <p className="text-[13px] text-slate-500 italic mb-4 max-w-[760px]">
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
           Playable traversals, both built on the same game engine. Both of these
           traversal games will be fully developed. Below them are the pieces the
           team has adopted and that are now being built out.
@@ -871,41 +912,49 @@ export default function GainsDemoPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-[760px] mt-3">
           {/* Adopted 2026-08-13, moved from Ideas & Demos for Review */}
-          <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
+          <div
+            className="rounded-[24px] p-5"
+            style={{ background: 'var(--surface-card)', border: '1px dashed var(--border-strong)', backdropFilter: 'var(--blur-panel)' }}
+          >
             <div className="mb-3">
               <Pill icon={HardHat}>In development</Pill>
             </div>
-            <h3 className="text-[15px] font-bold text-slate-800 mb-2">
+            <h3 className="text-[15px] font-bold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
               New arcade activities
             </h3>
-            <div className="space-y-3 text-[13px] text-slate-700">
+            <div className="space-y-3 text-[13px]" style={{ color: 'var(--text-body)' }}>
               {REVIEW_ARCADES.map((a) => (
                 <div key={a.title}>
-                  <p className="font-semibold text-slate-800">{a.title}</p>
+                  <p className="font-semibold" style={{ color: 'var(--text-bright)' }}>{a.title}</p>
                   <p className="leading-relaxed">{a.body}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-card p-5 border-2 border-dashed border-slate-200">
+          <div
+            className="rounded-[24px] p-5"
+            style={{ background: 'var(--surface-card)', border: '1px dashed var(--border-strong)', backdropFilter: 'var(--blur-panel)' }}
+          >
             <div className="mb-3">
               <Pill icon={HardHat}>In development</Pill>
             </div>
-            <h3 className="text-[15px] font-bold text-slate-800 mb-2">
+            <h3 className="text-[15px] font-bold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
               The gear that evolves: a growing toolbox
             </h3>
-            <div className="space-y-2 text-[13px] text-slate-700">
+            <div className="space-y-2 text-[13px]" style={{ color: 'var(--text-body)' }}>
               {REVIEW_GEAR_POINTS.map((p, i) => (
                 <p key={i} className="leading-relaxed">{p}</p>
               ))}
             </div>
-            <p className="text-[13px] italic text-slate-700 border-l-2 border-amber-300 pl-3 mt-3">
+            <p className="text-[13px] italic pl-3 mt-3" style={{ color: 'var(--text-muted)', borderLeft: '2px solid var(--border-warm)' }}>
               {REVIEW_GEAR_THEME}
             </p>
           </div>
         </div>
       </section>
+      </div>
+      </div>
     </DemoPageLayout>
   )
 }
@@ -916,12 +965,12 @@ export default function GainsDemoPage() {
 // that item's feedback section tag.
 function ReviewItem({ n, title, section, children }) {
   return (
-    <article className="bg-white rounded-2xl border border-amber-200 p-5">
-      <h3 className="text-[16px] font-semibold text-slate-800 mb-2">
-        <span className="text-amber-700">{n}.</span> {title}
+    <article className="rounded-[20px] p-5" style={{ background: 'var(--surface-card-raised)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}>
+      <h3 className="text-[16px] font-semibold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
+        <span style={{ color: 'var(--text-warm)' }}>{n}.</span> {title}
       </h3>
-      <div className="text-[14px] text-slate-700 leading-relaxed">{children}</div>
-      <div className="mt-4 pt-3 border-t border-amber-100">
+      <div className="text-[14px] leading-relaxed" style={{ color: 'var(--text-body)' }}>{children}</div>
+      <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-soft)' }}>
         <FeedbackButton
           program="gains-teens"
           sections={GAINS_FEEDBACK_SECTIONS}
@@ -936,10 +985,13 @@ function ReviewItem({ n, title, section, children }) {
 
 function InDevelopmentCard({ label, note }) {
   return (
-    <div className="bg-white rounded-2xl shadow-card p-8 max-w-[760px] border-2 border-dashed border-slate-200 text-center">
-      <HardHat size={28} strokeWidth={1.5} className="text-slate-400 mx-auto mb-3" />
-      <p className="text-[16px] font-semibold text-slate-700 mb-1">{label}</p>
-      {note && <p className="text-[13px] text-slate-500">{note}</p>}
+    <div
+      className="rounded-[24px] p-8 max-w-[760px] text-center"
+      style={{ background: 'var(--surface-card)', border: '1px dashed var(--border-strong)', backdropFilter: 'var(--blur-panel)' }}
+    >
+      <HardHat size={28} strokeWidth={1.5} className="mx-auto mb-3" style={{ color: 'var(--text-faint)' }} />
+      <p className="text-[16px] font-semibold mb-1" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-body)' }}>{label}</p>
+      {note && <p className="text-[13px]" style={{ color: 'var(--text-faint)' }}>{note}</p>}
     </div>
   )
 }
@@ -951,12 +1003,16 @@ function InDevelopmentCard({ label, note }) {
 // Handles a dashed placeholder when art isn't ready.
 function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
   return (
-    <figure className="bg-white rounded-2xl shadow-card p-3 flex flex-col">
+    <figure
+      className="rounded-[20px] p-3 flex flex-col"
+      style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}
+    >
       {placeholder ? (
         <div
           role="img"
           aria-label={`${name} — art in progress`}
-          className="w-full aspect-[3/4] bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-[13px] italic mb-3"
+          className="w-full aspect-[3/4] rounded-xl flex items-center justify-center text-[13px] italic mb-3"
+          style={{ background: 'rgba(255,247,234,.06)', border: '2px dashed var(--border-soft)', color: 'var(--text-faint)' }}
         >
           Redesign in progress
         </div>
@@ -972,13 +1028,11 @@ function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
         />
       )}
       <figcaption className="flex-1">
-        <h4 className="text-[14px] font-semibold text-slate-800 leading-tight">{name}</h4>
+        <h4 className="text-[14px] font-semibold leading-tight" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>{name}</h4>
         {tag && (
-          <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1 text-[11px] font-medium bg-ctac-teal-100 text-ctac-teal-800">
-            {tag}
-          </span>
+          <GainsBadge tone="water" style={{ marginTop: 4, height: 22, fontSize: 10 }}>{tag}</GainsBadge>
         )}
-        {blurb && <p className="text-[12px] text-slate-600 leading-relaxed mt-1.5">{blurb}</p>}
+        {blurb && <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-muted)' }}>{blurb}</p>}
       </figcaption>
     </figure>
   )
@@ -986,7 +1040,10 @@ function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
 
 function PrototypeCard({ img, title, blurb, href }) {
   return (
-    <article className="bg-white rounded-2xl shadow-card p-4 flex gap-4">
+    <article
+      className="rounded-[20px] p-4 flex gap-4"
+      style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}
+    >
       <div
         className="flex-shrink-0 w-[74px] overflow-hidden rounded-xl bg-[#05070e]"
         style={{ aspectRatio: '9 / 16' }}
@@ -995,13 +1052,14 @@ function PrototypeCard({ img, title, blurb, href }) {
         <img src={img} alt="" loading="lazy" className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="text-[15px] font-semibold text-slate-800 leading-tight mb-1">
+        <h3 className="text-[15px] font-semibold leading-tight mb-1" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
           {title}
         </h3>
-        <p className="text-[12px] text-slate-600 leading-relaxed mb-3">{blurb}</p>
+        <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{blurb}</p>
         <Link
           to={href}
-          className="inline-flex items-center gap-1.5 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
+          className="inline-flex items-center gap-1.5 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+          style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
         >
           <Play size={13} strokeWidth={2} />
           Play
@@ -1011,22 +1069,27 @@ function PrototypeCard({ img, title, blurb, href }) {
   )
 }
 
+// Draft 50: restyled to the Shadowmend Badge look. Pill is used all over
+// the per-zone/in-development chrome, so restyling it here cascades
+// everywhere it's used rather than touching each call site.
 function Pill({ icon: Icon, children }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
-      <Icon size={13} strokeWidth={2} />
+    <GainsBadge tone="warm" icon={<Icon size={13} strokeWidth={2} />} style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 'var(--weight-medium)' }}>
       {children}
-    </span>
+    </GainsBadge>
   )
 }
 
 function Beat({ label, children }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-wide text-slate-400 font-semibold mb-1.5">
+      <div
+        className="text-[11px] uppercase font-semibold mb-1.5"
+        style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+      >
         {label}
       </div>
-      <div className="text-[14px] text-slate-700 leading-relaxed">{children}</div>
+      <div className="text-[14px] leading-relaxed" style={{ color: 'var(--text-body)' }}>{children}</div>
     </div>
   )
 }
@@ -1038,11 +1101,15 @@ function CharacterChips({ names }) {
         const c = CHAR[key]
         if (!c) return null
         return (
-          <span key={key} className="inline-flex items-center gap-1.5 bg-slate-100 rounded-full pl-1 pr-3 py-1">
+          <span
+            key={key}
+            className="inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1"
+            style={{ background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
+          >
             <img src={c.src} alt="" loading="lazy" className="w-6 h-6 rounded-full object-cover" />
-            <span className="text-[12px] font-medium text-slate-700">
+            <span className="text-[12px] font-medium" style={{ color: 'var(--text-body)' }}>
               {c.name}
-              {c.role ? <span className="text-slate-400"> · {c.role}</span> : null}
+              {c.role ? <span style={{ color: 'var(--text-faint)' }}> · {c.role}</span> : null}
             </span>
           </span>
         )
@@ -1055,14 +1122,17 @@ function ZoneSection({ zone }) {
   const t = zone.traversal
   return (
     <section className="mb-8">
-      <h3 className="text-[18px] font-bold text-slate-800">
+      <h3 className="text-[18px] font-bold" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
         {zone.n} · {zone.name}
       </h3>
-      <p className="text-[13px] text-slate-500 mb-3">{zone.scenery}</p>
+      <p className="text-[13px] mb-3" style={{ color: 'var(--text-muted)' }}>{zone.scenery}</p>
 
-      <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col md:flex-row gap-5">
+      <div
+        className="rounded-[24px] p-5 flex flex-col md:flex-row gap-5"
+        style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}
+      >
         <div className="md:w-[190px] flex-shrink-0 mx-auto md:mx-0 w-[150px]">
-          <img src={zone.image} alt={`${zone.name} — zone plate`} loading="lazy" className="w-full rounded-2xl" />
+          <img src={zone.image} alt={`${zone.name} — zone plate`} loading="lazy" className="w-full rounded-2xl" style={{ boxShadow: 'var(--shadow-md)' }} />
         </div>
 
         <div className="flex-1 space-y-4 min-w-0">
@@ -1075,19 +1145,22 @@ function ZoneSection({ zone }) {
               {zone.videos.map((v) => (
                 <div key={v.title}>
                   <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
-                    <span className="font-semibold text-slate-800">{v.title}</span>
-                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
+                    <span className="font-semibold" style={{ color: 'var(--text-bright)' }}>{v.title}</span>
+                    <span
+                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium whitespace-nowrap"
+                      style={{ background: 'var(--action-quiet)', color: 'var(--text-muted)' }}
+                    >
                       {v.duration}
                     </span>
                   </div>
                   <div className="mb-2">
                     <Pill icon={Film}>Video in production</Pill>
                   </div>
-                  {v.note && <p className="text-[12px] italic text-slate-500 mb-1.5">{v.note}</p>}
+                  {v.note && <p className="text-[12px] italic mb-1.5" style={{ color: 'var(--text-faint)' }}>{v.note}</p>}
                   {v.pending ? (
-                    <p className="text-[13px] italic text-slate-500">{v.pendingNote}</p>
+                    <p className="text-[13px] italic" style={{ color: 'var(--text-faint)' }}>{v.pendingNote}</p>
                   ) : (
-                    <p className="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line">{v.script}</p>
+                    <p className="text-[13px] leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-body)' }}>{v.script}</p>
                   )}
                 </div>
               ))}
@@ -1096,12 +1169,12 @@ function ZoneSection({ zone }) {
 
           <Beat label="Activity">
             <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
-              <span className="font-semibold text-slate-800">{zone.activity.title}</span>
+              <span className="font-semibold" style={{ color: 'var(--text-bright)' }}>{zone.activity.title}</span>
               <Pill icon={HardHat}>
                 {zone.activity.pending ? 'To be designed' : 'Interactive version in development'}
               </Pill>
             </div>
-            <div className="text-[13px] text-slate-700 leading-relaxed">{zone.activity.desc}</div>
+            <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-body)' }}>{zone.activity.desc}</div>
           </Beat>
 
           {zone.synopsis && (
@@ -1109,7 +1182,7 @@ function ZoneSection({ zone }) {
               <div className="mb-1.5">
                 <Pill icon={HardHat}>In development</Pill>
               </div>
-              <div className="text-[13px] text-slate-700 leading-relaxed">{zone.synopsis.desc}</div>
+              <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-body)' }}>{zone.synopsis.desc}</div>
             </Beat>
           )}
 
@@ -1121,7 +1194,8 @@ function ZoneSection({ zone }) {
                 <p className="mb-2">{t.text}</p>
                 <Link
                   to={t.playHref || '/gains-demo/traversal'}
-                  className="inline-flex items-center gap-2 bg-ctac-teal-500 hover:bg-ctac-teal-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
+                  className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
                 >
                   <Play size={14} strokeWidth={2} />
                   {t.playLabel || 'Play the traversal prototype'}

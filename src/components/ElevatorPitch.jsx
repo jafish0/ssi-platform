@@ -121,12 +121,13 @@ function SelectStep({ options, selected, onChange }) {
           onChange={(e) => onChange(e.target.value)}
           placeholder="Write your own"
           autoFocus
-          className="w-full text-[14px] px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+          className="w-full text-[14px] px-3 py-2.5 rounded-2xl focus:outline-none"
+          style={{ background: 'var(--action-quiet)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
         />
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="text-[12px] font-semibold text-amber-700 hover:text-amber-900 underline"
+          className="text-[12px] font-semibold underline text-[var(--text-warm)] hover:text-[var(--brand-flame)] transition-colors"
         >
           Choose from the list instead
         </button>
@@ -142,11 +143,11 @@ function SelectStep({ options, selected, onChange }) {
           type="button"
           onClick={() => onChange(opt)}
           aria-pressed={selected === opt}
-          className={
-            'w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border transition-colors ' +
-            (selected === opt
-              ? 'bg-amber-500 border-amber-500 text-white font-semibold'
-              : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300')
+          className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border transition-colors"
+          style={
+            selected === opt
+              ? { background: 'var(--action-primary)', borderColor: 'var(--action-primary)', color: 'var(--text-on-warm)', fontWeight: 'var(--weight-bold)' }
+              : { background: 'var(--action-quiet)', borderColor: 'var(--border-soft)', color: 'var(--text-body)' }
           }
         >
           {opt}
@@ -155,7 +156,8 @@ function SelectStep({ options, selected, onChange }) {
       <button
         type="button"
         onClick={() => onChange('')}
-        className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border border-dashed border-slate-300 text-slate-500 hover:border-amber-300"
+        className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border border-dashed hover:border-[var(--border-warm)] hover:text-[var(--text-warm)] transition-colors"
+        style={{ borderColor: 'var(--border-soft)', color: 'var(--text-faint)' }}
       >
         Write your own
       </button>
@@ -223,7 +225,7 @@ export default function ElevatorPitch() {
   }
 
   return (
-    <div className="relative flex flex-col h-full w-full bg-slate-900 overflow-hidden">
+    <div className="relative flex flex-col h-full w-full overflow-hidden" style={{ background: 'var(--surface-abyss)', fontFamily: 'var(--font-core)' }}>
       <img
         src={`${ART}/bridge-bg.webp`}
         alt="A rope bridge over the Mistfields, reaching toward a far cliff"
@@ -234,79 +236,86 @@ export default function ElevatorPitch() {
           mist), so the message-builder card sits near the top on its own
           scrim, leaving that part of the scene clear. */}
       <div className="relative px-4 pt-4 pb-5 bg-gradient-to-b from-slate-950/90 via-slate-950/75 to-transparent">
-        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase text-amber-300 mb-1">
+        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-1" style={{ color: 'var(--text-warm)' }}>
           Zone 3 · Message to Your Guardian
         </div>
 
-        <div className="bg-white/95 backdrop-blur rounded-2xl px-3.5 py-3">
+        <div
+          className="rounded-2xl px-3.5 py-3"
+          style={{ background: 'var(--surface-sheet)', backdropFilter: 'var(--blur-sheet)', border: '1px solid var(--border-soft)' }}
+        >
           {step === 'intro' && (
-            <p className="text-[13px] text-slate-700 leading-relaxed">{SPARK_INTRO}</p>
+            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-bright)' }}>{SPARK_INTRO}</p>
           )}
 
           {promptLabel && (
-            <p className="text-[11px] font-bold uppercase tracking-wide text-amber-600 mb-1">
+            <p className="text-[11px] font-bold uppercase mb-1" style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-warm)' }}>
               {promptLabel} of 6
             </p>
           )}
 
           {step === 'greeting' && (
             <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
               <input
                 type="text"
                 value={greeting}
                 onChange={(e) => setGreeting(e.target.value)}
                 placeholder="hey Dad"
-                className="w-full text-[14px] px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl focus:outline-none focus:border-amber-400"
+                className="w-full text-[14px] px-3 py-2.5 rounded-2xl focus:outline-none"
+                style={{ background: 'var(--action-quiet)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
               />
             </>
           )}
 
           {step === 'situation' && (
             <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
               <SelectStep options={SITUATION_OPTIONS} selected={situation} onChange={setSituation} />
             </>
           )}
 
           {step === 'request' && (
             <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
               <SelectStep options={REQUEST_OPTIONS} selected={request} onChange={setRequest} />
             </>
           )}
 
           {step === 'normalize' && (
             <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
               <SelectStep options={NORMALIZE_OPTIONS} selected={normalize} onChange={setNormalize} />
             </>
           )}
 
           {step === 'offer' && (
             <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
               <SelectStep options={OFFER_OPTIONS} selected={offer} onChange={setOffer} />
             </>
           )}
 
           {step === 'help' && (
             <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">{promptText}</p>
+              <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
               <SelectStep options={HELP_OPTIONS} selected={help} onChange={setHelp} />
             </>
           )}
 
           {step === 'review' && (
             <>
-              <p className="text-[13px] font-semibold text-slate-800 mb-2">Here’s your message:</p>
-              <p className="text-[14px] text-slate-800 leading-relaxed italic border-l-2 border-amber-300 pl-3">
+              <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>Here’s your message:</p>
+              <p className="text-[14px] leading-relaxed italic pl-3" style={{ color: 'var(--text-bright)', borderLeft: '2px solid var(--border-warm)' }}>
                 {message}
               </p>
-              <p className="text-[12px] text-slate-500 mt-2">
+              <p className="text-[12px] mt-2" style={{ color: 'var(--text-muted)' }}>
                 You can go back and change any part before you save it.
               </p>
-              <p className="text-[12px] text-slate-600 mt-2 bg-amber-50 border border-amber-200 rounded-2xl px-3 py-2">
+              <p
+                className="text-[12px] mt-2 rounded-2xl px-3 py-2"
+                style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
+              >
                 {REASSURANCE}
               </p>
             </>
@@ -317,15 +326,18 @@ export default function ElevatorPitch() {
               Wingsuit award -- it used to sit alongside the Wingsuit message
               on `done`, below. */}
           {step === 'safety' && (
-            <p className="text-[13px] text-slate-700 leading-relaxed bg-amber-50 border border-amber-300 rounded-2xl px-3 py-2.5">
+            <p
+              className="text-[13px] leading-relaxed rounded-2xl px-3 py-2.5"
+              style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
+            >
               {SAFETY_DISCLAIMER}
             </p>
           )}
 
           {step === 'done' && (
             <>
-              <p className="font-extrabold text-amber-700 text-[13px] mb-1">You did it</p>
-              <p className="text-[13px] text-slate-700 leading-relaxed">
+              <p className="font-extrabold text-[13px] mb-1" style={{ color: 'var(--text-warm)' }}>You did it</p>
+              <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-bright)' }}>
                 That’s a strong message to carry with you. When the moment feels
                 right, you’ll know just what to say. Take this with you: a
                 Wingsuit. It’ll help you cross the bridge ahead.
@@ -339,14 +351,16 @@ export default function ElevatorPitch() {
             <button
               type="button"
               onClick={() => setStep('situation')}
-              className="flex-1 py-2.5 rounded-full bg-white/90 hover:bg-white text-amber-700 text-[14px] font-extrabold"
+              className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
+              style={{ background: 'var(--action-quiet)', color: 'var(--text-bright)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}
             >
               Change something
             </button>
             <button
               type="button"
               onClick={save}
-              className="flex-1 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[14px] font-extrabold"
+              className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
               Save It
             </button>
@@ -365,7 +379,8 @@ export default function ElevatorPitch() {
               (step === 'request' && !request) ||
               (step === 'help' && !help)
             }
-            className="w-full mt-2.5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-[15px] font-extrabold"
+            className="w-full mt-2.5 py-2.5 rounded-full disabled:opacity-[.42] disabled:cursor-not-allowed text-[15px] font-extrabold"
+            style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
           >
             Continue
           </button>
@@ -375,7 +390,7 @@ export default function ElevatorPitch() {
           <button
             type="button"
             onClick={restart}
-            className="w-full mt-2.5 py-2 text-[13px] font-semibold text-amber-200 hover:text-white underline"
+            className="w-full mt-2.5 py-2 text-[13px] font-semibold underline text-[var(--text-warm)] hover:text-[var(--text-bright)] transition-colors"
           >
             Start over
           </button>
