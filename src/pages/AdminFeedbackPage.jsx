@@ -37,6 +37,7 @@ const PROGRAMS = [
 const SECTION_LABELS = {
   // Ideas & Demos for Review (proposals staged above the official breakdown)
   'review-finalboss': 'Review: Final Boss summit script',
+  'review-videos': 'Review: Zone videos',
   'review-exposition': 'Review: Exposition',
   'review-character': 'Review: Character progression',
   'review-arcades': 'Review: Arcade ideas',

@@ -33,14 +33,17 @@ import '../styles/gains-tokens.css'
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
   { value: 'review-finalboss', label: 'Review: Final Boss summit script' },
-  { value: 'review-character', label: 'Review: Character progression' },
+  { value: 'review-videos', label: 'Review: Zone videos' },
   // Retired as their proposals were adopted (labels are kept in
-  // AdminFeedbackPage so existing rows still read correctly):
+  // AdminFeedbackPage so existing rows still label correctly):
   //   review-rename     — the zone rename, accepted 2026-08-11, now canon
   //   review-exposition — adopted 2026-08-13, now the Exposition section
   //   review-arcades    — adopted 2026-08-13, now under Prototypes and In Development
   //   review-gear       — adopted 2026-08-13, now under Prototypes and In Development
-  { value: 'review-spark-voice', label: "Review: Spark's voice" },
+  //   review-character  — adopted 2026-08-27 (Draft 51), now the Playable
+  //                       Character section's four-stage strip
+  //   review-spark-voice — decided 2026-08-27 (Draft 51): Option F: see the
+  //                        Narrator card in Playable Character
   { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
   { value: 'review-mindfulness', label: 'Review: Mindfulness Calm Place' },
   { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
@@ -64,27 +67,6 @@ const AUDIO = '/long-light/audio'
 // page -- one definition instead of restating the same style object at
 // each of the ~7 call sites.
 const SECTION_LABEL_STYLE = { letterSpacing: 'var(--tracking-caps)', color: 'var(--text-warm)', fontFamily: 'var(--font-core)' }
-
-// Spark's voice contenders (Draft 28, expanded to six in Draft 43). Neutral
-// labels on purpose, no per-voice description or commentary anywhere: the
-// team is picking blind, so nothing here should hint at a favourite. The
-// files live in public/long-light/audio/ and are mirrored from the staging
-// copy in Gains for Teens/long-light-site/audio/.
-//
-// ?v=3 cache-busts a/b/c, which reuse their Draft 28/29 filenames with new
-// audio; d/e/f are new filenames so don't strictly need it, but every URL
-// gets the same query for consistency and to directly guarantee "no stale
-// audio plays" rather than resting on Cache-Control: must-revalidate
-// (already confirmed correct against the live host, but a version bump
-// removes any doubt without costing anything).
-const SPARK_VOICE_OPTIONS = [
-  { id: 'A', file: 'a' },
-  { id: 'B', file: 'b' },
-  { id: 'C', file: 'c' },
-  { id: 'D', file: 'd' },
-  { id: 'E', file: 'e' },
-  { id: 'F', file: 'f' },
-]
 
 // ---------- NPCs (Draft 20) ----------
 // Spark's intro line is VERBATIM (all-ASCII source: straight apostrophes) —
@@ -186,11 +168,23 @@ const ZONE_MAP_ROWS = [
   },
 ]
 
-// ---------- Ideas & Demos for Review (Draft 24) ----------
+// ---------- Ideas & Demos for Review (Draft 24, reordered Draft 51) ----------
 // A staging area at the top of the page: proposals and previews the team
-// comments on BEFORE they're folded into the official zone breakdown. Items
-// 3–5 are text-only; items 1, 2 and 6 are things moved up out of their
-// official spots while they're under discussion.
+// comments on BEFORE they're folded into the official zone breakdown.
+
+// Draft 51: the five zone psychoeducation videos, added to the top of the
+// review section as their own group. Each Vimeo link is unlisted (a privacy
+// hash, not a public video), so they're embedded via player.vimeo.com's own
+// `?h=` hash-embed URL rather than the public vimeo.com/{id} page -- that's
+// the standard, non-awkward way to embed an unlisted Vimeo video anywhere.
+const REVIEW_VIDEOS = [
+  { title: 'Zone 1 — What is Trauma', id: '1222082001', h: 'c65abe5b9f' },
+  { title: 'Zone 2 — The Four Reactions', id: '1222089263', h: 'd3825818f8' },
+  { title: 'Zone 3 — Getting the Best Therapy', id: '1222097986', h: '4c7cf651e2' },
+  { title: 'Zone 4 — What Therapy Feels Like', id: '1222092263', h: 'bca4fdcea9' },
+  { title: 'Zone 5 — Growth Mindset', id: '1222095414', h: '82f1e6b6f1' },
+]
+
 const REVIEW_ARCADES = [
   {
     title: 'Reaching the Lantern Path — a slower, revealing arcade',
@@ -518,72 +512,26 @@ export default function GainsDemoPage() {
               {/* Adopted and moved out of this section: the Exposition (now
                   its own section under The climb), the arcade ideas and the
                   gear toolbox (both now under Prototypes and In Development),
-                  and the Final Boss summit script (now in the new In
-                  Development section below, since the team adopted it). */}
+                  the Final Boss summit script (now in the new In Development
+                  section below), the character-progression strip (now the
+                  Playable Character section) and Spark's voice picker (now
+                  decided -- see the Narrator card in Playable Character). */}
 
-              {/* 1 — How the character changes */}
-              <ReviewItem
-                n={1}
-                title="How the character changes"
-                section="review-character"
-              >
+              {/* 1 — the five zone psychoeducation videos (Draft 51) */}
+              <ReviewItem n={1} title="Videos" section="review-videos">
                 <p className="mb-3">
-                  One traveler, the whole way up. The darkness they arrive with
-                  lightens as they climb, until everyone can see the person
-                  they’ve always been.
+                  The five zone psychoeducation videos, one per zone.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[680px]">
-                  {TRAVELER_STAGES.map((c) => (
-                    <ArtCard key={c.name} {...c} uniform />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {REVIEW_VIDEOS.map((v) => (
+                    <ReviewVideo key={v.id} {...v} />
                   ))}
                 </div>
               </ReviewItem>
 
-              {/* 3 — Spark's voice: six contenders, plain labels only, no
-                  per-voice commentary (Draft 43). */}
+              {/* 2 — Body Mapping activity (playable) */}
               <ReviewItem
                 n={2}
-                title="Spark’s voice (six options)"
-                section="review-spark-voice"
-              >
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-shrink-0 mx-auto sm:mx-0 w-[110px]">
-                    <img
-                      src={`${ART}/narrator-spark.webp`}
-                      alt="Spark — the narrator and guide"
-                      loading="lazy"
-                      className="w-full h-auto rounded-2xl"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium mb-2">
-                      Six voices to choose from. All six read the intro below.
-                      Have a listen and tell us which one you prefer.
-                    </p>
-                    {SPARK_VOICE_OPTIONS.map((opt) => (
-                      <div key={opt.id}>
-                        <p className="text-[12px] font-semibold mb-1" style={{ color: 'var(--text-warm)' }}>
-                          Spark {opt.id}
-                        </p>
-                        <audio
-                          controls
-                          preload="metadata"
-                          src={`${AUDIO}/spark-voice-${opt.file}.mp3?v=3`}
-                          aria-label={`Audio: Spark ${opt.id}`}
-                          className="w-full mb-3"
-                        />
-                      </div>
-                    ))}
-                    <p className="text-[13px] leading-relaxed">
-                      {SPARK_INTRO_LINE}
-                    </p>
-                  </div>
-                </div>
-              </ReviewItem>
-
-              {/* 4 — Body Mapping activity (playable) */}
-              <ReviewItem
-                n={3}
                 title="Body Mapping activity (playable)"
                 section="review-bodymap"
               >
@@ -625,9 +573,9 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 5 — Mindfulness "Calm Place" activity (playable) */}
+              {/* 3 — Mindfulness "Calm Place" activity (playable) */}
               <ReviewItem
-                n={4}
+                n={3}
                 title="Mindfulness: Calm Place (playable)"
                 section="review-mindfulness"
               >
@@ -650,9 +598,9 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 6 — Zone 3 "Elevator Pitch" message-builder (playable) */}
+              {/* 4 — Zone 3 "Elevator Pitch" message-builder (playable) */}
               <ReviewItem
-                n={5}
+                n={4}
                 title="Zone 3: Message to Your Guardian (playable)"
                 section="review-zone3pitch"
               >
@@ -804,22 +752,39 @@ export default function GainsDemoPage() {
         <InDevelopmentCard label="In development." note="Assent flow and pre/post measures not identified yet." />
       </section>
 
-      {/* C. Playable Character (single protagonist) */}
+      {/* C. Playable Character (single protagonist). Draft 51: the four-stage
+          progression strip moved here from Ideas & Demos for Review now that
+          the team's adopted it (it's no longer a proposal), replacing the
+          single generic Traveler card that stood in for it. Spark, labeled
+          Narrator with the team's adopted voice (Option F), lives in this
+          same section too -- this is the "who you play as / who guides you"
+          area, not just the playable character alone. */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
           Playable Character
         </h2>
         <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
-          You play as the Traveler.
+          One traveler, the whole way up. The darkness they arrive with lightens
+          as they climb, until everyone can see the person they’ve always been.
         </p>
-        {/* The four-stage progression is a proposal for now — it lives in
-            Ideas & Demos for Review at the top until the team signs off. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[680px]">
+          {TRAVELER_STAGES.map((c) => (
+            <ArtCard key={c.name} {...c} uniform />
+          ))}
+        </div>
+        <p className="text-[12px] italic mt-3 max-w-[680px]" style={{ color: 'var(--text-faint)' }}>
+          These stage images will be regenerated with an inner light — a glow
+          in the chest that grows brighter across the stages.
+        </p>
+
+        <h3
+          className="text-[12px] font-semibold uppercase mt-6 mb-2"
+          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+        >
+          Narrator
+        </h3>
         <div className="max-w-[220px]">
-          <ArtCard
-            src={`${ART}/avatar-human-traveler.webp`}
-            name="The Traveler"
-            blurb="A young traveler setting out to understand what happened, and to find the way forward."
-          />
+          <NarratorCard />
         </div>
       </section>
 
@@ -1033,6 +998,66 @@ function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
           <GainsBadge tone="water" style={{ marginTop: 4, height: 22, fontSize: 10 }}>{tag}</GainsBadge>
         )}
         {blurb && <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-muted)' }}>{blurb}</p>}
+      </figcaption>
+    </figure>
+  )
+}
+
+// Draft 51: one of the five zone psychoeducation videos in the review
+// section. Vimeo's `?h=` hash-embed URL is the standard way to embed an
+// unlisted video anywhere -- no separate "unlisted" handling needed.
+function ReviewVideo({ title, id, h }) {
+  return (
+    <div>
+      <p className="text-[13px] font-semibold mb-1.5" style={{ color: 'var(--text-bright)' }}>{title}</p>
+      <div
+        className="relative w-full rounded-2xl overflow-hidden"
+        style={{ aspectRatio: '16 / 9', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-md)' }}
+      >
+        <iframe
+          src={`https://player.vimeo.com/video/${id}?h=${h}&title=0&byline=0&portrait=0`}
+          title={title}
+          className="absolute inset-0 w-full h-full"
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    </div>
+  )
+}
+
+// Draft 51: Spark, presented as the Narrator with the team's adopted voice
+// (Option F, decided -- the six-option picker that used to live in the
+// review section is retired). Matches ArtCard's visual language by hand
+// since ArtCard itself has no slot for an <audio> element.
+function NarratorCard() {
+  return (
+    <figure
+      className="rounded-[20px] p-3 flex flex-col"
+      style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}
+    >
+      <img
+        src={`${ART}/narrator-spark.webp`}
+        alt="Spark, the narrator and guide"
+        loading="lazy"
+        className="w-full h-auto rounded-xl mb-3"
+      />
+      <figcaption className="flex-1">
+        <h4 className="text-[14px] font-semibold leading-tight" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
+          Spark
+        </h4>
+        <GainsBadge tone="water" style={{ marginTop: 4, height: 22, fontSize: 10 }}>Narrator</GainsBadge>
+        <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-muted)' }}>
+          Your guide through Shadowmend.
+        </p>
+        <audio
+          controls
+          preload="metadata"
+          src={`${AUDIO}/spark-voice-f.mp3?v=3`}
+          aria-label="Spark's voice sample"
+          className="w-full mt-2"
+        />
       </figcaption>
     </figure>
   )
