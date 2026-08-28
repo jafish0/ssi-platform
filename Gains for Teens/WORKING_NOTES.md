@@ -132,6 +132,32 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **a14dcac** (2026-08-27) — Draft 51: **Demo cleanup — videos into review (top),
+  Spark→Narrator in Characters, Traveler strip→Playable Character.** Styling stays
+  the current design-system look; no activity logic or copy changed.
+  1. Added the five zone psychoeducation videos as a new first item ("Videos") in
+  Ideas & Demos for Review, each embedded via Vimeo's `?h=` privacy-hash URL — the
+  standard way to embed an unlisted video. New `review-videos` feedback section for
+  comments on the group.
+  2. Retired the "Spark's voice (six options)" review item — the team has decided
+  on Option F. Spark now appears in the Playable Character section labeled
+  "Narrator," with his art and a single voice-sample player for the adopted file
+  (`spark-voice-f.mp3`). `SPARK_VOICE_OPTIONS` and the six-player picker were
+  deleted, not just hidden.
+  3. Moved the Traveler four-stage progression ("How the character changes") out of
+  the review section into Playable Character, replacing the single generic
+  Traveler placeholder now that the team's adopted the strip. Added the requested
+  note underneath about the stages getting an inner-light regeneration.
+  Review section now numbers 1–4: Videos, Body Mapping, Mindfulness: Calm Place,
+  Zone 3: Message to Your Guardian. `review-character` and `review-spark-voice`
+  stay in `AdminFeedbackPage`'s label map (retired, not deleted) so historical
+  feedback rows still read correctly; `review-videos` was added there too.
+  **Verified:** confirmed live on ssi.ctac.app — all 5 video iframes render with
+  correct titles and hash-embed URLs; the Narrator card's audio resolves to the
+  right file; the four Traveler stages + the inner-light note render in Playable
+  Character; the retired items are gone and remaining review items renumber
+  correctly (1–4); no console errors; no overflow at 375px; clean build.
+
 - **20082b2** (2026-08-27) — Draft 50: **Roll the Shadowmend design system across
   the whole /gains-demo page.** Extends Draft 49's foundation (the `.gains-theme`
   tokens + the `ds/` primitives) to the entire page. Styling only — no activity
@@ -2580,3 +2606,28 @@ Extend Draft 49's foundation (the `.gains-theme` tokens in `src/styles/gains-tok
 **Verify.** The whole `/gains-demo` reads as one cohesive Shadowmend/Long Light surface (twilight palette, Nunito, soft-bloom motion, amber pill CTAs, 48px targets); every activity still functions exactly as before (Body Map, Mindfulness, Zone 3 all tested end-to-end); the review comment threads still work; no overflow at 375px; Ready for Roots (`/demo`) is visually and functionally unchanged with no console errors; clean build. Log Recently-shipped + mark shipped.
 
 *End of Draft 50.*
+
+
+### Draft 51 — Demo cleanup: videos into review (top), Spark→Narrator in Characters, Traveler strip→Playable Character — ✅ SHIPPED a14dcac (2026-08-27)
+
+Reorganize `/gains-demo` (styling stays the current design-system look; keep all logic/copy).
+
+**1. Add the five zone videos to the TOP of "Ideas & Demos for Review."** New first items, each a titled card that embeds the Vimeo video (or a clickable thumbnail card linking out if embedding the unlisted links is awkward). Titles + links:
+- **Zone 1 — What is Trauma:** https://vimeo.com/1222082001/c65abe5b9f
+- **Zone 2 — The Four Reactions:** https://vimeo.com/1222089263/d3825818f8
+- **Zone 3 — Getting the Best Therapy:** https://vimeo.com/1222097986/4c7cf651e2
+- **Zone 4 — What Therapy Feels Like:** https://vimeo.com/1222092263/bca4fdcea9
+- **Zone 5 — Growth Mindset:** https://vimeo.com/1222095414/82f1e6b6f1
+Give them a shared "Videos" heading; a comment thread for them is welcome (e.g. `review-videos`).
+
+**2. Spark → the Characters area as "Narrator," with the chosen voice.** Retire the "Spark's voice (six options)" review item (the voice is decided). In the **Playable Character / Characters** area, present **Spark labeled "Narrator"** with Spark's art + a single voice-sample player for the **adopted voice: Option F (`/long-light/audio/spark-voice-f.mp3`)**. (If Spark already appears in the NPCs section, keep that, but this is where the Narrator label + the chosen voice sample live.)
+
+**3. Move the Traveler four-stage progression out of review → Playable Character.** Take the "How the character changes" strip (the four Traveler stages) out of "Ideas & Demos for Review" and place it in the **Playable Character** section. Add a note under it: *"These stage images will be regenerated with an inner light — a glow in the chest that grows brighter across the stages."*
+
+**4. Rename the top-of-demo label** from "Long Light" to **"Shadowmend / Long Light"** (the header/title at the very top of `/gains-demo`).
+
+**After this,** the review section reads: the five Videos (top) → Body Mapping → Mindfulness: Calm Place → Zone 3: Message to Your Guardian. (Character progression + Spark voice have moved out.)
+
+**Verify.** Five videos play/link at the top of the review section; Spark appears as "Narrator" in the Characters area with the Option-F sample; the four-stage Traveler strip is in Playable Character with the inner-light note; the review section's remaining items reflow cleanly; design-system styling intact; Ready for Roots untouched; no console errors. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 51.*
