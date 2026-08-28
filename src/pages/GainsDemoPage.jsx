@@ -460,7 +460,7 @@ export default function GainsDemoPage() {
       {/* Intro */}
       <section className="mb-6">
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
-          GAINS for Teens — The Long Light
+          GAINS for Teens — Shadowmend / Long Light
         </h1>
         <p className="text-[14px] text-slate-600 leading-relaxed max-w-[760px]">
           An internal walkthrough of the intervention, laid out the way it
@@ -522,7 +522,7 @@ export default function GainsDemoPage() {
                 <p className="mb-3">
                   The five zone psychoeducation videos, one per zone.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-6">
                   {REVIEW_VIDEOS.map((v) => (
                     <ReviewVideo key={v.id} {...v} />
                   ))}
@@ -1006,22 +1006,29 @@ function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
 // Draft 51: one of the five zone psychoeducation videos in the review
 // section. Vimeo's `?h=` hash-embed URL is the standard way to embed an
 // unlisted video anywhere -- no separate "unlisted" handling needed.
+// Draft 52: these are phone-portrait videos (9:16, like the rest of the
+// game), not landscape -- resized down from an oversized 2-up 16:9 grid to
+// a single vertical stack, each constrained to the same width as the
+// playable-activity phone frames below (`-mx-4 sm:mx-auto sm:max-w-[360px]`
+// is that exact pattern, copied for consistency).
 function ReviewVideo({ title, id, h }) {
   return (
     <div>
       <p className="text-[13px] font-semibold mb-1.5" style={{ color: 'var(--text-bright)' }}>{title}</p>
-      <div
-        className="relative w-full rounded-2xl overflow-hidden"
-        style={{ aspectRatio: '16 / 9', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-md)' }}
-      >
-        <iframe
-          src={`https://player.vimeo.com/video/${id}?h=${h}&title=0&byline=0&portrait=0`}
-          title={title}
-          className="absolute inset-0 w-full h-full"
-          frameBorder="0"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
-        />
+      <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
+        <div
+          className="relative w-full rounded-2xl overflow-hidden"
+          style={{ aspectRatio: '9 / 16', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-md)' }}
+        >
+          <iframe
+            src={`https://player.vimeo.com/video/${id}?h=${h}&title=0&byline=0&portrait=0`}
+            title={title}
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
       </div>
     </div>
   )
