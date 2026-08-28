@@ -132,6 +132,19 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **c5de9ca** (2026-08-27) — Draft 52: **Review videos: resize + stack vertically;
+  fix the visible demo title.**
+  1. The five review videos were rendering in an oversized 2-up 16:9 grid. Resized
+  each to its natural phone-portrait 9:16 and switched to a single vertical stack,
+  constrained to the same ~360px width as the playable-activity phone frames
+  elsewhere on the page (the same `-mx-4 sm:mx-auto sm:max-w-[360px]` pattern).
+  2. The page's own `<h1>` still read "GAINS for Teens — The Long Light"; changed
+  to "GAINS for Teens — Shadowmend / Long Light" per Draft 51's original ask, which
+  had only touched a different meta line.
+  **Verified:** confirmed live on ssi.ctac.app — all 5 videos render at 360×640
+  (9:16), stacked vertically with no horizontal overlap; the h1 reads the new
+  title; no overflow at 375px; clean build.
+
 - **a14dcac** (2026-08-27) — Draft 51: **Demo cleanup — videos into review (top),
   Spark→Narrator in Characters, Traveler strip→Playable Character.** Styling stays
   the current design-system look; no activity logic or copy changed.
@@ -2631,3 +2644,14 @@ Give them a shared "Videos" heading; a comment thread for them is welcome (e.g. 
 **Verify.** Five videos play/link at the top of the review section; Spark appears as "Narrator" in the Characters area with the Option-F sample; the four-stage Traveler strip is in Playable Character with the inner-light note; the review section's remaining items reflow cleanly; design-system styling intact; Ready for Roots untouched; no console errors. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 51.*
+
+
+### Draft 52 — Review videos: resize + stack vertically; fix the visible demo title — ✅ SHIPPED c5de9ca (2026-08-27)
+
+**1. Resize the five review videos and stack them vertically.** Right now they render in an oversized 2-up grid. Instead, show them in a **single vertical column, one after another**, each sized to its **natural phone-portrait 9:16** at about the **same width as the playable activity cards** (constrained max-width, centered) — not full-width/oversized. Keep each video's title above it and the shared "Videos" heading + comment thread.
+
+**2. Fix the visible demo title.** The header at the top of `/gains-demo` still reads **"GAINS for Teens — The Long Light."** Change "The Long Light" → **"Shadowmend / Long Light"** so it reads **"GAINS for Teens — Shadowmend / Long Light."** (Draft 51 shipped without this visible-title change — it only touched a spec meta line.)
+
+**Verify.** The five videos are a single vertical stack, each at ~activity size (9:16, constrained width, centered), all playing; the top-of-page title reads "GAINS for Teens — Shadowmend / Long Light"; no overflow; design-system styling intact. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 52.*
