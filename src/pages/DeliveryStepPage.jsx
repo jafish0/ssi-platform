@@ -195,6 +195,36 @@ export default function DeliveryStepPage() {
   const existingResponse = responsesByItemId[currentItem.id]
   const totalItems = currentSection?.items?.length ?? 0
 
+  // Draft 101 Part J: a text_prompt flagged `combine_with_next` renders
+  // together with the very next item in its section on one screen (e.g.
+  // Assent's body text + its Yes/No choice), instead of the engine's normal
+  // one-item-per-screen flow. Generic on the flag rather than hardcoded to
+  // Assent, matching this file's existing pull_forward_highlight pattern.
+  // The combined item's own save is routed through its REAL id/token_key
+  // (so a `choice` item's exit_on keeps working exactly as it does
+  // standalone) and advances past both items at once via goNext(2) rather
+  // than the normal single-item handleItemSave/goNext().
+  const combinedNextItem =
+    currentItem.type === 'text_prompt' && currentItem.content_json?.combine_with_next
+      ? currentSection?.items?.[currentItemIndex + 1]
+      : null
+
+  async function handleCombinedSave(responseValue) {
+    if (!combinedNextItem) return
+    try {
+      const result = await saveResponse(
+        combinedNextItem.id,
+        combinedNextItem.token_key,
+        responseValue,
+      )
+      if (result?.exited) return
+      if (resumedNotice) setResumedNotice(false)
+      goNext(2)
+    } catch (err) {
+      console.error('Failed to save response', err)
+    }
+  }
+
   return (
     <main className="min-h-screen flex items-start justify-center px-4 py-8">
       <div className="w-full max-w-[640px]">
@@ -222,6 +252,17 @@ export default function DeliveryStepPage() {
             resolveToken={resolveToken}
             existingResponse={existingResponse}
           />
+          {combinedNextItem && (
+            <div className="mt-2">
+              <ItemRenderer
+                item={combinedNextItem}
+                onSave={handleCombinedSave}
+                sessionData={responses}
+                resolveToken={resolveToken}
+                existingResponse={responsesByItemId[combinedNextItem.id]}
+              />
+            </div>
+          )}
         </div>
 
         {!isFirstItem && (

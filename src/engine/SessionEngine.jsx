@@ -207,8 +207,13 @@ export function SessionProvider({ sessionId, children }) {
 
       // Hard-branch exit support: a `choice` item may declare exit_on rules in
       // its content_json. If the saved selection matches, end the session here
-      // with a custom message (no further items rendered).
-      const item = currentItem
+      // with a custom message (no further items rendered). Looked up by id in
+      // currentItems rather than assumed to be currentItem — a combined
+      // screen (Draft 101 Part J: a text_prompt rendered together with the
+      // NEXT item, e.g. Assent's body + its Yes/No choice) saves the next
+      // item's real id while currentItem/currentItemIndex still point at the
+      // text_prompt, so this lookup must not assume they're the same item.
+      const item = currentItems.find((it) => it.id === itemId) || currentItem
       if (item && item.id === itemId && item.type === 'choice') {
         const rules = item.content_json?.exit_on
         const ruleArr = Array.isArray(rules) ? rules : rules ? [rules] : []
@@ -243,7 +248,7 @@ export function SessionProvider({ sessionId, children }) {
       }
       return { exited: false }
     },
-    [sessionId, currentItem, currentSectionIndex],
+    [sessionId, currentItem, currentItems, currentSectionIndex],
   )
 
   const completeSession = useCallback(async () => {
@@ -251,10 +256,21 @@ export function SessionProvider({ sessionId, children }) {
     await syncSectionProgress(currentSectionIndex, 'completed')
   }, [currentSectionIndex, syncSectionProgress])
 
-  const goNext = useCallback(() => {
+  // `count` (default 1) lets a caller advance past more than one item in a
+  // single step — e.g. a screen that renders two adjacent items combined
+  // (Draft 101 Part J: Assent's body text_prompt + its Yes/No choice on one
+  // screen) needs to skip both at once. Computing the target index up front
+  // and comparing it ONCE against currentItems.length (rather than calling
+  // this function twice) is deliberate: goNext's guard reads currentItemIndex
+  // from this render's closure, so two synchronous calls would both see the
+  // same stale "not at the end yet" snapshot and could push the index past
+  // the end of a short section instead of correctly rolling into the next
+  // section.
+  const goNext = useCallback((count = 1) => {
     if (!currentSection) return
-    if (currentItemIndex < currentItems.length - 1) {
-      setCurrentItemIndex((i) => i + 1)
+    const targetIndex = currentItemIndex + count
+    if (targetIndex < currentItems.length) {
+      setCurrentItemIndex(targetIndex)
       return
     }
     // End of section
