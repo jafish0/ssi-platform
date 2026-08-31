@@ -726,6 +726,25 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 return
               }
               setShowMissingPick(false)
+              // v5.9 (Draft 62 Part A) follow-up: if exactly one thought
+              // cleared threshold, the gate above only ever required
+              // picking that one (pickRequired maxes out at
+              // eligibleItems.length), so the participant would practice
+              // just one thought instead of two like every other case.
+              // Mirror the 0-endorsement fallback — auto-add a second,
+              // randomly drawn from the same locked pool (Other excluded)
+              // — so everyone ends up practicing exactly two.
+              if (selectedItems.length === 1) {
+                const already = new Set(selectedItems.map((it) => it.id))
+                const pool = APPRAISAL_ITEMS.map((it) => it.id).filter(
+                  (id) => !already.has(id),
+                )
+                const extra = pool[Math.floor(Math.random() * pool.length)]
+                setItems((prev) => ({
+                  ...prev,
+                  [extra]: { ...(prev[extra] || {}), selected: true, randomly_selected: true },
+                }))
+              }
               setPhase('kai_strategy_intro')
               scrollTop()
             }}

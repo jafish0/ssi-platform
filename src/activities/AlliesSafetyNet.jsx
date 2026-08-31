@@ -1033,11 +1033,20 @@ function InspectXOutScreen({ allies, onToggleRemoved, lowSupport }) {
         />
       </div>
       <MissingTypesCallout allies={allies} />
-      {removedCount > 0 && (
+      {removedCount > 0 ? (
         <p className="text-[13px] text-slate-600 italic text-center mt-3">
           {removedCount === 1
             ? '1 ally taken out — they\'re still in your life.'
             : `${removedCount} allies taken out — they're still in your life.`}
+        </p>
+      ) : (
+        // 2026-08-31 team meeting: nothing on this screen told a kid who's
+        // happy with their net (and doesn't want to take anyone out) that
+        // skipping is expected — even though Continue already worked fine
+        // with zero removals. Small reassuring caption, same treatment as
+        // the "taken out" note above.
+        <p className="text-[13px] text-slate-500 italic text-center mt-3">
+          If there&apos;s no one you need to take out, tap Continue below.
         </p>
       )}
     </div>

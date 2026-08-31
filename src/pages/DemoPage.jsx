@@ -105,11 +105,11 @@ const REVIEW_CARDS = [
     feedbackArea: "Sam's Story — Gender-Neutral Version",
   },
   {
-    title: 'Learning Skills for Belonging — Part 2, Scene 3: Putting it All Together',
+    title: 'Learning Skills for Belonging — Part 2, Scene 3: Taking Charge of Your Well-Being',
     vimeoUrl: 'https://vimeo.com/1221518456/c2fb47f691',
     description:
       'Self-regulation, the too-heavy-shield metaphor, box breathing, and the shift from a fixed mindset to a growth mindset.',
-    feedbackArea: 'Kai Part 2 Scene 3: Putting it All Together',
+    feedbackArea: 'Kai Part 2 Scene 3: Taking Charge of Your Well-Being',
   },
 ]
 

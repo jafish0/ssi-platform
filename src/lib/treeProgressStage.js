@@ -61,7 +61,7 @@ export const INTERSTITIAL_COPY = {
   },
   GettingUnstuck: {
     heading: 'Your tree is filling out.',
-    body: 'Working through something hard isn’t easy. Yours is growing because you did it anyway.',
+    body: 'Working through something hard isn’t easy. Your tree is growing because you did it anyway.',
   },
   LetterBuilder: {
     heading: 'Almost in full bloom.',

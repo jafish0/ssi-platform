@@ -379,16 +379,21 @@ function VASRow({ vasConfig, value, onChange }) {
   const min = vasConfig?.min_value ?? 0
   const max = vasConfig?.max_value ?? 100
   const step = vasConfig?.step ?? 1
-  const v = value ?? Math.round((min + max) / 2)
+  const restValue = min - step
+  const v = value ?? restValue
   return (
     <div>
       <input
         type="range"
-        min={min}
+        min={restValue}
         max={max}
         step={step}
         value={v}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => {
+          const next = Number(e.target.value)
+          if (next < min) return
+          onChange(next)
+        }}
         className="w-full accent-ctac-teal-400"
       />
       <div className="flex justify-between text-[13px] text-slate-500 mt-1">

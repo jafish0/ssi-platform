@@ -65,17 +65,22 @@ export function LikertItem({ prompt, anchors, value, onChange }) {
 // midpoint with muted styling and a "Drag the slider" hint — the
 // participant must explicitly interact before the response counts.
 export function SliderItem({ prompt, min, max, anchors, value, touched, onChange }) {
-  const displayValue = touched ? value : Math.round((min + max) / 2)
+  const restValue = min - 1
+  const displayValue = touched ? value : restValue
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4">
       <div className="text-[15px] leading-relaxed text-slate-800 mb-4">{prompt}</div>
       <input
         type="range"
-        min={min}
+        min={restValue}
         max={max}
         step={1}
         value={displayValue}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => {
+          const v = Number(e.target.value)
+          if (v < min) return
+          onChange(v)
+        }}
         className={
           'w-full h-2 rounded-full appearance-none cursor-pointer ' +
           (touched ? 'accent-ctac-teal-500' : 'accent-slate-300')

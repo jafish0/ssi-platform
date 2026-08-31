@@ -23,6 +23,7 @@ import {
   ProgressStrip,
 } from '../components/survey/SurveyItems.jsx'
 import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
+import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 
 // ---------- Scale definitions ----------
 
@@ -300,9 +301,9 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
             program, but others will be different. When you complete this
             short survey, you will receive another $25 gift card to thank
             you for your time. If you experience feelings of distress when
-            answering these questions, please tell your caregiver or you
-            can email us at sprang@uky.edu.
+            answering these questions, please tell your caregiver.
           </p>
+          <CrisisLifelineNote className="mt-4" />
         </div>
       )
 

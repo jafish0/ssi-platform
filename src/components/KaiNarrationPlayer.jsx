@@ -28,6 +28,7 @@ import { Volume2, RotateCcw } from 'lucide-react'
 
 export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete }) {
   const audioRef = useRef(null)
+  const maxTimeRef = useRef(0)
   const [playing, setPlaying] = useState(false)
   const [autoplayBlocked, setAutoplayBlocked] = useState(false)
   const [completed, setCompleted] = useState(false)
@@ -39,6 +40,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
   // reach this screen, so it usually succeeds; if blocked, fall back to a
   // visible Play button.
   useEffect(() => {
+    maxTimeRef.current = 0
     setLoadFailed(false)
     const el = audioRef.current
     if (!el) return
@@ -75,7 +77,21 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
   function handleTimeUpdate() {
     const el = audioRef.current
     if (!el || !el.duration) return
+    if (el.currentTime > maxTimeRef.current) maxTimeRef.current = el.currentTime
     setProgress(el.currentTime / el.duration)
+  }
+
+  // No forward-skipping past what's actually been heard — same "no skip"
+  // treatment as the main Vimeo videos (2026-08-31 meeting, Part H). The
+  // 0.25s tolerance is a safety margin for floating-point/event-timing
+  // imprecision right at the boundary; normal linear playback never fires
+  // the `seeking` event at all, only an actual user-initiated jump does.
+  function handleSeeking() {
+    const el = audioRef.current
+    if (!el) return
+    if (el.currentTime > maxTimeRef.current + 0.25) {
+      el.currentTime = maxTimeRef.current
+    }
   }
 
   function handleEnded() {
@@ -126,6 +142,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
             controls
             preload="auto"
             onTimeUpdate={handleTimeUpdate}
+            onSeeking={handleSeeking}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
             onEnded={handleEnded}

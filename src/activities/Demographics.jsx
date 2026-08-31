@@ -160,9 +160,8 @@ export default function Demographics({ onSave = console.log }) {
       missing.push({ id: 'hispanic', label: 'Are you Hispanic or Latino?' })
     }
     if (!numericOk(data.grade)) missing.push({ id: 'grade', label: 'What grade are you currently in?' })
-    if (!numericOk(data.home_years) || !numericOk(data.home_months)) {
-      missing.push({ id: 'home_time', label: 'How long have you lived in your current home?' })
-    }
+    // home_time (years lived in current home) is intentionally NOT required —
+    // 2026-08-31 team decision: this question must never block Continue.
     if (!numericOk(data.placements)) {
       missing.push({ id: 'placements', label: 'How many out of home placements have you had?' })
     }
@@ -202,7 +201,9 @@ export default function Demographics({ onSave = console.log }) {
         hispanic: data.hispanic,
         grade: data.grade,
         home_years: data.home_years,
-        home_months: data.home_months,
+        // home_months retired 2026-08-31 (see WORKING_NOTES) — key kept for
+        // schema stability; export pipeline handles null via `?? ''`.
+        home_months: null,
         placements: data.placements,
       })
     } finally {
@@ -267,9 +268,10 @@ export default function Demographics({ onSave = console.log }) {
       </div>
       <div id="item-home_time" className="mb-4">
         <div className="text-[15px] text-slate-800 mb-2">
-          How long have you lived in your current home?
+          How long have you lived in your current home?{' '}
+          <span className="text-slate-400 font-normal">(optional)</span>
         </div>
-        <div className="flex gap-4 flex-wrap">
+        {!data.home_lt1yr && (
           <NumberInput
             prompt="Years"
             value={data.home_years ?? null}
@@ -277,14 +279,35 @@ export default function Demographics({ onSave = console.log }) {
             min={0}
             max={20}
           />
-          <NumberInput
-            prompt="Months"
-            value={data.home_months ?? null}
-            onChange={(v) => setField('home_months', v)}
-            min={0}
-            max={11}
-          />
-        </div>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            const next = !data.home_lt1yr
+            setData((prev) => ({
+              ...prev,
+              home_lt1yr: next,
+              home_years: next ? 0 : prev.home_years,
+            }))
+          }}
+          aria-pressed={!!data.home_lt1yr}
+          className={
+            'text-left rounded-2xl border min-h-[44px] px-4 py-2 text-[14px] inline-flex items-center gap-3 transition-colors ' +
+            (data.home_lt1yr
+              ? 'bg-ctac-teal-100 border-ctac-teal-400 text-ctac-teal-900'
+              : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
+          }
+        >
+          <span
+            className={
+              'inline-flex items-center justify-center rounded-md w-5 h-5 border-2 flex-shrink-0 ' +
+              (data.home_lt1yr ? 'bg-ctac-teal-500 border-ctac-teal-500 text-white' : 'border-slate-300')
+            }
+          >
+            {data.home_lt1yr ? '✓' : ''}
+          </span>
+          Less than 1 year
+        </button>
       </div>
       <div id="item-placements">
         <NumberInput

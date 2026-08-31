@@ -234,7 +234,7 @@ export default function VideoPlayer({ content, onSave, sessionData, existingResp
         : null
 
   const frameWrapperClass = portrait
-    ? 'relative w-full max-w-[360px] mx-auto bg-black rounded-2xl overflow-hidden mb-4 shadow-card'
+    ? 'relative w-full max-w-[360px] md:max-w-[480px] mx-auto bg-black rounded-2xl overflow-hidden mb-4 shadow-card'
     : 'relative w-full aspect-video bg-black rounded-2xl overflow-hidden mb-4 shadow-card'
 
   return (

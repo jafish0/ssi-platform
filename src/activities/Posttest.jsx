@@ -21,6 +21,7 @@ import {
   ScaleScreen,
   ProgressStrip,
 } from '../components/survey/SurveyItems.jsx'
+import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 
 // ---------- Scale definitions ----------
 // BHS / ASCS / NB anchors match the Pretest exactly so the SPSS-side
@@ -249,9 +250,10 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
             feeling right now. Some of these questions will be the same as
             questions you answered at the start of this of the program,
             but others will be different. If you experience feelings of
-            distress, please tell your caregiver or you can email us at
-            sprang@uky.edu. Your experiences are very important to us!
+            distress, please tell your caregiver. Your experiences are
+            very important to us!
           </p>
+          <CrisisLifelineNote className="mt-4" />
         </div>
       )
 

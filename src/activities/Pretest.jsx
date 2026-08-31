@@ -158,20 +158,25 @@ function LikertItem({ prompt, anchors, value, onChange }) {
 
 function SliderItem({ prompt, min, max, anchors, value, touched, onChange }) {
   // `touched` is hoisted up so the parent can use it for validation.
-  // Until touched, we render the thumb at the middle of the track but
-  // visually mute the indicator and show a "Drag the slider" hint
-  // so participants don't accidentally submit the default.
-  const displayValue = touched ? value : Math.round((min + max) / 2)
+  // The slider rests one tick before `min` (not a real answerable value)
+  // until touched, so dragging to the true midpoint always registers as
+  // a deliberate choice rather than an accident of not having moved it.
+  const restValue = min - 1
+  const displayValue = touched ? value : restValue
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4">
       <div className="text-[15px] leading-relaxed text-slate-800 mb-4">{prompt}</div>
       <input
         type="range"
-        min={min}
+        min={restValue}
         max={max}
         step={1}
         value={displayValue}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => {
+          const v = Number(e.target.value)
+          if (v < min) return
+          onChange(v)
+        }}
         className={
           'w-full h-2 rounded-full appearance-none cursor-pointer ' +
           (touched ? 'accent-ctac-teal-500' : 'accent-slate-300')
@@ -329,8 +334,6 @@ export default function Pretest({ onSave = console.log }) {
           raceAny &&
           [0, 1].includes(data.hispanic) &&
           numericOk(data.grade) &&
-          numericOk(data.home_years) &&
-          numericOk(data.home_months) &&
           numericOk(data.placements)
         )
       }
@@ -394,7 +397,7 @@ export default function Pretest({ onSave = console.log }) {
         hispanic: data.hispanic,
         grade: data.grade,
         home_years: data.home_years,
-        home_months: data.home_months,
+        home_months: null, // field retired (Draft 101 Part F); key kept for export-pipeline schema stability
         // Out-of-home placements count (demographics; added 6.29.26)
         placements: data.placements,
         // Beck Hopelessness (0–3)
@@ -568,21 +571,44 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
             <div className="text-[15px] text-slate-800 mb-2">
               How long have you lived in your current home?
             </div>
-            <div className="flex gap-4 flex-wrap">
-              <NumberInput
-                prompt="Years"
-                value={data.home_years ?? null}
-                onChange={(v) => setField('home_years', v)}
-                min={0}
-                max={20}
-              />
-              <NumberInput
-                prompt="Months"
-                value={data.home_months ?? null}
-                onChange={(v) => setField('home_months', v)}
-                min={0}
-                max={11}
-              />
+            {/* Optional — never blocks Continue. "Less than 1 year" hides
+                the Years input and pins home_years to 0; unchecking clears
+                it back to blank. Months field retired (Draft 101 Part F). */}
+            <div className="flex items-start gap-3 flex-wrap">
+              {!data.home_less_than_year && (
+                <NumberInput
+                  prompt="Years"
+                  value={data.home_years ?? null}
+                  onChange={(v) => setField('home_years', v)}
+                  min={0}
+                  max={20}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !data.home_less_than_year
+                  setField('home_less_than_year', next)
+                  setField('home_years', next ? 0 : null)
+                }}
+                aria-pressed={!!data.home_less_than_year}
+                className={
+                  'text-left rounded-2xl border min-h-[44px] px-4 py-2 text-[14px] flex items-center gap-3 transition-colors ' +
+                  (data.home_less_than_year
+                    ? 'bg-ctac-teal-100 border-ctac-teal-400 text-ctac-teal-900'
+                    : 'bg-white border-slate-200 text-slate-800 hover:border-ctac-teal-300')
+                }
+              >
+                <span
+                  className={
+                    'inline-flex items-center justify-center rounded-md w-5 h-5 border-2 flex-shrink-0 ' +
+                    (data.home_less_than_year ? 'bg-ctac-teal-500 border-ctac-teal-500 text-white' : 'border-slate-300')
+                  }
+                >
+                  {data.home_less_than_year ? '✓' : ''}
+                </span>
+                Less than 1 year
+              </button>
             </div>
           </div>
           <NumberInput

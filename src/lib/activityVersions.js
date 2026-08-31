@@ -30,9 +30,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'getting-unstuck': {
-    version: 'v5.11',
-    updated: '2026-08-27',
+    version: 'v5.12',
+    updated: '2026-08-31',
     changelog: [
+      '2026-08-31 · v5.12 — edge-case fix (MINOR — no data-shape change). When exactly ONE thought cleared the eligibility threshold (and no eligible Other), the pick gate only ever required picking that one item, so the participant practiced just one thought instead of two like every other case (0 endorsed → 2 random; 2+ endorsed → picks 2). Now, once the pick gate passes with exactly 1 selected, a second thought is auto-added — randomly drawn from the same locked `APPRAISAL_ITEMS` pool the v5.9 0-endorsement fallback uses (Other still excluded), flagged `randomly_selected: true` same as that fallback — so everyone ends up practicing exactly two regardless of how many they personally endorsed. Save payload unchanged (reuses the existing `randomly_selected` field).',
       '2026-08-27 · v5.11 — Draft 100 (MINOR — additive UX, no data-shape change). Continue no longer just sits disabled across any of this activity\'s 5 gates (rate every thought, the Other-thought Yes/No + text + rating, pick 2 thoughts, finish the Kai narration, pick-a-strategy + fill in the response) — it stays tappable, and tapping it while incomplete names what\'s missing. The rate/other/strategy gates name the specific missing item and scroll to/highlight it; the pick gate (a count, not a specific item) and the narration gate (nothing to point at) get a plain message instead. Save payload unchanged.',
       '2026-08-26 · v5.10 — real bug fix (Josh, staged live-preview review; MINOR — no save-payload shape change). The "pick" screen\'s heading says "Pick the top two thoughts," but Continue only ever required at least 1 selected, so a participant could proceed after picking just one. Now requires exactly `min(MAX_PICKS, eligibleItems.length)` — 2 in the normal case, or the most actually achievable if only 1 thought cleared the eligibility threshold (so a legitimately 1-eligible-item session still isn\'t locked out).',
       '2026-08-11 · v5.9 — Draft 62 Parts A/B/C (2026-08-11 meeting). (A) 0-endorsement fallback: previously, rating nothing ≥2 dropped the kid into a static "affirmation" dead-end (two-strategies explainer, straight to Save, no actual practice) — Holly flagged that this let a kid skip Challenge/Both-And entirely. Now the kid sees Stephanie\'s copy ("Try out the following exercise…") then practices on 2 RANDOMLY-selected thoughts from the locked 6-item pool (a_other excluded from the random pool), same Challenge/Both-And UI as endorsed picks. New `zero_endorsement_intro` phase; the 2 auto-picked items get `selected: true, randomly_selected: true` in state, surfaced in the save payload as `randomly_selected: true` on those two appraisal entries (absent/false otherwise) so export can tell endorsed apart from randomly-given. (B/C) New shared `KaiNarrationPlayer` component (audio + always-visible transcript, autoplay with a Play-button fallback, Continue-gating `onComplete`) replaces the old affirmation screen\'s "Video Coming Soon" placeholder — surfaced via a new `kai_strategy_intro` gate shown once before the FIRST strategy screen on EITHER path (normal pick or the fallback), since "the two-strategies work" is the same single code path for both. Audio file (`getting-unstuck-strategies-intro.mp3`) does not exist yet — Josh drops it at `public/kai-narration/` after this ships; until then the KaiNarrationPlayer has nothing to autoplay, which is expected.',
@@ -52,9 +53,10 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   'allies-safety-net': {
-    version: 'v6.0',
-    updated: '2026-08-16',
+    version: 'v6.1',
+    updated: '2026-08-31',
     changelog: [
+      '2026-08-31 · v6.1 — Inspect X-out screen: added a small reassuring caption ("If there\'s no one you need to take out, tap Continue below.") for participants who are happy with their net and don\'t want to remove anyone — 2026-08-31 team meeting flagged that nothing on the screen said skipping was a valid, expected path, even though Continue with zero removals already worked. Renders in the same slot/style as the existing "N allies taken out" note, mutually exclusive with it (shows only when removedCount is 0). Copy-only; no data-shape change.',
       '2026-08-16 · v6.0 — Draft 88 Part B (MAJOR — a whole mid-flow screen is removed). The post-save confirmation\'s "Save as image" button (and its download plumbing) is removed; the confirmation keeps the net visual + strengthen summary. Nothing may invite the participant out of the app before the posttest: the program\'s only download actions now live on the post-posttest completion screen (DeliveryShellPage), which renders the consolidated Plan keepsake from the saved payloads. Response payload unchanged. (In the live flow the removed screen was never actually reached — the engine advances as soon as onSave resolves — so this mainly aligns the sandbox with the live experience.)',
       '2026-08-13 · v5.9 — Draft 65 (2026-08-13, now that the Kai narration audio has landed). (A) `KaiNarrationPlayer` gains a small circular Kai portrait next to the speaker icon so the participant sees who\'s talking — shared-component change, both narration spots on this activity pick it up automatically. (B) Removed body copy on the intro and Inspect-education screens that duplicated Kai\'s narration transcript almost verbatim: the intro screen\'s opening ally-definition sentence ("An ally is someone you trust to provide support...") and closing "Let\'s build your safety net." line are gone — the additive second sentence ("They might not always get it right...") and the three color-coded support-type bullets stay; the Inspect-education screen\'s four red-flag bullets below the player are gone (the same four warning signs are already verbatim in the transcript) — the intro paragraph above the player and the closing "On the next screen..." paragraph stay. (C) The intro transcript\'s "practical support" / "emotional support" / "social support" now render in the same amber/rose/sky tones as the `SUPPORT_TYPES` bullets below, for visual consistency from first mention. Display-only; no data-shape change.',
       '2026-08-11 · v5.8 — Draft 62 Part B (2026-08-11 meeting). Two spots gain Kai audio narration via the new shared `KaiNarrationPlayer` component (autoplay + always-visible transcript + Continue-gated on `onComplete`): the intro screen (before ally selection) and the Inspect-education screen (before Inspect X-out), where it replaces the old "Video Coming Soon" placeholder. Continue on both screens is disabled until that screen\'s narration has played once (sticky — a later replay doesn\'t re-lock it). Existing static text on both screens is unchanged; the narration is additive. Audio files (`safety-net-allies-intro.mp3`, `safety-net-inspect-intro.mp3`) do not exist yet — Josh drops them at `public/kai-narration/` after this ships; until then the KaiNarrationPlayer has nothing to autoplay, which is expected. No data-shape change.',
@@ -151,33 +153,37 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   posttest: {
-    version: 'v1.1',
-    updated: '2026-07-16',
+    version: 'v1.2',
+    updated: '2026-08-31',
     changelog: [
+      '2026-08-31 · v1.2 — Dr. Sprang\'s ask (2026-08-31 meeting; MINOR — additive UI, no data-shape change). Intro paragraph\'s distress sentence no longer points to the sprang@uky.edu inbox (she doesn\'t monitor it around the clock and doesn\'t want a distressed kid emailing into silence) — now reads "If you experience feelings of distress, please tell your caregiver." The shared `CrisisLifelineNote` (988 callout) renders immediately after the intro paragraph. Save payload unchanged.',
       '2026-07-16 · v1.1 — Jessica review note (6.29.26 doc). Program Feedback Acceptability scale: spelled out the value-2 anchor "Neither" → "Neither Agree nor Disagree" for clarity. No data-shape change.',
       '2026-05-13 · v1.0 — initial sandbox build of the locked Posttest survey (18 items: BHS, ASCS, NB, Belonging Worries, Perceived Helpfulness, Program Feedback Acceptability Likert + 2 open-response). 9-screen paginated flow mirroring the Pretest pattern. Shared survey-item components (SurveyItems.jsx). Save payload flat-keyed by `post_*` SPSS column names.',
     ],
   },
   followup: {
-    version: 'v1.1',
-    updated: '2026-06-08',
+    version: 'v1.2',
+    updated: '2026-08-31',
     changelog: [
+      '2026-08-31 · v1.2 — Dr. Sprang\'s ask (2026-08-31 meeting; MINOR — additive UI, no data-shape change). Intro paragraph\'s distress sentence no longer points to the sprang@uky.edu inbox (she doesn\'t monitor it around the clock and doesn\'t want a distressed kid emailing into silence) — now reads "...please tell your caregiver." The shared `CrisisLifelineNote` (988 callout) renders immediately after the intro paragraph. Save payload unchanged.',
       '2026-06-08 · v1.1 — Draft 26. Appraisals section scale shifted from 0-5 to 0-4 to match Getting Unstuck v5.4 (the two read the same shared `src/lib/appraisals.js` scale — anchors 0 Not At All True / 2 Somewhat True / 4 Definitely True). Item wording and order unchanged. fu_app_* value range narrows 0..5 → 0..4.',
       '2026-05-13 · v1.0 — initial sandbox build of the locked FollowUp Survey (30 items: BHS, ASCS, UCLA, NB, BPB, the 6 shared Appraisals items from `src/lib/appraisals.js`, Belonging Worries, permanency radio with Other-text, placement-disruption worry). 11-screen paginated flow mirroring the Pretest pattern. Save payload flat-keyed by `fu_*` SPSS column names.',
     ],
   },
   pretest: {
-    version: 'v1.1',
-    updated: '2026-07-16',
+    version: 'v2.0',
+    updated: '2026-08-31',
     changelog: [
+      '2026-08-31 · v2.0 — Draft 101 Parts E/F (2026-08-31 meeting; MAJOR — save-payload field drops). (E) Slider rest position: the local SliderItem copy (matching the shared SurveyItems.jsx fix) now rests one tick before `min` instead of on the visible midpoint, so dragging back to the true midpoint always counts as a deliberate choice. (F) Home-duration question: dropped the Months field entirely, added a "Less than 1 year" toggle next to Years (checks → home_years pinned to 0, Years input hidden; unchecking clears back to blank) and made the whole question optional — it no longer gates Continue. Save payload: home_months is now always null (key kept for export-pipeline schema stability); home_years may be 0, a real number, or null/undefined.',
       '2026-07-16 · v1.1 — Jessica review note (6.29.26 doc): added two items that were missing from the app. (1) Demographics gains an out-of-home-placements count ("How many out of home placements have you had?") as a required number field (payload key `placements`). (2) New 1-item "Placement Disruption Worry" scale on its own screen ("Your placement") between Belonging Worries and Program Expectation — "How worried are you right now that this placement will change?" on the locked 0–4 anchors (Not at all → Extremely), mirroring the FollowUp disruption item (payload key `pre_disruption_worry`). Now 11 screens. Production export columns for the two new items follow when they are added to the published survey snapshot in the builder (survey export is snapshot-driven, not from this sandbox file).',
       '2026-05-11 · v1.0 — initial sandbox build of the locked Belonging pretest (29 items: 6 demographics + 7 scales). 10-screen paginated flow mirroring the live session layout. Sliders require explicit interaction before counting as answered; pre_bw_2 hidden when pre_bw_1 = 0. Save payload keyed by SPSS column names from Draft 6.',
     ],
   },
   demographics: {
-    version: 'v1.1',
-    updated: '2026-08-27',
+    version: 'v2.0',
+    updated: '2026-08-31',
     changelog: [
+      '2026-08-31 · v2.0 — home-duration fix (2026-08-31 team meeting; MAJOR — data-shape change). The Years+Months pair for "How long have you lived in your current home?" required BOTH to be filled before Continue would unlock, with no way to represent "less than a year" other than typing 0 — nobody thought to, so it silently blocked kids in a placement under a year. Months field removed entirely; added a "Less than 1 year" toggle that sets `home_years` to 0 and hides the Years input while checked. The whole question is now optional — removed from computeMissing() so it can never block Continue, filled or not (every other field stays required). `home_months` is retired: save payload always sends `home_months: null` (key kept for schema stability, export pipeline handles null via `?? ""`); `home_years` may now be 0, a real number, or null/undefined.',
       '2026-08-27 · v1.1 — Draft 100 (MINOR — additive UX, no data-shape change). Continue no longer just sits disabled when a field is missing — it stays tappable, and tapping it while incomplete names which field is missing (or, with several missing, highlights and scrolls to the first) instead of leaving the kid to hunt for it. Save payload unchanged.',
       "2026-08-26 · v1.0 — new: demographics + Placement Disruption Worry items added to fill a gap between the live pretest and the polished /demo Pretest.jsx reference (age/sex/race/hispanic/grade/home time/placements; disruption-worry Likert item as a separate component, see 'placement-disruption-worry').",
     ],
