@@ -110,6 +110,48 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`2bb44a8` · 2026-09-01** — **Draft 103 — Kai Part 1 Scene 4 re-record swap, plus three small items that fell through the cracks.** **Part A:** swapped the mispronounced "foster or relative care" cut (`1221516709/72f8ac57d9`) for Josh's re-recorded video (`1223092389/9479dd45fc`) — live DB item + `/demo`'s `REVIEW_CARDS`, stale `knownIssue` note cleared. No `context_before` duration line existed on the live item to update (checked directly — nothing to change there). **Part B:** a persistent, subtle "Give feedback" button now follows every screen of a real dogfood session (added to `DeliveryShellPage.jsx`'s shared shell alongside the progress bar, not `DeliveryStepPage.jsx`, so it also covers the completion/exit screens) — fixed top-right, auto-filling "Where you are" from the current section title, confirmed no collision with the 1px progress strip. **Part C:** "Now we're going to meet someone." → "Now we're going to hear a story from Sam." on the transition into Sam's Story. **Part D — a real bug found while investigating, not the one originally suspected:** the draft's own guess (`TrampolineNet.jsx`'s SVG export) turned out to be stale — that export path was removed in Draft 88; the only surviving place ally names/actions get exported/printed today is the consolidated Plan keepsake. Found and fixed a genuine issue there: `buildPlanKeepsakeSvg`'s text wrapping used a fixed CHARACTER count (~64), which assumes every character is the same width — Georgia is proportional, so a line of wide characters (capitals, a long unbroken name) could measure past the canvas edge and get silently clipped on export. Now wraps by actual canvas-measured pixel width using the exact font the SVG renders with. Investigated `TrampolineNet.jsx` too as an alternate theory (only 3 fixed type-label pills, positions driven by wedge angle not ally count — not a plausible source of ally-count-driven overlap). **Honest gap:** could not conclusively reproduce the "overlapping" half of Bianca's report in either location with synthetic test data — the pixel-width fix is a genuine, defensible correctness improvement regardless, but if the complaint recurs, we need Bianca's actual exported image to diagnose further rather than guessing again. Also republished **Ready for Roots v13**, and bumped the shared dogfood code's `max_uses` 50→70 (this session's own extensive QA across Drafts 101-103 had exhausted it — worth knowing before the team's next round). **Verified live**: Part A's new video id/hash confirmed in the Vimeo embed URL; Part B's button position + area auto-fill confirmed on a real session; Part C's new copy confirmed live after clicking through the full pretest. Build clean throughout.
+
+  <details>
+  <summary>Draft 103 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 103 — Kai Part 1 Scene 4 re-record swap, plus three small items that fell through the cracks
+
+**Context.** The Kai Part 1 Scene 4 fix is a straightforward video-URL swap Josh just finished (Part A below). Parts B-D are three items that surfaced re-auditing the 8/31 meeting transcript + feedback CSV against everything already shipped — each was genuinely never turned into a draft, not deliberately deferred.
+
+### Part A — Swap Kai Part 1 Scene 4's video (the "foster or relative care" mispronunciation fix)
+
+Josh re-recorded the line and produced a new cut. Replace the video everywhere the old one is referenced:
+
+- **Old:** `https://vimeo.com/1221516709/72f8ac57d9` (id `1221516709`, hash `72f8ac57d9`)
+- **New:** `https://vimeo.com/1223092389/9479dd45fc` (id `1223092389`, hash `9479dd45fc`)
+
+Two places this needs to change:
+1. **Live authored content** — the "Kai: The Extra Level" section's video item in the `items` table (`ready-set-dedicate` intervention, order_index 10 per the Draft 97 structure notes above). Update the Vimeo id/hash in `content_json`, then republish so it takes effect (matching how every other content change in this file goes live).
+2. **`/demo`'s `REVIEW_CARDS`** (`src/pages/DemoPage.jsx`) — same scene's card. While there, **clear the `knownIssue` note** Draft 63 added flagging the old mispronunciation (`hTgGTKsx2Oo`'s "foster or relative care" issue) — it's fixed, the note is stale.
+
+**Also check:** the video's runtime — the live item's `context_before` line currently says the old cut ran 0:38 (per the Draft 97 structure addendum). Confirm the new cut's actual duration on Vimeo and update that line if it changed.
+
+**Not a Code task:** `Ready for Roots - Video Library.docx` (Josh's own tracking checklist) — he'll update that himself.
+
+Josh also separately fixed the "you never will be" repeated-subtitle issue (Sam's Story — Female) directly in Vimeo's caption track — no code change needed there, nothing to verify on Code's end.
+
+### Part B — Feedback comment box on the dogfooding build
+
+Josh asked (8/28 CSV note) whether a comment box could be added back to the real dogfooding build (top-right), the way `/demo` already has one per card. Assessed earlier as feasible — `FeedbackButton.jsx` is self-contained and route-agnostic (falls back to the raw pathname when no explicit `area` is passed), calling the existing `submit-feedback` edge function. Add a persistent instance to the real delivery flow's shared shell (`DeliveryStepPage.jsx` / `DeliveryShellPage.jsx` — wherever the layout common to every screen in a real session lives), fixed top-right, matching `/demo`'s existing visual style. Confirm it doesn't collide with existing top-of-screen chrome (progress bar, mute button, etc.) at 375px.
+
+### Part C — Standalone copy fix: "meet someone" → "Now we're going to hear a story from Sam"
+
+Marked **Adopt** in the 8/31 feedback sheet (Holly, 8/27 CSV row) but never shipped — it's an independent one-line copy change, not part of the blocked transition-to-video-endscreen redesign. Find the current "meet someone"-style line in the Sam's Story section's intro/bridge text (section 3, "Sam's Story," per the Draft 97 structure notes — the draft intro `text_prompt` ahead of the variant picker) and swap it for **"Now we're going to hear a story from Sam."**
+
+### Part D — Safety Net's exported/printed keepsake image: overlapping, cut-off labels
+
+Bianca reported (8/31 meeting transcript) that when she printed her Safety Net keepsake, ally labels overlapped and were cut off — she was clear this was about the **printed/exported image specifically** ("on the picture of it... the labels are cut off"), not the live in-app net. Likely the `downloadSvgStringAsPng` export path in `TrampolineNet.jsx` — probably the same family of issue as the earlier mobile "Social" label cutoff (fixed by dropping a suffix), but this time in the exported PNG's rendering, not the live DOM. Reproduce by exporting a net with several allies across all three types and fix the overlap/cutoff in the export path specifically.
+
+**Verify, all parts:** Scene 4 plays the new cut live and on `/demo`, old known-issue note gone, duration line accurate; feedback button appears on a real delivery session at 375px without overlapping other chrome and successfully submits; the Sam's Story intro line reads the new copy; an exported Safety Net PNG with a full net (multiple allies per type) shows no overlapping or cut-off text. Build/console clean throughout.
+
+  </details>
+
 - **`c81a363` · 2026-09-01** — **Draft 102 — Narration audio: two-button UX + wire in Josh's 66 recorded files.** New shared `NarrationControls` component ("Read me the question" / "Read the answers" / "Read the instructions" — each optional and independent, no autoplay, no Continue-gating, no forward-seek lock; that stricter treatment stays reserved for `KaiNarrationPlayer`'s longer clips). **Part 0's own architecture question resolved by investigation, not guesswork:** the live Pretest Welcome and the live FollowUp "Welcome back" are both real DB `text_prompt` items (audio wired via `content_json.audio_url`, same mechanism `TextPrompt.jsx` already had); the Posttest "welcome back" intro has **no live equivalent at all** — the main intervention's "Wrap-up questions" section goes straight into scored items with no intro screen, so `posttest_01_welcome_intro.mp3` has no live target and stays unwired (demo-only). Wired into every consumer with a matching clip: `PsychometricScale.jsx` (instructions once per screen + question/answers per item, across BHS/ASCS/UCLA/NB/BPB/Belonging Worries/Placement Worry/Program Expectation-Helpfulness/Program Feedback/the canonical 6-item Appraisals used by the follow-up), `FreeText.jsx` (the two Posttest open-ended questions), `Choice.jsx` (new capability, added for the follow-up's "Where you are living" item — caught only because a post-wiring completeness check cross-referenced every one of the 66 files against both the DB and the codebase and found 2 unaccounted for), and `Demographics.jsx`/`PlacementDisruptionWorry.jsx` (hardcoded per-field wiring, `Assent.jsx`-style, since these are standalone components). Content: added Josh's approved explainer sentence to the live Pretest Welcome paragraph; fixed the queued `Pretest.jsx` (demo file) crisis-email line Draft 101 Part L missed. **Real bug found during Part 0's investigation:** the *live* follow-up intervention's "Welcome back" item still had "...email us at sprang@uky.edu" — Draft 101 Part L only ever fixed the *demo* `FollowUp.jsx`, never this live DB item — which would have put the on-screen text at odds with the newly-wired audio (re-recorded without that line, per Josh's 2026-09-01 confirmation in the draft's own addendum). Fixed to match. `pf_feedback_03`'s audio is genuinely missing (never recorded) — that one item's question button just doesn't render; confirmed live, nothing else regressed. 66 mp3s copied to `public/narration/`. Published as **Ready for Roots v12** and the **90-day follow-up v3**. **Verified live end-to-end** on fresh sessions for both interventions: every scale's narration buttons play the correct audio (network-request-verified 206 responses, not just "no console error"); Demographics' 7 fields each show the right button set; the missing-file item degrades gracefully; the follow-up welcome-back fix + its audio both render correctly; the Assent merge and exit_on fix from Draft 101 re-confirmed still intact along the way. Build clean throughout.
 
   <details>
@@ -11860,38 +11902,3 @@ New `src/lib/treeProgressStage.js` derives a 0-5 growth stage from how many of t
 **Two exceptions — kept as small in-app screens, NOT moved to video, per Josh's explicit call (not the default "everything moves to video" rule):** `BelongingSkillsSort` and `Plan` never trigger the tree-growth interstitial (they land on "flat" growth stages under the 7-activities→5-stages mapping — see `treeProgressStage.js`'s own comment). Since there's no video adjacent to either one's completion to hang an end-screen off of, and neither gets the tree's positive reinforcement, **"Almost there." (after Belonging Skills Sort) and "That's your plan." (after Plan) both stay exactly as they are today** — small app screens, unchanged. Considered and explicitly rejected for now: extending the tree interstitial's growth-stage math to also cover these two activities (the more thorough fix, but bigger scope — a candidate for its own future draft if it ever becomes worth doing, not this one).
 
 **Next step, whenever Josh has graphics:** wire each `youtube_id`/`vimeo_url` video item's begin/end screens (Vimeo-side, per-video settings — not an app content change) to match the above, then hide the now-redundant in-app `page_break` items this replaces (same `content_json.hidden` mechanism already used throughout this file), leaving the two named exceptions alone.
-
-## Draft 103 — Kai Part 1 Scene 4 re-record swap, plus three small items that fell through the cracks
-
-**Context.** The Kai Part 1 Scene 4 fix is a straightforward video-URL swap Josh just finished (Part A below). Parts B-D are three items that surfaced re-auditing the 8/31 meeting transcript + feedback CSV against everything already shipped — each was genuinely never turned into a draft, not deliberately deferred.
-
-### Part A — Swap Kai Part 1 Scene 4's video (the "foster or relative care" mispronunciation fix)
-
-Josh re-recorded the line and produced a new cut. Replace the video everywhere the old one is referenced:
-
-- **Old:** `https://vimeo.com/1221516709/72f8ac57d9` (id `1221516709`, hash `72f8ac57d9`)
-- **New:** `https://vimeo.com/1223092389/9479dd45fc` (id `1223092389`, hash `9479dd45fc`)
-
-Two places this needs to change:
-1. **Live authored content** — the "Kai: The Extra Level" section's video item in the `items` table (`ready-set-dedicate` intervention, order_index 10 per the Draft 97 structure notes above). Update the Vimeo id/hash in `content_json`, then republish so it takes effect (matching how every other content change in this file goes live).
-2. **`/demo`'s `REVIEW_CARDS`** (`src/pages/DemoPage.jsx`) — same scene's card. While there, **clear the `knownIssue` note** Draft 63 added flagging the old mispronunciation (`hTgGTKsx2Oo`'s "foster or relative care" issue) — it's fixed, the note is stale.
-
-**Also check:** the video's runtime — the live item's `context_before` line currently says the old cut ran 0:38 (per the Draft 97 structure addendum). Confirm the new cut's actual duration on Vimeo and update that line if it changed.
-
-**Not a Code task:** `Ready for Roots - Video Library.docx` (Josh's own tracking checklist) — he'll update that himself.
-
-Josh also separately fixed the "you never will be" repeated-subtitle issue (Sam's Story — Female) directly in Vimeo's caption track — no code change needed there, nothing to verify on Code's end.
-
-### Part B — Feedback comment box on the dogfooding build
-
-Josh asked (8/28 CSV note) whether a comment box could be added back to the real dogfooding build (top-right), the way `/demo` already has one per card. Assessed earlier as feasible — `FeedbackButton.jsx` is self-contained and route-agnostic (falls back to the raw pathname when no explicit `area` is passed), calling the existing `submit-feedback` edge function. Add a persistent instance to the real delivery flow's shared shell (`DeliveryStepPage.jsx` / `DeliveryShellPage.jsx` — wherever the layout common to every screen in a real session lives), fixed top-right, matching `/demo`'s existing visual style. Confirm it doesn't collide with existing top-of-screen chrome (progress bar, mute button, etc.) at 375px.
-
-### Part C — Standalone copy fix: "meet someone" → "Now we're going to hear a story from Sam"
-
-Marked **Adopt** in the 8/31 feedback sheet (Holly, 8/27 CSV row) but never shipped — it's an independent one-line copy change, not part of the blocked transition-to-video-endscreen redesign. Find the current "meet someone"-style line in the Sam's Story section's intro/bridge text (section 3, "Sam's Story," per the Draft 97 structure notes — the draft intro `text_prompt` ahead of the variant picker) and swap it for **"Now we're going to hear a story from Sam."**
-
-### Part D — Safety Net's exported/printed keepsake image: overlapping, cut-off labels
-
-Bianca reported (8/31 meeting transcript) that when she printed her Safety Net keepsake, ally labels overlapped and were cut off — she was clear this was about the **printed/exported image specifically** ("on the picture of it... the labels are cut off"), not the live in-app net. Likely the `downloadSvgStringAsPng` export path in `TrampolineNet.jsx` — probably the same family of issue as the earlier mobile "Social" label cutoff (fixed by dropping a suffix), but this time in the exported PNG's rendering, not the live DOM. Reproduce by exporting a net with several allies across all three types and fix the overlap/cutoff in the export path specifically.
-
-**Verify, all parts:** Scene 4 plays the new cut live and on `/demo`, old known-issue note gone, duration line accurate; feedback button appears on a real delivery session at 375px without overlapping other chrome and successfully submits; the Sam's Story intro line reads the new copy; an exported Safety Net PNG with a full net (multiple allies per type) shows no overlapping or cut-off text. Build/console clean throughout.
