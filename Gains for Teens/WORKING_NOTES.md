@@ -132,6 +132,45 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **af00a92** (2026-09-01) — Draft 53: **Build the measurement packet into
+  Child Assent & Measures.** Adds the full GAINS measurement packet to
+  `/gains-demo`, rendered as the actual questionnaires with the app's form
+  controls in the Shadowmend design system. Source of truth: Stephanie's
+  `Gains Teens Measurements_SG.docx` — every item (including the CTS and
+  Beck-4 items that were embedded as images in the source doc) is
+  transcribed verbatim, nothing invented or placeholdered.
+  **Scope, per the draft: team review only.** All state is local/ephemeral —
+  nothing is persisted or scored. **Live data capture + scoring to Supabase is
+  a separate follow-up**, noted on the page itself, mirroring how Ready for
+  Roots' own pretest/posttest went from demo-only to a real DB pipeline.
+  Four new hand-authored form primitives under `src/components/gains/ds/`
+  (RadioList, CheckboxList, LikertScale, TextInput/TextArea) — the DesignSync
+  connector's authorization had lapsed this session, so these were authored
+  directly rather than ported, matching the same Shadowmend token language
+  already established across Drafts 49–52 (amber selected state,
+  translucent-quiet unselected, 48px tap targets, Nunito). New
+  `src/components/gains/MeasurementPacket.jsx` composes all nine instruments,
+  grouped exactly as specified — Pre-only: Demographics, Event: time since
+  trauma, Child Trauma Screen (CTS) Reactions Subscale, Therapy history (with
+  its two-level Yes/No branching). Pre + Post: Beck Hopelessness Scale-4,
+  Motivation/Readiness to Change Ruler, Implicit Theories of Emotion Scale,
+  Trauma and Treatment Beliefs. Post-only: Program Feedback Scale (including
+  its two free-response items).
+  **Verified via direct DOM/state interaction** (screenshots broke past the
+  review section's Vimeo iframes in this headless environment — a known
+  compositing quirk unrelated to this change, confirmed by DOM content being
+  fully correct throughout): all 9 instruments render under the correct
+  headings; every verbatim item text check passed (CTS's kept doc numbering
+  5–10, all 3 Trauma Beliefs reverse-scored markers); the therapy-history
+  branching correctly shows/hides each nested question on both paths and
+  cleanly clears the other branch when switched; CheckboxList's multi-select
+  (Race) and single-select-via-wrapper (Sex) both work, including the
+  "Another (write it in)" free-text reveal; LikertScale's per-item
+  independent selection confirmed; text inputs and free-response textareas
+  capture typed text. Confirmed live on ssi.ctac.app. 48px tap targets
+  confirmed by direct measurement; no overflow at 375px; Ready for Roots
+  (`/demo`) confirmed unaffected with no console errors; clean build.
+
 - **c5de9ca** (2026-08-27) — Draft 52: **Review videos: resize + stack vertically;
   fix the visible demo title.**
   1. The five review videos were rendering in an oversized 2-up 16:9 grid. Resized
@@ -2655,3 +2694,75 @@ Give them a shared "Videos" heading; a comment thread for them is welcome (e.g. 
 **Verify.** The five videos are a single vertical stack, each at ~activity size (9:16, constrained width, centered), all playing; the top-of-page title reads "GAINS for Teens — Shadowmend / Long Light"; no overflow; design-system styling intact. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 52.*
+
+
+### Draft 53 — Build the measurement packet into the demo (Child Assent & Measures) — ✅ SHIPPED af00a92 (2026-09-01)
+
+Add the GAINS measurement packet to `/gains-demo` in the **"Child Assent & Measures"** section, rendered as the actual questionnaires using the app's form controls + the Shadowmend design system (radios, checkboxes, Likert scales, text inputs; Nunito; 48px targets; scoped `.gains-theme`; mobile 9:16). Source of truth: `Gains for Teens/Measurements/Gains Teens Measurements_SG.docx`.
+
+**Scope:** this is for team review on the demo (the page already says no real participant data). Render the forms; ephemeral/local state is fine. **Live data capture + scoring to Supabase is a SEPARATE follow-up** (mirroring Ready for Roots) — note it, don't build it here.
+
+**IMPORTANT — use the real items, no invented content.** All items come from Stephanie's measurement doc; the CTS and Beck-4 items were embedded as images, now transcribed below. Build every instrument with its verbatim items. Every instrument now has its full item text — nothing is missing, nothing to placeholder.
+
+Group each instrument **once**, labeled by when it's administered.
+
+**PRE-ONLY**
+1. **Demographics**
+   - Age — "What is your current age?" (text)
+   - Grade — "What grade are you in?" (text)
+   - Race/Ethnicity — "Choose one or more races that you consider yourself to be." (multi-select): White or Caucasian; Black or African American; American Indian/Native American/Alaska Native; Asian; Native Hawaiian or Other Pacific Islander; Another (text); Prefer not to say
+   - "Are you of Spanish, Hispanic, or Latino origin?" — Yes / No
+   - Sex — "Please select your sex." — Boy/Male; Girl/Female; Nonbinary; Another (text); Prefer not to say
+2. **Event: time since trauma** — show verbatim: "Sometimes scary or very upsetting things happen to people where they feel like their life or the life of someone close to them is in danger (like being hurt, seeing someone else hurt, being in a car accident, or not getting food or having a safe place to live). These things are called trauma experiences. When was the LAST time something like this happened to you?" → two text entries: months, years.
+3. **Child Trauma Screen (CTS) — Reactions Subscale** (from Stephanie's doc). Prompt: "How often did each of these happen in the last 30 days?" 4-point scale: Never/Rarely = 0 · 1-2 times per month = 1 · 1-2 times per week = 2 · 3+ times per week = 3. Items (keep the doc's numbering 5–10):
+   5. Strong feelings in your body when you remember something that happened (sweating, heart beats fast, feel sick).
+   6. Try to stay away from people, places, or things that remind you about something that happened.
+   7. Trouble feeling happy.
+   8. Trouble sleeping.
+   9. Hard to concentrate or pay attention.
+   10. Feel alone and not close to people around you.
+4. **Therapy history (present & past)** — with branching:
+   - "Are you currently talking to a mental health therapist about any stressful issues in your life or for any reason?" — Yes / No
+   - If **yes** → "Are you talking with your therapist about any traumatic experiences you have had?" — Yes / No
+   - If **no** → "Have you ever talked to a mental health therapist in the past?" — Yes / No
+     - If **yes** → "When was the last time you were in therapy?" — Less Than A Week Ago / About A Month Ago / Between 2-6 Months Ago / Between 6 Months-1 Year Ago / Over 1 year Ago
+     - and → "Did you talk with your therapist about any traumatic experiences you have had?" — Yes / No
+
+**PRE + POST** (administered both times)
+5. **Beck Hopelessness Scale-4** (from Stephanie's doc). Prompt: "Please share how you are feeling, right now, at this moment." 4-point scale: Absolutely Disagree = 0 · Somewhat Disagree = 1 · Somewhat Agree = 2 · Absolutely Agree = 3. Sum to a total. Items:
+   1. I feel that my future is hopeless and that things will not improve.
+   2. My future seems dark to me.
+   3. Things just won't work out the way I want them to.
+   4. There's no use in really trying to get something I want, because I probably won't get it.
+6. **Motivation / Readiness to Change Ruler** — 10-point scale. Verbatim items:
+   - "At this moment, how ready are you to work towards dealing with any of the difficulties you may have related to your trauma experiences?"
+   - "At this moment, how confident are you in your ability to improve those difficulties related to your trauma experiences?"
+   - "How helpful do you think trauma therapy would be for you?"
+   - "What is the reason for your response/rating." (text entry)
+7. **Implicit Theories of Emotion Scale – Child Version** — 6 items; 6-point (Strongly disagree → Strongly agree). Verbatim items:
+   1. I can't really control my feelings. It's just the way I am.
+   2. If I want to, I can change how I feel.
+   3. My feelings are something about me that I can't change very much.
+   4. Even if I usually feel a certain way, I can change the feelings I have.
+   5. No matter how hard I might try, I can't really change the feelings I have.
+   6. I can learn to change my feelings.
+8. **Trauma and Treatment Beliefs** — 6 items; 6-point (Strongly disagree → Strongly agree). Verbatim items (note reverse-scored):
+   1. A traumatic event is a really scary experience that is almost impossible to recover from.
+   2. Once a trauma is over our bodies and reactions always go back to "normal," like it never happened. (reverse scored)
+   3. Having a hard time sleeping, difficulties concentrating, and not being able to relax can be reactions to experiencing trauma.
+   4. Therapy doesn't really help most people that have experienced trauma. (reverse scored)
+   5. If someone feels uncomfortable in therapy it means it is not working. (reverse scored)
+   6. How someone thinks about things can change how they feel and what they do.
+
+**POST-ONLY**
+9. **Program Feedback Scale** (from Stephanie's doc). The first four items on a 0 (Really disagree) → 4 (Really agree) scale; the last two are free-response text entries. Items:
+   1. This program was easy to use
+   2. I understood the program
+   3. I enjoyed the program
+   4. I think the program would be helpful to other kids my age
+   5. What did you like about the program? Please share as many true thoughts and feelings as you would like. (free-response text)
+   6. What would you change about the program? Please share as many true thoughts and feelings as you would like. (free-response text)
+
+**Verify.** The packet renders in the Child Assent & Measures section, grouped Pre-only / Pre+Post / Post-only, each instrument labeled with its timing; every provided item appears verbatim with the correct response format (Likert scales show their anchors); every instrument renders with its full verbatim items (CTS, Beck-4, and the complete Program Feedback Scale) — nothing omitted, no placeholder rows, no fabricated items; the therapy-history branching works; design-system styling, no data stored. Note in the shipped log that live capture + scoring is a follow-up. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 53.*
