@@ -20,6 +20,7 @@ import BodyMapping from '../components/BodyMapping.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 import ElevatorPitch from '../components/ElevatorPitch.jsx'
 import ExpositionIntro from '../components/gains/ExpositionIntro.jsx'
+import MeasurementPacket from '../components/gains/MeasurementPacket.jsx'
 import GainsCard from '../components/gains/ds/Card.jsx'
 import GainsBadge from '../components/gains/ds/Badge.jsx'
 import GainsButton from '../components/gains/ds/Button.jsx'
@@ -744,12 +745,25 @@ export default function GainsDemoPage() {
         </div>
       </section>
 
-      {/* B. Child Assent & Measures */}
+      {/* B. Child Assent & Measures. Draft 53 (2026-08-27): the measurement
+          packet, rendered as the actual questionnaires for team review.
+          Source of truth is Stephanie's `Gains Teens Measurements_SG.docx`
+          -- every item in MeasurementPacket.jsx is transcribed verbatim.
+          Local/ephemeral state only; live capture + scoring to Supabase is
+          a separate follow-up (mirroring how Ready for Roots' own
+          pretest/posttest moved from demo-only to a real DB pipeline). */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase mb-3" style={SECTION_LABEL_STYLE}>
           Child Assent &amp; Measures
         </h2>
-        <InDevelopmentCard label="In development." note="Assent flow and pre/post measures not identified yet." />
+        <p className="text-[13px] italic mb-2 max-w-[560px]" style={{ color: 'var(--text-muted)' }}>
+          The measurement packet, rendered here for review. Answers aren’t saved —
+          live data capture and scoring to the database is a separate follow-up.
+        </p>
+        <div className="mb-4">
+          <Pill icon={HardHat}>Assent flow not built yet</Pill>
+        </div>
+        <MeasurementPacket />
       </section>
 
       {/* C. Playable Character (single protagonist). Draft 51: the four-stage
@@ -945,19 +959,6 @@ function ReviewItem({ n, title, section, children }) {
         />
       </div>
     </article>
-  )
-}
-
-function InDevelopmentCard({ label, note }) {
-  return (
-    <div
-      className="rounded-[24px] p-8 max-w-[760px] text-center"
-      style={{ background: 'var(--surface-card)', border: '1px dashed var(--border-strong)', backdropFilter: 'var(--blur-panel)' }}
-    >
-      <HardHat size={28} strokeWidth={1.5} className="mx-auto mb-3" style={{ color: 'var(--text-faint)' }} />
-      <p className="text-[16px] font-semibold mb-1" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-body)' }}>{label}</p>
-      {note && <p className="text-[13px]" style={{ color: 'var(--text-faint)' }}>{note}</p>}
-    </div>
   )
 }
 
