@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CheckCircle2, RefreshCw } from 'lucide-react'
 import { PrimaryButton } from './shared.jsx'
+import NarrationControls from './NarrationControls.jsx'
 
 function shuffle(arr) {
   const a = arr.slice()
@@ -137,7 +138,14 @@ export default function Choice({ content, onSave, existingResponse }) {
   return (
     <div>
       {content?.prompt && (
-        <p className="text-[16px] leading-relaxed text-slate-800 mb-5">{content.prompt}</p>
+        <p className={`text-[16px] leading-relaxed text-slate-800 ${(content?.audio_url || content?.answers_audio_url) ? 'mb-2' : 'mb-5'}`}>
+          {content.prompt}
+        </p>
+      )}
+      {(content?.audio_url || content?.answers_audio_url) && (
+        <div className="mb-5">
+          <NarrationControls questionAudioUrl={content.audio_url} answersAudioUrl={content.answers_audio_url} />
+        </div>
       )}
 
       {feedback === 'correct' && (

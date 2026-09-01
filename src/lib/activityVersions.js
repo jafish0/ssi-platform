@@ -171,27 +171,30 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   pretest: {
-    version: 'v2.0',
-    updated: '2026-08-31',
+    version: 'v2.1',
+    updated: '2026-09-01',
     changelog: [
+      '2026-09-01 · v2.1 — Draft 102 queued fix (MINOR — additive UI, no data-shape change). Welcome intro\'s distress sentence no longer points to the sprang@uky.edu inbox (matching the Welcome/Almost-done/Posttest/FollowUp fix from Draft 101 Part L, which missed this file) — now reads "...please tell your caregiver." The shared CrisisLifelineNote (988 callout) renders immediately after. Save payload unchanged.',
       '2026-08-31 · v2.0 — Draft 101 Parts E/F (2026-08-31 meeting; MAJOR — save-payload field drops). (E) Slider rest position: the local SliderItem copy (matching the shared SurveyItems.jsx fix) now rests one tick before `min` instead of on the visible midpoint, so dragging back to the true midpoint always counts as a deliberate choice. (F) Home-duration question: dropped the Months field entirely, added a "Less than 1 year" toggle next to Years (checks → home_years pinned to 0, Years input hidden; unchecking clears back to blank) and made the whole question optional — it no longer gates Continue. Save payload: home_months is now always null (key kept for export-pipeline schema stability); home_years may be 0, a real number, or null/undefined.',
       '2026-07-16 · v1.1 — Jessica review note (6.29.26 doc): added two items that were missing from the app. (1) Demographics gains an out-of-home-placements count ("How many out of home placements have you had?") as a required number field (payload key `placements`). (2) New 1-item "Placement Disruption Worry" scale on its own screen ("Your placement") between Belonging Worries and Program Expectation — "How worried are you right now that this placement will change?" on the locked 0–4 anchors (Not at all → Extremely), mirroring the FollowUp disruption item (payload key `pre_disruption_worry`). Now 11 screens. Production export columns for the two new items follow when they are added to the published survey snapshot in the builder (survey export is snapshot-driven, not from this sandbox file).',
       '2026-05-11 · v1.0 — initial sandbox build of the locked Belonging pretest (29 items: 6 demographics + 7 scales). 10-screen paginated flow mirroring the live session layout. Sliders require explicit interaction before counting as answered; pre_bw_2 hidden when pre_bw_1 = 0. Save payload keyed by SPSS column names from Draft 6.',
     ],
   },
   demographics: {
-    version: 'v2.0',
-    updated: '2026-08-31',
+    version: 'v2.1',
+    updated: '2026-09-01',
     changelog: [
+      '2026-09-01 · v2.1 — Draft 102 (MINOR — additive UI, no data-shape change). Each field gains a "Read me the question" narration button (plus "Read the answers" for sex/race/hispanic), pointing at Josh\'s recorded audio. Save payload unchanged.',
       '2026-08-31 · v2.0 — home-duration fix (2026-08-31 team meeting; MAJOR — data-shape change). The Years+Months pair for "How long have you lived in your current home?" required BOTH to be filled before Continue would unlock, with no way to represent "less than a year" other than typing 0 — nobody thought to, so it silently blocked kids in a placement under a year. Months field removed entirely; added a "Less than 1 year" toggle that sets `home_years` to 0 and hides the Years input while checked. The whole question is now optional — removed from computeMissing() so it can never block Continue, filled or not (every other field stays required). `home_months` is retired: save payload always sends `home_months: null` (key kept for schema stability, export pipeline handles null via `?? ""`); `home_years` may now be 0, a real number, or null/undefined.',
       '2026-08-27 · v1.1 — Draft 100 (MINOR — additive UX, no data-shape change). Continue no longer just sits disabled when a field is missing — it stays tappable, and tapping it while incomplete names which field is missing (or, with several missing, highlights and scrolls to the first) instead of leaving the kid to hunt for it. Save payload unchanged.',
       "2026-08-26 · v1.0 — new: demographics + Placement Disruption Worry items added to fill a gap between the live pretest and the polished /demo Pretest.jsx reference (age/sex/race/hispanic/grade/home time/placements; disruption-worry Likert item as a separate component, see 'placement-disruption-worry').",
     ],
   },
   'placement-disruption-worry': {
-    version: 'v1.0',
-    updated: '2026-08-26',
+    version: 'v1.1',
+    updated: '2026-09-01',
     changelog: [
+      '2026-09-01 · v1.1 — Draft 102 (MINOR — additive UI, no data-shape change). Adds "Read me the question" and "Read the answers" narration buttons pointing at Josh\'s recorded audio. Save payload unchanged.',
       "2026-08-26 · v1.0 — new: demographics + Placement Disruption Worry items added to fill a gap between the live pretest and the polished /demo Pretest.jsx reference (age/sex/race/hispanic/grade/home time/placements as a separate component, see 'demographics'; this component is the disruption-worry Likert item).",
     ],
   },

@@ -5,6 +5,7 @@ import {
   PullForwardCallout,
   WordBankChip,
 } from './shared.jsx'
+import NarrationControls from './NarrationControls.jsx'
 
 export default function FreeText({ content, onSave, existingResponse, sessionData }) {
   const starter = content?.sentence_starter || ''
@@ -76,7 +77,14 @@ export default function FreeText({ content, onSave, existingResponse, sessionDat
 
   return (
     <div>
-      <p className="text-[16px] leading-relaxed text-slate-800 mb-4">{content?.prompt}</p>
+      <p className={`text-[16px] leading-relaxed text-slate-800 ${content?.audio_url ? 'mb-2' : 'mb-4'}`}>
+        {content?.prompt}
+      </p>
+      {content?.audio_url && (
+        <div className="mb-4">
+          <NarrationControls questionAudioUrl={content.audio_url} />
+        </div>
+      )}
 
       {pullForwardConfig && pullForwardValue && (
         <PullForwardCallout

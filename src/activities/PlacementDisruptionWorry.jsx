@@ -12,6 +12,7 @@
 // FollowUp survey's disruption item.
 
 import { useState } from 'react'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 
 const DISRUPTION_ANCHORS = [
   { v: 0, label: 'Not at all' },
@@ -74,6 +75,12 @@ export default function PlacementDisruptionWorry({ onSave = console.log }) {
   return (
     <div>
       <h2 className="text-[20px] font-semibold mb-3">Your placement</h2>
+      <div className="mb-3">
+        <NarrationControls
+          questionAudioUrl="/narration/placement_worry_01_question.mp3"
+          answersAudioUrl="/narration/placement_worry_options.mp3"
+        />
+      </div>
       <LikertItem
         prompt="How worried are you right now that this placement will change?"
         anchors={DISRUPTION_ANCHORS}

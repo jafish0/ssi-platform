@@ -19,6 +19,7 @@
 
 import { useState } from 'react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 
 // ---------- Scale definitions ----------
 
@@ -513,11 +514,12 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
               videos and complete some activities. Some of these questions
               might ask about feelings that are hard to talk about. If you
               feel upset and want to talk to someone, please tell your
-              caregiver or email us at sprang@uky.edu. By completing the
-              program today, you will receive a $25 e-gift card as a thank
-              you. We&apos;re so glad you&apos;re working with us!
+              caregiver. By completing the program today, you will receive a
+              $25 e-gift card as a thank you. We&apos;re so glad
+              you&apos;re working with us!
             </p>
           </div>
+          <CrisisLifelineNote className="mt-4" />
         </div>
       )
 

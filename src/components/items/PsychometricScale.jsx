@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PrimaryButton, MissingItemsNote, scrollToMissingItem } from './shared.jsx'
+import NarrationControls from './NarrationControls.jsx'
 
 function shuffle(arr) {
   const a = arr.slice()
@@ -214,7 +215,14 @@ export default function PsychometricScale({ content, onSave, existingResponse })
         <h2 className="text-[22px] font-semibold mb-2">{content.scale_name}</h2>
       )}
       {content?.instructions && (
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-6">{content.instructions}</p>
+        <p className={`text-[16px] leading-relaxed text-slate-700 ${content?.instructions_audio_url ? 'mb-2' : 'mb-6'}`}>
+          {content.instructions}
+        </p>
+      )}
+      {content?.instructions_audio_url && (
+        <div className="mb-6">
+          <NarrationControls instructionsAudioUrl={content.instructions_audio_url} />
+        </div>
       )}
 
       {showProgress && oneAtATime && (
@@ -261,6 +269,7 @@ export default function PsychometricScale({ content, onSave, existingResponse })
               format={format}
               anchors={content?.anchors}
               vasConfig={content?.vas_config}
+              answersAudioUrl={content?.answers_audio_url}
               value={responses[it.id]}
               onChange={(v) => setItemResponse(it.id, v)}
             />
@@ -278,10 +287,17 @@ export default function PsychometricScale({ content, onSave, existingResponse })
   )
 }
 
-function ScaleItemRow({ item, format, anchors, vasConfig, value, onChange }) {
+function ScaleItemRow({ item, format, anchors, vasConfig, answersAudioUrl, value, onChange }) {
   return (
     <div id={`item-${item.id}`} className="border-b border-slate-200 pb-5 last:border-b-0">
-      <p className="text-[16px] text-slate-800 mb-3">{item.text}</p>
+      <p className={`text-[16px] text-slate-800 ${item.audio_url || answersAudioUrl ? 'mb-2' : 'mb-3'}`}>
+        {item.text}
+      </p>
+      {(item.audio_url || answersAudioUrl) && (
+        <div className="mb-3">
+          <NarrationControls questionAudioUrl={item.audio_url} answersAudioUrl={answersAudioUrl} />
+        </div>
+      )}
       {format === 'likert' && (
         <LikertRow anchors={anchors} value={value} onChange={onChange} />
       )}

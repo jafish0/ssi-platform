@@ -20,6 +20,7 @@ import {
   MissingItemsNote,
   scrollToMissingItem,
 } from '../components/items/shared.jsx'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 
 const RACE_OPTIONS = [
   { key: 'race_white',   label: 'White' },
@@ -218,6 +219,10 @@ export default function Demographics({ onSave = console.log }) {
         A few quick questions before we get started.
       </p>
       <div id="item-age">
+        <NarrationControls
+          className="mb-2"
+          questionAudioUrl="/narration/pretest_demographics_01_question.mp3"
+        />
         <NumberInput
           prompt="How old are you?"
           value={data.age ?? null}
@@ -227,6 +232,11 @@ export default function Demographics({ onSave = console.log }) {
         />
       </div>
       <div id="item-sex">
+        <NarrationControls
+          className="mb-2"
+          questionAudioUrl="/narration/pretest_demographics_02_question.mp3"
+          answersAudioUrl="/narration/pretest_demographics_02_options.mp3"
+        />
         <RadioGroup
           prompt="What is your sex?"
           options={[
@@ -239,6 +249,11 @@ export default function Demographics({ onSave = console.log }) {
         />
       </div>
       <div id="item-race">
+        <NarrationControls
+          className="mb-2"
+          questionAudioUrl="/narration/pretest_demographics_03_question.mp3"
+          answersAudioUrl="/narration/pretest_demographics_03_options.mp3"
+        />
         <CheckboxGroup
           prompt="What race do you consider yourself (choose all that apply)?"
           options={RACE_OPTIONS}
@@ -247,6 +262,11 @@ export default function Demographics({ onSave = console.log }) {
         />
       </div>
       <div id="item-hispanic">
+        <NarrationControls
+          className="mb-2"
+          questionAudioUrl="/narration/pretest_demographics_04_question.mp3"
+          answersAudioUrl="/narration/pretest_demographics_04_options.mp3"
+        />
         <RadioGroup
           prompt="Are you Hispanic or Latino?"
           options={[
@@ -258,6 +278,10 @@ export default function Demographics({ onSave = console.log }) {
         />
       </div>
       <div id="item-grade">
+        <NarrationControls
+          className="mb-2"
+          questionAudioUrl="/narration/pretest_demographics_05_question.mp3"
+        />
         <NumberInput
           prompt="What grade are you currently in at school?"
           value={data.grade ?? null}
@@ -271,6 +295,10 @@ export default function Demographics({ onSave = console.log }) {
           How long have you lived in your current home?{' '}
           <span className="text-slate-400 font-normal">(optional)</span>
         </div>
+        <NarrationControls
+          className="mb-2"
+          questionAudioUrl="/narration/pretest_demographics_06_question.mp3"
+        />
         {!data.home_lt1yr && (
           <NumberInput
             prompt="Years"
@@ -310,6 +338,10 @@ export default function Demographics({ onSave = console.log }) {
         </button>
       </div>
       <div id="item-placements">
+        <NarrationControls
+          className="mb-2"
+          questionAudioUrl="/narration/pretest_demographics_07_question.mp3"
+        />
         <NumberInput
           prompt="How many out of home placements have you had?"
           value={data.placements ?? null}
