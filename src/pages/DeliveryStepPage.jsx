@@ -91,12 +91,22 @@ export default function DeliveryStepPage() {
 
   useEffect(() => {
     if (lastSectionRef.current !== currentSectionIndex) {
-      // Just advanced into a new section
-      if (currentSectionIndex > 0 && currentItemIndex === 0) {
+      // Just advanced into a new section. Skip the transition card when the
+      // section leads with a video (Draft 105) — every video now has its
+      // own Vimeo begin-screen thumbnail carrying the section title, so
+      // this in-app card was pure redundant repetition ("three intros to
+      // the same thing," per the 8/31 meeting feedback). `currentSection`
+      // here is closed over from this render, and `.items` is already
+      // hidden-item-filtered by SessionEngine's normalizeSnapshot, so
+      // index 0 correctly means the first VISIBLE item even for a section
+      // like Sam's Story whose literal item 0 is a hidden bridge text.
+      const leadsWithVideo = currentSection?.items?.[0]?.type === 'video'
+      if (currentSectionIndex > 0 && currentItemIndex === 0 && !leadsWithVideo) {
         setShowTransition(true)
       }
       lastSectionRef.current = currentSectionIndex
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSectionIndex, currentItemIndex])
 
   if (!currentItem) {
