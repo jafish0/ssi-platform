@@ -143,12 +143,10 @@ const LEARNING_SKILLS_CARDS = [
   },
   {
     title: 'Learning Skills for Belonging — Part 1, Scene 4: The Foster Care "Extra Level"',
-    vimeoUrl: 'https://vimeo.com/1221516709/72f8ac57d9',
+    vimeoUrl: 'https://vimeo.com/1223092389/9479dd45fc',
     description:
       'The specific difficulty of building belonging while in foster or relative care — "playing the Belonging Game on Hard Mode."',
     feedbackArea: 'Kai Part 1 Scene 4: The Foster Care Extra Level',
-    knownIssue:
-      'Known issue: the opening line’s "foster or relative care" pronunciation is being re-recorded. A new cut will replace this one.',
   },
   // Part 2 Scenes 1-2 + Conclusion graduated out of weekly review here
   // (Draft 90, 2026-08-19) — cleared review. Scene 3 stays in

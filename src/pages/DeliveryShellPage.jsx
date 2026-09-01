@@ -6,6 +6,7 @@ import TreeProgress from '../components/TreeProgress.jsx'
 import TreeProgressMontage from '../components/TreeProgressMontage.jsx'
 import SplashScreen from '../components/SplashScreen.jsx'
 import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
+import FeedbackButton from '../components/FeedbackButton.jsx'
 import { PrimaryButton } from '../components/items/shared.jsx'
 // Draft 88 Part B: the post-posttest completion screen is the ONE place a
 // participant can save their keepsake — the five mid-flow download buttons
@@ -285,6 +286,20 @@ function ShellInner() {
   return (
     <>
       <ProgressBar />
+      {/* Draft 103 Part B: a persistent feedback affordance on the real
+          dogfooding build, matching /demo's existing per-page button —
+          fixed top-right, below the 1px progress strip so the two never
+          overlap. Lives in the shared shell (not DeliveryStepPage) so it
+          follows the participant across every screen in a real session,
+          including the completion/exit screens rendered by this same
+          component. */}
+      <div className="fixed top-3 right-3 z-40">
+        <FeedbackButton
+          subtle
+          label="Give feedback"
+          initialArea={`Live session · ${currentSection?.title || 'unknown section'}`}
+        />
+      </div>
       <Outlet />
     </>
   )

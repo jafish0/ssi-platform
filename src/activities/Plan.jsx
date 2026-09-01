@@ -887,14 +887,32 @@ export function PlanDownloads({ model }) {
 
 // ---------- Keepsake SVG (shared by PNG + PDF) ----------
 
-function wrapText(str, maxChars) {
+// Draft 103 Part D fix: this used to wrap by a fixed CHARACTER count
+// (~64), which assumes every character is the same width. Georgia is a
+// proportional serif — a line of 64 wide characters (capitals, "W"/"M",
+// a long name with no spaces to break on) measures noticeably wider than
+// 64 narrow ones, so a "short enough" line could still render past the
+// canvas edge and get silently clipped in the exported PNG (Bianca's
+// "cut off" report). Wrap by actual measured pixel width instead, using
+// the same font the SVG <text> element renders with — one shared
+// offscreen canvas context measures in the same engine that will
+// ultimately rasterize the SVG, so the measurement matches reality.
+let _measureCtx = null
+function measureTextWidth(text, font) {
+  if (!_measureCtx) _measureCtx = document.createElement('canvas').getContext('2d')
+  _measureCtx.font = font
+  return _measureCtx.measureText(text).width
+}
+
+function wrapText(str, maxWidth, font) {
   const words = String(str || '').split(/\s+/)
   const lines = []
   let cur = ''
   for (const w of words) {
-    if (!cur) cur = w
-    else if ((cur + ' ' + w).length <= maxChars) cur += ' ' + w
-    else {
+    const candidate = cur ? `${cur} ${w}` : w
+    if (!cur || measureTextWidth(candidate, font) <= maxWidth) {
+      cur = candidate
+    } else {
       lines.push(cur)
       cur = w
     }
@@ -917,7 +935,6 @@ function buildPlanKeepsakeSvg(model) {
   const m = model
   const width = 640
   const padX = 44
-  const wrapAt = 64
   const els = []
   let y = 70
 
@@ -934,7 +951,9 @@ function buildPlanKeepsakeSvg(model) {
     y += 24
   }
   const body = (txt, { italic = false, indent = 0 } = {}) => {
-    for (const line of wrapText(txt, wrapAt - Math.round(indent / 8))) {
+    const font = `${italic ? 'italic ' : ''}16px Georgia, 'Times New Roman', serif`
+    const maxWidth = width - padX - indent - padX
+    for (const line of wrapText(txt, maxWidth, font)) {
       els.push(
         `<text x="${padX + indent}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="16" ${italic ? 'font-style="italic" ' : ''}fill="#1F2937">${escapeXml(line)}</text>`,
       )
