@@ -1,30 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession } from '../engine/SessionEngine.jsx'
 import ItemRenderer from '../engine/ItemRenderer.jsx'
-import {
-  PrimaryButton,
-  GhostButton,
-} from '../components/items/shared.jsx'
+import { GhostButton } from '../components/items/shared.jsx'
 import TreeGrowthInterstitial from '../components/TreeGrowthInterstitial.jsx'
 import { deriveTreeStage, REAL_ACTIVITY_COMPONENT_NAMES } from '../lib/treeProgressStage.js'
-
-function SectionTransition({ section, onContinue }) {
-  return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-10 bg-ctac-teal-50">
-      <div className="w-full max-w-[540px] text-center">
-        <h1 className="text-[28px] font-bold leading-tight mb-4 text-slate-800">
-          {section?.title || 'Next part'}
-        </h1>
-        {section?.config_json?.description && (
-          <p className="text-[16px] leading-relaxed text-slate-700 mb-8 max-w-md mx-auto">
-            {section.config_json.description}
-          </p>
-        )}
-        <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>
-      </div>
-    </main>
-  )
-}
 
 export default function DeliveryStepPage() {
   const {
@@ -41,10 +20,6 @@ export default function DeliveryStepPage() {
     responsesByItemId,
     resolveToken,
   } = useSession()
-
-  // Show a section transition card when entering a new section, except the first.
-  const [showTransition, setShowTransition] = useState(false)
-  const lastSectionRef = useRef(currentSectionIndex)
 
   // Set when saving a real, scored activity's response pushes the tree
   // (src/lib/treeProgressStage.js) to a new growth stage — holds
@@ -87,27 +62,7 @@ export default function DeliveryStepPage() {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     }
-  }, [currentItem?.id, showTransition, treeInterstitial])
-
-  useEffect(() => {
-    if (lastSectionRef.current !== currentSectionIndex) {
-      // Just advanced into a new section. Skip the transition card when the
-      // section leads with a video (Draft 105) — every video now has its
-      // own Vimeo begin-screen thumbnail carrying the section title, so
-      // this in-app card was pure redundant repetition ("three intros to
-      // the same thing," per the 8/31 meeting feedback). `currentSection`
-      // here is closed over from this render, and `.items` is already
-      // hidden-item-filtered by SessionEngine's normalizeSnapshot, so
-      // index 0 correctly means the first VISIBLE item even for a section
-      // like Sam's Story whose literal item 0 is a hidden bridge text.
-      const leadsWithVideo = currentSection?.items?.[0]?.type === 'video'
-      if (currentSectionIndex > 0 && currentItemIndex === 0 && !leadsWithVideo) {
-        setShowTransition(true)
-      }
-      lastSectionRef.current = currentSectionIndex
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSectionIndex, currentItemIndex])
+  }, [currentItem?.id, treeInterstitial])
 
   if (!currentItem) {
     return (
@@ -117,12 +72,10 @@ export default function DeliveryStepPage() {
     )
   }
 
-  // Checked before showTransition. treeInterstitial is set from
-  // handleItemSave either immediately (before goNext() runs, so the
-  // section index can't have advanced yet) or, when a pull-forward
-  // display screen deferred it, on the NEXT handleItemSave call — by then
-  // any section transition from the intervening goNext() has already been
-  // dismissed by the participant, so the two still never show at once.
+  // treeInterstitial is set from handleItemSave either immediately (before
+  // goNext() runs, so the section index can't have advanced yet) or, when a
+  // pull-forward display screen deferred it, on the NEXT handleItemSave
+  // call.
   if (treeInterstitial) {
     return (
       <TreeGrowthInterstitial
@@ -133,15 +86,6 @@ export default function DeliveryStepPage() {
           setTreeInterstitial(null)
           goNext()
         }}
-      />
-    )
-  }
-
-  if (showTransition) {
-    return (
-      <SectionTransition
-        section={currentSection}
-        onContinue={() => setShowTransition(false)}
       />
     )
   }
@@ -244,7 +188,15 @@ export default function DeliveryStepPage() {
           </div>
         )}
 
-        {/* Section header */}
+        {/* Section header. Draft 106 (2026-09-01, Josh's direct feedback
+            walking the app himself): the old full-screen "section title +
+            Continue" transition card between sections is gone entirely —
+            he found it disruptive on every section he hit, not just the
+            video-led ones Draft 105 had already suppressed. This inline
+            strip is now the only section-title UI. Several sections still
+            carry a `config_json.description` subtitle the removed card
+            used to show — that text is now unused (kept in the DB, not
+            deleted, in case a future design wants it back). */}
         {currentSection?.title && (
           <div className="text-[13px] text-slate-500 mb-3 px-1">
             <span className="font-semibold text-slate-700">{currentSection.title}</span>

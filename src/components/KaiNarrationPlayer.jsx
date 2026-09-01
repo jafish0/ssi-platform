@@ -16,6 +16,23 @@
 // left of the speaker icon so the participant sees who's talking — the
 // icon still signals "audio," the portrait signals "who."
 //
+// Draft 106 (2026-09-01, Josh's direct feedback walking the app himself):
+// this used to render the browser's native `<audio controls>` UI, whose
+// visible scrub bar could be dragged straight to the end to unlock
+// Continue without listening. Draft 101 Part H tried to police that by
+// snapping `currentTime` back on the `seeking` event, but that only
+// caught one specific event in the drag sequence — a real native-scrubber
+// drag in Chrome doesn't reliably fire `seeking` at a moment when
+// `currentTime` already reflects the dragged-to position, so the snap-back
+// could miss the actual jump. Same lesson Josh already applies to the
+// Vimeo videos: don't try to detect and reverse a skip after the fact,
+// remove the thing that lets you skip in the first place. So the native
+// scrub bar is gone entirely — hand-built Play/Pause + Replay buttons
+// only, no seek control of any kind, exactly like the main videos have no
+// visible scrub bar either. Volume is left to the OS/device; that's an
+// acceptable accessibility trade for a short single clip with an
+// always-visible on-screen transcript.
+//
 // Fails open: if the audio fails to load (e.g. Josh hasn't dropped the mp3
 // in at its expected path yet — see public/kai-narration/README.md), this
 // treats the transcript as the intended fallback (per the draft's own
@@ -24,30 +41,25 @@
 // permanently disabled.
 
 import { useEffect, useRef, useState } from 'react'
-import { Volume2, RotateCcw } from 'lucide-react'
+import { Volume2, Pause, RotateCcw } from 'lucide-react'
 
 export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete }) {
   const audioRef = useRef(null)
-  const maxTimeRef = useRef(0)
   const [playing, setPlaying] = useState(false)
-  const [autoplayBlocked, setAutoplayBlocked] = useState(false)
   const [completed, setCompleted] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [progress, setProgress] = useState(0) // 0..1
 
   // Attempt auto-play on mount. Browsers block this without prior user
   // interaction — the participant has already interacted with the page to
-  // reach this screen, so it usually succeeds; if blocked, fall back to a
-  // visible Play button.
+  // reach this screen, so it usually succeeds; if blocked, the Play/Pause
+  // toggle below (driven by the `playing` state, not by whether autoplay
+  // itself succeeded) covers starting it manually.
   useEffect(() => {
-    maxTimeRef.current = 0
     setLoadFailed(false)
     const el = audioRef.current
     if (!el) return
-    const p = el.play()
-    if (p && typeof p.catch === 'function') {
-      p.then(() => setAutoplayBlocked(false)).catch(() => setAutoplayBlocked(true))
-    }
+    el.play().catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioSrc])
 
@@ -63,8 +75,14 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
     onComplete?.()
   }
 
-  function handlePlayClick() {
-    audioRef.current?.play().catch(() => {})
+  function handleTogglePlay() {
+    const el = audioRef.current
+    if (!el) return
+    if (playing) {
+      el.pause()
+    } else {
+      el.play().catch(() => {})
+    }
   }
 
   function handleReplay() {
@@ -77,21 +95,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
   function handleTimeUpdate() {
     const el = audioRef.current
     if (!el || !el.duration) return
-    if (el.currentTime > maxTimeRef.current) maxTimeRef.current = el.currentTime
     setProgress(el.currentTime / el.duration)
-  }
-
-  // No forward-skipping past what's actually been heard — same "no skip"
-  // treatment as the main Vimeo videos (2026-08-31 meeting, Part H). The
-  // 0.25s tolerance is a safety margin for floating-point/event-timing
-  // imprecision right at the boundary; normal linear playback never fires
-  // the `seeking` event at all, only an actual user-initiated jump does.
-  function handleSeeking() {
-    const el = audioRef.current
-    if (!el) return
-    if (el.currentTime > maxTimeRef.current + 0.25) {
-      el.currentTime = maxTimeRef.current
-    }
   }
 
   function handleEnded() {
@@ -132,22 +136,20 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
         </p>
       ) : (
         <>
-          {/* Native controls stay available (visible) for accessible seek /
-              pause / volume + keyboard support; the amber progress bar
-              below is an always-visible "how far along" indicator alongside
-              them. */}
+          {/* No native `controls` (Draft 106) — no visible scrub bar means
+              no seek gesture to police. The amber progress bar below is a
+              display-only "how far along" indicator, not an interactive
+              control. */}
           <audio
             ref={audioRef}
             src={audioSrc}
-            controls
             preload="auto"
             onTimeUpdate={handleTimeUpdate}
-            onSeeking={handleSeeking}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
             onEnded={handleEnded}
             onError={handleError}
-            className="w-full mb-3"
+            className="hidden"
           >
             Your browser does not support the audio element.
           </audio>
@@ -177,15 +179,19 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
           )}
 
           <div className="flex items-center gap-3 mb-4">
-            {autoplayBlocked && !playing && !completed && (
+            {!completed && (
               <button
                 type="button"
-                onClick={handlePlayClick}
-                aria-label="Play Kai's narration"
+                onClick={handleTogglePlay}
+                aria-label={playing ? "Pause Kai's narration" : "Play Kai's narration"}
                 className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-full px-4 py-2 min-h-[40px] text-[13px]"
               >
-                <Volume2 size={14} strokeWidth={2} />
-                Play
+                {playing ? (
+                  <Pause size={14} strokeWidth={2} />
+                ) : (
+                  <Volume2 size={14} strokeWidth={2} />
+                )}
+                {playing ? 'Pause' : 'Play'}
               </button>
             )}
             {completed && (
