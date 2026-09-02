@@ -37,7 +37,14 @@ const PROGRAMS = [
 const SECTION_LABELS = {
   // Ideas & Demos for Review (proposals staged above the official breakdown)
   'review-finalboss': 'Review: Final Boss summit script',
-  'review-videos': 'Review: Zone videos',
+  'review-pretest': 'Review: Pre-test measures flow',
+  'review-posttest': 'Review: Post-test measures flow',
+  'review-videos': 'Review: Videos — overall / general note',
+  'video-1': 'Review: Video 1 — What is Trauma',
+  'video-2': 'Review: Video 2 — The Four Reactions',
+  'video-3': 'Review: Video 3 — Getting the Best Therapy',
+  'video-4': 'Review: Video 4 — What Therapy Feels Like',
+  'video-5': 'Review: Video 5 — Growth Mindset',
   'review-exposition': 'Review: Exposition',
   'review-character': 'Review: Character progression',
   'review-arcades': 'Review: Arcade ideas',

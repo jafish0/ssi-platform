@@ -40,7 +40,15 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-finalboss', label: 'Review: Final Boss summit script' },
   { value: 'review-pretest', label: 'Review: Pre-test measures flow' },
   { value: 'review-posttest', label: 'Review: Post-test measures flow' },
-  { value: 'review-videos', label: 'Review: Zone videos' },
+  // Draft 55 (2026-09-01): each video now gets its own comment box so
+  // feedback maps per-video in the CSV export; review-videos stays as the
+  // one "overall / general note" box for the group.
+  { value: 'review-videos', label: 'Review: Videos — overall / general note' },
+  { value: 'video-1', label: 'Review: Video 1 — What is Trauma' },
+  { value: 'video-2', label: 'Review: Video 2 — The Four Reactions' },
+  { value: 'video-3', label: 'Review: Video 3 — Getting the Best Therapy' },
+  { value: 'video-4', label: 'Review: Video 4 — What Therapy Feels Like' },
+  { value: 'video-5', label: 'Review: Video 5 — Growth Mindset' },
   // Retired as their proposals were adopted (labels are kept in
   // AdminFeedbackPage so existing rows still label correctly):
   //   review-rename     — the zone rename, accepted 2026-08-11, now canon
@@ -188,12 +196,17 @@ const ZONE_MAP_ROWS = [
 // hash, not a public video), so they're embedded via player.vimeo.com's own
 // `?h=` hash-embed URL rather than the public vimeo.com/{id} page -- that's
 // the standard, non-awkward way to embed an unlisted Vimeo video anywhere.
+// Draft 55 (2026-09-01): re-rendered links for 1/2/3/5 (Video 4 unchanged),
+// exported clean -- no baked-in captions or "Spark" label; real captions go
+// on in Vimeo as text tracks. Each carries its own feedback `section` tag so
+// a comment maps to a specific video in the CSV export instead of all five
+// sharing one `review-videos` box.
 const REVIEW_VIDEOS = [
-  { title: 'Zone 1 — What is Trauma', id: '1222082001', h: 'c65abe5b9f' },
-  { title: 'Zone 2 — The Four Reactions', id: '1222089263', h: 'd3825818f8' },
-  { title: 'Zone 3 — Getting the Best Therapy', id: '1222097986', h: '4c7cf651e2' },
-  { title: 'Zone 4 — What Therapy Feels Like', id: '1222092263', h: 'bca4fdcea9' },
-  { title: 'Zone 5 — Growth Mindset', id: '1222095414', h: '82f1e6b6f1' },
+  { title: 'Zone 1 — What is Trauma', id: '1223203599', h: 'a9c90c2fa2', section: 'video-1' },
+  { title: 'Zone 2 — The Four Reactions', id: '1223210105', h: '315f412718', section: 'video-2' },
+  { title: 'Zone 3 — Getting the Best Therapy', id: '1223207965', h: 'd0c77b8f23', section: 'video-3' },
+  { title: 'Zone 4 — What Therapy Feels Like', id: '1222092263', h: 'bca4fdcea9', section: 'video-4' },
+  { title: 'Zone 5 — Growth Mindset', id: '1223211325', h: 'b8579c9aa1', section: 'video-5' },
 ]
 
 const REVIEW_ARCADES = [
@@ -574,9 +587,11 @@ export default function GainsDemoPage() {
               {/* 3 — the five zone psychoeducation videos (Draft 51) */}
               <ReviewItem n={3} title="Videos" section="review-videos">
                 <p className="mb-3">
-                  The five zone psychoeducation videos, one per zone.
+                  The five zone psychoeducation videos, one per zone. Each has
+                  its own comment box below it; use the box at the bottom of
+                  this card for anything about the videos as a group.
                 </p>
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {REVIEW_VIDEOS.map((v) => (
                     <ReviewVideo key={v.id} {...v} />
                   ))}
@@ -1040,28 +1055,37 @@ function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
 // section. Vimeo's `?h=` hash-embed URL is the standard way to embed an
 // unlisted video anywhere -- no separate "unlisted" handling needed.
 // Draft 52: these are phone-portrait videos (9:16, like the rest of the
-// game), not landscape -- resized down from an oversized 2-up 16:9 grid to
-// a single vertical stack, each constrained to the same width as the
-// playable-activity phone frames below (`-mx-4 sm:mx-auto sm:max-w-[360px]`
-// is that exact pattern, copied for consistency).
-function ReviewVideo({ title, id, h }) {
+// game), not landscape.
+// Draft 55: laid out 2-per-row in a grid instead of a single stack, so each
+// player now fills its own grid cell rather than being centered to a fixed
+// 360px phone-frame width. Each card also gets its own comment box (tagged
+// with that video's `section`) so feedback maps to a specific video in the
+// CSV export instead of all five sharing one box.
+function ReviewVideo({ title, id, h, section }) {
   return (
     <div>
       <p className="text-[13px] font-semibold mb-1.5" style={{ color: 'var(--text-bright)' }}>{title}</p>
-      <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
-        <div
-          className="relative w-full rounded-2xl overflow-hidden"
-          style={{ aspectRatio: '9 / 16', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-md)' }}
-        >
-          <iframe
-            src={`https://player.vimeo.com/video/${id}?h=${h}&title=0&byline=0&portrait=0`}
-            title={title}
-            className="absolute inset-0 w-full h-full"
-            frameBorder="0"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
+      <div
+        className="relative w-full rounded-2xl overflow-hidden"
+        style={{ aspectRatio: '9 / 16', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-md)' }}
+      >
+        <iframe
+          src={`https://player.vimeo.com/video/${id}?h=${h}&title=0&byline=0&portrait=0`}
+          title={title}
+          className="absolute inset-0 w-full h-full"
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+      <div className="mt-2">
+        <FeedbackButton
+          program="gains-teens"
+          sections={GAINS_FEEDBACK_SECTIONS}
+          defaultSection={section}
+          label="Comment on this video"
+          subtle
+        />
       </div>
     </div>
   )
