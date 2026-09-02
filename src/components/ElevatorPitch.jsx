@@ -90,9 +90,6 @@ const STEPS = ['intro', 'greeting', 'situation', 'request', 'normalize', 'offer'
 const REASSURANCE =
   'If asking directly feels hard, how about writing this in a note first to take the pressure off- you will get a copy of this message in your action plan to make it easier'
 
-const SAFETY_DISCLAIMER =
-  'Note: if what is going on feels urgent, like you are struggling to cope or having thoughts of hurting yourself or someone else, don’t wait to convince your parents- reach out immediately to a school counselor, you family physician or call or text 988 immediately.'
-
 // Adds terminal punctuation only if the line doesn't already have some --
 // preserves Holly's exact wording while giving the assembled message
 // consistent sentence endings (matching her own worked example).
@@ -325,22 +322,14 @@ export default function ElevatorPitch() {
           {/* Draft 48 (Holly/admin, 2026-08-24): the 988 disclaimer gets its
               own screen now, shown after the message is saved but before the
               Wingsuit award -- it used to sit alongside the Wingsuit message
-              on `done`, below. Draft 59 (Holly, 2026-09-02): Sprang's
-              verbatim line names 988 but never explains what it is, so the
-              team-approved crisis-lifeline explainer now follows it -- same
-              wording used everywhere else in the platform (Assent, Welcome,
-              end-of-program), just themed for this dark GAINS screen. */}
-          {step === 'safety' && (
-            <div className="space-y-2">
-              <p
-                className="text-[13px] leading-relaxed rounded-2xl px-3 py-2.5"
-                style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
-              >
-                {SAFETY_DISCLAIMER}
-              </p>
-              <GainsCrisisLifelineNote />
-            </div>
-          )}
+              on `done`, below. Draft 59 (Holly, 2026-09-02) added the
+              team-approved crisis-lifeline explainer below Sprang's verbatim
+              disclaimer so 988 was actually explained; live-demo review the
+              same day (Josh) found the two 988 mentions read as duplicated
+              on screen, so only the phone-icon explainer stays. Sprang's
+              exact wording is preserved in git history if it needs to come
+              back. */}
+          {step === 'safety' && <GainsCrisisLifelineNote />}
 
           {/* Draft 59 (Holly + Ginny, 2026-09-02): the old copy's "when the
               moment feels right" implied waiting for a magic moment (Holly),
