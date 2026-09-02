@@ -349,6 +349,13 @@ const CLOSE_1_TEXT =
 const CLOSE_2_TEXT =
   'Congratulations — your practice actually leveled up your Oxygen Mask! The climb up to Mount Hope should be easier now.'
 
+// Shown once `finished` is set (see finish() below) -- a placeholder for
+// the real Oxygen Mask gear sequence, which isn't built yet. Demo-only note
+// so testers see a deliberate end instead of the close screen just sitting
+// there with its buttons gone and the soundscape still looping.
+const GEAR_PLACEHOLDER_TEXT =
+  'The actual Gear sequence for the Oxygen Mask will come here instead of this placeholder.'
+
 function loadLayer(url) {
   return fetch(url)
     .then((r) => r.text())
@@ -392,9 +399,12 @@ export default function MindfulnessCalmPlace() {
   // second (capped -- no practice offer is shown once it reaches 2).
   const [completionCount, setCompletionCount] = useState(0)
   // Draft 57: replaces the old restart()-to-intro loop (Ginny's bug). Once
-  // true, the close screen's button row is hidden and the last message
-  // simply stays on screen -- that's the whole "ends cleanly" fix, no new
-  // screen or navigation needed.
+  // true, the close screen's button row is hidden. 2026-09-02 (Josh, demo
+  // feedback, in-conversation -- no draft number): finish() also stops the
+  // soundscape/narration (it used to keep looping forever with no more
+  // screens to reach) and the panel swaps to GEAR_PLACEHOLDER_TEXT, a
+  // deliberate end instead of just freezing on whichever close message was
+  // already showing.
   const [finished, setFinished] = useState(false)
 
   const containerRef = useRef(null)
@@ -493,8 +503,13 @@ export default function MindfulnessCalmPlace() {
     setMode('see')
   }
 
+  // Stops the soundscape (and any narration still mid-clip) so the activity
+  // actually goes quiet once it ends, instead of looping the bed forever
+  // with no more screens to reach.
   function finish() {
     setFinished(true)
+    if (soundscapeRef.current) soundscapeRef.current.pause()
+    if (narrationRef.current) narrationRef.current.pause()
   }
 
   const seeAllFound = seen.length >= 3
@@ -604,7 +619,10 @@ export default function MindfulnessCalmPlace() {
         ? 'Beautifully done.'
         : 'Now, let’s feel. Feel your lungs fill as you breathe with me.'
   } else if (mode === 'close') {
-    if (completionCount >= 2) {
+    if (finished) {
+      panelLabel = null
+      panelText = GEAR_PLACEHOLDER_TEXT
+    } else if (completionCount >= 2) {
       panelLabel = 'Leveled up'
       panelText = CLOSE_2_TEXT
     } else {
@@ -866,11 +884,12 @@ export default function MindfulnessCalmPlace() {
           )}
 
           {/* Second completion: a single button that ends the activity --
-              `finish()` only sets `finished`, which hides this row and
-              leaves CLOSE_2_TEXT on screen. No path back to `mode: 'intro'`
-              exists anywhere in this screen (Draft 57 fixes the old
-              restart()-to-intro bug by removing that path entirely, not by
-              guarding it). */}
+              `finish()` sets `finished` (hiding this row and swapping the
+              panel to GEAR_PLACEHOLDER_TEXT) and stops the soundscape/
+              narration so the activity actually goes quiet. No path back to
+              `mode: 'intro'` exists anywhere in this screen (Draft 57 fixes
+              the old restart()-to-intro bug by removing that path entirely,
+              not by guarding it). */}
           {mode === 'close' && !finished && completionCount >= 2 && (
             <button
               type="button"
