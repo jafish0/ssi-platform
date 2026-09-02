@@ -132,6 +132,39 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **8f40734** (2026-09-02) — Draft 63: **The Ascent — feeling-obstacles
+  (blast the red, collect the gold), bigger climber (Ginny/Sprang's 8/31
+  climb ideas).** Layers the team's feeling mechanic on top of the
+  existing climb bones (three stages, Second Wind, darkness aura, ledges,
+  stage beats, Beacon completion — all unchanged) in
+  `src/game/climbScene.js`. **Bigger climber**: `CLIMB_FIG_H` 55→100
+  (Sprang: "that little climber seems so small, could it be bigger?"),
+  collection radius scaled to match (39→68) — confirmed rendering clearly
+  bigger both locally and live. **Two feeling types fall from above,
+  replacing the plain oxygen orbs**: GOLD (hope, joy, courage, calm,
+  pride, gratitude) — the Second Wind charge, same collect logic/sound as
+  before, just labeled; RED (sadness, shame, guilt, anger, resentment,
+  helplessness, hopelessness, regret) — the obstacles, a random
+  size/hit-count per spawn (1/2/3 taps to shatter) rather than a fixed
+  intensity ranking per word. **Focusing Lens beam**: a discrete tap
+  (disambiguated from a steering drag by total pointer displacement +
+  duration) fires at the nearest red in range, flashes its name, and once
+  enough hits land shatters it into GOLD-colored light motes (on-lore:
+  facing a feeling turns it to light) for a small Second Wind top-up. An
+  un-blasted red that reaches the climber knocks it back a little and
+  drains Second Wind instead of a fail state. Procedural art for this
+  first pass — gold reuses the existing warm orb art verbatim, red gets a
+  new ember-glow texture. `onComplete` now also reports `feelingsCleared`
+  alongside `orbsCollected`. Verified via direct scene-state inspection
+  (progress/breath/spawn/collision/hit-counting all confirmed correct)
+  after discovering this dev environment's headless Browser pane reports
+  `document.visibilityState` as hidden, which pauses Phaser's
+  requestAnimationFrame loop — a testing-environment quirk, not a code
+  issue, worth remembering for future Phaser work here. Verified live too
+  (bigger climber rendering, all assets 200, no console errors). Clean
+  build; no version bump (`src/game/` + `src/components/`, not
+  `src/activities/`).
+
 - **2dc20e1** (2026-09-02) — Draft 62 (supersedes Draft 61, which was never
   separately implemented): **Zone 3 safety screen — merge Sprang's
   disclaimer + the 988 definition into one line.** After 00bf621 removed
@@ -3183,3 +3216,29 @@ Notes:
 **Verify.** On `/gains-demo` Zone 3 "Message to Your Guardian" safety screen: the merged line shows (escalation + "988, the Suicide & Crisis Lifeline (free, confidential support, 24/7)"); 988 appears exactly once; "your family physician" reads correctly; no separate explainer card; Wingsuit "done" copy unchanged; Ready for Roots' `CrisisLifelineNote` unaffected; clean build. `src/components/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 62.*
+
+
+### Draft 63 — The Ascent: feeling-obstacles (blast the red, collect the gold), bigger climber — Ginny/Sprang's 8/31 climb ideas — ✅ SHIPPED 8f40734 (2026-09-02)
+
+Rework the Zone 4→5 climb (`src/game/climbScene.js`, page `src/pages/GainsClimbPage.jsx`, wrapper `src/components/TraversalGame.jsx`) to add the feeling mechanic the team designed in the 8/31 meeting. Keep the existing climb bones — three stages (tree/mountain/spire), Second Wind breath meter, the own-darkness aura that closes in when breath is low, `onComplete({ orbsCollected })`, one-thumb play, non-fail. This adds a layer on top; it doesn't replace the climb.
+
+**Design intent (from the transcript — keep the framing):** feelings fall at you as you climb; you **face them, which turns them to light** (on-lore: "all light is a faced shadow"). Sprang/Ginny wanted to "blast/shatter" them and agreed this is OK because it reads as **protecting yourself, not aggression** — keep that tone (light, not violence; nothing gory or combat-y).
+
+**1. Bigger climber.** The climber is currently tiny (`CLIMB_FIG_H = 55`). Make it clearly bigger — try **~95–105px** — so it reads as a real character, not a speck. Scale its collision/steer feel to match; keep it bottom-anchored. (Sprang: "that little climber seems so small, could it be bigger?" → yes.)
+
+**2. Consolidate the drop-items into TWO feeling types (both fall from above, varying size = intensity).**
+- **GOLD = positive feelings you COLLECT** (these replace the plain oxygen orbs as your Second Wind charge). Each is a warm gold mote with a feeling word: **hope, joy, courage, calm, pride, gratitude**. Steer to collect → **refills Second Wind** + a soft chime + the word blooms briefly. (Reuse the existing orb collect logic/sound; just retint gold and label them.)
+- **RED = negative feelings you BLAST** (the obstacles): **sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret**. They descend toward the climber. **Size = intensity** (a small wisp of guilt vs a big wall of hopelessness). If a red feeling reaches/hits the climber un-blasted, it **knocks you back a little and drains Second Wind** (feeds the darkness aura) — protect yourself by clearing them.
+
+**3. Focusing Lens beam — tap-to-target (the "blast").** Tap directly on a red feeling → a **beam of light** fires from the climber's Focusing Lens to it → the feeling's **name flashes** → it **shatters into light motes** (protecting yourself; on-lore turn-to-light). 
+- **Freed light is fuel:** a shattered red feeling releases a couple of light motes that give a **small Second Wind boost** (facing it powers your climb). Gold collectibles are the main breath source; blasting is a smaller top-up + clears the threat.
+- **Size scales the effort:** small reds pop from one tap; **big reds need a charged/held beam** (tap-and-hold to charge, or 2–3 hits) **or a breath first** (an Oxygen-Mask beat) before the beam lands — two gears working together on the hardest feelings.
+- **Controls:** keep steering as the existing drag; a discrete **tap** (little/no drag) on a red feeling fires the beam. Tune the tap-vs-drag disambiguation so collecting gold and blasting red both feel good one-thumb. Optional nicety: the beam auto-aims at the tapped feeling so precision isn't punishing.
+
+**4. Keep the rest.** Second Wind drain per stage, the darkness aura when low (now also nudged by un-blasted reds hitting you), stage pauses, brightening as you rise, the Beacon completion. `onComplete` can also report reds cleared if easy (e.g. `{ orbsCollected, feelingsCleared }`) — optional.
+
+**Art:** render the feeling motes **procedurally for now** — reuse the glow-texture approach already in `climbScene.js` (gold glow vs red/ember glow) with a Phaser text label for the feeling word; the beam + shatter can be a light line + particle burst. No new painted assets required for a first pass; we can swap in painted feeling art later. (Cowork will provide painted feeling art in a follow-up if we want it.)
+
+**Verify.** On `/gains-demo/climb`: the climber is visibly bigger; gold feeling-motes (hope/joy/courage/calm/pride/gratitude) fall and are collected to refill Second Wind with the word shown; red feeling-obstacles (the 8 negatives) fall in varying sizes; tapping a red fires the Lens beam, flashes its name, and shatters it into light that gives a small breath boost; big reds need a charged beam or a breath; un-blasted reds that hit you knock you back and drain breath; the darkness aura, stages, brightening, and Beacon completion still work; one-thumb play feels good (steer to collect, tap to blast); non-fail; no console errors; Ready for Roots unaffected; clean build. Phaser/`src/game/` + `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 63.*
