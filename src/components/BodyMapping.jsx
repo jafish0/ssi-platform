@@ -196,7 +196,7 @@ function OtherAreaField({ value, onChange }) {
         className="w-full text-left mt-1.5 px-3.5 py-2.5 rounded-2xl text-[12px] leading-snug border border-dashed hover:border-[var(--border-warm)] hover:text-[var(--text-warm)] transition-colors"
         style={{ borderColor: 'var(--border-soft)', color: 'var(--text-faint)' }}
       >
-        Is there another area you feel it in your body? (write it in)
+        Is there another area where you feel a trauma reaction in your body? If so, write it in the box below.
       </button>
     )
   }
@@ -502,14 +502,17 @@ export default function BodyMapping() {
             </g>
 
             {/* Draft 46 (Holly): lowered ~30 units so it isn't floating in
-                empty space beneath the heart/lungs cluster. */}
+                empty space beneath the heart/lungs cluster. Draft 56
+                (Holly, 2026-08-31): nudged another ~30 units lower so it
+                reads as sitting a bit lower on the torso; still clear of
+                the body/hand target below (cy 616). */}
             <g {...regionProps('stomach', 'Stomach: gut feelings')} id="bm-region-stomach">
-              <circle className="bm-target" cx="352" cy="508" r="46" />
-              <g className="bm-icon" transform="translate(352,508) scale(1.25)">
+              <circle className="bm-target" cx="352" cy="538" r="46" />
+              <g className="bm-icon" transform="translate(352,538) scale(1.25)">
                 <path d="M-8,-17 C-6,-9 -8,-5 -11,-1 C-15,6 -12,15 -4,17 C5,19 13,12 13,2 C13,-8 5,-16 -5,-16" />
                 <path d="M-8,-17 L-1,-19" />
               </g>
-              <g className="bm-check" transform="translate(385,541)">
+              <g className="bm-check" transform="translate(385,571)">
                 <circle r="14" fill="#B45309" />
                 <path d="M-6,0 L-1.5,5 L6.5,-5" fill="none" stroke="#FFFBEB" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
               </g>
