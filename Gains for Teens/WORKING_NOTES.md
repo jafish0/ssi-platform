@@ -132,6 +132,34 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **813b3dd** (2026-09-02) — Draft 64: **The Ascent revisions — readable
+  orbs, big slow blocking red feelings, progressive "name it to tame it"
+  blast, tap hint + new directions.** Revisions to the just-shipped
+  Draft 63, from Josh's review of the live build: the orbs were too small
+  to read and the reds needed to matter more. New directions copy on the
+  instructions screen. Gold feeling-orbs bigger (`ORB_W` 16→36) and fall a
+  little slower (210→175) so the word is legible while catchable. Reds
+  are no longer a random falling swarm — one of each negative feeling, met
+  one at a time as a single big, slow, BLOCKING cloud scheduled across the
+  climb (`RED_CHECKPOINTS`); while one is up, climb progress freezes (not
+  breath drain, not gold spawning) until it's cleared. "Name it to tame
+  it": each tap lightens the cloud and reveals the feeling's name
+  underneath instead of an instant multi-hit-then-gone; once fully cleared
+  it releases real, collectible gold feelings (not an instant top-up) —
+  the gathering is the reward. A stuck player (untouched a few seconds)
+  gets a pulsing tap-ring + a text nudge, clearing on first contact. Also
+  fixed a visual bug caught during verification: the red cloud's additive
+  blending in a warm tone made it blend invisibly into the background art;
+  switched to a dedicated normal-blended cloud texture in a deeper red so
+  it reads as a heavy obstacle. Removed the old un-blasted-red-hits-the-
+  climber knockback (reds don't approach the climber anymore, they block
+  until faced). Keeps the bigger climber, Second Wind, aura, stages,
+  brightening, Beacon completion, one-thumb play, non-fail. Verified via
+  direct scene-state inspection locally (checkpoint spawning, progress
+  freeze/resume, progressive reveal, hint show/hide, shatter-reward all
+  confirmed) and live (directions copy exact, clean console, correct
+  climber rendering).
+
 - **8f40734** (2026-09-02) — Draft 63: **The Ascent — feeling-obstacles
   (blast the red, collect the gold), bigger climber (Ginny/Sprang's 8/31
   climb ideas).** Layers the team's feeling mechanic on top of the
@@ -3242,3 +3270,36 @@ Rework the Zone 4→5 climb (`src/game/climbScene.js`, page `src/pages/GainsClim
 **Verify.** On `/gains-demo/climb`: the climber is visibly bigger; gold feeling-motes (hope/joy/courage/calm/pride/gratitude) fall and are collected to refill Second Wind with the word shown; red feeling-obstacles (the 8 negatives) fall in varying sizes; tapping a red fires the Lens beam, flashes its name, and shatters it into light that gives a small breath boost; big reds need a charged beam or a breath; un-blasted reds that hit you knock you back and drain breath; the darkness aura, stages, brightening, and Beacon completion still work; one-thumb play feels good (steer to collect, tap to blast); non-fail; no console errors; Ready for Roots unaffected; clean build. Phaser/`src/game/` + `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 63.*
+
+
+### Draft 64 — The Ascent revisions: readable orbs, big slow blocking red feelings, progressive "name it to tame it" blast, tap hint + new directions — ✅ SHIPPED 813b3dd (2026-09-02)
+
+Revisions to the just-shipped Draft 63 climb (`src/game/climbScene.js`, directions on `src/pages/GainsClimbPage.jsx`). The mechanic is right; this tunes sizes, pacing, the blast, and the copy so it reads and plays clearly (from Josh's review of the live build — the orbs are too small to read and the reds need to matter more).
+
+**1. New directions copy.** Replace the current intro bullets ("The air is getting thinner…", "Use your Second Wind gear to collect oxygen…", etc.) with:
+> **The Ascent**
+> • Steer with one thumb — drag anywhere (or the arrow keys).
+> • Collect the glowing **gold feelings** — hope, courage, pride, calm — to refill your **Second Wind** and keep climbing.
+> • **Heavy feelings** drift into your path and block the way. **Tap one to fire your Focusing Lens** — a beam of light reveals what it is, then shatters it into gold feelings you can gather.
+> • If your air runs low, the darkness closes in — grab a gold feeling and it clears.
+
+**2. Gold feeling-orbs — bigger + a little slower.** They're currently too small to read the word (~`ORB_W 16`). Make them **clearly big enough that the feeling word is legible** while falling, and **slow their fall a little** so they're catchable and readable. Keep the collect-to-refill-Second-Wind behavior and the word bloom.
+
+**3. Red negative feelings — much bigger, much slower, blocking, one of each.**
+- **One of each negative feeling** (not a random swarm) — use Ginny's list, ~6–8: **sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret** (Josh may trim to 6–7; pick the set and space them out over the climb so you meet them one/a-few at a time).
+- **Much bigger** than the gold orbs (a real cloud/orb presence) and **float much slower**.
+- **They impede your path** — a big red drifting in your lane actually **blocks upward progress** until you clear it (you can't just slip past the big ones); this is the obstacle the team wanted.
+
+**4. Progressive "name it to tame it" blast (keep this idea — it's the heart of it).** When the player **taps a red** to fire the Focusing Lens beam:
+- the red cloud/orb **lightens progressively** with each tap / sustained beam (big ones take a few hits, matching their size),
+- as it lightens, the **emotion's name is slowly revealed** behind it (it surfaces as the cloud clears — facing/naming it),
+- once fully cleared it **shatters into gold "joy" orbs** that the player can gather (freed light = fuel, the reward for facing it).
+Tune so bigger feelings need more beam than small ones.
+
+**5. "Tap me" hint when stuck.** If the player is **blocked against / lingering on a big red** for a moment (not progressing), show a clear **tap hint on that red** — a pulsing ring / finger-tap icon (and/or a small "tap to focus your lens" nudge) — so they learn to tap it to blast. Fades once they tap or move on.
+
+**Keep** the bigger climber (Draft 63), Second Wind, darkness aura, stages, brightening, Beacon completion, one-thumb play, non-fail.
+
+**Verify.** On `/gains-demo/climb`: the new directions show; gold feeling-orbs are big enough to read and fall a bit slower; each negative feeling appears as one much-bigger, much-slower cloud that blocks the path; tapping a red fires the lens, the cloud lightens step-by-step, its name is revealed as it clears, then it shatters into collectible gold orbs; a tap-hint appears when the player is stuck on a big red; climber size, Second Wind, aura, stages, and completion all still work; no console errors; Ready for Roots unaffected; clean build. `src/game/` + `src/pages/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 64.*
