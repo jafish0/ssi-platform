@@ -132,6 +132,23 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **00bf621** (2026-09-02) — In-conversation (no draft): live-demo review
+  found the Zone 3 safety screen showing 988 twice (Sprang's verbatim
+  disclaimer + Draft 59's phone-icon crisis-lifeline explainer). Removed
+  Sprang's disclaimer, keeping only the phone-icon explainer -- her exact
+  wording is preserved in git history if it needs to come back. Removed the
+  now-unused `SAFETY_DISCLAIMER` constant. Verified locally and live: only
+  one 988 paragraph shows now.
+
+- **52465ea** (2026-09-02) — In-conversation (no draft): Mindful Place's
+  close screen had no real end -- declining practice ("Move on") or
+  finishing the second completion ("I'm all set") just hid the buttons and
+  left the soundscape looping forever. `finish()` now pauses both the
+  soundscape and any narration clip still playing, and the panel swaps to
+  a demo-only placeholder ("The actual Gear sequence for the Oxygen Mask
+  will come here instead of this placeholder."). Verified locally and
+  live: both audio elements paused, zero buttons remain.
+
 - **d86728a** (2026-09-02) — Draft 60: **Mindful Place — reposition/resize
   the frog onto the water + only breathe it during the breathe step.** Two
   follow-ups to Draft 58 that were mistakenly folded into that already-
