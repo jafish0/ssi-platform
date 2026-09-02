@@ -132,6 +132,43 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **5bb7775** (2026-09-02) — Draft 57: **Mindfulness rebuild — rename to
+  "Mindful Place", single soundscape + Spark narration, concentric-ring
+  breathing, painterly breathing frog, crickets, practice-to-level-up,
+  done-bug fix.** A big pass on `src/components/MindfulnessCalmPlace.jsx`.
+  Renamed "Calm Place" to "Mindful Place" everywhere in user-facing text
+  (internal filename/slugs/the `review-mindfulness` tag are unchanged on
+  purpose). **Audio:** replaced the old three-track ambient mix (music/rain/
+  frog, each with its own Hear-step volume dance) with one looping
+  soundscape bed plus seven Spark voice-F narration clips that auto-play
+  once per step and duck the bed while speaking; Hear's chips (now 5: Rain,
+  Thunder, Frogs, **Crickets**, Music) are selection-only against that one
+  bed — nothing plays per-chip anymore. **Breathing:** paced by
+  `mind-04-breathe.mp3`'s own spoken count instead of a plain ticker — the
+  visual phase is derived every ~150ms from the audio element's real
+  `currentTime` (generic over `LEAD_IN`/`PHASE_DUR`/`AGAIN_BRIDGE`/
+  `CYCLES`), so four concentric rings + a focus vignette + the on-screen
+  count stay locked to what's actually playing (verified precisely: at
+  t≈18s the UI showed "Breathe out," tick 1, matching the phase math
+  exactly). The frog is now a plain painterly PNG planted bottom-left (not
+  an SVG with its own idle loop); its wrapper gets the same box-breath
+  transform inline while active, bottom-anchored so its feet stay planted.
+  **Practice loop + the done bug:** replaced the old two overlapping repeat
+  mechanisms (a breath-only "practice again" and a separate "do it again"
+  that quietly looped back to the intro screen — Ginny's reported bug) with
+  one loop: first completion offers "Practice again" (reruns the WHOLE
+  exercise) / "Move on," second completion shows the level-up message with
+  a single "I'm all set" button. Verified there is no path back to the
+  intro screen anywhere in the close flow — after the second completion the
+  button row disappears entirely and the level-up message just stays on
+  screen (confirmed 0 buttons remain). New assets copied in from
+  `Gains for Teens/Activities/Mindfulness/`: the soundscape, seven
+  narration clips, and the painterly frog PNG; the old rain/music/frog mp3s
+  and the old frog SVG are deleted and fully unreferenced (confirmed via
+  network requests — no 404s, nothing requests the removed files). Verified
+  locally (full flow twice through, including the practice loop) and live;
+  no overflow at 375px; Ready for Roots unaffected; clean build.
+
 - **ae1f6d8** (2026-09-01) — In-conversation (no draft): Josh sent a newer
   re-render for Video 1 ("What is Trauma"): id `1223215595`, h `2b10eb8857`,
   replacing the Draft 55 re-render. `REVIEW_VIDEOS` in `GainsDemoPage.jsx`
@@ -2911,3 +2948,59 @@ Change it to Maggie's wording, verbatim:
 **Verify.** On `/gains-demo` Body Mapping: the write-in button shows the new sentence; tapping it still reveals the text input and saves as before; the stomach icon/target/check sit slightly lower and stay aligned with each other, still clearly on the torso and not overlapping the hand/body region; heart remains on the correct side; no layout shift at 375px; clean build. `BodyMapping.jsx` is under `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 56.*
+
+
+### Draft 57 — Mindfulness rebuild: rename to "Mindful Place", single soundscape + Spark narration, concentric-ring breathing, painterly breathing frog, crickets, practice-to-level-up, done-bug fix — ✅ SHIPPED 5bb7775 (2026-09-02)
+
+Big pass on the Mindfulness activity (`src/components/MindfulnessCalmPlace.jsx` + its references in `src/pages/GainsDemoPage.jsx`). New audio + art assets are provided. Work through all sections.
+
+**0. Assets — add these (source lives in `Gains for Teens/Activities/Mindfulness/`), copy into the SERVED folder `public/long-light/audio/mindfulness/` (and art into `public/long-light/art/mindfulness/`):**
+- `Final Soundscape.mp3` → `public/long-light/audio/mindfulness/soundscape.mp3` (the single looping ambient bed; ~37s, loopable)
+- `mind-01-arrive.mp3`, `mind-02-see.mp3`, `mind-03-hear.mp3`, `mind-04-breathe.mp3`, `mind-05-done.mp3`, `mind-06-close.mp3`, `mind-07-leveledup.mp3` → same audio folder (Spark voice-F narration)
+- `frog-painterly.png` → `public/long-light/art/mindfulness/frog-painterly.png` (new painterly frog, transparent)
+**Remove (no longer used):** `public/long-light/audio/mindfulness/rain.mp3`, `music.mp3`, `frog.mp3` — and all their in-component refs/logic (see §3). Also retire the old `frog.svg` as the frog visual (replaced by the PNG; keep other overlay SVGs — rain, lightning, fireflies, reeds).
+
+**1. Rename "Calm Place" → "Mindful Place" in ALL user-facing text** (keep internal slugs/filenames/`review-mindfulness` tag as-is). Includes: the activity title/heading, the World & Development Map cell (Zone 4), the review-section item title, and any in-component copy. On-screen copy should read "Mindful Place."
+
+**2. Audio system — replace the 3-file ambient mix with ONE looping bed + narration.**
+- Delete the `musicRef` / `rainRef` / `frogRef` trio, `BASE_VOLUME`, and the per-file play/volume logic.
+- Add a single **ambient bed**: `soundscape.mp3`, looped, started on the "Begin"/"Tap to begin" gesture (the existing iOS audio-unlock gesture), playing quietly for the whole activity.
+- Add **narration clips that auto-play once on entering each step** (the Begin gesture unlocks autoplay for all of them):
+  - arrive → `mind-01`; see → `mind-02`; hear → `mind-03`; breathe → `mind-04` (see §5 for sync); breathe-done → `mind-05`; close after 1st completion → `mind-06`; close after 2nd completion → `mind-07`.
+  - Fire once per step entry (guard against re-fire on re-render); respect a mute control if present.
+  - **Duck the ambient bed** (e.g. to ~0.4× ) while a narration clip is speaking, then restore.
+
+**3. Hear step — 5 chips, selection-only against the bed.** Chips become: **Rain, Thunder, Frogs, Crickets, Music** (add **Crickets**; pick any 3 to advance). Since the bed is now one combined track that already contains all of these, tapping a chip only **selects** it — there is no per-sound file to play anymore. Remove the old rain/thunder/frogs/music file-playback behavior. (Thunder may still pulse the lightning layer as a visual nicety; Frog/Lightning visual pulses on SEE can stay.)
+
+**4. See step** — unchanged (Frog, Lightning, Pond, Fireflies, Trees, Clouds; pick 3).
+
+**5. Breathe step — concentric-ring breathing + focus vignette + count, synced to `mind-04`.** Replace the current single Spark-glow expand/contract with:
+- **Concentric rings** (3–4) centered in the **middle of the play area** (NOT on the frog): expand outward on the inhale, hold at max, contract on the exhale, hold at min; brighten as they expand. Warm amber, on-palette.
+- A **focus vignette**: during the breathe step only, fade in a subtle darkening/vignette over the animated scene so the rings read clearly; fade it out when breathing ends.
+- **Count in the center**: the phase word ("Breathe in / Hold / Breathe out / Hold") and a 1‑2‑3‑4 tick.
+- **Timing (drive off `mind-04` playback) — exact structure:** the clip is ~50s.
+  - **0.0–7.0s:** lead-in — rings/frog idle & small while Spark talks.
+  - **7.0–27.0s:** **Cycle 1** — 4 phases × **5.0s** (breathe in 7–12, hold 12–17, breathe out 17–22, hold 22–27).
+  - **27.0–29.0s:** Spark says **"again"** — a ~2s **bridge**: rings/frog **hold small/idle**, do NOT restart yet.
+  - **29.0–49.0s:** **Cycle 2** — 4 phases × 5.0s (breathe in 29–34, hold 34–39, out 39–44, hold 44–49).
+  Expose as tunable constants: `LEAD_IN = 7.0`, `PHASE_DUR = 5.0`, `AGAIN_BRIDGE = 2.0`, `CYCLE2_START = 29.0`, `CYCLES = 2`. Start the visual timer when `mind-04` begins (align to the audio element's play/currentTime) and drive phases off elapsed time so it stays locked to the spoken count.
+
+**6. Frog — painterly PNG, planted bottom-left, breathing bottom-anchored.**
+- Replace the frog visual with `frog-painterly.png`; keep it in its current **bottom-left** position/scale.
+- During the breathe step, the frog does a **bottom-anchored subtle swell** synced to the same box-breath cadence as the rings (feet planted; ~6% vertical / ~3% horizontal on the inhale, hold, shrink on exhale, hold). Outside the breathe step it's static (or a very gentle idle). This is a supporting cue — keep it subtle. (The image includes its lily pad; anchor the swell at the base so the pad barely moves.)
+
+**7. Practice-to-level-up loop + fix the "done" bug.** Replace BOTH current loops (the breath-only "practice again" and the full "do it again" with the `restart()`-to-intro bug):
+- Player completes the full exercise (see → hear → breathe).
+- **1st completion:** earn the **Oxygen Mask**, play `mind-06` (whose voice line ends by inviting practice). Then show two buttons: **Practice again** / **Move on**.
+- **Practice again** → the **whole exercise** runs again (see → hear → breathe).
+- **2nd completion:** play `mind-07` and show the matching on-screen message ("…practice leveled up your Oxygen Mask…"). Then a single **I'm all set / Move on** button that **ENDS the activity cleanly — it must NOT loop back to the intro/beginning** (this is Ginny's bug). Cap: no further practice offers after the 2nd completion.
+
+**8. On-screen copy — match the narration:**
+- arrive: "Welcome to your mindful place. Let's use our senses to really arrive."
+- see: "What are three things you can see" (unchanged) / hear: "Find three things you can hear." (unchanged)
+- close (1st): "That is your mindful place. You don't need this particular place at the pond to find it — you can do this anywhere you are. Here, take this with you — an Oxygen Mask! It'll help you breathe easy on the climb ahead! If you want, you can practice again and make the mask work even better!"
+- leveled up (2nd): "Congratulations — your practice actually leveled up your Oxygen Mask! The climb up to Mount Hope should be easier now."
+
+**Verify.** On `/gains-demo`: the activity reads "Mindful Place" everywhere; Begin unlocks audio; the single soundscape loops as the bed; each step's Spark narration auto-plays once and ducks the bed; Hear shows 5 chips incl. Crickets (pick 3, selection-only, no stray per-sound playback); the old rain/music/frog mp3s are gone and unreferenced; the breathe step shows centered concentric rings + focus vignette + count, idle for 7.0s then 2 synced cycles; the painterly frog sits bottom-left and swells gently (feet planted) in time; first completion earns + invites practice, second completion shows the level-up and ends cleanly with NO loop to intro; 9:16, no-fail, no overflow at 375px; Ready for Roots (`/demo`) unaffected; clean build. `MindfulnessCalmPlace.jsx` is under `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 57.*
