@@ -47,7 +47,7 @@ export default function GainsClimbPage() {
       footerPath="/gains-demo/climb"
       feedbackProgram="gains-teens"
       feedbackSections={GAINS_FEEDBACK_SECTIONS}
-      feedbackDefaultSection="zone-4"
+      feedbackDefaultSection="review-ascent"
     >
       <div className="mb-4">
         <Link

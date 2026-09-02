@@ -23,7 +23,6 @@ import FeedbackButton from '../components/FeedbackButton.jsx'
 import BodyMapping from '../components/BodyMapping.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 import ElevatorPitch from '../components/ElevatorPitch.jsx'
-import ExpositionIntro from '../components/gains/ExpositionIntro.jsx'
 import MeasurementFlow from '../components/gains/MeasurementFlow.jsx'
 import GainsCard from '../components/gains/ds/Card.jsx'
 import GainsBadge from '../components/gains/ds/Badge.jsx'
@@ -62,6 +61,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
   { value: 'review-mindfulness', label: 'Review: Mindfulness Mindful Place' },
   { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
+  { value: 'review-ascent', label: 'Review: The Ascent (climb)' },
   // The official breakdown
   // assent-measures — superseded by review-pretest/review-posttest (Draft
   // 54, 2026-09-01): the packet moved back into the review section since
@@ -88,11 +88,6 @@ const AUDIO = '/long-light/audio'
 const SECTION_LABEL_STYLE = { letterSpacing: 'var(--tracking-caps)', color: 'var(--text-warm)', fontFamily: 'var(--font-core)' }
 
 // ---------- NPCs (Draft 20) ----------
-// Spark's intro line is VERBATIM (all-ASCII source: straight apostrophes) —
-// don't re-typeset it. The four symptom creatures have no voice lines yet.
-const SPARK_INTRO_LINE =
-  "Welcome to Shadowmend, my name is Spark. Everyone that comes here has experienced really scary and stressful things. They usually arrive with a darkness around them that can feel upsetting and heavy and also make it hard for others to really see or get to know them. It's my job to teach you more about trauma and ways to feel better. Together, we will move through each of the five levels; learning, playing games, and getting gear to help us reach Mount Hope, where that darkness around you will get lighter, helping everyone see the amazing person you are!"
-
 const SYMPTOM_CREATURES = [
   { src: `${ART}/emberwick.webp`, name: 'Emberwick', tag: 'reactivity / hypervigilance' },
   { src: `${ART}/mirefly.webp`, name: 'Mirefly', tag: 'intrusion' },
@@ -690,6 +685,60 @@ export default function GainsDemoPage() {
                   </div>
                 </div>
               </ReviewItem>
+
+              {/* 7 — The Ascent (Zone 4->5 climb, playable) */}
+              <ReviewItem
+                n={7}
+                title="The Ascent — Zone 4→5 climb (playable)"
+                section="review-ascent"
+              >
+                <p className="mb-3">
+                  The traversal that carries you from the Bright Reaches up to
+                  the Beacon at Mount Hope, built from the ideas in our 8/31
+                  meeting.
+                </p>
+                <p className="mb-3">
+                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>How to play:</span>{' '}
+                  Steer with one thumb (drag anywhere). Collect the glowing{' '}
+                  <strong style={{ color: 'var(--text-bright)' }}>gold feelings</strong>{' '}
+                  (hope, courage, pride...) to refill your{' '}
+                  <strong style={{ color: 'var(--text-bright)' }}>Second Wind</strong> and
+                  keep climbing. When a big, heavy feeling drifts into your
+                  path and blocks the way,{' '}
+                  <strong style={{ color: 'var(--text-bright)' }}>tap it to fire your Focusing Lens</strong>{' '}
+                  — a beam of light reveals what it is, then shatters it into
+                  gold feelings to gather. If your air runs low, your own
+                  darkness closes in; grab a gold feeling and it clears.
+                </p>
+                <p className="mb-3">
+                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>What&apos;s new (from the meeting):</span>{' '}
+                  a bigger climber; the obstacles are now{' '}
+                  <strong style={{ color: 'var(--text-bright)' }}>feelings</strong>, varying in
+                  size; <strong style={{ color: 'var(--text-bright)' }}>gold positive feelings to
+                  collect</strong> and <strong style={{ color: 'var(--text-bright)' }}>red negative
+                  ones to blast</strong> (name-it-to-tame-it); framed as{' '}
+                  <strong style={{ color: 'var(--text-bright)' }}>protecting yourself, not
+                  aggression</strong> — facing a feeling turns it to light.
+                </p>
+                <p className="mb-4">
+                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>We&apos;d love your read on:</span>{' '}
+                  Do the red feelings feel like real obstacles now? Are these
+                  the right feelings (golds now include growth-mindset ones —
+                  curiosity, determination, resilience...; reds are sadness,
+                  shame, guilt, anger, resentment, helplessness, hopelessness,
+                  regret)? Is the Focusing Lens blast clear and satisfying —
+                  did you know to tap the reds? Overall: is it fun and
+                  on-message?
+                </p>
+                <Link
+                  to="/gains-demo/climb"
+                  className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+                >
+                  <Play size={14} strokeWidth={2} />
+                  Play the Ascent
+                </Link>
+              </ReviewItem>
             </div>
           </div>
         </div>
@@ -866,44 +915,11 @@ export default function GainsDemoPage() {
         </div>
       </section>
 
-      {/* D. The game flow — Exposition → Zone 1 → Zone 5 */}
+      {/* D. The game flow — Zone 1 → Zone 5 */}
       <section className="mb-4">
         <h2 className="text-[14px] font-semibold uppercase" style={SECTION_LABEL_STYLE}>
           The climb
         </h2>
-      </section>
-
-      {/* Exposition — the opening that sets up the world. Stephanie's Option-2
-          text, adopted by the team (2026-08-13). Restyled to the Shadowmend
-          design system as Draft 49's proof of concept (2026-08-27): the
-          `.gains-theme` wrapper is this component's only styling
-          dependency, scoped to just this card per the draft (other GAINS
-          screens below stay on the existing amber/slate look until we roll
-          the Shadowmend look outward). SPARK_INTRO_LINE is still VERBATIM
-          and still lives above as the single source — this only restyles
-          its presentation. Flow into a real Zone 1 isn't wired yet, hence
-          the pill. */}
-      <section className="mb-8">
-        <h3 className="text-[18px] font-bold" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>Exposition</h3>
-        <p className="text-[13px] mb-3" style={{ color: 'var(--text-muted)' }}>
-          The opening that sets up the world, before Zone 1. Restyled to the
-          Shadowmend design system (Draft 49) as the proof of concept —
-          flow into Zone 1 is still in development.
-        </p>
-        <div className="mb-3 flex items-center gap-2 flex-wrap">
-          <Pill icon={HardHat}>In development</Pill>
-          <span className="text-[12px] italic" style={{ color: 'var(--text-faint)' }}>
-            Shadowmend styling adopted, flow to Zone 1 pending
-          </span>
-        </div>
-        <div className="-mx-4 sm:mx-0 sm:w-full sm:max-w-[360px]">
-          <div
-            className="relative w-full overflow-hidden rounded-3xl"
-            style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
-          >
-            <ExpositionIntro line={SPARK_INTRO_LINE} />
-          </div>
-        </div>
       </section>
 
       {ZONES.map((z) => (
