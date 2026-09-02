@@ -75,7 +75,12 @@ const GOLD_SPEED = 175 // was 210 -- "slow their fall a little"
 
 // GAINS feeling vocabularies (Ginny/Sprang, 8/31 meeting) — GOLD is what you
 // collect, RED is what you blast.
-const GOLD_WORDS = ['hope', 'joy', 'courage', 'calm', 'pride', 'gratitude']
+// Draft 65: 10 more (growth-mindset leaning), 16 total.
+const GOLD_WORDS = [
+  'hope', 'joy', 'courage', 'calm', 'pride', 'gratitude',
+  'curiosity', 'determination', 'resilience', 'optimism', 'confidence',
+  'grit', 'patience', 'motivation', 'wonder', 'strength',
+]
 const RED_WORDS = [
   'sadness', 'shame', 'guilt', 'anger', 'resentment',
   'helplessness', 'hopelessness', 'regret',
@@ -125,10 +130,14 @@ const DEFAULTS = {
     orb: 0xffe3a0,
     ink: 0x05070e,
     warm: 0xffd9a0,
-    // Draft 64: a deep, dusty red -- rendered as an opaque cloud (normal
-    // blend, not ADD) so it reads as a dense obstacle against the warm
-    // background art instead of blending into it like a light glow would.
-    red: 0x8f2e22,
+    // Draft 64: rendered as an opaque cloud (normal blend, not ADD) so it
+    // reads as a dense obstacle against the warm background art instead of
+    // blending into it like a light glow would. Draft 65: Draft 64's muddy
+    // brick (0x8f2e22) still read as a faint wash -- `red` is now the
+    // saturated core, `redRim` a warm ember edge, so it has real defined
+    // mass at full strength (see makeCloudTexture).
+    red: 0xd6301f,
+    redRim: 0xff8a4a,
   },
 }
 
@@ -233,7 +242,7 @@ export function makeClimbScene(Phaser) {
     create() {
       const P = this.cfg.palette
       this.makeGlowTexture(P.orb)
-      this.makeCloudTexture(P.red, 'cloud-red')
+      this.makeCloudTexture(P.red, P.redRim, 'cloud-red')
       this.makeVignetteTexture(P.ink)
       this.makeRingTexture()
 
@@ -498,10 +507,13 @@ export function makeClimbScene(Phaser) {
         .image(0, 0, 'orb')
         .setDisplaySize(ORB_W, ORB_W * (408 / 256))
         .setBlendMode('ADD')
+      // Draft 65: longer additions ("determination", "resilience", ...)
+      // shrink a touch to fit rather than getting dropped or clipped.
+      const goldFontPx = Math.max(11, 15 - Math.max(0, word.length - 6))
       const label = this.add
         .text(0, ORB_W * 1.1, word, {
           fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
-          fontSize: '15px',
+          fontSize: `${goldFontPx}px`,
           fontStyle: 'bold',
           color: '#fff3d0',
           stroke: '#3a2a06',
@@ -1045,18 +1057,22 @@ export function makeClimbScene(Phaser) {
       tex.refresh()
     }
 
-    // Draft 64: the blocking red cloud's texture -- a softer-edged, more
-    // opaque blob than makeGlowTexture's bright core-and-falloff (that shape
-    // is built for an ADD-blended light; this one is drawn NORMAL so it
-    // reads as a dense, heavy obstacle instead of glowing light).
-    makeCloudTexture(color, key = 'cloud-red') {
+    // Draft 64: the blocking red cloud's texture, drawn NORMAL (not ADD) so
+    // it reads as a dense, heavy obstacle instead of glowing light. Draft
+    // 65: Draft 64's smooth radial falloff still read as a faint wash --
+    // this now has a dense, saturated, near-opaque core plus a warm ember
+    // rim so it has real defined mass at full strength, with only a slight
+    // soft bleed at the very edge (not a diffuse fade the whole way out).
+    makeCloudTexture(coreColor, rimColor, key = 'cloud-red') {
       if (this.textures.exists(key)) return
-      const R = 100
+      const R = 110
       const g = this.make.graphics({ x: 0, y: 0, add: false })
-      for (let i = 10; i >= 1; i--) {
-        g.fillStyle(color, 0.1)
-        g.fillCircle(R, R, R * (i / 10))
-      }
+      g.fillStyle(coreColor, 0.14)
+      g.fillCircle(R, R, R * 0.94)
+      g.fillStyle(coreColor, 0.9)
+      g.fillCircle(R, R, R * 0.7)
+      g.lineStyle(7, rimColor, 0.9)
+      g.strokeCircle(R, R, R * 0.7)
       g.generateTexture(key, R * 2, R * 2)
       g.destroy()
     }
