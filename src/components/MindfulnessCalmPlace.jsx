@@ -57,9 +57,13 @@
 // rings that expand/brighten together on the inhale and contract on the
 // exhale, plus a focus vignette that darkens the scene's edges only while
 // breathing is active. The frog is now a plain painterly PNG (not an SVG
-// with its own #frog-body idle loop) planted bottom-left; a wrapping element
-// gets the same box-breath transform inline while breathing is active, with
-// a bottom transform-origin so its feet stay planted.
+// with its own #frog-body idle loop), its pad resting on the water near
+// center; a wrapping element gets the same box-breath transform inline
+// while breathing is active, with a bottom transform-origin so its feet
+// stay planted. Draft 60 (2026-09-02): moved off the rocks onto the water,
+// sized down to suit the more central spot, and made it completely still
+// outside the breathe step -- it used to run a continuous idle wobble the
+// whole time.
 //
 // Practice loop + the "done" bug. The old code had two overlapping repeat
 // mechanisms (a breath-only "practice again" capped at 2, and a separate
@@ -96,8 +100,8 @@ const LAYER_URLS = {
 // staged motion.css (Draft 33's asset). Per-element durations/delays live in
 // each SVG's own style attributes; this only supplies the keyframes. The
 // frog's own idle loop used to live here too (#frog-body/om-breathe) -- it's
-// a plain PNG now, so its idle motion is CSS on a wrapper div instead (see
-// .om-frog-idle in SCENE_CSS).
+// a plain PNG now and, per Draft 60, has no idle motion of its own at all;
+// it's static outside the breathe step (see breathingAlong below).
 const MOTION_CSS = `
 .drop{animation-name:om-rain;animation-timing-function:linear;animation-iteration-count:infinite}
 @keyframes om-rain{from{transform:translate(0,-200px)}to{transform:translate(-56px,420px)}}
@@ -177,17 +181,6 @@ const SCENE_CSS = `
   .om-vignette { transition: none; }
 }
 
-/* Draft 57: the frog's default idle motion, now CSS on a wrapper div rather
-   than the old SVG's #frog-body keyframe. Swapped out for an inline
-   transform driven by the same box-breath cadence as the rings while the
-   breathe step is active (see the frogSwellRef effect below) -- the wrapper
-   simply drops this class for that stretch so the two never fight. */
-.om-frog-idle { animation: omFrogIdle 4.6s ease-in-out infinite; }
-@keyframes omFrogIdle {
-  0%, 100% { transform: translateY(0) scale(1, 1); }
-  50% { transform: translateY(-3px) scale(1.01, 1.02); }
-}
-@media (prefers-reduced-motion: reduce) { .om-frog-idle { animation: none; } }
 `
 
 // SEE step: six predefined options, any three unlock Continue. `glowLayer`
@@ -564,10 +557,9 @@ export default function MindfulnessCalmPlace() {
 
   // Draft 57: drives the frog wrapper's scale/lift straight onto its own
   // element (frogSwellRef), the same technique the old code used on the
-  // SVG's #frog-body. Only takes over while breathingAlong; the wrapper
-  // drops .om-frog-idle for that stretch so the CSS keyframe doesn't fight
-  // this inline transform, and clearing the inline style on exit lets the
-  // idle keyframe resume from its own natural state.
+  // SVG's #frog-body. Only takes over while breathingAlong; Draft 60: the
+  // frog has no motion of its own otherwise, so clearing the inline style
+  // on exit just leaves it static (was: resume an idle CSS keyframe).
   useEffect(() => {
     const el = frogSwellRef.current
     if (!el) return
@@ -658,14 +650,18 @@ export default function MindfulnessCalmPlace() {
           />
           <div className="om-layer" dangerouslySetInnerHTML={{ __html: layers.reeds }} />
 
-          {/* Draft 57: painterly PNG, bottom-left, its own small wrapper
-              rather than a full-frame .om-layer overlay. transform-origin
-              is bottom-center so the box-breath swell (and the idle
-              wobble) grows from its planted feet instead of its middle. */}
-          <div className="absolute" data-layer="frog" style={{ left: '4%', bottom: '6%', width: '34%' }}>
+          {/* Draft 57: painterly PNG, its own small wrapper rather than a
+              full-frame .om-layer overlay. transform-origin is bottom-center
+              so the box-breath swell grows from its planted feet instead of
+              its middle. Draft 60: repositioned from bottom-left (where the
+              pad sat on the rocks) to near-center-low so the pad rests on
+              the water instead, and sized down to suit the more central
+              spot -- roughly the point Josh circled on the live build
+              (~55% from the left, ~82% down). Completely still outside the
+              breathe step -- see the frogSwellRef effect above. */}
+          <div className="absolute" data-layer="frog" style={{ left: '44%', bottom: '14%', width: '23%' }}>
             <div
               ref={frogSwellRef}
-              className={breathingAlong ? '' : 'om-frog-idle'}
               style={{ transformOrigin: '50% 100%' }}
             >
               <img
