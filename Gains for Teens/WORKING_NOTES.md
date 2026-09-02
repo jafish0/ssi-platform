@@ -132,6 +132,22 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **ae1f6d8** (2026-09-01) — In-conversation (no draft): Josh sent a newer
+  re-render for Video 1 ("What is Trauma"): id `1223215595`, h `2b10eb8857`,
+  replacing the Draft 55 re-render. `REVIEW_VIDEOS` in `GainsDemoPage.jsx`
+  updated; Videos 2-5 unchanged. Verified locally and live.
+
+- **3300eb5** (2026-09-01) — Draft 56: **Body Mapping: reword the write-in
+  prompt + nudge the stomach region lower.** Two small edits from the 8/31
+  feedback in `src/components/BodyMapping.jsx`. Reworded the "another area"
+  write-in prompt to Maggie's verbatim wording (placeholder text unchanged);
+  confirmed it still reveals the text input on tap. Nudged the stomach
+  target/icon/check group down another ~30 units (cy 508→538, check
+  541→571) per Holly's feedback so it sits a bit lower on the torso — still
+  clear of the body/hand target below it (cx 190 apart, well outside the
+  combined radius) and the heart above (unchanged, correct side). No
+  overflow at 375px, clean build.
+
 - **6f2eacf** (2026-09-01) — Draft 55: **Videos: swap in the re-rendered
   Vimeo links, lay them out 2-per-row, and give each video its own comment
   box (per-video CSV tags).** Replaces four of the five zone psychoed video
@@ -2871,3 +2887,27 @@ Rework the **"Videos"** item in the "Proposals — comment before we make them o
 **Verify.** On `/gains-demo`, the videos item shows all five re-rendered players (correct new links, Video 4 unchanged), laid out 2-per-row on desktop and stacked on mobile with no overflow at 375px; **each video has its own "Comment on this video" box**, and submitting one writes a row tagged with that video's section (`video-1`…`video-5`) — confirm the tags are distinct and show friendly labels in the admin view + CSV export. Shadowmend styling intact; Ready for Roots unaffected; clean build. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 55.*
+
+
+### Draft 56 — Body Mapping: reword the write-in prompt + nudge the stomach region lower — ✅ SHIPPED 3300eb5 (2026-09-01)
+
+Two small edits from the 8/31 feedback, both in `src/components/BodyMapping.jsx`. No new assets.
+
+**1. Reword the write-in prompt (Maggie).** The "another area" write-in button currently reads (line ~199):
+> Is there another area you feel it in your body? (write it in)
+
+Change it to Maggie's wording, verbatim:
+> Is there another area where you feel a trauma reaction in your body? If so, write it in the box below.
+
+(Leave the input `placeholder="e.g., sweating, clenching jaw"` as-is.)
+
+**2. Nudge the stomach region a little lower (Holly — minor).** Move the whole **stomach** group down ~**30px** so it sits a bit lower on the torso. Keep the target circle, its icon, and the check badge aligned — bump the y on all three (x unchanged). Current values in the `#bm-region-stomach` group:
+- `<circle className="bm-target" cx="352" cy="508" r="46" />` → cy `508` → **`538`**
+- `<g className="bm-icon" transform="translate(352,508) scale(1.25)">` → translate y `508` → **`538`**
+- `<g className="bm-check" transform="translate(385,541)">` → translate y `541` → **`571`**
+
+~30px is a starting point; fine-tune so it reads as "a bit lower" without crowding the body/hand region below it. (For reference: heart is at cy 380, lungs at cy 296, body/hand target at cy 616 — keep clear of that.)
+
+**Verify.** On `/gains-demo` Body Mapping: the write-in button shows the new sentence; tapping it still reveals the text input and saves as before; the stomach icon/target/check sit slightly lower and stay aligned with each other, still clearly on the torso and not overlapping the hand/body region; heart remains on the correct side; no layout shift at 375px; clean build. `BodyMapping.jsx` is under `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 56.*
