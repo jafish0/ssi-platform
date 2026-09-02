@@ -132,6 +132,26 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **aa9c184** (2026-09-02) — Draft 65: **The Ascent — 10 more gold feelings,
+  far more defined/intense red obstacles.** Two tweaks to the Draft 64 climb
+  (`src/game/climbScene.js`), from Josh's review of the live build.
+  `GOLD_WORDS` grows from 6 to 16 (adds curiosity, determination, resilience,
+  optimism, confidence, grit, patience, motivation, wonder, strength); longer
+  words get a font-shrink formula (`Math.max(11, 15 - Math.max(0, word.length
+  - 6))`) so they fit the mote instead of clipping or getting dropped. The red
+  obstacle's muddy-brick fill (`0x8f2e22`) still read as a faint wash even
+  normal-blended (Draft 64's fix), so it's replaced with a genuinely intense
+  design: a saturated crimson core (`0xd6301f`) plus a warm ember rim
+  (`0xff8a4a`), drawn as a defined shape (opaque core circle + stroked rim)
+  rather than a soft radial gradient, via a rewritten `makeCloudTexture(core,
+  rim, key)`. Only the starting intensity changes; the progressive "name it
+  to tame it" reveal/shatter behavior from Draft 64 is untouched. Verified
+  locally via direct scene-state inspection and before/after screenshots
+  (16-word roster all legible, red cloud reads as a genuine dense obstacle at
+  full strength, progressive lighten/reveal/shatter still correct) and live
+  on ssi.ctac.app/gains-demo/climb (clean console, correct instructions copy,
+  all climb assets loading 200).
+
 - **813b3dd** (2026-09-02) — Draft 64: **The Ascent revisions — readable
   orbs, big slow blocking red feelings, progressive "name it to tame it"
   blast, tap hint + new directions.** Revisions to the just-shipped
@@ -3303,3 +3323,24 @@ Tune so bigger feelings need more beam than small ones.
 **Verify.** On `/gains-demo/climb`: the new directions show; gold feeling-orbs are big enough to read and fall a bit slower; each negative feeling appears as one much-bigger, much-slower cloud that blocks the path; tapping a red fires the lens, the cloud lightens step-by-step, its name is revealed as it clears, then it shatters into collectible gold orbs; a tap-hint appears when the player is stuck on a big red; climber size, Second Wind, aura, stages, and completion all still work; no console errors; Ready for Roots unaffected; clean build. `src/game/` + `src/pages/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 64.*
+
+
+### Draft 65 — The Ascent: add more gold feelings + make the red obstacles far more defined/intense — ✅ SHIPPED aa9c184 (2026-09-02)
+
+Two tweaks to the Draft 64 climb (`src/game/climbScene.js`), from Josh's review of the live build. Gold pacing/size is good now; this adds variety and fixes the red reading too faint.
+
+**1. Add 10 more gold (positive) feelings.** Current `GOLD_WORDS = ['hope','joy','courage','calm','pride','gratitude']`. Add these (growth-mindset leaning), for 16 total:
+`'curiosity', 'determination', 'resilience', 'optimism', 'confidence', 'grit', 'patience', 'motivation', 'wonder', 'strength'`
+(Keep them readable as they fall — they're already big enough per Draft 64. If any long word like "determination" crowds the mote, shrink its font a touch to fit rather than dropping the word.)
+
+**2. Make the red obstacles MUCH more defined and intense.** Right now a red cloud reads as a faint, washed-out soft glow (base color `red: 0x8f2e22`, a muddy dark brick, drawn via the soft `makeGlowTexture`), so it doesn't feel like a real obstacle — see the barely-visible "regret" in the live build. Fix so an **un-blasted red reads as a dense, saturated, clearly-defined obstacle**:
+- **Bolder, more saturated color** — move off the muddy brick toward a richer crimson/ember (e.g. a saturated red core with a warm ember edge); pick what looks best, but clearly more intense than `0x8f2e22`.
+- **Higher base opacity + a defined shape** — give it a solid, readable core and a defined edge/rim (not just a diffuse radial fade), so it has real form and mass. It should look like something blocking your way at full strength.
+- **Keep the progressive "name it to tame it" blast** — it just now starts from this **intense, opaque** state and lightens step-by-step as you beam it, revealing the word, then shattering into gold. (So only the STARTING intensity changes; the reveal/shatter behavior from Draft 64 stays.)
+- The feeling word should stay legible against the more-intense fill (adjust text color/contrast if needed).
+
+**Keep** everything else from Drafts 63–64 (bigger climber, one big slow blocking red per negative, tap-to-blast, tap hint when stuck, gold collect → Second Wind, aura, stages, completion).
+
+**Verify.** On `/gains-demo/climb`: gold motes now include the 10 new feelings (all readable); each red obstacle reads as a dense, saturated, clearly-defined cloud/orb at full strength (no more faint wash), lightens progressively as blasted, reveals its word, and shatters into gold; word legible on the intense fill; everything else from Drafts 63–64 still works; no console errors; Ready for Roots unaffected; clean build. `src/game/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 65.*
