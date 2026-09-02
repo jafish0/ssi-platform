@@ -60,7 +60,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   //   review-spark-voice — decided 2026-08-27 (Draft 51): Option F: see the
   //                        Narrator card in Playable Character
   { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
-  { value: 'review-mindfulness', label: 'Review: Mindfulness Calm Place' },
+  { value: 'review-mindfulness', label: 'Review: Mindfulness Mindful Place' },
   { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
   // The official breakdown
   // assent-measures — superseded by review-pretest/review-posttest (Draft
@@ -173,7 +173,7 @@ const ZONE_MAP_ROWS = [
     zone: '4 · The Bright Reaches',
     scene: 'above the clouds; warm, open',
     video: 'What to Expect from Therapy — ends with the 3-3-3 rule',
-    activity: 'Mindfulness: Calm Place (3-3-3)',
+    activity: 'Mindfulness: Mindful Place (3-3-3)',
     gear: 'Oxygen Mask — helps you breathe',
     goal: 'Demystify therapy; teach grounding.',
   },
@@ -390,10 +390,10 @@ const ZONES = [
       { title: 'What to Expect from Therapy', duration: '47 sec', script: WHAT_TO_EXPECT },
     ],
     activity: {
-      title: 'Mindfulness: Calm Place (3-3-3)',
+      title: 'Mindfulness: Mindful Place (3-3-3)',
       desc: (
         <>
-          Spark leads a calm-place visualization that doubles as the 3-3-3
+          Spark leads a Mindful Place visualization that doubles as the 3-3-3
           technique: pick three things you can see, then three things you
           can hear, then follow a guided box-breath with Spark. Earns the
           Oxygen Mask, with a chance to practice again and upgrade it.
@@ -643,14 +643,14 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 5 — Mindfulness "Calm Place" activity (playable) */}
+              {/* 5 — Mindfulness "Mindful Place" activity (playable) */}
               <ReviewItem
                 n={5}
-                title="Mindfulness: Calm Place (playable)"
+                title="Mindfulness: Mindful Place (playable)"
                 section="review-mindfulness"
               >
                 <p className="mb-3">
-                  A Zone 4 grounding activity: Spark leads a calm-place
+                  A Zone 4 grounding activity: Spark leads a Mindful Place
                   visualization that doubles as the 3-3-3 technique. Pick
                   three things you can see, then three things you can hear,
                   then follow a guided box-breath with Spark. Earns the

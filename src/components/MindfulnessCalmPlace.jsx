@@ -1,25 +1,30 @@
-// Mindfulness "Calm Place" (GAINS Zone 4 activity) — Draft 33, reworked Drafts 34-35, 37-39.
+// Mindfulness "Mindful Place" (GAINS Zone 4 activity) — Draft 33, reworked
+// Drafts 34-35, 37-39, rebuilt Draft 57. On-screen copy calls it "Mindful
+// Place" now; the internal filename/import name and the `review-mindfulness`
+// feedback tag are unchanged on purpose (Draft 57 renamed user-facing text
+// only, not internal slugs).
 //
 // Spark leads a guided calm-place visualization that does double duty:
 // grounding (the 3-3-3 technique: see / hear / breathe) AND calm-place
 // visualization. Built from the staged assets in
 // `Gains for Teens/long-light-site/{art,audio}/mindfulness/` (mirrored into
-// public/long-light/ for serving): a dusk pond background, five layered
-// overlay SVGs (rain, lightning, fireflies, reeds, frog) with their own idle
-// animations in motion.css, and three looping ambient audio tracks.
+// public/long-light/ for serving): a dusk pond background, four layered
+// overlay SVGs (rain, lightning, fireflies, reeds) with their own idle
+// animations in motion.css, a painterly frog PNG, and one looping ambient
+// soundscape plus Spark voice-F narration.
 //
 // Flow, guided and no-fail:
 //   intro   — "Begin" gesture (required for audio autoplay).
 //   arrive  — Spark settles the player into the scene.
 //   see     — pick any 3 of 6 predefined option chips (frog, lightning, pond,
 //             fireflies, trees, clouds).
-//   hear    — pick any 3 of 4 predefined sound chips (rain, thunder, frogs,
-//             music).
-//   breathe — a guided box-breath: in (4) - hold (4) - out (4) - hold (4),
-//             for 2 cycles, paced by a large glow and an on-screen count.
-//   close   — Oxygen Mask earned; can practice the breath again (up to 2
-//             more times) to "upgrade" it, a reinforcing message only —
-//             no mechanical difference in the mask itself.
+//   hear    — pick any 3 of 5 predefined sound chips (rain, thunder, frogs,
+//             crickets, music) -- selection only, see §Audio below.
+//   breathe — a guided box-breath, synced to Spark's count in mind-04, for 2
+//             cycles, paced by concentric rings + an on-screen count.
+//   close   — Oxygen Mask earned; can practice the whole exercise again once
+//             to "level up" the mask (a reinforcing message only -- no
+//             mechanical difference in the mask itself), then ends cleanly.
 //
 // Draft 33 had SEE/HEAR as scene-tapping (invisible hotspots over the art).
 // Two problems surfaced in testing: the hotspots (and the bottom panel bar
@@ -32,25 +37,48 @@
 // layer as a non-blocking nicety; pond/trees/clouds live in the static
 // background image, so they have no layer to pulse.
 //
-// Draft 35 reworked breathe: the original subtle pulse gave no direction, so
-// it's now a directive box-breath. Pacing is driven by a plain 1-second
-// setInterval counting elapsed ticks, with phase/cycle/count derived by
-// simple division rather than tracked as separate incrementing state — this
-// sidesteps the coordination bugs a naive "increment count, and if it
-// overflows also increment phase, and if THAT overflows also increment
-// cycle" approach invites. The glow's expand/contract is a CSS transition
-// (not a keyframe animation) timed to each phase's real 4-second duration,
-// which lets a phase change that doesn't alter the target (hold following
-// in, hold following out) simply hold still without any extra logic.
+// --- Draft 57 (2026-09-02): audio + breathing rebuild ---
+// Audio. The old three-track ambient mix (music/rain/frog, each with its own
+// volume dance for the Hear step) is gone, replaced by ONE looping
+// soundscape bed (already contains all the Hear sounds) plus short Spark
+// narration clips that auto-play once per step, ducking the bed while they
+// speak (see NARRATION_CLIPS / the stepKey effect below). Hear's chips are
+// now selection-only against that one bed -- there's no separate per-sound
+// file to play anymore, so tapping a chip just marks it found (and, for
+// Thunder, still pulses the lightning layer as a visual nicety).
 //
-// Draft 37 brought all three Hear tracks up to one shared, clearly audible
-// ambient level for the step's duration (see enterHear/HEAR_AMBIENT_VOLUME)
-// and, on top of that, briefly nudged a tapped chip's own track louder.
-// Draft 39: that nudge read, in practice, as a second copy of the same
-// sound starting on top of the ambient bed. Tapping a chip is select-only
-// now -- it updates state and (for Frog/Lightning/Thunder) pulses the
-// matching overlay layer, nothing more; the sound the player is "noticing"
-// is only ever the one already playing in the ambient bed.
+// Breathing. The box-breath is now paced by mind-04-breathe.mp3's own
+// spoken count rather than a plain 1-second ticker: LEAD_IN/PHASE_DUR/
+// AGAIN_BRIDGE/CYCLE2_START below are that clip's exact timing structure
+// (Spark's script), and the visual phase is derived every ~150ms from the
+// audio element's real `currentTime` (see breathePhaseAt) so the rings,
+// count and frog stay locked to what's actually playing instead of drifting
+// on their own clock. The single glow blob is replaced by four concentric
+// rings that expand/brighten together on the inhale and contract on the
+// exhale, plus a focus vignette that darkens the scene's edges only while
+// breathing is active. The frog is now a plain painterly PNG (not an SVG
+// with its own #frog-body idle loop) planted bottom-left; a wrapping element
+// gets the same box-breath transform inline while breathing is active, with
+// a bottom transform-origin so its feet stay planted.
+//
+// Practice loop + the "done" bug. The old code had two overlapping repeat
+// mechanisms (a breath-only "practice again" capped at 2, and a separate
+// "do it again" that quietly looped back through `restart()` to the very
+// intro screen -- Ginny's reported bug). Draft 57 replaces both with one
+// loop: on the FIRST full completion (see→hear→breathe), Spark's mind-06
+// invites practice with "Practice again" / "Move on"; "Practice again" reruns
+// the WHOLE exercise (not just the breath). On the SECOND completion,
+// mind-07's level-up message shows with a single "I'm all set" button. There
+// is no path back to `mode: 'intro'` from anywhere in the close screen --
+// `finish()` only sets a `finished` flag that hides the button row and
+// leaves the last message on screen, which is what "ends the activity
+// cleanly" means here.
+//
+// Draft 37 had brought all three (now-retired) tracks up to one shared,
+// clearly audible ambient level for Hear's duration and briefly nudged a
+// tapped chip's own track louder; Draft 39 found that nudge read as a second
+// copy of the same sound starting on top of the ambient bed and dropped it.
+// Both are moot now that Hear has nothing to play per-chip at all.
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -62,12 +90,14 @@ const LAYER_URLS = {
   lightning: `${ART}/layer-lightning.svg`,
   fireflies: `${ART}/layer-fireflies.svg`,
   reeds: `${ART}/layer-reeds.svg`,
-  frog: `${ART}/frog.svg`,
 }
 
-// Idle-loop keyframes for the overlay layers, copied verbatim from the
+// Idle-loop keyframes for the four overlay layers, copied verbatim from the
 // staged motion.css (Draft 33's asset). Per-element durations/delays live in
-// each SVG's own style attributes; this only supplies the keyframes.
+// each SVG's own style attributes; this only supplies the keyframes. The
+// frog's own idle loop used to live here too (#frog-body/om-breathe) -- it's
+// a plain PNG now, so its idle motion is CSS on a wrapper div instead (see
+// .om-frog-idle in SCENE_CSS).
 const MOTION_CSS = `
 .drop{animation-name:om-rain;animation-timing-function:linear;animation-iteration-count:infinite}
 @keyframes om-rain{from{transform:translate(0,-200px)}to{transform:translate(-56px,420px)}}
@@ -102,44 +132,58 @@ const MOTION_CSS = `
 .fly-core,.fly-glow{animation-name:om-blink;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
 @keyframes om-blink{0%{opacity:.1}18%{opacity:1}42%{opacity:.35}60%{opacity:1}85%{opacity:.05}100%{opacity:.1}}
 
-#frog-body{animation:om-breathe 4.6s ease-in-out infinite}
-@keyframes om-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.015)}}
-
 @media (prefers-reduced-motion:reduce){
-  .drop,#layer-lightning,.reed,.fly,.fly-core,.fly-glow,#frog-body{animation:none}
+  .drop,#layer-lightning,.reed,.fly,.fly-core,.fly-glow{animation:none}
 }
 `
 
 // Component-specific styling: makes each injected layer fill the frame
 // (xMidYMid slice, forced below at fetch time, keeps it aligned with the
 // object-cover background rather than letterboxing at a different aspect
-// ratio), the chip-selection "pulse" nicety, and the breathing glow.
+// ratio), the chip-selection "pulse" nicety, the breathing rings + focus
+// vignette (Draft 57), and the frog's idle/breathing motion.
 const SCENE_CSS = `
 .om-layer, .om-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .om-pulse { animation: omPulseFlash .9s ease-out; }
 @keyframes omPulseFlash { 0% { filter: brightness(1); } 30% { filter: brightness(1.85); } 100% { filter: brightness(1); } }
 @media (prefers-reduced-motion: reduce) { .om-pulse { animation: none; } }
-.om-glow-breath {
-  position: absolute; left: 50%; top: 50%; border-radius: 9999px;
-  background: radial-gradient(circle, rgba(253,230,138,.95) 0%, rgba(245,158,11,.55) 45%, rgba(245,158,11,0) 72%);
-  width: 68%; aspect-ratio: 1 / 1;
-  transition: transform 4s linear, opacity 4s linear, filter 4s linear;
-}
-/* Gentle shimmer layered on top while holding at full (post-inhale). Applies
-   to filter, not transform, so it doesn't fight the phase transition above. */
-.om-glow-breath.om-shimmer { animation: omShimmer 1.1s ease-in-out infinite; }
-@keyframes omShimmer {
-  0%, 100% { filter: brightness(1.08); }
-  50% { filter: brightness(1.25); }
-}
+
+/* Draft 57: four concentric rings replace the old single glow blob for the
+   breathe step. They share one phase-driven scale/opacity/brightness on the
+   group wrapper -- transforms on a parent scale its centered children
+   together, so the four rings expand/contract as one nested set without
+   individually-tracked math. */
+.om-ring-group { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 50%; transition: transform 5s ease-in-out, opacity 5s ease-in-out, filter 5s ease-in-out; }
+.om-ring-group.om-shimmer { animation: omShimmer 1.1s ease-in-out infinite; }
+@keyframes omShimmer { 0%, 100% { filter: brightness(1.08); } 50% { filter: brightness(1.3); } }
+.om-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); aspect-ratio: 1 / 1; border-radius: 9999px; border-style: solid; border-color: rgba(253,230,138,.85); box-shadow: 0 0 20px rgba(245,158,11,.3); }
+.om-ring--1 { width: 24%; border-width: 3px; }
+.om-ring--2 { width: 40%; border-width: 2.5px; opacity: .82; }
+.om-ring--3 { width: 56%; border-width: 2px; opacity: .58; }
+.om-ring--4 { width: 72%; border-width: 1.5px; opacity: .34; }
+
+/* A subtle darkening around the frame's edges during the breathe step only,
+   so the rings and count read clearly against the scene underneath. */
+.om-vignette { position: absolute; inset: 0; background: radial-gradient(circle at 50% 46%, rgba(4,10,20,0) 26%, rgba(4,10,20,.6) 100%); opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+.om-vignette.is-active { opacity: 1; }
+
 @media (prefers-reduced-motion: reduce) {
-  .om-glow-breath { transition: none; }
-  .om-glow-breath.om-shimmer { animation: none; }
+  .om-ring-group { transition: none; }
+  .om-ring-group.om-shimmer { animation: none; }
+  .om-vignette { transition: none; }
 }
-/* Draft 47: suspends the frog's own idle om-breathe loop while it's instead
-   being driven inline, in time with the box count (see FROG_BREATHE_TARGETS
-   above). */
-.om-breathing-along #frog-body { animation: none; }
+
+/* Draft 57: the frog's default idle motion, now CSS on a wrapper div rather
+   than the old SVG's #frog-body keyframe. Swapped out for an inline
+   transform driven by the same box-breath cadence as the rings while the
+   breathe step is active (see the frogSwellRef effect below) -- the wrapper
+   simply drops this class for that stretch so the two never fight. */
+.om-frog-idle { animation: omFrogIdle 4.6s ease-in-out infinite; }
+@keyframes omFrogIdle {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-3px) scale(1.01, 1.02); }
+}
+@media (prefers-reduced-motion: reduce) { .om-frog-idle { animation: none; } }
 `
 
 // SEE step: six predefined options, any three unlock Continue. `glowLayer`
@@ -155,73 +199,133 @@ const SEE_ITEMS = [
   { id: 'clouds', label: 'Clouds', affirm: 'Clouds drifting slowly overhead.' },
 ]
 
-// HEAR step: four predefined sound options, any three unlock Continue.
-// Rain and Thunder are the same recording (light rain + gentle thunder
-// together) -- both are just selections against the one ambient bed, not
-// separate playbacks -- so Thunder additionally pulses the lightning layer
-// (its `glowLayer`) to still read as its own distinct element.
+// HEAR step: five predefined sound options, any three unlock Continue.
+// Draft 57: selection only -- the one ambient soundscape already contains
+// all five, so tapping a chip just marks it "found," nothing plays or
+// changes volume. Thunder still pulses the lightning layer (its `glowLayer`)
+// so it reads as its own distinct element even though it shares Rain's
+// place in the mix.
 const HEAR_ITEMS = [
   { id: 'rain', label: 'Rain', affirm: 'The rain, tapping softly.' },
   { id: 'thunder', label: 'Thunder', affirm: 'A low rumble of distant thunder.', glowLayer: 'lightning' },
   { id: 'frogs', label: 'Frogs', affirm: 'Frogs and the brook, murmuring together.' },
+  { id: 'crickets', label: 'Crickets', affirm: 'Crickets, chirping steadily in the grass.' },
   { id: 'music', label: 'Music', affirm: 'A quiet melody, drifting through the air.' },
 ]
 
-const BASE_VOLUME = { music: 0.35, rain: 0.12, frog: 0.12 }
-// Draft 37: rain/frog used to sit at a whisper (0.12) the whole time, so
-// "find three things you can hear" was really "find the one thing already
-// audible, then tap blind for the other two." All three sit at one shared,
-// clearly audible level for the duration of the Hear step, then drop back to
-// BASE_VOLUME's quiet background once the step ends. (Draft 37 also nudged a
-// tapped chip's own track louder on top of this; Draft 39 removed that --
-// see the file header comment -- so tapping no longer touches volume at all.)
-const HEAR_AMBIENT_VOLUME = 0.4
 const PULSE_MS = 900
 
-// Box breathing: 4 phases x 4 one-second counts each = 16s/cycle, x 2 cycles
-// (Draft 37: was 3, testing feedback said 2).
+// Draft 57: one quiet looping bed for the whole activity, ducked while a
+// narration clip is speaking (see the stepKey effect below), then restored.
+const BED_VOLUME = 0.3
+const BED_DUCK_MULT = 0.4
+
+// Spark voice-F narration, one clip per step, keyed by the `stepKey` derived
+// below from mode/breatheStage/completionCount. Fires once per step entry
+// (guarded by lastNarrationKeyRef) and ducks the bed for its duration.
+const NARRATION_CLIPS = {
+  arrive: 'mind-01-arrive.mp3',
+  see: 'mind-02-see.mp3',
+  hear: 'mind-03-hear.mp3',
+  breathe: 'mind-04-breathe.mp3',
+  breatheDone: 'mind-05-done.mp3',
+  'close-1': 'mind-06-close.mp3',
+  'close-2': 'mind-07-leveledup.mp3',
+}
+
+function stepKeyFor(mode, breatheStage, completionCount, finished) {
+  if (mode === 'arrive') return 'arrive'
+  if (mode === 'see') return 'see'
+  if (mode === 'hear') return 'hear'
+  if (mode === 'breathe' && breatheStage === 'active') return 'breathe'
+  if (mode === 'breathe' && breatheStage === 'done') return 'breatheDone'
+  if (mode === 'close' && !finished) return `close-${completionCount}`
+  return null
+}
+
+// Box breathing, paced by mind-04-breathe.mp3's own spoken count rather than
+// a plain ticker -- these are that clip's exact timing structure (Spark's
+// script), read directly off the audio element's `currentTime`:
+//   0.0-7.0s   lead-in, rings/frog idle & small while Spark talks
+//   7.0-27.0s  cycle 1 -- 4 phases x 5.0s (in, hold, out, hold)
+//   27.0-29.0s "again" bridge -- hold small/idle, don't restart yet
+//   29.0-49.0s cycle 2 -- 4 phases x 5.0s, same shape as cycle 1
+const LEAD_IN = 7.0
+const PHASE_DUR = 5.0
+const AGAIN_BRIDGE = 2.0
+const CYCLES = 2
+
 const BREATHE_PHASES = [
   { key: 'in', label: 'Breathe in' },
   { key: 'hold1', label: 'Hold' },
   { key: 'out', label: 'Breathe out' },
   { key: 'hold2', label: 'Hold' },
 ]
-const COUNTS_PER_PHASE = 4
-const BREATHE_CYCLES = 2
-const TICK_MS = 1000
-const TICKS_PER_CYCLE = BREATHE_PHASES.length * COUNTS_PER_PHASE
-const TOTAL_BREATHE_TICKS = BREATHE_CYCLES * TICKS_PER_CYCLE
 
-// Glow target per phase. hold1 repeats `in`'s target (holds at full) and
-// hold2 repeats `out`'s (holds small); since the CSS value doesn't change
-// between in->hold1 or out->hold2, the transition just arrives and stays,
-// with no extra "hold in place" logic needed.
-const GLOW_TARGETS = {
-  in: { scale: 1.4, opacity: 1, brightness: 1.15 },
-  hold1: { scale: 1.4, opacity: 1, brightness: 1.15 },
-  out: { scale: 0.5, opacity: 0.45, brightness: 0.85 },
-  hold2: { scale: 0.5, opacity: 0.45, brightness: 0.85 },
+// Derives which phase of which cycle (or lead-in/bridge/end) a given elapsed
+// time falls in, generically over CYCLES/LEAD_IN/PHASE_DUR/AGAIN_BRIDGE --
+// tuning any of those automatically moves every cycle/bridge boundary after
+// it (e.g. LEAD_IN=7, PHASE_DUR=5, AGAIN_BRIDGE=2, CYCLES=2 lands cycle 1 at
+// 7-27s, the "again" bridge at 27-29s, and cycle 2 at 29-49s, matching
+// mind-04-breathe.mp3's script). Nothing here is tracked as separate state;
+// it all comes back out of this one function each time `breatheElapsed`
+// updates.
+function breathePhaseAt(t) {
+  if (t < LEAD_IN) return { kind: 'leadin' }
+  let cycleStart = LEAD_IN
+  for (let cycle = 1; cycle <= CYCLES; cycle++) {
+    const cycleEnd = cycleStart + 4 * PHASE_DUR
+    if (t < cycleEnd) {
+      const rel = t - cycleStart
+      const idx = Math.min(3, Math.floor(rel / PHASE_DUR))
+      return { kind: 'cycle', cycle, phase: BREATHE_PHASES[idx], elapsedInPhase: rel - idx * PHASE_DUR }
+    }
+    if (cycle < CYCLES && t < cycleEnd + AGAIN_BRIDGE) return { kind: 'bridge' }
+    cycleStart = cycleEnd + AGAIN_BRIDGE
+  }
+  return { kind: 'end' }
+}
+
+// A 1-2-3-4 tick within each 5-second phase, purely a visual rhythm cue
+// alongside Spark's spoken count.
+function tickFromElapsed(elapsedInPhase) {
+  return Math.min(4, Math.floor((elapsedInPhase / PHASE_DUR) * 4) + 1)
+}
+
+// Ring group target per phase. hold1 repeats `in`'s target (holds at full)
+// and hold2 repeats `out`'s (holds small); since the CSS value doesn't
+// change between in->hold1 or out->hold2, the transition just arrives and
+// stays, with no extra "hold in place" logic needed. `idle` covers lead-in,
+// the "again" bridge, and anything outside an active breathe step.
+const RING_TARGETS = {
+  idle: { scale: 0.62, opacity: 0.35, brightness: 0.8 },
+  in: { scale: 1.35, opacity: 1, brightness: 1.2 },
+  hold1: { scale: 1.35, opacity: 1, brightness: 1.2 },
+  out: { scale: 0.62, opacity: 0.55, brightness: 0.85 },
+  hold2: { scale: 0.62, opacity: 0.55, brightness: 0.85 },
 }
 
 // Draft 47 (Maggie/Holly, 2026-08-24): the frog "breathes along" with the
-// box count during the active breathing stage -- same shape as its own idle
-// om-breathe wobble (translateY paired with scale, so it moves the way the
-// source asset already expects), just larger and tied to the count instead
-// of running on its own independent 4.6s loop. Subtler than the big glow
-// (whose scale swings 1.4/0.5): this is a frog, not a balloon. The idle
-// keyframe is suspended for the duration via the .om-breathing-along class
-// below, since a running CSS animation would otherwise fight this inline
-// transform every frame.
+// count during the active breathing stage. Draft 57: retargeted onto the
+// painterly PNG's wrapper div (bottom-anchored via transform-origin, see
+// the frogSwellRef effect) instead of the old SVG's #frog-body, with
+// separate x/y scale so the swell reads as a soft belly-breath rather than
+// a uniform balloon. Subtler than the rings: this is a frog, not a balloon.
 const FROG_BREATHE_TARGETS = {
-  in: { translateY: -6, scale: 1.08 },
-  hold1: { translateY: -6, scale: 1.08 },
-  out: { translateY: 2, scale: 0.94 },
-  hold2: { translateY: 2, scale: 0.94 },
+  idle: { translateY: 1, scaleX: 0.985, scaleY: 0.97 },
+  in: { translateY: -4, scaleX: 1.03, scaleY: 1.06 },
+  hold1: { translateY: -4, scaleX: 1.03, scaleY: 1.06 },
+  out: { translateY: 1, scaleX: 0.985, scaleY: 0.97 },
+  hold2: { translateY: 1, scaleX: 0.985, scaleY: 0.97 },
 }
 
+// Draft 57: arrive/close now carry a single narration-matched line as the
+// panel's main message (see panelText below), so their old separate
+// `instruction` line is retired to avoid repeating the same sentiment twice
+// on screen.
 const INSTRUCTIONS = {
   intro: 'Tap to begin.',
-  arrive: 'Let’s use our senses to really arrive.',
+  arrive: '',
   see: 'What are three things you can see',
   hear: 'Find three things you can hear.',
   // Draft 47 (2026-08-24): shown before breathing starts, so it orients the
@@ -230,8 +334,15 @@ const INSTRUCTIONS = {
   // Draft 47 (Holly): the final breathe screen used to reuse `breatheReady`
   // ("follow Spark's count"), which is stale once the breathing is over.
   breatheDone: 'Ready to keep going?',
-  close: 'That’s your calm place.',
+  close: '',
 }
+
+// Draft 57 on-screen copy, written to match the new narration verbatim.
+const ARRIVE_TEXT = 'Welcome to your mindful place. Let’s use our senses to really arrive.'
+const CLOSE_1_TEXT =
+  'That is your mindful place. You don’t need this particular place at the pond to find it — you can do this anywhere you are. Here, take this with you — an Oxygen Mask! It’ll help you breathe easy on the climb ahead! If you want, you can practice again and make the mask work even better!'
+const CLOSE_2_TEXT =
+  'Congratulations — your practice actually leveled up your Oxygen Mask! The climb up to Mount Hope should be easier now.'
 
 function loadLayer(url) {
   return fetch(url)
@@ -264,22 +375,29 @@ export default function MindfulnessCalmPlace() {
   const [heard, setHeard] = useState([])
   const [lastSeen, setLastSeen] = useState(null)
   const [lastHeard, setLastHeard] = useState(null)
-  // ready (Spark's lead-in, not yet started) | active (timer running) | done
+  // ready (Spark's lead-in, not yet started) | active (mind-04 playing) | done
   const [breatheStage, setBreatheStage] = useState('ready')
-  const [breatheTicks, setBreatheTicks] = useState(0) // 1..TOTAL_BREATHE_TICKS while active
-  // How many times the box-breath has been re-run from the close screen's
-  // "practice again" offer (capped at 2), and whether the offer's been
-  // turned down -- either one stops the offer from showing again.
-  const [practiceCount, setPracticeCount] = useState(0)
-  const [practiceDeclined, setPracticeDeclined] = useState(false)
+  // Seconds into mind-04-breathe.mp3, polled from the audio element while
+  // breatheStage is 'active' (see the poll effect below). Phase/cycle/count
+  // are all derived from this single number via breathePhaseAt, rather than
+  // tracked separately.
+  const [breatheElapsed, setBreatheElapsed] = useState(0)
+  // How many times the FULL exercise (see -> hear -> breathe) has been
+  // completed: 0 before the first run, 1 after the first, 2 after the
+  // second (capped -- no practice offer is shown once it reaches 2).
+  const [completionCount, setCompletionCount] = useState(0)
+  // Draft 57: replaces the old restart()-to-intro loop (Ginny's bug). Once
+  // true, the close screen's button row is hidden and the last message
+  // simply stays on screen -- that's the whole "ends cleanly" fix, no new
+  // screen or navigation needed.
+  const [finished, setFinished] = useState(false)
 
   const containerRef = useRef(null)
-  const musicRef = useRef(null)
-  const rainRef = useRef(null)
-  const frogRef = useRef(null)
-  const frogLayerRef = useRef(null)
+  const soundscapeRef = useRef(null)
+  const narrationRef = useRef(null)
+  const frogSwellRef = useRef(null)
   const pulseTimers = useRef({})
-  const breatheTimerRef = useRef(null)
+  const lastNarrationKeyRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -291,7 +409,8 @@ export default function MindfulnessCalmPlace() {
     return () => {
       cancelled = true
       Object.values(pulseTimers.current).forEach(clearTimeout)
-      clearInterval(breatheTimerRef.current)
+      if (soundscapeRef.current) soundscapeRef.current.pause()
+      if (narrationRef.current) narrationRef.current.pause()
     }
   }, [])
 
@@ -310,18 +429,17 @@ export default function MindfulnessCalmPlace() {
   }
 
   function begin() {
-    setMode('arrive')
     // Called synchronously inside the tap handler (a real user gesture),
-    // which is what satisfies the browser's audio-autoplay policy.
-    ;[musicRef, rainRef, frogRef].forEach((ref) => {
-      const el = ref.current
-      if (!el) return
-      el.currentTime = 0
-    })
-    if (musicRef.current) musicRef.current.volume = BASE_VOLUME.music
-    if (rainRef.current) rainRef.current.volume = BASE_VOLUME.rain
-    if (frogRef.current) frogRef.current.volume = BASE_VOLUME.frog
-    ;[musicRef, rainRef, frogRef].forEach((ref) => ref.current && ref.current.play().catch(() => {}))
+    // which is what satisfies the browser's audio-autoplay policy -- and,
+    // per Draft 57, is what unlocks the narration clips played from effects
+    // shortly after this same gesture.
+    const bed = soundscapeRef.current
+    if (bed) {
+      bed.currentTime = 0
+      bed.volume = BED_VOLUME
+      bed.play().catch(() => {})
+    }
+    setMode('arrive')
   }
 
   function tapSee(item) {
@@ -338,146 +456,128 @@ export default function MindfulnessCalmPlace() {
     if (item.glowLayer) flashLayer(item.glowLayer)
   }
 
-  // All three tracks come up to one shared, clearly audible level for the
-  // duration of Hear (see HEAR_AMBIENT_VOLUME). Tapping a chip only selects
-  // it -- see tapHear -- so this is the only place Hear's volumes change.
-  function enterHear() {
-    setMode('hear')
-    if (musicRef.current) musicRef.current.volume = HEAR_AMBIENT_VOLUME
-    if (rainRef.current) rainRef.current.volume = HEAR_AMBIENT_VOLUME
-    if (frogRef.current) frogRef.current.volume = HEAR_AMBIENT_VOLUME
-  }
-
   function startBreathe() {
-    clearInterval(breatheTimerRef.current)
-    // Leaving Hear: drop back to the quiet background bed rather than
-    // carrying its louder, "genuinely hearable" mix into the rest of the
-    // activity.
-    if (musicRef.current) musicRef.current.volume = BASE_VOLUME.music
-    if (rainRef.current) rainRef.current.volume = BASE_VOLUME.rain
-    if (frogRef.current) frogRef.current.volume = BASE_VOLUME.frog
     setBreatheStage('ready')
-    setBreatheTicks(0)
+    setBreatheElapsed(0)
     setMode('breathe')
   }
 
-  // Ticks once per second regardless of phase/cycle boundaries; phase, cycle
-  // and the on-screen count are all derived from this single number (see
-  // below), rather than tracked as separate state that would need to be kept
-  // in sync with each other on every tick.
   function beginBreathing() {
     setBreatheStage('active')
-    setBreatheTicks(1)
-    clearInterval(breatheTimerRef.current)
-    breatheTimerRef.current = setInterval(() => {
-      setBreatheTicks((t) => {
-        const next = t + 1
-        if (next > TOTAL_BREATHE_TICKS) {
-          clearInterval(breatheTimerRef.current)
-          setBreatheStage('done')
-          return t
-        }
-        return next
-      })
-    }, TICK_MS)
+    setBreatheElapsed(0)
   }
 
-  // "Practice again" (close screen, up to 2 times): re-runs just the
-  // box-breath, not the whole activity. Purely a reinforcing message once it
-  // finishes -- no mechanical change to the Oxygen Mask, there's no
-  // "un-upgraded" state anywhere to reference.
+  // Breathe -> close, incrementing how many full runs have finished. Named
+  // distinctly from a plain setMode so the completion count and the mode
+  // change can never drift apart.
+  function enterClose() {
+    setCompletionCount((c) => c + 1)
+    setMode('close')
+  }
+
+  // "Practice again" (close screen, offered once): reruns the WHOLE
+  // exercise, not just the breath -- see the file header on why this
+  // replaces the old two-loop setup.
   function practiceAgain() {
-    setPracticeCount((c) => c + 1)
-    startBreathe()
-  }
-
-  function declinePractice() {
-    setPracticeDeclined(true)
-  }
-
-  function again() {
-    clearInterval(breatheTimerRef.current)
     setSeen([])
     setHeard([])
     setLastSeen(null)
     setLastHeard(null)
     setBreatheStage('ready')
-    setBreatheTicks(0)
-    setPracticeCount(0)
-    setPracticeDeclined(false)
+    setBreatheElapsed(0)
     setMode('see')
   }
 
-  function restart() {
-    clearInterval(breatheTimerRef.current)
-    setMode('intro')
-    setSeen([])
-    setHeard([])
-    setLastSeen(null)
-    setLastHeard(null)
-    setBreatheStage('ready')
-    setBreatheTicks(0)
-    setPracticeCount(0)
-    setPracticeDeclined(false)
-    ;[musicRef, rainRef, frogRef].forEach((ref) => {
-      const el = ref.current
-      if (!el) return
-      el.pause()
-      el.currentTime = 0
-    })
+  function finish() {
+    setFinished(true)
   }
 
   const seeAllFound = seen.length >= 3
   const hearAllFound = heard.length >= 3
   const inSelectionStep = mode === 'see' || mode === 'hear'
-
-  // Phase/cycle/count-in-phase, all derived from the single elapsed-ticks
-  // counter rather than tracked separately.
-  const tickIdx0 = Math.max(0, breatheTicks - 1)
-  const withinCycle = tickIdx0 % TICKS_PER_CYCLE
-  const breathePhase = BREATHE_PHASES[Math.floor(withinCycle / COUNTS_PER_PHASE)]
-  const breatheCount = (withinCycle % COUNTS_PER_PHASE) + 1
   const breathingAlong = mode === 'breathe' && breatheStage === 'active'
 
-  // Draft 47: drives the frog's scale/lift straight onto its own #frog-body
-  // element (reached via the ref, since it arrived as raw injected SVG
-  // rather than React-owned markup -- same technique as flashLayer above).
-  // Only takes over while breathingAlong; the .om-breathing-along class
-  // handles suspending the idle keyframe, and clearing the inline style on
-  // exit lets that keyframe resume from its own natural state.
+  const stepKey = stepKeyFor(mode, breatheStage, completionCount, finished)
+
+  // Fires each narration clip once per step entry (guarded against re-fire
+  // on re-render by comparing to the previously-fired key, not a
+  // once-ever set -- so re-entering a step via "Practice again" fires it
+  // again). Ducks the bed for the clip's duration, then restores it; for
+  // the breathe clip specifically, its `ended` event is also what advances
+  // breatheStage to 'done' (which is what makes mind-05 play next).
   useEffect(() => {
-    const wrap = frogLayerRef.current
-    const body = wrap && wrap.querySelector('#frog-body')
-    if (!body) return
-    if (breathingAlong) {
-      const t = FROG_BREATHE_TARGETS[breathePhase.key]
-      body.style.transition = 'transform 4s ease-in-out'
-      body.style.transform = `translateY(${t.translateY}px) scale(${t.scale})`
-    } else {
-      body.style.transition = ''
-      body.style.transform = ''
+    if (!stepKey || stepKey === lastNarrationKeyRef.current) return
+    const clip = NARRATION_CLIPS[stepKey]
+    if (!clip) return
+    lastNarrationKeyRef.current = stepKey
+    const el = narrationRef.current
+    const bed = soundscapeRef.current
+    if (!el) return
+    const restoreBed = () => {
+      if (bed) bed.volume = BED_VOLUME
     }
-  }, [breathingAlong, breathePhase.key])
+    el.pause()
+    el.currentTime = 0
+    el.src = `${AUDIO}/${clip}`
+    if (bed) bed.volume = BED_VOLUME * BED_DUCK_MULT
+    el.addEventListener(
+      'ended',
+      () => {
+        restoreBed()
+        if (stepKey === 'breathe') setBreatheStage('done')
+      },
+      { once: true }
+    )
+    el.play().catch(() => restoreBed())
+  }, [stepKey])
+
+  // Polls the breathe clip's real playback position every ~150ms while it's
+  // active, so the rings/count/frog stay locked to what's actually playing
+  // instead of drifting on their own clock.
+  useEffect(() => {
+    if (!breathingAlong) return
+    const id = setInterval(() => {
+      const el = narrationRef.current
+      if (el) setBreatheElapsed(el.currentTime)
+    }, 150)
+    return () => clearInterval(id)
+  }, [breathingAlong])
+
+  const phaseInfo = breathePhaseAt(breatheElapsed)
+  const breathePhase = phaseInfo.kind === 'cycle' ? phaseInfo.phase : null
+  const breatheTargetKey = breathePhase ? breathePhase.key : 'idle'
+  const breatheCount = breathePhase ? tickFromElapsed(phaseInfo.elapsedInPhase) : null
+  const ringTarget = RING_TARGETS[breatheTargetKey]
+  const frogTarget = FROG_BREATHE_TARGETS[breatheTargetKey]
+
+  // Draft 57: drives the frog wrapper's scale/lift straight onto its own
+  // element (frogSwellRef), the same technique the old code used on the
+  // SVG's #frog-body. Only takes over while breathingAlong; the wrapper
+  // drops .om-frog-idle for that stretch so the CSS keyframe doesn't fight
+  // this inline transform, and clearing the inline style on exit lets the
+  // idle keyframe resume from its own natural state.
+  useEffect(() => {
+    const el = frogSwellRef.current
+    if (!el) return
+    if (breathingAlong) {
+      el.style.transition = `transform ${PHASE_DUR}s ease-in-out`
+      el.style.transform = `translateY(${frogTarget.translateY}px) scale(${frogTarget.scaleX}, ${frogTarget.scaleY})`
+    } else {
+      el.style.transition = ''
+      el.style.transform = ''
+    }
+  }, [breathingAlong, frogTarget])
 
   // ---- panel copy per mode ----
-  // Draft 47: breathe's caption differs by sub-stage (the ready orientation
-  // line doesn't apply anymore once breathing is done), so it can't be a
-  // single INSTRUCTIONS[mode] lookup the way every other mode is.
-  let instruction =
-    mode === 'breathe'
-      ? breatheStage === 'done'
-        ? INSTRUCTIONS.breatheDone
-        : INSTRUCTIONS.breatheReady
-      : INSTRUCTIONS[mode]
+  let instruction = mode === 'breathe' ? (breatheStage === 'done' ? INSTRUCTIONS.breatheDone : INSTRUCTIONS.breatheReady) : INSTRUCTIONS[mode]
   let panelLabel = null
   let panelText = 'Take a slow breath, and let’s step in.'
 
   if (mode === 'intro') {
     panelText =
-      'Before we climb on, let’s try something you can use whenever things feel like too much. It’s called finding your calm place. Take a slow breath… and let’s step in.'
+      'Before we climb on, let’s try something you can use whenever things feel like too much. It’s called finding your mindful place. Take a slow breath… and let’s step in.'
   } else if (mode === 'arrive') {
-    panelText =
-      'This is a calm place. Any time you feel overwhelmed, you can close your eyes and come back here in your mind.'
+    panelText = ARRIVE_TEXT
   } else if (mode === 'see') {
     if (lastSeen) {
       const item = SEE_ITEMS.find((x) => x.id === lastSeen)
@@ -500,22 +600,16 @@ export default function MindfulnessCalmPlace() {
         ? 'Beautifully done.'
         : 'Now, let’s feel. Feel your lungs fill as you breathe with me.'
   } else if (mode === 'close') {
-    if (practiceCount === 0) {
-      panelLabel = 'You did it'
-      panelText =
-        'That’s your calm place. You can come back any time you need a moment. Take this with you: an Oxygen Mask. It’ll help you breathe easy on the climb ahead.'
+    if (completionCount >= 2) {
+      panelLabel = 'Leveled up'
+      panelText = CLOSE_2_TEXT
     } else {
-      panelText = 'Your practice made this tool stronger. It should work really well on the climb ahead.'
+      panelLabel = 'You did it'
+      panelText = CLOSE_1_TEXT
     }
   }
 
   const showScene = mode !== 'intro'
-  const breatheTarget = GLOW_TARGETS[breathePhase.key]
-  const glowStyle = {
-    transform: `translate(-50%, -50%) scale(${breatheTarget.scale})`,
-    opacity: breatheTarget.opacity,
-    filter: `brightness(${breatheTarget.brightness})`,
-  }
 
   return (
     <div ref={containerRef} className="relative flex flex-col h-full w-full overflow-hidden" style={{ background: 'var(--surface-abyss)', fontFamily: 'var(--font-core)' }}>
@@ -523,17 +617,17 @@ export default function MindfulnessCalmPlace() {
       <style>{MOTION_CSS}</style>
 
       {/* audio always mounted (not yet playing) so `begin()` can call .play()
-          synchronously inside the real user gesture */}
-      <audio ref={musicRef} src={`${AUDIO}/music.mp3`} loop preload="auto" />
-      <audio ref={rainRef} src={`${AUDIO}/rain.mp3`} loop preload="auto" />
-      <audio ref={frogRef} src={`${AUDIO}/frog.mp3`} loop preload="auto" />
+          synchronously inside the real user gesture. `narrationRef`'s src is
+          swapped per step by the stepKey effect above. */}
+      <audio ref={soundscapeRef} src={`${AUDIO}/soundscape.mp3`} loop preload="auto" />
+      <audio ref={narrationRef} preload="auto" />
 
       {/* background pond, always present; the animated overlay layers only
           mount once the scene starts, so nothing animates unopened in the
           review list */}
       <img
         src={`${ART}/pond-bg.webp`}
-        alt="A calm dusk pond, Spark's calm place"
+        alt="A calm dusk pond, Spark's mindful place"
         className="absolute inset-0 w-full h-full object-cover"
       />
 
@@ -551,29 +645,52 @@ export default function MindfulnessCalmPlace() {
             dangerouslySetInnerHTML={{ __html: layers.fireflies }}
           />
           <div className="om-layer" dangerouslySetInnerHTML={{ __html: layers.reeds }} />
-          <div
-            ref={frogLayerRef}
-            className={'om-layer' + (breathingAlong ? ' om-breathing-along' : '')}
-            data-layer="frog"
-            dangerouslySetInnerHTML={{ __html: layers.frog }}
-          />
+
+          {/* Draft 57: painterly PNG, bottom-left, its own small wrapper
+              rather than a full-frame .om-layer overlay. transform-origin
+              is bottom-center so the box-breath swell (and the idle
+              wobble) grows from its planted feet instead of its middle. */}
+          <div className="absolute" data-layer="frog" style={{ left: '4%', bottom: '6%', width: '34%' }}>
+            <div
+              ref={frogSwellRef}
+              className={breathingAlong ? '' : 'om-frog-idle'}
+              style={{ transformOrigin: '50% 100%' }}
+            >
+              <img
+                src={`${ART}/frog-painterly.png`}
+                alt=""
+                className="w-full h-auto block"
+                style={{ filter: 'drop-shadow(0 8px 14px rgba(0,0,0,.35))' }}
+              />
+            </div>
+          </div>
 
           {mode === 'breathe' && breatheStage === 'active' && (
             <>
+              <div className="om-vignette is-active" />
               <div
-                className={
-                  'om-glow-breath' + (breathePhase.key === 'hold1' ? ' om-shimmer' : '')
-                }
-                style={glowStyle}
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <div className="text-white text-[22px] font-extrabold drop-shadow-lg mb-1">
-                  {breathePhase.label}
-                </div>
-                <div className="text-white text-[52px] font-extrabold drop-shadow-lg leading-none">
-                  {breatheCount}
-                </div>
+                className={'om-ring-group' + (breatheTargetKey === 'hold1' ? ' om-shimmer' : '')}
+                style={{
+                  transform: `scale(${ringTarget.scale})`,
+                  opacity: ringTarget.opacity,
+                  filter: `brightness(${ringTarget.brightness})`,
+                }}
+              >
+                <div className="om-ring om-ring--1" />
+                <div className="om-ring om-ring--2" />
+                <div className="om-ring om-ring--3" />
+                <div className="om-ring om-ring--4" />
               </div>
+              {breathePhase && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <div className="text-white text-[22px] font-extrabold drop-shadow-lg mb-1">
+                    {breathePhase.label}
+                  </div>
+                  <div className="text-white text-[52px] font-extrabold drop-shadow-lg leading-none">
+                    {breatheCount}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </>
@@ -631,7 +748,7 @@ export default function MindfulnessCalmPlace() {
           {((mode === 'see' && seeAllFound) || (mode === 'hear' && hearAllFound)) && (
             <button
               type="button"
-              onClick={() => (mode === 'see' ? enterHear() : startBreathe())}
+              onClick={() => (mode === 'see' ? setMode('hear') : startBreathe())}
               className="w-full py-2.5 rounded-full text-[15px] font-extrabold transition-colors"
               style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
@@ -644,7 +761,7 @@ export default function MindfulnessCalmPlace() {
       {/* Spark's panel for the non-selection steps: a floating bar rather
           than a separate card below the scene, so the artwork fills nearly
           the whole frame ("keep UI minimal so the scene breathes"). Hidden
-          outright while breathing is active: the glow + phase/count overlay
+          outright while breathing is active: the rings + phase/count overlay
           IS the UI for that stretch (Draft 35 — "make it large and clearly
           the focal point"), and a panel competing for the same space would
           undercut that. */}
@@ -663,7 +780,9 @@ export default function MindfulnessCalmPlace() {
             <div className="text-[13px] leading-snug" style={{ color: 'var(--text-bright)' }}>{panelText}</div>
           </div>
 
-          <div className="text-[12px] mb-2 min-h-[16px]" style={{ color: 'var(--text-body)' }}>{instruction}</div>
+          {instruction && (
+            <div className="text-[12px] mb-2 min-h-[16px]" style={{ color: 'var(--text-body)' }}>{instruction}</div>
+          )}
 
           {mode === 'intro' && (
             <button
@@ -701,7 +820,7 @@ export default function MindfulnessCalmPlace() {
           {mode === 'breathe' && breatheStage === 'done' && (
             <button
               type="button"
-              onClick={() => setMode('close')}
+              onClick={enterClose}
               className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
               style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
@@ -709,12 +828,10 @@ export default function MindfulnessCalmPlace() {
             </button>
           )}
 
-          {/* Practice-to-upgrade the Oxygen Mask (Draft 37), up to 2 times.
-              A distinct, narrower loop from "Do it again" below -- this one
-              only re-runs the breath, not the whole activity -- so it's
-              offered first and gates on its own counter rather than sharing
-              state with the full-activity repeat. */}
-          {mode === 'close' && practiceCount < 2 && !practiceDeclined && (
+          {/* Practice-to-level-up the Oxygen Mask (Draft 57), offered once:
+              the whole exercise reruns from Practice again, not just the
+              breath (see practiceAgain and the file header). */}
+          {mode === 'close' && !finished && completionCount === 1 && (
             <div className="space-y-2">
               <p className="text-[12px] text-center" style={{ color: 'var(--text-body)' }}>
                 Want to practice again to upgrade your mask?
@@ -730,38 +847,31 @@ export default function MindfulnessCalmPlace() {
                 </button>
                 <button
                   type="button"
-                  onClick={declinePractice}
+                  onClick={finish}
                   className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
                   style={{ background: 'var(--action-quiet)', color: 'var(--text-bright)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}
                 >
-                  No, I’m ready
+                  Move on
                 </button>
               </div>
             </div>
           )}
 
-          {mode === 'close' && (practiceCount >= 2 || practiceDeclined) && (
-            <div className="space-y-2">
-              <p className="text-[12px] text-center" style={{ color: 'var(--text-body)' }}>Want to stay a little longer?</p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={again}
-                  className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
-                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
-                >
-                  Do it again
-                </button>
-                <button
-                  type="button"
-                  onClick={restart}
-                  className="flex-1 py-2.5 rounded-full text-[14px] font-extrabold"
-                  style={{ background: 'var(--action-quiet)', color: 'var(--text-bright)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}
-                >
-                  I’m all set
-                </button>
-              </div>
-            </div>
+          {/* Second completion: a single button that ends the activity --
+              `finish()` only sets `finished`, which hides this row and
+              leaves CLOSE_2_TEXT on screen. No path back to `mode: 'intro'`
+              exists anywhere in this screen (Draft 57 fixes the old
+              restart()-to-intro bug by removing that path entirely, not by
+              guarding it). */}
+          {mode === 'close' && !finished && completionCount >= 2 && (
+            <button
+              type="button"
+              onClick={finish}
+              className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+            >
+              I’m all set
+            </button>
           )}
         </div>
       )}
