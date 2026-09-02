@@ -29,14 +29,16 @@
 // already have it, so the combined message reads as one natural paragraph
 // (matching Holly's own worked example, which does the same).
 //
-// Draft 41 also added two pieces of verbatim safety/reassurance copy from
-// Dr. Sprang, rendered exactly as written including her informal em-dash-
-// without-a-following-space punctuation ("off- you", "parents- reach") --
-// this is clinical wording from a named source, not ours to re-typeset.
+// Draft 41 also added two pieces of safety/reassurance copy from Dr.
+// Sprang. REASSURANCE is still rendered exactly as she wrote it, informal
+// em-dash-without-a-following-space punctuation included ("off- you") --
+// clinical wording from a named source, not ours to re-typeset. Her
+// original safety disclaimer went through a couple of revisions after
+// that (see SAFETY_DISCLAIMER's own comment, Draft 62) and is no longer
+// verbatim -- it's now a merged, Josh-approved version.
 
 import { useState } from 'react'
 import { addActionPlanItem } from '../lib/gainsActionPlan.js'
-import GainsCrisisLifelineNote from './gains/CrisisLifelineNote.jsx'
 
 const ART = '/long-light/art/zone3'
 
@@ -89,6 +91,14 @@ const STEPS = ['intro', 'greeting', 'situation', 'request', 'normalize', 'offer'
 // punctuation stays exactly as written.
 const REASSURANCE =
   'If asking directly feels hard, how about writing this in a note first to take the pressure off- you will get a copy of this message in your action plan to make it easier'
+
+// Draft 62 (2026-09-02): merges Sprang's escalation guidance (Draft 41, was
+// its own SAFETY_DISCLAIMER) with the 988 definition Draft 59 had added as a
+// separate phone-icon card -- Josh wants both, but as one line so 988 only
+// appears once. Copy reviewed and approved by Josh; ships as-is, including
+// her "your family physician" typo fix (was "you family physician").
+const SAFETY_DISCLAIMER =
+  'Note: if what is going on feels urgent — like you are struggling to cope or having thoughts of hurting yourself or someone else — don’t wait to convince your parents. Reach out immediately to a school counselor, your family physician, or call or text 988, the Suicide & Crisis Lifeline (free, confidential support, 24/7).'
 
 // Adds terminal punctuation only if the line doesn't already have some --
 // preserves Holly's exact wording while giving the assembled message
@@ -322,14 +332,21 @@ export default function ElevatorPitch() {
           {/* Draft 48 (Holly/admin, 2026-08-24): the 988 disclaimer gets its
               own screen now, shown after the message is saved but before the
               Wingsuit award -- it used to sit alongside the Wingsuit message
-              on `done`, below. Draft 59 (Holly, 2026-09-02) added the
-              team-approved crisis-lifeline explainer below Sprang's verbatim
-              disclaimer so 988 was actually explained; live-demo review the
-              same day (Josh) found the two 988 mentions read as duplicated
-              on screen, so only the phone-icon explainer stays. Sprang's
-              exact wording is preserved in git history if it needs to come
-              back. */}
-          {step === 'safety' && <GainsCrisisLifelineNote />}
+              on `done`, below. Draft 59 added a separate phone-icon
+              crisis-lifeline explainer below Sprang's line so 988 was
+              actually explained, but live-demo review found the two 988
+              mentions read as duplicated. Draft 62 (2026-09-02, approved by
+              Josh) merges both into this one line instead -- Sprang's
+              escalation guidance plus the 988 definition -- so it only
+              appears once. */}
+          {step === 'safety' && (
+            <p
+              className="text-[13px] leading-relaxed rounded-2xl px-3 py-2.5"
+              style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
+            >
+              {SAFETY_DISCLAIMER}
+            </p>
+          )}
 
           {/* Draft 59 (Holly + Ginny, 2026-09-02): the old copy's "when the
               moment feels right" implied waiting for a magic moment (Holly),
