@@ -1,9 +1,13 @@
 // GAINS Teens demo page at /gains-demo — the internal review surface for
 // the GAINS for Teens SSI ("The Long Light"). Reorganized (Draft 12) to
 // read like the actual GAME FLOW, top to bottom:
-//   Zone Map (roadmap) → Child Assent & Measures → Playable Characters →
-//   Zone 1…5 (each: image, characters, video/script, activity, gear,
-//   traversal) with "in development" placeholders where pending.
+//   Zone Map (roadmap) → Playable Characters → Zone 1…5 (each: image,
+//   characters, video/script, activity, gear, traversal) with "in
+//   development" placeholders where pending.
+// Draft 54 (2026-09-01): the Child Assent & Measures packet is a proposal
+// under review, not adopted canon yet -- it now lives as the Pre-test/
+// Post-test items at the top of "Ideas & Demos for Review" (see
+// MeasurementFlow.jsx), not as its own section further down the page.
 // Unlisted; shared by link. Feedback reuses the shared pipeline tagged
 // program="gains-teens" + a section (see GAINS_FEEDBACK_SECTIONS).
 //
@@ -20,7 +24,7 @@ import BodyMapping from '../components/BodyMapping.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 import ElevatorPitch from '../components/ElevatorPitch.jsx'
 import ExpositionIntro from '../components/gains/ExpositionIntro.jsx'
-import MeasurementPacket from '../components/gains/MeasurementPacket.jsx'
+import MeasurementFlow from '../components/gains/MeasurementFlow.jsx'
 import GainsCard from '../components/gains/ds/Card.jsx'
 import GainsBadge from '../components/gains/ds/Badge.jsx'
 import GainsButton from '../components/gains/ds/Button.jsx'
@@ -34,6 +38,8 @@ import '../styles/gains-tokens.css'
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
   { value: 'review-finalboss', label: 'Review: Final Boss summit script' },
+  { value: 'review-pretest', label: 'Review: Pre-test measures flow' },
+  { value: 'review-posttest', label: 'Review: Post-test measures flow' },
   { value: 'review-videos', label: 'Review: Zone videos' },
   // Retired as their proposals were adopted (labels are kept in
   // AdminFeedbackPage so existing rows still label correctly):
@@ -49,6 +55,10 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-mindfulness', label: 'Review: Mindfulness Calm Place' },
   { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
   // The official breakdown
+  // assent-measures — superseded by review-pretest/review-posttest (Draft
+  // 54, 2026-09-01): the packet moved back into the review section since
+  // it's still a proposal, not adopted canon. Label kept so historical
+  // feedback rows still read correctly.
   { value: 'assent-measures', label: 'Child Assent / Measures' },
   { value: 'exposition', label: 'Exposition' },
   { value: 'npcs', label: 'NPCs' },
@@ -518,8 +528,51 @@ export default function GainsDemoPage() {
                   Playable Character section) and Spark's voice picker (now
                   decided -- see the Narrator card in Playable Character). */}
 
-              {/* 1 — the five zone psychoeducation videos (Draft 51) */}
-              <ReviewItem n={1} title="Videos" section="review-videos">
+              {/* 1 — the measurement packet's Pre-test flow (Draft 54). Draft
+                  53's flat scroll is now paginated one instrument per page,
+                  inside the same mobile phone frame as the playable
+                  activities below, matching how it will actually be
+                  administered. Nothing is stored or scored. */}
+              <ReviewItem n={1} title="Pre-test: measures flow (playable)" section="review-pretest">
+                <p className="mb-3">
+                  The measurement packet (Demographics through Trauma &amp;
+                  Treatment Beliefs), paginated one instrument per page with a
+                  progress indicator and a Continue button. Every item is
+                  transcribed verbatim from Stephanie&apos;s measures doc.
+                  Review-only — nothing is saved.
+                </p>
+                <div className="mb-3">
+                  <Pill icon={HardHat}>Assent flow not built yet</Pill>
+                </div>
+                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
+                  <div
+                    className="relative w-full overflow-hidden rounded-3xl"
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
+                  >
+                    <MeasurementFlow flow="pre" />
+                  </div>
+                </div>
+              </ReviewItem>
+
+              {/* 2 — the same instruments administered again post-program,
+                  plus the Post-only Program Feedback Scale. */}
+              <ReviewItem n={2} title="Post-test: measures flow (playable)" section="review-posttest">
+                <p className="mb-3">
+                  The Pre+Post instruments again, plus the Program Feedback
+                  Scale at the end. Same paginated flow as the Pre-test above.
+                </p>
+                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
+                  <div
+                    className="relative w-full overflow-hidden rounded-3xl"
+                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
+                  >
+                    <MeasurementFlow flow="post" />
+                  </div>
+                </div>
+              </ReviewItem>
+
+              {/* 3 — the five zone psychoeducation videos (Draft 51) */}
+              <ReviewItem n={3} title="Videos" section="review-videos">
                 <p className="mb-3">
                   The five zone psychoeducation videos, one per zone.
                 </p>
@@ -530,9 +583,9 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 2 — Body Mapping activity (playable) */}
+              {/* 4 — Body Mapping activity (playable) */}
               <ReviewItem
-                n={2}
+                n={4}
                 title="Body Mapping activity (playable)"
                 section="review-bodymap"
               >
@@ -574,9 +627,9 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 3 — Mindfulness "Calm Place" activity (playable) */}
+              {/* 5 — Mindfulness "Calm Place" activity (playable) */}
               <ReviewItem
-                n={3}
+                n={5}
                 title="Mindfulness: Calm Place (playable)"
                 section="review-mindfulness"
               >
@@ -599,9 +652,9 @@ export default function GainsDemoPage() {
                 </div>
               </ReviewItem>
 
-              {/* 4 — Zone 3 "Elevator Pitch" message-builder (playable) */}
+              {/* 6 — Zone 3 "Elevator Pitch" message-builder (playable) */}
               <ReviewItem
-                n={4}
+                n={6}
                 title="Zone 3: Message to Your Guardian (playable)"
                 section="review-zone3pitch"
               >
@@ -743,27 +796,6 @@ export default function GainsDemoPage() {
             />
           </div>
         </div>
-      </section>
-
-      {/* B. Child Assent & Measures. Draft 53 (2026-08-27): the measurement
-          packet, rendered as the actual questionnaires for team review.
-          Source of truth is Stephanie's `Gains Teens Measurements_SG.docx`
-          -- every item in MeasurementPacket.jsx is transcribed verbatim.
-          Local/ephemeral state only; live capture + scoring to Supabase is
-          a separate follow-up (mirroring how Ready for Roots' own
-          pretest/posttest moved from demo-only to a real DB pipeline). */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase mb-3" style={SECTION_LABEL_STYLE}>
-          Child Assent &amp; Measures
-        </h2>
-        <p className="text-[13px] italic mb-2 max-w-[560px]" style={{ color: 'var(--text-muted)' }}>
-          The measurement packet, rendered here for review. Answers aren’t saved —
-          live data capture and scoring to the database is a separate follow-up.
-        </p>
-        <div className="mb-4">
-          <Pill icon={HardHat}>Assent flow not built yet</Pill>
-        </div>
-        <MeasurementPacket />
       </section>
 
       {/* C. Playable Character (single protagonist). Draft 51: the four-stage
