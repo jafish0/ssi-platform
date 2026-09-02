@@ -132,6 +132,38 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1857fb1** (2026-09-02) — Draft 59: **Zone 3 Elevator Pitch — reword the
+  Wingsuit "done" screen + explain 988 on the safety screen.** Two copy/UX
+  fixes from the 8/31 feedback in `src/components/ElevatorPitch.jsx`.
+  Reworded the Wingsuit done-screen copy (Holly: the old "when the moment
+  feels right" implied waiting for a magic moment; Ginny: it didn't make
+  clear the Wingsuit was earned by the planning just done, same note she
+  made about the Oxygen Mask) — "You did it" heading stays. Added the
+  team-approved crisis-lifeline explainer below Sprang's verbatim safety
+  disclaimer (unchanged) so 988 is actually explained, not just named — new
+  `src/components/gains/CrisisLifelineNote.jsx` imports `CRISIS_LIFELINE_TEXT`
+  from the shared component so the copy stays in one place, themed with
+  Shadowmend's dark/amber tokens instead of Ready for Roots' light card.
+  Verified locally and live: both screens read correctly, Ready for Roots'
+  own `CrisisLifelineNote` untouched, no overflow at 375px, clean build.
+
+- **9cb7748** (2026-09-02) — Draft 58: **Mindful Place breathe visual — make
+  the rings more prominent + strengthen the focus vignette.** Pure visual
+  tuning of the just-shipped Draft 57 breathe step
+  (`src/components/MindfulnessCalmPlace.jsx`), no logic/timing changes —
+  confirmed the ring/frog cadence still locks exactly to `mind-04`'s real
+  playback (spot-checked mid-cycle-1 and mid-cycle-2, both matched the phase
+  math precisely). Thicker ring strokes (3/2.5/2/1.5px → 5/4/3/2.5px), a
+  bigger glow, and a much wider scale/opacity/brightness swing (0.42–1.55 vs
+  the old 0.62–1.35) so the expand/contract reads as obvious motion. Deepened
+  and pulled in the focus vignette (16%/55%/82% gradient stops vs the old
+  26%/100%) so it pops against the busy rain/fireflies scene. Also re-copied
+  a corrected `frog-painterly.png` — the Draft 57 asset had its lily pad
+  clipped flat on both sides; this one (1421×948) has the full, naturally
+  tapered pad. Verified no clipping by the frame at 375px, and tightened the
+  breath swell to be vertical-dominant (scaleX capped at 1.01, was 1.03) so
+  the wider pad doesn't visibly stretch sideways. Verified locally and live.
+
 - **5bb7775** (2026-09-02) — Draft 57: **Mindfulness rebuild — rename to
   "Mindful Place", single soundscape + Spark narration, concentric-ring
   breathing, painterly breathing frog, crickets, practice-to-level-up,
@@ -3004,3 +3036,49 @@ Big pass on the Mindfulness activity (`src/components/MindfulnessCalmPlace.jsx` 
 **Verify.** On `/gains-demo`: the activity reads "Mindful Place" everywhere; Begin unlocks audio; the single soundscape loops as the bed; each step's Spark narration auto-plays once and ducks the bed; Hear shows 5 chips incl. Crickets (pick 3, selection-only, no stray per-sound playback); the old rain/music/frog mp3s are gone and unreferenced; the breathe step shows centered concentric rings + focus vignette + count, idle for 7.0s then 2 synced cycles; the painterly frog sits bottom-left and swells gently (feet planted) in time; first completion earns + invites practice, second completion shows the level-up and ends cleanly with NO loop to intro; 9:16, no-fail, no overflow at 375px; Ready for Roots (`/demo`) unaffected; clean build. `MindfulnessCalmPlace.jsx` is under `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 57.*
+
+
+### Draft 58 — Mindful Place breathe visual: make the rings more prominent + strengthen the focus vignette — ✅ SHIPPED 9cb7748 (2026-09-02)
+
+Two visual tweaks to the just-shipped Draft 57 breathe step (`src/components/MindfulnessCalmPlace.jsx`). No logic/timing changes — the ring/frog cadence and the `LEAD_IN`/`PHASE_DUR`/`AGAIN_BRIDGE`/`CYCLES` sync all stay exactly as they are. This is purely about making the breath *read* more clearly (Josh's note from the live build: the rings look a bit faint/thin and the scene competes with them).
+
+**1. Make the concentric rings more prominent and show the movement more.**
+- **Thicker strokes** on the rings (bump the stroke width up noticeably from current).
+- **Wider travel** — increase the difference between the min (exhale/hold-empty) radius and the max (inhale/hold-full) radius so the expand/contract motion is unmistakable at a glance. Big at the top of the inhale, clearly smaller at the bottom of the exhale.
+- **More brightness/opacity contrast across the breath** — rings brighter and more opaque at full inhale, dimmer and more transparent at the bottom of the exhale — so you can feel the swell, not just see static circles.
+- Keep them centered in the middle of the play area, warm amber, on-palette; keep the count + phase word in the center.
+
+**2. Strengthen the focus vignette.** The vignette added in Draft 57 is too subtle against the busy scene (rain + fireflies). During the breathe step only, deepen the darkening/soft vignette behind the ring area so the rings and count clearly stand out; still fade it in when breathing starts and fade it out when breathing ends. Keep it calm (a soft radial darken, not a hard black frame) — enough that the rings pop, not so much that the pond disappears.
+
+**3. Lily pad — replace the clipped asset, keep it fully visible, and don't inflate it.**
+- (a) **Replace the frog asset.** The `frog-painterly.png` shipped in Draft 57 had its lily pad clipped flat on both sides (bad cutout). A corrected version with the FULL pad (natural rounded edges, wider ~1421×948) is in `Gains for Teens/Activities/Mindfulness/frog-painterly.png` — re-copy it over `public/long-light/art/mindfulness/frog-painterly.png`.
+- (b) **Size/position so the whole pad shows** — the pad's left/right tips must not be clipped by the container/frame edge at any supported width (down to 375px). Scale/place the frog bottom-left so the complete pad is visible.
+- (c) **Keep the breath swell from stretching the pad:** bottom-anchored, vertical-dominant transform (`transform-origin` bottom-center; swell almost entirely `scaleY` up to ~1.05, `scaleX` ≤1.01). The frog's belly rises without visibly stretching the wide horizontal pad. Subtle.
+
+**No other changes.** Frog placement is good as-is; audio, narration, chips, practice loop, and copy all stay.
+
+**Verify.** On `/gains-demo` Mindful Place breathe step: rings are visibly thicker, expand/contract over a wider range, and brighten/dim across the breath so the motion is obvious; the focus vignette is clearly stronger and makes the rings/count pop against the scene, fading in/out with the breathe step; timing still locked to `mind-04` (idle to 7s, cycle 1, "again" hold, cycle 2); frog unchanged; 9:16, no overflow at 375px; Ready for Roots unaffected; clean build. `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 58.*
+
+
+### Draft 59 — Zone 3 Elevator Pitch: reword the Wingsuit "done" screen + explain 988 on the safety screen — ✅ SHIPPED 1857fb1 (2026-09-02)
+
+Two copy/UX fixes from the 8/31 feedback, in `src/components/ElevatorPitch.jsx`.
+
+**1. Reword the Wingsuit "done" screen (Holly + Ginny).** The current `step === 'done'` copy is:
+> "That's a strong message to carry with you. When the moment feels right, you'll know just what to say. Take this with you: a Wingsuit. It'll help you cross the bridge ahead."
+
+Two problems: "when the moment feels right" implies waiting for a magic moment (Holly), and it's not clear the Wingsuit was *earned* (Ginny — same note she made about the Oxygen Mask). Replace with:
+> "You planned your message — and that's exactly what earns your Wingsuit! You don't have to wait for the perfect moment; the best time to share it is soon, while it's fresh. Take the Wingsuit with you — it'll help you cross the bridge ahead."
+
+(The "You did it" heading above it can stay.)
+
+**2. Explain what 988 is on the `safety` screen (Holly).** Right now the safety screen shows only Sprang's verbatim `SAFETY_DISCLAIMER`, which names 988 but doesn't say what it is. **Do NOT edit Sprang's verbatim line.** Instead, add the team-approved crisis-lifeline callout **below** it, so 988 is explained the same way it is elsewhere in the platform.
+- The existing component is `src/components/CrisisLifelineNote.jsx` (text: "…call or text 988 (Suicide & Crisis Lifeline) — free, confidential support, 24/7."). But it's styled in the **Ready for Roots light palette** (amber-50 / slate), which will look wrong on the dark Shadowmend GAINS screen.
+- So render a **Shadowmend-styled version** of that callout on the safety screen: **same approved wording** (reuse `CRISIS_LIFELINE_TEXT` so the copy stays in one place), but themed with the GAINS tokens (dark card, `--border-warm`/amber accent, phone icon, calm — not red/urgent), matching the other cards in this activity. Cleanest is a small GAINS-themed wrapper that imports `CRISIS_LIFELINE_TEXT` rather than duplicating the string.
+- Result: the safety screen shows Sprang's disclaimer (unchanged) + the calm, on-theme 988 explainer beneath it.
+
+**Verify.** On `/gains-demo` Zone 3 "Message to Your Guardian": the done screen shows the new Wingsuit copy (no "when the moment feels right"; makes the earn explicit); the safety screen still shows Sprang's disclaimer verbatim, now followed by a Shadowmend-styled 988 callout that reads "…988 (Suicide & Crisis Lifeline) — free, confidential support, 24/7" and matches the dark theme (no bright RfR card); flow save/step logic unchanged; 9:16, no overflow at 375px; Ready for Roots (`/demo`) unaffected (the shared `CrisisLifelineNote` used there is untouched); clean build. `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 59.*
