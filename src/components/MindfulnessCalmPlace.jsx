@@ -152,19 +152,23 @@ const SCENE_CSS = `
    breathe step. They share one phase-driven scale/opacity/brightness on the
    group wrapper -- transforms on a parent scale its centered children
    together, so the four rings expand/contract as one nested set without
-   individually-tracked math. */
+   individually-tracked math. Draft 58: thicker strokes, a bigger box-shadow
+   glow, and a wider min/max scale range (see RING_TARGETS) so the swell
+   reads as obvious motion rather than static circles. */
 .om-ring-group { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 50%; transition: transform 5s ease-in-out, opacity 5s ease-in-out, filter 5s ease-in-out; }
 .om-ring-group.om-shimmer { animation: omShimmer 1.1s ease-in-out infinite; }
-@keyframes omShimmer { 0%, 100% { filter: brightness(1.08); } 50% { filter: brightness(1.3); } }
-.om-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); aspect-ratio: 1 / 1; border-radius: 9999px; border-style: solid; border-color: rgba(253,230,138,.85); box-shadow: 0 0 20px rgba(245,158,11,.3); }
-.om-ring--1 { width: 24%; border-width: 3px; }
-.om-ring--2 { width: 40%; border-width: 2.5px; opacity: .82; }
-.om-ring--3 { width: 56%; border-width: 2px; opacity: .58; }
-.om-ring--4 { width: 72%; border-width: 1.5px; opacity: .34; }
+@keyframes omShimmer { 0%, 100% { filter: brightness(1.1); } 50% { filter: brightness(1.4); } }
+.om-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); aspect-ratio: 1 / 1; border-radius: 9999px; border-style: solid; border-color: rgba(253,230,138,.9); box-shadow: 0 0 32px rgba(245,158,11,.45); }
+.om-ring--1 { width: 24%; border-width: 5px; }
+.om-ring--2 { width: 40%; border-width: 4px; opacity: .85; }
+.om-ring--3 { width: 56%; border-width: 3px; opacity: .62; }
+.om-ring--4 { width: 72%; border-width: 2.5px; opacity: .38; }
 
-/* A subtle darkening around the frame's edges during the breathe step only,
-   so the rings and count read clearly against the scene underneath. */
-.om-vignette { position: absolute; inset: 0; background: radial-gradient(circle at 50% 46%, rgba(4,10,20,0) 26%, rgba(4,10,20,.6) 100%); opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+/* Draft 58: deepened from Draft 57's original (too subtle against the busy
+   rain/fireflies scene) -- darker at the edge and starting closer in, so the
+   rings/count clearly pop without blacking out the pond entirely. Still a
+   soft radial darken, not a hard frame. */
+.om-vignette { position: absolute; inset: 0; background: radial-gradient(circle at 50% 46%, rgba(4,10,20,0) 16%, rgba(4,10,20,.5) 55%, rgba(4,10,20,.82) 100%); opacity: 0; transition: opacity 1s ease; pointer-events: none; }
 .om-vignette.is-active { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -297,12 +301,16 @@ function tickFromElapsed(elapsedInPhase) {
 // change between in->hold1 or out->hold2, the transition just arrives and
 // stays, with no extra "hold in place" logic needed. `idle` covers lead-in,
 // the "again" bridge, and anything outside an active breathe step.
+// Draft 58: widened the scale/opacity/brightness range noticeably (Josh's
+// note that the shipped rings looked too faint/thin) -- big and bright at
+// the top of the inhale, clearly smaller and dimmer at the bottom of the
+// exhale, so the swell is unmistakable at a glance.
 const RING_TARGETS = {
-  idle: { scale: 0.62, opacity: 0.35, brightness: 0.8 },
-  in: { scale: 1.35, opacity: 1, brightness: 1.2 },
-  hold1: { scale: 1.35, opacity: 1, brightness: 1.2 },
-  out: { scale: 0.62, opacity: 0.55, brightness: 0.85 },
-  hold2: { scale: 0.62, opacity: 0.55, brightness: 0.85 },
+  idle: { scale: 0.55, opacity: 0.28, brightness: 0.75 },
+  in: { scale: 1.55, opacity: 1, brightness: 1.4 },
+  hold1: { scale: 1.55, opacity: 1, brightness: 1.4 },
+  out: { scale: 0.42, opacity: 0.3, brightness: 0.65 },
+  hold2: { scale: 0.42, opacity: 0.3, brightness: 0.65 },
 }
 
 // Draft 47 (Maggie/Holly, 2026-08-24): the frog "breathes along" with the
@@ -311,12 +319,16 @@ const RING_TARGETS = {
 // the frogSwellRef effect) instead of the old SVG's #frog-body, with
 // separate x/y scale so the swell reads as a soft belly-breath rather than
 // a uniform balloon. Subtler than the rings: this is a frog, not a balloon.
+// Draft 58: tightened scaleX to near-1 (was 1.03/0.985) so the wide lily pad
+// doesn't visibly stretch sideways -- the swell is now almost entirely
+// vertical (scaleY), matching a belly rising rather than the whole pad
+// inflating.
 const FROG_BREATHE_TARGETS = {
-  idle: { translateY: 1, scaleX: 0.985, scaleY: 0.97 },
-  in: { translateY: -4, scaleX: 1.03, scaleY: 1.06 },
-  hold1: { translateY: -4, scaleX: 1.03, scaleY: 1.06 },
-  out: { translateY: 1, scaleX: 0.985, scaleY: 0.97 },
-  hold2: { translateY: 1, scaleX: 0.985, scaleY: 0.97 },
+  idle: { translateY: 1, scaleX: 0.995, scaleY: 0.97 },
+  in: { translateY: -4, scaleX: 1.01, scaleY: 1.05 },
+  hold1: { translateY: -4, scaleX: 1.01, scaleY: 1.05 },
+  out: { translateY: 1, scaleX: 0.995, scaleY: 0.97 },
+  hold2: { translateY: 1, scaleX: 0.995, scaleY: 0.97 },
 }
 
 // Draft 57: arrive/close now carry a single narration-matched line as the
