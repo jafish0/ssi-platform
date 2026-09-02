@@ -106,16 +106,21 @@ export default function GainsClimbPage() {
               <Sparkles size={30} strokeWidth={1.5} className="text-amber-200 mb-3" />
               <h2 className="text-[22px] font-bold text-white mb-3">The Ascent</h2>
               <ul className="text-[14px] text-amber-50/90 leading-relaxed space-y-2 mb-6 text-left max-w-[290px]">
-                <li>• Steer with one thumb: drag anywhere (or the arrow keys).</li>
-                <li>• The air is getting thinner as you get closer to the summit.</li>
+                <li>• Steer with one thumb — drag anywhere (or the arrow keys).</li>
                 <li>
-                  • Use your <strong className="text-white">Second Wind</strong> gear to
-                  collect oxygen to keep going.
+                  • Collect the glowing <strong className="text-white">gold feelings</strong> —
+                  hope, courage, pride, calm — to refill your{' '}
+                  <strong className="text-white">Second Wind</strong> and keep climbing.
                 </li>
                 <li>
-                  • As your air runs low the{' '}
-                  <strong className="text-white">darkness</strong> closes in around
-                  you. Grab an orb and it clears.
+                  • <strong className="text-white">Heavy feelings</strong> drift into your
+                  path and block the way. <strong className="text-white">Tap one to fire
+                  your Focusing Lens</strong> — a beam of light reveals what it is, then
+                  shatters it into gold feelings you can gather.
+                </li>
+                <li>
+                  • If your air runs low, the darkness closes in — grab a gold feeling
+                  and it clears.
                 </li>
               </ul>
               <button

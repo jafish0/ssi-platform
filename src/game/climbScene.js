@@ -27,29 +27,35 @@
 // Draft 63 (Ginny/Sprang's 8/31 climb ideas): a feeling mechanic layered on
 // top of the same climb bones. Feelings fall at you as you climb; you FACE
 // them, which turns them to light (on-lore: "all light is a faced shadow").
-// Two mote types, both falling from above:
 //   GOLD — positive feelings (hope, joy, courage, calm, pride, gratitude),
 //     collected by steering into them. Replaces the old plain oxygen orbs
 //     as the Second Wind charge (same collect logic/sound, just labeled).
-//   RED — negative feelings (sadness, shame, guilt, anger, resentment,
-//     helplessness, hopelessness, regret), the obstacles. Varying size =
-//     intensity (RED_TIERS). Tap directly on one to fire the climber's
-//     Focusing Lens beam at it: its name flashes, and once it's taken
-//     enough hits (1/2/3 by size — "two gears working together on the
-//     hardest feelings," no separate charge-hold timing for this first
-//     pass) it shatters into light motes (a small Second Wind top-up —
-//     facing it powers the climb; gold stays the main breath source). If a
-//     red reaches the climber un-blasted, it knocks the climber back a
-//     little and drains Second Wind (feeding the darkness aura already
-//     driven by breath below).
+//   RED — negative feelings, the obstacles. Tap one to fire the climber's
+//     Focusing Lens beam at it: enough hits and it shatters, releasing more
+//     gold to gather (facing it powers the climb; gold stays the main
+//     breath source).
 // Tap-vs-drag is disambiguated by total pointer displacement + duration
 // (see the pointerdown/pointerup handlers in create()) — steering-by-drag
 // is completely unchanged, a tap on a red just additionally fires the beam.
-// Art is procedural for this pass (Cowork can supply painted feeling art in
-// a follow-up): gold motes reuse the existing warm orb art verbatim (it's
-// already gold-toned); red motes get a new red/ember glow texture, same
-// makeGlowTexture() approach as the existing ambient motes, just a second
-// color + texture key.
+// Art is procedural (Cowork can supply painted feeling art in a follow-up):
+// gold motes reuse the existing warm orb art verbatim (it's already
+// gold-toned); red gets a red/ember glow texture, same makeGlowTexture()
+// approach as the existing ambient motes, just a second color + texture key.
+//
+// Draft 64 (Josh's review of the live Draft 63 build) revised the reds:
+// gold was too small to read its word, so it's now bigger and a little
+// slower (ORB_W/GOLD_SPEED). Reds are no longer a random falling swarm --
+// one of each negative feeling (RED_WORDS), met one at a time as a single
+// big, slow, BLOCKING cloud (RED_CHECKPOINTS schedules them across the
+// climb) rather than something you dodge: while one is up, climb progress
+// is frozen (not breath drain, not gold spawning) until it's cleared. Taps
+// now progressively lighten the cloud and reveal its name underneath
+// ("name it to tame it") instead of an instant multi-hit-then-gone; once
+// fully cleared it releases real, collectible gold feelings (RED_REWARD_GOLD)
+// rather than an instant breath top-up. A stuck player (untouched past
+// HINT_DELAY_MS) gets a pulsing tap-ring + a short text nudge on the cloud.
+// The old un-blasted-red-hits-the-climber knockback is gone -- reds don't
+// approach the climber anymore, they just block until faced.
 
 const GAME_W = 540
 const GAME_H = 960
@@ -61,27 +67,51 @@ const PLATE_ZOOM = 1.4 // >1 so there's vertical travel to pan through
 const CLIMB_FIG_H = 100 // on-screen height of the climber figure
 const CLIMB_SRC_FIG_H = 1010 // opaque figure height inside the 1351px canvas
 const CLIMB_SRC_H = 1351
-const ORB_W = 16 // gold-mote width on screen (height derived from its 256×408 art)
-const COLLECT_R = 68 // collection/hit radius — forgiving, but you still steer
+// Draft 64: gold was too small to read its word while falling -- bigger and
+// a little slower so it's both legible and catchable.
+const ORB_W = 36 // gold-mote width on screen (height derived from its 256×408 art)
+const COLLECT_R = 68 // collection radius — forgiving, but you still steer
+const GOLD_SPEED = 175 // was 210 -- "slow their fall a little"
 
-// Draft 63 feeling vocabularies (Ginny/Sprang, 8/31 meeting) — GOLD is what
-// you collect, RED is what you blast.
+// GAINS feeling vocabularies (Ginny/Sprang, 8/31 meeting) — GOLD is what you
+// collect, RED is what you blast.
 const GOLD_WORDS = ['hope', 'joy', 'courage', 'calm', 'pride', 'gratitude']
 const RED_WORDS = [
   'sadness', 'shame', 'guilt', 'anger', 'resentment',
   'helplessness', 'hopelessness', 'regret',
 ]
-// Red intensity tiers ("a small wisp of guilt vs a big wall of
-// hopelessness") — a random tier per spawn, not a fixed size per word (no
-// named feeling is presumed more "intense" than another). `hits` is how
-// many taps shatter it; `weight` skews spawns toward the smaller, easier
-// tier so the climb stays approachable one-thumb.
+// Draft 64: reds are no longer a random falling swarm -- one of each
+// negative feeling, met one at a time as a big, slow, BLOCKING cloud rather
+// than something you dodge. `RED_CHECKPOINTS` schedules them at fixed climb
+// progress (p), spaced out (see the array built below); `RED_TIERS` still
+// varies size/hit-count across the sequence ("big ones take a few hits,
+// matching their size") without ranking any specific named feeling as worse
+// than another -- tiers cycle round-robin over the word list, not tied to
+// which word it is.
 const RED_TIERS = [
-  { scale: 0.85, hits: 1, weight: 3 },
-  { scale: 1.3, hits: 2, weight: 2 },
-  { scale: 1.75, hits: 3, weight: 1 },
+  { scale: 1.0, hits: 3 },
+  { scale: 1.3, hits: 4 },
+  { scale: 1.6, hits: 5 },
 ]
-const TAP_R = 50 // how forgiving a tap has to land on a red to blast it
+const RED_BASE_W = 170 // base cloud width -- "much bigger" than a gold orb
+// Spread across the climb so you meet them one/a-few at a time, not at the
+// very start or the very end.
+const RED_CHECKPOINTS = (() => {
+  const start = 0.1
+  const end = 0.88
+  const step = RED_WORDS.length > 1 ? (end - start) / (RED_WORDS.length - 1) : 0
+  return RED_WORDS.map((word, i) => ({
+    word,
+    p: start + step * i,
+    tier: RED_TIERS[i % RED_TIERS.length],
+  }))
+})()
+// How many gold feelings a cleared red releases -- "shatters into gold
+// feelings you can gather," a real reward to collect rather than an instant
+// top-up.
+const RED_REWARD_GOLD = 3
+// How long (ms) an untouched blocking red sits before the tap hint appears.
+const HINT_DELAY_MS = 2500
 // A tap (vs. a steering drag) is a pointer that barely moved and released
 // quickly.
 const TAP_MAX_DIST = 14
@@ -95,7 +125,10 @@ const DEFAULTS = {
     orb: 0xffe3a0,
     ink: 0x05070e,
     warm: 0xffd9a0,
-    red: 0xff6a52, // ember/red glow for the negative-feeling motes
+    // Draft 64: a deep, dusty red -- rendered as an opaque cloud (normal
+    // blend, not ADD) so it reads as a dense obstacle against the warm
+    // background art instead of blending into it like a light glow would.
+    red: 0x8f2e22,
   },
 }
 
@@ -164,7 +197,7 @@ export function makeClimbScene(Phaser) {
       this.stageIndex = 0
       this.breath = 1 // Second Wind, 0..1
       this.surgeMs = 0 // remaining orb speed-surge time
-      this.motes = [] // both gold (collectible) and red (blast) feelings
+      this.motes = [] // falling gold (collectible) feelings
       this.orbCount = 0
       this.feelingsCleared = 0
       this.targetX = GAME_W / 2
@@ -173,6 +206,10 @@ export function makeClimbScene(Phaser) {
       this.aura = 0 // 0 = clear edges, 1 = darkness pressed all the way in
       this.onLedge = false
       this.pauseMs = 0 // stage-arrival beat: holds the climb briefly
+      // Draft 64: the current blocking red (null = none up right now) and
+      // how far through RED_CHECKPOINTS we've gotten.
+      this.activeRed = null
+      this.nextRedIdx = 0
       // tap-vs-drag disambiguation (Draft 63) -- see the pointerdown/up
       // handlers in create() and TAP_MAX_DIST/TAP_MAX_MS above.
       this.tapStartX = null
@@ -196,8 +233,9 @@ export function makeClimbScene(Phaser) {
     create() {
       const P = this.cfg.palette
       this.makeGlowTexture(P.orb)
-      this.makeGlowTexture(P.red, 'glow-red')
+      this.makeCloudTexture(P.red, 'cloud-red')
       this.makeVignetteTexture(P.ink)
+      this.makeRingTexture()
 
       // --- stage plates (only the active one is visible; crossfade between) ---
       const plateW = GAME_W * PLATE_ZOOM
@@ -371,9 +409,9 @@ export function makeClimbScene(Phaser) {
       this.moteTimer = this.time.addEvent({
         delay: this.reduced ? 1400 : 1050,
         loop: true,
-        callback: () => this.spawnMote(),
+        callback: () => this.spawnGold(),
       })
-      this.time.delayedCall(500, () => this.spawnMote())
+      this.time.delayedCall(500, () => this.spawnGold())
     }
 
     startMusic() {
@@ -446,20 +484,15 @@ export function makeClimbScene(Phaser) {
       })
     }
 
-    // Draft 63: picks which feeling falls next. Weighted toward gold so
-    // Second Wind still has enough fuel now that reds share the same spawn
-    // slots.
-    spawnMote() {
+    spawnGold(x, y) {
       if (this.arrived) return
-      if (Phaser.Math.FloatBetween(0, 1) < 0.6) this.spawnGold()
-      else this.spawnRed()
-    }
-
-    spawnGold() {
-      if (this.arrived) return
-      const x = this.reduced
-        ? GAME_W / 2 + Phaser.Math.Between(-40, 40)
-        : Phaser.Math.Between(this.minX, this.maxX)
+      const px =
+        x != null
+          ? x
+          : this.reduced
+            ? GAME_W / 2 + Phaser.Math.Between(-40, 40)
+            : Phaser.Math.Between(this.minX, this.maxX)
+      const py = y != null ? y : -50
       const word = Phaser.Utils.Array.GetRandom(GOLD_WORDS)
       const glow = this.add
         .image(0, 0, 'orb')
@@ -468,14 +501,14 @@ export function makeClimbScene(Phaser) {
       const label = this.add
         .text(0, ORB_W * 1.1, word, {
           fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
-          fontSize: '11px',
+          fontSize: '15px',
           fontStyle: 'bold',
           color: '#fff3d0',
           stroke: '#3a2a06',
           strokeThickness: 3,
         })
         .setOrigin(0.5, 0.5)
-      const m = this.add.container(x, -50, [glow, label]).setDepth(30)
+      const m = this.add.container(px, py, [glow, label]).setDepth(30)
       m.kind = 'gold'
       if (!this.reduced) {
         this.tweens.add({
@@ -489,61 +522,6 @@ export function makeClimbScene(Phaser) {
         })
       }
       this.motes.push(m)
-    }
-
-    // Red feeling-obstacles: size (RED_TIERS) is randomized per spawn, not
-    // fixed per word -- "varying size = intensity" is the point, not a
-    // ranking of which named feeling is worse than another.
-    spawnRed() {
-      if (this.arrived) return
-      const x = this.reduced
-        ? GAME_W / 2 + Phaser.Math.Between(-40, 40)
-        : Phaser.Math.Between(this.minX, this.maxX)
-      const word = Phaser.Utils.Array.GetRandom(RED_WORDS)
-      const tier = this.pickRedTier()
-      const w = ORB_W * 1.7 * tier.scale
-      const glow = this.add
-        .image(0, 0, 'glow-red')
-        .setDisplaySize(w, w)
-        .setBlendMode('ADD')
-      const label = this.add
-        .text(0, 0, word, {
-          fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
-          fontSize: '10px',
-          fontStyle: 'bold',
-          color: '#fff3f0',
-          stroke: '#3a0a06',
-          strokeThickness: 3,
-          align: 'center',
-          wordWrap: { width: w * 1.6 },
-        })
-        .setOrigin(0.5, 0.5)
-      const m = this.add.container(x, -50, [glow, label]).setDepth(30)
-      m.kind = 'red'
-      m.hitsNeeded = tier.hits
-      m.hitsTaken = 0
-      if (!this.reduced) {
-        this.tweens.add({
-          targets: glow,
-          scaleX: glow.scaleX * 1.1,
-          scaleY: glow.scaleY * 1.1,
-          duration: 900,
-          yoyo: true,
-          repeat: -1,
-          ease: 'Sine.inOut',
-        })
-      }
-      this.motes.push(m)
-    }
-
-    pickRedTier() {
-      const total = RED_TIERS.reduce((s, t) => s + t.weight, 0)
-      let r = Phaser.Math.FloatBetween(0, total)
-      for (const t of RED_TIERS) {
-        if (r < t.weight) return t
-        r -= t.weight
-      }
-      return RED_TIERS[0]
     }
 
     collectGold(m) {
@@ -602,63 +580,76 @@ export function makeClimbScene(Phaser) {
       this.removeMote(m)
     }
 
-    // A red feeling reaches the climber un-blasted: a small knockback +
-    // Second Wind drain (feeding the darkness aura, which already reads
-    // straight off breath in update()) rather than a fail state.
-    hitByRed(m) {
-      this.breath = clamp(this.breath - 0.12, 0, 1)
-      const dir = this.climber.x < m.x ? -1 : 1
-      this.targetX = clamp(this.targetX + dir * 26, this.minX, this.maxX)
+    // Draft 64: reds are now scripted, blocking encounters -- one at a time,
+    // spaced across RED_CHECKPOINTS (see the constant above). Spawns a big,
+    // slow-drifting cloud roughly centered in the lane; `update()` freezes
+    // climb progress (not breath drain, not gold spawning) for as long as
+    // `this.activeRed` is set.
+    spawnRedCheckpoint(entry) {
+      const w = RED_BASE_W * entry.tier.scale
+      const x = GAME_W / 2
+      const y = GAME_H * 0.46
+      const glow = this.add.image(0, 0, 'cloud-red').setDisplaySize(w, w)
+      const label = this.add
+        .text(0, 0, entry.word, {
+          fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
+          fontSize: '20px',
+          fontStyle: 'bold',
+          color: '#fff3f0',
+          stroke: '#2a0704',
+          strokeThickness: 4,
+          align: 'center',
+        })
+        .setOrigin(0.5, 0.5)
+        .setAlpha(0) // revealed progressively as the cloud lightens (hitRed)
+      const m = this.add.container(x, y, [glow, label]).setDepth(32)
+      m.kind = 'red'
+      m.word = entry.word
+      m.hitsNeeded = entry.tier.hits
+      m.hitsTaken = 0
+      m.stuckMs = 0
+      m.hintRing = null
+      m.hintText = null
       if (!this.reduced) {
-        this.cameras.main.shake(140, 0.006)
-        const flash = this.add
-          .rectangle(GAME_W / 2, GAME_H / 2, GAME_W, GAME_H, this.cfg.palette.red, 1)
-          .setDepth(45)
-          .setBlendMode('ADD')
-          .setAlpha(0)
         this.tweens.add({
-          targets: flash,
-          alpha: 0.22,
-          duration: 120,
+          targets: glow,
+          y: -8,
+          duration: 2200,
           yoyo: true,
-          onComplete: () => flash.destroy(),
+          repeat: -1,
+          ease: 'Sine.inOut',
         })
       }
-      this.removeMote(m)
+      this.activeRed = m
     }
 
-    // Tap-to-target: finds the nearest red feeling within TAP_R of the tap
-    // and registers a hit on it. No-op if nothing's there (a missed tap just
-    // nudges the steer target — see the pointerdown handler in create()).
+    // Tap-to-target: a tap landing on the active red's cloud registers a hit.
+    // No-op otherwise -- a missed tap just nudges the steer target (see the
+    // pointerdown handler in create()).
     tryBlast(x, y) {
-      if (!this.started || this.arrived) return
-      let best = null
-      let bestD = TAP_R
-      for (const m of this.motes) {
-        if (m.kind !== 'red') continue
-        const d = Phaser.Math.Distance.Between(x, y, m.x, m.y)
-        if (d < bestD) {
-          bestD = d
-          best = m
-        }
-      }
-      if (best) this.hitRed(best)
+      if (!this.started || this.arrived || !this.activeRed) return
+      const m = this.activeRed
+      const cloud = m.list[0]
+      const r = cloud.displayWidth / 2 + 20 // a little forgiving beyond the cloud's own edge
+      if (Phaser.Math.Distance.Between(x, y, m.x, m.y) < r) this.hitRed(m)
     }
 
-    // The Focusing Lens beam: fires from the climber to the tapped feeling,
-    // flashes its name, and either shatters it (enough hits taken) or just
-    // registers the hit -- big reds need a few taps ("two gears working
-    // together on the hardest feelings").
+    // "Name it to tame it": each hit lightens the cloud and reveals the
+    // feeling's name a little more (surfacing as it clears); the tap hint
+    // (if showing) clears on first contact. Once fully cleared it shatters
+    // into gold feelings to gather -- see shatterRed.
     hitRed(m) {
       m.hitsTaken += 1
+      m.stuckMs = 0
+      this.hideStuckHint(m)
       this.fireBeam(m.x, m.y)
+      const t = clamp(m.hitsTaken / m.hitsNeeded, 0, 1)
+      const cloud = m.list[0]
       const label = m.list[1]
-      this.tweens.add({ targets: label, scale: 1.3, duration: 140, yoyo: true, ease: 'Quad.out' })
+      this.tweens.add({ targets: cloud, alpha: Math.max(0.12, 1 - t), duration: 260, ease: 'Quad.out' })
+      this.tweens.add({ targets: label, alpha: t, duration: 260, ease: 'Quad.out' })
       if (m.hitsTaken >= m.hitsNeeded) {
         this.shatterRed(m)
-      } else {
-        const glow = m.list[0]
-        this.tweens.add({ targets: glow, alpha: 0.5, duration: 90, yoyo: true })
       }
     }
 
@@ -680,28 +671,82 @@ export function makeClimbScene(Phaser) {
       this.tweens.add({ targets: g, alpha: 0, duration: 240, onComplete: () => g.destroy() })
     }
 
-    // Facing a feeling turns it to light (on-lore): the shatter burst reuses
-    // the GOLD glow texture (not red) so the released motes visually read as
-    // light, not as more of the feeling that just broke apart. A smaller
-    // Second Wind top-up than a gold collect -- gold stays the main source.
+    // Facing a feeling turns it to light (on-lore): it shatters into real
+    // gold feelings the player collects normally (steering into them, same
+    // Second Wind refill) -- the reward IS the gathering, not an instant
+    // top-up. Clears the block so climb progress resumes.
     shatterRed(m) {
       if (!this.reduced) {
         const burst = this.add
           .particles(m.x, m.y, 'glow', {
             lifespan: 520,
-            speed: { min: 50, max: 120 },
-            scale: { start: 0.32, end: 0 },
+            speed: { min: 50, max: 140 },
+            scale: { start: 0.34, end: 0 },
             alpha: { start: 1, end: 0 },
             blendMode: 'ADD',
             emitting: false,
           })
           .setDepth(42)
-        burst.explode(8 + m.hitsNeeded * 3)
+        burst.explode(10 + m.hitsNeeded * 3)
         this.time.delayedCall(700, () => burst.destroy())
       }
-      this.breath = clamp(this.breath + 0.08, 0, 1)
+      for (let i = 0; i < RED_REWARD_GOLD; i++) {
+        const gx = clamp(m.x + Phaser.Math.Between(-70, 70), this.minX, this.maxX)
+        const gy = m.y + Phaser.Math.Between(-30, 30)
+        this.time.delayedCall(i * 140, () => this.spawnGold(gx, gy))
+      }
       this.feelingsCleared += 1
-      this.removeMote(m)
+      this.hideStuckHint(m)
+      this.removeRedCloud(m)
+      this.activeRed = null
+    }
+
+    // The "tap me" nudge (Draft 64): shown once an untouched blocking red
+    // has sat for HINT_DELAY_MS -- a pulsing ring plus a short text nudge,
+    // both cleared the moment the player lands a first hit (see hitRed).
+    showStuckHint(m) {
+      if (m.hintRing) return
+      const ring = this.add
+        .image(m.x, m.y, 'tap-ring')
+        .setDisplaySize(140, 140)
+        .setDepth(33)
+        .setAlpha(0.8)
+      this.tweens.add({
+        targets: ring,
+        scale: 1.35,
+        alpha: 0,
+        duration: 1100,
+        repeat: -1,
+        ease: 'Sine.out',
+      })
+      const hint = this.add
+        .text(m.x, m.y + 110, 'Tap to focus your lens', {
+          fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
+          fontSize: '13px',
+          fontStyle: 'bold',
+          color: '#fff3d0',
+          stroke: '#2a1a06',
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5, 0.5)
+        .setDepth(33)
+        .setAlpha(0)
+      this.tweens.add({ targets: hint, alpha: 0.95, duration: 300 })
+      m.hintRing = ring
+      m.hintText = hint
+    }
+
+    hideStuckHint(m) {
+      if (m.hintRing) {
+        this.tweens.killTweensOf(m.hintRing)
+        m.hintRing.destroy()
+        m.hintRing = null
+      }
+      if (m.hintText) {
+        this.tweens.killTweensOf(m.hintText)
+        m.hintText.destroy()
+        m.hintText = null
+      }
     }
 
     // Motes carry infinite (repeat:-1) pulse tweens on their glow child.
@@ -714,6 +759,12 @@ export function makeClimbScene(Phaser) {
       m.destroy()
       const idx = this.motes.indexOf(m)
       if (idx > -1) this.motes.splice(idx, 1)
+    }
+
+    removeRedCloud(m) {
+      m.list.slice().forEach((child) => this.tweens.killTweensOf(child))
+      this.tweens.killTweensOf(m)
+      m.destroy()
     }
 
     arrive() {
@@ -802,6 +853,28 @@ export function makeClimbScene(Phaser) {
         // A ledge or a stage beat both ease off the climb.
         const hold = beat || ledge
 
+        // --- Draft 64: a blocking red feeling in the lane. Spawns the next
+        //     scripted checkpoint once progress reaches it (only one active
+        //     at a time); freezes forward progress only -- breath still
+        //     drains and gold still falls, so there's still something to do
+        //     and a reason to hurry while working the lens. ---
+        if (
+          !this.activeRed &&
+          this.nextRedIdx < RED_CHECKPOINTS.length &&
+          this.p >= RED_CHECKPOINTS[this.nextRedIdx].p
+        ) {
+          this.spawnRedCheckpoint(RED_CHECKPOINTS[this.nextRedIdx])
+          this.nextRedIdx += 1
+        }
+        const blocked = !!this.activeRed
+        if (blocked) {
+          const m = this.activeRed
+          if (m.hitsTaken === 0) {
+            m.stuckMs += delta
+            if (m.stuckMs > HINT_DELAY_MS && !m.hintRing) this.showStuckHint(m)
+          }
+        }
+
         // --- Second Wind drains (faster up high), orbs refill it ---
         if (!hold) {
           this.breath = clamp(
@@ -812,7 +885,9 @@ export function makeClimbScene(Phaser) {
         }
 
         // --- climb rate: surge after an orb, weary when out of breath.
-        //     NEVER zero — the climb always continues (no-fail). ---
+        //     NEVER zero (unless blocked) — the climb always continues
+        //     (no-fail); a blocking red is the one deliberate exception, and
+        //     it's always finite (tap it enough and it shatters). ---
         if (this.surgeMs > 0) this.surgeMs -= delta
         let rate = 1
         if (this.surgeMs > 0) rate = 1.5
@@ -821,6 +896,7 @@ export function makeClimbScene(Phaser) {
         // The stage beat pauses forward progress — finite, so the ascent
         // always resumes and still always completes.
         if (beat) rate = 0
+        if (blocked) rate = 0
 
         this.p = Math.min(1, this.p + (delta / this.durationMs) * rate)
 
@@ -887,20 +963,17 @@ export function makeClimbScene(Phaser) {
         this.climber.y = this.baseY + bob + (this.reduced ? 0 : Math.sin(time * 0.006) * 1.2)
       }
 
-      // --- feelings drift down past the climber (Draft 63) ---
-      const goldSpeed = 210
-      const redSpeed = 185 // a touch slower -- a beat to notice and tap it
+      // --- gold feelings drift down past the climber ---
       const climberY = this.baseY - CLIMB_FIG_H * 0.55
       for (let i = this.motes.length - 1; i >= 0; i--) {
         const m = this.motes[i]
-        m.y += (m.kind === 'gold' ? goldSpeed : redSpeed) * dt
-        if (!this.arrived) {
-          const hitR = m.kind === 'gold' ? COLLECT_R : COLLECT_R * 0.85
-          if (Phaser.Math.Distance.Between(this.climber.x, climberY, m.x, m.y) < hitR) {
-            if (m.kind === 'gold') this.collectGold(m)
-            else this.hitByRed(m)
-            continue
-          }
+        m.y += GOLD_SPEED * dt
+        if (
+          !this.arrived &&
+          Phaser.Math.Distance.Between(this.climber.x, climberY, m.x, m.y) < COLLECT_R
+        ) {
+          this.collectGold(m)
+          continue
         }
         if (m.y > GAME_H + 60) {
           this.removeMote(m)
@@ -970,6 +1043,35 @@ export function makeClimbScene(Phaser) {
       ctx.fillStyle = grd
       ctx.fillRect(0, 0, GAME_W, GAME_H)
       tex.refresh()
+    }
+
+    // Draft 64: the blocking red cloud's texture -- a softer-edged, more
+    // opaque blob than makeGlowTexture's bright core-and-falloff (that shape
+    // is built for an ADD-blended light; this one is drawn NORMAL so it
+    // reads as a dense, heavy obstacle instead of glowing light).
+    makeCloudTexture(color, key = 'cloud-red') {
+      if (this.textures.exists(key)) return
+      const R = 100
+      const g = this.make.graphics({ x: 0, y: 0, add: false })
+      for (let i = 10; i >= 1; i--) {
+        g.fillStyle(color, 0.1)
+        g.fillCircle(R, R, R * (i / 10))
+      }
+      g.generateTexture(key, R * 2, R * 2)
+      g.destroy()
+    }
+
+    // The "tap me" hint ring shown on a big red the player is stuck on -- a
+    // simple stroked circle, scaled/faded in a repeating tween (see
+    // showStuckHint).
+    makeRingTexture() {
+      if (this.textures.exists('tap-ring')) return
+      const R = 64
+      const g = this.make.graphics({ x: 0, y: 0, add: false })
+      g.lineStyle(6, 0xfff3d0, 0.9)
+      g.strokeCircle(R, R, R - 6)
+      g.generateTexture('tap-ring', R * 2, R * 2)
+      g.destroy()
     }
   }
 }
