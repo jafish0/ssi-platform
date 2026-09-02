@@ -36,6 +36,7 @@
 
 import { useState } from 'react'
 import { addActionPlanItem } from '../lib/gainsActionPlan.js'
+import GainsCrisisLifelineNote from './gains/CrisisLifelineNote.jsx'
 
 const ART = '/long-light/art/zone3'
 
@@ -324,23 +325,36 @@ export default function ElevatorPitch() {
           {/* Draft 48 (Holly/admin, 2026-08-24): the 988 disclaimer gets its
               own screen now, shown after the message is saved but before the
               Wingsuit award -- it used to sit alongside the Wingsuit message
-              on `done`, below. */}
+              on `done`, below. Draft 59 (Holly, 2026-09-02): Sprang's
+              verbatim line names 988 but never explains what it is, so the
+              team-approved crisis-lifeline explainer now follows it -- same
+              wording used everywhere else in the platform (Assent, Welcome,
+              end-of-program), just themed for this dark GAINS screen. */}
           {step === 'safety' && (
-            <p
-              className="text-[13px] leading-relaxed rounded-2xl px-3 py-2.5"
-              style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
-            >
-              {SAFETY_DISCLAIMER}
-            </p>
+            <div className="space-y-2">
+              <p
+                className="text-[13px] leading-relaxed rounded-2xl px-3 py-2.5"
+                style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
+              >
+                {SAFETY_DISCLAIMER}
+              </p>
+              <GainsCrisisLifelineNote />
+            </div>
           )}
 
+          {/* Draft 59 (Holly + Ginny, 2026-09-02): the old copy's "when the
+              moment feels right" implied waiting for a magic moment (Holly),
+              and didn't make clear the Wingsuit was earned by the planning
+              just done (Ginny -- the same note she made about the Oxygen
+              Mask). */}
           {step === 'done' && (
             <>
               <p className="font-extrabold text-[13px] mb-1" style={{ color: 'var(--text-warm)' }}>You did it</p>
               <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-bright)' }}>
-                That’s a strong message to carry with you. When the moment feels
-                right, you’ll know just what to say. Take this with you: a
-                Wingsuit. It’ll help you cross the bridge ahead.
+                You planned your message — and that’s exactly what earns your
+                Wingsuit! You don’t have to wait for the perfect moment; the
+                best time to share it is soon, while it’s fresh. Take the
+                Wingsuit with you — it’ll help you cross the bridge ahead.
               </p>
             </>
           )}
