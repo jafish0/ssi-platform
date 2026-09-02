@@ -132,6 +132,27 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **7f2237e** (2026-09-02) — Draft 66 + Draft 67: **The Ascent surfaced as
+  review item #7; Exposition proof-of-concept card removed.** Draft 66:
+  The Ascent climb gets its own home in the review section — a new
+  `review-ascent` feedback tag in `GAINS_FEEDBACK_SECTIONS`, and item #7
+  right after Zone 3's Message to Your Guardian, carrying the "what to
+  try" blurb (how to play, what's new from the 8/31 meeting, what to give
+  feedback on) plus a "Play the Ascent" button linking to
+  `/gains-demo/climb`. The climb page's own on-page feedback now defaults
+  to `review-ascent` too (was the generic `zone-4`), so comments left
+  while actually playing land in the same bucket as the review card.
+  Draft 67: removed the Exposition Shadowmend proof-of-concept card
+  (Draft 49) from `/gains-demo` — now that the whole page uses the
+  Shadowmend design system, the standalone showcase was redundant; "The
+  climb" heading flows straight into the Zone 1-5 sections with no gap.
+  Cleaned up the now-unused `ExpositionIntro` import and
+  `SPARK_INTRO_LINE` constant (kept `Pill`/`HardHat`, still used
+  elsewhere). Verified locally (item #7 renders in order with a working
+  link and correctly-tagged feedback dropdown; Exposition heading gone
+  with no layout gap; clean build) and live on ssi.ctac.app (clean
+  console, "Play the Ascent" link present, Exposition absent).
+
 - **aa9c184** (2026-09-02) — Draft 65: **The Ascent — 10 more gold feelings,
   far more defined/intense red obstacles.** Two tweaks to the Draft 64 climb
   (`src/game/climbScene.js`), from Josh's review of the live build.
@@ -3344,3 +3365,46 @@ Two tweaks to the Draft 64 climb (`src/game/climbScene.js`), from Josh's review 
 **Verify.** On `/gains-demo/climb`: gold motes now include the 10 new feelings (all readable); each red obstacle reads as a dense, saturated, clearly-defined cloud/orb at full strength (no more faint wash), lightens progressively as blasted, reveals its word, and shatters into gold; word legible on the intense fill; everything else from Drafts 63–64 still works; no console errors; Ready for Roots unaffected; clean build. `src/game/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 65.*
+
+
+### Draft 66 — Surface the Ascent as review item #7 with its own comment box + a "what to try" blurb — ✅ SHIPPED 7f2237e (2026-09-02)
+
+The Ascent climb is ready for group feedback. Right now it's only reachable from the Prototypes area and its on-page feedback defaults to the generic `zone-4` tag. Give it a proper home in the review section with its own feedback tag.
+
+**1. New feedback section.** Add to `GAINS_FEEDBACK_SECTIONS` (`src/pages/GainsDemoPage.jsx`):
+`{ value: 'review-ascent', label: 'Review: The Ascent (climb)' }`
+
+**2. Add review item #7** in the "Proposals — comment before we make them official" (Ideas & Demos for Review) section, **directly after item 6 (Zone 3: Message to Your Guardian)** — so it's the 7th item. Use the standard `ReviewItem` (which carries its own "Comment on this" box):
+`<ReviewItem n={7} title="The Ascent — Zone 4→5 climb (playable)" section="review-ascent">`
+
+Body copy (the "what to try" blurb — use roughly this):
+> The traversal that carries you from the Bright Reaches up to the Beacon at Mount Hope — built from the ideas in our 8/31 meeting.
+>
+> **How to play:** Steer with one thumb (drag anywhere). Collect the glowing **gold feelings** (hope, courage, pride…) to refill your **Second Wind** and keep climbing. When a big, heavy feeling drifts into your path and blocks the way, **tap it to fire your Focusing Lens** — a beam of light reveals what it is, then shatters it into gold feelings to gather. If your air runs low, your own darkness closes in; grab a gold feeling and it clears.
+>
+> **What's new (from the meeting):** a bigger climber; the obstacles are now **feelings**, varying in size; **gold positive feelings to collect** and **red negative ones to blast** (name-it-to-tame-it); framed as **protecting yourself, not aggression** — facing a feeling turns it to light.
+>
+> **We'd love your read on:** Do the red feelings feel like real obstacles now? Are these the right feelings (golds now include growth-mindset ones — curiosity, determination, resilience…; reds are sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret)? Is the Focusing Lens blast clear and satisfying — did you know to tap the reds? Overall: is it fun and on-message?
+
+Then a prominent **"Play the Ascent →" button linking to `/gains-demo/climb`** (reuse the existing playHref pattern; the dedicated page already runs the game). Embedding the `TraversalGame` inline is fine too if it's clean, but the link to the working page is the safe default.
+
+**3. Point the climb page's on-page feedback at the new tag.** In `src/pages/GainsClimbPage.jsx`, change `feedbackDefaultSection="zone-4"` → `feedbackDefaultSection="review-ascent"` so comments left while playing also land in the Ascent bucket.
+
+(Leave the existing Prototypes-area climb entry as-is — it's part of the zone-map/dev context. This just adds the review-section home + dedicated tag.)
+
+**Verify.** On `/gains-demo`: item #7 "The Ascent — Zone 4→5 climb (playable)" appears right after the Zone 3 pitch item, with the blurb and a working "Play the Ascent →" link to the climb; its "Comment on this" box submits tagged `review-ascent` and shows the friendly label in the admin view/CSV; the climb page's own feedback now defaults to `review-ascent`; nothing else in the review section reorders unexpectedly; Ready for Roots unaffected; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 66.*
+
+
+### Draft 67 — Remove the "Exposition" Shadowmend proof-of-concept card from the demo — ✅ SHIPPED 7f2237e (2026-09-02)
+
+On `/gains-demo`, under the **"The climb"** heading (section D), there's an **"Exposition"** subsection that was Draft 49's proof-of-concept for the Shadowmend design system (the "In development · Shadowmend styling adopted, flow to Zone 1 pending" card with the `ExpositionIntro` / Spark welcome over the Mount Hope vista). Now that the whole page is Shadowmend-styled, this showcase card is redundant. **Remove it.**
+
+- Delete the **Exposition `<section>`** (the `<h3>Exposition</h3>` block through its closing `</section>`, plus the explanatory comment above it) in `src/pages/GainsDemoPage.jsx` (currently ~lines 876–909).
+- **Keep** the "The climb" section heading and the `ZONES.map(...)` zone sections that follow — only the Exposition card goes.
+- Clean up anything left unused by the removal: the `ExpositionIntro` import, the `SPARK_INTRO_LINE` constant, and the `HardHat`/`Pill` usages **only if** they're now unreferenced elsewhere (check first — `Pill`/`HardHat` are likely used by other in-development markers, so leave those if so). Don't remove the shared `.gains-theme` styling.
+
+**Verify.** On `/gains-demo`: the "Exposition" proof-of-concept card is gone; "The climb" heading flows straight into the Zone 1→5 sections with no empty gap or broken layout; no unused-import/lint errors; the rest of the page is unchanged; Ready for Roots unaffected; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 67.*
