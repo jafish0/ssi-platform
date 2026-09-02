@@ -132,6 +132,35 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **6f28c2f** (2026-09-01) — Draft 54: **Paginate the measures into the real
+  app flow, in a mobile container, at the top of the review section.**
+  Reworks the Draft 53 measurement packet from one flat scroll into a real
+  administration flow: one instrument per page inside the same mobile phone
+  frame the playable activities use, with a "Step X of Y" progress indicator
+  (dots) and a Continue button (Finish on the last page) — nothing is stored
+  or scored, matching Draft 53's review-only scope. `MeasurementPacket.jsx`
+  is now a shared data module (instrument definitions + a small field-
+  renderer per instrument, e.g. `DemographicsFields`, `CTSFields`,
+  `TherapyHistoryFields`) so no item text was retyped; new
+  `MeasurementFlow.jsx` adds the paginated chrome and is instantiated twice
+  — **Pre-test** (Demographics → Event: time since trauma → CTS → Therapy
+  history → Beck Hopelessness-4 → Motivation Ruler → Implicit Theories →
+  Trauma & Treatment Beliefs, 8 pages) and **Post-test** (the Pre+Post
+  instruments again + Program Feedback Scale, 5 pages), each with its own
+  independent state. The therapy-history page's Continue stays disabled
+  until the top question is answered, since the sub-questions shown depend
+  on it. Since this is still a proposal and not adopted canon, both flows
+  now sit as items 1 and 2 at the top of "Ideas & Demos for Review" (above
+  the videos) instead of their own Child Assent & Measures section further
+  down the page — that section is removed, and its feedback-dropdown value
+  (`assent-measures`) is kept (commented as superseded) so historical
+  feedback rows still label correctly; new `review-pretest`/`review-posttest`
+  section values added for the two new items' comment threads. Verified
+  locally and live: page order, all 8/5 pages in order, therapy-history
+  branching and Continue-gating, the Finish → "complete, nothing saved" →
+  Start over end state, no horizontal overflow at 375px, Ready for Roots
+  unaffected, clean build.
+
 - **af00a92** (2026-09-01) — Draft 53: **Build the measurement packet into
   Child Assent & Measures.** Adds the full GAINS measurement packet to
   `/gains-demo`, rendered as the actual questionnaires with the app's form
@@ -2766,3 +2795,23 @@ Group each instrument **once**, labeled by when it's administered.
 **Verify.** The packet renders in the Child Assent & Measures section, grouped Pre-only / Pre+Post / Post-only, each instrument labeled with its timing; every provided item appears verbatim with the correct response format (Likert scales show their anchors); every instrument renders with its full verbatim items (CTS, Beck-4, and the complete Program Feedback Scale) — nothing omitted, no placeholder rows, no fabricated items; the therapy-history branching works; design-system styling, no data stored. Note in the shipped log that live capture + scoring is a follow-up. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 53.*
+
+
+### Draft 54 — Pretest: paginate the measures into the real app flow, in a mobile container, at the top of the review section — ✅ SHIPPED 6f28c2f (2026-09-01)
+
+Rework the measurement packet (Draft 53 — `src/components/gains/MeasurementPacket.jsx`, using the `src/components/gains/ds/` form primitives) so it plays like it will in the real app: **paginated with Continue buttons, inside a mobile-display-sized container** (the same phone frame the playable activities/videos use), instead of the current single long scroll. Reuse the existing instruments/items exactly — this is a flow/layout change, no item edits.
+
+**1. Paginate as the administration flow.** One instrument per page (split Demographics across pages if it's long), each page inside the mobile 9:16 frame. Each page shows the instrument, a **Continue** button, and a small **progress indicator** (e.g. "Step X of Y" or dots). The therapy-history branching stays within its page (Continue enabled once answered). A final page ends the flow cleanly — a "Done"/"Finish" (review-only, nothing stored).
+
+**2. Pre-test vs post-test (matches how it's administered):**
+- **Pre-test flow** = Pre-only + Pre+Post instruments: Demographics → Event/time since trauma → Child Trauma Screen → Therapy history → Beck Hopelessness-4 → Readiness/Motivation ruler → Implicit Theories of Emotion → Trauma & Treatment Beliefs.
+- **Post-test flow** = the Pre+Post instruments again + the Post-only Program Feedback Scale.
+Build the **Pre-test** as the primary paginated flow now; make the **Post-test** its own separate paginated flow (same pattern), so the two are distinct.
+
+**3. Move to the top.** Place the **Pre-test** as the **first item** in the "Proposals — comment before we make them official" (Ideas & Demos for Review) section — above the videos. The Post-test flow can sit right after it.
+
+Keep: verbatim items (no changes/omissions), Shadowmend styling, 48px tap targets, review-only (no data stored or scored), and the comment thread.
+
+**Verify.** The measures render as a paginated flow (one instrument per page, Continue + progress) inside a mobile-sized container; the Pre-test is the first item at the top of the review section, above the videos; therapy-history branching works within its page; reaching the end finishes cleanly with nothing stored; the Post-test flow is present; Shadowmend styling intact; no overflow at 375px; Ready for Roots unaffected; clean build. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 54.*
