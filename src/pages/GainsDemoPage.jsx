@@ -201,8 +201,9 @@ const ZONE_MAP_ROWS = [
 // on in Vimeo as text tracks. Each carries its own feedback `section` tag so
 // a comment maps to a specific video in the CSV export instead of all five
 // sharing one `review-videos` box.
+// Video 1 swapped again (2026-09-01, Josh) to a newer re-render.
 const REVIEW_VIDEOS = [
-  { title: 'Zone 1 — What is Trauma', id: '1223203599', h: 'a9c90c2fa2', section: 'video-1' },
+  { title: 'Zone 1 — What is Trauma', id: '1223215595', h: '2b10eb8857', section: 'video-1' },
   { title: 'Zone 2 — The Four Reactions', id: '1223210105', h: '315f412718', section: 'video-2' },
   { title: 'Zone 3 — Getting the Best Therapy', id: '1223207965', h: 'd0c77b8f23', section: 'video-3' },
   { title: 'Zone 4 — What Therapy Feels Like', id: '1222092263', h: 'bca4fdcea9', section: 'video-4' },
