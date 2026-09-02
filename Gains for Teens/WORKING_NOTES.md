@@ -132,6 +132,23 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **2dc20e1** (2026-09-02) — Draft 62 (supersedes Draft 61, which was never
+  separately implemented): **Zone 3 safety screen — merge Sprang's
+  disclaimer + the 988 definition into one line.** After 00bf621 removed
+  Sprang's disclaimer to fix the double-988 (below), Josh asked for the
+  opposite — keep her wording (Draft 61) — then, before that shipped,
+  asked instead to merge her escalation guidance with the 988 definition
+  into one Josh-approved line (Draft 62), so went straight to that final
+  state. `SAFETY_DISCLAIMER` now reads: "...don't wait to convince your
+  parents. Reach out immediately to a school counselor, your family
+  physician, or call or text 988, the Suicide & Crisis Lifeline (free,
+  confidential support, 24/7)." — also fixes her original "you family
+  physician" typo. Removed the now-unused GAINS-themed crisis-lifeline
+  wrapper from Draft 59 (nothing imports it anymore); Ready for Roots'
+  own shared `CrisisLifelineNote.jsx` and all its usages are untouched.
+  Verified locally and live: exactly one 988 paragraph, Wingsuit done-copy
+  unchanged.
+
 - **00bf621** (2026-09-02) — In-conversation (no draft): live-demo review
   found the Zone 3 safety screen showing 988 twice (Sprang's verbatim
   disclaimer + Draft 59's phone-icon crisis-lifeline explainer). Removed
@@ -3131,3 +3148,38 @@ Two small follow-ups to Draft 58 (`src/components/MindfulnessCalmPlace.jsx`), fr
 **Verify.** On `/gains-demo` Mindful Place: the frog sits near center-low with its pad on the water (not the rocks), slightly smaller, full pad un-clipped at 375px; during SEE and HEAR the frog is perfectly still; during the breathe step it does the gentle vertical swell in time with the rings/count; nothing else changed; Ready for Roots unaffected; clean build. `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 60.*
+
+
+### Draft 61 — Zone 3 safety screen: keep Sprang's verbatim disclaimer, remove the duplicate 988 explainer — ⚠️ SUPERSEDED by Draft 62 · never separately implemented — ✅ folded into 2dc20e1 (2026-09-02)
+
+Correction to commit `00bf621`. That commit fixed the double-988 on the Zone 3 Elevator Pitch `safety` screen by removing **Sprang's verbatim disclaimer** and keeping Draft 59's phone-icon explainer. Josh wants it the other way: **keep Sprang's original wording** (the duplication was the only problem).
+
+**Do:**
+- **Restore the verbatim `SAFETY_DISCLAIMER`** on the `safety` screen (it's in git history from before `00bf621`): *"Note: if what is going on feels urgent, like you are struggling to cope or having thoughts of hurting yourself or someone else, don't wait to convince your parents- reach out immediately to a school counselor, you family physician or call or text 988 immediately."* — restore its exact text/punctuation, and the constant.
+- **Remove the crisis-lifeline explainer** that Draft 59 added to this screen (the GAINS/Shadowmend-styled phone-icon 988 callout), so 988 appears only once — in Sprang's line.
+- Leave the shared `CrisisLifelineNote` component itself intact (it's still used by Ready for Roots); this is only about what shows on the GAINS Zone 3 safety screen.
+
+*(Note: this returns the screen to Sprang's wording, which names 988 but doesn't define it — so Holly's "should we tell them what 988 is here?" is intentionally set aside for now, per Josh. Can revisit with the team later if they want the definition merged into Sprang's line.)*
+
+**Verify.** On `/gains-demo` Zone 3 "Message to Your Guardian" safety screen: Sprang's disclaimer shows verbatim; 988 appears exactly once; no leftover phone-icon explainer card on this screen; the Wingsuit "done" copy from Draft 59 is unchanged; Ready for Roots' `CrisisLifelineNote` usages unaffected; clean build. `src/components/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 61.*
+
+
+### Draft 62 — Zone 3 safety screen: merge Sprang's disclaimer + the 988 definition into one line — ✅ SHIPPED 2dc20e1 (2026-09-02)
+
+Draft 61 restored Sprang's verbatim disclaimer and removed the duplicate explainer (one 988 mention). Josh now wants the two combined so the single line keeps Sprang's escalation guidance AND explains what 988 is (Holly's ask) — still only one 988 mention.
+
+**Replace the `safety`-screen `SAFETY_DISCLAIMER` text with this merged version:**
+
+> Note: if what is going on feels urgent — like you are struggling to cope or having thoughts of hurting yourself or someone else — don't wait to convince your parents. Reach out immediately to a school counselor, your family physician, or call or text 988, the Suicide & Crisis Lifeline (free, confidential support, 24/7).
+
+Notes:
+- This keeps Sprang's escalation content and folds in the 988 definition ("the Suicide & Crisis Lifeline (free, confidential support, 24/7)") inline.
+- Includes a typo fix from her original: "you family physician" → "**your** family physician".
+- Copy reviewed and approved by Josh (2026-09-02) — ship as-is.
+- Keep it as the single 988 element on the screen — do NOT re-add the separate phone-icon explainer card. Styling stays the current GAINS/Shadowmend safety-note treatment.
+
+**Verify.** On `/gains-demo` Zone 3 "Message to Your Guardian" safety screen: the merged line shows (escalation + "988, the Suicide & Crisis Lifeline (free, confidential support, 24/7)"); 988 appears exactly once; "your family physician" reads correctly; no separate explainer card; Wingsuit "done" copy unchanged; Ready for Roots' `CrisisLifelineNote` unaffected; clean build. `src/components/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 62.*
