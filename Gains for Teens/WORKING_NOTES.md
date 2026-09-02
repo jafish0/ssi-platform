@@ -132,6 +132,30 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **6f2eacf** (2026-09-01) — Draft 55: **Videos: swap in the re-rendered
+  Vimeo links, lay them out 2-per-row, and give each video its own comment
+  box (per-video CSV tags).** Replaces four of the five zone psychoed video
+  links (`REVIEW_VIDEOS`, `src/pages/GainsDemoPage.jsx`) with clean
+  re-renders — Video 4 unchanged — that ship without baked-in captions or a
+  "Spark" label; real captions go on in Vimeo as text tracks, and the embed
+  keeps the CC button available. Lays the five out in a responsive 2-column
+  grid (`grid-cols-1` on mobile, `sm:grid-cols-2` wider), replacing the
+  single-column stack — row 1: Video 1 + 2, row 2: Video 3 + 4, row 3: Video
+  5 alone. **The main change:** each video card now carries its own "Comment
+  on this video" box tagged `video-1`…`video-5` (new `GAINS_FEEDBACK_SECTIONS`
+  entries), so a downloaded CSV can finally tell which video a comment is
+  about — previously all five shared one `review-videos` box. That box is
+  kept and relabeled "Videos — overall / general note" for cross-video
+  comments; its old label stays mapped in AdminFeedbackPage so historical
+  rows still read correctly. Added the five new `video-N` labels to
+  AdminFeedbackPage's map too (plus `review-pretest`/`review-posttest`,
+  missed when Draft 54 added those sections) so the admin view shows a
+  friendly label instead of a raw slug. Verified locally and live: all 5 new
+  ids/hashes load, 2-per-row grid on desktop / stacked on mobile with no
+  overflow at 375px, each comment button opens with the correct `video-N`
+  section selected, Shadowmend styling intact, Ready for Roots unaffected,
+  clean build.
+
 - **6f28c2f** (2026-09-01) — Draft 54: **Paginate the measures into the real
   app flow, in a mobile container, at the top of the review section.**
   Reworks the Draft 53 measurement packet from one flat scroll into a real
@@ -2815,3 +2839,35 @@ Keep: verbatim items (no changes/omissions), Shadowmend styling, 48px tap target
 **Verify.** The measures render as a paginated flow (one instrument per page, Continue + progress) inside a mobile-sized container; the Pre-test is the first item at the top of the review section, above the videos; therapy-history branching works within its page; reaching the end finishes cleanly with nothing stored; the Post-test flow is present; Shadowmend styling intact; no overflow at 375px; Ready for Roots unaffected; clean build. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
 
 *End of Draft 54.*
+
+
+### Draft 55 — Videos: swap in the re-rendered Vimeo links, lay them out 2-per-row, and give each video its own comment box (per-video CSV tags) — ✅ SHIPPED 6f2eacf (2026-09-01)
+
+Rework the **"Videos"** item in the "Proposals — comment before we make them official" (Ideas & Demos for Review) section on `/gains-demo`. Three changes: (1) new video links, (2) a 2-per-row layout, (3) **each video gets its own comment box tagged distinctly** so feedback maps per-video in the CSV export. Right now all five share one `review-videos` box, so a downloaded CSV can't tell which video a comment is about — that's the problem to fix.
+
+**1. Swap in the re-rendered Vimeo links** (in `REVIEW_VIDEOS`, `src/pages/GainsDemoPage.jsx`). Video 4 is unchanged; the other four are new renders. Update `id` + `h`:
+
+- Video 1 — "What is Trauma": id `1223203599`, h `a9c90c2fa2`  *(was 1222082001 / c65abe5b9f)*
+- Video 2 — "The Four Reactions": id `1223210105`, h `315f412718`  *(was 1222089263 / d3825818f8)*
+- Video 3 — "Getting the Best Therapy": id `1223207965`, h `d0c77b8f23`  *(was 1222097986 / 4c7cf651e2)*
+- Video 4 — "What Therapy Feels Like": **unchanged** — id `1222092263`, h `bca4fdcea9`
+- Video 5 — "Growth Mindset": id `1223211325`, h `b8579c9aa1`  *(was 1222095414 / 82f1e6b6f1)*
+
+**2. Layout — two videos per row.** Replace the current single-column `space-y-6` stack with a **responsive 2-column grid**: `grid-cols-1` on mobile (stacked, full-width — side-by-side 9:16 players are too small on a phone), `sm:grid-cols-2` on wider screens. Natural flow puts Video 1 + Video 2 on row 1, Video 3 + Video 4 on row 2, and Video 5 on row 3 (left cell). Each cell holds: the video title, the 9:16 Vimeo player, and that video's own comment box (below). Keep the players tidy within each cell (they no longer need the `max-w-[360px]` centering now that they sit in grid cells — let each fill its cell, still `aspect-ratio 9/16`).
+
+**3. Per-video comment boxes with distinct section tags — the main change.**
+- Add five new sections to `GAINS_FEEDBACK_SECTIONS` (used by both the per-item `FeedbackButton` and the global feedback dropdown):
+  - `{ value: 'video-1', label: 'Video 1 — What is Trauma' }`
+  - `{ value: 'video-2', label: 'Video 2 — The Four Reactions' }`
+  - `{ value: 'video-3', label: 'Video 3 — Getting the Best Therapy' }`
+  - `{ value: 'video-4', label: 'Video 4 — What Therapy Feels Like' }`
+  - `{ value: 'video-5', label: 'Video 5 — Growth Mindset' }`
+- Give **each video card its own `FeedbackButton`** (`program="gains-teens"`, `defaultSection` = that video's tag, `label="Comment on this video"`, `subtle`). Extend the `REVIEW_VIDEOS` entries with a `section` field and pass it through `ReviewVideo`, or render the button in the card — whichever is cleaner.
+- **Keep `review-videos`** as an "overall videos" box: relabel it `'Videos — overall / general note'` and leave one such box for the group (e.g. at the bottom of the videos item, or as the ReviewItem's own box). Its label stays in the section list so historical rows still read correctly. If it feels redundant next to the five per-video boxes, it can be dropped — Josh's call — but keeping it costs nothing and catches cross-video comments.
+- Make sure the new `video-1..5` labels also resolve in **AdminFeedbackPage** and the **CSV export** (add them to whatever label map that view/export uses), so the download shows the friendly label / distinct value per video, not a blank.
+
+**4. Captions (context, mostly Vimeo-side).** These re-renders were exported **clean — no baked-in captions and no "Spark" label** (per team feedback). Real captions are uploaded to each video **in Vimeo** as text tracks (Josh does this). The embed just needs to **keep the CC button available** — don't add `controls=0` or otherwise suppress captions; the current `?h=…&title=0&byline=0&portrait=0` is fine. (Optional: `texttrack=en` to default captions on once tracks are uploaded — leave off for now.)
+
+**Verify.** On `/gains-demo`, the videos item shows all five re-rendered players (correct new links, Video 4 unchanged), laid out 2-per-row on desktop and stacked on mobile with no overflow at 375px; **each video has its own "Comment on this video" box**, and submitting one writes a row tagged with that video's section (`video-1`…`video-5`) — confirm the tags are distinct and show friendly labels in the admin view + CSV export. Shadowmend styling intact; Ready for Roots unaffected; clean build. No `src/activities` changes → no version bumps. Log Recently-shipped + mark shipped.
+
+*End of Draft 55.*
