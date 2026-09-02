@@ -132,6 +132,21 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **d86728a** (2026-09-02) — Draft 60: **Mindful Place — reposition/resize
+  the frog onto the water + only breathe it during the breathe step.** Two
+  follow-ups to Draft 58 that were mistakenly folded into that already-
+  shipped draft and never implemented. Moved the frog from bottom-left
+  (pad on the rocks) to near-center-low (~55% from the left, pad on the
+  water/reflection), sized down to suit — verified no clipping of the pad's
+  tips at 375px. Removed the frog's continuous idle wobble
+  (`.om-frog-idle`) entirely: it used to run for the whole activity, which
+  read as "breathing" throughout; the frog is now completely still in
+  every mode except the active breathe step (confirmed via DOM: no class,
+  no inline transform, no CSS animation on SEE/HEAR, only during active
+  breathing). No other changes — rings, vignette, timing/sync, audio,
+  narration, chips, practice loop, and copy all stay exactly as shipped in
+  Drafts 57–58. Verified locally and live.
+
 - **1857fb1** (2026-09-02) — Draft 59: **Zone 3 Elevator Pitch — reword the
   Wingsuit "done" screen + explain 988 on the safety screen.** Two copy/UX
   fixes from the 8/31 feedback in `src/components/ElevatorPitch.jsx`.
@@ -3052,10 +3067,12 @@ Two visual tweaks to the just-shipped Draft 57 breathe step (`src/components/Min
 
 **3. Lily pad — replace the clipped asset, keep it fully visible, and don't inflate it.**
 - (a) **Replace the frog asset.** The `frog-painterly.png` shipped in Draft 57 had its lily pad clipped flat on both sides (bad cutout). A corrected version with the FULL pad (natural rounded edges, wider ~1421×948) is in `Gains for Teens/Activities/Mindfulness/frog-painterly.png` — re-copy it over `public/long-light/art/mindfulness/frog-painterly.png`.
-- (b) **Size/position so the whole pad shows** — the pad's left/right tips must not be clipped by the container/frame edge at any supported width (down to 375px). Scale/place the frog bottom-left so the complete pad is visible.
+- (b) **Reposition + resize.** Move the frog from its current bottom-left spot (where the pad sits on the rocks) to **near horizontal center, low in the frame, so the lily pad rests on the water / pond reflection** — roughly **~55% from the left, ~82% down** (where Josh circled in the screenshot). Make it **a bit smaller** to suit the new spot. Keep the full pad visible (tips not clipped) at all widths down to 375px.
 - (c) **Keep the breath swell from stretching the pad:** bottom-anchored, vertical-dominant transform (`transform-origin` bottom-center; swell almost entirely `scaleY` up to ~1.05, `scaleX` ≤1.01). The frog's belly rises without visibly stretching the wide horizontal pad. Subtle.
 
-**No other changes.** Frog placement is good as-is; audio, narration, chips, practice loop, and copy all stay.
+**4. Frog only breathes during the breathe step.** Right now the frog swells the whole time. It should be **completely still during SEE and HEAR** (and intro/close) and only do the box-breath swell during the **breathe** step (i.e. gate the inline transform on `mode === 'breathe'` + active; hold it static otherwise).
+
+**No other changes.** Audio, narration, chips, practice loop, and copy all stay.
 
 **Verify.** On `/gains-demo` Mindful Place breathe step: rings are visibly thicker, expand/contract over a wider range, and brighten/dim across the breath so the motion is obvious; the focus vignette is clearly stronger and makes the rings/count pop against the scene, fading in/out with the breathe step; timing still locked to `mind-04` (idle to 7s, cycle 1, "again" hold, cycle 2); frog unchanged; 9:16, no overflow at 375px; Ready for Roots unaffected; clean build. `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
@@ -3082,3 +3099,18 @@ Two problems: "when the moment feels right" implies waiting for a magic moment (
 **Verify.** On `/gains-demo` Zone 3 "Message to Your Guardian": the done screen shows the new Wingsuit copy (no "when the moment feels right"; makes the earn explicit); the safety screen still shows Sprang's disclaimer verbatim, now followed by a Shadowmend-styled 988 callout that reads "…988 (Suicide & Crisis Lifeline) — free, confidential support, 24/7" and matches the dark theme (no bright RfR card); flow save/step logic unchanged; 9:16, no overflow at 375px; Ready for Roots (`/demo`) unaffected (the shared `CrisisLifelineNote` used there is untouched); clean build. `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 59.*
+
+
+### Draft 60 — Mindful Place: reposition/resize the frog onto the water + only breathe it during the breathe step — ✅ SHIPPED d86728a (2026-09-02)
+
+Two small follow-ups to Draft 58 (`src/components/MindfulnessCalmPlace.jsx`), from Josh's review of the live build. (These were mistakenly added to the already-shipped Draft 58 and so never got implemented — they live here now.)
+
+**1. Reposition + resize the frog.** Right now the frog sits bottom-left, with its lily pad resting on the **rocks**. Move it to **near horizontal center, low in the frame, so the pad rests on the water / pond reflection** — roughly **~55% from the left, ~82% down** (where Josh circled). **Make it a bit smaller** to suit the new, more central spot. Keep the full pad visible (tips not clipped) at all widths down to 375px. The concentric rings stay centered in the middle of the play area as they are — the frog just moves onto the water below them.
+
+**2. Frog only breathes during the breathe step.** Currently the frog swells the whole activity. It should be **completely still during SEE and HEAR** (and intro/close) and only do the bottom-anchored, vertical-dominant box-breath swell during the **breathe** step. Gate the inline breath transform on `mode === 'breathe'` (active); hold it static in every other mode.
+
+**No other changes** — rings, vignette, timing/sync, audio, narration, chips, practice loop, and copy all stay exactly as shipped in Drafts 57–58.
+
+**Verify.** On `/gains-demo` Mindful Place: the frog sits near center-low with its pad on the water (not the rocks), slightly smaller, full pad un-clipped at 375px; during SEE and HEAR the frog is perfectly still; during the breathe step it does the gentle vertical swell in time with the rings/count; nothing else changed; Ready for Roots unaffected; clean build. `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 60.*
