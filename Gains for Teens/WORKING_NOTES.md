@@ -132,6 +132,38 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **366a553** (2026-09-03) — Draft 70: **Zone 4 second-playthrough fixes +
+  new Video 4 render + new "Follow me" take.** (1) Video 4 is the new
+  render without the burned-in Spark subtitles (Vimeo `1223708060` /
+  `2ab5970912`) in both places: the Zone 4 video scene and the Zone 4 entry
+  in `REVIEW_VIDEOS` on `/gains-demo`. (2) Josh's tighter z4-02 re-record
+  (4.8 s) is copied over `zone4/audio/z4-02-follow-me.mp3`; the bubble text
+  is unchanged. (3) **Spark's black box** — root cause: the "alpha" flame
+  PNGs (`spark-flicker-1..4.png`) are premultiplied against black and carry
+  a faint nonzero alpha over the WHOLE canvas (edge pixels like
+  rgba(30,23,15,30)), so in normal blend they drew a dark rectangle; Draft
+  69 had already switched to these frames, which is why the box appeared
+  then. The frames are re-exported with the color un-premultiplied and
+  alpha below 32/255 knocked out and rescaled (straight alpha, corners and
+  edges fully transparent, ~40% of pixels now alpha 0); rendering stays as
+  Draft 69 left it (normal blend flame at 0.96 + one soft additive halo).
+  (4) The pond's activity trigger is now the **upper-right bank beside the
+  frog** at (770, 862): the ring/lock marker sits there, the auto-walk
+  target is the bank (the Traveler stops next to the frog, never in the
+  water), the clearing polygon reaches up to that bank, and waypoint 5
+  (690, 900) hugs the bank on the way; Spark's follow-me glide now heads
+  for that bank too. The frog stays at (830, 880). (5) **No walking in the
+  water**: the pond ellipse is enlarged to 215×150 so it covers the
+  lower-right lobe that used to poke outside it (that's how you could wade
+  in); water is excluded from the walkable set, a tap on the water counts
+  as a pond tap and walks to the bank trigger (the redirect plays if the
+  pond is still locked). Verified locally (all sampled water points
+  non-walkable and all bank points walkable; a water tap before Spark →
+  redirect + walk via the junction to the bank, stopping at (770, 862) on
+  dry land; Spark → new-id iframe; Skip → follow-me + companion; water tap
+  → walk to the bank → Mindful Place mounts; Spark renders as a clean
+  flame with no rectangle; clean console) and live.
+
 - **b94dff5** (2026-09-03) — Draft 69: **Zone 4 first-playthrough fixes.**
   (1) **"Follow me" on the Spark tap** — root cause: the walk scene kept
   taking taps during the ~400 ms bloom into the video, and a tap on Spark
@@ -3650,3 +3682,22 @@ Three fixes from Josh's first live playthrough of `/gains-demo/zone4` (Draft 68)
 **Verify.** On `/gains-demo/zone4`: tapping Spark opens Video 4 with NO "follow me" line; the line plays only once the video ends (and after the dev Skip), as Spark becomes the companion; Spark renders as a warm soft flame with a readable face and gentle halo (no white flare), trail also soft; Spark waits at the left-of-path spot at level start and the frog sits on the pond's upper-right bank; auto-walk to Spark follows the path; everything else unchanged; clean console; Ready for Roots unaffected; clean build. `src/game/` + `src/components/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 69.*
+
+
+### Draft 70 — Zone 4 second-playthrough fixes + new Video 4 render + new "Follow me" line — ✅ SHIPPED 366a553 (2026-09-03)
+
+Five items from Josh's second live playthrough after Draft 69, plus two asset swaps.
+
+**1. New Video 4 render (Spark subtitles removed).** Vimeo **id `1223708060`, h `2ab5970912`** (was 1222092263 / bca4fdcea9). Replace it in **both** places: the Zone 4 video scene (`/gains-demo/zone4`) AND the Zone 4 entry in `REVIEW_VIDEOS` on `/gains-demo` ("Zone 4 — What Therapy Feels Like").
+
+**2. New "Follow me" line.** Josh re-recorded z4-02 (tighter, ~4.8s). The new file is now at `Gains for Teens/Walkable Zones/z4-02-follow-me.mp3` (the old take is kept as `z4-02-follow-me-v1-old.mp3`). **Re-copy** it over `public/long-light/zone4/audio/z4-02-follow-me.mp3`.
+
+**3. Black box around Spark.** After Draft 69's glow fix, Spark renders inside a visible **black rectangle** — the on-black flicker frames (`spark-flicker-onblack-*.png`) are being drawn without ADD blend, so their black background shows. Fix: **switch Spark's flame sprite to the transparent alpha frames** (`spark-flicker-1..4.png`) in normal blend, keeping the toned-down look from Draft 69, and put only a soft, low-alpha ADD halo behind it if a glow is wanted. (Or restore ADD on the on-black frames at low alpha — but the alpha frames are the cleaner path.) Apply the same to the companion trail if it uses the on-black art.
+
+**4. Move the pond's activity trigger up to the bank by the frog.** The pond's lock/marker + interact point currently sits on the path below the pond. Move it to the **pond's upper-right bank, right beside the frog** (roughly **x ≈ 770, y ≈ 850** in the 1080×1920 logical space — where Josh marked the blue dot). That spot is where the Mindful Place triggers; the auto-walk target is the bank there (the Traveler stops beside the frog, not in the water). Keep the frog at its Draft 69 position.
+
+**5. Pond boundary — no walking in the water.** The Traveler can currently walk into the pond. **Exclude the water from the walkable polygon** (the clearing around the pond stays walkable; the water surface does not). Taps on the water resolve to the nearest bank point. Re-check the waypoint graph so the route to the pond trigger hugs the bank.
+
+**Verify.** `/gains-demo/zone4`: Video 4 is the new render (no burned-in Spark subtitles) — and the same new render shows in the review-section videos; the new shorter "Follow me" plays after the video; Spark has **no black box** (clean flame, toned-down glow); the pond marker/trigger sits on the upper-right bank beside the frog and the Traveler walks to the bank to start the Mindful Place; you cannot walk into the water (taps on it stop at the bank); everything else from Drafts 68–69 unchanged; clean console; Ready for Roots unaffected; clean build. `src/game/` + `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 70.*
