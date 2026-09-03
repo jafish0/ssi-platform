@@ -132,6 +132,34 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **b94dff5** (2026-09-03) — Draft 69: **Zone 4 first-playthrough fixes.**
+  (1) **"Follow me" on the Spark tap** — root cause: the walk scene kept
+  taking taps during the ~400 ms bloom into the video, and a tap on Spark
+  in that window (after `talkedToSpark` had flipped) hit Spark's
+  "replay the current objective" branch, whose line at that point was
+  z4-02. Fixed at both ends: Spark's replay only exists once the video has
+  been watched (`ready` after the activity, `followMe` before it, nothing
+  in between), and input is blocked from the moment any scene transition
+  starts (the walk is paused for the whole bloom, and tap/arrive handlers
+  ignore that window). Spark tap → walk up → video with no VO; `ended`
+  (or the tester Skip) → back to the walk → `watchedVideo` → z4-02 +
+  companion + pond active, in that order. (2) **Spark's glow** — the
+  on-black frames in ADD blend blew out to a white flare over the bright
+  plate. Spark is now the alpha flame cut-outs (regenerated to
+  `zone4/spark/flicker-1..4.webp`, 194×255) in normal blend at 0.96 alpha
+  with one soft additive halo behind (0.26), so the face/eyes read; the
+  waiting ring pulses at about half strength and the companion light-trail
+  is smaller and softer. (3) **Positions** per Josh's markup — Spark waits
+  on the grassy left edge beside the path at (240, 1110); the Traveler's
+  stand spot is on the path next to him at (412, 1128), a straight walk
+  from the start (verified: no detour, stops beside not on top); the frog
+  sits on the pond's upper-right bank at (830, 880), now depth-scaled (~76
+  px wide there) so it reads small. Verified locally (a Spark tap fired
+  right as the Traveler arrives produces no bubble and no line; the video
+  opens silent; "follow me" plays after Skip with Spark as companion; the
+  new look/positions in screenshots; clean console) and live (new Spark
+  frames served, page + HUD + arrive line, clean console).
+
 - **d92609a** (2026-09-02) — Draft 68 **Phase C**: **Zone 4 ambient
   overlays, SFX confirm, walk tune.** Draft 68 is now fully shipped (A →
   B → C). New `ZoneOverlays` (`components/gains/zone/ZoneOverlays.jsx`)
@@ -3604,3 +3632,21 @@ Back in `walk`: set `didActivity` + `exitUnlocked`; play **`z4-03-ready.mp3`**; 
 **Verify.** `/gains-demo/zone4`: Begin → arrival title + Spark's arrive line; tap-to-move works inside the walkable path/clearing with correct direction sprites, depth scaling, shadow, dust + footsteps, tap marker; only the valid next objective glows; wrong-order taps trigger the right redirect (5/6/7) as Spark bubbles; Spark → Video 4 (ends → follow-me, Spark becomes companion and glides to the pond); Pond → Mindful Place → onComplete → Gear Award (reveal → Equip → celebrate figure → HUD icon fly-in; level-up variant when practiced) → ready line + path lights up; Exit → "headed for Mount Hope" + VO → the Ascent runs in-frame → end card + Play again; ambience loops, pond soundscape crossfades by proximity, beds duck under VO; overlays/SFX wired or gracefully absent; review item #8 + `review-zone4` tag work; no console errors; Ready for Roots (`/demo`) unaffected; clean build. `src/game/`, `src/components/`, `src/pages/` (not `src/activities/`) → no version bump. Log Recently-shipped per phase + mark shipped.
 
 *End of Draft 68.*
+
+
+### Draft 69 — Zone 4 first-playthrough fixes: "follow me" fires too early, Spark's glow too bright, reposition Spark + the frog — ✅ SHIPPED b94dff5 (2026-09-03)
+
+Three fixes from Josh's first live playthrough of `/gains-demo/zone4` (Draft 68). Everything else plays as intended.
+
+**1. BUG — "Follow me" plays when you tap Spark, not after the video.** Tapping Spark correctly opens Video 4, but **`z4-02-follow-me.mp3` also fires at the same moment**. It must fire **only after Video 4 `ended`** (when Spark becomes the companion and the pond unlocks). Fix the sequencing: Spark tap → walk up → video scene (no VO); video `ended` → back to walk → set `watchedVideo` → **then** z4-02 + companion mode + pond active. Make sure the tester Skip path follows the same order (skip → then z4-02).
+
+**2. Spark's glow is far too bright.** In the live build Spark reads as a blown-out white flare (ADD blend + the built-in glow stacks). **Tone it down substantially** so Spark reads as a warm, soft flame with visible eyes/face and a gentle halo — not a hot spot. Options (pick what looks right): lower the ADD-blend sprite alpha (~0.55–0.7), drop the extra glow/pulse layer intensity, or switch the flame body to normal blend with only a soft ADD halo behind it. Keep the flicker frames and the halo ring, just at a fraction of the current intensity. Same treatment for the companion light-trail if it's also hot.
+
+**3. Reposition Spark's starting spot and the frog** (from Josh's marked-up screenshot; positions in the plate's logical 1080×1920 space — fine-tune by eye):
+- **Spark (waiting position at level start):** move from the current spot near the pond entry to the **left side of the path, off the path in the grassy edge**, roughly **x ≈ 240, y ≈ 1110** (~22% from the left, ~58% down). He should sit just beside the path so the player walks to him first.
+- **Frog:** move from mid-pond to the **upper-right edge of the pond** — roughly **x ≈ 830, y ≈ 880** (~77% from the left, ~46% down), sitting on/at the bank at the pond's far side. Keep it small and idle-bobbing; the pond's tap target stays the pond itself.
+- After moving Spark, re-check the walkable polygon/waypoints so the auto-walk to his new spot follows the path and stops beside him (not on top of him).
+
+**Verify.** On `/gains-demo/zone4`: tapping Spark opens Video 4 with NO "follow me" line; the line plays only once the video ends (and after the dev Skip), as Spark becomes the companion; Spark renders as a warm soft flame with a readable face and gentle halo (no white flare), trail also soft; Spark waits at the left-of-path spot at level start and the frog sits on the pond's upper-right bank; auto-walk to Spark follows the path; everything else unchanged; clean console; Ready for Roots unaffected; clean build. `src/game/` + `src/components/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 69.*
