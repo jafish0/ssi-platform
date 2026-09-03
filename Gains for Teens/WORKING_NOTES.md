@@ -132,6 +132,10 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **293752d** (2026-09-03) — in-conversation (Josh): the Beck-4 page no
+  longer shows "Scored by summing all 4 items." (scoring guidance for us,
+  not for the teen); `Instrument` no longer renders a note at all.
+
 - **dd90007** (2026-09-03) — in-conversation (Josh, no draft): **pre/post
   measures show no scale names, and every question is mandatory.** The
   instrument title and PRE / PRE + POST badge are no longer rendered on the
