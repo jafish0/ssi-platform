@@ -51,7 +51,11 @@ const TAP_MAX_MS = 350
 // A tap just off the walkable area snaps to the nearest walkable point if
 // it's within this; further out is ignored.
 const SNAP_MAX = 170
-const INTERACT_R = { spark: 130, pond: 150, exit: 170 }
+// 2026-09-03 (Josh): companion Spark used to hover right by the exit and
+// steal the tap (replaying the "ready" line). Spark's radius is a little
+// tighter, the active objective is hit-tested before Spark, and Spark
+// keeps to the side away from the objective (see updateSpark).
+const INTERACT_R = { spark: 110, pond: 150, exit: 170 }
 const IDLE_NUDGE_MS = 6000
 const NUDGE_COOLDOWN_MS = 9000
 const PROXIMITY_EVERY_MS = 120
@@ -653,12 +657,14 @@ export function makeZoneWalkScene(Phaser) {
 
     hitInteractable(x, y) {
       const z = this.zone
-      if (this.spark && Phaser.Math.Distance.Between(x, y, this.spark.x, this.spark.y) < INTERACT_R.spark) return 'spark'
+      // Objectives first, so a companion Spark hovering near the exit or
+      // the pond can't steal the tap meant for them.
       if (Phaser.Math.Distance.Between(x, y, z.spots.exit.x, z.spots.exit.y) < INTERACT_R.exit) return 'exit'
       const pondHit =
         inEllipse(x, y, { ...z.pond, rx: z.pond.rx + 40, ry: z.pond.ry + 40 }) ||
         Phaser.Math.Distance.Between(x, y, z.spots.pond.x, z.spots.pond.y) < INTERACT_R.pond
       if (pondHit) return 'pond'
+      if (this.spark && Phaser.Math.Distance.Between(x, y, this.spark.x, this.spark.y) < INTERACT_R.spark) return 'spark'
       return null
     }
 
@@ -795,8 +801,13 @@ export function makeZoneWalkScene(Phaser) {
         this.sparkGesture = null
         const t = this.traveler
         const s = this.depthScale(t.y)
-        const side = this.facing === 'side' ? -1 : 1
-        gx = t.x + side * 92 * s + (this.nudge ? this.nudge.dx : 0)
+        // Hover on the side AWAY from the active objective (the pond is to
+        // the right of the path, the exit straight up it), so Spark never
+        // sits between the Traveler and the thing they're about to tap.
+        const obj = this.progress.pond === 'active' ? z.spots.pond : this.progress.exit === 'active' ? z.spots.exit : null
+        let side = -1
+        if (obj && obj.x < t.x - 40) side = 1
+        gx = t.x + side * 105 * s + (this.nudge ? this.nudge.dx : 0)
         gy = t.y - 20 * s + (this.nudge ? this.nudge.dy : 0)
       }
       const k = 1 - Math.exp(-delta / 320)
