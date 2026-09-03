@@ -21,9 +21,9 @@
 // (the existing TraversalGame in climb mode) after the transition card.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react'
+import { RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react'
 import FeedbackButton from '../components/FeedbackButton.jsx'
+import FullscreenStage from '../components/gains/zone/FullscreenStage.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 import TraversalGame from '../components/TraversalGame.jsx'
 import GearAward from '../components/gains/GearAward.jsx'
@@ -52,15 +52,17 @@ const DEV_SKIP =
 
 // Spark's lines (voice F), VERBATIM from
 // `Gains for Teens/Walkable Zones/Zone 4 — Spark Voice Lines (voice F).md`.
+// 2026-09-03: the arrive and follow-me bubbles updated to match Josh's
+// newer recordings of those two lines.
 const LINES = {
   welcome: { file: 'z4-00-welcome.mp3', text: 'Welcome to the Bright Reaches.' },
   arrive: {
     file: 'z4-01-arrive.mp3',
-    text: "Oh — something's different about you. It's like the light inside you is brighter. Come over here — I want to tell you about what therapy is actually like.",
+    text: "Oh! something's different about you! It's like the light inside you is brighter. Come over here for a moment. I want to tell you all about therapy.",
   },
   followMe: {
     file: 'z4-02-follow-me.mp3',
-    text: "Follow me! I've got an idea for an activity we can do now. There's a calm little pond just up the path.",
+    text: 'Follow me! I know the perfect place to try the grounding activity',
   },
   ready: {
     file: 'z4-03-ready.mp3',
@@ -364,52 +366,14 @@ export default function GainsZone4Page() {
 
   // 2026-09-03 (Josh, first phone playthrough of the hub): the zone opened
   // under the demo's app header and a long description, so on a phone it
-  // wasn't remotely full screen. The page is now a full-viewport stage the
-  // way the real game will be: a dark ground, a slim bar (back, Restart,
-  // Comment), and the 9:16 frame sized to whatever's left -- full width on
-  // a phone, full height on a desktop. The card on /gains-demo carries the
-  // description; the in-frame intro card carries the controls.
+  // wasn't remotely full screen. It's now a full-viewport stage the way the
+  // real game will be (FullscreenStage, shared with the Ascent): a dark
+  // ground, a slim bar (back, Restart, Comment), and the 9:16 frame sized to
+  // whatever's left. The hub card carries the description; the in-frame
+  // intro card carries the controls.
   return (
-    <div className="gains-theme z4-full fixed inset-0 flex flex-col" style={{ background: 'var(--surface-abyss)', fontFamily: 'var(--font-core)' }}>
-      <header className="flex items-center justify-between gap-2 px-3 flex-shrink-0" style={{ height: 48 }}>
-        <Link
-          to="/gains-demo"
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold"
-          style={{ color: 'var(--text-muted)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
-        >
-          <ArrowLeft size={14} strokeWidth={2} />
-          GAINS demo
-        </Link>
-        <div className="flex items-center gap-2">
-          {scene !== 'intro' && (
-            <button
-              type="button"
-              onClick={playAgain}
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold"
-              style={{ color: 'var(--text-muted)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
-            >
-              <RotateCcw size={13} strokeWidth={2} />
-              Restart
-            </button>
-          )}
-          <FeedbackButton program="gains-teens" sections={GAINS_FEEDBACK_SECTIONS} defaultSection="review-zone4" label="Comment" subtle />
-        </div>
-      </header>
-
-      <main className="flex-1 min-h-0 flex items-center justify-center px-2 pb-2">
-          <div
-            ref={frameRef}
-            className="relative overflow-hidden"
-            style={{
-              width: 'min(100%, calc(var(--z4-vh, 100vh) - 64px) * 9 / 16)',
-              aspectRatio: '9 / 16',
-              borderRadius: 'var(--radius-2xl)',
-              border: '1px solid var(--border-soft)',
-              boxShadow: 'var(--shadow-lg)',
-              background: 'var(--surface-abyss)',
-              fontFamily: 'var(--font-core)',
-            }}
-          >
+    <FullscreenStage section="review-zone4" onRestart={playAgain} showRestart={scene !== 'intro'} frameRef={frameRef}>
+          <>
             {/* The walkable world: mounted from intro through transition so
                 its state persists under the in-frame scenes. */}
             {stageMounted && (
@@ -585,16 +549,11 @@ export default function GainsZone4Page() {
                 {muted ? <VolumeX size={18} strokeWidth={1.75} /> : <Volume2 size={18} strokeWidth={1.75} />}
               </button>
             )}
-          </div>
-      </main>
+          </>
 
       <style>{`
         @keyframes z4-title-veil { 0% { opacity: 1 } 70% { opacity: 1 } 100% { opacity: 0 } }
-        /* Full-viewport stage: dvh tracks the phone browser's real visible
-           height (toolbars come and go); vh is the fallback. */
-        .z4-full { height: 100vh; height: 100dvh; --z4-vh: 100vh; }
-        @supports (height: 100dvh) { .z4-full { --z4-vh: 100dvh; } }
       `}</style>
-    </div>
+    </FullscreenStage>
   )
 }
