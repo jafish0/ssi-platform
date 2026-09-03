@@ -35,8 +35,13 @@ const H = 1920
 const FIG_H = 250
 const SRC_FIG_H = 560
 const SPARK_H = 180
-const SPARK_SRC_H = 290
-const FROG_W = 105
+// Draft 69: Spark's frames are the alpha flame cut-outs (194x255), drawn in
+// NORMAL blend with a soft additive halo behind -- the on-black ADD frames
+// blew out to a white flare over the bright plate and lost the face.
+const SPARK_SRC_H = 255
+const SPARK_ALPHA = 0.96
+const SPARK_HALO_ALPHA = 0.26
+const FROG_W = 105 // at depth-scale 1; scaled down with distance like everything else
 const WALK_SPEED = 250 // logical px/s at depth-scale 1
 // Phase C tune: 8 fps over the 6-frame cycle puts the two footfalls at
 // ~2.7 steps/s, closer to a walk than 9 fps's near-jog cadence.
@@ -54,12 +59,16 @@ const PROXIMITY_EVERY_MS = 120
 // ---- Zone 4: the Bright Reaches ---------------------------------------
 const ZONE4 = {
   // Where things stand. `*Stand` is where the Traveler stops to interact.
+  // Draft 69 (Josh's marked-up screenshot): Spark waits on the grassy LEFT
+  // edge beside the path, so the player walks up to him first; the Traveler
+  // stops on the path next to him, not on top of him. The frog sits on the
+  // pond's far (upper-right) bank.
   spots: {
     start: { x: 470, y: 1830 },
-    sparkWait: { x: 590, y: 1440 },
-    sparkStand: { x: 478, y: 1452 },
+    sparkWait: { x: 240, y: 1110 },
+    sparkStand: { x: 412, y: 1128 },
     pond: { x: 600, y: 1095 },
-    frog: { x: 700, y: 1060 },
+    frog: { x: 830, y: 880 },
     exit: { x: 400, y: 500 },
     exitStand: { x: 400, y: 532 },
   },
@@ -176,7 +185,7 @@ export function makeZoneWalkScene(Phaser) {
       // Frog on the pond (Mindful Place's painterly frog, reused).
       if (this.textures.exists('frog')) {
         const frog = this.add.image(z.spots.frog.x, z.spots.frog.y, 'frog').setOrigin(0.5, 0.9)
-        frog.setScale(FROG_W / frog.width)
+        frog.setScale((FROG_W * this.depthScale(z.spots.frog.y)) / frog.width)
         frog.setDepth(z.spots.frog.y)
         this.frog = frog
         if (!this.reduced) {
@@ -709,37 +718,41 @@ export function makeZoneWalkScene(Phaser) {
       if (!this.anims.exists('spark-flicker')) this.anims.create({ key: 'spark-flicker', frames, frameRate: 5, repeat: -1 })
       const wait = z.spots.sparkWait
       const s = this.depthScale(wait.y)
-      this.spark = this.add.sprite(wait.x, wait.y - 130 * s, 'spark-0').setBlendMode(Phaser.BlendModes.ADD)
+      // Soft additive halo behind the flame (the only ADD-blended part).
+      this.sparkHalo = this.add.image(wait.x, wait.y - 130 * s, 'glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffd9a0)
+      this.sparkHalo.setAlpha(SPARK_HALO_ALPHA).setScale(1.9 * s).setDepth(wait.y + 0.9)
+      this.spark = this.add.sprite(wait.x, wait.y - 130 * s, 'spark-0').setAlpha(SPARK_ALPHA)
       this.spark.play('spark-flicker')
       this.spark.setScale((SPARK_H / SPARK_SRC_H) * s).setDepth(wait.y + 1)
       this.sparkGround = { x: wait.x, y: wait.y }
       this.sparkBob = 0
-      // Waiting-objective pulse ring on the ground under Spark.
+      // Waiting-objective pulse ring on the ground under Spark (kept gentle
+      // so it doesn't stack into a hot spot with the halo).
       this.sparkRing = this.add.image(wait.x, wait.y, 'ring').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffe3a0)
-      this.sparkRing.setScale(0.45 * s).setAlpha(0.8).setDepth(wait.y - 0.6)
+      this.sparkRing.setScale(0.45 * s).setAlpha(0.5).setDepth(wait.y - 0.6)
       this.sparkRingBase = 0.45 * s
-      this.pulse(this.sparkRing, this.sparkRingBase)
-      // Companion light-trail.
+      this.pulse(this.sparkRing, this.sparkRingBase, 0.55)
+      // Companion light-trail, soft.
       this.trail = this.add.particles(0, 0, 'glow', {
-        lifespan: { min: 500, max: 900 },
-        speed: { min: 4, max: 18 },
-        scale: { start: 0.22, end: 0.02 },
-        alpha: { start: 0.8, end: 0 },
+        lifespan: { min: 450, max: 800 },
+        speed: { min: 4, max: 16 },
+        scale: { start: 0.16, end: 0.02 },
+        alpha: { start: 0.42, end: 0 },
         tint: [0xffe3a0, 0xfff3d0, 0xffc98a],
         blendMode: 'ADD',
-        frequency: 45,
+        frequency: 60,
         emitting: false,
       })
       this.trail.setDepth(wait.y + 0.5)
       this.trail.startFollow(this.spark)
     }
 
-    pulse(img, baseScale) {
+    pulse(img, baseScale, maxAlpha = 0.95) {
       if (this.reduced) return
       this.tweens.add({
         targets: img,
         scale: { from: baseScale * 0.82, to: baseScale * 1.14 },
-        alpha: { from: 0.95, to: 0.28 },
+        alpha: { from: maxAlpha, to: maxAlpha * 0.3 },
         duration: 1300,
         yoyo: true,
         repeat: -1,
@@ -757,6 +770,7 @@ export function makeZoneWalkScene(Phaser) {
         const s = this.depthScale(w.y)
         this.spark.setPosition(w.x, w.y - 130 * s + bob)
         this.spark.setScale((SPARK_H / SPARK_SRC_H) * s).setDepth(w.y + 1)
+        this.placeSparkHalo(s, w.y)
         if (this.trail) this.trail.emitting = false
         return
       }
@@ -781,10 +795,18 @@ export function makeZoneWalkScene(Phaser) {
       const speed = Math.hypot(gx - this.sparkGround.x, gy - this.sparkGround.y)
       this.spark.setPosition(this.sparkGround.x, this.sparkGround.y - 215 * s + bob)
       this.spark.setScale((SPARK_H / SPARK_SRC_H) * s).setDepth(this.sparkGround.y + 1)
+      this.placeSparkHalo(s, this.sparkGround.y)
       if (this.trail) {
         this.trail.setDepth(this.sparkGround.y + 0.5)
         this.trail.emitting = !this.reduced && speed > 18
       }
+    }
+
+    // The halo rides on the flame's center, a hair behind it in depth.
+    placeSparkHalo(s, groundY) {
+      if (!this.sparkHalo) return
+      this.sparkHalo.setPosition(this.spark.x, this.spark.y + 10 * s)
+      this.sparkHalo.setScale(1.9 * s).setDepth(groundY + 0.9)
     }
 
     // ---- interactable markers ----
@@ -846,8 +868,8 @@ export function makeZoneWalkScene(Phaser) {
       if (this.sparkRing) {
         this.tweens.killTweensOf(this.sparkRing)
         if (p.spark === 'active' && p.sparkMode === 'waiting') {
-          this.sparkRing.setAlpha(0.8)
-          this.pulse(this.sparkRing, this.sparkRingBase)
+          this.sparkRing.setAlpha(0.5)
+          this.pulse(this.sparkRing, this.sparkRingBase, 0.55)
         } else this.sparkRing.setAlpha(0)
       }
     }

@@ -91,6 +91,12 @@ export default function GainsZone4Page() {
   const [started, setStarted] = useState(false) // the walk has begun (post title card)
   const [showTitle, setShowTitle] = useState(false)
   const [veil, setVeil] = useState(false)
+  // Draft 69: true from the moment a scene change starts until the veil
+  // begins to lift. The walk scene is paused for the whole window, so a tap
+  // landing during the bloom (e.g. tapping Spark again as you arrive) can't
+  // trigger anything -- that's how "follow me" was firing on the Spark tap.
+  const [transitioning, setTransitioning] = useState(false)
+  const transitioningRef = useRef(false)
   const [muted, setMuted] = useState(false)
   const [bubble, setBubble] = useState(null) // { text, visible }
   const [progress, setProgressState] = useState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
@@ -168,11 +174,17 @@ export default function GainsZone4Page() {
   }, [])
 
   function transitionTo(next, after) {
+    transitioningRef.current = true
+    setTransitioning(true)
     setVeil(true)
     later(() => {
       setScene(next)
       if (after) after()
-      later(() => setVeil(false), 120)
+      later(() => {
+        setVeil(false)
+        transitioningRef.current = false
+        setTransitioning(false)
+      }, 120)
     }, BLOOM_IN_MS)
   }
 
@@ -208,9 +220,13 @@ export default function GainsZone4Page() {
 
   function handleTap(target) {
     const p = progressRef.current
+    if (sceneRef.current !== 'walk' || transitioningRef.current) return
     if (target === 'spark') {
-      // "Where do I go?" — after the first talk, Spark replays the objective.
-      if (p.talked) redirect(p.didActivity ? 'ready' : 'followMe')
+      // "Where do I go?" — once the video's been watched, Spark replays the
+      // current objective. Between the first talk and the video's end there
+      // is no objective line yet (Draft 69: this used to key off `talked`,
+      // which let "follow me" fire on the Spark tap itself).
+      if (p.watched) redirect(p.didActivity ? 'ready' : 'followMe')
     } else if (target === 'pond') {
       if (!p.watched) redirect('redirectPond')
     } else if (target === 'exit') {
@@ -221,7 +237,7 @@ export default function GainsZone4Page() {
 
   function handleArrive(target) {
     const p = progressRef.current
-    if (sceneRef.current !== 'walk') return
+    if (sceneRef.current !== 'walk' || transitioningRef.current) return
     if (target === 'spark' && !p.talked) {
       setProgress({ talked: true })
       audioRef.current?.stopSpeech()
@@ -330,7 +346,7 @@ export default function GainsZone4Page() {
   )
 
   const stageMounted = scene !== 'climb' && scene !== 'end'
-  const walkPaused = scene !== 'walk' || showTitle
+  const walkPaused = scene !== 'walk' || showTitle || transitioning
   const hudVisible = started && scene !== 'intro' && scene !== 'climb' && scene !== 'end'
 
   return (
