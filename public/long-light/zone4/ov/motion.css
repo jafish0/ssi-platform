@@ -1,0 +1,39 @@
+/* motion.css — Bright Reaches overlay idle loops. Inline the SVGs, include this file.
+   Per-element durations/delays live in each element's style attribute. */
+:root{--ease-soft:cubic-bezier(.45,0,.2,1);--ease-drift:cubic-bezier(.4,0,.6,1)}
+
+/* clouds — screen */
+.wisp{animation-name:br-drift-l,br-breathe;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;animation-direction:alternate}
+.wisp--r{animation-name:br-drift-r,br-breathe}
+@keyframes br-drift-l{from{transform:translateX(0)}to{transform:translateX(-70px)}}
+@keyframes br-drift-r{from{transform:translateX(0)}to{transform:translateX(70px)}}
+@keyframes br-breathe{from{opacity:.75}to{opacity:1}}
+
+/* motes — screen */
+.mote{animation-name:br-rise-a;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;will-change:transform}
+.mote--b{animation-name:br-rise-b}
+@keyframes br-rise-a{0%{transform:translate(0,0)}30%{transform:translate(14px,-40px)}60%{transform:translate(-10px,-84px)}100%{transform:translate(6px,-130px)}}
+@keyframes br-rise-b{0%{transform:translate(0,0)}35%{transform:translate(-16px,-46px)}65%{transform:translate(12px,-90px)}100%{transform:translate(-4px,-130px)}}
+.mote-core,.mote-glow{animation-name:br-blink;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes br-blink{0%,100%{opacity:.08}40%{opacity:1}70%{opacity:.5}}
+
+/* sway — normal */
+.tuft{animation-name:br-sway;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes br-sway{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.8deg)}}
+
+/* beacon — screen */
+.beacon-bloom{animation:br-bloom 7s var(--ease-soft) infinite}
+.beacon-bloom--wide{animation-delay:-1.2s}
+@keyframes br-bloom{0%,100%{transform:scale(.88);opacity:.3}50%{transform:scale(1.12);opacity:.6}}
+.beacon-core{animation:br-core 7s var(--ease-soft) infinite}
+@keyframes br-core{0%,100%{opacity:.7;transform:scale(.9)}50%{opacity:1;transform:scale(1.15)}}
+
+/* pond glint — screen */
+.glint-ring{animation:br-ring 9s ease-out infinite}
+@keyframes br-ring{0%{transform:scale(.3);opacity:0}12%{opacity:.35}100%{transform:scale(3.2);opacity:0}}
+.glint{animation-name:br-shimmer;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes br-shimmer{0%,100%{opacity:.08;transform:scaleX(.6)}50%{opacity:.7;transform:scaleX(1)}}
+
+@media (prefers-reduced-motion:reduce){
+  .wisp,.mote,.mote-core,.mote-glow,.tuft,.beacon-bloom,.beacon-core,.glint-ring,.glint{animation:none}
+}

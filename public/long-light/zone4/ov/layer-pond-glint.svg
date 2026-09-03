@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-pond-glint</title>
+  <desc>Slow ripple rings and light-glints on the pond surface. Blend: screen. Hooks: .glint-ring (expand/fade, 9s), .glint (shimmer).</desc>
+  <g id="layer-pond-glint">
+    <ellipse cx="833" cy="1042" rx="215" ry="112" fill="url(#pondSheen)" opacity="0.35"></ellipse>
+    <ellipse class="glint-ring" cx="800" cy="1000" rx="40" ry="12" fill="none" stroke="#fff0d6" stroke-width="1.6" opacity="0.22" style="transform-origin:800px 1000px;animation-delay:0s"></ellipse>
+    <ellipse class="glint-ring" cx="900" cy="1060" rx="48" ry="14" fill="none" stroke="#fff0d6" stroke-width="1.6" opacity="0.22" style="transform-origin:900px 1060px;animation-delay:-3s"></ellipse>
+    <ellipse class="glint-ring" cx="760" cy="1080" rx="36" ry="11" fill="none" stroke="#fff0d6" stroke-width="1.6" opacity="0.22" style="transform-origin:760px 1080px;animation-delay:-6s"></ellipse>
+    <ellipse class="glint-ring" cx="870" cy="990" rx="32" ry="10" fill="none" stroke="#fff0d6" stroke-width="1.6" opacity="0.22" style="transform-origin:870px 990px;animation-delay:-1.5s"></ellipse>
+    <ellipse class="glint" cx="720" cy="1030" rx="10" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:720px 1030px;animation-duration:6.9s;animation-delay:-4.4s"></ellipse>
+    <ellipse class="glint" cx="790" cy="1060" rx="13" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:790px 1060px;animation-duration:7.6s;animation-delay:-3.0s"></ellipse>
+    <ellipse class="glint" cx="860" cy="1020" rx="18" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:860px 1020px;animation-duration:6.1s;animation-delay:-1.6s"></ellipse>
+    <ellipse class="glint" cx="930" cy="1080" rx="17" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:930px 1080px;animation-duration:6.2s;animation-delay:-1.9s"></ellipse>
+    <ellipse class="glint" cx="820" cy="1110" rx="19" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:820px 1110px;animation-duration:5.5s;animation-delay:-0.2s"></ellipse>
+    <ellipse class="glint" cx="880" cy="1130" rx="15" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:880px 1130px;animation-duration:4.8s;animation-delay:-5.9s"></ellipse>
+    <ellipse class="glint" cx="760" cy="1000" rx="15" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:760px 1000px;animation-duration:4.9s;animation-delay:-2.7s"></ellipse>
+    <ellipse class="glint" cx="960" cy="1030" rx="14" ry="1.6" fill="#fff4dc" opacity="0.5" style="transform-origin:960px 1030px;animation-duration:4.1s;animation-delay:-3.4s"></ellipse>
+  </g>
+  <defs><radialGradient id="pondSheen" cx="0.45" cy="0.4" r="0.6"><stop offset="0" stop-color="#ffe9c4" stop-opacity="0.5"></stop><stop offset="1" stop-color="#d7b8d8" stop-opacity="0"></stop></radialGradient></defs>
+</svg>

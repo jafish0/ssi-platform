@@ -57,6 +57,9 @@ function deriveContext(pathname, params) {
   if (pathname.startsWith('/gains-demo/traversal')) {
     return { area: 'GAINS Teens traversal prototype', activity_id: null, activity_version: null }
   }
+  if (pathname.startsWith('/gains-demo/zone4')) {
+    return { area: 'GAINS Teens Zone 4 walkable zone', activity_id: null, activity_version: null }
+  }
   return { area: pathname, activity_id: null, activity_version: null }
 }
 

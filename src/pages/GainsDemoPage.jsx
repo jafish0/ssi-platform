@@ -62,6 +62,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-mindfulness', label: 'Review: Mindfulness Mindful Place' },
   { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
   { value: 'review-ascent', label: 'Review: The Ascent (climb)' },
+  { value: 'review-zone4', label: 'Review: Zone 4 walkable zone' },
   // The official breakdown
   // assent-measures — superseded by review-pretest/review-posttest (Draft
   // 54, 2026-09-01): the packet moved back into the review section since
@@ -737,6 +738,31 @@ export default function GainsDemoPage() {
                 >
                   <Play size={14} strokeWidth={2} />
                   Play the Ascent
+                </Link>
+              </ReviewItem>
+
+              {/* 8 — Zone 4 walkable zone (Draft 68): the first in-world
+                  zone, everything inside one phone frame. */}
+              <ReviewItem
+                n={8}
+                title="Zone 4: The Bright Reaches — walkable zone (playable prototype)"
+                section="review-zone4"
+              >
+                <p className="mb-4">
+                  Our first walkable zone — move through the Bright Reaches like
+                  a game: find Spark, watch the video, follow Spark to the pond
+                  for the Mindful Place, earn and equip your Oxygen Mask, then
+                  head for the exit and climb toward Mount Hope. Tap the ground
+                  to move; tap Spark, the pond, or the exit to interact. Spark
+                  will redirect you if you try something too early.
+                </p>
+                <Link
+                  to="/gains-demo/zone4"
+                  className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+                >
+                  <Play size={14} strokeWidth={2} />
+                  Play Zone 4
                 </Link>
               </ReviewItem>
             </div>

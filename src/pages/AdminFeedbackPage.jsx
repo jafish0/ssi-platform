@@ -54,6 +54,8 @@ const SECTION_LABELS = {
   'review-bodymap': 'Review: Body Mapping activity',
   'review-mindfulness': 'Review: Mindfulness Calm Place',
   'review-zone3pitch': 'Review: Zone 3 Elevator Pitch',
+  'review-ascent': 'Review: The Ascent (climb)',
+  'review-zone4': 'Review: Zone 4 walkable zone',
   'assent-measures': 'Child Assent / Measures',
   exposition: 'Exposition',
   npcs: 'NPCs',

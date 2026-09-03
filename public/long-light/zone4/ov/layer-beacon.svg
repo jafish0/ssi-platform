@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-beacon</title>
+  <desc>Breathing bloom on the distant beacon at 652,215. Blend: screen. Hooks: .beacon-bloom (7s breathe), .beacon-core.</desc>
+  <defs>
+    <radialGradient id="bloom" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff6e0" stop-opacity="0.9"></stop><stop offset="0.25" stop-color="#ffe2a8" stop-opacity="0.45"></stop><stop offset="0.6" stop-color="#ffb98a" stop-opacity="0.14"></stop><stop offset="1" stop-color="#e8a0a0" stop-opacity="0"></stop></radialGradient>
+    <radialGradient id="core" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fffdf5" stop-opacity="1"></stop><stop offset="1" stop-color="#ffe7b8" stop-opacity="0"></stop></radialGradient>
+  </defs>
+  <g id="layer-beacon">
+    <circle class="beacon-bloom" cx="652" cy="215" r="150" fill="url(#bloom)" opacity="0.45" style="transform-origin:652px 215px"></circle>
+    <ellipse class="beacon-bloom beacon-bloom--wide" cx="652" cy="222" rx="260" ry="80" fill="url(#bloom)" opacity="0.28" style="transform-origin:652px 222px"></ellipse>
+    <circle class="beacon-core" cx="652" cy="213" r="16" fill="url(#core)" opacity="0.9" style="transform-origin:652px 213px"></circle>
+  </g>
+</svg>

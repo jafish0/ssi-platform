@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-clouds</title>
+  <desc>Cloud wisps along the cloud-sea horizon and plateau edges. Blend: screen. Hooks: .wisp (+ .wisp--l / .wisp--r for drift direction).</desc>
+  <defs>
+    <radialGradient id="wispCream" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff1dc" stop-opacity="0.9"></stop><stop offset="0.55" stop-color="#f6d9c4" stop-opacity="0.35"></stop><stop offset="1" stop-color="#e8c9d6" stop-opacity="0"></stop></radialGradient>
+    <radialGradient id="wispLav" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#f3e3ee" stop-opacity="0.85"></stop><stop offset="0.55" stop-color="#d9c4e8" stop-opacity="0.32"></stop><stop offset="1" stop-color="#b9a4dc" stop-opacity="0"></stop></radialGradient>
+  </defs>
+  <g id="layer-clouds">
+    <ellipse class="wisp wisp--r" cx="120" cy="330" rx="260" ry="46" fill="url(#wispCream)" opacity="0.32" style="animation-duration:81s,44.6s;animation-delay:-15s,-6.0s"></ellipse>
+    <ellipse class="wisp wisp--l" cx="420" cy="300" rx="300" ry="40" fill="url(#wispCream)" opacity="0.39" style="animation-duration:86s,47.3s;animation-delay:-8s,-3.2s"></ellipse>
+    <ellipse class="wisp wisp--r" cx="760" cy="335" rx="280" ry="44" fill="url(#wispCream)" opacity="0.48" style="animation-duration:75s,41.3s;animation-delay:-9s,-3.6s"></ellipse>
+    <ellipse class="wisp wisp--l" cx="1000" cy="300" rx="220" ry="38" fill="url(#wispCream)" opacity="0.47" style="animation-duration:76s,41.8s;animation-delay:-1s,-0.4s"></ellipse>
+    <ellipse class="wisp wisp--r" cx="220" cy="430" rx="300" ry="50" fill="url(#wispCream)" opacity="0.50" style="animation-duration:71s,39.1s;animation-delay:-29s,-11.6s"></ellipse>
+    <ellipse class="wisp wisp--l" cx="600" cy="450" rx="320" ry="52" fill="url(#wispCream)" opacity="0.42" style="animation-duration:66s,36.3s;animation-delay:-14s,-5.6s"></ellipse>
+    <ellipse class="wisp wisp--r" cx="950" cy="420" rx="260" ry="46" fill="url(#wispCream)" opacity="0.43" style="animation-duration:66s,36.3s;animation-delay:-17s,-6.8s"></ellipse>
+    <ellipse class="wisp wisp--l" cx="60" cy="620" rx="190" ry="60" fill="url(#wispLav)" opacity="0.45" style="animation-duration:67s,36.9s;animation-delay:-20s,-8.0s"></ellipse>
+    <ellipse class="wisp wisp--l" cx="110" cy="860" rx="180" ry="54" fill="url(#wispLav)" opacity="0.37" style="animation-duration:77s,42.4s;animation-delay:-30s,-12.0s"></ellipse>
+    <ellipse class="wisp wisp--l" cx="40" cy="1120" rx="170" ry="58" fill="url(#wispLav)" opacity="0.38" style="animation-duration:83s,45.7s;animation-delay:-30s,-12.0s"></ellipse>
+    <ellipse class="wisp wisp--l" cx="90" cy="1380" rx="160" ry="52" fill="url(#wispLav)" opacity="0.45" style="animation-duration:68s,37.4s;animation-delay:-30s,-12.0s"></ellipse>
+    <ellipse class="wisp wisp--r" cx="1030" cy="560" rx="190" ry="58" fill="url(#wispLav)" opacity="0.36" style="animation-duration:57s,31.4s;animation-delay:-5s,-2.0s"></ellipse>
+    <ellipse class="wisp wisp--r" cx="1000" cy="760" rx="170" ry="54" fill="url(#wispLav)" opacity="0.37" style="animation-duration:83s,45.7s;animation-delay:-17s,-6.8s"></ellipse>
+    <ellipse class="wisp wisp--r" cx="1050" cy="1000" rx="160" ry="56" fill="url(#wispLav)" opacity="0.31" style="animation-duration:67s,36.9s;animation-delay:-19s,-7.6s"></ellipse>
+    <ellipse class="wisp wisp--r" cx="1040" cy="1230" rx="150" ry="50" fill="url(#wispLav)" opacity="0.49" style="animation-duration:73s,40.2s;animation-delay:-32s,-12.8s"></ellipse>
+  </g>
+</svg>

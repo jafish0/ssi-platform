@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-sway</title>
+  <desc>Grass tufts at path edges, each blade rotating about its base. Blend: normal. Hook: .tuft.</desc>
+  <g id="layer-sway">
+    <g class="tuft-clump">
+      <path class="tuft" d="M219 1880 Q196 1816 162 1764 Q187 1822 213 1880 Z" fill="#3b3a5c" opacity="0.56" style="transform-origin:219px 1880px;animation-duration:7.25s;animation-delay:-4.46s"></path>
+      <path class="tuft" d="M231 1880 Q211 1790 182 1717 Q203 1798 226 1880 Z" fill="#8a7a56" opacity="0.77" style="transform-origin:231px 1880px;animation-duration:7.81s;animation-delay:-4.44s"></path>
+      <path class="tuft" d="M244 1880 Q230 1795 209 1725 Q223 1802 238 1880 Z" fill="#c9a86a" opacity="0.65" style="transform-origin:244px 1880px;animation-duration:6.36s;animation-delay:-4.54s"></path>
+      <path class="tuft" d="M256 1880 Q249 1786 238 1708 Q242 1794 251 1880 Z" fill="#3b3a5c" opacity="0.68" style="transform-origin:256px 1880px;animation-duration:6.52s;animation-delay:-1.72s"></path>
+      <path class="tuft" d="M269 1880 Q264 1806 258 1745 Q258 1813 263 1880 Z" fill="#8a7a56" opacity="0.77" style="transform-origin:269px 1880px;animation-duration:7.23s;animation-delay:-1.96s"></path>
+      <path class="tuft" d="M282 1880 Q284 1804 287 1743 Q279 1811 276 1880 Z" fill="#c9a86a" opacity="0.83" style="transform-origin:282px 1880px;animation-duration:7.22s;animation-delay:-0.42s"></path>
+    </g>
+    <g class="tuft-clump">
+      <path class="tuft" d="M305 1600 Q285 1548 253 1505 Q278 1552 301 1600 Z" fill="#3b3a5c" opacity="0.69" style="transform-origin:305px 1600px;animation-duration:7.27s;animation-delay:-5.65s"></path>
+      <path class="tuft" d="M315 1600 Q302 1555 283 1518 Q296 1559 311 1600 Z" fill="#8a7a56" opacity="0.70" style="transform-origin:315px 1600px;animation-duration:5.86s;animation-delay:-2.53s"></path>
+      <path class="tuft" d="M325 1600 Q314 1554 297 1516 Q308 1558 321 1600 Z" fill="#c9a86a" opacity="0.77" style="transform-origin:325px 1600px;animation-duration:5.98s;animation-delay:-3.62s"></path>
+      <path class="tuft" d="M335 1600 Q322 1563 303 1532 Q316 1566 331 1600 Z" fill="#3b3a5c" opacity="0.77" style="transform-origin:335px 1600px;animation-duration:5.21s;animation-delay:-0.82s"></path>
+      <path class="tuft" d="M345 1600 Q332 1532 313 1477 Q326 1539 340 1600 Z" fill="#8a7a56" opacity="0.78" style="transform-origin:345px 1600px;animation-duration:7.82s;animation-delay:-2.55s"></path>
+      <path class="tuft" d="M355 1600 Q351 1549 345 1508 Q346 1554 350 1600 Z" fill="#c9a86a" opacity="0.64" style="transform-origin:355px 1600px;animation-duration:6.27s;animation-delay:-2.80s"></path>
+    </g>
+    <g class="tuft-clump">
+      <path class="tuft" d="M208 1380 Q191 1331 167 1290 Q185 1335 204 1380 Z" fill="#3b3a5c" opacity="0.65" style="transform-origin:208px 1380px;animation-duration:6.81s;animation-delay:-4.74s"></path>
+      <path class="tuft" d="M217 1380 Q200 1318 175 1268 Q194 1324 213 1380 Z" fill="#8a7a56" opacity="0.57" style="transform-origin:217px 1380px;animation-duration:5.41s;animation-delay:-1.85s"></path>
+      <path class="tuft" d="M226 1380 Q211 1311 190 1255 Q206 1317 222 1380 Z" fill="#c9a86a" opacity="0.83" style="transform-origin:226px 1380px;animation-duration:6.28s;animation-delay:-1.77s"></path>
+      <path class="tuft" d="M235 1380 Q223 1330 205 1288 Q217 1334 231 1380 Z" fill="#3b3a5c" opacity="0.68" style="transform-origin:235px 1380px;animation-duration:6.40s;animation-delay:-4.40s"></path>
+      <path class="tuft" d="M244 1380 Q240 1328 234 1285 Q235 1332 240 1380 Z" fill="#8a7a56" opacity="0.73" style="transform-origin:244px 1380px;animation-duration:7.37s;animation-delay:-2.13s"></path>
+      <path class="tuft" d="M253 1380 Q251 1318 248 1268 Q246 1324 249 1380 Z" fill="#c9a86a" opacity="0.59" style="transform-origin:253px 1380px;animation-duration:5.93s;animation-delay:-0.90s"></path>
+    </g>
+    <g class="tuft-clump">
+      <path class="tuft" d="M640 1230 Q639 1175 637 1129 Q635 1180 636 1230 Z" fill="#3b3a5c" opacity="0.68" style="transform-origin:640px 1230px;animation-duration:5.88s;animation-delay:-0.04s"></path>
+      <path class="tuft" d="M648 1230 Q658 1174 674 1128 Q656 1179 644 1230 Z" fill="#8a7a56" opacity="0.69" style="transform-origin:648px 1230px;animation-duration:7.20s;animation-delay:-0.49s"></path>
+      <path class="tuft" d="M656 1230 Q663 1190 674 1158 Q660 1194 652 1230 Z" fill="#c9a86a" opacity="0.79" style="transform-origin:656px 1230px;animation-duration:6.07s;animation-delay:-4.05s"></path>
+      <path class="tuft" d="M664 1230 Q675 1189 692 1155 Q673 1193 660 1230 Z" fill="#3b3a5c" opacity="0.64" style="transform-origin:664px 1230px;animation-duration:5.45s;animation-delay:-3.69s"></path>
+      <path class="tuft" d="M672 1230 Q680 1198 693 1172 Q678 1201 669 1230 Z" fill="#8a7a56" opacity="0.64" style="transform-origin:672px 1230px;animation-duration:5.02s;animation-delay:-0.23s"></path>
+      <path class="tuft" d="M680 1230 Q694 1168 714 1117 Q692 1173 677 1230 Z" fill="#c9a86a" opacity="0.77" style="transform-origin:680px 1230px;animation-duration:5.25s;animation-delay:-4.97s"></path>
+    </g>
+    <g class="tuft-clump">
+      <path class="tuft" d="M678 1640 Q677 1604 677 1575 Q673 1608 674 1640 Z" fill="#3b3a5c" opacity="0.64" style="transform-origin:678px 1640px;animation-duration:5.02s;animation-delay:-0.23s"></path>
+      <path class="tuft" d="M687 1640 Q692 1571 700 1514 Q689 1577 683 1640 Z" fill="#8a7a56" opacity="0.77" style="transform-origin:687px 1640px;animation-duration:5.25s;animation-delay:-4.97s"></path>
+      <path class="tuft" d="M696 1640 Q704 1591 717 1550 Q701 1595 692 1640 Z" fill="#c9a86a" opacity="0.66" style="transform-origin:696px 1640px;animation-duration:7.03s;animation-delay:-4.69s"></path>
+      <path class="tuft" d="M705 1640 Q719 1584 741 1538 Q717 1589 701 1640 Z" fill="#3b3a5c" opacity="0.60" style="transform-origin:705px 1640px;animation-duration:6.85s;animation-delay:-2.62s"></path>
+      <path class="tuft" d="M714 1640 Q725 1602 742 1570 Q722 1605 710 1640 Z" fill="#8a7a56" opacity="0.55" style="transform-origin:714px 1640px;animation-duration:5.11s;animation-delay:-4.28s"></path>
+      <path class="tuft" d="M723 1640 Q736 1591 756 1550 Q734 1595 719 1640 Z" fill="#c9a86a" opacity="0.57" style="transform-origin:723px 1640px;animation-duration:7.49s;animation-delay:-2.94s"></path>
+    </g>
+    <g class="tuft-clump">
+      <path class="tuft" d="M851 1900 Q860 1834 873 1779 Q855 1840 846 1900 Z" fill="#3b3a5c" opacity="0.75" style="transform-origin:851px 1900px;animation-duration:7.34s;animation-delay:-3.04s"></path>
+      <path class="tuft" d="M862 1900 Q869 1818 878 1750 Q864 1825 857 1900 Z" fill="#8a7a56" opacity="0.73" style="transform-origin:862px 1900px;animation-duration:6.31s;animation-delay:-4.59s"></path>
+      <path class="tuft" d="M874 1900 Q880 1842 889 1794 Q876 1847 869 1900 Z" fill="#c9a86a" opacity="0.56" style="transform-origin:874px 1900px;animation-duration:7.14s;animation-delay:-2.12s"></path>
+      <path class="tuft" d="M886 1900 Q893 1842 903 1795 Q888 1848 881 1900 Z" fill="#3b3a5c" opacity="0.80" style="transform-origin:886px 1900px;animation-duration:6.47s;animation-delay:-4.95s"></path>
+      <path class="tuft" d="M898 1900 Q909 1820 925 1755 Q905 1828 892 1900 Z" fill="#8a7a56" opacity="0.78" style="transform-origin:898px 1900px;animation-duration:6.52s;animation-delay:-1.15s"></path>
+      <path class="tuft" d="M909 1900 Q933 1839 968 1790 Q931 1845 904 1900 Z" fill="#c9a86a" opacity="0.68" style="transform-origin:909px 1900px;animation-duration:7.29s;animation-delay:-2.93s"></path>
+    </g>
+    <g class="tuft-clump">
+      <path class="tuft" d="M544 1030 Q544 999 544 973 Q541 1001 541 1030 Z" fill="#3b3a5c" opacity="0.56" style="transform-origin:544px 1030px;animation-duration:7.14s;animation-delay:-2.12s"></path>
+      <path class="tuft" d="M551 1030 Q551 999 551 974 Q548 1002 548 1030 Z" fill="#8a7a56" opacity="0.80" style="transform-origin:551px 1030px;animation-duration:6.47s;animation-delay:-4.95s"></path>
+      <path class="tuft" d="M557 1030 Q560 987 563 952 Q557 991 554 1030 Z" fill="#c9a86a" opacity="0.78" style="transform-origin:557px 1030px;animation-duration:6.52s;animation-delay:-1.15s"></path>
+      <path class="tuft" d="M563 1030 Q572 997 586 971 Q571 1000 560 1030 Z" fill="#3b3a5c" opacity="0.68" style="transform-origin:563px 1030px;animation-duration:7.29s;animation-delay:-2.93s"></path>
+      <path class="tuft" d="M569 1030 Q580 1003 596 981 Q578 1005 567 1030 Z" fill="#8a7a56" opacity="0.76" style="transform-origin:569px 1030px;animation-duration:6.06s;animation-delay:-2.50s"></path>
+      <path class="tuft" d="M576 1030 Q583 1007 594 988 Q581 1009 573 1030 Z" fill="#c9a86a" opacity="0.70" style="transform-origin:576px 1030px;animation-duration:7.47s;animation-delay:-1.96s"></path>
+    </g>
+  </g>
+</svg>

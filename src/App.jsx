@@ -25,6 +25,7 @@ import IRBPreviewPage from './pages/IRBPreviewPage.jsx'
 import GainsDemoPage from './pages/GainsDemoPage.jsx'
 import GainsTraversalPage from './pages/GainsTraversalPage.jsx'
 import GainsClimbPage from './pages/GainsClimbPage.jsx'
+import GainsZone4Page from './pages/GainsZone4Page.jsx'
 
 function AdminRoutes() {
   return (
@@ -132,6 +133,8 @@ export default function App() {
       <Route path="/gains-demo" element={<GainsDemoPage />} />
       <Route path="/gains-demo/traversal" element={<GainsTraversalPage />} />
       <Route path="/gains-demo/climb" element={<GainsClimbPage />} />
+      {/* Zone 4 walkable-zone prototype (GAINS Draft 68). */}
+      <Route path="/gains-demo/zone4" element={<GainsZone4Page />} />
       {/* The Plan now ships as the seventh activity (Draft 39). The
           /the-plan entry point (montage closer CTA) redirects into the
           sandbox-hosted activity. */}

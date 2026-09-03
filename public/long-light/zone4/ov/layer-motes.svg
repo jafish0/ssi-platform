@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <title>layer-motes</title>
+  <desc>Warm light-motes drifting upward and blinking. Blend: screen. Hooks: .mote (+ .mote--b), .mote-core, .mote-glow.</desc>
+  <defs><radialGradient id="moteGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe9b8" stop-opacity="0.7"></stop><stop offset="0.45" stop-color="#ffcf8a" stop-opacity="0.26"></stop><stop offset="1" stop-color="#ffb870" stop-opacity="0"></stop></radialGradient></defs>
+  <g id="layer-motes">
+    <g class="mote" style="animation-duration:19.2s;animation-delay:-4.1s">
+      <circle class="mote-glow" cx="120" cy="1500" r="28" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:5.77s;animation-delay:-2.06s"></circle>
+      <circle class="mote-core" cx="120" cy="1500" r="3.8" fill="#fff4d2" opacity="0.85" style="animation-duration:5.77s;animation-delay:-2.06s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:19.4s;animation-delay:-4.6s">
+      <circle class="mote-glow" cx="210" cy="1700" r="31" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.36s;animation-delay:-2.55s"></circle>
+      <circle class="mote-core" cx="210" cy="1700" r="4.2" fill="#fff4d2" opacity="0.85" style="animation-duration:4.36s;animation-delay:-2.55s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:17.8s;animation-delay:-0.5s">
+      <circle class="mote-glow" cx="160" cy="1860" r="25" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.48s;animation-delay:-4.49s"></circle>
+      <circle class="mote-core" cx="160" cy="1860" r="3.3" fill="#fff4d2" opacity="0.85" style="animation-duration:4.48s;animation-delay:-4.49s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:16.1s;animation-delay:-14.7s">
+      <circle class="mote-glow" cx="300" cy="1460" r="25" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:3.71s;animation-delay:-5.61s"></circle>
+      <circle class="mote-core" cx="300" cy="1460" r="3.4" fill="#fff4d2" opacity="0.85" style="animation-duration:3.71s;animation-delay:-5.61s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:16.3s;animation-delay:-6.9s">
+      <circle class="mote-glow" cx="240" cy="1240" r="22" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:6.32s;animation-delay:-2.71s"></circle>
+      <circle class="mote-core" cx="240" cy="1240" r="3.0" fill="#fff4d2" opacity="0.85" style="animation-duration:6.32s;animation-delay:-2.71s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:14.3s;animation-delay:-8.5s">
+      <circle class="mote-glow" cx="160" cy="1000" r="19" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.77s;animation-delay:-3.03s"></circle>
+      <circle class="mote-core" cx="160" cy="1000" r="2.6" fill="#fff4d2" opacity="0.85" style="animation-duration:4.77s;animation-delay:-3.03s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:21.4s;animation-delay:-15.0s">
+      <circle class="mote-glow" cx="330" cy="880" r="19" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:5.31s;animation-delay:-4.46s"></circle>
+      <circle class="mote-core" cx="330" cy="880" r="2.7" fill="#fff4d2" opacity="0.85" style="animation-duration:5.31s;animation-delay:-4.46s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:17.4s;animation-delay:-18.7s">
+      <circle class="mote-glow" cx="560" cy="760" r="16" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:3.91s;animation-delay:-4.44s"></circle>
+      <circle class="mote-core" cx="560" cy="760" r="2.2" fill="#fff4d2" opacity="0.85" style="animation-duration:3.91s;animation-delay:-4.44s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:18.2s;animation-delay:-9.0s">
+      <circle class="mote-glow" cx="620" cy="1150" r="28" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.78s;animation-delay:-4.54s"></circle>
+      <circle class="mote-core" cx="620" cy="1150" r="3.9" fill="#fff4d2" opacity="0.85" style="animation-duration:4.78s;animation-delay:-4.54s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:21.5s;animation-delay:-10.1s">
+      <circle class="mote-glow" cx="700" cy="1000" r="21" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.90s;animation-delay:-1.72s"></circle>
+      <circle class="mote-core" cx="700" cy="1000" r="2.9" fill="#fff4d2" opacity="0.85" style="animation-duration:4.90s;animation-delay:-1.72s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:23.4s;animation-delay:-14.9s">
+      <circle class="mote-glow" cx="900" cy="900" r="23" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:5.87s;animation-delay:-1.96s"></circle>
+      <circle class="mote-core" cx="900" cy="900" r="3.1" fill="#fff4d2" opacity="0.85" style="animation-duration:5.87s;animation-delay:-1.96s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:18.5s;animation-delay:-14.8s">
+      <circle class="mote-glow" cx="960" cy="1320" r="29" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.43s;animation-delay:-0.42s"></circle>
+      <circle class="mote-core" cx="960" cy="1320" r="3.9" fill="#fff4d2" opacity="0.85" style="animation-duration:4.43s;animation-delay:-0.42s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:19.1s;animation-delay:-15.1s">
+      <circle class="mote-glow" cx="830" cy="1450" r="32" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.38s;animation-delay:-5.65s"></circle>
+      <circle class="mote-core" cx="830" cy="1450" r="4.3" fill="#fff4d2" opacity="0.85" style="animation-duration:4.38s;animation-delay:-5.65s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:21.4s;animation-delay:-5.7s">
+      <circle class="mote-glow" cx="740" cy="1550" r="23" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:5.70s;animation-delay:-2.53s"></circle>
+      <circle class="mote-core" cx="740" cy="1550" r="3.2" fill="#fff4d2" opacity="0.85" style="animation-duration:5.70s;animation-delay:-2.53s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:21.4s;animation-delay:-6.5s">
+      <circle class="mote-glow" cx="900" cy="1650" r="24" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:4.57s;animation-delay:-3.62s"></circle>
+      <circle class="mote-core" cx="900" cy="1650" r="3.3" fill="#fff4d2" opacity="0.85" style="animation-duration:4.57s;animation-delay:-3.62s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:21.6s;animation-delay:-1.4s">
+      <circle class="mote-glow" cx="820" cy="1800" r="28" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:3.95s;animation-delay:-0.82s"></circle>
+      <circle class="mote-core" cx="820" cy="1800" r="3.9" fill="#fff4d2" opacity="0.85" style="animation-duration:3.95s;animation-delay:-0.82s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:16.9s;animation-delay:-18.8s">
+      <circle class="mote-glow" cx="640" cy="1880" r="28" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:3.52s;animation-delay:-2.55s"></circle>
+      <circle class="mote-core" cx="640" cy="1880" r="3.9" fill="#fff4d2" opacity="0.85" style="animation-duration:3.52s;animation-delay:-2.55s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:17.3s;animation-delay:-8.4s">
+      <circle class="mote-glow" cx="380" cy="1320" r="29" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:3.75s;animation-delay:-2.80s"></circle>
+      <circle class="mote-core" cx="380" cy="1320" r="3.9" fill="#fff4d2" opacity="0.85" style="animation-duration:3.75s;animation-delay:-2.80s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:14.7s;animation-delay:-12.1s">
+      <circle class="mote-glow" cx="980" cy="1150" r="20" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:5.53s;animation-delay:-4.74s"></circle>
+      <circle class="mote-core" cx="980" cy="1150" r="2.8" fill="#fff4d2" opacity="0.85" style="animation-duration:5.53s;animation-delay:-4.74s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:23.4s;animation-delay:-2.7s">
+      <circle class="mote-glow" cx="500" cy="1000" r="21" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:5.35s;animation-delay:-1.85s"></circle>
+      <circle class="mote-core" cx="500" cy="1000" r="2.9" fill="#fff4d2" opacity="0.85" style="animation-duration:5.35s;animation-delay:-1.85s"></circle>
+    </g>
+    <g class="mote" style="animation-duration:18.2s;animation-delay:-8.5s">
+      <circle class="mote-glow" cx="760" cy="1180" r="17" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:3.61s;animation-delay:-1.77s"></circle>
+      <circle class="mote-core" cx="760" cy="1180" r="2.3" fill="#fff4d2" opacity="0.85" style="animation-duration:3.61s;animation-delay:-1.77s"></circle>
+    </g>
+    <g class="mote mote--b" style="animation-duration:20.0s;animation-delay:-9.3s">
+      <circle class="mote-glow" cx="880" cy="1040" r="32" fill="url(#moteGlow)" opacity="0.6" style="animation-duration:5.99s;animation-delay:-4.40s"></circle>
+      <circle class="mote-core" cx="880" cy="1040" r="4.4" fill="#fff4d2" opacity="0.85" style="animation-duration:5.99s;animation-delay:-4.40s"></circle>
+    </g>
+  </g>
+</svg>
