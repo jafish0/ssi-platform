@@ -132,6 +132,43 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **7d9c056** (2026-09-02) — Draft 68 **Phase B**: **Zone 4 hand-offs, all
+  in-frame.** The Phase A stubs are replaced by the real scenes. Spark →
+  **Video 4** through the Vimeo Player SDK (`@vimeo/player` added; the
+  unlisted id+hash is passed as a `url`), autoplaying in the frame with
+  controls; `ended` blooms back to the world, Spark becomes the companion
+  and glides toward the pond with "follow me" (chime on the unlock). A
+  tester-only Skip shows under the dev flag (`?dev` on the URL, or a dev
+  build) and never in the real flow; a load error falls back to a plain
+  Continue so nobody gets stuck. Pond → **Mindful Place**:
+  `MindfulnessCalmPlace` gains an `onComplete({ leveledUp })` prop; with a
+  host, "Move on" (first completion) / "I'm all set" (second) hand off
+  instead of the standalone gear-placeholder ending, `leveledUp` true after
+  the practice-again run; the standalone review-list demo is unchanged
+  (same dev-flag Skip over the activity for testers). Then the new reusable
+  **`GearAward`** (`components/gains/GearAward.jsx`): the world dims and
+  blurs under a radial bloom, the Oxygen Mask floats center with a sparkle,
+  "You earned the Oxygen Mask!" / "It'll help you breathe easy on the climb
+  ahead." and one big amber "Equip mask" (ui-tap) → light-flash
+  (equip-flash) → the celebrate figure (mask on, fist up), "Equipped!",
+  Spark's "Perfect fit. Now you can breathe easy up there.", Continue; the
+  mask icon flies into the HUD slot; the level-up variant swaps the title
+  to "Your Oxygen Mask leveled up!" and brightens the glow (same screens,
+  no new art). Parameterized by `{ name, itemSrc, equippedSrc, title,
+  subline, sparkLine, leveledUp }` for the Lantern / Lens / Wingsuit /
+  Goggles later. Back in the walk: `didActivity` + `exitUnlocked`, z4-03,
+  the exit glows and the path lights up. Exit → "We're headed for Mount
+  Hope!" + z4-04 (the climb directions) → the existing **`TraversalGame`
+  in climb mode** mounts in the same frame (the walk stage is torn down
+  first, so one WebGL context) → its `onComplete` lands on the end card
+  ("You reached the Beacon." + how many gold feelings you gathered / heavy
+  ones you faced, "Zone 5 · to be continued", Play again, and a Zone 4
+  comment affordance). Verified locally end-to-end (Vimeo iframe with the
+  right hash autoplaying in-frame; Mindful Place mounted with its own
+  Begin; Gear Award reveal → Equipped with the HUD mask; ready line + exit
+  active; transition VO → the Climb scene created and started in-frame →
+  end card with the result → Play again) with a clean console, and live.
+
 - **1d3be45** (2026-09-02) — Draft 68 **Phase A**: **Zone 4 "Bright Reaches"
   walkable zone — the world, with stub hand-offs.** New route
   `/gains-demo/zone4` (`GainsZone4Page`), one 9:16 phone frame, everything
@@ -3454,7 +3491,7 @@ On `/gains-demo`, under the **"The climb"** heading (section D), there's an **"E
 *End of Draft 67.*
 
 
-### Draft 68 — Zone 4 "Bright Reaches" walkable zone: the full in-world loop in one 9:16 frame (walk → Spark → Video 4 → pond → Mindful Place → gear award → exit → Ascent) — ✅ Phase A SHIPPED 1d3be45 (2026-09-02)
+### Draft 68 — Zone 4 "Bright Reaches" walkable zone: the full in-world loop in one 9:16 frame (walk → Spark → Video 4 → pond → Mindful Place → gear award → exit → Ascent) — ✅ Phase A SHIPPED 1d3be45 · Phase B SHIPPED 7d9c056 (2026-09-02)
 
 **Read first:** `Gains for Teens/Walkable Zones — Concept.md` (the design) and `Gains for Teens/Walkable Zones/Zone 4 — Spark Voice Lines (voice F).md` (the VO). This builds the Zone 4 prototype of the walkable-zone template — a small single-screen world you move through, where the video, the activity, the gear award, and the Ascent climb all trigger from inside the same phone frame. **Ship in the three phases below as separate commits** (log each). Phases B and C can land as their assets arrive.
 
