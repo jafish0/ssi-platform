@@ -132,6 +132,37 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **dd90007** (2026-09-03) — in-conversation (Josh, no draft): **pre/post
+  measures show no scale names, and every question is mandatory.** The
+  instrument title and PRE / PRE + POST badge are no longer rendered on the
+  pages (nor the "Event: time since trauma" label on the first Demographics
+  page); the teen sees only each instrument's instructions, where it has
+  them, and the items. `title`/`timing` stay on the page objects for
+  reviewers and the CSV later. Every question is required: each page
+  declares a branch-aware `required(v)` (an entry can be alternatives, e.g.
+  months-or-years for the trauma event; the therapy follow-ups are required
+  only when their branch is open). Continue stays enabled; tapping it with
+  anything unanswered highlights the missing questions (warm-coral edge and
+  text plus "Please answer this question.") and shows "Please answer the
+  highlighted question(s) to continue" above the button; highlights clear
+  as each is answered. This replaces the old `gate`. Applies to the
+  post-test too (same component). Verified at 375px by driving every
+  page: all 15 pre-test (long branch) and 10 post-test pages block when
+  empty, advance once answered, 0px inner overflow, and complete.
+
+- **f36d703** (2026-09-03) — in-conversation (Josh, no draft): **the Ascent
+  is full-screen too + new Spark bubble texts.** New shared
+  `components/gains/zone/FullscreenStage.jsx` (dark ground, slim ← GAINS
+  demo · Restart · Comment bar, 9:16 frame sized to the rest of the
+  viewport); Zone 4 now uses it instead of its inline shell, and
+  `/gains-demo/climb` uses it in place of the demo header + description
+  page (377×670 frame in a 393×852 viewport, no page scroll). The Zone 4
+  arrive and follow-me bubbles now read as Josh's newer recordings: "Oh!
+  something's different about you! It's like the light inside you is
+  brighter. Come over here for a moment. I want to tell you all about
+  therapy." and "Follow me! I know the perfect place to try the grounding
+  activity" (the served mp3s already matched the source files).
+
 - **1dbd724** (2026-09-03) — in-conversation (Josh's phone playthrough,
   no draft): **Zone 4: companion Spark no longer blocks the exit.** After
   the activity Spark hovered right by the exit, so a tap on the exit
