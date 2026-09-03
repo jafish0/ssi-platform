@@ -132,6 +132,37 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **d92609a** (2026-09-02) — Draft 68 **Phase C**: **Zone 4 ambient
+  overlays, SFX confirm, walk tune.** Draft 68 is now fully shipped (A →
+  B → C). New `ZoneOverlays` (`components/gains/zone/ZoneOverlays.jsx`)
+  loads the five Claude Design layers for the Bright Reaches plate
+  (`layer-clouds/motes/sway/beacon/pond-glint.svg`) and their `motion.css`
+  from `public/long-light/zone4/ov/`, the same way the Mindfulness `_ov`
+  set works (viewBox 1080×1920, forced `xMidYMid slice` so they register
+  to the plate): DOM layers over the Phaser canvas, `mix-blend-mode:
+  screen` for the light layers and `normal` for the tufts, pointer-events
+  none, faded out under the video / activity / gear scenes, gone with the
+  stage; a file that fails to fetch is skipped, so the set can change file
+  by file. `motion.css` already goes static under prefers-reduced-motion.
+  SFX hooks confirmed end to end: footsteps by surface (stone on the path,
+  grass in the clearing, random 1–3), chime-unlock whenever an objective
+  lights up (now including Spark at arrival), spark-whoosh when Spark
+  starts the follow-me glide, ui-tap on Begin and Equip, equip-flash on the
+  equip, arrive-swell under the title card; all graceful no-ops if a file is
+  missing. Tune: walk cycle 9 → 8 fps (~2.7 steps/s, a walk rather than a
+  jog). Verified locally (all five layers present with the intended blend
+  modes, motion keyframes running, registered to the plate, clean console)
+  and live.
+
+  **What to try at `/gains-demo/zone4`:** Begin → the title card and Spark's
+  arrive line → tap the path to walk (Traveler shrinks with distance, dust
+  and footsteps) → tap the pond or the exit first to hear Spark redirect you
+  → tap Spark for Video 4 in-frame → Spark follows you and heads for the
+  pond → the Mindful Place (practice again to level the mask up) → the Gear
+  Award → the exit lights up → "We're headed for Mount Hope!" → the Ascent
+  → the Beacon. Add `?dev` to the URL for tester Skips on the video and the
+  activity.
+
 - **7d9c056** (2026-09-02) — Draft 68 **Phase B**: **Zone 4 hand-offs, all
   in-frame.** The Phase A stubs are replaced by the real scenes. Spark →
   **Video 4** through the Vimeo Player SDK (`@vimeo/player` added; the
@@ -3491,7 +3522,7 @@ On `/gains-demo`, under the **"The climb"** heading (section D), there's an **"E
 *End of Draft 67.*
 
 
-### Draft 68 — Zone 4 "Bright Reaches" walkable zone: the full in-world loop in one 9:16 frame (walk → Spark → Video 4 → pond → Mindful Place → gear award → exit → Ascent) — ✅ Phase A SHIPPED 1d3be45 · Phase B SHIPPED 7d9c056 (2026-09-02)
+### Draft 68 — Zone 4 "Bright Reaches" walkable zone: the full in-world loop in one 9:16 frame (walk → Spark → Video 4 → pond → Mindful Place → gear award → exit → Ascent) — ✅ SHIPPED in three phases: A 1d3be45 · B 7d9c056 · C d92609a (2026-09-02)
 
 **Read first:** `Gains for Teens/Walkable Zones — Concept.md` (the design) and `Gains for Teens/Walkable Zones/Zone 4 — Spark Voice Lines (voice F).md` (the VO). This builds the Zone 4 prototype of the walkable-zone template — a small single-screen world you move through, where the video, the activity, the gear award, and the Ascent climb all trigger from inside the same phone frame. **Ship in the three phases below as separate commits** (log each). Phases B and C can land as their assets arrive.
 
