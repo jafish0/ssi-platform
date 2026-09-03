@@ -38,7 +38,9 @@ const SPARK_H = 180
 const SPARK_SRC_H = 290
 const FROG_W = 105
 const WALK_SPEED = 250 // logical px/s at depth-scale 1
-const WALK_FPS = 9
+// Phase C tune: 8 fps over the 6-frame cycle puts the two footfalls at
+// ~2.7 steps/s, closer to a walk than 9 fps's near-jog cadence.
+const WALK_FPS = 8
 const TAP_MAX_DIST = 14
 const TAP_MAX_MS = 350
 // A tap just off the walkable area snaps to the nearest walkable point if

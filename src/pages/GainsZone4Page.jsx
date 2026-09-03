@@ -32,6 +32,7 @@ import ZoneStage from '../components/gains/zone/ZoneStage.jsx'
 import GearHud from '../components/gains/zone/GearHud.jsx'
 import SparkBubble from '../components/gains/zone/SparkBubble.jsx'
 import VideoScene from '../components/gains/zone/VideoScene.jsx'
+import ZoneOverlays from '../components/gains/zone/ZoneOverlays.jsx'
 import { createZoneAudio } from '../components/gains/zone/zoneAudio.js'
 import GainsButton from '../components/gains/ds/Button.jsx'
 import { GAINS_FEEDBACK_SECTIONS } from './GainsDemoPage.jsx'
@@ -181,6 +182,7 @@ export default function GainsZone4Page() {
     if (a) {
       a.unlock()
       a.preloadSfx(SFX_PRELOAD)
+      a.sfx('ui-tap')
       a.sfx('arrive-swell')
     }
     setScene('walk')
@@ -189,6 +191,9 @@ export default function GainsZone4Page() {
     later(() => {
       setShowTitle(false)
       setStarted(true)
+      // Spark is the first active objective: the same chime every objective
+      // gets when it lights up.
+      audioRef.current?.sfx('chime-unlock')
       say('arrive')
     }, TITLE_CARD_MS)
   }
@@ -386,6 +391,11 @@ export default function GainsZone4Page() {
                 />
               </div>
             )}
+
+            {/* Phase C: the Claude Design ambient layers over the plate
+                (clouds, motes, sway, beacon bloom, pond glints). Faded out
+                under the in-frame scenes, gone with the stage. */}
+            {stageMounted && <ZoneOverlays base={BASE} visible={scene === 'walk' || scene === 'transition'} />}
 
             {hudVisible && <GearHud maskEquipped={maskEquipped} maskSrc={MASK_SRC} flyIn={maskFly} frameRef={frameRef} />}
 
