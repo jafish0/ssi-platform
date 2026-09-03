@@ -132,6 +132,51 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1dbd724** (2026-09-03) — in-conversation (Josh's phone playthrough,
+  no draft): **Zone 4: companion Spark no longer blocks the exit.** After
+  the activity Spark hovered right by the exit, so a tap on the exit
+  sometimes hit Spark and replayed the "ready" line. Fix at the hit-test:
+  the active objective (exit, pond) is checked BEFORE Spark, so any tap
+  in its area goes to it even if Spark is in the way; companion Spark now
+  hovers on the side away from the active objective (left of the path
+  heading up, left of the pond); Spark's tap radius is a little tighter
+  (130 → 110). Verified locally by parking the Traveler at the exit with
+  the exit active: Spark settles up-left of the Traveler and a tap on
+  Spark's own center resolves to the exit.
+
+- **e5ce9a3** (2026-09-03) — in-conversation (Josh, no draft): **Zone 4 is
+  a full-screen stage + the walk waits for Spark's arrive line + the equip
+  sound on receiving the mask.** (1) `/gains-demo/zone4` no longer sits
+  under the demo's app header and a description; it's a full-viewport dark
+  stage the way the game will be, with a slim bar (← GAINS demo · Restart ·
+  Comment) and the 9:16 frame sized to the rest of the viewport (`100dvh`
+  with a `vh` fallback): full width on a phone (377×670 in a 393×852
+  viewport, no page scroll), full height on a desktop. The hub card
+  carries the description; the in-frame intro card carries the controls.
+  (2) The Traveler can't move until Spark finishes z4-01 ("something's
+  different about you…"): the walk stays paused and the tap hint waits for
+  the line to end (the lock lifts at once if the clip can't play, so nobody
+  can get stuck); the scene's tap handler also guards on paused/begun.
+  (3) `equip-flash` also plays as the Gear Award reveal blooms in
+  (receiving the Oxygen Mask), not only on Equip.
+
+- **a0e66ab** (2026-09-03) — in-conversation (Josh: "way too many
+  Continues, halve it"): **pre/post measures 24 → 14 steps.** New
+  `ScaleMatrix` (`components/gains/ds`): the paper-form layout, response
+  options as column headers printed once and one row of tap circles per
+  item (labeled mode for CTS / Beck-4; numeric with the two end anchors
+  for Implicit Theories / Trauma Beliefs / Program Feedback), about half
+  the height of a full-text button per option per item. Compact instrument
+  header (title + badge on one line, "Part n of m" dropped since the step
+  bar shows progress). Age and grade side by side with the trauma-event
+  question riding on the first Demographics page; both conditional therapy
+  follow-ups on one page; two rulers per page. CTS runs three items per
+  page and Beck-4 two (six / four on one page overflow at 375px, so 12 was
+  not reachable at this frame size with 40–44px tap targets). Pre-test 24
+  → **14** (15 on the past-therapy branch), post-test 16 → **10**; every
+  step measured at 0px inner overflow at 375px wide on the longest branch
+  with the write-ins engaged. Item wording and order unchanged.
+
 - **e59f2ff** (2026-09-03) — Draft 71: **`/gains-demo` restructured into a
   hub.** (1) The review section is now **seven cards** (Pre/Post test ·
   Videos · Body Mapping · Mindful Place · Message to Your Guardian · The
