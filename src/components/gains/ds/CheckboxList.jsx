@@ -19,7 +19,7 @@ export default function CheckboxList({ options, value, onChange, otherOption, ot
   const grid = columns > 1
   return (
     <div
-      className={grid ? 'grid gap-2' : 'space-y-2'}
+      className={grid ? 'grid gap-1.5' : 'space-y-2'}
       style={grid ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}
       role="group"
       aria-label={name}

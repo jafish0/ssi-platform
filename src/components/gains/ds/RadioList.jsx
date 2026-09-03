@@ -15,7 +15,7 @@ export default function RadioList({ options, value, onChange, name, columns = 1 
     <div
       role="radiogroup"
       aria-label={name}
-      className={columns > 1 ? 'grid gap-2' : 'space-y-2'}
+      className={columns > 1 ? 'grid gap-1.5' : 'space-y-2'}
       style={columns > 1 ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}
     >
       {options.map((opt) => {
@@ -32,7 +32,7 @@ export default function RadioList({ options, value, onChange, name, columns = 1 
               // Grid mode trims to a 44px target (Apple HIG's floor) so a
               // 4-point scale fits a phone frame; the list keeps 48.
               minHeight: columns > 1 ? 44 : 'var(--tap-min)',
-              padding: columns > 1 ? '6px 10px' : '10px 14px',
+              padding: columns > 1 ? '5px 10px' : '10px 14px',
               background: selected ? 'var(--action-primary)' : 'var(--action-quiet)',
               borderColor: selected ? 'var(--action-primary)' : 'var(--border-soft)',
               color: selected ? 'var(--text-on-warm)' : 'var(--text-body)',

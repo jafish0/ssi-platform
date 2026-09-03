@@ -77,7 +77,7 @@ export default function MeasurementFlow({ flow }) {
             </p>
           </div>
         ) : (
-          <Instrument title={current.title} part={current.part} timing={current.timing} prompt={current.prompt} note={current.note}>
+          <Instrument title={current.title} timing={current.timing} prompt={current.prompt} note={current.note}>
             <current.Fields v={v} set={set} range={current.range} />
           </Instrument>
         )}
