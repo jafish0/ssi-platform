@@ -60,6 +60,18 @@ function deriveContext(pathname, params) {
   if (pathname.startsWith('/gains-demo/zone4')) {
     return { area: 'GAINS Teens Zone 4 walkable zone', activity_id: null, activity_version: null }
   }
+  // Draft 71: the dedicated review pages.
+  const gainsPages = {
+    '/gains-demo/climb': 'GAINS Teens: The Ascent',
+    '/gains-demo/pretest': 'GAINS Teens: Pre-test measures',
+    '/gains-demo/posttest': 'GAINS Teens: Post-test measures',
+    '/gains-demo/videos': 'GAINS Teens: Videos',
+    '/gains-demo/bodymap': 'GAINS Teens: Body Mapping',
+    '/gains-demo/mindful': 'GAINS Teens: Mindful Place',
+    '/gains-demo/guardian': 'GAINS Teens: Message to Your Guardian',
+  }
+  const gainsKey = Object.keys(gainsPages).find((k) => pathname === k || pathname.startsWith(k + '/'))
+  if (gainsKey) return { area: gainsPages[gainsKey], activity_id: null, activity_version: null }
   return { area: pathname, activity_id: null, activity_version: null }
 }
 

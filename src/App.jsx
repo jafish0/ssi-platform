@@ -26,6 +26,12 @@ import GainsDemoPage from './pages/GainsDemoPage.jsx'
 import GainsTraversalPage from './pages/GainsTraversalPage.jsx'
 import GainsClimbPage from './pages/GainsClimbPage.jsx'
 import GainsZone4Page from './pages/GainsZone4Page.jsx'
+import GainsPretestPage from './pages/GainsPretestPage.jsx'
+import GainsPosttestPage from './pages/GainsPosttestPage.jsx'
+import GainsVideosPage from './pages/GainsVideosPage.jsx'
+import GainsBodyMapPage from './pages/GainsBodyMapPage.jsx'
+import GainsMindfulPage from './pages/GainsMindfulPage.jsx'
+import GainsGuardianPage from './pages/GainsGuardianPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -135,6 +141,13 @@ export default function App() {
       <Route path="/gains-demo/climb" element={<GainsClimbPage />} />
       {/* Zone 4 walkable-zone prototype (GAINS Draft 68). */}
       <Route path="/gains-demo/zone4" element={<GainsZone4Page />} />
+      {/* Dedicated 9:16 pages for the review cards (GAINS Draft 71). */}
+      <Route path="/gains-demo/pretest" element={<GainsPretestPage />} />
+      <Route path="/gains-demo/posttest" element={<GainsPosttestPage />} />
+      <Route path="/gains-demo/videos" element={<GainsVideosPage />} />
+      <Route path="/gains-demo/bodymap" element={<GainsBodyMapPage />} />
+      <Route path="/gains-demo/mindful" element={<GainsMindfulPage />} />
+      <Route path="/gains-demo/guardian" element={<GainsGuardianPage />} />
       {/* The Plan now ships as the seventh activity (Draft 39). The
           /the-plan entry point (montage closer CTA) redirects into the
           sandbox-hosted activity. */}

@@ -9,25 +9,32 @@
 //
 // Review-only: nothing is stored or scored here. Live capture + scoring to
 // Supabase is a separate follow-up (see MeasurementPacket.jsx's header).
+//
+// Draft 71 (2026-09-03): every step must fit the 9:16 frame with Continue
+// always visible -- no scrolling inside the frame. The packet is therefore
+// chunked into more, shorter pages (long instruments split across steps,
+// see MeasurementPacket.jsx), and a page can be conditional: `skip(v)`
+// drops it from the flow for the branch the tester picked (the therapy-
+// history follow-ups), with the progress indicator counting only the
+// pages this branch will actually see. `gate(v)` holds Continue until the
+// answer that decides a branch is in.
 
 import { useState } from 'react'
 import { PRE_TEST_PAGES, POST_TEST_PAGES, Instrument } from './MeasurementPacket.jsx'
 
 export default function MeasurementFlow({ flow }) {
-  const pages = flow === 'post' ? POST_TEST_PAGES : PRE_TEST_PAGES
+  const allPages = flow === 'post' ? POST_TEST_PAGES : PRE_TEST_PAGES
   const stepLabel = flow === 'post' ? 'Post-test' : 'Pre-test'
 
   const [v, setV] = useState({})
   const [page, setPage] = useState(0)
   const set = (key) => (val) => setV((prev) => ({ ...prev, [key]: val }))
 
+  const pages = allPages.filter((p) => !(p.skip && p.skip(v)))
   const done = page >= pages.length
   const current = pages[page]
 
-  // The therapy-history page reveals follow-up questions based on this
-  // answer -- Continue waits for it so the branch a tester sees next
-  // matches what they just picked, instead of skipping past unanswered.
-  const continueDisabled = current?.id === 'therapy-history' && !v.therapy_current
+  const continueDisabled = !!(current && current.gate && !current.gate(v))
 
   function restart() {
     setPage(0)
@@ -36,8 +43,8 @@ export default function MeasurementFlow({ flow }) {
 
   return (
     <div className="relative flex flex-col h-full w-full overflow-hidden" style={{ background: 'var(--surface-abyss)', fontFamily: 'var(--font-core)' }}>
-      <div className="px-4 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-soft)' }}>
-        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-2" style={{ color: 'var(--text-warm)' }}>
+      <div className="px-4 pt-3 pb-2.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-soft)' }}>
+        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-1.5" style={{ color: 'var(--text-warm)' }}>
           {stepLabel}
         </div>
         {!done && (
@@ -58,7 +65,7 @@ export default function MeasurementFlow({ flow }) {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4" data-measure-body>
         {done ? (
           <div className="text-center py-8">
             <p className="font-extrabold text-[15px] mb-1" style={{ color: 'var(--text-warm)' }}>
@@ -70,13 +77,13 @@ export default function MeasurementFlow({ flow }) {
             </p>
           </div>
         ) : (
-          <Instrument title={current.title} timing={current.timing} prompt={current.prompt} note={current.note}>
-            <current.Fields v={v} set={set} />
+          <Instrument title={current.title} part={current.part} timing={current.timing} prompt={current.prompt} note={current.note}>
+            <current.Fields v={v} set={set} range={current.range} />
           </Instrument>
         )}
       </div>
 
-      <div className="px-4 pb-4 pt-3 flex-shrink-0" style={{ borderTop: done ? 'none' : '1px solid var(--border-soft)' }}>
+      <div className="px-4 pb-3 pt-2.5 flex-shrink-0" style={{ borderTop: done ? 'none' : '1px solid var(--border-soft)' }}>
         {done ? (
           <button
             type="button"

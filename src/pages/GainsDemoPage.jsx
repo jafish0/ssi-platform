@@ -1,15 +1,22 @@
 // GAINS Teens demo page at /gains-demo — the internal review surface for
-// the GAINS for Teens SSI ("The Long Light"). Reorganized (Draft 12) to
-// read like the actual GAME FLOW, top to bottom:
-//   Zone Map (roadmap) → Playable Characters → Zone 1…5 (each: image,
-//   characters, video/script, activity, gear, traversal) with "in
-//   development" placeholders where pending.
-// Draft 54 (2026-09-01): the Child Assent & Measures packet is a proposal
-// under review, not adopted canon yet -- it now lives as the Pre-test/
-// Post-test items at the top of "Ideas & Demos for Review" (see
-// MeasurementFlow.jsx), not as its own section further down the page.
+// the GAINS for Teens SSI ("The Long Light").
+//
+// Draft 71 (2026-09-03) restructured it into a hub. Top to bottom:
+//   Proposals — comment before we make them official: seven CARDS (title,
+//     Josh's verbatim "what's new" blurb, Open/Play buttons to a dedicated
+//     9:16 page, its own comment box). No inline embeds anymore -- every
+//     playable opens on its own page the way it will appear in the game
+//     (/gains-demo/pretest, /posttest, /videos, /bodymap, /mindful,
+//     /guardian, /climb, /zone4).
+//   → a round-closing divider
+//   → World and Development Map
+//   → The climb: Zone 1…5 cards (the canon area the divider points to)
+//   → Prototypes and In Development: the traversals, the adopted dev
+//     pieces, the Final Boss script, the Playable Character strip +
+//     Narrator, and the NPCs (all consolidated here from what used to be
+//     three separate sections).
 // Unlisted; shared by link. Feedback reuses the shared pipeline tagged
-// program="gains-teens" + a section (see GAINS_FEEDBACK_SECTIONS).
+// program="gains-teens" + a section (see gainsFeedbackSections.js).
 //
 // Art is served from the static pitch site at /long-light/ (absolute
 // paths) so this page and the pitch share one copy of each asset. Video
@@ -17,16 +24,12 @@
 
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HardHat, Film, Play } from 'lucide-react'
+import { HardHat, Film, Play, ArrowRight } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
-import BodyMapping from '../components/BodyMapping.jsx'
-import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
-import ElevatorPitch from '../components/ElevatorPitch.jsx'
-import MeasurementFlow from '../components/gains/MeasurementFlow.jsx'
-import GainsCard from '../components/gains/ds/Card.jsx'
 import GainsBadge from '../components/gains/ds/Badge.jsx'
-import GainsButton from '../components/gains/ds/Button.jsx'
+import { GAINS_FEEDBACK_SECTIONS } from './gainsFeedbackSections.js'
+import { REVIEW_CARDS } from './gainsReviewCards.js'
 // Shadowmend design-system tokens (Draft 49). Every variable is declared
 // under `.gains-theme`, applied to this page's own content wrapper below --
 // see the file header comment there. That scoping, not where the CSS is
@@ -34,50 +37,8 @@ import GainsButton from '../components/gains/ds/Button.jsx'
 // unaffected: nothing outside a `.gains-theme` element can see these vars.
 import '../styles/gains-tokens.css'
 
-export const GAINS_FEEDBACK_SECTIONS = [
-  // Ideas & Demos for Review — one thread per proposal
-  { value: 'review-finalboss', label: 'Review: Final Boss summit script' },
-  { value: 'review-pretest', label: 'Review: Pre-test measures flow' },
-  { value: 'review-posttest', label: 'Review: Post-test measures flow' },
-  // Draft 55 (2026-09-01): each video now gets its own comment box so
-  // feedback maps per-video in the CSV export; review-videos stays as the
-  // one "overall / general note" box for the group.
-  { value: 'review-videos', label: 'Review: Videos — overall / general note' },
-  { value: 'video-1', label: 'Review: Video 1 — What is Trauma' },
-  { value: 'video-2', label: 'Review: Video 2 — The Four Reactions' },
-  { value: 'video-3', label: 'Review: Video 3 — Getting the Best Therapy' },
-  { value: 'video-4', label: 'Review: Video 4 — What Therapy Feels Like' },
-  { value: 'video-5', label: 'Review: Video 5 — Growth Mindset' },
-  // Retired as their proposals were adopted (labels are kept in
-  // AdminFeedbackPage so existing rows still label correctly):
-  //   review-rename     — the zone rename, accepted 2026-08-11, now canon
-  //   review-exposition — adopted 2026-08-13, now the Exposition section
-  //   review-arcades    — adopted 2026-08-13, now under Prototypes and In Development
-  //   review-gear       — adopted 2026-08-13, now under Prototypes and In Development
-  //   review-character  — adopted 2026-08-27 (Draft 51), now the Playable
-  //                       Character section's four-stage strip
-  //   review-spark-voice — decided 2026-08-27 (Draft 51): Option F: see the
-  //                        Narrator card in Playable Character
-  { value: 'review-bodymap', label: 'Review: Body Mapping activity' },
-  { value: 'review-mindfulness', label: 'Review: Mindfulness Mindful Place' },
-  { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
-  { value: 'review-ascent', label: 'Review: The Ascent (climb)' },
-  { value: 'review-zone4', label: 'Review: Zone 4 walkable zone' },
-  // The official breakdown
-  // assent-measures — superseded by review-pretest/review-posttest (Draft
-  // 54, 2026-09-01): the packet moved back into the review section since
-  // it's still a proposal, not adopted canon. Label kept so historical
-  // feedback rows still read correctly.
-  { value: 'assent-measures', label: 'Child Assent / Measures' },
-  { value: 'exposition', label: 'Exposition' },
-  { value: 'npcs', label: 'NPCs' },
-  { value: 'zone-1', label: 'Zone 1' },
-  { value: 'zone-2', label: 'Zone 2' },
-  { value: 'zone-3', label: 'Zone 3' },
-  { value: 'zone-4', label: 'Zone 4' },
-  { value: 'zone-5', label: 'Zone 5' },
-  { value: 'general', label: 'General Feedback' },
-]
+// Re-exported for the pages that import the tags from here (climb, zone4).
+export { GAINS_FEEDBACK_SECTIONS }
 
 const ART = '/long-light/art'
 const AUDIO = '/long-light/audio'
@@ -186,28 +147,9 @@ const ZONE_MAP_ROWS = [
 // ---------- Ideas & Demos for Review (Draft 24, reordered Draft 51) ----------
 // A staging area at the top of the page: proposals and previews the team
 // comments on BEFORE they're folded into the official zone breakdown.
-
-// Draft 51: the five zone psychoeducation videos, added to the top of the
-// review section as their own group. Each Vimeo link is unlisted (a privacy
-// hash, not a public video), so they're embedded via player.vimeo.com's own
-// `?h=` hash-embed URL rather than the public vimeo.com/{id} page -- that's
-// the standard, non-awkward way to embed an unlisted Vimeo video anywhere.
-// Draft 55 (2026-09-01): re-rendered links for 1/2/3/5 (Video 4 unchanged),
-// exported clean -- no baked-in captions or "Spark" label; real captions go
-// on in Vimeo as text tracks. Each carries its own feedback `section` tag so
-// a comment maps to a specific video in the CSV export instead of all five
-// sharing one `review-videos` box.
-// Video 1 swapped again (2026-09-01, Josh) to a newer re-render.
-// Video 4 swapped (Draft 70, 2026-09-03) to a render without the burned-in
-// Spark subtitles; the Zone 4 walkable zone plays the same id (VIDEO4 in
-// GainsZone4Page) -- keep the two in step.
-const REVIEW_VIDEOS = [
-  { title: 'Zone 1 — What is Trauma', id: '1223215595', h: '2b10eb8857', section: 'video-1' },
-  { title: 'Zone 2 — The Four Reactions', id: '1223210105', h: '315f412718', section: 'video-2' },
-  { title: 'Zone 3 — Getting the Best Therapy', id: '1223207965', h: 'd0c77b8f23', section: 'video-3' },
-  { title: 'Zone 4 — What Therapy Feels Like', id: '1223708060', h: '2ab5970912', section: 'video-4' },
-  { title: 'Zone 5 — Growth Mindset', id: '1223211325', h: 'b8579c9aa1', section: 'video-5' },
-]
+// Draft 71: the cards' content lives in gainsReviewCards.js; the videos
+// themselves (REVIEW_VIDEOS + the player card) moved to
+// components/gains/reviewVideos.jsx for the /gains-demo/videos page.
 
 const REVIEW_ARCADES = [
   {
@@ -533,250 +475,26 @@ export default function GainsDemoPage() {
             </p>
 
             <div className="space-y-4">
-              {/* Adopted and moved out of this section: the Exposition (now
-                  its own section under The climb), the arcade ideas and the
-                  gear toolbox (both now under Prototypes and In Development),
-                  the Final Boss summit script (now in the new In Development
-                  section below), the character-progression strip (now the
-                  Playable Character section) and Spark's voice picker (now
-                  decided -- see the Narrator card in Playable Character). */}
-
-              {/* 1 — the measurement packet's Pre-test flow (Draft 54). Draft
-                  53's flat scroll is now paginated one instrument per page,
-                  inside the same mobile phone frame as the playable
-                  activities below, matching how it will actually be
-                  administered. Nothing is stored or scored. */}
-              <ReviewItem n={1} title="Pre-test: measures flow (playable)" section="review-pretest">
-                <p className="mb-3">
-                  The measurement packet (Demographics through Trauma &amp;
-                  Treatment Beliefs), paginated one instrument per page with a
-                  progress indicator and a Continue button. Every item is
-                  transcribed verbatim from Stephanie&apos;s measures doc.
-                  Review-only — nothing is saved.
-                </p>
-                <div className="mb-3">
-                  <Pill icon={HardHat}>Assent flow not built yet</Pill>
-                </div>
-                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
-                  <div
-                    className="relative w-full overflow-hidden rounded-3xl"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
-                  >
-                    <MeasurementFlow flow="pre" />
-                  </div>
-                </div>
-              </ReviewItem>
-
-              {/* 2 — the same instruments administered again post-program,
-                  plus the Post-only Program Feedback Scale. */}
-              <ReviewItem n={2} title="Post-test: measures flow (playable)" section="review-posttest">
-                <p className="mb-3">
-                  The Pre+Post instruments again, plus the Program Feedback
-                  Scale at the end. Same paginated flow as the Pre-test above.
-                </p>
-                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
-                  <div
-                    className="relative w-full overflow-hidden rounded-3xl"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
-                  >
-                    <MeasurementFlow flow="post" />
-                  </div>
-                </div>
-              </ReviewItem>
-
-              {/* 3 — the five zone psychoeducation videos (Draft 51) */}
-              <ReviewItem n={3} title="Videos" section="review-videos">
-                <p className="mb-3">
-                  The five zone psychoeducation videos, one per zone. Each has
-                  its own comment box below it; use the box at the bottom of
-                  this card for anything about the videos as a group.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {REVIEW_VIDEOS.map((v) => (
-                    <ReviewVideo key={v.id} {...v} />
-                  ))}
-                </div>
-              </ReviewItem>
-
-              {/* 4 — Body Mapping activity (playable) */}
-              <ReviewItem
-                n={4}
-                title="Body Mapping activity (playable)"
-                section="review-bodymap"
-              >
-                <p className="mb-3">
-                  Activity 1, built from Stephanie&apos;s blueprint. Part 1 reveals
-                  how five parts of the body react during and after a trauma.
-                  Part 2 asks which of those reactions you&apos;ve felt recently.
-                  No scoring, nothing to get wrong. Try it here in the phone
-                  frame.
-                </p>
-                <p
-                  className="mb-3 rounded-2xl px-3.5 py-2.5 text-[13px]"
-                  style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)' }}
-                >
-                  <strong className="font-semibold" style={{ color: 'var(--text-warm)' }}>Reading it for now.</strong>{' '}
-                  Once we settle on Spark&apos;s voice (item 2 above), we will
-                  add audio narration so each of these lines is read aloud
-                  instead.
-                </p>
-                {/* Phone frame. Nested inside two padded cards, a strict 9:16
-                    box on a 375px screen would only be ~455px tall, shorter
-                    than any real phone, which squeezed the figure out. It is
-                    also narrower than a real phone, so copy wraps to more lines
-                    here than it will in the app. 360x780 is a ratio of 2.17,
-                    which is an iPhone 15 Pro (393x852) rather than the older
-                    9:16, and every pixel of the extra height goes to the figure
-                    since everything else in the activity is a fixed size. */}
-                {/* -mx-4 on phones claws back the review card's own padding so
-                    the frame isn't squeezed to ~257px, well under a real phone,
-                    which made every line of copy wrap taller than it will in
-                    the app. Back to normal from sm: up, where there is room. */}
-                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
-                  <div
-                    className="relative w-full overflow-hidden rounded-3xl"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
-                  >
-                    <BodyMapping />
-                  </div>
-                </div>
-              </ReviewItem>
-
-              {/* 5 — Mindfulness "Mindful Place" activity (playable) */}
-              <ReviewItem
-                n={5}
-                title="Mindfulness: Mindful Place (playable)"
-                section="review-mindfulness"
-              >
-                <p className="mb-3">
-                  A Zone 4 grounding activity: Spark leads a Mindful Place
-                  visualization that doubles as the 3-3-3 technique. Pick
-                  three things you can see, then three things you can hear,
-                  then follow a guided box-breath with Spark. Earns the
-                  Oxygen Mask for the climb ahead, with a chance to practice
-                  again and upgrade it. Has sound (tap Begin to start it) and
-                  works best with headphones or the volume up.
-                </p>
-                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
-                  <div
-                    className="relative w-full overflow-hidden rounded-3xl"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
-                  >
-                    <MindfulnessCalmPlace />
-                  </div>
-                </div>
-              </ReviewItem>
-
-              {/* 6 — Zone 3 "Elevator Pitch" message-builder (playable) */}
-              <ReviewItem
-                n={6}
-                title="Zone 3: Message to Your Guardian (playable)"
-                section="review-zone3pitch"
-              >
-                <p className="mb-3">
-                  Holly&apos;s end-of-Zone-3 activity: the teen builds a short
-                  message asking a guardian for trauma therapy, one step at a
-                  time (greeting, situation, request, how it&apos;ll help),
-                  then sends it and earns the Wingsuit to cross the bridge.
-                  No-fail; every pick can be changed before sending.
-                </p>
-                <div className="-mx-4 sm:mx-auto sm:w-full sm:max-w-[360px]">
-                  <div
-                    className="relative w-full overflow-hidden rounded-3xl"
-                    style={{ aspectRatio: '360 / 780', minHeight: '780px', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-lg)' }}
-                  >
-                    <ElevatorPitch />
-                  </div>
-                </div>
-              </ReviewItem>
-
-              {/* 7 — The Ascent (Zone 4->5 climb, playable) */}
-              <ReviewItem
-                n={7}
-                title="The Ascent — Zone 4→5 climb (playable)"
-                section="review-ascent"
-              >
-                <p className="mb-3">
-                  The traversal that carries you from the Bright Reaches up to
-                  the Beacon at Mount Hope, built from the ideas in our 8/31
-                  meeting.
-                </p>
-                <p className="mb-3">
-                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>How to play:</span>{' '}
-                  Steer with one thumb (drag anywhere). Collect the glowing{' '}
-                  <strong style={{ color: 'var(--text-bright)' }}>gold feelings</strong>{' '}
-                  (hope, courage, pride...) to refill your{' '}
-                  <strong style={{ color: 'var(--text-bright)' }}>Second Wind</strong> and
-                  keep climbing. When a big, heavy feeling drifts into your
-                  path and blocks the way,{' '}
-                  <strong style={{ color: 'var(--text-bright)' }}>tap it to fire your Focusing Lens</strong>{' '}
-                  — a beam of light reveals what it is, then shatters it into
-                  gold feelings to gather. If your air runs low, your own
-                  darkness closes in; grab a gold feeling and it clears.
-                </p>
-                <p className="mb-3">
-                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>What&apos;s new (from the meeting):</span>{' '}
-                  a bigger climber; the obstacles are now{' '}
-                  <strong style={{ color: 'var(--text-bright)' }}>feelings</strong>, varying in
-                  size; <strong style={{ color: 'var(--text-bright)' }}>gold positive feelings to
-                  collect</strong> and <strong style={{ color: 'var(--text-bright)' }}>red negative
-                  ones to blast</strong> (name-it-to-tame-it); framed as{' '}
-                  <strong style={{ color: 'var(--text-bright)' }}>protecting yourself, not
-                  aggression</strong> — facing a feeling turns it to light.
-                </p>
-                <p className="mb-4">
-                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>We&apos;d love your read on:</span>{' '}
-                  Do the red feelings feel like real obstacles now? Are these
-                  the right feelings (golds now include growth-mindset ones —
-                  curiosity, determination, resilience...; reds are sadness,
-                  shame, guilt, anger, resentment, helplessness, hopelessness,
-                  regret)? Is the Focusing Lens blast clear and satisfying —
-                  did you know to tap the reds? Overall: is it fun and
-                  on-message?
-                </p>
-                <Link
-                  to="/gains-demo/climb"
-                  className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
-                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
-                >
-                  <Play size={14} strokeWidth={2} />
-                  Play the Ascent
-                </Link>
-              </ReviewItem>
-
-              {/* 8 — Zone 4 walkable zone (Draft 68): the first in-world
-                  zone, everything inside one phone frame. */}
-              <ReviewItem
-                n={8}
-                title="Zone 4: The Bright Reaches — walkable zone (playable prototype)"
-                section="review-zone4"
-              >
-                <p className="mb-4">
-                  Our first walkable zone — move through the Bright Reaches like
-                  a game: find Spark, watch the video, follow Spark to the pond
-                  for the Mindful Place, earn and equip your Oxygen Mask, then
-                  head for the exit and climb toward Mount Hope. Tap the ground
-                  to move; tap Spark, the pond, or the exit to interact. Spark
-                  will redirect you if you try something too early.
-                </p>
-                <Link
-                  to="/gains-demo/zone4"
-                  className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
-                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
-                >
-                  <Play size={14} strokeWidth={2} />
-                  Play Zone 4
-                </Link>
-              </ReviewItem>
+              {/* Draft 71: seven cards, no inline embeds. Each opens its
+                  dedicated 9:16 page (the playable exactly as it will appear
+                  in the game) and carries its own comment thread. Blurbs are
+                  Josh's verbatim "what's new" text (gainsReviewCards.js). */}
+              {REVIEW_CARDS.map(({ key, ...c }) => (
+                <ReviewCard key={key} {...c} />
+              ))}
             </div>
           </div>
         </div>
       </section>
 
+      {/* Draft 71: closes the review round -- everything above is under
+          discussion; everything below is, or is becoming, canon. */}
+      <RoundDivider />
+
       {/* A. World & Development Map — the living roadmap. Moved up (Draft 44)
-          to sit directly after the review section, ahead of In Development,
-          so the roadmap is the first thing after "what's up for discussion"
-          rather than being buried below it. */}
+          to sit directly after the review section, so the roadmap is the
+          first thing after "what's up for discussion" rather than being
+          buried below it. */}
       <section className="mb-10">
         <div className="flex items-baseline justify-between gap-3 flex-wrap mb-2">
           <h2 className="text-[14px] font-semibold uppercase" style={SECTION_LABEL_STYLE}>
@@ -826,125 +544,10 @@ export default function GainsDemoPage() {
         </div>
       </section>
 
-      {/* In Development — the pipeline stage between "under review" and "the
-          official zones." Items here have been adopted by the team (no
-          longer soliciting comment) but aren't built yet. Review → World &
-          Development Map → In Development → the official zones/canon below. */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
-          In Development
-        </h2>
-        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
-          Adopted by the team and moving toward being built, but not part of
-          the official breakdown yet.
-        </p>
-        <div
-          className="rounded-[24px] p-5"
-          style={{ background: 'var(--surface-card)', border: '1px dashed var(--border-strong)', backdropFilter: 'var(--blur-panel)' }}
-        >
-          <div className="mb-3">
-            <Pill icon={HardHat}>In development</Pill>
-          </div>
-          <h3 className="text-[15px] font-bold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
-            Final Boss: the summit script
-          </h3>
-          <p className="mb-3 italic text-[14px]" style={{ color: 'var(--text-muted)' }}>
-            Holly’s first-draft script for the final summit: the last climb
-            to the Beacon, where the gear you’ve earned helps you move past
-            mixed feelings about starting therapy. Adopted; the actual
-            summit sequence isn’t built yet.
-          </p>
-          <div className="space-y-2 text-[14px] leading-relaxed" style={{ color: 'var(--text-body)' }}>
-            {FINAL_BOSS_SCRIPT.map((line, i) => {
-              if (line.type === 'direction') {
-                return (
-                  <p key={i} className="italic" style={{ color: 'var(--text-faint)' }}>
-                    {line.text}
-                  </p>
-                )
-              }
-              if (line.type === 'choices') {
-                return (
-                  <ol key={i} className="list-decimal pl-5 space-y-1">
-                    {line.items.map((item, j) => (
-                      <li key={j}>{item}</li>
-                    ))}
-                  </ol>
-                )
-              }
-              return (
-                <p key={i}>
-                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>Spark:</span>{' '}
-                  {line.text}
-                </p>
-              )
-            })}
-          </div>
-          <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-soft)' }}>
-            <FeedbackButton
-              program="gains-teens"
-              sections={GAINS_FEEDBACK_SECTIONS}
-              defaultSection="review-finalboss"
-              label="Comment on this"
-              subtle
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* C. Playable Character (single protagonist). Draft 51: the four-stage
-          progression strip moved here from Ideas & Demos for Review now that
-          the team's adopted it (it's no longer a proposal), replacing the
-          single generic Traveler card that stood in for it. Spark, labeled
-          Narrator with the team's adopted voice (Option F), lives in this
-          same section too -- this is the "who you play as / who guides you"
-          area, not just the playable character alone. */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
-          Playable Character
-        </h2>
-        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
-          One traveler, the whole way up. The darkness they arrive with lightens
-          as they climb, until everyone can see the person they’ve always been.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[680px]">
-          {TRAVELER_STAGES.map((c) => (
-            <ArtCard key={c.name} {...c} uniform />
-          ))}
-        </div>
-        <p className="text-[12px] italic mt-3 max-w-[680px]" style={{ color: 'var(--text-faint)' }}>
-          These stage images will be regenerated with an inner light — a glow
-          in the chest that grows brighter across the stages.
-        </p>
-
-        <h3
-          className="text-[12px] font-semibold uppercase mt-6 mb-2"
-          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
-        >
-          Narrator
-        </h3>
-        <div className="max-w-[220px]">
-          <NarratorCard />
-        </div>
-      </section>
-
-      {/* C2. NPCs — the four symptom creatures. (Spark's card sits in the
-          review section at the top while his voice model is under review.) */}
-      <section className="mb-10">
-        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
-          NPCs
-        </h2>
-        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
-          The characters you meet along the way. Voice lines to come.
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
-          {SYMPTOM_CREATURES.map((c) => (
-            <ArtCard key={c.name} {...c} />
-          ))}
-        </div>
-      </section>
-
-      {/* D. The game flow — Zone 1 → Zone 5 */}
+      {/* D. The game flow — Zone 1 → Zone 5. (Draft 71: the In Development,
+          Playable Character and NPCs sections that used to sit between the
+          map and here moved down into Prototypes and In Development, so the
+          divider above points straight at the canon Zone cards.) */}
       <section className="mb-4">
         <h2 className="text-[14px] font-semibold uppercase" style={SECTION_LABEL_STYLE}>
           The climb
@@ -955,17 +558,23 @@ export default function GainsDemoPage() {
         <ZoneSection key={z.n} zone={z} />
       ))}
 
-      {/* F. Prototypes and In Development — the playable traversals, plus the
-          proposals the team adopted on 2026-08-13 (arcade ideas, gear toolbox)
-          which moved down here out of Ideas & Demos for Review. */}
+      {/* F. Prototypes and In Development — the playable traversals, plus
+          everything the team has adopted that is being built out: the arcade
+          ideas and gear toolbox (adopted 2026-08-13), and, since Draft 71,
+          the Final Boss summit script, the Traveler's four-stage progression
+          with the Narrator, and the NPCs (consolidated here from three
+          separate sections that used to sit above The climb). */}
       <section className="mb-10">
         <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
           Prototypes and In Development
         </h2>
         <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
-          Playable traversals, both built on the same game engine. Both of these
-          traversal games will be fully developed. Below them are the pieces the
-          team has adopted and that are now being built out.
+          Playable traversals, both built on the same game engine and both to
+          be fully developed. Below them, everything the team has adopted and
+          that is now being built out: the arcade ideas, the growing gear
+          toolbox, the Final Boss summit script, the Traveler and the
+          Narrator, and the NPCs. Adopted, but not part of the official
+          breakdown yet.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[760px]">
           <PrototypeCard
@@ -1024,6 +633,112 @@ export default function GainsDemoPage() {
             </p>
           </div>
         </div>
+
+        {/* Final Boss summit script (Draft 30, adopted 2026-08-14; moved here
+            from its own In Development section in Draft 71). Keeps its
+            review-finalboss comment thread. */}
+        <div
+          className="rounded-[24px] p-5 mt-8 max-w-[760px]"
+          style={{ background: 'var(--surface-card)', border: '1px dashed var(--border-strong)', backdropFilter: 'var(--blur-panel)' }}
+        >
+          <div className="mb-3">
+            <Pill icon={HardHat}>In development</Pill>
+          </div>
+          <h3 className="text-[15px] font-bold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
+            Final Boss: the summit script
+          </h3>
+          <p className="mb-3 italic text-[14px]" style={{ color: 'var(--text-muted)' }}>
+            Holly’s first-draft script for the final summit: the last climb
+            to the Beacon, where the gear you’ve earned helps you move past
+            mixed feelings about starting therapy. Adopted; the actual
+            summit sequence isn’t built yet.
+          </p>
+          <div className="space-y-2 text-[14px] leading-relaxed" style={{ color: 'var(--text-body)' }}>
+            {FINAL_BOSS_SCRIPT.map((line, i) => {
+              if (line.type === 'direction') {
+                return (
+                  <p key={i} className="italic" style={{ color: 'var(--text-faint)' }}>
+                    {line.text}
+                  </p>
+                )
+              }
+              if (line.type === 'choices') {
+                return (
+                  <ol key={i} className="list-decimal pl-5 space-y-1">
+                    {line.items.map((item, j) => (
+                      <li key={j}>{item}</li>
+                    ))}
+                  </ol>
+                )
+              }
+              return (
+                <p key={i}>
+                  <span className="font-semibold" style={{ color: 'var(--text-warm)' }}>Spark:</span>{' '}
+                  {line.text}
+                </p>
+              )
+            })}
+          </div>
+          <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-soft)' }}>
+            <FeedbackButton
+              program="gains-teens"
+              sections={GAINS_FEEDBACK_SECTIONS}
+              defaultSection="review-finalboss"
+              label="Comment on this"
+              subtle
+            />
+          </div>
+        </div>
+
+        {/* Playable Character (single protagonist) + Narrator. Draft 51: the
+            four-stage progression strip, adopted; Spark labeled Narrator with
+            the team's adopted voice (Option F). Moved here in Draft 71. */}
+        <h3
+          className="text-[12px] font-semibold uppercase mt-8 mb-2"
+          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+        >
+          Playable Character
+        </h3>
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
+          One traveler, the whole way up. The darkness they arrive with lightens
+          as they climb, until everyone can see the person they’ve always been.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[680px]">
+          {TRAVELER_STAGES.map((c) => (
+            <ArtCard key={c.name} {...c} uniform />
+          ))}
+        </div>
+        <p className="text-[12px] italic mt-3 max-w-[680px]" style={{ color: 'var(--text-faint)' }}>
+          These stage images will be regenerated with an inner light — a glow
+          in the chest that grows brighter across the stages.
+        </p>
+
+        <h3
+          className="text-[12px] font-semibold uppercase mt-6 mb-2"
+          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+        >
+          Narrator
+        </h3>
+        <div className="max-w-[220px]">
+          <NarratorCard />
+        </div>
+
+        {/* NPCs — the four symptom creatures. Moved here in Draft 71; the
+            `npcs` feedback tag is unchanged. */}
+        <h3
+          className="text-[12px] font-semibold uppercase mt-8 mb-2"
+          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+        >
+          NPCs
+        </h3>
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
+          The characters you meet along the way. Voice lines to come.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
+          {SYMPTOM_CREATURES.map((c) => (
+            <ArtCard key={c.name} {...c} />
+          ))}
+        </div>
       </section>
       </div>
       </div>
@@ -1033,15 +748,30 @@ export default function GainsDemoPage() {
 
 // ---------- Reusable pieces ----------
 
-// One proposal in the review section, with its own comment thread pinned to
-// that item's feedback section tag.
-function ReviewItem({ n, title, section, children }) {
+// One proposal in the review section (Draft 71): title, the verbatim
+// "what's new" blurb, Open/Play buttons to its dedicated 9:16 page, and its
+// own comment thread pinned to that item's feedback section tag.
+function ReviewCard({ n, title, section, blurb, links }) {
   return (
     <article className="rounded-[20px] p-5" style={{ background: 'var(--surface-card-raised)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)' }}>
       <h3 className="text-[16px] font-semibold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
         <span style={{ color: 'var(--text-warm)' }}>{n}.</span> {title}
       </h3>
-      <div className="text-[14px] leading-relaxed" style={{ color: 'var(--text-body)' }}>{children}</div>
+      <p className="text-[14px] leading-relaxed mb-4" style={{ color: 'var(--text-body)' }}>{blurb}</p>
+      <div className="flex flex-wrap gap-2">
+        {links.map((l) => (
+          <Link
+            key={l.to}
+            to={l.to}
+            className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+            style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+          >
+            {l.play && <Play size={14} strokeWidth={2} />}
+            {l.label}
+            <ArrowRight size={14} strokeWidth={2} />
+          </Link>
+        ))}
+      </div>
       <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-soft)' }}>
         <FeedbackButton
           program="gains-teens"
@@ -1052,6 +782,28 @@ function ReviewItem({ n, title, section, children }) {
         />
       </div>
     </article>
+  )
+}
+
+// Draft 71: the bar that closes the review round, between the last card and
+// the World and Development Map.
+function RoundDivider() {
+  return (
+    <div className="mb-12 flex items-center gap-4" role="separator" aria-label="End of this round's review items">
+      <div className="flex-1 h-px" style={{ background: 'var(--border-soft)' }} />
+      <div
+        className="rounded-[20px] px-6 py-4 text-center max-w-[560px]"
+        style={{ background: 'var(--surface-card)', border: '1px solid var(--border-warm)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--glow-sm)', fontFamily: 'var(--font-core)' }}
+      >
+        <p className="text-[15px] font-extrabold" style={{ color: 'var(--text-warm)' }}>
+          That is all for review for this round.
+        </p>
+        <p className="text-[13px] mt-1 leading-relaxed" style={{ color: 'var(--text-body)' }}>
+          As the items above are approved, they will move down to the Zone Cards to become canon.
+        </p>
+      </div>
+      <div className="flex-1 h-px" style={{ background: 'var(--border-soft)' }} />
+    </div>
   )
 }
 
@@ -1094,46 +846,6 @@ function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
         {blurb && <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-muted)' }}>{blurb}</p>}
       </figcaption>
     </figure>
-  )
-}
-
-// Draft 51: one of the five zone psychoeducation videos in the review
-// section. Vimeo's `?h=` hash-embed URL is the standard way to embed an
-// unlisted video anywhere -- no separate "unlisted" handling needed.
-// Draft 52: these are phone-portrait videos (9:16, like the rest of the
-// game), not landscape.
-// Draft 55: laid out 2-per-row in a grid instead of a single stack, so each
-// player now fills its own grid cell rather than being centered to a fixed
-// 360px phone-frame width. Each card also gets its own comment box (tagged
-// with that video's `section`) so feedback maps to a specific video in the
-// CSV export instead of all five sharing one box.
-function ReviewVideo({ title, id, h, section }) {
-  return (
-    <div>
-      <p className="text-[13px] font-semibold mb-1.5" style={{ color: 'var(--text-bright)' }}>{title}</p>
-      <div
-        className="relative w-full rounded-2xl overflow-hidden"
-        style={{ aspectRatio: '9 / 16', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-md)' }}
-      >
-        <iframe
-          src={`https://player.vimeo.com/video/${id}?h=${h}&title=0&byline=0&portrait=0`}
-          title={title}
-          className="absolute inset-0 w-full h-full"
-          frameBorder="0"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-      <div className="mt-2">
-        <FeedbackButton
-          program="gains-teens"
-          sections={GAINS_FEEDBACK_SECTIONS}
-          defaultSection={section}
-          label="Comment on this video"
-          subtle
-        />
-      </div>
-    </div>
   )
 }
 

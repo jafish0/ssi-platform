@@ -17,6 +17,15 @@
 // nothing is persisted, nothing is scored. Live data capture + scoring to
 // Supabase is a SEPARATE follow-up, mirroring how Ready for Roots' own
 // pretest/posttest went from demo-only to a real DB-driven pipeline.
+//
+// Draft 71 (2026-09-03): re-chunked so every step fits a 9:16 phone frame
+// with Continue always visible (no scrolling inside the frame). Long
+// instruments are split across steps -- Demographics over three pages, the
+// scales in groups of 2-3 items via a `range` on the page -- as parts of the
+// same instrument ("Part 1 of 3"), and the therapy-history follow-ups are a
+// conditional second page (`skip` when the tester is currently in therapy).
+// Item wording and order are unchanged; the field components below just
+// take a `range` slice where an instrument spans pages.
 
 import GainsBadge from './ds/Badge.jsx'
 import RadioList from './ds/RadioList.jsx'
@@ -113,16 +122,23 @@ const PROGRAM_FEEDBACK_ITEMS = [
 
 // ---------- shared layout pieces ----------
 
-export function Instrument({ title, timing, prompt, note, children }) {
+export function Instrument({ title, part, timing, prompt, note, children }) {
   return (
     <div
-      className="rounded-[24px] p-5"
+      className="rounded-[24px] p-4"
       style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}
     >
       <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
-        <h4 className="text-[15px] font-bold" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
-          {title}
-        </h4>
+        <div className="min-w-0">
+          <h4 className="text-[15px] font-bold leading-snug" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
+            {title}
+          </h4>
+          {part && (
+            <p className="text-[11px] font-semibold mt-0.5" style={{ color: 'var(--text-faint)' }}>
+              {part}
+            </p>
+          )}
+        </div>
         <GainsBadge tone="water" style={{ flexShrink: 0 }}>{timing}</GainsBadge>
       </div>
       {prompt && (
@@ -130,7 +146,7 @@ export function Instrument({ title, timing, prompt, note, children }) {
           {prompt}
         </p>
       )}
-      <div className="space-y-5">{children}</div>
+      <div className="space-y-4">{children}</div>
       {note && (
         <p className="text-[11px] italic mt-4 pt-3" style={{ color: 'var(--text-faint)', borderTop: '1px solid var(--border-soft)' }}>
           {note}
@@ -143,7 +159,7 @@ export function Instrument({ title, timing, prompt, note, children }) {
 function Item({ n, text, children }) {
   return (
     <div>
-      <p className="text-[13px] leading-snug mb-2" style={{ color: 'var(--text-bright)' }}>
+      <p className="text-[13px] leading-snug mb-1.5" style={{ color: 'var(--text-bright)' }}>
         {n != null && <span style={{ color: 'var(--text-warm)' }}>{n}. </span>}
         {text}
       </p>
@@ -154,7 +170,8 @@ function Item({ n, text, children }) {
 
 // ---------- one field-set per instrument ----------
 
-function DemographicsFields({ v, set }) {
+// Demographics spans three pages (Draft 71); same five items, same order.
+function DemographicsFieldsA({ v, set }) {
   return (
     <>
       <Item n={null} text="What is your current age?">
@@ -163,19 +180,32 @@ function DemographicsFields({ v, set }) {
       <Item n={null} text="What grade are you in?">
         <TextInput value={v.grade || ''} onChange={set('grade')} placeholder="Grade" />
       </Item>
-      <Item n={null} text="Choose one or more races that you consider yourself to be.">
-        <CheckboxList
-          name="Race/ethnicity"
-          options={RACE_OPTIONS}
-          value={v.race || []}
-          onChange={set('race')}
-          otherOption="Another (write it in)"
-          otherValue={v.race_other}
-          onOtherChange={set('race_other')}
-        />
-      </Item>
+    </>
+  )
+}
+
+function DemographicsFieldsB({ v, set }) {
+  return (
+    <Item n={null} text="Choose one or more races that you consider yourself to be.">
+      <CheckboxList
+        name="Race/ethnicity"
+        options={RACE_OPTIONS}
+        value={v.race || []}
+        onChange={set('race')}
+        otherOption="Another (write it in)"
+        otherValue={v.race_other}
+        onOtherChange={set('race_other')}
+        columns={2}
+      />
+    </Item>
+  )
+}
+
+function DemographicsFieldsC({ v, set }) {
+  return (
+    <>
       <Item n={null} text="Are you of Spanish, Hispanic, or Latino origin?">
-        <RadioList name="Hispanic/Latino origin" options={YES_NO} value={v.hispanic} onChange={set('hispanic')} />
+        <RadioList name="Hispanic/Latino origin" options={YES_NO} value={v.hispanic} onChange={set('hispanic')} columns={2} />
       </Item>
       <Item n={null} text="Please select your sex.">
         <CheckboxList
@@ -186,10 +216,17 @@ function DemographicsFields({ v, set }) {
           otherOption="Another (write it in)"
           otherValue={v.sex_other}
           onOtherChange={set('sex_other')}
+          columns={2}
         />
       </Item>
     </>
   )
+}
+
+// Slice helper for the scales that span pages: `range` is [from, to) into
+// the instrument's item list; no range means the whole list.
+function sliced(items, range) {
+  return range ? items.slice(range[0], range[1]).map((item, i) => [item, range[0] + i]) : items.map((item, i) => [item, i])
 }
 
 function TraumaTimingFields({ v, set }) {
@@ -206,65 +243,87 @@ function TraumaTimingFields({ v, set }) {
   )
 }
 
-function CTSFields({ v, set }) {
-  return CTS_ITEMS.map((item) => (
+function CTSFields({ v, set, range }) {
+  return sliced(CTS_ITEMS, range).map(([item]) => (
     <Item key={item.n} n={item.n} text={item.text}>
-      <RadioList name={`CTS item ${item.n}`} options={CTS_SCALE} value={v[`cts_${item.n}`]} onChange={set(`cts_${item.n}`)} />
+      <RadioList name={`CTS item ${item.n}`} options={CTS_SCALE} value={v[`cts_${item.n}`]} onChange={set(`cts_${item.n}`)} columns={2} />
     </Item>
   ))
 }
 
-function TherapyHistoryFields({ v, set }) {
+// Therapy history spans up to three pages (Draft 71): the current-therapy
+// question with its follow-up; then -- only when the answer is "no" -- the
+// past-therapy question with "when"; then -- only when past therapy is
+// "yes" -- whether trauma came up. Pages not on the tester's branch are
+// skipped (see PRE_TEST_PAGES). Same questions, same branching, same order.
+function TherapyCurrentFields({ v, set }) {
   return (
     <>
       <Item n={null} text="Are you currently talking to a mental health therapist about any stressful issues in your life or for any reason?">
-        <RadioList name="Currently in therapy" options={YES_NO} value={v.therapy_current} onChange={set('therapy_current')} />
+        <RadioList name="Currently in therapy" options={YES_NO} value={v.therapy_current} onChange={set('therapy_current')} columns={2} />
       </Item>
 
       {v.therapy_current === 'yes' && (
         <Item n={null} text="Are you talking with your therapist about any traumatic experiences you have had?">
-          <RadioList name="Discussing trauma with current therapist" options={YES_NO} value={v.therapy_current_trauma} onChange={set('therapy_current_trauma')} />
+          <RadioList name="Discussing trauma with current therapist" options={YES_NO} value={v.therapy_current_trauma} onChange={set('therapy_current_trauma')} columns={2} />
         </Item>
-      )}
-
-      {v.therapy_current === 'no' && (
-        <>
-          <Item n={null} text="Have you ever talked to a mental health therapist in the past?">
-            <RadioList name="Past therapy" options={YES_NO} value={v.therapy_past} onChange={set('therapy_past')} />
-          </Item>
-          {v.therapy_past === 'yes' && (
-            <>
-              <Item n={null} text="When was the last time you were in therapy?">
-                <RadioList name="Last time in therapy" options={THERAPY_TIMING_OPTIONS} value={v.therapy_past_when} onChange={set('therapy_past_when')} />
-              </Item>
-              <Item n={null} text="Did you talk with your therapist about any traumatic experiences you have had?">
-                <RadioList name="Discussed trauma with past therapist" options={YES_NO} value={v.therapy_past_trauma} onChange={set('therapy_past_trauma')} />
-              </Item>
-            </>
-          )}
-        </>
       )}
     </>
   )
 }
 
-function Beck4Fields({ v, set }) {
-  return BECK4_ITEMS.map((text, i) => (
+function TherapyPastFields({ v, set }) {
+  return (
+    <>
+      <Item n={null} text="Have you ever talked to a mental health therapist in the past?">
+        <RadioList name="Past therapy" options={YES_NO} value={v.therapy_past} onChange={set('therapy_past')} columns={2} />
+      </Item>
+      {v.therapy_past === 'yes' && (
+        <Item n={null} text="When was the last time you were in therapy?">
+          <RadioList name="Last time in therapy" options={THERAPY_TIMING_OPTIONS} value={v.therapy_past_when} onChange={set('therapy_past_when')} columns={2} />
+        </Item>
+      )}
+    </>
+  )
+}
+
+function TherapyPastTraumaFields({ v, set }) {
+  return (
+    <Item n={null} text="Did you talk with your therapist about any traumatic experiences you have had?">
+      <RadioList name="Discussed trauma with past therapist" options={YES_NO} value={v.therapy_past_trauma} onChange={set('therapy_past_trauma')} columns={2} />
+    </Item>
+  )
+}
+
+function Beck4Fields({ v, set, range }) {
+  return sliced(BECK4_ITEMS, range).map(([text, i]) => (
     <Item key={i} n={i + 1} text={text}>
-      <RadioList name={`Beck-4 item ${i + 1}`} options={BECK4_SCALE} value={v[`beck_${i}`]} onChange={set(`beck_${i}`)} />
+      <RadioList name={`Beck-4 item ${i + 1}`} options={BECK4_SCALE} value={v[`beck_${i}`]} onChange={set(`beck_${i}`)} columns={2} />
     </Item>
   ))
 }
 
-function MotivationFields({ v, set }) {
+// The readiness ruler spans three pages (Draft 71): one 10-point ruler per
+// page, the third with its reason.
+function MotivationFieldsA({ v, set }) {
+  return (
+    <Item n={null} text="At this moment, how ready are you to work towards dealing with any of the difficulties you may have related to your trauma experiences?">
+      <LikertScale name="Readiness" count={10} value={v.motiv_ready} onChange={set('motiv_ready')} />
+    </Item>
+  )
+}
+
+function MotivationFieldsB({ v, set }) {
+  return (
+    <Item n={null} text="At this moment, how confident are you in your ability to improve those difficulties related to your trauma experiences?">
+      <LikertScale name="Confidence" count={10} value={v.motiv_confidence} onChange={set('motiv_confidence')} />
+    </Item>
+  )
+}
+
+function MotivationFieldsC({ v, set }) {
   return (
     <>
-      <Item n={null} text="At this moment, how ready are you to work towards dealing with any of the difficulties you may have related to your trauma experiences?">
-        <LikertScale name="Readiness" count={10} value={v.motiv_ready} onChange={set('motiv_ready')} />
-      </Item>
-      <Item n={null} text="At this moment, how confident are you in your ability to improve those difficulties related to your trauma experiences?">
-        <LikertScale name="Confidence" count={10} value={v.motiv_confidence} onChange={set('motiv_confidence')} />
-      </Item>
       <Item n={null} text="How helpful do you think trauma therapy would be for you?">
         <LikertScale name="Helpfulness" count={10} value={v.motiv_helpful} onChange={set('motiv_helpful')} />
       </Item>
@@ -275,8 +334,8 @@ function MotivationFields({ v, set }) {
   )
 }
 
-function ImplicitTheoriesFields({ v, set }) {
-  return IMPLICIT_THEORIES_ITEMS.map((text, i) => (
+function ImplicitTheoriesFields({ v, set, range }) {
+  return sliced(IMPLICIT_THEORIES_ITEMS, range).map(([text, i]) => (
     <Item key={i} n={i + 1} text={text}>
       <LikertScale
         name={`Implicit theories item ${i + 1}`}
@@ -290,8 +349,8 @@ function ImplicitTheoriesFields({ v, set }) {
   ))
 }
 
-function TraumaBeliefsFields({ v, set }) {
-  return TRAUMA_BELIEFS_ITEMS.map((item, i) => (
+function TraumaBeliefsFields({ v, set, range }) {
+  return sliced(TRAUMA_BELIEFS_ITEMS, range).map(([item, i]) => (
     <Item key={i} n={i + 1} text={item.reverse ? `${item.text} (reverse scored)` : item.text}>
       <LikertScale
         name={`Trauma beliefs item ${i + 1}`}
@@ -305,22 +364,27 @@ function TraumaBeliefsFields({ v, set }) {
   ))
 }
 
-function ProgramFeedbackFields({ v, set }) {
+// The Program Feedback Scale spans three pages (Draft 71): the four rated
+// items two at a time (`range`), then the two open questions.
+function ProgramFeedbackFieldsA({ v, set, range }) {
+  return sliced(PROGRAM_FEEDBACK_ITEMS, range).map(([text, i]) => (
+    <Item key={i} n={i + 1} text={text}>
+      <LikertScale
+        name={`Program feedback item ${i + 1}`}
+        count={5}
+        startAt={0}
+        minLabel="Really disagree"
+        maxLabel="Really agree"
+        value={v[`feedback_${i}`]}
+        onChange={set(`feedback_${i}`)}
+      />
+    </Item>
+  ))
+}
+
+function ProgramFeedbackFieldsB({ v, set }) {
   return (
     <>
-      {PROGRAM_FEEDBACK_ITEMS.map((text, i) => (
-        <Item key={i} n={i + 1} text={text}>
-          <LikertScale
-            name={`Program feedback item ${i + 1}`}
-            count={5}
-            startAt={0}
-            minLabel="Really disagree"
-            maxLabel="Really agree"
-            value={v[`feedback_${i}`]}
-            onChange={set(`feedback_${i}`)}
-          />
-        </Item>
-      ))}
       <Item n={5} text="What did you like about the program? Please share as many true thoughts and feelings as you would like.">
         <TextArea value={v.feedback_like || ''} onChange={set('feedback_like')} placeholder="Type your answer" />
       </Item>
@@ -331,37 +395,78 @@ function ProgramFeedbackFields({ v, set }) {
   )
 }
 
-// ---------- administration order (Draft 54) ----------
+// ---------- administration order (Draft 54; re-chunked Draft 71) ----------
 //
 // Pre-test = Pre-only + Pre+Post instruments, in this order. Post-test =
 // the Pre+Post instruments again + the Post-only Program Feedback Scale --
 // built by reusing the same page objects rather than redefining them.
+// A page may carry `part` (shown under the title), `range` (the slice of
+// the instrument's items on this page), `skip(v)` (drop the page for this
+// branch) and `gate(v)` (hold Continue until a branch-deciding answer).
+
+const CTS_PROMPT = 'How often did each of these happen in the last 30 days?'
+const BECK4_PROMPT = 'Please share how you are feeling, right now, at this moment.'
 
 export const PRE_TEST_PAGES = [
-  { id: 'demographics', title: 'Demographics', timing: 'Pre', Fields: DemographicsFields },
+  { id: 'demographics-1', title: 'Demographics', part: 'Part 1 of 3', timing: 'Pre', Fields: DemographicsFieldsA },
+  { id: 'demographics-2', title: 'Demographics', part: 'Part 2 of 3', timing: 'Pre', Fields: DemographicsFieldsB },
+  { id: 'demographics-3', title: 'Demographics', part: 'Part 3 of 3', timing: 'Pre', Fields: DemographicsFieldsC },
   { id: 'trauma-timing', title: 'Event: time since trauma', timing: 'Pre', Fields: TraumaTimingFields },
-  {
-    id: 'cts',
+  // The two four-point scales with a label on every point (CTS, Beck-4) run
+  // one item per page: two of them don't fit a 375px-wide frame.
+  ...CTS_ITEMS.map((_, i) => ({
+    id: `cts-${i + 1}`,
     title: 'Child Trauma Screen (CTS) — Reactions Subscale',
+    part: `Part ${i + 1} of ${CTS_ITEMS.length}`,
     timing: 'Pre',
-    prompt: 'How often did each of these happen in the last 30 days?',
+    prompt: CTS_PROMPT,
     Fields: CTSFields,
-  },
-  { id: 'therapy-history', title: 'Therapy history (present & past)', timing: 'Pre', Fields: TherapyHistoryFields },
+    range: [i, i + 1],
+  })),
+  // Continue waits for the branch-deciding answer so the page a tester sees
+  // next matches what they just picked; pages off the branch are skipped.
+  { id: 'therapy-current', title: 'Therapy history (present & past)', part: 'Part 1 of 3', timing: 'Pre', Fields: TherapyCurrentFields, gate: (v) => !!v.therapy_current },
   {
-    id: 'beck4',
-    title: 'Beck Hopelessness Scale-4',
-    timing: 'Pre + Post',
-    prompt: 'Please share how you are feeling, right now, at this moment.',
-    note: 'Scored by summing all 4 items.',
-    Fields: Beck4Fields,
+    id: 'therapy-past',
+    title: 'Therapy history (present & past)',
+    part: 'Part 2 of 3',
+    timing: 'Pre',
+    Fields: TherapyPastFields,
+    skip: (v) => v.therapy_current !== 'no',
+    gate: (v) => !!v.therapy_past,
   },
-  { id: 'motivation', title: 'Motivation / Readiness to Change Ruler', timing: 'Pre + Post', Fields: MotivationFields },
-  { id: 'implicit', title: 'Implicit Theories of Emotion Scale – Child Version', timing: 'Pre + Post', Fields: ImplicitTheoriesFields },
-  { id: 'beliefs', title: 'Trauma and Treatment Beliefs', timing: 'Pre + Post', Fields: TraumaBeliefsFields },
+  {
+    id: 'therapy-past-trauma',
+    title: 'Therapy history (present & past)',
+    part: 'Part 3 of 3',
+    timing: 'Pre',
+    Fields: TherapyPastTraumaFields,
+    skip: (v) => v.therapy_current !== 'no' || v.therapy_past !== 'yes',
+  },
+  ...BECK4_ITEMS.map((_, i) => ({
+    id: `beck4-${i + 1}`,
+    title: 'Beck Hopelessness Scale-4',
+    part: `Part ${i + 1} of ${BECK4_ITEMS.length}`,
+    timing: 'Pre + Post',
+    prompt: BECK4_PROMPT,
+    note: i === BECK4_ITEMS.length - 1 ? 'Scored by summing all 4 items.' : undefined,
+    Fields: Beck4Fields,
+    range: [i, i + 1],
+  })),
+  { id: 'motivation-1', title: 'Motivation / Readiness to Change Ruler', part: 'Part 1 of 3', timing: 'Pre + Post', Fields: MotivationFieldsA },
+  { id: 'motivation-2', title: 'Motivation / Readiness to Change Ruler', part: 'Part 2 of 3', timing: 'Pre + Post', Fields: MotivationFieldsB },
+  { id: 'motivation-3', title: 'Motivation / Readiness to Change Ruler', part: 'Part 3 of 3', timing: 'Pre + Post', Fields: MotivationFieldsC },
+  { id: 'implicit-1', title: 'Implicit Theories of Emotion Scale – Child Version', part: 'Part 1 of 3', timing: 'Pre + Post', Fields: ImplicitTheoriesFields, range: [0, 2] },
+  { id: 'implicit-2', title: 'Implicit Theories of Emotion Scale – Child Version', part: 'Part 2 of 3', timing: 'Pre + Post', Fields: ImplicitTheoriesFields, range: [2, 4] },
+  { id: 'implicit-3', title: 'Implicit Theories of Emotion Scale – Child Version', part: 'Part 3 of 3', timing: 'Pre + Post', Fields: ImplicitTheoriesFields, range: [4, 6] },
+  { id: 'beliefs-1', title: 'Trauma and Treatment Beliefs', part: 'Part 1 of 3', timing: 'Pre + Post', Fields: TraumaBeliefsFields, range: [0, 2] },
+  { id: 'beliefs-2', title: 'Trauma and Treatment Beliefs', part: 'Part 2 of 3', timing: 'Pre + Post', Fields: TraumaBeliefsFields, range: [2, 4] },
+  { id: 'beliefs-3', title: 'Trauma and Treatment Beliefs', part: 'Part 3 of 3', timing: 'Pre + Post', Fields: TraumaBeliefsFields, range: [4, 6] },
 ]
 
 export const POST_TEST_PAGES = [
   ...PRE_TEST_PAGES.filter((p) => p.timing === 'Pre + Post'),
-  { id: 'feedback', title: 'Program Feedback Scale', timing: 'Post', Fields: ProgramFeedbackFields },
+  { id: 'feedback-1', title: 'Program Feedback Scale', part: 'Part 1 of 3', timing: 'Post', Fields: ProgramFeedbackFieldsA, range: [0, 2] },
+  { id: 'feedback-2', title: 'Program Feedback Scale', part: 'Part 2 of 3', timing: 'Post', Fields: ProgramFeedbackFieldsA, range: [2, 4] },
+  { id: 'feedback-3', title: 'Program Feedback Scale', part: 'Part 3 of 3', timing: 'Post', Fields: ProgramFeedbackFieldsB },
 ]
