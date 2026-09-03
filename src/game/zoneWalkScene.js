@@ -63,30 +63,36 @@ const ZONE4 = {
   // edge beside the path, so the player walks up to him first; the Traveler
   // stops on the path next to him, not on top of him. The frog sits on the
   // pond's far (upper-right) bank.
+  // Draft 70: the pond's activity trigger (`pond`) is the upper-right bank
+  // right beside the frog -- that's where the Mindful Place starts and where
+  // the Traveler walks to (on the bank, never in the water).
   spots: {
     start: { x: 470, y: 1830 },
     sparkWait: { x: 240, y: 1110 },
     sparkStand: { x: 412, y: 1128 },
-    pond: { x: 600, y: 1095 },
+    pond: { x: 770, y: 862 },
     frog: { x: 830, y: 880 },
     exit: { x: 400, y: 500 },
     exitStand: { x: 400, y: 532 },
   },
-  // Spark's "glide to the pond" gesture target (hovers over the water's
-  // near edge), and where the exit's light-path starts (the junction).
-  pondHover: { x: 660, y: 960 },
-  // The water itself is not walkable.
-  pond: { x: 816, y: 1052, rx: 196, ry: 130 },
+  // Spark's "glide to the pond" gesture target (hovers over the bank by the
+  // trigger), and where the exit's light-path starts (the junction).
+  pondHover: { x: 720, y: 815 },
+  // The water itself is not walkable. Draft 70: enlarged to cover the whole
+  // surface (the lower-right lobe used to poke outside the old ellipse, so
+  // you could wade in there).
+  pond: { x: 816, y: 1052, rx: 215, ry: 150 },
   // Walkable set = union of these polygons, minus the pond. Authored against
   // the plate: the lit stone path (bottom → junction → plateau → ridge) and
   // the grassy pond clearing, which joins the path only through its upper-
-  // left gap (the clearing's lower-left is rock).
+  // left gap (the clearing's lower-left is rock). The clearing's top edge
+  // reaches up to the far bank so the Traveler can stand beside the frog.
   polys: [
     [[230, 1920], [720, 1920], [680, 1640], [300, 1640]],
     [[300, 1640], [680, 1640], [620, 1420], [330, 1420]],
     [[330, 1420], [620, 1420], [560, 1240], [350, 1240]],
     [[350, 1240], [560, 1240], [610, 1000], [400, 1000]],
-    [[560, 975], [672, 893], [864, 883], [1018, 941], [1037, 1104], [912, 1210], [672, 1210], [600, 1120], [580, 1060]],
+    [[560, 975], [672, 893], [700, 842], [890, 836], [1018, 941], [1037, 1104], [912, 1210], [672, 1210], [600, 1120], [580, 1060]],
     [[400, 1000], [610, 1000], [620, 880], [380, 880]],
     [[330, 900], [660, 900], [760, 730], [150, 730]],
     [[150, 730], [760, 730], [560, 600], [100, 600]],
@@ -95,9 +101,10 @@ const ZONE4 = {
   grassPolys: [4],
   // Waypoint graph (a tree) along the path centerline; routing goes
   // straight when the segment is clear, else via the nearest nodes.
+  // Node 5 hugs the bank on the way to the pond trigger (Draft 70).
   nodes: [
     [470, 1830], [490, 1600], [470, 1380], [460, 1170], [500, 1040],
-    [600, 1090], [500, 930], [430, 820], [330, 700], [330, 600], [400, 520],
+    [690, 900], [500, 930], [430, 820], [330, 700], [330, 600], [400, 520],
   ],
   edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [4, 6], [6, 7], [7, 8], [8, 9], [9, 10]],
   // The exit's "path lights up" follows these nodes, junction → exit.

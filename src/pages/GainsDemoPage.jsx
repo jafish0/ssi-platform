@@ -198,11 +198,14 @@ const ZONE_MAP_ROWS = [
 // a comment maps to a specific video in the CSV export instead of all five
 // sharing one `review-videos` box.
 // Video 1 swapped again (2026-09-01, Josh) to a newer re-render.
+// Video 4 swapped (Draft 70, 2026-09-03) to a render without the burned-in
+// Spark subtitles; the Zone 4 walkable zone plays the same id (VIDEO4 in
+// GainsZone4Page) -- keep the two in step.
 const REVIEW_VIDEOS = [
   { title: 'Zone 1 — What is Trauma', id: '1223215595', h: '2b10eb8857', section: 'video-1' },
   { title: 'Zone 2 — The Four Reactions', id: '1223210105', h: '315f412718', section: 'video-2' },
   { title: 'Zone 3 — Getting the Best Therapy', id: '1223207965', h: 'd0c77b8f23', section: 'video-3' },
-  { title: 'Zone 4 — What Therapy Feels Like', id: '1222092263', h: 'bca4fdcea9', section: 'video-4' },
+  { title: 'Zone 4 — What Therapy Feels Like', id: '1223708060', h: '2ab5970912', section: 'video-4' },
   { title: 'Zone 5 — Growth Mindset', id: '1223211325', h: 'b8579c9aa1', section: 'video-5' },
 ]
 

@@ -43,7 +43,8 @@ const POND_SOUNDSCAPE = '/long-light/audio/mindfulness/soundscape.mp3'
 const MASK_SRC = `${BASE}/gear/oxygen-mask.webp`
 const CELEBRATE_SRC = `${BASE}/gear/celebrate.webp`
 // Video 4 (same unlisted id + hash as REVIEW_VIDEOS on the demo page).
-const VIDEO4 = { id: '1222092263', h: 'bca4fdcea9', title: 'Zone 4 — What Therapy Feels Like' }
+// Draft 70 (2026-09-03): new render without the burned-in Spark subtitles.
+const VIDEO4 = { id: '1223708060', h: '2ab5970912', title: 'Zone 4 — What Therapy Feels Like' }
 // Tester-only skips (video, activity): dev builds, or `?dev` on the URL.
 // Never shown to kids in the real flow.
 const DEV_SKIP =
