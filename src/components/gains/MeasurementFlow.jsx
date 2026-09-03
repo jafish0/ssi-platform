@@ -104,7 +104,7 @@ export default function MeasurementFlow({ flow }) {
             </p>
           </div>
         ) : (
-          <Instrument prompt={current.prompt} note={current.note}>
+          <Instrument prompt={current.prompt}>
             <current.Fields v={v} set={set} range={current.range} missing={missing} />
           </Instrument>
         )}

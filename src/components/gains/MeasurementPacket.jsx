@@ -134,7 +134,7 @@ const PROGRAM_FEEDBACK_ITEMS = [
 // teen just sees the instructions (when an instrument has them) and the
 // items. `title`/`timing` stay on the page objects for the reviewer-facing
 // data and the CSV later, they're just not rendered here.
-export function Instrument({ prompt, note, children }) {
+export function Instrument({ prompt, children }) {
   return (
     <div
       className="rounded-[24px] p-3.5"
@@ -146,11 +146,6 @@ export function Instrument({ prompt, note, children }) {
         </p>
       )}
       <div className="space-y-2.5">{children}</div>
-      {note && (
-        <p className="text-[11px] italic mt-4 pt-3" style={{ color: 'var(--text-faint)', borderTop: '1px solid var(--border-soft)' }}>
-          {note}
-        </p>
-      )}
     </div>
   )
 }
@@ -464,7 +459,9 @@ export const PRE_TEST_PAGES = [
   },
   // Two Beck-4 items per page (the four together overflow a 375px frame).
   { id: 'beck4-1', title: 'Beck Hopelessness Scale-4', timing: 'Pre + Post', prompt: BECK4_PROMPT, Fields: Beck4Fields, range: [0, 2], required: () => keysFor('beck', 0, 2) },
-  { id: 'beck4-2', title: 'Beck Hopelessness Scale-4', timing: 'Pre + Post', prompt: BECK4_PROMPT, note: 'Scored by summing all 4 items.', Fields: Beck4Fields, range: [2, 4], required: () => keysFor('beck', 2, 4) },
+  // (The source doc's "Scored by summing all 4 items." is scoring guidance
+  // for us, not for the teen -- not shown on the page, per Josh 2026-09-03.)
+  { id: 'beck4-2', title: 'Beck Hopelessness Scale-4', timing: 'Pre + Post', prompt: BECK4_PROMPT, Fields: Beck4Fields, range: [2, 4], required: () => keysFor('beck', 2, 4) },
   { id: 'motivation-1', title: 'Motivation / Readiness to Change Ruler', timing: 'Pre + Post', Fields: MotivationFieldsA, required: () => ['motiv_ready', 'motiv_confidence'] },
   { id: 'motivation-2', title: 'Motivation / Readiness to Change Ruler', timing: 'Pre + Post', Fields: MotivationFieldsB, required: () => ['motiv_helpful', 'motiv_reason'] },
   { id: 'implicit-1', title: 'Implicit Theories of Emotion Scale – Child Version', timing: 'Pre + Post', Fields: ImplicitTheoriesFields, range: [0, 3], required: () => keysFor('implicit', 0, 3) },
