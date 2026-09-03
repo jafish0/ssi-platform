@@ -625,6 +625,10 @@ export function makeZoneWalkScene(Phaser) {
     }
 
     handleTap(x, y) {
+      // pointerup already checks this; guarding here too keeps any other
+      // caller honest (nothing moves before the zone has begun or while a
+      // scene/intro line has it paused).
+      if (this.paused || !this.began) return
       this.lastInputAt = this.time.now
       if (!this.firstTapDone) {
         this.firstTapDone = true

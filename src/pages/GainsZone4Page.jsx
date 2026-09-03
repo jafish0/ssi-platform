@@ -23,7 +23,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react'
-import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
 import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
 import TraversalGame from '../components/TraversalGame.jsx'
@@ -91,6 +90,10 @@ export default function GainsZone4Page() {
   const [scene, setScene] = useState('intro') // intro|walk|video|activity|gear|transition|climb|end
   const [started, setStarted] = useState(false) // the walk has begun (post title card)
   const [showTitle, setShowTitle] = useState(false)
+  // 2026-09-03 (Josh): the Traveler can't move until Spark finishes the
+  // arrive line -- the walk stays paused (and the tap hint waits) while
+  // z4-01 plays; a tap during the line does nothing.
+  const [introLock, setIntroLock] = useState(false)
   const [veil, setVeil] = useState(false)
   // Draft 69: true from the moment a scene change starts until the veil
   // begins to lift. The walk scene is paused for the whole window, so a tap
@@ -207,7 +210,10 @@ export default function GainsZone4Page() {
       // Spark is the first active objective: the same chime every objective
       // gets when it lights up.
       audioRef.current?.sfx('chime-unlock')
-      say('arrive')
+      // Hold the walk until Spark has finished speaking (resolves at once if
+      // the clip can't play, so nobody is ever stuck).
+      setIntroLock(true)
+      say('arrive').then(() => setIntroLock(false))
     }, TITLE_CARD_MS)
   }
 
@@ -295,7 +301,9 @@ export default function GainsZone4Page() {
 
   function onActivityComplete({ leveledUp } = {}) {
     setProgress({ leveledUp: !!leveledUp })
-    transitionTo('gear')
+    // 2026-09-03 (Josh): the equip sound also marks RECEIVING the mask --
+    // it plays as the Gear Award reveal blooms in, and again on Equip.
+    transitionTo('gear', () => audioRef.current?.sfx('equip-flash'))
   }
 
   function onGearEquip() {
@@ -330,6 +338,7 @@ export default function GainsZone4Page() {
     setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
     setMaskEquipped(false)
     setClimbResult(null)
+    setIntroLock(false)
     setStarted(false)
     setShowTitle(false)
     setRunKey((k) => k + 1)
@@ -347,43 +356,52 @@ export default function GainsZone4Page() {
   )
 
   const stageMounted = scene !== 'climb' && scene !== 'end'
-  const walkPaused = scene !== 'walk' || showTitle || transitioning
+  const walkPaused = scene !== 'walk' || showTitle || transitioning || introLock
+  // The scene's own "begin" (camera settle + tap hint) waits for the arrive
+  // line too, so the hint doesn't invite a tap that would be ignored.
+  const walkBegun = started && !introLock
   const hudVisible = started && scene !== 'intro' && scene !== 'climb' && scene !== 'end'
 
+  // 2026-09-03 (Josh, first phone playthrough of the hub): the zone opened
+  // under the demo's app header and a long description, so on a phone it
+  // wasn't remotely full screen. The page is now a full-viewport stage the
+  // way the real game will be: a dark ground, a slim bar (back, Restart,
+  // Comment), and the 9:16 frame sized to whatever's left -- full width on
+  // a phone, full height on a desktop. The card on /gains-demo carries the
+  // description; the in-frame intro card carries the controls.
   return (
-    <DemoPageLayout
-      banner={false}
-      homeTo="/gains-demo"
-      homeLabel="GAINS for Teens · Demo"
-      footerPath="/gains-demo/zone4"
-      feedbackProgram="gains-teens"
-      feedbackSections={GAINS_FEEDBACK_SECTIONS}
-      feedbackDefaultSection="review-zone4"
-    >
-      <div className="mb-4">
-        <Link to="/gains-demo" className="inline-flex items-center gap-1 text-ctac-teal-700 hover:text-ctac-teal-900 text-[13px] font-medium">
-          <ArrowLeft size={14} strokeWidth={1.5} />
-          Back to GAINS demo
+    <div className="gains-theme z4-full fixed inset-0 flex flex-col" style={{ background: 'var(--surface-abyss)', fontFamily: 'var(--font-core)' }}>
+      <header className="flex items-center justify-between gap-2 px-3 flex-shrink-0" style={{ height: 48 }}>
+        <Link
+          to="/gains-demo"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold"
+          style={{ color: 'var(--text-muted)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
+        >
+          <ArrowLeft size={14} strokeWidth={2} />
+          GAINS demo
         </Link>
-      </div>
+        <div className="flex items-center gap-2">
+          {scene !== 'intro' && (
+            <button
+              type="button"
+              onClick={playAgain}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold"
+              style={{ color: 'var(--text-muted)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
+            >
+              <RotateCcw size={13} strokeWidth={2} />
+              Restart
+            </button>
+          )}
+          <FeedbackButton program="gains-teens" sections={GAINS_FEEDBACK_SECTIONS} defaultSection="review-zone4" label="Comment" subtle />
+        </div>
+      </header>
 
-      <section className="mb-5">
-        <h1 className="text-[24px] font-bold text-slate-800 mb-1">Zone 4: The Bright Reaches — walkable zone</h1>
-        <p className="text-[14px] text-slate-600 leading-relaxed max-w-[620px]">
-          Our first walkable zone. Move through the Bright Reaches like a game: find Spark, watch the video,
-          follow Spark to the pond for the Mindful Place, earn and equip your Oxygen Mask, then head for the
-          exit and climb toward Mount Hope. Everything happens inside the one phone frame. Tap the ground to
-          move; tap Spark, the pond, or the exit to interact. Spark will redirect you if you try something
-          too early. Art, sound, and feel are prototype-stage.
-        </p>
-      </section>
-
-      <div className="gains-theme">
-        <div className="mx-auto w-full max-w-[420px]">
+      <main className="flex-1 min-h-0 flex items-center justify-center px-2 pb-2">
           <div
             ref={frameRef}
-            className="relative w-full overflow-hidden"
+            className="relative overflow-hidden"
             style={{
+              width: 'min(100%, calc(var(--z4-vh, 100vh) - 64px) * 9 / 16)',
               aspectRatio: '9 / 16',
               borderRadius: 'var(--radius-2xl)',
               border: '1px solid var(--border-soft)',
@@ -404,7 +422,7 @@ export default function GainsZone4Page() {
                   onEvent={onZoneEvent}
                   progress={zoneProgress}
                   paused={walkPaused}
-                  started={started}
+                  started={walkBegun}
                 />
               </div>
             )}
@@ -568,30 +586,15 @@ export default function GainsZone4Page() {
               </button>
             )}
           </div>
-
-          {scene !== 'intro' && (
-            <div className="flex justify-center mt-4">
-              <button
-                type="button"
-                onClick={playAgain}
-                className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-full px-5 py-2 min-h-[40px] text-[13px]"
-                style={{ fontFamily: 'system-ui, sans-serif' }}
-              >
-                <RotateCcw size={14} strokeWidth={2} />
-                Restart the zone
-              </button>
-            </div>
-          )}
-
-          <p className="text-center text-[12px] text-slate-400 mt-3" style={{ fontFamily: 'system-ui, sans-serif' }}>
-            Prototype · not yet wired into the session flow · reduced-motion supported
-          </p>
-        </div>
-      </div>
+      </main>
 
       <style>{`
         @keyframes z4-title-veil { 0% { opacity: 1 } 70% { opacity: 1 } 100% { opacity: 0 } }
+        /* Full-viewport stage: dvh tracks the phone browser's real visible
+           height (toolbars come and go); vh is the fallback. */
+        .z4-full { height: 100vh; height: 100dvh; --z4-vh: 100vh; }
+        @supports (height: 100dvh) { .z4-full { --z4-vh: 100dvh; } }
       `}</style>
-    </DemoPageLayout>
+    </div>
   )
 }
