@@ -18,7 +18,9 @@
 
 const CIRCLE = 40 // px; a compact tap target, still comfortably tappable
 
-export default function ScaleMatrix({ items, options, values, onChange, name, minLabel, maxLabel }) {
+// `missing` (optional) lists item keys the tester still has to answer after
+// trying to continue; those rows get the warm-coral highlight.
+export default function ScaleMatrix({ items, options, values, onChange, name, minLabel, maxLabel, missing = [] }) {
   const numeric = Boolean(minLabel || maxLabel)
   const cols = { gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }
   return (
@@ -44,10 +46,19 @@ export default function ScaleMatrix({ items, options, values, onChange, name, mi
       )}
       {items.map((item) => {
         const current = values[item.key]
+        const isMissing = missing.includes(item.key)
         return (
-          <div key={item.key} className="pt-1.5 mt-1" style={{ borderTop: '1px solid var(--border-soft)' }}>
-            <p className="text-[13px] leading-snug mb-1.5" style={{ color: 'var(--text-bright)' }}>
-              {item.n != null && <span style={{ color: 'var(--text-warm)' }}>{item.n}. </span>}
+          <div
+            key={item.key}
+            className="pt-1.5 mt-1"
+            data-missing={isMissing || undefined}
+            style={{
+              borderTop: '1px solid var(--border-soft)',
+              ...(isMissing ? { borderLeft: '3px solid var(--coral-400)', paddingLeft: 8, marginLeft: -11, borderRadius: 4 } : null),
+            }}
+          >
+            <p className="text-[13px] leading-snug mb-1.5" style={{ color: isMissing ? 'var(--coral-400)' : 'var(--text-bright)' }}>
+              {item.n != null && <span style={{ color: isMissing ? 'var(--coral-400)' : 'var(--text-warm)' }}>{item.n}. </span>}
               {item.text}
             </p>
             <div role="radiogroup" aria-label={item.text} className="grid" style={{ ...cols, gap: 4 }}>

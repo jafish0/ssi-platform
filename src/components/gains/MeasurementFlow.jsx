@@ -1,26 +1,43 @@
 // GAINS pretest/posttest measurement flow (Draft 54, 2026-09-01).
 //
 // Paginated administration flow for the measurement packet (Draft 53) --
-// one instrument per page inside the mobile phone frame, with a progress
-// indicator and a Continue button, matching how the measures will actually
-// be administered in the real app. Reuses the exact page/instrument
-// definitions from `MeasurementPacket.jsx` -- no items changed, only the
-// layout (that file used to render everything as one flat scroll).
+// inside the mobile phone frame, with a progress indicator and a Continue
+// button, matching how the measures will actually be administered in the
+// real app. Reuses the exact item definitions from `MeasurementPacket.jsx`
+// -- no items changed, only the layout.
 //
 // Review-only: nothing is stored or scored here. Live capture + scoring to
 // Supabase is a separate follow-up (see MeasurementPacket.jsx's header).
 //
 // Draft 71 (2026-09-03): every step must fit the 9:16 frame with Continue
-// always visible -- no scrolling inside the frame. The packet is therefore
-// chunked into more, shorter pages (long instruments split across steps,
-// see MeasurementPacket.jsx), and a page can be conditional: `skip(v)`
-// drops it from the flow for the branch the tester picked (the therapy-
-// history follow-ups), with the progress indicator counting only the
-// pages this branch will actually see. `gate(v)` holds Continue until the
-// answer that decides a branch is in.
+// always visible -- no scrolling inside the frame. The packet is chunked
+// into short pages (see MeasurementPacket.jsx), and a page can be
+// conditional: `skip(v)` drops it from the flow for the branch the tester
+// picked, with the progress indicator counting only the pages this branch
+// will actually see.
+//
+// 2026-09-03 (Josh): every question is mandatory. Each page declares
+// `required(v)` (branch-aware); Continue stays enabled, but tapping it with
+// anything unanswered highlights the missing questions on the page and
+// holds the step until they're answered (the highlight clears as each one
+// is answered). Scale names are no longer shown -- just the items.
 
 import { useState } from 'react'
 import { PRE_TEST_PAGES, POST_TEST_PAGES, Instrument } from './MeasurementPacket.jsx'
+
+function answered(val) {
+  if (val == null) return false
+  if (Array.isArray(val)) return val.length > 0
+  if (typeof val === 'string') return val.trim() !== ''
+  return true
+}
+
+// `required(v)` returns keys; an entry may be an array of alternatives (any
+// one answered satisfies it, and the first one is what gets highlighted).
+function missingFor(page, v) {
+  const req = page && page.required ? page.required(v) : []
+  return req.filter((r) => (Array.isArray(r) ? !r.some((k) => answered(v[k])) : !answered(v[r]))).map((r) => (Array.isArray(r) ? r[0] : r))
+}
 
 export default function MeasurementFlow({ flow }) {
   const allPages = flow === 'post' ? POST_TEST_PAGES : PRE_TEST_PAGES
@@ -28,17 +45,27 @@ export default function MeasurementFlow({ flow }) {
 
   const [v, setV] = useState({})
   const [page, setPage] = useState(0)
+  const [attempted, setAttempted] = useState(false)
   const set = (key) => (val) => setV((prev) => ({ ...prev, [key]: val }))
 
   const pages = allPages.filter((p) => !(p.skip && p.skip(v)))
   const done = page >= pages.length
   const current = pages[page]
+  const missing = attempted && current ? missingFor(current, v) : []
 
-  const continueDisabled = !!(current && current.gate && !current.gate(v))
+  function next() {
+    if (missingFor(current, v).length) {
+      setAttempted(true)
+      return
+    }
+    setAttempted(false)
+    setPage((p) => p + 1)
+  }
 
   function restart() {
     setPage(0)
     setV({})
+    setAttempted(false)
   }
 
   return (
@@ -77,8 +104,8 @@ export default function MeasurementFlow({ flow }) {
             </p>
           </div>
         ) : (
-          <Instrument title={current.title} timing={current.timing} prompt={current.prompt} note={current.note}>
-            <current.Fields v={v} set={set} range={current.range} />
+          <Instrument prompt={current.prompt} note={current.note}>
+            <current.Fields v={v} set={set} range={current.range} missing={missing} />
           </Instrument>
         )}
       </div>
@@ -94,15 +121,21 @@ export default function MeasurementFlow({ flow }) {
             Start over
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={continueDisabled}
-            className="w-full py-2.5 rounded-full disabled:opacity-[.42] disabled:cursor-not-allowed text-[15px] font-extrabold"
-            style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
-          >
-            {page === pages.length - 1 ? 'Finish' : 'Continue'}
-          </button>
+          <>
+            {missing.length > 0 && (
+              <p className="text-[12px] font-semibold text-center mb-2" style={{ color: 'var(--coral-400)' }} role="alert">
+                Please answer the highlighted {missing.length === 1 ? 'question' : 'questions'} to continue.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={next}
+              className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+            >
+              {page === pages.length - 1 ? 'Finish' : 'Continue'}
+            </button>
+          </>
         )}
       </div>
     </div>
