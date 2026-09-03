@@ -132,6 +132,50 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1d3be45** (2026-09-02) — Draft 68 **Phase A**: **Zone 4 "Bright Reaches"
+  walkable zone — the world, with stub hand-offs.** New route
+  `/gains-demo/zone4` (`GainsZone4Page`), one 9:16 phone frame, everything
+  inside it. New Phaser scene `src/game/zoneWalkScene.js` (hosted by
+  `components/gains/zone/ZoneStage.jsx`): the plate at logical 1080×1920,
+  y-depth-sorted sprites, tap-to-move over an authored walkable polygon set
+  (lit path + pond clearing, minus the water) with a small waypoint graph so
+  the Traveler follows the path around the rocks instead of cutting
+  through; direction-picked 6-frame walk cycles (back/front/side/side-left),
+  idle front/back with a breathing bob, depth scale 1.0→0.6 bottom→ridge,
+  drop shadow, footstep dust + surface-tagged footstep events (stone vs
+  grass), tap-marker ripple, first-tap "Tap the path to move" hint, a slow
+  camera settle on arrival. Spark: flicker frames in ADD blend, `waiting`
+  (pulse ring, the active objective) → `companion` (lags to the shoulder,
+  light-trail while moving, glides toward the pond on "follow me", nudges
+  toward the pending objective after ~6s idle). Interactables (Spark, pond
+  with the Mindful Place frog, exit) with locked (dim + lock badge) / active
+  (pulse ring, exit glow) / done states; one tap walks + interacts; "the
+  path lights up" motes along the waypoints when the exit unlocks.
+  Progression is in React (`arrived → talkedToSpark → watchedVideo →
+  didActivity → exitUnlocked`); wrong-order taps play Spark's redirects
+  (z4-05/06/07, 4s cooldown) as voice + a compact bubble under the HUD;
+  tapping Spark after the first talk replays the current objective line.
+  Audio (`zone/zoneAudio.js`): Begin is the unlock gesture; ambience loops
+  quietly, the pond soundscape crossfades by proximity (ambience ducks a
+  little there), both duck under VO; SFX via one WebAudio context (all the
+  sfx files Josh supplied are wired: footsteps by surface, chime on each
+  objective unlock, spark-whoosh on the glide, arrive-swell); every file is
+  a graceful no-op if missing. Gear HUD (Lantern / Lens / Wingsuit dim,
+  Mask slot empty until equipped, icon fly-in). Soft-bloom veil crossfades
+  between scenes. Phase A's video / activity / gear / climb are placeholder
+  cards that advance the state, so the whole gated loop is playable
+  end-to-end (verified locally by driving the scene: routing, redirects,
+  companion glide, equip → ready line → exit lights → transition VO → end →
+  Play again; and live: page + all assets 200, clean console). Assets
+  converted into `public/long-light/zone4/` (map webp 391 KB; 26 traveler
+  frames + 4 Spark frames as webp, ~25 KB each; gear webp; VO mp3s; a 150 s
+  slice of the northern-cliffs bed as `ambience.mp3`; SFX; overlay SVGs
+  with the c2pa metadata blobs stripped, 4 MB total). Also: review item #8
+  + `review-zone4` tag; the admin label map gets `review-ascent` (missed in
+  Draft 66) and `review-zone4`; feedback "where you are" label for the
+  route. Phases B (real hand-offs) and C (overlays + polish) follow as
+  their own commits.
+
 - **7f2237e** (2026-09-02) — Draft 66 + Draft 67: **The Ascent surfaced as
   review item #7; Exposition proof-of-concept card removed.** Draft 66:
   The Ascent climb gets its own home in the review section — a new
@@ -3408,3 +3452,87 @@ On `/gains-demo`, under the **"The climb"** heading (section D), there's an **"E
 **Verify.** On `/gains-demo`: the "Exposition" proof-of-concept card is gone; "The climb" heading flows straight into the Zone 1→5 sections with no empty gap or broken layout; no unused-import/lint errors; the rest of the page is unchanged; Ready for Roots unaffected; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 67.*
+
+
+### Draft 68 — Zone 4 "Bright Reaches" walkable zone: the full in-world loop in one 9:16 frame (walk → Spark → Video 4 → pond → Mindful Place → gear award → exit → Ascent) — ✅ Phase A SHIPPED 1d3be45 (2026-09-02)
+
+**Read first:** `Gains for Teens/Walkable Zones — Concept.md` (the design) and `Gains for Teens/Walkable Zones/Zone 4 — Spark Voice Lines (voice F).md` (the VO). This builds the Zone 4 prototype of the walkable-zone template — a small single-screen world you move through, where the video, the activity, the gear award, and the Ascent climb all trigger from inside the same phone frame. **Ship in the three phases below as separate commits** (log each). Phases B and C can land as their assets arrive.
+
+---
+## Assets manifest (source → served). Convert big PNGs to .webp; WAV → mp3.
+- **Map plate:** `Gains for Teens/Walkable Zones/Zone 4 Bright Reaches.png` (1296×2304, the version WITH the pond) → `public/long-light/zone4/map.webp`
+- **Traveler sprites** (all transparent PNG, in `Gains for Teens/Walkable Zones/sprites/`): `traveler-stage3-idle-front.png`, `traveler-stage3-idle-back.png`; walk cycles `traveler-stage3-walk-back-1..6.png` (walking away/up), `traveler-stage3-walk-front-1..6.png` (toward camera/down), `traveler-stage3-walk-side-1..6.png` (right), `traveler-stage3-walk-side-left-1..6.png` (left, pre-mirrored). Canvases differ per direction — **normalize to one character height in-engine** (feet baseline aligned). → `public/long-light/zone4/traveler/`
+- **Spark:** `sprites/spark-flicker-1..4.png` (alpha) and `sprites/spark-flicker-onblack-1..4.png` (for ADD blend — prefer these with `blendMode ADD` so the glow adds light) → `public/long-light/zone4/spark/`
+- **Frog on the pond:** reuse `public/long-light/art/mindfulness/frog-painterly.png` (small, sitting at the pond, gentle idle bob).
+- **Gear:** `sprites/gear-oxygen-mask.png` (item) and `sprites/traveler-stage3-mask-celebrate.png` (equipped figure) → `public/long-light/zone4/gear/`
+- **Spark VO** (`Gains for Teens/Walkable Zones/`): `z4-00-welcome.mp3`, `z4-01-arrive.mp3`, `z4-02-follow-me.mp3`, `z4-03-ready.mp3`, `z4-04-exit-transition.mp3`, `z4-05-redirect-pond-first.mp3`, `z4-06-redirect-exit-before-video.mp3`, `z4-07-redirect-exit-before-activity.mp3` → `public/long-light/zone4/audio/`
+- **Ambience music:** `Gains for Teens/Activities/Mindfulness/northern-cliffs-2026-05-07-02-58-48-utc/northern-cliffs_main-full.wav` → convert → `public/long-light/zone4/audio/ambience.mp3` (loop, quiet)
+- **Pond soundscape** for proximity crossfade: existing `public/long-light/audio/mindfulness/soundscape.mp3`
+- **Ambient overlays (from Claude Design — may land after Phase A):** `Gains for Teens/Walkable Zones/overlays/` → `layer-clouds.svg`, `layer-motes.svg`, `layer-sway.svg`, `layer-beacon.svg`, `layer-pond-glint.svg`, `motion.css` → `public/long-light/zone4/ov/`. Same format/loading as the Mindfulness `_ov` layers (viewBox 1080×1920, `preserveAspectRatio="xMidYMid slice"`). Build the layer slots now; wire files when present; skip gracefully if missing.
+- **SFX (from Josh — may land after Phase A):** `Gains for Teens/Walkable Zones/sfx/` → `step-stone-1..3.mp3`, `step-grass-1..3.mp3`, `chime-unlock.mp3`, `spark-whoosh.mp3`, `ui-tap.mp3`, `equip-flash.mp3`, `arrive-swell.mp3` → `public/long-light/zone4/sfx/`. Wire with graceful no-ops if a file is missing.
+- **Video 4:** Vimeo id `1222092263`, h `bca4fdcea9` (already in `REVIEW_VIDEOS`).
+
+---
+## The page + stage
+- New route **`/gains-demo/zone4`** → `src/pages/GainsZone4Page.jsx`, using `DemoPageLayout` (`feedbackProgram="gains-teens"`, `feedbackDefaultSection="review-zone4"`). Title: "GAINS for Teens — Zone 4: The Bright Reaches (walkable prototype)".
+- ONE **9:16 phone-frame stage** centered on the page (same frame treatment as the videos/activities: rounded, `--border-soft`, `--shadow-lg`; ~420×880 CSS, scaling down at 375px). **Every scene renders inside this frame** — nothing navigates away. A scene-state machine: `intro | walk | video | activity | gear | transition | climb | end`. Use **soft-bloom crossfades** (design-system motion) between scenes — no hard cuts.
+- Add `{ value: 'review-zone4', label: 'Review: Zone 4 walkable zone' }` to `GAINS_FEEDBACK_SECTIONS`.
+- **Review item #8** in the review section (after the Ascent, item 7): `<ReviewItem n={8} title="Zone 4: The Bright Reaches — walkable zone (playable prototype)" section="review-zone4">` with a short blurb (below) + a prominent **"Play Zone 4 →"** link to `/gains-demo/zone4`.
+  > Blurb: "Our first walkable zone — move through the Bright Reaches like a game: find Spark, watch the video, follow Spark to the pond for the Mindful Place, earn and equip your Oxygen Mask, then head for the exit and climb toward Mount Hope. Tap the ground to move; tap Spark, the pond, or the exit to interact. Spark will redirect you if you try something too early."
+
+---
+## PHASE A — the walkable world (Phaser scene `src/game/zoneWalkScene.js`, hosted by `TraversalGame`-style wrapper or a new `ZoneStage` component)
+
+**Intro/arrival.** A **Begin** tap first (the iOS audio-unlock gesture). Then: fade in from light → title card **"Welcome to the Bright Reaches"** (+ `z4-00-welcome.mp3` and `arrive-swell.mp3` if present) → camera settles on the walk scene → Spark plays **`z4-01-arrive.mp3`** (shown as a Spark speech bubble too).
+
+**World.** The map plate fills the stage (logical 1080×1920). Overlay layers (when present) sit on top of the plate. Sprites are **depth-sorted by y** (lower on screen = in front) so the Traveler passes in front of / behind objects correctly.
+
+**Walkable area.** Define a **walkable polygon** = the lit stone path + the pond clearing (author it as a polygon in the scene config; the rocks/brush are boundaries). A tap outside it moves the Traveler to the nearest walkable point (or is ignored if far). Tag regions as `stone` (path) vs `grass` (clearing edges) for footstep SFX.
+
+**Traveler (player).** Starts at the bottom of the path. **Tap-to-move:** tap ground → walks there (straight or simple path-follow within the polygon). Pick the animation by movement direction: `walk-back` (moving up), `walk-front` (moving down), `walk-side`/`walk-side-left` (mostly horizontal); `idle-front`/`idle-back` when stopped, with a **gentle breathing bob**. **Depth scale**: ~1.0 at the bottom of the path → ~0.6 near the top. **Drop shadow** ellipse under the feet. **Footstep dust** particles on each step + **footstep SFX** (`step-stone-*` on path, `step-grass-*` in the clearing; random pick per step). **Tap marker:** a soft light-ripple at the tap point that fades as the Traveler arrives. **First-tap hint:** a ghost "tap to move" gesture on first entry, gone after the first tap.
+
+**Spark (companion).** Flicker frames (4) cycling slowly, `blendMode ADD` (use the on-black frames), gentle float/bob. Two states:
+- `waiting` — parked at Spark's spot on the lower path, **glowing as the active objective** (pulse ring).
+- `companion` (after the video) — **follows the Traveler** with a lazy lag and bob, trailing a **light-trail** particle stream; hovers near the shoulder when the Traveler stops; if the player idles ~6s with an objective pending, Spark **nudges** (bobs/glides a little toward it). Plays `spark-whoosh.mp3` when it first starts following.
+- **"Where do I go?"** — tapping Spark any time after the first talk replays the current objective's line.
+
+**Interactables + gating.** Three: **Spark**, the **Pond** (activity station; the frog sprite sits there), the **Exit** (top of the path, toward the beacon). Each has states `locked` (dim + small lock badge), `active` (glow pulse + optional marker), `done`. **Only the valid next step is `active`.** **One tap does both:** tapping an interactable makes the Traveler auto-walk to it and interact on arrival. Progression state: `arrived → talkedToSpark → watchedVideo → didActivity → exitUnlocked`.
+- Tap Pond before Spark → **`z4-05`** (redirect). Tap Exit before the video → **`z4-06`**. Tap Exit after the video but before the activity → **`z4-07`**. Redirects show as Spark speech bubbles (portrait + text), can replay on repeated wrong taps with a ~4s cooldown.
+- **"The path lights up":** when the Exit becomes `active`, a line of light-motes rises along the path to it + `chime-unlock.mp3`. Also play the chime whenever an objective becomes active.
+
+**Audio.** `ambience.mp3` loops quietly for the whole zone. **Proximity crossfade:** the pond `soundscape.mp3` volume = function of the Traveler's distance to the pond (silent far away → clearly audible at the pond); ambience ducks slightly there. Duck all beds while Spark speaks; restore after.
+
+**Gear HUD.** Four small slots in a top corner — Lantern, Focusing Lens, Wingsuit, Oxygen Mask — styled Shadowmend. Show the first three as **earned (dim placeholder icons)** and the Mask slot **empty** until equipped (Phase B fills it with an icon fly-in). Keep it unobtrusive.
+
+*(Phase A ships with Spark's tap opening a temporary "video goes here" stub that immediately sets `watchedVideo`, and the Pond/Exit stubs likewise — so the gating/companion loop is testable before Phase B.)*
+
+---
+## PHASE B — the hand-offs (all inside the frame)
+
+**Spark → Video 4.** Tap Spark (`active`) → Traveler walks up → soft-bloom to `video`: embed Vimeo `1222092263?h=bca4fdcea9` filling the frame (autoplay is fine — the tap is the gesture). Use the **Vimeo Player SDK** (`@vimeo/player`) to catch **`ended`** → bloom back to `walk`; set `watchedVideo`; Spark → `companion`; play **`z4-02-follow-me.mp3`**; Pond → `active`; Spark **glides toward the pond** trailing light (the gesture). Provide a small "Skip" for testers only (dev flag), not for kids.
+
+**Pond → Mindful Place.** Tap Pond (`active`) → walk there → bloom to `activity`: mount **`MindfulnessCalmPlace`** in the frame. **Change the component:** add an **`onComplete({ leveledUp })`** prop. When provided, the close-screen exits ("Move on" after the first completion, or "I'm all set" after the second) call `onComplete` **instead of** showing the current "Gear sequence goes here" placeholder — **remove that placeholder text**. Without the prop (standalone demo), keep today's behavior. Pass `leveledUp = true` if the player did the practice-again second completion.
+
+**Gear award (new reusable component `src/components/gains/GearAward.jsx`).** After `onComplete`, bloom to `gear`:
+- **Reveal:** the scene behind dims/blurs; a soft radial bloom; the **Oxygen Mask item floats center**, gently turning with a sparkle. Title **"You earned the Oxygen Mask!"**, subline **"It'll help you breathe easy on the climb ahead."**, big amber pill **"Equip mask"** (`ui-tap.mp3`).
+- **Equip:** tap → quick light-flash + `equip-flash.mp3` → the **celebrate figure** (mask on, fist up). **"Equipped!"** + a short Spark line (e.g. *"Perfect fit. Now you can breathe easy up there."* — text only is fine). The **mask icon flies into the HUD slot**. **Continue** → bloom back to `walk`.
+- **Level-up variant** (`leveledUp`): title **"Your Oxygen Mask leveled up!"**, brighter glow on the item — same screens, no new art.
+- Parameterize by `{ name, itemSrc, equippedSrc, title, subline, sparkLine, leveledUp }` so future gears (Lantern, Lens, Wingsuit, Goggles) reuse it.
+Back in `walk`: set `didActivity` + `exitUnlocked`; play **`z4-03-ready.mp3`**; Exit → `active`; **path lights up**.
+
+**Exit → transition → Ascent.** Tap Exit (`active`) → walk to the top → bloom to `transition`: card **"We're headed for Mount Hope!"** + **`z4-04-exit-transition.mp3`** (it contains the climb directions) → on end, bloom to `climb`: mount the existing **`TraversalGame mode="climb"`** in the frame (it already runs the Ascent); on its `onComplete` → `end`.
+
+**End.** "You reached the Beacon — Zone 5 · to be continued" card + **Play again** (restarts the zone from `intro`). Fire the review feedback affordance here too.
+
+---
+## PHASE C — polish (land as overlays/SFX arrive; some may already be done in A)
+- Wire the five **Claude Design overlay layers** + `motion.css` (clouds drift, motes, sway, beacon pulse, pond glints); respect reduced-motion.
+- Confirm all **SFX** hooks (footsteps by surface, chime, whoosh, tap, equip flash, arrive swell) are wired with graceful no-ops if absent.
+- Tune: Spark's follow lag/bob, tap-marker feel, footstep cadence, depth-scale curve, proximity-audio curve, bloom durations. Idle "glance around" on the Traveler if cheap.
+
+---
+**Keep:** 9:16 everywhere, non-fail, one-thumb, Shadowmend styling, `prefers-reduced-motion` support, Ready for Roots untouched.
+
+**Verify.** `/gains-demo/zone4`: Begin → arrival title + Spark's arrive line; tap-to-move works inside the walkable path/clearing with correct direction sprites, depth scaling, shadow, dust + footsteps, tap marker; only the valid next objective glows; wrong-order taps trigger the right redirect (5/6/7) as Spark bubbles; Spark → Video 4 (ends → follow-me, Spark becomes companion and glides to the pond); Pond → Mindful Place → onComplete → Gear Award (reveal → Equip → celebrate figure → HUD icon fly-in; level-up variant when practiced) → ready line + path lights up; Exit → "headed for Mount Hope" + VO → the Ascent runs in-frame → end card + Play again; ambience loops, pond soundscape crossfades by proximity, beds duck under VO; overlays/SFX wired or gracefully absent; review item #8 + `review-zone4` tag work; no console errors; Ready for Roots (`/demo`) unaffected; clean build. `src/game/`, `src/components/`, `src/pages/` (not `src/activities/`) → no version bump. Log Recently-shipped per phase + mark shipped.
+
+*End of Draft 68.*
