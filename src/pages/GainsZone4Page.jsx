@@ -13,18 +13,25 @@
 // moves the Traveler and reports taps/arrivals. Wrong-order taps get Spark's
 // voiced redirects (lines 5/6/7) instead of greyed-out UI.
 //
-// Phase A ships the walkable world with STUB hand-offs (the video / activity
-// / gear / climb scenes are placeholder cards that immediately advance the
-// state) so the gating + companion loop is testable; Phase B swaps in the
-// real Vimeo player, MindfulnessCalmPlace, GearAward and TraversalGame.
+// Phase A shipped the walkable world with stub hand-offs; Phase B wires the
+// real ones, all inside the frame: Video 4 via the Vimeo Player SDK
+// (VideoScene, `ended` → back to the world), the Mindful Place activity
+// (MindfulnessCalmPlace with its new `onComplete`), the Oxygen Mask Gear
+// Award (GearAward, reveal → equip → HUD fly-in), and the Ascent climb
+// (the existing TraversalGame in climb mode) after the transition card.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
+import FeedbackButton from '../components/FeedbackButton.jsx'
+import MindfulnessCalmPlace from '../components/MindfulnessCalmPlace.jsx'
+import TraversalGame from '../components/TraversalGame.jsx'
+import GearAward from '../components/gains/GearAward.jsx'
 import ZoneStage from '../components/gains/zone/ZoneStage.jsx'
 import GearHud from '../components/gains/zone/GearHud.jsx'
 import SparkBubble from '../components/gains/zone/SparkBubble.jsx'
+import VideoScene from '../components/gains/zone/VideoScene.jsx'
 import { createZoneAudio } from '../components/gains/zone/zoneAudio.js'
 import GainsButton from '../components/gains/ds/Button.jsx'
 import { GAINS_FEEDBACK_SECTIONS } from './GainsDemoPage.jsx'
@@ -33,6 +40,14 @@ import '../styles/gains-tokens.css'
 const BASE = '/long-light/zone4'
 const POND_SOUNDSCAPE = '/long-light/audio/mindfulness/soundscape.mp3'
 const MASK_SRC = `${BASE}/gear/oxygen-mask.webp`
+const CELEBRATE_SRC = `${BASE}/gear/celebrate.webp`
+// Video 4 (same unlisted id + hash as REVIEW_VIDEOS on the demo page).
+const VIDEO4 = { id: '1222092263', h: 'bca4fdcea9', title: 'Zone 4 — What Therapy Feels Like' }
+// Tester-only skips (video, activity): dev builds, or `?dev` on the URL.
+// Never shown to kids in the real flow.
+const DEV_SKIP =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) ||
+  (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('dev'))
 
 // Spark's lines (voice F), VERBATIM from
 // `Gains for Teens/Walkable Zones/Zone 4 — Spark Voice Lines (voice F).md`.
@@ -80,6 +95,7 @@ export default function GainsZone4Page() {
   const [progress, setProgressState] = useState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
   const [maskEquipped, setMaskEquipped] = useState(false)
   const [maskFly, setMaskFly] = useState(0)
+  const [climbResult, setClimbResult] = useState(null)
   const [runKey, setRunKey] = useState(0) // bumps to remount the stage on Play again
 
   const frameRef = useRef(null)
@@ -261,7 +277,11 @@ export default function GainsZone4Page() {
   }
 
   function onGearEquip() {
-    audioRef.current?.sfx('equip-flash')
+    const a = audioRef.current
+    if (a) {
+      a.sfx('ui-tap')
+      later(() => a.sfx('equip-flash'), 120)
+    }
     setMaskEquipped(true)
     setMaskFly((n) => n + 1)
   }
@@ -275,7 +295,8 @@ export default function GainsZone4Page() {
     })
   }
 
-  function onClimbComplete() {
+  function onClimbComplete(result) {
+    setClimbResult(result || null)
     transitionTo('end')
   }
 
@@ -286,6 +307,7 @@ export default function GainsZone4Page() {
     setBubble(null)
     setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
     setMaskEquipped(false)
+    setClimbResult(null)
     setStarted(false)
     setShowTitle(false)
     setRunKey((k) => k + 1)
@@ -411,33 +433,40 @@ export default function GainsZone4Page() {
               </div>
             )}
 
-            {/* ---- Phase A stubs: each advances the state so the loop is
-                testable before the real hand-offs land in Phase B. ---- */}
-            {scene === 'video' && (
-              <StubScene
-                eyebrow="Video 4"
-                title="What Therapy Feels Like"
-                body="Video 4 plays here (Phase B: the Vimeo player, in-frame). Continuing…"
-                onDone={onVideoEnded}
-              />
-            )}
+            {/* Spark → Video 4, in-frame; `ended` blooms back to the world. */}
+            {scene === 'video' && <VideoScene id={VIDEO4.id} h={VIDEO4.h} title={VIDEO4.title} onEnded={onVideoEnded} allowSkip={DEV_SKIP} />}
+
+            {/* Pond → the Mindful Place; its close screen hands off via
+                onComplete (leveledUp if the player practiced again). */}
             {scene === 'activity' && (
-              <StubScene
-                eyebrow="Zone 4 · Mindfulness"
-                title="Mindful Place"
-                body="The Mindful Place activity runs here (Phase B). Continuing…"
-                onDone={() => onActivityComplete({ leveledUp: false })}
-              />
+              <div className="absolute inset-0 z-20">
+                <MindfulnessCalmPlace onComplete={onActivityComplete} />
+                {DEV_SKIP && (
+                  <button
+                    type="button"
+                    onClick={() => onActivityComplete({ leveledUp: false })}
+                    className="absolute z-30 rounded-full px-3 py-1.5 text-[11px] font-bold"
+                    style={{ top: 12, right: 56, background: 'rgba(2,17,39,.6)', color: 'var(--text-muted)', border: '1px solid var(--border-soft)' }}
+                  >
+                    Skip (testers)
+                  </button>
+                )}
+              </div>
             )}
+
+            {/* Gear Award: reveal → Equip → equipped figure → Continue. */}
             {scene === 'gear' && (
-              <StubScene
-                eyebrow="Gear earned"
-                title="Oxygen Mask"
-                body="The Gear Award sequence goes here (Phase B). Continuing…"
-                onDone={() => {
-                  onGearEquip()
-                  later(onGearContinue, 900)
-                }}
+              <GearAward
+                name="Oxygen Mask"
+                itemSrc={MASK_SRC}
+                equippedSrc={CELEBRATE_SRC}
+                title={progress.leveledUp ? 'Your Oxygen Mask leveled up!' : 'You earned the Oxygen Mask!'}
+                subline="It'll help you breathe easy on the climb ahead."
+                sparkLine="Perfect fit. Now you can breathe easy up there."
+                leveledUp={progress.leveledUp}
+                equipLabel="Equip mask"
+                onEquip={onGearEquip}
+                onContinue={onGearContinue}
               />
             )}
             {scene === 'transition' && (
@@ -453,14 +482,16 @@ export default function GainsZone4Page() {
                 </div>
               </div>
             )}
+            {/* The Ascent, in-frame: the existing climb traversal, started
+                straight away (the exit tap was the gesture; the transition VO
+                just carried the directions). The walk stage is unmounted
+                underneath so only one WebGL context is live. */}
             {scene === 'climb' && (
-              <StubScene
-                eyebrow="The Ascent"
-                title="Climb to the Beacon"
-                body="The Ascent climb runs here, in-frame (Phase B). Continuing…"
-                onDone={onClimbComplete}
-              />
+              <div className="absolute inset-0 z-20" style={{ background: '#05070e' }}>
+                <TraversalGame mode="climb" started muted={muted} reducedMotion={reducedMotion} onComplete={onClimbComplete} />
+              </div>
             )}
+
             {scene === 'end' && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6" style={{ background: 'var(--sky-beacon)' }}>
                 <div style={{ animation: 'sm-bloom var(--dur-bloom) var(--ease-bloom) both' }}>
@@ -468,10 +499,21 @@ export default function GainsZone4Page() {
                   <h2 className="text-[26px] font-extrabold mb-2" style={{ color: 'var(--text-on-warm)' }}>
                     You reached the Beacon.
                   </h2>
+                  {climbResult && typeof climbResult.orbsCollected === 'number' && (
+                    <p className="text-[14px] mb-1" style={{ color: 'rgba(58,29,5,.85)' }}>
+                      You gathered <strong>{climbResult.orbsCollected}</strong> gold {climbResult.orbsCollected === 1 ? 'feeling' : 'feelings'} on the way up
+                      {typeof climbResult.feelingsCleared === 'number' && climbResult.feelingsCleared > 0
+                        ? ` and faced ${climbResult.feelingsCleared} heavy ${climbResult.feelingsCleared === 1 ? 'one' : 'ones'}.`
+                        : '.'}
+                    </p>
+                  )}
                   <p className="text-[14px] mb-6" style={{ color: 'rgba(58,29,5,.8)' }}>Zone 5 · to be continued</p>
                   <GainsButton onClick={playAgain} iconLeft={<RotateCcw size={16} strokeWidth={2} />}>
                     Play again
                   </GainsButton>
+                  <div className="mt-5 flex justify-center">
+                    <FeedbackButton program="gains-teens" sections={GAINS_FEEDBACK_SECTIONS} defaultSection="review-zone4" label="Comment on Zone 4" subtle />
+                  </div>
                 </div>
               </div>
             )}
@@ -524,30 +566,5 @@ export default function GainsZone4Page() {
         @keyframes z4-title-veil { 0% { opacity: 1 } 70% { opacity: 1 } 100% { opacity: 0 } }
       `}</style>
     </DemoPageLayout>
-  )
-}
-
-// Phase A placeholder for an in-frame scene: shows what will live here, then
-// advances after a beat so the surrounding loop can be exercised.
-function StubScene({ eyebrow, title, body, onDone, delayMs = 1600 }) {
-  useEffect(() => {
-    const id = setTimeout(onDone, delayMs)
-    return () => clearTimeout(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-7 z-20" style={{ background: 'var(--surface-sheet)', backdropFilter: 'var(--blur-sheet)' }}>
-      <div style={{ animation: 'sm-bloom var(--dur-bloom) var(--ease-bloom) both' }}>
-        <div className="text-[11px] font-extrabold uppercase mb-2" style={{ letterSpacing: 'var(--tracking-caps)', color: 'var(--text-warm)' }}>
-          {eyebrow}
-        </div>
-        <h2 className="text-[24px] font-extrabold mb-3" style={{ color: 'var(--text-bright)' }}>
-          {title}
-        </h2>
-        <p className="text-[14px] leading-relaxed max-w-[280px] mx-auto" style={{ color: 'var(--text-muted)' }}>
-          {body}
-        </p>
-      </div>
-    </div>
   )
 }

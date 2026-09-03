@@ -83,6 +83,16 @@
 // tapped chip's own track louder; Draft 39 found that nudge read as a second
 // copy of the same sound starting on top of the ambient bed and dropped it.
 // Both are moot now that Hear has nothing to play per-chip at all.
+//
+// --- Draft 68 (2026-09-02): `onComplete` ---
+// Inside the Zone 4 walkable zone this activity is one scene in a larger
+// in-frame loop, and the Oxygen Mask is awarded by a real Gear Award scene
+// afterwards. When the `onComplete({ leveledUp })` prop is provided, the
+// close screen's exits ("Move on" after the first completion, "I'm all set"
+// after the second) hand off to it instead of showing the standalone
+// GEAR_PLACEHOLDER_TEXT ending; `leveledUp` is true if the player did the
+// practice-again second run. Without the prop (the review-list demo) the
+// behavior is unchanged.
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -380,7 +390,7 @@ function Chip({ label, active, onClick }) {
   )
 }
 
-export default function MindfulnessCalmPlace() {
+export default function MindfulnessCalmPlace({ onComplete = null }) {
   const [layers, setLayers] = useState(null)
   const [mode, setMode] = useState('intro') // intro | arrive | see | hear | breathe | close
   const [seen, setSeen] = useState([])
@@ -505,11 +515,17 @@ export default function MindfulnessCalmPlace() {
 
   // Stops the soundscape (and any narration still mid-clip) so the activity
   // actually goes quiet once it ends, instead of looping the bed forever
-  // with no more screens to reach.
+  // with no more screens to reach. Draft 68: with an `onComplete` host, the
+  // ending belongs to the host (the Gear Award follows), so hand off instead
+  // of showing the standalone placeholder.
   function finish() {
-    setFinished(true)
     if (soundscapeRef.current) soundscapeRef.current.pause()
     if (narrationRef.current) narrationRef.current.pause()
+    if (onComplete) {
+      onComplete({ leveledUp: completionCount >= 2 })
+      return
+    }
+    setFinished(true)
   }
 
   const seeAllFound = seen.length >= 3
