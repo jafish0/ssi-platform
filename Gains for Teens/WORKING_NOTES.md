@@ -132,6 +132,53 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **e59f2ff** (2026-09-03) — Draft 71: **`/gains-demo` restructured into a
+  hub.** (1) The review section is now **seven cards** (Pre/Post test ·
+  Videos · Body Mapping · Mindful Place · Message to Your Guardian · The
+  Ascent · Zone 4), each with Josh's **verbatim "what's new" blurb**
+  (`src/pages/gainsReviewCards.js`, the text that replaces the team email),
+  Open/Play buttons, and its own "Comment on this" box (tags unchanged:
+  `review-pretest` on the card, `review-posttest` on the post-test page,
+  etc.). **No inline embeds remain.** (2) Six **new dedicated pages** via a
+  shared `PlayableShell` (DemoPageLayout + blurb + ONE centered 9:16 frame
+  + Restart + the item's feedback tag): `/gains-demo/pretest`, `/posttest`
+  (`MeasurementFlow`), `/bodymap`, `/mindful` (standalone, no
+  `onComplete`), `/guardian` (`ElevatorPitch`), and `/videos` (the five
+  players in the 2-per-row grid with per-video boxes `video-1…5` plus the
+  group box). Links open in the same tab like the existing Play links.
+  (3) **Pre/post pagination fits the frame** at a 375px-wide viewport
+  (body height ~470px, measured programmatically step by step on the
+  longest therapy branch with the write-ins engaged: **0px overflow on all
+  26 pre-test and 16 post-test steps**). Chunking: Demographics over 3
+  pages; CTS and Beck-4 one item per page (two didn't fit); the readiness
+  ruler one ruler per page (the third with its reason); Implicit Theories
+  and Trauma Beliefs two items per page; Program Feedback three pages;
+  therapy history up to three pages with the follow-up pages **skipped
+  off-branch** (`skip(v)`) and Continue **held** until the branch-deciding
+  answer (`gate(v)`), the step counter reflecting only the pages this
+  branch will see. Item wording and order are unchanged; "Part n of m"
+  shows under the instrument title. To get there the input components
+  grew: `RadioList`/`CheckboxList` take `columns` (a 2-column grid halves a
+  4-point scale; 44px targets in grid mode) and `LikertScale` now lays its
+  points in a fit-to-width grid (6 points on one row, a 10-point ruler as
+  two rows of five) instead of a flex-wrap that broke into ragged lines.
+  (4) A **Shadowmend divider** after card 7: "That is all for review for
+  this round. As the items above are approved, they will move down to the
+  Zone Cards to become canon." (5) The old **In Development** (Final Boss
+  script + its `review-finalboss` box), **Playable Character** (four-stage
+  strip + inner-light note + Narrator card) and **NPCs** sections are
+  consolidated into **Prototypes and In Development** at the bottom; the
+  first In Development heading is gone; **The climb** (Zone 1–5) stays
+  put. Page order: header → cards 1–7 → divider → World and Development
+  Map → The climb → Prototypes and In Development → footer. Housekeeping:
+  `GAINS_FEEDBACK_SECTIONS` moved to `src/pages/gainsFeedbackSections.js`
+  (re-exported from GainsDemoPage for older importers), `REVIEW_VIDEOS` +
+  the player card to `components/gains/reviewVideos.jsx`, feedback "where
+  you are" labels for the new routes. Verified locally (structure, links,
+  divider, consolidated sections, all six pages rendering their playable
+  in the frame with the right tag, the videos page's five players + boxes,
+  the pre/post fit measurement above, clean build) and live.
+
 - **366a553** (2026-09-03) — Draft 70: **Zone 4 second-playthrough fixes +
   new Video 4 render + new "Follow me" take.** (1) Video 4 is the new
   render without the burned-in Spark subtitles (Vimeo `1223708060` /
@@ -3701,3 +3748,55 @@ Five items from Josh's second live playthrough after Draft 69, plus two asset sw
 **Verify.** `/gains-demo/zone4`: Video 4 is the new render (no burned-in Spark subtitles) — and the same new render shows in the review-section videos; the new shorter "Follow me" plays after the video; Spark has **no black box** (clean flame, toned-down glow); the pond marker/trigger sits on the upper-right bank beside the frog and the Traveler walks to the bank to start the Mindful Place; you cannot walk into the water (taps on it stop at the bank); everything else from Drafts 68–69 unchanged; clean console; Ready for Roots unaffected; clean build. `src/game/` + `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 70.*
+
+
+### Draft 71 — Demo page restructure: review cards that open real 9:16 pages, "what's new" blurbs on the cards, a round-closing divider, pre/post fits each page, and one consolidated In-Development section — ✅ SHIPPED e59f2ff (2026-09-03)
+
+A reorganization of `/gains-demo` (`src/pages/GainsDemoPage.jsx` + new pages + `src/App.jsx` routes) so the review section reads as a clean hub of cards, every playable opens in its own dedicated page exactly the way it will appear in the game (like `/gains-demo/climb` and `/gains-demo/zone4` already do), and the page stops being overwhelming. Josh is replacing the long team email with the "what's new" text living ON each card, so those blurbs matter — use them verbatim.
+
+---
+## 1. Review section → cards that open dedicated pages
+Keep the "Proposals — comment before we make them official" (Ideas & Demos for Review) section, but **remove all inline embeds** (the pre/post packet, the five video players, Body Mapping, Mindful Place, the Zone 3 pitch). Each item becomes a **card**: title · the "what's new / what to look for" blurb · one or more **"Open →" buttons to a dedicated page** · the existing "Comment on this" box (its section tag unchanged). Renumber **1–7** (pre/post merge into one card):
+
+1. **Pre/Post test** (`review-pretest` for the card; the two pages keep `review-pretest` / `review-posttest`) — buttons **"Open the Pre-test →"** (`/gains-demo/pretest`) and **"Open the Post-test →"** (`/gains-demo/posttest`).
+2. **Videos** (`review-videos`) — **"Open the videos →"** (`/gains-demo/videos`).
+3. **Body Mapping** (`review-bodymap`) — **"Open Body Mapping →"** (`/gains-demo/bodymap`).
+4. **Mindful Place** (`review-mindfulness`) — **"Open Mindful Place →"** (`/gains-demo/mindful`).
+5. **Message to Your Guardian** (`review-zone3pitch`) — **"Open Message to Your Guardian →"** (`/gains-demo/guardian`).
+6. **The Ascent** (`review-ascent`) — **"Play the Ascent →"** (`/gains-demo/climb`, exists).
+7. **Zone 4: The Bright Reaches — walkable zone** (`review-zone4`) — **"Play Zone 4 →"** (`/gains-demo/zone4`, exists).
+
+**Card blurbs (verbatim — these replace the email):**
+- **1 · Pre/Post test:** "The measures, paginated the way they'll be administered, one page at a time with a Continue button. Pre-test: demographics, the event and time since, the Child Trauma Screen, therapy history, Beck Hopelessness, the readiness ruler, Implicit Theories of Emotion, and Trauma & Treatment Beliefs. Post-test: the pre+post instruments again plus the Program Feedback Scale. Look for item wording, order, and anything missing."
+- **2 · Videos:** "All of the video feedback is in. Video 1 has the revised script (our minds and bodies react to keep us safe), the updated body map that matches the activity, and the 'you see something happen' wording. Video 2 lost the gray circle, the jittery bubble, and the busy animations in the middle of the screen. Video 3 no longer refers to 'these characters,' and it frames TF-CBT and EMDR as examples rather than the only options. Video 4 was re-rendered to take the narration text out. Video 5's glasses have stems. The narration text at the bottom of all the videos is gone; captions are a CC toggle in the player. Each video has its own comment box."
+- **3 · Body Mapping:** "The write-in prompt now reads 'Is there another area where you feel a trauma reaction in your body? If so, write it in the box below,' and the stomach sits a little lower."
+- **4 · Mindful Place:** "Formerly Calm Place, and now finished. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music, so everything is audible), the breathing is guided by concentric rings that expand and contract with Spark's count, the frog is the new painterly one and breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. The bug where 'done' sent you back to the beginning is fixed."
+- **5 · Message to Your Guardian:** "The Wingsuit screen now makes clear that planning your message is what earns it, and it no longer suggests waiting for the perfect moment. The safety page explains what 988 is."
+- **6 · The Ascent:** "The Zone 4 to 5 climb got the rework we talked about. The climber is bigger. The obstacles are now feelings that fall toward you. Gold feelings (hope, courage, curiosity, resilience, and more) you collect to refill your Second Wind. Red feelings (sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret) block your path. Tap one to fire your Focusing Lens. The cloud lightens, the feeling's name is revealed, and it shatters into gold you can gather. It's framed as protecting yourself rather than fighting."
+- **7 · Zone 4:** "The first walkable zone: the Bright Reaches as a place you move through. Tap the ground to walk. Find Spark, watch the video, follow Spark to the pond for the Mindful Place, earn and equip your Oxygen Mask, then head for the exit and climb toward Mount Hope. Spark redirects you if you try something too early. It all happens inside one phone-sized frame, the way it will in the real app. Prototype stage. Does it feel like a game to you?"
+
+## 2. New dedicated pages (same pattern as `GainsClimbPage` / `GainsZone4Page`)
+Each: `DemoPageLayout`, the card's blurb at the top, ONE centered **9:16 phone frame** with the playable inside (same frame treatment), a Restart, `feedbackProgram="gains-teens"`, `feedbackDefaultSection` = that item's tag, `footerPath` = its route. Add routes in `src/App.jsx`.
+- `/gains-demo/pretest` → `GainsPretestPage` (the Pre-test flow of `MeasurementPacket`) · tag `review-pretest`
+- `/gains-demo/posttest` → `GainsPosttestPage` (the Post-test flow) · tag `review-posttest`
+- `/gains-demo/videos` → `GainsVideosPage`: the five players in the existing 2-per-row grid, **each with its own comment box** (`video-1`…`video-5`, as Draft 55 built) · page default tag `review-videos`. Use the current `REVIEW_VIDEOS` (incl. the new Video 4 render from Draft 70).
+- `/gains-demo/bodymap` → `GainsBodyMapPage` (`BodyMapping`) · `review-bodymap`
+- `/gains-demo/mindful` → `GainsMindfulPage` (`MindfulnessCalmPlace`, standalone — no `onComplete`) · `review-mindfulness`
+- `/gains-demo/guardian` → `GainsGuardianPage` (`ElevatorPitch`) · `review-zone3pitch`
+Open these from the cards in the **same tab** (like the existing Play links) unless the current climb/zone4 links open new tabs — match whatever they do.
+
+## 3. Pre/Post pagination — every page fits on screen, no inner scrolling
+In `MeasurementPacket`, re-chunk so **no step needs to scroll inside the frame**: split long instruments across multiple steps (e.g. Demographics over 2–3 pages; scales in groups of ~4–6 items depending on item length), with **Continue always visible at the bottom** and the progress indicator reflecting the new total. Keep item wording/order verbatim and the therapy-history branching intact. Verify at the frame height on a 375px-wide viewport.
+
+## 4. Divider after the last review card
+Directly after card 7, before "World and Development Map," add a **Shadowmend-styled divider bar** (soft card/rule with `--border-soft`, warm accent, Nunito, centered) reading:
+> **That is all for review for this round.** As the items above are approved, they will move down to the Zone Cards to become canon.
+
+## 5. Consolidate the two development sections
+Move the current **"In Development"** section (the Final Boss summit script card + its comment box), the **"Playable Character"** section (four-stage strip + the inner-light note) with its **Narrator (Spark)** card, and the **"NPCs"** section (Emberwick, Mirefly, Hollowshell, Dimmet) **down into "Prototypes and In Development"** at the bottom of the page (alongside the playable traversals and dev pieces). Remove the now-empty first "In Development" heading. **Keep "The climb" heading and the Zone 1–5 cards where they are** (they're the canon area the divider points to). Preserve every comment thread/tag (`review-finalboss`, `npcs`, etc.).
+
+**Resulting page order:** Header → Proposals — comment before we make them official (cards 1–7) → **divider** → World and Development Map → The climb (Zone 1–5 cards) → Prototypes and In Development (traversals + Final Boss + Playable Character/Narrator + NPCs) → footer.
+
+**Verify.** `/gains-demo`: the review section shows seven cards with the verbatim blurbs, each with working Open/Play buttons and its own comment box; no inline embeds remain; the divider appears after card 7; the World & Development Map, then The climb (Zone 1–5), then a single Prototypes and In Development section containing the traversals, Final Boss script, Playable Character + Narrator, and NPCs; the first "In Development" heading is gone. New pages `/gains-demo/pretest`, `/posttest`, `/videos`, `/bodymap`, `/mindful`, `/guardian` each render their playable in a 9:16 frame with the right feedback tag; the videos page shows all five (new Video 4) with per-video boxes; pre/post steps never scroll inside the frame (Continue always visible) and item text/order is unchanged; all feedback tags still label correctly in admin/CSV; Ready for Roots unaffected; clean build. `src/pages/` + `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 71.*
