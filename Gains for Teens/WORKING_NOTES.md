@@ -132,6 +132,74 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **76d52f2** (2026-09-11) — Draft 75: **Zone 4 "Tap the path to walk"
+  cue.** After Spark's arrive line, an instruction pill ("Tap the path to
+  walk", Nunito 800 on a dark rounded backing) plus the ghost-tap ring
+  pulsing ON the path between the Traveler and Spark (about a third of the
+  way up); it now stays until the first SUCCESSFUL tap-to-move -- a tap off
+  the walkable area leaves it up -- then fades. Reduced motion: static text
+  and ring. Verified locally (cue present after the line, ring on a walkable
+  point, persists through a non-walkable tap, gone on the first move).
+
+- **6ceac7a** (2026-09-11) — Draft 74: **activity fixes + three activities
+  graduate to their Zone cards.** Body Mapping's closing line renders at the
+  body-copy size (14px, bright; was 11.5px) and still fits above Continue.
+  Mindful Place's chips sit three to a row, centered (SEE 3+3, HEAR 3+2; no
+  dangling chip, no font shrink). Guardian step 4 reads "Therapy can help
+  me sleep better…" ("also" dropped). Body Mapping, Mindful Place and
+  Message to Your Guardian left the review section: each Zone card (1, 3,
+  4) shows it as the zone's activity with a **Playable** badge, an
+  **Open →** link to its dedicated page and its original comment box (tags
+  `review-bodymap` / `review-zone3pitch` / `review-mindfulness` unchanged).
+  The review section is down to **four cards** (Pre/Post test, Videos, The
+  Ascent, Zone 4), renumbered 1–4; the dedicated routes/pages are unchanged
+  and still open with their blurbs.
+
+- **80fd739** (2026-09-11) — Draft 73: **pre/post measures.** (1)
+  "(reverse scored)" is gone from every item (the `reverse` flags stay as
+  scoring metadata; nothing else participant-facing said "reverse"). (2)
+  **Trauma and Treatment Beliefs is a 5-point scale with every point
+  labeled** -- 1 Strongly Disagree · 2 Disagree · 3 Neither Agree nor
+  Disagree · 4 Agree · 5 Strongly Agree -- pre and post; `ScaleMatrix` gained
+  a `numbered` labeled mode (number over label in the column headers, the
+  number in each circle). CTS, Beck-4, Implicit Theories and Program
+  Feedback are untouched. (3) **The three readiness-ruler items are
+  sliders**: new `ds/RangeSlider.jsx`, the Ready for Roots `SliderItem`
+  pattern in Shadowmend tokens -- rests one tick before 1, no default,
+  "Drag the slider to choose.", counts as unanswered until dragged, the
+  chosen number shows large; end anchors are the numbers 1 and 10 (the
+  source has no anchor wording -- Cowork/Josh, supply words if wanted).
+  (4) **Bolder, brighter text**: instructions 13px bold bright, item text
+  14px semibold, option labels 14px bright, matrix headers/anchors in the
+  body color. (5) **Time since the trauma = the Ready for Roots pattern**:
+  "About how many years ago did it happen?" write-in; "It happened less
+  than a year ago" checkbox pins years to 0, hides Years and reveals "About
+  how many months ago?" + "Less than a month ago" / "I'm not sure" (no
+  "ongoing" option, per the team). It has its own page now (the expanded
+  branch didn't fit beside age/grade); required-field logic follows the
+  branch (years, OR months / one of the two options). Every page still
+  fits at 375px: **16 pre-test pages on the longest branch, 10 post-test,
+  0px inner overflow**, all blocking when empty. Ready for Roots' own
+  Pretest/SliderItem untouched; `src/activities/` untouched (no version
+  bump).
+
+- **2006085** (2026-09-11) — Draft 72: **the Ascent's feeling words,
+  reds, and music.** Gold labels 15–21px (long words shrink), red labels
+  20–28px, both with **no stroke/outline** -- weight 800 plus a soft dark
+  drop-shadow carries the contrast. **Reds scaled up** (`RED_BASE_W` 170 →
+  230; the 1.0/1.3/1.6 tier variation kept) so one in the lane blocks the
+  gold behind it. **Reds now drift down into the lane** from above (~1.5s
+  ease-out) before holding and blocking; the stuck-hint timer waits until
+  it has settled; tap-to-blast, name-reveal and shatter-to-gold unchanged.
+  **Music**: the 3–5s lull was silence baked into the mp3 (0.8s leading +
+  2.8s trailing), not the loop; `public/gains/climb/audio/climb-music.mp3`
+  is trimmed to the music (118.1s; the untrimmed original is kept beside
+  the game assets as `climb-music-untrimmed-2026-09-11.mp3`), so the
+  existing `loop: true` now wraps seamlessly. Climber sprite and the core
+  mechanic untouched. Verified locally by inspecting the running scene
+  (label styles, red width 230 at tier 1, `descending` true → false at
+  y 442, loop true/duration 118.1) and by screenshot.
+
 - **293752d** (2026-09-03) — in-conversation (Josh): the Beck-4 page no
   longer shows "Scored by summing all 4 items." (scoring guidance for us,
   not for the teen); `Instrument` no longer renders a note at all.
@@ -3880,3 +3948,70 @@ Move the current **"In Development"** section (the Final Boss summit script card
 **Verify.** `/gains-demo`: the review section shows seven cards with the verbatim blurbs, each with working Open/Play buttons and its own comment box; no inline embeds remain; the divider appears after card 7; the World & Development Map, then The climb (Zone 1–5), then a single Prototypes and In Development section containing the traversals, Final Boss script, Playable Character + Narrator, and NPCs; the first "In Development" heading is gone. New pages `/gains-demo/pretest`, `/posttest`, `/videos`, `/bodymap`, `/mindful`, `/guardian` each render their playable in a 9:16 frame with the right feedback tag; the videos page shows all five (new Video 4) with per-video boxes; pre/post steps never scroll inside the frame (Continue always visible) and item text/order is unchanged; all feedback tags still label correctly in admin/CSV; Ready for Roots unaffected; clean build. `src/pages/` + `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 71.*
+
+
+### Draft 72 — The Ascent: readable feeling words (no outline), bigger descending reds, seamless music loop — 9/11 feedback — ✅ SHIPPED 2006085 (2026-09-11)
+
+Tuning from the 9/11 team review (`src/game/climbScene.js`). **Do NOT change the core mechanic** (tap-to-blast vs. avoid is being held for Dr. Sprang) and **do NOT touch the climber sprite** (that's a multi-image sprite set we don't have new assets for yet).
+
+**1. Feeling-word text — bigger, and remove the white outline.** The words on the gold orbs and the red clouds are too small to read, and the "bold" treatment rendered as a **white stroke/outline** that makes them harder to read. Increase the font size on both (gold noticeably, red too), **drop the outline/stroke entirely**, and use a clean heavier weight plus a soft dark drop-shadow for contrast instead. Long words (e.g. "determination") shrink to fit rather than being cut.
+
+**2. Red obstacles bigger.** Scale the reds up so a red in your lane genuinely **blocks the view of the orbs behind it** and reads as an obstacle you must deal with (Maggie: "so it feels more competitive"). Keep the intentional size/hit-count variation between reds (that's by design — do not flatten it).
+
+**3. Reds descend instead of appearing in place.** Right now a red pops into position; have it **drift down slowly into the lane** from above (a gentle descent, then it holds and blocks as today). Same blocking, same tap-to-blast, same progressive name-reveal — only the entrance changes.
+
+**4. Music loop gap.** The music runs out and there's a 3–5s silence before it restarts. Make the track **loop seamlessly** (Phaser `loop: true` on the sound, or a short crossfade at the boundary) so there's never a lull, however long a run takes.
+
+**Verify.** On `/gains-demo/climb`: feeling words are clearly readable at game size on both gold and red with no white outline; reds are larger and visibly block the lane; a red drifts down into place rather than popping in; music never drops out across a long run; climber sprite unchanged; tap-to-blast, name-reveal, shatter-to-gold, Second Wind, aura all unchanged; no console errors; clean build. `src/game/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 72.*
+
+
+### Draft 73 — Pre/Post measures: drop "(reverse scored)", 5-point anchored Beliefs scale, sliders for the rulers, bolder text, Ready-for-Roots time-since-trauma — 9/11 feedback — ✅ SHIPPED 80fd739 (2026-09-11)
+
+Changes to `src/components/gains/MeasurementPacket.jsx` (and its `ds/` primitives as needed), from the 9/11 review. Item **wording and order stay verbatim** except where stated. Review-only demo (nothing stored) — but keep field keys stable so the future live instrument maps cleanly.
+
+**1. Remove the "(reverse scored)" text everywhere.** It's generated at render: `text: item.reverse ? \`${item.text} (reverse scored)\` : item.text` (~line 372). **Stop appending it** — render `item.text` only. **Keep the `reverse: true` flag** on the items (it's scoring metadata). Then grep the whole packet for any other "reverse" leakage (pre and post, trauma-knowledge items, post-test 7 of 10) and remove it from anything participant-facing.
+
+**2. Trauma and Treatment Beliefs → 5-point with labeled anchors (pre AND post).** This team-created scale currently uses `SIX_POINT` (1–6 shown as bare numbers with only the endpoints named). Change it to a **5-point scale with every point labeled:** **1 Strongly Disagree · 2 Disagree · 3 Neither Agree nor Disagree · 4 Agree · 5 Strongly Agree.** (Not "Neutral" — the team specifically chose "Neither Agree nor Disagree" as kid-friendlier.) Applies to `beliefs-1`/`beliefs-2` in both flows. If the full-label key across the top of the ScaleMatrix gets cluttered at 375px, put the **anchor labels beneath the numbers** (or stack them) — readable beats compact. **Leave the standardized scales exactly as they are** (CTS, Beck-4, Implicit Theories with its "Absolutely/Somewhat" anchors, Program Feedback) — those can't change. *(Bianca is logging this as a measurement change for the IRB amendment.)*
+
+**3. Sliders for the ruler items (Ready-for-Roots style).** The Motivation / Readiness to Change Ruler items (`motiv_ready`, `motiv_confidence`, `motiv_helpful` — the 1–10 "numbers in circles") should be **sliders**, mirroring Ready for Roots' `SliderItem` in `src/activities/Pretest.jsx`: an `<input type="range">` with the anchor text at each end, **no default value** (rests one tick before min; "Drag the slider to choose"), touched-tracking so an untouched slider counts as unanswered, and the current value shown large. Restyle to the GAINS/Shadowmend tokens (amber thumb/track) — same behavior, this program's look. Any other GAINS item that is really a ruler/slider gets the same treatment.
+
+**4. Bolder, less gray instructions and answer options.** Instruction text and response-option labels currently read small and gray. Bump size/weight and use `--text-bright`/`--text-body` rather than muted tones; make scale anchors clearly noticeable. Keep every page fitting without inner scroll (Draft 71 §3) — re-chunk if the larger type pushes a page over.
+
+**5. "Time since the trauma" → the Ready for Roots pattern (+ a months follow-up).** Replace the current `trauma_months` / `trauma_years` pair (and the `TRAUMA_TIMING` bucket list) with:
+- **"About how many years ago did it happen?"** — numeric write-in (`trauma_years`).
+- A checkbox **"It happened less than a year ago"** (`trauma_less_than_year`) — when checked, hide the Years input and pin years to 0 (exactly like RfR's `home_less_than_year`), and **reveal a follow-up:** **"About how many months ago?"** — numeric write-in (`trauma_months`) **plus two options: "Less than a month ago"** and **"I'm not sure."** (Mirror the RfR wording style. **Deliberately NO "it's still happening / ongoing" option** — the team decided against it.)
+- Keep it in `demographics-1` (or its own short page if it no longer fits), keep the required-field logic sensible (years OR the less-than-a-year branch answered).
+
+**Keep:** everything else — instrument order, pagination-fits-the-page, branching on therapy history, Shadowmend styling, review-only.
+
+**Verify.** `/gains-demo/pretest` and `/gains-demo/posttest`: no "(reverse scored)" anywhere; Trauma and Treatment Beliefs shows five labeled points (Strongly Disagree … Strongly Agree) in both flows and the standardized scales are untouched; the three ruler items are sliders with anchors, no default, and must be dragged to count; instructions/options are bold and readable; the time-since-trauma question shows years + the less-than-a-year checkbox, which reveals months + "Less than a month ago" + "I'm not sure" (no "ongoing"); every page still fits at 375px with Continue visible; Ready for Roots' own Pretest/SliderItem untouched; clean build. `src/components/` (not `src/activities/`) → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 73.*
+
+
+### Draft 74 — Activity fixes (Body Map text, Mindful Place chips, Guardian "also") + graduate all three to their Zone cards — 9/11 feedback — ✅ SHIPPED 6ceac7a (2026-09-11)
+
+Three small fixes, then the three activities leave the review section and become canon on the Zone cards.
+
+**1. Body Mapping — final summary box text is too small.** After Continue, the closing copy ("Each of these things help us respond to danger, but these responses can stick around even after the danger has passed…") renders noticeably smaller than the intro card at the top. **Increase it to match the intro/body copy size** (≈14–15px, `--text-bright`), keeping it fitting above the Continue button in the 9:16 frame (`src/components/BodyMapping.jsx`).
+
+**2. Mindful Place — chip rows.** The SEE step's six chips render as a row of five with one hanging below. Lay them out as **2 rows of 3** (a grid) so nothing dangles and the font doesn't have to shrink. **Check the HEAR chips (5) and any other chip row** — the team suspects they're all like this; make each a clean grid (e.g. 3+2 or 2+2+1 centered), no lone orphan (`src/components/MindfulnessCalmPlace.jsx`).
+
+**3. Message to Your Guardian — step 4 copy.** The option **"Therapy can also help me…" → "Therapy can help me…"** — drop "also" (the step moved earlier, so it's now the first reason given). Verbatim change to that one option only (`src/components/ElevatorPitch.jsx`).
+
+**4. Graduate to canon.** With those fixes in, **move Body Mapping, Mindful Place, and Message to Your Guardian out of the "Proposals — comment before we make them official" section** and into their **Zone cards** on `/gains-demo`: Body Mapping → Zone 1 card, Message to Your Guardian → Zone 3 card, Mindful Place → Zone 4 card. On each Zone card show it as the zone's activity with its **"Open →" link to the existing dedicated page** and a **"Comment on this"** box keeping its existing tag (`review-bodymap`, `review-zone3pitch`, `review-mindfulness` — leave the tag values so history still reads; relabel to e.g. "Zone 1: Body Mapping" if you like). **Remove their three review cards** and **renumber the remaining review cards** (Pre/Post test, Videos, The Ascent, Zone 4 → 1–4). Keep the dedicated routes/pages as they are.
+
+**Verify.** Body Mapping's closing text matches the intro size and fits; Mindful Place chips sit in clean grids with no orphan on any step; Guardian step 4 reads "Therapy can help me…"; on `/gains-demo` the review section shows four cards (Pre/Post, Videos, Ascent, Zone 4) and the three activities appear on their Zone 1/3/4 cards with working Open links and comment boxes; nothing else moved; feedback tags still label correctly; clean build. `src/components/` + `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 74.*
+
+
+### Draft 75 — Zone 4: clearer "tap to move" instruction on arrival — 9/11 feedback — ✅ SHIPPED 76d52f2 (2026-09-11)
+
+Testers didn't immediately realize they could walk. On `/gains-demo/zone4` (`src/game/zoneWalkScene.js` / `ZoneStage`), make the first-move cue unmistakable: after Spark's arrive line, show a **clear on-screen instruction** — e.g. **"Tap the path to walk"** — with the ghost-tap animation pulsing on the path between the Traveler and Spark, and keep it up **until the player's first successful tap-to-move** (don't time it out). Optionally have Spark's speech bubble echo it ("Tap the path to come over to me"). Style it like the existing hint (Shadowmend, unobtrusive but obvious). Fade it out on the first move. Reduced-motion: static text, no pulse.
+
+**Verify.** On arrival the "Tap the path to walk" cue is clearly visible and persists until the first move, then fades; nothing else in the zone changes; clean build. `src/game/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 75.*
