@@ -213,11 +213,15 @@ function OtherAreaField({ value, onChange }) {
   )
 }
 
+// Draft 74 (9/11 review): the closing line used to render at 11.5px, well
+// under the intro/body copy; it now matches that size and brightness. It
+// still fits: the copy block's height is reserved by the worst-case region
+// panel + counter + write-in spacer, which is taller than this box.
 function ClosingBox() {
   return (
     <div
-      className="mt-1.5 rounded-2xl px-3 py-2 text-[11.5px] leading-snug"
-      style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
+      className="mt-1.5 rounded-2xl px-3.5 py-2.5 text-[14px] leading-snug"
+      style={{ background: 'rgba(253,230,138,.10)', border: '1px solid var(--border-warm)', color: 'var(--text-bright)' }}
     >
       {CLOSING}
     </div>

@@ -372,18 +372,23 @@ function loadLayer(url) {
     .then((svg) => svg.replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" '))
 }
 
+// Draft 74 (9/11 review): chips sit three to a row, centered, so a set of
+// six is 2 rows of 3 and a set of five is 3 + 2 -- no lone chip dangling
+// under a row of five, and no font shrink to squeeze them in.
 function Chip({ label, active, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-colors"
-      style={
-        active
+      className="px-2 py-1.5 rounded-full text-[13px] font-semibold border transition-colors text-center"
+      style={{
+        flex: '0 0 calc(33.333% - 6px)',
+        ...(active
           ? { background: 'var(--action-primary)', borderColor: 'var(--action-primary)', color: 'var(--text-on-warm)' }
-          : { background: 'var(--action-quiet)', borderColor: 'var(--border-soft)', color: 'var(--text-bright)' }
-      }
+          : { background: 'var(--action-quiet)', borderColor: 'var(--border-soft)', color: 'var(--text-bright)' }),
+      }}
+      data-chip
     >
       {label}
     </button>
@@ -750,7 +755,7 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
           </div>
           <div className="text-[12px] mb-2" style={{ color: 'var(--text-body)' }}>{instruction}</div>
 
-          <div className="flex flex-wrap gap-2 mb-2">
+          <div className="flex flex-wrap justify-center gap-2 mb-2">
             {mode === 'see' &&
               SEE_ITEMS.map((item) => (
                 <Chip

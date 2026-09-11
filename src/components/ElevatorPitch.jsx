@@ -56,7 +56,9 @@ const NORMALIZE_OPTIONS = [
   'Therapy isn’t just for when things are in crisis',
   'A lot of kids my age use therapy to feel better',
   'Therapy is a good place to think things through',
-  'Therapy can also help me sleep better, make better grades, improve my connection to people',
+  // Draft 74 (9/11 review): was "Therapy can also help me…" -- "also" dropped
+  // now that this step comes first among the reasons.
+  'Therapy can help me sleep better, make better grades, improve my connection to people',
 ]
 
 const OFFER_OPTIONS = [

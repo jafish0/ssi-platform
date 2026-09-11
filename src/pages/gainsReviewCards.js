@@ -1,7 +1,13 @@
-// The seven review cards on /gains-demo (Draft 71) and the blurb each
-// dedicated page repeats at its top. The blurbs are Josh's "what's new /
-// what to look for" text, VERBATIM -- they replace the long team email, so
-// don't reword them. `links` open the dedicated 9:16 pages in the same tab.
+// The review cards on /gains-demo (Draft 71) and the blurb each dedicated
+// page repeats at its top. The blurbs are Josh's "what's new / what to look
+// for" text, VERBATIM -- they replace the long team email, so don't reword
+// them. `links` open the dedicated 9:16 pages in the same tab.
+//
+// Draft 74 (9/11 review): Body Mapping, Mindful Place and Message to Your
+// Guardian graduated to canon -- they now live on their Zone cards (Zone 1,
+// 4 and 3) with the same feedback tags -- so the review section is down to
+// four cards, renumbered 1-4. Their blurbs stay here (keyed, not numbered)
+// because the dedicated pages still show them at the top.
 
 export const REVIEW_CARDS = [
   {
@@ -26,35 +32,8 @@ export const REVIEW_CARDS = [
     links: [{ label: 'Open the videos', to: '/gains-demo/videos' }],
   },
   {
-    key: 'bodymap',
-    n: 3,
-    title: 'Body Mapping',
-    section: 'review-bodymap',
-    blurb:
-      "The write-in prompt now reads 'Is there another area where you feel a trauma reaction in your body? If so, write it in the box below,' and the stomach sits a little lower.",
-    links: [{ label: 'Open Body Mapping', to: '/gains-demo/bodymap' }],
-  },
-  {
-    key: 'mindful',
-    n: 4,
-    title: 'Mindful Place',
-    section: 'review-mindfulness',
-    blurb:
-      "Formerly Calm Place, and now finished. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music, so everything is audible), the breathing is guided by concentric rings that expand and contract with Spark's count, the frog is the new painterly one and breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. The bug where 'done' sent you back to the beginning is fixed.",
-    links: [{ label: 'Open Mindful Place', to: '/gains-demo/mindful' }],
-  },
-  {
-    key: 'guardian',
-    n: 5,
-    title: 'Message to Your Guardian',
-    section: 'review-zone3pitch',
-    blurb:
-      'The Wingsuit screen now makes clear that planning your message is what earns it, and it no longer suggests waiting for the perfect moment. The safety page explains what 988 is.',
-    links: [{ label: 'Open Message to Your Guardian', to: '/gains-demo/guardian' }],
-  },
-  {
     key: 'ascent',
-    n: 6,
+    n: 3,
     title: 'The Ascent',
     section: 'review-ascent',
     blurb:
@@ -63,7 +42,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone4',
-    n: 7,
+    n: 4,
     title: 'Zone 4: The Bright Reaches — walkable zone',
     section: 'review-zone4',
     blurb:
@@ -72,6 +51,20 @@ export const REVIEW_CARDS = [
   },
 ]
 
+// Blurbs for the three activities that graduated to their Zone cards (Draft
+// 74); their dedicated pages still open with these at the top.
+export const CANON_ACTIVITY_BLURBS = {
+  bodymap:
+    "The write-in prompt now reads 'Is there another area where you feel a trauma reaction in your body? If so, write it in the box below,' and the stomach sits a little lower.",
+  mindful:
+    "Formerly Calm Place, and now finished. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music, so everything is audible), the breathing is guided by concentric rings that expand and contract with Spark's count, the frog is the new painterly one and breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. The bug where 'done' sent you back to the beginning is fixed.",
+  guardian:
+    'The Wingsuit screen now makes clear that planning your message is what earns it, and it no longer suggests waiting for the perfect moment. The safety page explains what 988 is.',
+}
+
 export function reviewCard(key) {
-  return REVIEW_CARDS.find((c) => c.key === key)
+  const card = REVIEW_CARDS.find((c) => c.key === key)
+  if (card) return card
+  if (CANON_ACTIVITY_BLURBS[key]) return { key, blurb: CANON_ACTIVITY_BLURBS[key] }
+  return null
 }

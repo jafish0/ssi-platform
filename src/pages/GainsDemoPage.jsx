@@ -2,12 +2,13 @@
 // the GAINS for Teens SSI ("The Long Light").
 //
 // Draft 71 (2026-09-03) restructured it into a hub. Top to bottom:
-//   Proposals — comment before we make them official: seven CARDS (title,
-//     Josh's verbatim "what's new" blurb, Open/Play buttons to a dedicated
-//     9:16 page, its own comment box). No inline embeds anymore -- every
-//     playable opens on its own page the way it will appear in the game
-//     (/gains-demo/pretest, /posttest, /videos, /bodymap, /mindful,
-//     /guardian, /climb, /zone4).
+//   Proposals — comment before we make them official: CARDS (title, Josh's
+//     verbatim "what's new" blurb, Open/Play buttons to a dedicated 9:16
+//     page, its own comment box). No inline embeds anymore -- every playable
+//     opens on its own page the way it will appear in the game. Draft 74
+//     (9/11) graduated Body Mapping, Mindful Place and Message to Your
+//     Guardian to their Zone cards, so four cards remain: Pre/Post test,
+//     Videos, The Ascent, Zone 4.
 //   → a round-closing divider
 //   → World and Development Map
 //   → The climb: Zone 1…5 cards (the canon area the divider points to)
@@ -246,6 +247,8 @@ const ZONES = [
     videos: [{ title: 'Video 1 — What trauma is', duration: '25 sec', script: V1 }],
     activity: {
       title: 'Body Mapping',
+      // Draft 74 (9/11 review): graduated to canon -- playable from here.
+      live: { href: '/gains-demo/bodymap', section: 'review-bodymap' },
       desc: (
         <>
           <p>
@@ -304,6 +307,7 @@ const ZONES = [
     ],
     activity: {
       title: 'Message to Your Guardian',
+      live: { href: '/gains-demo/guardian', section: 'review-zone3pitch' },
       desc: (
         <>
           Holly’s and Dr. Sprang’s message-builder, step by step: greeting,
@@ -332,6 +336,7 @@ const ZONES = [
     ],
     activity: {
       title: 'Mindfulness: Mindful Place (3-3-3)',
+      live: { href: '/gains-demo/mindful', section: 'review-mindfulness' },
       desc: (
         <>
           Spark leads a Mindful Place visualization that doubles as the 3-3-3
@@ -1017,11 +1022,39 @@ function ZoneSection({ zone }) {
           <Beat label="Activity">
             <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
               <span className="font-semibold" style={{ color: 'var(--text-bright)' }}>{zone.activity.title}</span>
-              <Pill icon={HardHat}>
-                {zone.activity.pending ? 'To be designed' : 'Interactive version in development'}
-              </Pill>
+              {zone.activity.live ? (
+                <GainsBadge tone="warm" icon={<Play size={13} strokeWidth={2} />} style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 'var(--weight-medium)' }}>
+                  Playable
+                </GainsBadge>
+              ) : (
+                <Pill icon={HardHat}>
+                  {zone.activity.pending ? 'To be designed' : 'Interactive version in development'}
+                </Pill>
+              )}
             </div>
             <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-body)' }}>{zone.activity.desc}</div>
+            {/* Draft 74: the built activities live here now (graduated out of
+                the review section), each opening its dedicated 9:16 page and
+                keeping its original comment thread/tag. */}
+            {zone.activity.live && (
+              <div className="mt-3 flex items-center gap-3 flex-wrap">
+                <Link
+                  to={zone.activity.live.href}
+                  className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+                >
+                  Open
+                  <ArrowRight size={14} strokeWidth={2} />
+                </Link>
+                <FeedbackButton
+                  program="gains-teens"
+                  sections={GAINS_FEEDBACK_SECTIONS}
+                  defaultSection={zone.activity.live.section}
+                  label="Comment on this"
+                  subtle
+                />
+              </div>
+            )}
           </Beat>
 
           {zone.synopsis && (
