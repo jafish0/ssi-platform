@@ -609,6 +609,7 @@ export function makeZoneWalkScene(Phaser) {
       const { x: fx, y: fy } = this.traveler
       this.path = this.route(fx, fy, x, y)
       this.pendingTarget = target
+      if (this.path.length && this.hint) this.hideHint() // first successful move
       // Kick the walk animation immediately so there's no idle frame lag.
       if (this.path.length) this.face(this.path[0].x - fx, this.path[0].y - fy)
     }
@@ -636,7 +637,6 @@ export function makeZoneWalkScene(Phaser) {
       this.lastInputAt = this.time.now
       if (!this.firstTapDone) {
         this.firstTapDone = true
-        this.hideHint()
         this.emit({ type: 'firstTap' })
       }
       const z = this.zone
@@ -694,28 +694,40 @@ export function makeZoneWalkScene(Phaser) {
       this.tweens.add({ targets: m, alpha: 0, scale: m.scale * 0.6, duration: 320, onComplete: () => m.destroy() })
     }
 
+    // Draft 75 (9/11 review): testers didn't realize they could walk. The
+    // first-move cue is now an unmistakable instruction pill plus the ghost
+    // tap pulsing ON THE PATH between the Traveler and Spark, and it stays
+    // up until the first successful tap-to-move (see walkTo), not until any
+    // tap. Reduced motion: static text and ring, no pulse.
     showHint() {
-      const { x, y } = this.traveler
-      const s = this.depthScale(y)
-      const hx = x + 10
-      const hy = y - 190 * s
+      const t = this.traveler
+      const sp = this.zone.spots.sparkWait
+      // A point on the path roughly a third of the way from the Traveler
+      // toward Spark -- where the first tap should land.
+      const hx = t.x + (sp.x - t.x) * 0.12
+      const hy = t.y + (sp.y - t.y) * 0.38
+      const s = this.depthScale(hy)
       const ring = this.add.image(hx, hy, 'ring').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffe9b8).setDepth(H + 10)
-      ring.setScale(0.22).setAlpha(0.85)
+      ring.setScale(0.3 * s).setAlpha(0.9)
+      const dot = this.add.image(hx, hy, 'glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffe9b8).setDepth(H + 10)
+      dot.setScale(0.5 * s).setAlpha(0.55)
       const text = this.add
-        .text(hx, hy - 60, 'Tap the path to move', {
+        .text(hx, hy - 110 * s, 'Tap the path to walk', {
           fontFamily: 'Nunito, ui-rounded, system-ui, sans-serif',
-          fontSize: '30px',
+          fontSize: '34px',
           fontStyle: '800',
           color: '#fff7ea',
-          stroke: '#1b1030',
-          strokeThickness: 6,
+          backgroundColor: 'rgba(2, 17, 39, 0.78)',
+          padding: { left: 26, right: 26, top: 12, bottom: 12 },
+          shadow: { offsetX: 0, offsetY: 4, color: 'rgba(0,0,0,0.5)', blur: 12, fill: true },
         })
         .setOrigin(0.5, 1)
         .setDepth(H + 10)
-      this.hint = [ring, text]
+      this.hint = [ring, dot, text]
       if (!this.reduced) {
-        this.tweens.add({ targets: ring, scale: { from: 0.22, to: 0.5 }, alpha: { from: 0.85, to: 0 }, duration: 1100, repeat: -1, ease: 'Sine.easeOut' })
-        this.tweens.add({ targets: text, y: hy - 68, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' })
+        this.tweens.add({ targets: ring, scale: { from: 0.3 * s, to: 0.75 * s }, alpha: { from: 0.9, to: 0 }, duration: 1100, repeat: -1, ease: 'Sine.easeOut' })
+        this.tweens.add({ targets: dot, alpha: { from: 0.55, to: 0.2 }, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' })
+        this.tweens.add({ targets: text, y: hy - 118 * s, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' })
       }
     }
 
