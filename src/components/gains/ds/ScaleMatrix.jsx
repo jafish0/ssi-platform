@@ -8,39 +8,54 @@
 // 4-point instrument (CTS, Beck-4) fits one phone-frame page, and the
 // 6-point end-anchored scales fit three items per page.
 //
-// Two flavors:
+// Flavors:
 //   - labeled:  `options[].label` become the column headers (CTS, Beck-4);
 //               circles are blank, filled when selected.
+//   - labeled + `numbered`: each header shows its point number over its
+//               label and the circles show the number too (the 5-point
+//               Trauma and Treatment Beliefs scale, Draft 73).
 //   - numeric:  pass `minLabel`/`maxLabel`; the circles show the point
 //               number and the two anchors print once above the items
-//               (Implicit Theories, Trauma Beliefs, Program Feedback).
+//               (Implicit Theories, Program Feedback).
 // `values` is the whole answer map; each item's `key` indexes into it.
+//
+// Draft 73 (9/11 review): bolder, brighter text throughout -- item text
+// 14px semibold, headers/anchors in the body color rather than muted.
 
 const CIRCLE = 40 // px; a compact tap target, still comfortably tappable
 
 // `missing` (optional) lists item keys the tester still has to answer after
 // trying to continue; those rows get the warm-coral highlight.
-export default function ScaleMatrix({ items, options, values, onChange, name, minLabel, maxLabel, missing = [] }) {
+export default function ScaleMatrix({ items, options, values, onChange, name, minLabel, maxLabel, numbered = false, missing = [] }) {
   const numeric = Boolean(minLabel || maxLabel)
+  const showNumber = numeric || numbered
   const cols = { gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }
+  const last = options[options.length - 1]
   return (
     <div role="group" aria-label={name}>
       {!numeric && (
-        <div className="grid mb-1" style={cols}>
+        <div className="grid mb-1.5" style={cols}>
           {options.map((o) => (
-            <div key={o.value} className="text-[10px] leading-tight text-center px-0.5 font-semibold" style={{ color: 'var(--text-muted)' }}>
-              {o.label}
+            <div key={o.value} className="text-center px-0.5">
+              {numbered && (
+                <div className="text-[13px] font-extrabold leading-none mb-0.5" style={{ color: 'var(--text-warm)' }}>
+                  {o.value}
+                </div>
+              )}
+              <div className="text-[11px] leading-tight font-bold" style={{ color: 'var(--text-body)' }}>
+                {o.label}
+              </div>
             </div>
           ))}
         </div>
       )}
       {numeric && (
-        <div className="flex justify-between text-[11px] mb-1" style={{ color: 'var(--text-faint)' }}>
+        <div className="flex justify-between text-[12px] font-semibold mb-1.5" style={{ color: 'var(--text-body)' }}>
           <span>
             {options[0].value} = {minLabel}
           </span>
           <span>
-            {options[options.length - 1].value} = {maxLabel}
+            {last.value} = {maxLabel}
           </span>
         </div>
       )}
@@ -57,7 +72,7 @@ export default function ScaleMatrix({ items, options, values, onChange, name, mi
               ...(isMissing ? { borderLeft: '3px solid var(--coral-400)', paddingLeft: 8, marginLeft: -11, borderRadius: 4 } : null),
             }}
           >
-            <p className="text-[13px] leading-snug mb-1.5" style={{ color: isMissing ? 'var(--coral-400)' : 'var(--text-bright)' }}>
+            <p className="text-[14px] font-semibold leading-snug mb-1.5" style={{ color: isMissing ? 'var(--coral-400)' : 'var(--text-bright)' }}>
               {item.n != null && <span style={{ color: isMissing ? 'var(--coral-400)' : 'var(--text-warm)' }}>{item.n}. </span>}
               {item.text}
             </p>
@@ -70,19 +85,19 @@ export default function ScaleMatrix({ items, options, values, onChange, name, mi
                     type="button"
                     role="radio"
                     aria-checked={selected}
-                    aria-label={numeric ? `${o.value} of ${options[options.length - 1].value}` : o.label}
+                    aria-label={numeric ? `${o.value} of ${last.value}` : numbered ? `${o.value} — ${o.label}` : o.label}
                     onClick={() => onChange(item.key, o.value)}
-                    className="mx-auto rounded-full flex items-center justify-center text-[12px] font-bold transition-colors"
+                    className="mx-auto rounded-full flex items-center justify-center text-[13px] font-bold transition-colors"
                     style={{
                       width: CIRCLE,
                       height: CIRCLE,
                       background: selected ? 'var(--action-primary)' : 'var(--action-quiet)',
                       border: '1px solid ' + (selected ? 'var(--action-primary)' : 'var(--border-strong)'),
-                      color: selected ? 'var(--text-on-warm)' : 'var(--text-body)',
+                      color: selected ? 'var(--text-on-warm)' : 'var(--text-bright)',
                       boxShadow: selected ? 'var(--glow-sm)' : 'none',
                     }}
                   >
-                    {numeric ? o.value : selected ? '✓' : ''}
+                    {showNumber ? o.value : selected ? '✓' : ''}
                   </button>
                 )
               })}

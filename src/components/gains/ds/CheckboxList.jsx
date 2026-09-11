@@ -33,7 +33,7 @@ export default function CheckboxList({ options, value, onChange, otherOption, ot
             role="checkbox"
             aria-checked={selected}
             onClick={() => toggle(opt.value)}
-            className="w-full text-left rounded-2xl text-[13px] leading-snug border transition-colors flex items-center gap-2.5"
+            className="w-full text-left rounded-2xl text-[14px] font-semibold leading-snug border transition-colors flex items-center gap-2.5"
             style={{
               // Grid mode trims to a 44px target (Apple HIG's floor) so the
               // list fits a phone frame; the single column keeps 48.
@@ -41,8 +41,9 @@ export default function CheckboxList({ options, value, onChange, otherOption, ot
               padding: grid ? '6px 10px' : '10px 14px',
               background: selected ? 'var(--action-primary)' : 'var(--action-quiet)',
               borderColor: selected ? 'var(--action-primary)' : 'var(--border-soft)',
-              color: selected ? 'var(--text-on-warm)' : 'var(--text-body)',
-              fontWeight: selected ? 'var(--weight-bold)' : 'var(--weight-regular)',
+              // Draft 73 (9/11 review): options read bright, not gray.
+              color: selected ? 'var(--text-on-warm)' : 'var(--text-bright)',
+              fontWeight: selected ? 'var(--weight-bold)' : 'var(--weight-medium)',
             }}
           >
             <span

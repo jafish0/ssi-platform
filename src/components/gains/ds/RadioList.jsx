@@ -15,7 +15,7 @@ export default function RadioList({ options, value, onChange, name, columns = 1 
     <div
       role="radiogroup"
       aria-label={name}
-      className={columns > 1 ? 'grid gap-1.5' : 'space-y-2'}
+      className={columns > 1 ? 'grid gap-1' : 'space-y-2'}
       style={columns > 1 ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}
     >
       {options.map((opt) => {
@@ -27,7 +27,7 @@ export default function RadioList({ options, value, onChange, name, columns = 1 
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(opt.value)}
-            className={'w-full rounded-2xl text-[13px] leading-snug border transition-colors ' + (columns > 1 ? 'text-center' : 'text-left')}
+            className={'w-full rounded-2xl text-[14px] font-semibold leading-snug border transition-colors ' + (columns > 1 ? 'text-center' : 'text-left')}
             style={{
               // Grid mode trims to a 44px target (Apple HIG's floor) so a
               // 4-point scale fits a phone frame; the list keeps 48.
@@ -35,8 +35,9 @@ export default function RadioList({ options, value, onChange, name, columns = 1 
               padding: columns > 1 ? '5px 10px' : '10px 14px',
               background: selected ? 'var(--action-primary)' : 'var(--action-quiet)',
               borderColor: selected ? 'var(--action-primary)' : 'var(--border-soft)',
-              color: selected ? 'var(--text-on-warm)' : 'var(--text-body)',
-              fontWeight: selected ? 'var(--weight-bold)' : 'var(--weight-regular)',
+              // Draft 73 (9/11 review): options read bright, not gray.
+              color: selected ? 'var(--text-on-warm)' : 'var(--text-bright)',
+              fontWeight: selected ? 'var(--weight-bold)' : 'var(--weight-medium)',
             }}
           >
             {opt.label}

@@ -10,35 +10,47 @@
 // flat scroll. It's now a data module -- each instrument's fields live in
 // their own small component, and `PRE_TEST_PAGES`/`POST_TEST_PAGES` list
 // them in administration order -- so `MeasurementFlow.jsx` can paginate
-// through them one instrument per page without duplicating any item text.
+// through them without duplicating any item text.
 //
 // Scope, per Draft 53: this is for team review on the demo page (which
 // already says no real participant data). All state is local/ephemeral --
 // nothing is persisted, nothing is scored. Live data capture + scoring to
 // Supabase is a SEPARATE follow-up, mirroring how Ready for Roots' own
-// pretest/posttest went from demo-only to a real DB-driven pipeline.
+// pretest/posttest went from demo-only to a real DB-driven pipeline. Field
+// keys are kept stable so that future live instrument maps cleanly.
 //
 // Draft 71 (2026-09-03): re-chunked so every step fits a 9:16 phone frame
 // with Continue always visible (no scrolling inside the frame), and the
 // therapy-history follow-ups became conditional pages (`skip` when off the
-// tester's branch, `gate` holding Continue until the deciding answer).
+// tester's branch). Same day (Josh): the rated scales use ScaleMatrix (the
+// paper-form layout: response options as column headers once, one row of
+// circles per item), no scale names or timing badges are shown, and every
+// question is mandatory (`required(v)` per page; the flow highlights what's
+// missing).
 //
-// Same day, Josh: that landed at 24 Continues on the pre-test, "way too
-// many" -- halve it. The rated scales now use ScaleMatrix (the paper-form
-// layout: response options as column headers once, one row of circles per
-// item), which is about half the height of a button per option per item,
-// and the per-page header is compact (title + badge on one line). CTS runs
-// three items per page and Beck-4 two (six / four on one page overflow a
-// 375px-wide frame), the 6-point scales three items per page, the
-// readiness ruler two per page, the trauma-event question rides with the
-// first Demographics page, and the two conditional therapy follow-ups
-// share one page. Pre-test: 14 Continues (15 on the past-therapy branch);
-// post-test: 10. Item wording and order are unchanged throughout.
+// Draft 73 (2026-09-11, the 9/11 review):
+//   - "(reverse scored)" is no longer appended to any item; the `reverse`
+//     flags stay as scoring metadata.
+//   - Trauma and Treatment Beliefs (the team's own scale) is a 5-point scale
+//     with every point labeled: 1 Strongly Disagree · 2 Disagree · 3 Neither
+//     Agree nor Disagree · 4 Agree · 5 Strongly Agree (pre and post). The
+//     standardized scales (CTS, Beck-4, Implicit Theories, Program Feedback)
+//     are untouched.
+//   - The three readiness-ruler items are sliders (RangeSlider, the Ready for
+//     Roots SliderItem pattern: no default, must be dragged to count).
+//   - Bolder, brighter instructions and options (Item/Instrument here, the
+//     ds primitives for the rest).
+//   - Time since the trauma follows the Ready for Roots pattern: years
+//     write-in, an "It happened less than a year ago" checkbox that pins
+//     years to 0 and reveals a months write-in plus "Less than a month ago" /
+//     "I'm not sure" (deliberately NO "still happening" option). It has its
+//     own page now (the expanded branch didn't fit beside age/grade).
+//   Pre-test: 15 pages (16 on the past-therapy branch). Post-test: 10.
 
 import RadioList from './ds/RadioList.jsx'
 import CheckboxList from './ds/CheckboxList.jsx'
-import LikertScale from './ds/LikertScale.jsx'
 import ScaleMatrix from './ds/ScaleMatrix.jsx'
+import RangeSlider from './ds/RangeSlider.jsx'
 import { TextInput, TextArea } from './ds/TextInput.jsx'
 
 // ---------- verbatim option sets ----------
@@ -112,6 +124,7 @@ const IMPLICIT_THEORIES_ITEMS = [
   'I can learn to change my feelings.',
 ]
 
+// `reverse` is scoring metadata only -- never shown to the teen (Draft 73).
 const TRAUMA_BELIEFS_ITEMS = [
   { text: 'A traumatic event is a really scary experience that is almost impossible to recover from.' },
   { text: 'Once a trauma is over our bodies and reactions always go back to “normal,” like it never happened.', reverse: true },
@@ -119,6 +132,16 @@ const TRAUMA_BELIEFS_ITEMS = [
   { text: 'Therapy doesn’t really help most people that have experienced trauma.', reverse: true },
   { text: 'If someone feels uncomfortable in therapy it means it is not working.', reverse: true },
   { text: 'How someone thinks about things can change how they feel and what they do.' },
+]
+
+// Draft 73: the team's chosen 5-point anchors ("Neither Agree nor Disagree",
+// not "Neutral" -- kid-friendlier). Logged for the IRB amendment.
+const BELIEFS_SCALE = [
+  { value: 1, label: 'Strongly Disagree' },
+  { value: 2, label: 'Disagree' },
+  { value: 3, label: 'Neither Agree nor Disagree' },
+  { value: 4, label: 'Agree' },
+  { value: 5, label: 'Strongly Agree' },
 ]
 
 const PROGRAM_FEEDBACK_ITEMS = [
@@ -130,10 +153,10 @@ const PROGRAM_FEEDBACK_ITEMS = [
 
 // ---------- shared layout pieces ----------
 
-// 2026-09-03 (Josh): no scale names or timing badges on the pages -- the
-// teen just sees the instructions (when an instrument has them) and the
-// items. `title`/`timing` stay on the page objects for the reviewer-facing
-// data and the CSV later, they're just not rendered here.
+// No scale names or timing badges on the pages (Josh, 2026-09-03) -- the
+// teen sees the instructions (when an instrument has them) and the items.
+// `title`/`timing` stay on the page objects for reviewers and the CSV.
+// Draft 73: the instruction line is bold and bright, not small and gray.
 export function Instrument({ prompt, children }) {
   return (
     <div
@@ -141,11 +164,11 @@ export function Instrument({ prompt, children }) {
       style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}
     >
       {prompt && (
-        <p className="text-[12px] italic mb-2 leading-snug" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-[13px] font-bold mb-2 leading-snug" style={{ color: 'var(--text-bright)' }}>
           {prompt}
         </p>
       )}
-      <div className="space-y-2.5">{children}</div>
+      <div className="space-y-2">{children}</div>
     </div>
   )
 }
@@ -158,7 +181,7 @@ function Item({ n, text, children, missing = false }) {
       data-missing={missing || undefined}
       style={missing ? { borderLeft: '3px solid var(--coral-400)', paddingLeft: 8, marginLeft: -11, borderRadius: 4 } : undefined}
     >
-      <p className="text-[13px] leading-snug mb-1" style={{ color: missing ? 'var(--coral-400)' : 'var(--text-bright)' }}>
+      <p className="text-[14px] font-semibold leading-snug mb-1" style={{ color: missing ? 'var(--coral-400)' : 'var(--text-bright)' }}>
         {n != null && <span style={{ color: missing ? 'var(--coral-400)' : 'var(--text-warm)' }}>{n}. </span>}
         {text}
       </p>
@@ -172,32 +195,44 @@ function Item({ n, text, children, missing = false }) {
   )
 }
 
+// A short sub-question label under an Item's main text (the time-since-
+// trauma follow-ups).
+function SubLabel({ children }) {
+  return (
+    <p className="text-[13px] font-semibold mt-1.5 mb-1" style={{ color: 'var(--text-body)' }}>
+      {children}
+    </p>
+  )
+}
+
 // Item keys `${prefix}_${i}` for i in [from, to).
 function keysFor(prefix, from, to) {
   return Array.from({ length: to - from }, (_, k) => `${prefix}_${from + k}`)
 }
 
+// Slice helper for the scales that span pages: `range` is [from, to) into
+// the instrument's item list; no range means the whole list.
+function sliced(items, range) {
+  return range ? items.slice(range[0], range[1]).map((item, i) => [item, range[0] + i]) : items.map((item, i) => [item, i])
+}
+
+// The rated scales render as a ScaleMatrix; this adapts the page's
+// `set(key)(value)` to the matrix's `onChange(key, value)`.
+const matrixChange = (set) => (key, value) => set(key)(value)
+
 // ---------- one field-set per instrument ----------
 
 // Demographics spans three pages (Draft 71); same five items, same order.
-// The trauma-event question (its own instrument in the source packet, and
-// still shown as such via the Instrument that follows on the page) rides
-// on the first Demographics page so it doesn't cost its own Continue.
 function DemographicsFieldsA({ v, set, missing = [] }) {
   return (
-    <>
-      <div className="grid grid-cols-2 gap-3">
-        <Item n={null} text="What is your current age?" missing={missing.includes('age')}>
-          <TextInput value={v.age || ''} onChange={set('age')} placeholder="Age" inputMode="numeric" />
-        </Item>
-        <Item n={null} text="What grade are you in?" missing={missing.includes('grade')}>
-          <TextInput value={v.grade || ''} onChange={set('grade')} placeholder="Grade" />
-        </Item>
-      </div>
-      <div className="pt-3 mt-1" style={{ borderTop: '1px solid var(--border-soft)' }}>
-        <TraumaTimingFields v={v} set={set} missing={missing} />
-      </div>
-    </>
+    <div className="grid grid-cols-2 gap-3">
+      <Item n={null} text="What is your current age?" missing={missing.includes('age')}>
+        <TextInput value={v.age || ''} onChange={set('age')} placeholder="Age" inputMode="numeric" />
+      </Item>
+      <Item n={null} text="What grade are you in?" missing={missing.includes('grade')}>
+        <TextInput value={v.grade || ''} onChange={set('grade')} placeholder="Grade" />
+      </Item>
+    </div>
   )
 }
 
@@ -240,41 +275,87 @@ function DemographicsFieldsC({ v, set, missing = [] }) {
   )
 }
 
-// Slice helper for the scales that span pages: `range` is [from, to) into
-// the instrument's item list; no range means the whole list.
-function sliced(items, range) {
-  return range ? items.slice(range[0], range[1]).map((item, i) => [item, range[0] + i]) : items.map((item, i) => [item, i])
-}
+const LESS_THAN_YEAR_OPTION = [{ value: 'yes', label: 'It happened less than a year ago' }]
+const MONTHS_CHOICE_OPTIONS = [
+  { value: 'lt_month', label: 'Less than a month ago' },
+  { value: 'unsure', label: 'I’m not sure' },
+]
 
+// Draft 73.5 -- the Ready for Roots pattern: a years write-in, or the
+// "less than a year ago" checkbox, which pins years to 0, hides the Years
+// input and reveals a months write-in plus two options. Deliberately no
+// "it's still happening" option (team decision).
 function TraumaTimingFields({ v, set, missing = [] }) {
+  const lessThanYear = !!v.trauma_less_than_year
+  const isMissing = missing.includes('trauma_years') || missing.includes('trauma_months')
   return (
     <Item
       n={null}
       text="Sometimes scary or very upsetting things happen to people where they feel like their life or the life of someone close to them is in danger (like being hurt, seeing someone else hurt, being in a car accident, or not getting food or having a safe place to live). These things are called trauma experiences. When was the LAST time something like this happened to you?"
-      missing={missing.includes('trauma_months')}
+      missing={isMissing}
     >
-      <div className="flex gap-2">
-        <TextInput value={v.trauma_months || ''} onChange={set('trauma_months')} placeholder="Months" inputMode="numeric" />
-        <TextInput value={v.trauma_years || ''} onChange={set('trauma_years')} placeholder="Years" inputMode="numeric" />
+      {!lessThanYear && (
+        <>
+          <SubLabel>About how many years ago did it happen?</SubLabel>
+          <TextInput value={v.trauma_years || ''} onChange={set('trauma_years')} placeholder="Years" inputMode="numeric" style={{ minHeight: 44 }} />
+        </>
+      )}
+      <div className="mt-1.5">
+        <CheckboxList
+          name="Less than a year ago"
+          options={LESS_THAN_YEAR_OPTION}
+          value={lessThanYear ? ['yes'] : []}
+          onChange={(next) => {
+            const on = next.includes('yes')
+            set('trauma_less_than_year')(on)
+            set('trauma_years')(on ? '0' : '')
+            if (!on) {
+              set('trauma_months')('')
+              set('trauma_months_choice')(null)
+            }
+          }}
+        />
       </div>
+      {lessThanYear && (
+        <>
+          <SubLabel>About how many months ago?</SubLabel>
+          <TextInput
+            value={v.trauma_months || ''}
+            onChange={(val) => {
+              set('trauma_months')(val)
+              if (val) set('trauma_months_choice')(null)
+            }}
+            placeholder="Months"
+            inputMode="numeric"
+            style={{ minHeight: 44 }}
+          />
+          <div className="mt-1.5">
+            <RadioList
+              name="Months ago (options)"
+              options={MONTHS_CHOICE_OPTIONS}
+              value={v.trauma_months_choice}
+              onChange={(val) => {
+                set('trauma_months_choice')(val)
+                set('trauma_months')('')
+              }}
+              columns={2}
+            />
+          </div>
+        </>
+      )}
     </Item>
   )
 }
-
-// The rated scales render as a ScaleMatrix (see its header). `matrix`
-// adapts the page's `set(key)(value)` to the matrix's `onChange(key, value)`.
-const matrixChange = (set) => (key, value) => set(key)(value)
 
 function CTSFields({ v, set, range, missing }) {
   const items = sliced(CTS_ITEMS, range).map(([item]) => ({ key: `cts_${item.n}`, n: item.n, text: item.text }))
   return <ScaleMatrix name="Child Trauma Screen" items={items} options={CTS_SCALE} values={v} onChange={matrixChange(set)} missing={missing} />
 }
 
-// Therapy history spans up to three pages (Draft 71): the current-therapy
-// question with its follow-up; then -- only when the answer is "no" -- the
-// past-therapy question with "when"; then -- only when past therapy is
-// "yes" -- whether trauma came up. Pages not on the tester's branch are
-// skipped (see PRE_TEST_PAGES). Same questions, same branching, same order.
+// Therapy history: the current-therapy question with its follow-up; then --
+// only when the answer is "no" -- the past-therapy question with its
+// follow-ups on one page. Pages off the tester's branch are skipped (see
+// PRE_TEST_PAGES). Same questions, same branching, same order.
 function TherapyCurrentFields({ v, set, missing = [] }) {
   return (
     <>
@@ -291,8 +372,6 @@ function TherapyCurrentFields({ v, set, missing = [] }) {
   )
 }
 
-// The past-therapy question and both of its follow-ups share one page (only
-// shown when the tester isn't currently in therapy).
 function TherapyPastFields({ v, set, missing = [] }) {
   return (
     <>
@@ -318,16 +397,16 @@ function Beck4Fields({ v, set, range, missing }) {
   return <ScaleMatrix name="Beck Hopelessness Scale-4" items={items} options={BECK4_SCALE} values={v} onChange={matrixChange(set)} missing={missing} />
 }
 
-// The readiness ruler spans two pages: two 10-point rulers, then the third
-// with its reason.
+// The readiness ruler: three 1-10 sliders (Draft 73), two on the first page
+// and the third with its reason on the second.
 function MotivationFieldsA({ v, set, missing = [] }) {
   return (
     <>
       <Item n={null} text="At this moment, how ready are you to work towards dealing with any of the difficulties you may have related to your trauma experiences?" missing={missing.includes('motiv_ready')}>
-        <LikertScale name="Readiness" count={10} value={v.motiv_ready} onChange={set('motiv_ready')} />
+        <RangeSlider name="Readiness" min={1} max={10} value={v.motiv_ready} onChange={set('motiv_ready')} />
       </Item>
       <Item n={null} text="At this moment, how confident are you in your ability to improve those difficulties related to your trauma experiences?" missing={missing.includes('motiv_confidence')}>
-        <LikertScale name="Confidence" count={10} value={v.motiv_confidence} onChange={set('motiv_confidence')} />
+        <RangeSlider name="Confidence" min={1} max={10} value={v.motiv_confidence} onChange={set('motiv_confidence')} />
       </Item>
     </>
   )
@@ -337,7 +416,7 @@ function MotivationFieldsB({ v, set, missing = [] }) {
   return (
     <>
       <Item n={null} text="How helpful do you think trauma therapy would be for you?" missing={missing.includes('motiv_helpful')}>
-        <LikertScale name="Helpfulness" count={10} value={v.motiv_helpful} onChange={set('motiv_helpful')} />
+        <RangeSlider name="Helpfulness" min={1} max={10} value={v.motiv_helpful} onChange={set('motiv_helpful')} />
       </Item>
       <Item n={null} text="What is the reason for your response/rating." missing={missing.includes('motiv_reason')}>
         <TextArea value={v.motiv_reason || ''} onChange={set('motiv_reason')} placeholder="Type your answer" />
@@ -366,23 +445,8 @@ function ImplicitTheoriesFields({ v, set, range, missing }) {
 }
 
 function TraumaBeliefsFields({ v, set, range, missing }) {
-  const items = sliced(TRAUMA_BELIEFS_ITEMS, range).map(([item, i]) => ({
-    key: `beliefs_${i}`,
-    n: i + 1,
-    text: item.reverse ? `${item.text} (reverse scored)` : item.text,
-  }))
-  return (
-    <ScaleMatrix
-      name="Trauma and Treatment Beliefs"
-      items={items}
-      options={SIX_POINT}
-      minLabel="Strongly disagree"
-      maxLabel="Strongly agree"
-      values={v}
-      onChange={matrixChange(set)}
-      missing={missing}
-    />
-  )
+  const items = sliced(TRAUMA_BELIEFS_ITEMS, range).map(([item, i]) => ({ key: `beliefs_${i}`, n: i + 1, text: item.text }))
+  return <ScaleMatrix name="Trauma and Treatment Beliefs" items={items} options={BELIEFS_SCALE} numbered values={v} onChange={matrixChange(set)} missing={missing} />
 }
 
 // The Program Feedback Scale spans two pages: the four rated items, then
@@ -416,7 +480,7 @@ function ProgramFeedbackFieldsB({ v, set, missing = [] }) {
   )
 }
 
-// ---------- administration order (Draft 54; re-chunked Draft 71) ----------
+// ---------- administration order (Draft 54; re-chunked Draft 71/73) ----------
 //
 // Pre-test = Pre-only + Pre+Post instruments, in this order. Post-test =
 // the Pre+Post instruments again + the Post-only Program Feedback Scale --
@@ -426,7 +490,7 @@ function ProgramFeedbackFieldsB({ v, set, missing = [] }) {
 // item keys that must be answered before Continue advances -- branch-aware;
 // an entry may be an array of alternatives, any one of which satisfies it).
 // `title`/`timing` identify the instrument for reviewers and the CSV; they
-// are not shown to the teen. Pre-test: 14 pages (15 on the past-therapy
+// are not shown to the teen. Pre-test: 15 pages (16 on the past-therapy
 // branch). Post-test: 10.
 
 const CTS_PROMPT = 'How often did each of these happen in the last 30 days?'
@@ -434,9 +498,18 @@ const BECK4_PROMPT = 'Please share how you are feeling, right now, at this momen
 const ctsKeys = (from, to) => CTS_ITEMS.slice(from, to).map((i) => `cts_${i.n}`)
 
 export const PRE_TEST_PAGES = [
-  { id: 'demographics-1', title: 'Demographics', timing: 'Pre', Fields: DemographicsFieldsA, required: () => ['age', 'grade', ['trauma_months', 'trauma_years']] },
+  { id: 'demographics-1', title: 'Demographics', timing: 'Pre', Fields: DemographicsFieldsA, required: () => ['age', 'grade'] },
   { id: 'demographics-2', title: 'Demographics', timing: 'Pre', Fields: DemographicsFieldsB, required: () => [['race', 'race_other']] },
   { id: 'demographics-3', title: 'Demographics', timing: 'Pre', Fields: DemographicsFieldsC, required: () => ['hispanic', ['sex', 'sex_other']] },
+  // Years, OR the less-than-a-year branch answered (months, or one of its
+  // two options).
+  {
+    id: 'trauma-timing',
+    title: 'Event: time since trauma',
+    timing: 'Pre',
+    Fields: TraumaTimingFields,
+    required: (v) => (v.trauma_less_than_year ? [['trauma_months', 'trauma_months_choice']] : ['trauma_years']),
+  },
   // Three CTS items per page (six on one page overflows a 375px frame).
   { id: 'cts-1', title: 'Child Trauma Screen (CTS) — Reactions Subscale', timing: 'Pre', prompt: CTS_PROMPT, Fields: CTSFields, range: [0, 3], required: () => ctsKeys(0, 3) },
   { id: 'cts-2', title: 'Child Trauma Screen (CTS) — Reactions Subscale', timing: 'Pre', prompt: CTS_PROMPT, Fields: CTSFields, range: [3, 6], required: () => ctsKeys(3, 6) },
@@ -458,9 +531,9 @@ export const PRE_TEST_PAGES = [
     required: (v) => ['therapy_past', ...(v.therapy_past === 'yes' ? ['therapy_past_when', 'therapy_past_trauma'] : [])],
   },
   // Two Beck-4 items per page (the four together overflow a 375px frame).
-  { id: 'beck4-1', title: 'Beck Hopelessness Scale-4', timing: 'Pre + Post', prompt: BECK4_PROMPT, Fields: Beck4Fields, range: [0, 2], required: () => keysFor('beck', 0, 2) },
   // (The source doc's "Scored by summing all 4 items." is scoring guidance
-  // for us, not for the teen -- not shown on the page, per Josh 2026-09-03.)
+  // for us, not for the teen -- not shown on the page.)
+  { id: 'beck4-1', title: 'Beck Hopelessness Scale-4', timing: 'Pre + Post', prompt: BECK4_PROMPT, Fields: Beck4Fields, range: [0, 2], required: () => keysFor('beck', 0, 2) },
   { id: 'beck4-2', title: 'Beck Hopelessness Scale-4', timing: 'Pre + Post', prompt: BECK4_PROMPT, Fields: Beck4Fields, range: [2, 4], required: () => keysFor('beck', 2, 4) },
   { id: 'motivation-1', title: 'Motivation / Readiness to Change Ruler', timing: 'Pre + Post', Fields: MotivationFieldsA, required: () => ['motiv_ready', 'motiv_confidence'] },
   { id: 'motivation-2', title: 'Motivation / Readiness to Change Ruler', timing: 'Pre + Post', Fields: MotivationFieldsB, required: () => ['motiv_helpful', 'motiv_reason'] },
