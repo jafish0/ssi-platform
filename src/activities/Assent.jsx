@@ -19,6 +19,7 @@
 // flow.
 
 import { useState } from 'react'
+import { Volume2 } from 'lucide-react'
 import { PrimaryButton, SecondaryButton } from '../components/items/shared.jsx'
 import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 
@@ -46,7 +47,8 @@ function AssentNarration() {
           onClick={() => setRevealed(true)}
           className="inline-flex items-center gap-2 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
         >
-          🔊 Read this to me
+          <Volume2 size={16} strokeWidth={2} />
+          Read this to me
         </button>
       </div>
     )

@@ -127,7 +127,7 @@ function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
               Here&apos;s everything you made today.
             </h2>
             <Keepsake>
-              <PlanReview model={keepsakeModel} />
+              <PlanReview model={keepsakeModel} showCrisisNote={false} />
             </Keepsake>
             <PlanDownloads model={keepsakeModel} />
             <p className="text-[13px] text-slate-500 text-center mt-3">
@@ -138,10 +138,20 @@ function CelebrationScreen({ onBackToStart, config, keepsakeModel }) {
         )}
         {/* 988 Suicide & Crisis Lifeline callout (Draft 96) — the "end of
             the program" placement, shown on every completion (main-program
-            and follow-up alike). Skipped when a plan keepsake is shown
-            above: PlanReview already renders its own copy of this note
-            (Josh, 2026-08-27 — it was showing twice on the same screen). */}
-        {!keepsakeModel && <CrisisLifelineNote className="mb-6 text-left" />}
+            and follow-up alike).
+            Draft 108 Part F (2026-09-10 team meeting): this used to be
+            skipped whenever a keepsake was shown, trusting PlanReview to
+            render its own copy instead (Josh, 2026-08-27 — it was showing
+            twice on the same screen before that). That coupling was fragile
+            — a future change to PlanReview's own note could silently drop
+            it here with nothing to catch it. Now this screen always renders
+            its own single copy (PlanReview's is explicitly suppressed via
+            showCrisisNote={false} above), using the "plan" wording when a
+            keepsake is shown alongside it (the plan is read back well after
+            today) and the default program-scoped wording otherwise — same
+            per-context wording as before, just no longer dependent on
+            PlanReview's internals to get there. */}
+        <CrisisLifelineNote className="mb-6 text-left" variant={keepsakeModel ? 'plan' : 'default'} />
         <PrimaryButton onClick={() => setConfirmed(true)}>
           Complete Program
         </PrimaryButton>

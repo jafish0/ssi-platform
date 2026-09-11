@@ -60,6 +60,19 @@ function toSkillEntry(id) {
   return s ? { ...s, howExample: HOW_EXAMPLES[id] || '' } : null
 }
 
+// The full 7-skill list, each with its `howExample` placeholder attached —
+// shared by the empty-bucket fallback below and, as of Draft 108 Part B.2,
+// by Plan.jsx's "Pick a different skill" handler for the 1-skill case (see
+// that file for why: a 1-item willing-to-try bucket doesn't trigger this
+// module's own empty-bucket fallback, so the UI needs the same full list
+// on demand once the kid asks to see other options).
+export function buildFullSkillsList() {
+  return ALL_BELONGING_SKILLS.map((s) => ({
+    ...s,
+    howExample: HOW_EXAMPLES[s.id] || '',
+  }))
+}
+
 // Build the Plan's `planData` contract from real session payloads.
 // Returns null when no upstream payloads exist (callers fall back to
 // PLAN_DEMO_DATA). Every section handles missing/half-done upstream
@@ -81,10 +94,7 @@ export function buildRealPlanData(sessionData) {
   let willingToTrySkills = willingIds.map(toSkillEntry).filter(Boolean)
   let skillsFromFullList = false
   if (willingToTrySkills.length === 0) {
-    willingToTrySkills = ALL_BELONGING_SKILLS.map((s) => ({
-      ...s,
-      howExample: HOW_EXAMPLES[s.id] || '',
-    }))
+    willingToTrySkills = buildFullSkillsList()
     skillsFromFullList = true
   }
 

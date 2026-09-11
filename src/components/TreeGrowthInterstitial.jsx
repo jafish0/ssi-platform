@@ -35,10 +35,10 @@ export default function TreeGrowthInterstitial({
         <div className="mx-auto w-full max-w-[260px] mb-4">
           <TreeProgress stage={stage} animated />
         </div>
-        <h1 className="text-[28px] font-bold leading-tight mb-4 text-slate-800">
+        <h1 className="text-[28px] font-bold leading-tight mb-4 text-slate-800 max-w-[260px] mx-auto">
           {copy.heading}
         </h1>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-8 max-w-md mx-auto">
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-8 max-w-[260px] mx-auto">
           {copy.body}
         </p>
         <PrimaryButton onClick={onContinue}>Continue</PrimaryButton>

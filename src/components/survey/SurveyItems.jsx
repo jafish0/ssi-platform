@@ -64,9 +64,18 @@ export function LikertItem({ prompt, anchors, value, onChange }) {
 // validation. Until touched, the slider thumb renders at the visual
 // midpoint with muted styling and a "Drag the slider" hint — the
 // participant must explicitly interact before the response counts.
+//
+// Draft 108 Part D (2026-09-10 team meeting): the team wanted two things,
+// more specific than the original rest-position fix — (1) an actual
+// visible number line (every integer from min to max printed along the
+// track, not just the 2-3 word anchors below it) and (2) confirmed the
+// existing rest position (one tick left of `min`, itself not a selectable
+// answer) is exactly right and should stay. So this only adds the number
+// row; the rest-position math is untouched.
 export function SliderItem({ prompt, min, max, anchors, value, touched, onChange }) {
   const restValue = min - 1
   const displayValue = touched ? value : restValue
+  const numberLine = Array.from({ length: max - min + 1 }, (_, i) => min + i)
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4">
       <div className="text-[15px] leading-relaxed text-slate-800 mb-4">{prompt}</div>
@@ -86,6 +95,13 @@ export function SliderItem({ prompt, min, max, anchors, value, touched, onChange
           (touched ? 'accent-ctac-teal-500' : 'accent-slate-300')
         }
       />
+      <div className="flex justify-between mt-1 px-0.5" aria-hidden="true">
+        {numberLine.map((n) => (
+          <span key={n} className="text-[10px] text-slate-400 tabular-nums">
+            {n}
+          </span>
+        ))}
+      </div>
       <div className="flex justify-between mt-1 text-[11px] text-slate-500">
         {anchors.map((a, i) => (
           <span key={i}>{a}</span>

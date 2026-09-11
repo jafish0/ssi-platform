@@ -1,6 +1,6 @@
 import { ACTIVITY_REGISTRY } from '../../lib/activityRegistry.js'
 
-export default function CustomActivity({ content, onSave, sessionData, resolveToken }) {
+export default function CustomActivity({ content, onSave, sessionData, resolveToken, existingResponse }) {
   const name = content?.component_name
   const Component = name ? ACTIVITY_REGISTRY[name] : null
 
@@ -26,6 +26,7 @@ export default function CustomActivity({ content, onSave, sessionData, resolveTo
       onSave={(data) => onSave(data)}
       sessionData={sessionData}
       resolveToken={resolveToken}
+      existingResponse={existingResponse}
     />
   )
 }

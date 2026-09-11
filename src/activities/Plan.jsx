@@ -42,7 +42,7 @@ import { PrimaryButton, MissingItemsNote, scrollToMissingItem } from '../compone
 import CrisisLifelineNote, { CRISIS_LIFELINE_TEXT_PLAN } from '../components/CrisisLifelineNote.jsx'
 import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
 import { PLAN_DEMO_DATA, ALL_BELONGING_SKILLS } from '../lib/planDemoData.js'
-import { buildRealPlanData } from '../lib/planRealData.js'
+import { buildRealPlanData, buildFullSkillsList } from '../lib/planRealData.js'
 
 const WHEN_OPTIONS = ['This week', 'This month', 'When the moment shows up', 'Other…']
 
@@ -195,7 +195,7 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
   // real cross-activity payloads from the session → synthetic demo data
   // (sandbox / IRB preview, where sessionData is {} or absent).
   const realData = useMemo(() => buildRealPlanData(sessionData), [sessionData])
-  const d = planData || realData || PLAN_DEMO_DATA
+  const baseData = planData || realData || PLAN_DEMO_DATA
   const usingDemoData = !planData && !realData
   const [screen, setScreen] = useState(1)
   // Pick-one flow (Draft 51 A): the kid selects a single willing-to-try
@@ -211,6 +211,29 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
   // of silently doing nothing. Only shown after a real incomplete tap, not
   // on first render.
   const [showMissing, setShowMissing] = useState(false)
+  // Draft 108 Part B.2 (2026-09-10 team meeting): a real bug — a kid with
+  // exactly ONE willing-to-try skill saw "Pick a different skill" just
+  // re-show that same single skill, since planRealData's own empty-bucket
+  // fallback only fires at 0 skills, never 1. Kept as separate local state
+  // rather than folded into that fallback's `<= 0` check: this only swaps
+  // in the full list on the kid's own explicit "different" tap, not
+  // unconditionally for every 1-skill bucket (whose copy — "you didn't put
+  // anything in your bucket" — would be wrong for a kid who deliberately
+  // picked one and is happy with it). Reshaping `d` itself here, rather
+  // than swapping only what screen 2 renders, keeps `buildPlanModel`/
+  // `buildPayload` below in sync automatically if the kid ends up picking
+  // a skill that was never in the original bucket.
+  const [showFullSkillList, setShowFullSkillList] = useState(false)
+  const d = useMemo(() => {
+    if (showFullSkillList) {
+      // Deliberately NOT setting skillsFromFullList here — that flag
+      // drives the "you didn't put anything in your bucket" message below,
+      // which would be wrong copy for a kid who DID pick one and asked to
+      // see other options. showFullSkillList gets its own message instead.
+      return { ...baseData, willingToTrySkills: buildFullSkillsList() }
+    }
+    return baseData
+  }, [baseData, showFullSkillList])
 
   // Screen 4 only exists when the kid wrote an inclusion memory in
   // Self-Reflection (never reflect on an empty callout).
@@ -350,6 +373,11 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
             problem. Pick one from the full list that feels worth a try.
           </p>
         )}
+        {showFullSkillList && !d.skillsFromFullList && (
+          <p className="text-sm italic text-slate-600 mb-4">
+            Here&apos;s the full list — pick a different one to focus on.
+          </p>
+        )}
         <div className="space-y-3">
           {d.willingToTrySkills.map((s) => {
             const c = skillCommits[s.id] || {}
@@ -456,7 +484,12 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
         {selectedSkillId && (
           <button
             type="button"
-            onClick={() => setSelectedSkillId(null)}
+            onClick={() => {
+              setSelectedSkillId(null)
+              // Nothing else to offer from a 0-or-1-skill bucket — swap in
+              // the full list so "different" actually means something.
+              if (d.willingToTrySkills.length <= 1) setShowFullSkillList(true)
+            }}
             className="mt-3 text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px] font-medium"
           >
             ← Pick a different skill
@@ -687,7 +720,13 @@ function Section({ title, children }) {
   )
 }
 
-export function PlanReview({ model }) {
+// Draft 108 Part F (2026-09-10 team meeting): `showCrisisNote` (default
+// true, unchanged for this file's own two review screens) lets a caller
+// take responsibility for the crisis note itself instead — see
+// DeliveryShellPage.jsx's CelebrationScreen, which needs the note to show
+// unconditionally on that screen regardless of whether a keepsake model is
+// present, rather than depending on this component happening to render one.
+export function PlanReview({ model, showCrisisNote = true }) {
   const m = model
   const showBpb = m.behaviorsUsed.length > 0 || m.inclusionOther || m.notTried.length > 0
   return (
@@ -818,7 +857,7 @@ export function PlanReview({ model }) {
           "plan" variant (Josh, 2026-08-27): the plan is read back well
           after the program ends, so wording is "if you ever feel..."
           rather than "at any time during this program." */}
-      <CrisisLifelineNote variant="plan" />
+      {showCrisisNote && <CrisisLifelineNote variant="plan" />}
     </div>
   )
 }

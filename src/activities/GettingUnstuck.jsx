@@ -800,11 +800,25 @@ export default function GettingUnstuck({ onSave = console.log }) {
   // the old affirmation-only "Video Coming Soon" explainer above.
   if (phase === 'kai_strategy_intro') {
     const cameFromFallback = eligibleItems.length === 0
+    // Draft 108 Part I (2026-09-10 team meeting): true whenever at least
+    // one of the thoughts about to be practiced wasn't the participant's
+    // own top pick — either the 0-endorsement fallback (both thoughts
+    // randomly drawn) or the 1-endorsement case (their one pick plus a
+    // randomly drawn second). This is the one screen both paths pass
+    // through before practicing, so it's the right place for a single
+    // explanatory line covering either case.
+    const hasRandomlyAssigned = selectedItems.some((it) => items[it.id]?.randomly_selected)
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-4">
           Two ways to get unstuck.
         </h2>
+        {hasRandomlyAssigned && (
+          <p className="text-[14px] text-slate-600 italic mb-4">
+            We picked one more thought for you to practice with. This helps
+            you get used to working through different kinds of thoughts.
+          </p>
+        )}
         <KaiNarrationPlayer
           audioSrc="/kai-narration/getting-unstuck-strategies-intro.mp3"
           transcript={KAI_STRATEGY_TRANSCRIPT}

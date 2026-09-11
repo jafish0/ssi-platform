@@ -116,9 +116,18 @@ export default function Choice({ content, onSave, existingResponse }) {
     await commit({ selected })
   }
 
+  // Draft 108 Part G (2026-09-10 team meeting): the Sam's-Story picker's
+  // three portraits read as tiny with a lot of surrounding blank space in
+  // the default `sm:grid-cols-2` layout (2-then-1 for exactly 3 options).
+  // Gated on `hide_option_labels` — today the only `card_grid` consumer in
+  // the whole app is that one picker, so this can't affect anything else,
+  // but gating on the flag (not the item) keeps that true on purpose.
+  const stackedCards = style === 'card_grid' && content?.hide_option_labels === true
   const containerClass =
     style === 'card_grid'
-      ? 'grid grid-cols-1 sm:grid-cols-2 gap-3'
+      ? stackedCards
+        ? 'flex flex-col items-center gap-4'
+        : 'grid grid-cols-1 sm:grid-cols-2 gap-3'
       : style === 'chip_row'
         ? 'flex flex-wrap gap-2'
         : 'flex flex-col gap-2'
@@ -222,6 +231,7 @@ export default function Choice({ content, onSave, existingResponse }) {
               className={
                 'text-left rounded-2xl border min-h-[80px] px-5 py-4 text-[16px] transition-colors ' +
                 (hideLabel ? 'flex flex-col items-center justify-center text-center ' : '') +
+                (stackedCards ? 'w-full max-w-[220px] ' : '') +
                 (quizCx ||
                   (sel
                     ? 'bg-ctac-teal-200 border-ctac-teal-400 text-ctac-teal-900'
@@ -234,8 +244,10 @@ export default function Choice({ content, onSave, existingResponse }) {
                   alt=""
                   aria-hidden="true"
                   className={
-                    hideLabel
-                      ? 'w-24 h-24 rounded-full object-cover object-top border border-slate-200'
+                    stackedCards
+                      ? 'w-40 h-40 rounded-full object-cover object-top border border-slate-200'
+                      : hideLabel
+                        ? 'w-24 h-24 rounded-full object-cover object-top border border-slate-200'
                       : 'w-16 h-16 rounded-full object-cover object-top border border-slate-200 mb-2'
                   }
                 />

@@ -164,6 +164,10 @@ function SliderItem({ prompt, min, max, anchors, value, touched, onChange }) {
   // a deliberate choice rather than an accident of not having moved it.
   const restValue = min - 1
   const displayValue = touched ? value : restValue
+  // Draft 108 Part D (2026-09-10): visible number line along the track,
+  // every integer min..max — kept in lockstep with the SurveyItems.jsx
+  // copy of this same component per this file's own top-of-function note.
+  const numberLine = Array.from({ length: max - min + 1 }, (_, i) => min + i)
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4">
       <div className="text-[15px] leading-relaxed text-slate-800 mb-4">{prompt}</div>
@@ -183,6 +187,13 @@ function SliderItem({ prompt, min, max, anchors, value, touched, onChange }) {
           (touched ? 'accent-ctac-teal-500' : 'accent-slate-300')
         }
       />
+      <div className="flex justify-between mt-1 px-0.5" aria-hidden="true">
+        {numberLine.map((n) => (
+          <span key={n} className="text-[10px] text-slate-400 tabular-nums">
+            {n}
+          </span>
+        ))}
+      </div>
       <div className="flex justify-between mt-1 text-[11px] text-slate-500">
         {anchors.map((a, i) => (
           <span key={i}>{a}</span>

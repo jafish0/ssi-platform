@@ -252,18 +252,70 @@ function initialStrengthened() {
   return m
 }
 
-export default function AlliesSafetyNet({ onSave = console.log }) {
+// Draft 108 Part B.1 (2026-09-10 team meeting): a real bug found live —
+// hitting the engine's own Back button from the NEXT item (a Kai video)
+// re-mounted this whole custom_activity fresh, since SessionEngine's
+// goBack just decrements currentItemIndex with no memory of an item's own
+// internal state. Safety Net is delivered as ONE item holding its entire
+// 14-screen flow in local useState, so a fresh remount always restarted at
+// screenIdx 0 (the intro) even after the kid had already finished and
+// saved the whole thing — "back near the end" read as "start over."
+// CustomActivity.jsx now forwards the engine's `existingResponse` prop
+// (previously dropped on the floor); this reverses `handleSubmit`'s save
+// shape back into local state so a re-visit reconstructs exactly what was
+// built, rather than wiping it.
+function hydrateFromResponse(existingResponse) {
+  const { sel, none } = initialSelection()
+  const customNames = {}
+  for (const a of existingResponse?.allies || []) {
+    for (const typeId of a.support_types || []) {
+      if (sel[typeId]) sel[typeId].add(a.id)
+    }
+    if (a.custom) customNames[a.id] = a.name
+  }
+  for (const t of SUPPORT_TYPES) {
+    none[t.id] = !!existingResponse?.none_for?.[t.id]
+  }
+  const strengthened = initialStrengthened()
+  for (const t of SUPPORT_TYPES) {
+    if (existingResponse?.strengthened?.[t.id]) {
+      strengthened[t.id] = existingResponse.strengthened[t.id]
+    }
+  }
+  return {
+    selection: sel,
+    noneFor: none,
+    customNames,
+    removedViaInspect: new Set(existingResponse?.removed_via_inspect || []),
+    inspectionCompleted: !!existingResponse?.inspection_completed,
+    strengthened,
+  }
+}
+
+export default function AlliesSafetyNet({ onSave = console.log, existingResponse }) {
   // ---- Build phase state ----
-  const [selection, setSelection] = useState(() => initialSelection().sel)
-  const [noneFor, setNoneFor] = useState(() => initialSelection().none)
-  const [customNames, setCustomNames] = useState({})
+  const [selection, setSelection] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse).selection : initialSelection().sel,
+  )
+  const [noneFor, setNoneFor] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse).noneFor : initialSelection().none,
+  )
+  const [customNames, setCustomNames] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse).customNames : {},
+  )
   const [editingCustom, setEditingCustom] = useState({})
   // ---- Inspect phase state — v5.0: a flat set of ally ids the kid
   //      tapped × on. No per-ally flags anymore.
-  const [removedViaInspect, setRemovedViaInspect] = useState(() => new Set())
-  const [inspectionCompleted, setInspectionCompleted] = useState(false)
+  const [removedViaInspect, setRemovedViaInspect] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse).removedViaInspect : new Set(),
+  )
+  const [inspectionCompleted, setInspectionCompleted] = useState(
+    () => !!existingResponse && hydrateFromResponse(existingResponse).inspectionCompleted,
+  )
   // ---- Strengthen phase state — per-type entry or null if no gap. ----
-  const [strengthened, setStrengthened] = useState(() => initialStrengthened())
+  const [strengthened, setStrengthened] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse).strengthened : initialStrengthened(),
+  )
   // ---- Submit ----
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
@@ -395,7 +447,9 @@ export default function AlliesSafetyNet({ onSave = console.log }) {
     // keeps the dependency array honest even though it never changes.
   }, [strengthenTypeIds])
 
-  const [screenIdx, setScreenIdx] = useState(0)
+  // Land on Review (not the intro) when re-entering an already-saved
+  // activity — see the hydrateFromResponse comment above.
+  const [screenIdx, setScreenIdx] = useState(() => (existingResponse ? screens.length - 1 : 0))
   // Clamp screenIdx if the screens array shrinks beneath the kid (e.g.
   // they restored an ally via × toggle and a Strengthen screen disappeared).
   // useMemo of `screens` recomputes on dependency change; clamp on render.

@@ -21,7 +21,21 @@ import CrisisLifelineNote from '../CrisisLifelineNote.jsx'
 // for their own audio_url, and Josh's ask was specifically about the main
 // Welcome screen — an opt-in flag means those two keep today's optional,
 // non-gating pill unless a later draft turns it on for them too.
-function TextPromptNarration({ src, gated, onComplete }) {
+//
+// Draft 108 Part H (2026-09-10 team meeting): nothing told a participant
+// this "read to me" option even existed, and Assent is the first place it
+// appears. Two independent tweaks, stacked: (1) the collapsed pill's icon
+// is now a real `Volume2` glyph instead of a plain 🔊 emoji, so it reads
+// consistently across devices instead of however each OS happens to render
+// that emoji — this is the *reliable* fix, always visible regardless of
+// autoplay support. (2) `content_json.audio_autoplay_attempt` opts a
+// specific item into ALSO trying to play the narration automatically in
+// the background on mount, via a disposable `Audio()` instance separate
+// from the pill's own audioRef — a pure best-effort bonus on top of (1),
+// not a replacement for it: most mobile browsers block audio without a
+// user gesture and will silently no-op here, leaving the pill exactly as
+// it always was, tap-to-reveal-and-play.
+function TextPromptNarration({ src, gated, onComplete, autoplayAttempt }) {
   const audioRef = useRef(null)
   const [revealed, setRevealed] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
@@ -36,6 +50,14 @@ function TextPromptNarration({ src, gated, onComplete }) {
     el.play().catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gated, src])
+
+  useEffect(() => {
+    if (gated || !autoplayAttempt) return
+    const attempt = new Audio(src)
+    attempt.play().catch(() => {})
+    return () => attempt.pause()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gated, autoplayAttempt, src])
 
   function handleError() {
     setLoadFailed(true)
@@ -141,7 +163,8 @@ function TextPromptNarration({ src, gated, onComplete }) {
           onClick={() => setRevealed(true)}
           className="inline-flex items-center gap-2 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
         >
-          🔊 Read this to me
+          <Volume2 size={16} strokeWidth={2} />
+          Read this to me
         </button>
       </div>
     )
@@ -199,10 +222,12 @@ export default function TextPrompt({ content, onSave, sessionData }) {
   const downloadCfg = content?.download_button
   const audioUrl = content?.audio_url
   const audioGated = content?.audio_gated === true
+  const audioAutoplayAttempt = content?.audio_autoplay_attempt === true
   const [narrationComplete, setNarrationComplete] = useState(false)
   const irbStamp = content?.irb_stamp
   const showCrisisNote = content?.show_crisis_note === true
   const continueLocked = audioGated && !!audioUrl && !narrationComplete
+  const footerNote = content?.footer_note
 
   async function handleContinue() {
     if (submitting || continueLocked) return
@@ -239,6 +264,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
         <TextPromptNarration
           src={audioUrl}
           gated={audioGated}
+          autoplayAttempt={audioAutoplayAttempt}
           onComplete={() => setNarrationComplete(true)}
         />
       )}
@@ -251,6 +277,14 @@ export default function TextPrompt({ content, onSave, sessionData }) {
         )}
         <p className={bodyClass}>{body}</p>
       </div>
+      {/* Draft 108 Part A.5 (2026-09-10 team meeting): a note ABOUT the
+          content above (e.g. "we'll save this so you have it later") reads
+          like part of the highlighted content itself when it's inside
+          `wrapperClass`'s shaded box. content_json.footer_note renders in
+          plain space instead, near the Continue button. */}
+      {footerNote && (
+        <p className="text-[14px] text-slate-600 mb-6">{interpolate(footerNote, sessionData || {})}</p>
+      )}
       {showCrisisNote && <CrisisLifelineNote className="mb-6" />}
       {(downloadCfg || showButton) && (
         <div className="flex flex-wrap justify-end gap-3">

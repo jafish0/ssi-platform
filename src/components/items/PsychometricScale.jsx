@@ -391,12 +391,33 @@ function LikertRow({ anchors, value, onChange }) {
   )
 }
 
+// Draft 108 Part D (2026-09-10 team meeting): a visible number line along
+// the track, same ask as SurveyItems.jsx's SliderItem. Unlike that
+// component's fixed 0-10/1-10 scales, live VAS items also include a 0-100
+// scale (e.g. the follow-up's program-helpfulness item) — printing all 101
+// integers would be unreadable on a phone, so this thins the line to at
+// most 11 evenly-spaced ticks (always including both endpoints) instead of
+// printing every step.
+const MAX_VAS_TICKS = 11
+function buildVasNumberLine(min, max, step) {
+  const total = Math.round((max - min) / step) + 1
+  if (total <= MAX_VAS_TICKS) {
+    return Array.from({ length: total }, (_, i) => min + i * step)
+  }
+  const ticks = new Set()
+  for (let i = 0; i < MAX_VAS_TICKS; i++) {
+    ticks.add(Math.round(min + (i * (max - min)) / (MAX_VAS_TICKS - 1)))
+  }
+  return [...ticks].sort((a, b) => a - b)
+}
+
 function VASRow({ vasConfig, value, onChange }) {
   const min = vasConfig?.min_value ?? 0
   const max = vasConfig?.max_value ?? 100
   const step = vasConfig?.step ?? 1
   const restValue = min - step
   const v = value ?? restValue
+  const numberLine = buildVasNumberLine(min, max, step)
   return (
     <div>
       <input
@@ -412,6 +433,13 @@ function VASRow({ vasConfig, value, onChange }) {
         }}
         className="w-full accent-ctac-teal-400"
       />
+      <div className="flex justify-between mt-1 px-0.5" aria-hidden="true">
+        {numberLine.map((n) => (
+          <span key={n} className="text-[10px] text-slate-400 tabular-nums">
+            {n}
+          </span>
+        ))}
+      </div>
       <div className="flex justify-between text-[13px] text-slate-500 mt-1">
         <span>{vasConfig?.min_label || min}</span>
         <span className="font-mono text-slate-700">{value ?? '—'}</span>
