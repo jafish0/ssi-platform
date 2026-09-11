@@ -98,7 +98,13 @@ const RED_TIERS = [
   { scale: 1.3, hits: 4 },
   { scale: 1.6, hits: 5 },
 ]
-const RED_BASE_W = 170 // base cloud width -- "much bigger" than a gold orb
+// Draft 72 (9/11 review, Maggie: "so it feels more competitive"): scaled up
+// again so a red in your lane genuinely blocks the view of the gold behind
+// it. The tier variation (1.0 / 1.3 / 1.6) is deliberate and kept.
+const RED_BASE_W = 230 // base cloud width (was 170)
+// Draft 72.3: a red drifts DOWN into the lane from above instead of popping
+// into place; this is how long the descent takes.
+const RED_DESCENT_MS = 1500
 // Spread across the climb so you meet them one/a-few at a time, not at the
 // very start or the very end.
 const RED_CHECKPOINTS = (() => {
@@ -368,6 +374,9 @@ export function makeClimbScene(Phaser) {
       this.hud.add([this.meterBg, this.meterFill, this.meterLabel, this.orbText])
 
       // --- audio: create music once so it survives scene.restart() ---
+      // Draft 72.4: the 3-5s "gap" at the loop point was silence baked into
+      // the file (0.8s leading + 2.8s trailing), not the loop -- the mp3 is
+      // trimmed to the music, so `loop: true` now wraps seamlessly.
       if (!this.music && this.cache.audio.exists('climb-music')) {
         this.music = this.sound.add('climb-music', { loop: true, volume: 0.3 })
       }
@@ -509,15 +518,17 @@ export function makeClimbScene(Phaser) {
         .setBlendMode('ADD')
       // Draft 65: longer additions ("determination", "resilience", ...)
       // shrink a touch to fit rather than getting dropped or clipped.
-      const goldFontPx = Math.max(11, 15 - Math.max(0, word.length - 6))
+      // Draft 72 (9/11 review): noticeably bigger, and the white stroke is
+      // gone -- it read as an outline that made the word HARDER to read. A
+      // heavier weight plus a soft dark drop-shadow carries the contrast.
+      const goldFontPx = Math.max(15, 21 - Math.max(0, word.length - 7))
       const label = this.add
-        .text(0, ORB_W * 1.1, word, {
+        .text(0, ORB_W * 1.15, word, {
           fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
           fontSize: `${goldFontPx}px`,
-          fontStyle: 'bold',
+          fontStyle: '800',
           color: '#fff3d0',
-          stroke: '#3a2a06',
-          strokeThickness: 3,
+          shadow: { offsetX: 0, offsetY: 2, color: 'rgba(10,6,2,0.85)', blur: 6, fill: true },
         })
         .setOrigin(0.5, 0.5)
       const m = this.add.container(px, py, [glow, label]).setDepth(30)
@@ -600,21 +611,27 @@ export function makeClimbScene(Phaser) {
     spawnRedCheckpoint(entry) {
       const w = RED_BASE_W * entry.tier.scale
       const x = GAME_W / 2
-      const y = GAME_H * 0.46
+      const restY = GAME_H * 0.46
       const glow = this.add.image(0, 0, 'cloud-red').setDisplaySize(w, w)
+      // Draft 72: bigger word, no outline (a soft drop-shadow instead), long
+      // words shrink a touch to fit the cloud.
+      const redFontPx = Math.max(20, 28 - Math.max(0, entry.word.length - 8))
       const label = this.add
         .text(0, 0, entry.word, {
           fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
-          fontSize: '20px',
-          fontStyle: 'bold',
+          fontSize: `${redFontPx}px`,
+          fontStyle: '800',
           color: '#fff3f0',
-          stroke: '#2a0704',
-          strokeThickness: 4,
           align: 'center',
+          shadow: { offsetX: 0, offsetY: 2, color: 'rgba(20,4,2,0.9)', blur: 8, fill: true },
         })
         .setOrigin(0.5, 0.5)
         .setAlpha(0) // revealed progressively as the cloud lightens (hitRed)
-      const m = this.add.container(x, y, [glow, label]).setDepth(32)
+      // Draft 72.3: enter from above and drift down into the lane, then hold
+      // and block exactly as before (blocking starts as soon as it's on the
+      // way; the stuck-hint timer waits until it has settled).
+      const startY = this.reduced ? restY : -w / 2 - 20
+      const m = this.add.container(x, startY, [glow, label]).setDepth(32)
       m.kind = 'red'
       m.word = entry.word
       m.hitsNeeded = entry.tier.hits
@@ -622,6 +639,18 @@ export function makeClimbScene(Phaser) {
       m.stuckMs = 0
       m.hintRing = null
       m.hintText = null
+      m.descending = !this.reduced
+      if (!this.reduced) {
+        this.tweens.add({
+          targets: m,
+          y: restY,
+          duration: RED_DESCENT_MS,
+          ease: 'Sine.out',
+          onComplete: () => {
+            m.descending = false
+          },
+        })
+      }
       if (!this.reduced) {
         this.tweens.add({
           targets: glow,
@@ -881,7 +910,7 @@ export function makeClimbScene(Phaser) {
         const blocked = !!this.activeRed
         if (blocked) {
           const m = this.activeRed
-          if (m.hitsTaken === 0) {
+          if (m.hitsTaken === 0 && !m.descending) {
             m.stuckMs += delta
             if (m.stuckMs > HINT_DELAY_MS && !m.hintRing) this.showStuckHint(m)
           }
