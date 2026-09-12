@@ -304,7 +304,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
             min={0}
             max={10}
             anchors={['Not at all', 'Moderately', 'A lot']}
-            value={data.post_bw_1 ?? 5}
+            value={data.post_bw_1}
             touched={!!touched.post_bw_1}
             onChange={(v) => setSlider('post_bw_1', v)}
           />
@@ -319,7 +319,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
               min={0}
               max={10}
               anchors={['Not at all', 'Moderately', 'A lot']}
-              value={data.post_bw_2 ?? 5}
+              value={data.post_bw_2}
               touched={!!touched.post_bw_2}
               onChange={(v) => setSlider('post_bw_2', v)}
             />
@@ -340,7 +340,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
             min={1}
             max={10}
             anchors={['Not at all', 'Somewhat', 'Very Much']}
-            value={data.post_pe_1 ?? 5}
+            value={data.post_pe_1}
             touched={!!touched.post_pe_1}
             onChange={(v) => setSlider('post_pe_1', v)}
           />

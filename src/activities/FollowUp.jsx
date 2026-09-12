@@ -390,7 +390,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
             min={0}
             max={10}
             anchors={['Not at all', 'Moderately', 'A lot']}
-            value={data.fu_bw_1 ?? 5}
+            value={data.fu_bw_1}
             touched={!!touched.fu_bw_1}
             onChange={(v) => setSlider('fu_bw_1', v)}
           />
@@ -405,7 +405,7 @@ function ScreenBody({ screen, data, touched, setField, setSlider }) {
               min={0}
               max={10}
               anchors={['Not at all', 'Moderately', 'A lot']}
-              value={data.fu_bw_2 ?? 5}
+              value={data.fu_bw_2}
               touched={!!touched.fu_bw_2}
               onChange={(v) => setSlider('fu_bw_2', v)}
             />

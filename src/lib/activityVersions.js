@@ -166,27 +166,30 @@ export const ACTIVITY_VERSIONS = {
     ],
   },
   posttest: {
-    version: 'v1.2',
-    updated: '2026-08-31',
+    version: 'v1.3',
+    updated: '2026-09-11',
     changelog: [
+      '2026-09-11 · v1.3 — Bug fix (MINOR — no data-shape change). Same slider fix as Pretest v2.3: SurveyItems.jsx\'s shared `SliderItem` (used here for post_bw_1/2, post_pe_1) now renders RatingSlider instead of a native `<input type=range>` — see that entry for detail. Also dropped the dead `?? 5` display fallback on each `value=` prop (harmless under the old rest-value override, but would have broken RatingSlider\'s touched detection). Save payload unchanged.',
       '2026-08-31 · v1.2 — Dr. Sprang\'s ask (2026-08-31 meeting; MINOR — additive UI, no data-shape change). Intro paragraph\'s distress sentence no longer points to the sprang@uky.edu inbox (she doesn\'t monitor it around the clock and doesn\'t want a distressed kid emailing into silence) — now reads "If you experience feelings of distress, please tell your caregiver." The shared `CrisisLifelineNote` (988 callout) renders immediately after the intro paragraph. Save payload unchanged.',
       '2026-07-16 · v1.1 — Jessica review note (6.29.26 doc). Program Feedback Acceptability scale: spelled out the value-2 anchor "Neither" → "Neither Agree nor Disagree" for clarity. No data-shape change.',
       '2026-05-13 · v1.0 — initial sandbox build of the locked Posttest survey (18 items: BHS, ASCS, NB, Belonging Worries, Perceived Helpfulness, Program Feedback Acceptability Likert + 2 open-response). 9-screen paginated flow mirroring the Pretest pattern. Shared survey-item components (SurveyItems.jsx). Save payload flat-keyed by `post_*` SPSS column names.',
     ],
   },
   followup: {
-    version: 'v1.2',
-    updated: '2026-08-31',
+    version: 'v1.3',
+    updated: '2026-09-11',
     changelog: [
+      '2026-09-11 · v1.3 — Bug fix (MINOR — no data-shape change). Same slider fix as Pretest v2.3: SurveyItems.jsx\'s shared `SliderItem` (used here for fu_bw_1/2) now renders RatingSlider instead of a native `<input type=range>` — see that entry for detail. Also dropped the dead `?? 5` display fallback on each `value=` prop. Save payload unchanged.',
       '2026-08-31 · v1.2 — Dr. Sprang\'s ask (2026-08-31 meeting; MINOR — additive UI, no data-shape change). Intro paragraph\'s distress sentence no longer points to the sprang@uky.edu inbox (she doesn\'t monitor it around the clock and doesn\'t want a distressed kid emailing into silence) — now reads "...please tell your caregiver." The shared `CrisisLifelineNote` (988 callout) renders immediately after the intro paragraph. Save payload unchanged.',
       '2026-06-08 · v1.1 — Draft 26. Appraisals section scale shifted from 0-5 to 0-4 to match Getting Unstuck v5.4 (the two read the same shared `src/lib/appraisals.js` scale — anchors 0 Not At All True / 2 Somewhat True / 4 Definitely True). Item wording and order unchanged. fu_app_* value range narrows 0..5 → 0..4.',
       '2026-05-13 · v1.0 — initial sandbox build of the locked FollowUp Survey (30 items: BHS, ASCS, UCLA, NB, BPB, the 6 shared Appraisals items from `src/lib/appraisals.js`, Belonging Worries, permanency radio with Other-text, placement-disruption worry). 11-screen paginated flow mirroring the Pretest pattern. Save payload flat-keyed by `fu_*` SPSS column names.',
     ],
   },
   pretest: {
-    version: 'v2.2',
+    version: 'v2.3',
     updated: '2026-09-11',
     changelog: [
+      '2026-09-11 · v2.3 — Bug fix (MINOR — no data-shape change). Josh flagged two problems with the slider items (pre_bw_1/2, pre_pe_1), screenshots against GAINS for Teens\' own ruler slider: once touched, dragging back to `min` could silently stick just short of it, and the "rest" position (one tick before `min`, on the same continuous native-range track) wasn\'t visually distinct from a real answer — contradicting the Draft 108 team check below. Replaced the native `<input type=range>` with RatingSlider (`src/components/items/RatingSlider.jsx`, ported from GAINS\' RangeSlider.jsx): a real off-track "parking spot" for unanswered, `min` always freely reachable once touched. Shared by SurveyItems.jsx\'s SliderItem and PsychometricScale.jsx\'s VASRow too. Save payload unchanged.',
       '2026-09-11 · v2.2 — Draft 108 Part D (2026-09-10 team meeting; MINOR — no data-shape change). The local `SliderItem` copy (kept in lockstep with SurveyItems.jsx\'s shared version) now prints a visible number line — every integer min..max along the track — in addition to the existing word anchors; the rest-position math (one tick before `min`, itself not a selectable answer) was already correct per the team and is unchanged. Save payload unchanged.',
       '2026-09-01 · v2.1 — Draft 102 queued fix (MINOR — additive UI, no data-shape change). Welcome intro\'s distress sentence no longer points to the sprang@uky.edu inbox (matching the Welcome/Almost-done/Posttest/FollowUp fix from Draft 101 Part L, which missed this file) — now reads "...please tell your caregiver." The shared CrisisLifelineNote (988 callout) renders immediately after. Save payload unchanged.',
       '2026-08-31 · v2.0 — Draft 101 Parts E/F (2026-08-31 meeting; MAJOR — save-payload field drops). (E) Slider rest position: the local SliderItem copy (matching the shared SurveyItems.jsx fix) now rests one tick before `min` instead of on the visible midpoint, so dragging back to the true midpoint always counts as a deliberate choice. (F) Home-duration question: dropped the Months field entirely, added a "Less than 1 year" toggle next to Years (checks → home_years pinned to 0, Years input hidden; unchecking clears back to blank) and made the whole question optional — it no longer gates Continue. Save payload: home_months is now always null (key kept for export-pipeline schema stability); home_years may be 0, a real number, or null/undefined.',

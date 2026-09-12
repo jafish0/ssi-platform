@@ -18,6 +18,7 @@
 // "explicit interaction required" line in the 2026-05-11 brief.
 
 import { useState } from 'react'
+import RatingSlider from '../components/items/RatingSlider.jsx'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
 import CrisisLifelineNote from '../components/CrisisLifelineNote.jsx'
 
@@ -157,43 +158,19 @@ function LikertItem({ prompt, anchors, value, onChange }) {
   )
 }
 
+// `touched` is hoisted up so the parent can use it for validation — always
+// exactly `value != null` (see `setSlider` below), the same signal
+// RatingSlider itself uses. RatingSlider (ported from GAINS for Teens'
+// RangeSlider.jsx after Josh's 2026-09-11 bug report) replaces the old
+// native-range "rest one tick before min" hack with a real off-track
+// parking spot for "unanswered," plus min always freely reachable once
+// touched — kept in lockstep with the SurveyItems.jsx copy of this same
+// component per this file's own top-of-file note.
 function SliderItem({ prompt, min, max, anchors, value, touched, onChange }) {
-  // `touched` is hoisted up so the parent can use it for validation.
-  // The slider rests one tick before `min` (not a real answerable value)
-  // until touched, so dragging to the true midpoint always registers as
-  // a deliberate choice rather than an accident of not having moved it.
-  const restValue = min - 1
-  const displayValue = touched ? value : restValue
-  // Draft 108 Part D (2026-09-10): visible number line along the track,
-  // every integer min..max — kept in lockstep with the SurveyItems.jsx
-  // copy of this same component per this file's own top-of-function note.
-  const numberLine = Array.from({ length: max - min + 1 }, (_, i) => min + i)
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4">
       <div className="text-[15px] leading-relaxed text-slate-800 mb-4">{prompt}</div>
-      <input
-        type="range"
-        min={restValue}
-        max={max}
-        step={1}
-        value={displayValue}
-        onChange={(e) => {
-          const v = Number(e.target.value)
-          if (v < min) return
-          onChange(v)
-        }}
-        className={
-          'w-full h-2 rounded-full appearance-none cursor-pointer ' +
-          (touched ? 'accent-ctac-teal-500' : 'accent-slate-300')
-        }
-      />
-      <div className="flex justify-between mt-1 px-0.5" aria-hidden="true">
-        {numberLine.map((n) => (
-          <span key={n} className="text-[10px] text-slate-400 tabular-nums">
-            {n}
-          </span>
-        ))}
-      </div>
+      <RatingSlider min={min} max={max} step={1} value={value} onChange={onChange} ariaLabel={prompt} />
       <div className="flex justify-between mt-1 text-[11px] text-slate-500">
         {anchors.map((a, i) => (
           <span key={i}>{a}</span>
@@ -705,7 +682,7 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
             min={0}
             max={10}
             anchors={['Not at all', 'Moderately', 'A lot']}
-            value={data.pre_bw_1 ?? 5}
+            value={data.pre_bw_1}
             touched={!!touched.pre_bw_1}
             onChange={(v) => setSlider('pre_bw_1', v)}
           />
@@ -720,7 +697,7 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
               min={0}
               max={10}
               anchors={['Not at all', 'Moderately', 'A lot']}
-              value={data.pre_bw_2 ?? 5}
+              value={data.pre_bw_2}
               touched={!!touched.pre_bw_2}
               onChange={(v) => setSlider('pre_bw_2', v)}
             />
@@ -754,7 +731,7 @@ function ScreenBody({ screen, data, touched, setField, toggleRace, setSlider }) 
             min={1}
             max={10}
             anchors={['Not at all', 'Somewhat', 'Very Much']}
-            value={data.pre_pe_1 ?? 5}
+            value={data.pre_pe_1}
             touched={!!touched.pre_pe_1}
             onChange={(v) => setSlider('pre_pe_1', v)}
           />

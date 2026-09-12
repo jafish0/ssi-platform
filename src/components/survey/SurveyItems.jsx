@@ -11,6 +11,8 @@
 // All components render a single survey question. Per-screen validation
 // + state lives in the parent activity component.
 
+import RatingSlider from '../items/RatingSlider.jsx'
+
 // ---------- Likert grid ----------
 //
 // Renders a row of equal-width tiles, one per scale point, each tile
@@ -61,47 +63,23 @@ export function LikertItem({ prompt, anchors, value, onChange }) {
 // ---------- Slider 0–N ----------
 //
 // `touched` is hoisted up so the parent can use it for per-screen
-// validation. Until touched, the slider thumb renders at the visual
-// midpoint with muted styling and a "Drag the slider" hint — the
-// participant must explicitly interact before the response counts.
+// validation — always exactly `value != null` in every caller (see
+// `setSlider` in Pretest/Posttest/FollowUp), so it's the same signal
+// RatingSlider itself uses to decide whether it's answered yet.
 //
-// Draft 108 Part D (2026-09-10 team meeting): the team wanted two things,
-// more specific than the original rest-position fix — (1) an actual
-// visible number line (every integer from min to max printed along the
-// track, not just the 2-3 word anchors below it) and (2) confirmed the
-// existing rest position (one tick left of `min`, itself not a selectable
-// answer) is exactly right and should stay. So this only adds the number
-// row; the rest-position math is untouched.
+// Draft 108 Part D (2026-09-10 team meeting) added the visible number
+// line but kept the old native-range "rest one tick before min" — Josh's
+// follow-up bug report (2026-09-11, screenshots against GAINS for Teens'
+// own ruler slider) showed that doesn't actually work: once touched,
+// dragging back toward min can silently stick just short of it, and the
+// rest position isn't visually distinct from a real answer. RatingSlider
+// (ported from GAINS' RangeSlider.jsx) fixes both — a real off-track
+// parking spot for "unanswered," and min itself always freely reachable.
 export function SliderItem({ prompt, min, max, anchors, value, touched, onChange }) {
-  const restValue = min - 1
-  const displayValue = touched ? value : restValue
-  const numberLine = Array.from({ length: max - min + 1 }, (_, i) => min + i)
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4">
       <div className="text-[15px] leading-relaxed text-slate-800 mb-4">{prompt}</div>
-      <input
-        type="range"
-        min={restValue}
-        max={max}
-        step={1}
-        value={displayValue}
-        onChange={(e) => {
-          const v = Number(e.target.value)
-          if (v < min) return
-          onChange(v)
-        }}
-        className={
-          'w-full h-2 rounded-full appearance-none cursor-pointer ' +
-          (touched ? 'accent-ctac-teal-500' : 'accent-slate-300')
-        }
-      />
-      <div className="flex justify-between mt-1 px-0.5" aria-hidden="true">
-        {numberLine.map((n) => (
-          <span key={n} className="text-[10px] text-slate-400 tabular-nums">
-            {n}
-          </span>
-        ))}
-      </div>
+      <RatingSlider min={min} max={max} step={1} value={value} onChange={onChange} ariaLabel={prompt} />
       <div className="flex justify-between mt-1 text-[11px] text-slate-500">
         {anchors.map((a, i) => (
           <span key={i}>{a}</span>

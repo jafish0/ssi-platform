@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PrimaryButton, MissingItemsNote, scrollToMissingItem } from './shared.jsx'
 import NarrationControls from './NarrationControls.jsx'
+import RatingSlider from './RatingSlider.jsx'
 
 function shuffle(arr) {
   const a = arr.slice()
@@ -415,31 +416,10 @@ function VASRow({ vasConfig, value, onChange }) {
   const min = vasConfig?.min_value ?? 0
   const max = vasConfig?.max_value ?? 100
   const step = vasConfig?.step ?? 1
-  const restValue = min - step
-  const v = value ?? restValue
   const numberLine = buildVasNumberLine(min, max, step)
   return (
     <div>
-      <input
-        type="range"
-        min={restValue}
-        max={max}
-        step={step}
-        value={v}
-        onChange={(e) => {
-          const next = Number(e.target.value)
-          if (next < min) return
-          onChange(next)
-        }}
-        className="w-full accent-ctac-teal-400"
-      />
-      <div className="flex justify-between mt-1 px-0.5" aria-hidden="true">
-        {numberLine.map((n) => (
-          <span key={n} className="text-[10px] text-slate-400 tabular-nums">
-            {n}
-          </span>
-        ))}
-      </div>
+      <RatingSlider min={min} max={max} step={step} value={value} onChange={onChange} ticks={numberLine} />
       <div className="flex justify-between text-[13px] text-slate-500 mt-1">
         <span>{vasConfig?.min_label || min}</span>
         <span className="font-mono text-slate-700">{value ?? '—'}</span>
