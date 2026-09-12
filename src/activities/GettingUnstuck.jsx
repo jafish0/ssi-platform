@@ -80,11 +80,17 @@ const MAX_PICKS = 2
 // they needed an affirmation"). With MAX_PICKS=2 a kid sees at most one
 // of these, so back-to-back repetition isn't really possible; we still
 // randomize so it doesn't always read the same across sessions.
+// Draft 110: each variant carries its own narration clip — Draft 109
+// found only unstuck_15d.mp3 existed (a Cowork recording-script authoring
+// bug had combined all 4 variants into one row), so all 4 headings fell
+// back to that one clip. Fixed now that unstuck_15a/b/c.mp3 exist and
+// unstuck_15d.mp3 was regenerated with its correct (previously garbled)
+// short line.
 const CYCLE_AFFIRMATIONS = [
-  'Nice work.',
-  'Good job.',
-  "You're doing this.",
-  'Keep going.',
+  { text: 'Nice work.', audio: 'unstuck_15a.mp3' },
+  { text: 'Good job.', audio: 'unstuck_15b.mp3' },
+  { text: "You're doing this.", audio: 'unstuck_15c.mp3' },
+  { text: 'Keep going.', audio: 'unstuck_15d.mp3' },
 ]
 
 // Three "Challenge it" prompts (Stephanie's PPT slide 12). Shown as
@@ -198,9 +204,9 @@ export default function GettingUnstuck({ onSave = console.log }) {
   //   review      → read-back before save
   const [phase, setPhase] = useState('rate')
 
-  // Heading for the between-thoughts affirmation beat (randomized when we
-  // enter the cycle_affirmation phase).
-  const [cycleHeading, setCycleHeading] = useState(CYCLE_AFFIRMATIONS[0])
+  // Heading + matching audio for the between-thoughts affirmation beat
+  // (randomized when we enter the cycle_affirmation phase).
+  const [cycleAffirmation, setCycleAffirmation] = useState(CYCLE_AFFIRMATIONS[0])
 
   // Kai narration gating (Draft 62 Part B) — Continue on kai_strategy_intro
   // is disabled until the narration has played once. Sticky: a later
@@ -1115,7 +1121,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 // Insert a brief affirmation beat before the next thought
                 // (v5.3, Ginny's encouragement ask). Continue on that
                 // screen advances thoughtIdx and returns to 'strategy'.
-                setCycleHeading(
+                setCycleAffirmation(
                   CYCLE_AFFIRMATIONS[
                     Math.floor(Math.random() * CYCLE_AFFIRMATIONS.length)
                   ],
@@ -1137,15 +1143,11 @@ export default function GettingUnstuck({ onSave = console.log }) {
   if (phase === 'cycle_affirmation') {
     return (
       <div className="text-center py-8">
-        <h2 className="text-[24px] font-semibold mb-2">{cycleHeading}</h2>
-        {/* Draft 109: the recording script names 4 clips (unstuck_15a-d),
-            one per randomized heading, but only unstuck_15d.mp3 actually
-            exists on disk (verified against the delivered file set) — the
-            other 3 were never recorded. Wiring the one that exists to this
-            heading regardless of which of the 4 texts is showing is a
-            reasonable stand-in until the other 3 are recorded; flagged in
-            WORKING_NOTES rather than silently dropping narration here. */}
-        <NarrationControls className="mb-2 justify-center" questionAudioUrl="/narration/unstuck_15d.mp3" />
+        <h2 className="text-[24px] font-semibold mb-2">{cycleAffirmation.text}</h2>
+        {/* Draft 110: each randomized heading now has its own matching
+            clip (Draft 109's single-clip fallback was a recording-script
+            authoring bug, not a real gap — see CYCLE_AFFIRMATIONS). */}
+        <NarrationControls className="mb-2 justify-center" questionAudioUrl={`/narration/${cycleAffirmation.audio}`} />
         <p className="text-[16px] text-slate-700 mb-8">Let&apos;s try the next one.</p>
         <NarrationControls className="mb-8 justify-center" questionAudioUrl="/narration/unstuck_16_next.mp3" />
         <div className="flex items-center justify-end">
