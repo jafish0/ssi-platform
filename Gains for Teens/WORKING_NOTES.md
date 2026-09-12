@@ -132,6 +132,23 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **1a51156** (2026-09-11) — Draft 76: **Readiness Ruler as a real ruler.**
+  `ds/RangeSlider.jsx` rebuilt as a custom accessible number line: ten
+  evenly spaced ticks labeled 1–10 under a 4px track; unanswered, the thumb
+  parks in a dashed hollow spot LEFT of tick 1 (off the line) with "Drag the
+  slider to choose." and the item stays unanswered (Continue blocks); a tap
+  or drag onto the line snaps to whole ticks, lights the chosen tick and the
+  answered stretch amber, and shows the number large beneath. A tap in the
+  parking zone is never an answer (unanswered stays unanswered; an existing
+  answer stays put), while a drag that slides off the left end clamps to 1.
+  role="slider" with aria-valuenow/valuetext ("not yet chosen" while
+  parked), Arrow/Home/End keys, 48px thumb hit area, tokens throughout, no
+  motion under reduced-motion. `anchorLow` / `anchorHigh` props exist and
+  render under ticks 1 and 10 when given -- NOT passed yet (empty pending
+  Stephanie's anchor wording). Two rulers still fit per page at 375px
+  (0px overflow, pre and post). Verified in the browser (parked → blocked
+  Continue, tap 6, drag 3, off-left clamp 1, parking tap no-op, keyboard).
+
 - **76d52f2** (2026-09-11) — Draft 75: **Zone 4 "Tap the path to walk"
   cue.** After Spark's arrive line, an instruction pill ("Tap the path to
   walk", Nunito 800 on a dark rounded backing) plus the ghost-tap ring
@@ -4015,3 +4032,18 @@ Testers didn't immediately realize they could walk. On `/gains-demo/zone4` (`src
 **Verify.** On arrival the "Tap the path to walk" cue is clearly visible and persists until the first move, then fades; nothing else in the zone changes; clean build. `src/game/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 75.*
+
+
+### Draft 76 — Readiness Ruler items: render the slider as a visible 1–10 number line ("a real ruler"), thumb parked left of 1 until answered — ✅ SHIPPED 1a51156 (2026-09-11)
+
+Refine the Draft 73 `ds/RangeSlider.jsx` used by the three Motivation / Readiness to Change Ruler items (`motiv_ready`, `motiv_confidence`, `motiv_helpful`). Team feedback was that bare numbers don't connect with a kid; Josh's design: make it a literal ruler.
+
+- **Track = a number line** with **ten evenly spaced tick marks, each labeled 1–10** beneath the track (always visible, readable at 375px — small but legible, `--text-body`).
+- **Unanswered state:** the thumb **parks in a distinct spot to the LEFT of tick 1** (off the line, dimmed/hollow), with the "Drag the slider to choose." helper. This replaces the invisible "one tick before 1" rest — same behavior, now visible. Still counts as unanswered until dragged onto the line.
+- **Dragging snaps to whole ticks** (1–10). The **selected tick highlights** (amber) and the chosen number shows large, as now. Once on the line the thumb can't return to the parking spot (an answer stays an answer until changed).
+- **End anchors:** support optional anchor words under tick 1 and tick 10 (`anchorLow` / `anchorHigh` props). **Leave them empty for now** — the source measure has no anchor wording; Cowork/Josh will supply words after Stephanie confirms (candidates: Not at all ready ↔ Completely ready · Not at all confident ↔ Very confident · Not at all helpful ↔ Extremely helpful).
+- Keep the 48px tap target on the thumb, keyboard/arrow support, reduced-motion friendliness, Shadowmend tokens; keep it fitting on its existing pages (two rulers per page).
+
+**Verify.** `/gains-demo/pretest` (and posttest) ruler pages: each slider shows a 1–10 number line with labeled ticks; the thumb starts parked left of 1 and the item is unanswered until dragged; dragging snaps to ticks, highlights the chosen one, shows the big number; Continue still blocks while parked; the anchor slots exist but are empty; pages fit at 375px; Ready for Roots untouched; clean build. `src/components/gains/ds/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 76.*
