@@ -5,33 +5,42 @@ import {
   MissingItemsNote,
   scrollToMissingItem,
 } from '../components/items/shared.jsx'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 
 const SCREENS = {
   inclusion_memory: {
     heading: 'A time you felt included',
+    headingAudio: 'story_00_step1_heading.mp3',
     prompt:
       'Think of a time you felt included — a time you really felt like you belonged. Write a few sentences about that experience.',
+    promptAudio: 'story_01_step1_instructions.mp3',
     field: 'memory',
     section: 'inclusion',
     placeholder: 'Where you were, who was there, what made it feel that way…',
   },
   inclusion_thoughts_feelings: {
     heading: 'Thoughts & feelings — included',
+    headingAudio: 'story_02_step2_heading.mp3',
     prompt: 'What thoughts and feelings were associated with that experience?',
+    promptAudio: 'story_03_step2_instructions.mp3',
     section: 'inclusion',
     twoCol: true,
   },
   exclusion_memory: {
     heading: 'A time you felt excluded',
+    headingAudio: 'story_06_step3_heading.mp3',
     prompt:
       'Now think of a time you felt excluded — a time you felt like you did not belong. Write a few sentences about that experience.',
+    promptAudio: 'story_07_step3_instructions.mp3',
     field: 'memory',
     section: 'exclusion',
     placeholder: 'Where you were, who was there, what made it feel that way…',
   },
   exclusion_thoughts_feelings: {
     heading: 'Thoughts & feelings — excluded',
+    headingAudio: 'story_08_step4_heading.mp3',
     prompt: 'What thoughts and feelings were associated with that experience?',
+    promptAudio: 'story_03_step2_instructions.mp3',
     section: 'exclusion',
     twoCol: true,
   },
@@ -50,6 +59,21 @@ const ORDER = [
 const TF_EXAMPLES = {
   inclusion: { thoughts: 'e.g., People like me', feelings: 'e.g., Happy' },
   exclusion: { thoughts: 'e.g., Nobody likes me', feelings: 'e.g., I felt sad' },
+}
+
+// Draft 109: the "Thoughts"/"Feelings" labels render from one shared JSX
+// block for both inclusion and exclusion steps, so their narration files
+// (recorded per-section, since the two sections' example text differs)
+// need the same per-section lookup as TF_EXAMPLES above.
+const TF_AUDIO = {
+  inclusion: {
+    thoughts: 'story_04_step2_thoughts_label.mp3',
+    feelings: 'story_05_step2_feelings_label.mp3',
+  },
+  exclusion: {
+    thoughts: 'story_09_step4_thoughts_label.mp3',
+    feelings: 'story_10_step4_feelings_label.mp3',
+  },
 }
 
 export default function SelfReflection({ onSave = console.log, initialStep = 1 }) {
@@ -147,7 +171,9 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
         <h2 className="text-[22px] font-semibold text-ctac-navy leading-snug mb-2">
           Our experiences can drive our thoughts and feelings about belonging.
         </h2>
+        <NarrationControls className="mb-2" questionAudioUrl="/narration/story_11_closing_heading.mp3" />
         <p className="text-[16px] leading-relaxed text-slate-600">Thanks for sharing!</p>
+        <NarrationControls className="mt-2" questionAudioUrl="/narration/story_12_closing_body.mp3" />
       </div>
     )
   }
@@ -171,9 +197,11 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
       </div>
 
       <h2 className="text-[22px] font-semibold mb-2">{screen.heading}</h2>
-      <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
+      <NarrationControls className="mb-2" questionAudioUrl={`/narration/${screen.headingAudio}`} />
+      <p className="text-[16px] leading-relaxed text-slate-700 mb-3">
         {screen.prompt}
       </p>
+      <NarrationControls className="mb-5" questionAudioUrl={`/narration/${screen.promptAudio}`} />
 
       {screen.twoCol ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,6 +209,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
             <label className="block text-[14px] font-medium text-slate-700 mb-1">
               Thoughts
             </label>
+            <NarrationControls className="mb-1" questionAudioUrl={`/narration/${TF_AUDIO[screen.section].thoughts}`} />
             {/* Example as persistent help text (not a placeholder) so it
                 stays visible while the kid types — Holly's 2026-06-18 ask. */}
             <p className="text-[13px] italic text-slate-500 mb-2">
@@ -198,6 +227,7 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
             <label className="block text-[14px] font-medium text-slate-700 mb-1">
               Feelings
             </label>
+            <NarrationControls className="mb-1" questionAudioUrl={`/narration/${TF_AUDIO[screen.section].feelings}`} />
             <p className="text-[13px] italic text-slate-500 mb-2">
               {TF_EXAMPLES[screen.section].feelings}
             </p>

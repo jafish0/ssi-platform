@@ -45,6 +45,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PrimaryButton, GhostButton, MissingItemsNote } from '../components/items/shared.jsx'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 
 // Skill labels match the locked pretest doc (set in commit `7b7046e`,
 // Draft 3). bs1–bs7 IDs are stable; the meaning of each ID is preserved
@@ -61,6 +62,7 @@ const BEHAVIORS = [
     text: 'Pay close attention when someone is talking to you (without checking your phone or getting distracted)',
     definition:
       "Giving someone your full attention when they're speaking — eyes on them, no phone, no looking around.",
+    audio: 'skills_06_behavior1.mp3',
   },
   {
     id: 'bs2',
@@ -68,6 +70,7 @@ const BEHAVIORS = [
     text: 'Use words like "we," "us," or "our group" to make people feel included',
     definition:
       'Saying things that signal everyone belongs in the group — "we" instead of "you guys," "our team" instead of "the group."',
+    audio: 'skills_07_behavior2.mp3',
   },
   {
     id: 'bs3',
@@ -75,6 +78,7 @@ const BEHAVIORS = [
     text: 'Say thank you or tell others when they do something you appreciate',
     definition:
       'Telling someone you noticed and appreciated what they did, instead of just thinking it.',
+    audio: 'skills_08_behavior3.mp3',
   },
   {
     id: 'bs4',
@@ -82,6 +86,7 @@ const BEHAVIORS = [
     text: 'Help someone out when they need it',
     definition:
       'Offering help when you see someone needs it, without waiting to be asked.',
+    audio: 'skills_09_behavior4.mp3',
   },
   {
     id: 'bs5',
@@ -89,6 +94,7 @@ const BEHAVIORS = [
     text: 'Invite others to spend time with you',
     definition:
       'Reaching out to bring someone into your plans or your day, instead of waiting for them to ask.',
+    audio: 'skills_10_behavior5.mp3',
   },
   {
     id: 'bs6',
@@ -96,6 +102,7 @@ const BEHAVIORS = [
     text: 'Include others in conversations and activities (like watching a movie, going for a walk, or playing a game)',
     definition:
       "Making space for others in what you're already doing — looping them into the conversation, the game, the show.",
+    audio: 'skills_11_behavior6.mp3',
   },
   {
     id: 'bs7',
@@ -103,6 +110,7 @@ const BEHAVIORS = [
     text: 'Talk through a disagreement with someone until you find an answer that works for everyone',
     definition:
       'Staying with a disagreement until you find something that works for everyone, instead of walking away or giving up.',
+    audio: 'skills_12_behavior7.mp3',
   },
 ]
 
@@ -120,9 +128,9 @@ function behaviorRest(b) {
 }
 
 const BUCKETS = [
-  { id: 'already_doing',  label: "What I'm already doing" },
-  { id: 'willing_to_try', label: "What I'm willing to try" },
-  { id: 'not_interested', label: 'Not interested right now' },
+  { id: 'already_doing',  label: "What I'm already doing", audio: 'skills_03_bucket_doing.mp3' },
+  { id: 'willing_to_try', label: "What I'm willing to try", audio: 'skills_04_bucket_try.mp3' },
+  { id: 'not_interested', label: 'Not interested right now', audio: 'skills_05_bucket_no.mp3' },
 ]
 
 // Used to truncate the ghost-chip label so it doesn't cover the screen
@@ -315,6 +323,21 @@ function SkillCard({
       {defOpen && (
         <div className="mt-2 pt-2 border-t border-ctac-teal-200 text-[12px] leading-relaxed text-slate-600 italic">
           {behavior.definition}
+          {/* Draft 109: piggybacks on the existing "?" reveal rather than
+              adding a pill to every card's default (collapsed) view — this
+              is a drag-interactive sort UI, and a narration button on every
+              unplaced card would clutter it and risk fighting the drag
+              gesture. Covers both unplaced and placed cards (both can open
+              defOpen). The wrapping div's stopPropagation matches the "?"
+              button above it — without it, tapping the pill on an unplaced
+              card would bubble into the card's own onPointerDown and start
+              a drag instead of revealing audio. */}
+          <div onPointerDown={(e) => e.stopPropagation()}>
+            <NarrationControls
+              className="mt-2 not-italic"
+              questionAudioUrl={behavior.audio ? `/narration/${behavior.audio}` : undefined}
+            />
+          </div>
         </div>
       )}
       {!isUnplaced && onRemove && (
@@ -351,8 +374,11 @@ function Bucket({
 }) {
   return (
     <div className="flex flex-col">
-      <div className="text-[13px] font-semibold text-ctac-teal-900 mb-2 text-center px-2">
+      <div className="text-[13px] font-semibold text-ctac-teal-900 mb-1 text-center px-2">
         {bucket.label}
+      </div>
+      <div className="flex justify-center mb-2">
+        <NarrationControls questionAudioUrl={bucket.audio ? `/narration/${bucket.audio}` : undefined} />
       </div>
       <div
         ref={bucketRef}
@@ -938,17 +964,20 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
       `}</style>
 
       <h2 className="text-[22px] font-semibold mb-2">Belonging skills</h2>
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/skills_00_heading.mp3" />
       <p className="text-[15px] leading-relaxed text-slate-700 mb-1">
         Tap each skill below to choose its bucket — or drag it in. If a
         skill isn&apos;t for you right now, put it in{' '}
         <em>Not interested right now</em> — that&apos;s a real answer, not a
         wrong one.
       </p>
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/skills_01_instructions.mp3" />
       <p className="text-[12px] text-slate-500 mb-5">
         Tap <span className="font-semibold">?</span> for a quick definition.
         Tap a placed card to move it, or its{' '}
         <span className="font-semibold">×</span> to send it back.
       </p>
+      <NarrationControls className="mb-5 -mt-3" questionAudioUrl="/narration/skills_02_instructions2.mp3" />
 
       {/* Buckets — three across on desktop, stacked on mobile */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -1069,9 +1098,11 @@ function ReconsiderScreen({ unplaced, onYes, onNo, submitting }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">You didn&apos;t sort these.</h2>
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/skills_13_reconsider_heading.mp3" />
       <p className="text-[16px] leading-relaxed text-slate-700 mb-4">
         Are any of these worth reconsidering?
       </p>
+      <NarrationControls className="mb-4" questionAudioUrl="/narration/skills_14_reconsider_body.mp3" />
       <ul className="flex flex-col gap-2 mb-6">
         {unplaced.map((b) => (
           <li
@@ -1079,6 +1110,9 @@ function ReconsiderScreen({ unplaced, onYes, onNo, submitting }) {
             className="rounded-2xl bg-white shadow-card px-4 py-3 text-[14px] text-slate-800 leading-snug"
           >
             {b.text}
+            {b.audio && (
+              <NarrationControls className="mt-1" questionAudioUrl={`/narration/${b.audio}`} />
+            )}
           </li>
         ))}
       </ul>
@@ -1107,9 +1141,11 @@ function SortSnapshotScreen({ placement, lookup }) {
   return (
     <div className="text-center">
       <h2 className="text-[22px] font-semibold mb-2">Nice work!</h2>
+      <NarrationControls className="mb-2 justify-center" questionAudioUrl="/narration/skills_15_done_heading.mp3" />
       <p className="text-[15px] text-slate-700 mb-5">
         Think about when you could try out one of these skills.
       </p>
+      <NarrationControls className="mb-5 justify-center" questionAudioUrl="/narration/skills_16_done_body.mp3" />
       <div className="mb-4 mx-auto w-full max-w-[560px]">
         <SortSnapshotSvg placement={placement} lookup={lookup} />
       </div>

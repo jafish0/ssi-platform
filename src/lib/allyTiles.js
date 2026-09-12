@@ -76,6 +76,7 @@ export const SUPPORT_TYPES = [
     label: 'Practical',
     definition:
       'The people who help you with things — rides, food, getting your homework done.',
+    audio: 'safetynet_03_type_practical.mp3',
     tone: 'amber',
   },
   {
@@ -83,6 +84,7 @@ export const SUPPORT_TYPES = [
     label: 'Emotional',
     definition:
       "The people you go to when you're upset or just need to talk.",
+    audio: 'safetynet_04_type_emotional.mp3',
     tone: 'rose',
   },
   {
@@ -90,6 +92,7 @@ export const SUPPORT_TYPES = [
     label: 'Social',
     definition:
       'The people you have fun with — hanging out, playing games, going places.',
+    audio: 'safetynet_05_type_social.mp3',
     tone: 'sky',
   },
 ]

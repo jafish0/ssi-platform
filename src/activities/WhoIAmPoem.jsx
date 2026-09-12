@@ -4,6 +4,7 @@ import {
   MissingItemsNote,
   scrollToMissingItem,
 } from '../components/items/shared.jsx'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 
 // "Who I Am" poem — 10-line structure per Ginny's revision
 // (`Poem structure.png` in repo root). 8 kid-filled lines, lines 6 and 10
@@ -16,15 +17,15 @@ import {
 // wanted later, "Inspired by traditional 'I am' poems" is fine.
 
 const LINES = [
-  { id: 'characteristics', n: 1, starter: 'I am',           hint: 'two special characteristics you have' },
-  { id: 'from',            n: 2, starter: 'I am from',      hint: 'a place, people, or way of life' },
-  { id: 'fear',            n: 3, starter: 'I fear',         hint: 'something you are afraid of' },
-  { id: 'suffer_when',     n: 4, starter: 'I suffer when',  hint: 'an event that makes you sad or angry' },
-  { id: 'want',            n: 5, starter: 'I want',         hint: 'an actual desire' },
+  { id: 'characteristics', n: 1, starter: 'I am',           hint: 'two special characteristics you have', audio: 'poem_02_line1.mp3' },
+  { id: 'from',            n: 2, starter: 'I am from',      hint: 'a place, people, or way of life', audio: 'poem_03_line2.mp3' },
+  { id: 'fear',            n: 3, starter: 'I fear',         hint: 'something you are afraid of', audio: 'poem_04_line3.mp3' },
+  { id: 'suffer_when',     n: 4, starter: 'I suffer when',  hint: 'an event that makes you sad or angry', audio: 'poem_05_line4.mp3' },
+  { id: 'want',            n: 5, starter: 'I want',         hint: 'an actual desire', audio: 'poem_06_line5.mp3' },
   // line 6 auto-mirrors line 1 — no kid input
-  { id: 'believe',         n: 7, starter: 'I believe',      hint: 'something you believe in' },
-  { id: 'dream',           n: 8, starter: 'I dream',        hint: 'something you actually dream about' },
-  { id: 'going',           n: 9, starter: 'I am going',     hint: 'where you hope to be' },
+  { id: 'believe',         n: 7, starter: 'I believe',      hint: 'something you believe in', audio: 'poem_07_line7.mp3' },
+  { id: 'dream',           n: 8, starter: 'I dream',        hint: 'something you actually dream about', audio: 'poem_08_line8.mp3' },
+  { id: 'going',           n: 9, starter: 'I am going',     hint: 'where you hope to be', audio: 'poem_09_line9.mp3' },
   // line 10 auto-mirrors line 1 — no kid input
 ]
 
@@ -109,9 +110,11 @@ export default function WhoIAmPoem({ onSave = console.log }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-1">Who I Am</h2>
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/poem_00_heading.mp3" />
       <p className="text-[14px] text-slate-500 mb-4">
         A short poem about you. Fill in the lines and we&apos;ll put it together.
       </p>
+      <NarrationControls className="mb-4" questionAudioUrl="/narration/poem_01_instructions.mp3" />
 
       <div className="space-y-4">
         {LINES.map((l) => (
@@ -121,6 +124,7 @@ export default function WhoIAmPoem({ onSave = console.log }) {
               {l.id === 'characteristics' && <span className="text-rose-400 ml-1">*</span>}
               <span className="ml-2 text-slate-500 italic font-normal">— {l.hint}</span>
             </label>
+            <NarrationControls className="mb-2" questionAudioUrl={`/narration/${l.audio}`} />
             <input
               type="text"
               value={vals[l.id] || ''}

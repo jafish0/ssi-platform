@@ -58,6 +58,7 @@
 import { useMemo, useState } from 'react'
 import { Check } from 'lucide-react'
 import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
 import TrampolineNet from '../components/TrampolineNet.jsx'
 import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
@@ -761,10 +762,13 @@ function IntroScreen({ onNarrationComplete }) {
       <h2 className="text-[22px] font-semibold mb-3">
         Who are the allies in your safety net?
       </h2>
+      <NarrationControls className="mb-3" questionAudioUrl="/narration/safetynet_00_intro_heading.mp3" />
 
       {/* Kai narration (Draft 62 Part B) — replaces what would otherwise
           be a "Video Coming Soon" spot; Continue is gated on this having
-          played at least once (see PrimaryAdvanceButton). */}
+          played at least once (see PrimaryAdvanceButton). Left completely
+          alone per Draft 109 — this narration gap-fill only covers text
+          the Kai audio doesn't already read. */}
       <KaiNarrationPlayer
         audioSrc="/kai-narration/safety-net-allies-intro.mp3"
         transcript={KAI_INTRO_TRANSCRIPT}
@@ -775,13 +779,15 @@ function IntroScreen({ onNarrationComplete }) {
           removed — it duplicated the transcript above almost verbatim.
           This sentence survives because it's additive, not in the
           narration. */}
-      <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
         They might not always get it right, but you know they care about
         you, they&apos;re a positive influence, and they try to help.
       </p>
-      <p className="text-[15px] leading-relaxed text-slate-800 mb-3">
+      <NarrationControls className="mb-3" questionAudioUrl="/narration/safetynet_01_intro_body.mp3" />
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
         We&apos;ll walk through three kinds of support — one at a time:
       </p>
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/safetynet_02_intro_setup.mp3" />
       <ul className="space-y-2 mb-4 text-[15px] leading-relaxed text-slate-800">
         {SUPPORT_TYPES.map((t) => {
           const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
@@ -818,6 +824,9 @@ function TransitionScreen({ typeId }) {
       <p className="text-[16px] leading-relaxed text-slate-800 max-w-[480px] mx-auto">
         {t.definition}
       </p>
+      <div className="flex justify-center mt-2">
+        <NarrationControls questionAudioUrl={t.audio ? `/narration/${t.audio}` : undefined} />
+      </div>
     </div>
   )
 }
@@ -847,6 +856,10 @@ function TypeScreen({
         <span className={`${tones.word} font-bold`}>{t.label.toLowerCase()}</span>{' '}
         support for you?
       </h2>
+      {/* Draft 109: recorded as three concrete per-type variants rather
+          than one templated line — typeId matches the filename suffix
+          directly (practical/emotional/social). */}
+      <NarrationControls className="mb-2" questionAudioUrl={`/narration/safetynet_06_selection_question_${typeId}.mp3`} />
       <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
         {t.definition}
       </p>
@@ -993,11 +1006,20 @@ function BuildFinalScreen({ allies, noneFor, lowSupport }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">Your safety net</h2>
-      <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/safetynet_07_summary_heading.mp3" />
+      <p className="text-[14px] text-slate-600 mb-2 leading-relaxed">
         {allEmpty
           ? 'No allies yet — that\'s okay. We\'ll look at where support could grow.'
           : 'Here\'s who you said is in your corner, grouped by the kind of support they give you. Some allies may show up in more than one place — that\'s the strongest kind.'}
       </p>
+      <NarrationControls
+        className="mb-5"
+        questionAudioUrl={
+          allEmpty
+            ? '/narration/safetynet_08_summary_empty.mp3'
+            : '/narration/safetynet_09_summary_body.mp3'
+        }
+      />
       <NetWithListToggle
         allies={allies}
         noneFor={noneFor}
@@ -1015,15 +1037,18 @@ function InspectEducationScreen({ onNarrationComplete }) {
       <h2 className="text-[22px] font-semibold mb-3">
         Watch out for warning signs.
       </h2>
-      <p className="text-[15px] leading-relaxed text-slate-800 mb-4">
+      <NarrationControls className="mb-3" questionAudioUrl="/narration/safetynet_10_inspect_heading.mp3" />
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
         Not everyone in your life belongs in your safety net. Sometimes
         people we&apos;re close to don&apos;t actually help us feel safer.
         Let&apos;s look at four warning signs.
       </p>
+      <NarrationControls className="mb-4" questionAudioUrl="/narration/safetynet_11_inspect_precede.mp3" />
 
       {/* Kai narration (Draft 62 Part B) — replaces the old "Video Coming
           Soon" placeholder; Continue is gated on this having played at
-          least once (see PrimaryAdvanceButton). */}
+          least once (see PrimaryAdvanceButton). Left completely alone per
+          Draft 109. */}
       <KaiNarrationPlayer
         audioSrc="/kai-narration/safety-net-inspect-intro.mp3"
         transcript={KAI_INSPECT_TRANSCRIPT}
@@ -1036,12 +1061,13 @@ function InspectEducationScreen({ onNarrationComplete }) {
           KAI_INSPECT_TRANSCRIPT above, so this was the clearest
           duplication on either narration screen. */}
 
-      <p className="text-[15px] leading-relaxed text-slate-800">
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
         On the next screen, you&apos;ll see your safety net. You can take
         out anyone you&apos;d like to take out. They&apos;ll still be in
         your life — this is just about who you lean on for support right
         now.
       </p>
+      <NarrationControls questionAudioUrl="/narration/safetynet_12_inspect_follow.mp3" />
     </div>
   )
 }
@@ -1070,10 +1096,12 @@ function InspectXOutScreen({ allies, onToggleRemoved, lowSupport }) {
       <h2 className="text-[20px] font-semibold mb-2">
         Anyone you want to take out of your net?
       </h2>
-      <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/safetynet_13_xout_heading.mp3" />
+      <p className="text-[14px] text-slate-600 mb-2 leading-relaxed">
         Tap the <span className="font-semibold">×</span> on anyone you want
         to take out of your safety net. Tap again to put them back.
       </p>
+      <NarrationControls className="mb-5" questionAudioUrl="/narration/safetynet_14_xout_instructions.mp3" />
       {lowSupport && <LowSupportCaption />}
       <div
         className={'mx-auto w-full max-w-[420px] md:max-w-[700px]' + (lowSupport ? ' opacity-60' : '')}
@@ -1099,9 +1127,14 @@ function InspectXOutScreen({ allies, onToggleRemoved, lowSupport }) {
         // skipping is expected — even though Continue already worked fine
         // with zero removals. Small reassuring caption, same treatment as
         // the "taken out" note above.
-        <p className="text-[13px] text-slate-500 italic text-center mt-3">
-          If there&apos;s no one you need to take out, tap Continue below.
-        </p>
+        <>
+          <p className="text-[13px] text-slate-500 italic text-center mt-3">
+            If there&apos;s no one you need to take out, tap Continue below.
+          </p>
+          <div className="flex justify-center mt-1">
+            <NarrationControls questionAudioUrl="/narration/safetynet_15_xout_skip.mp3" />
+          </div>
+        </>
       )}
     </div>
   )
@@ -1136,9 +1169,12 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
 
   return (
     <div>
-      <h2 className={`text-[22px] font-bold mb-4 ${tones.word}`}>
+      <h2 className={`text-[22px] font-bold mb-2 ${tones.word}`}>
         Let&apos;s strengthen your {t.label.toLowerCase()} support.
       </h2>
+      {/* Draft 109: three concrete per-type variants, typeId matches the
+          filename suffix directly. */}
+      <NarrationControls className="mb-3" questionAudioUrl={`/narration/safetynet_16_strengthen_heading_${t.id}.mp3`} />
       {alreadySelected.length > 0 && (
         <p className="text-[14px] leading-relaxed text-slate-500 mb-3">
           {alreadySelected.length === 1
@@ -1150,16 +1186,18 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
           <span className="text-slate-700">{formatNameList(alreadySelected)}</span>.
         </p>
       )}
-      <p className="text-[15px] leading-relaxed text-slate-800 mb-5">
+      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
         Is there anyone else who could give you{' '}
         <span className={`font-semibold ${tones.word}`}>{t.label.toLowerCase()}</span>{' '}
         support? Adding more people can make your safety net stronger.
       </p>
+      <NarrationControls className="mb-5" questionAudioUrl={`/narration/safetynet_17_strengthen_body_${t.id}.mp3`} />
 
       <div className="mb-4">
         <label className="block text-[13px] font-medium text-slate-700 mb-1">
           Who could that be?
         </label>
+        <NarrationControls className="mb-1" questionAudioUrl="/narration/safetynet_18_strengthen_who.mp3" />
         <input
           type="text"
           value={additionalPerson}
@@ -1174,6 +1212,7 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
         <label className="block text-[13px] font-medium text-slate-700 mb-1">
           What&apos;s one thing you could do to make that happen?
         </label>
+        <NarrationControls className="mb-1" questionAudioUrl="/narration/safetynet_19_strengthen_what.mp3" />
         <textarea
           rows={3}
           value={action}
@@ -1206,10 +1245,12 @@ function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds, lowSup
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">Your safety net is ready!</h2>
-      <p className="text-[14px] text-slate-600 mb-5 leading-relaxed">
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/safetynet_20_review_heading.mp3" />
+      <p className="text-[14px] text-slate-600 mb-2 leading-relaxed">
         Here&apos;s the net you came out with. You can come back to it any
         time.
       </p>
+      <NarrationControls className="mb-5" questionAudioUrl="/narration/safetynet_21_review_body.mp3" />
       <NetWithListToggle
         allies={allies}
         noneFor={noneFor}

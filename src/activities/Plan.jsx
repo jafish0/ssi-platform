@@ -40,6 +40,7 @@ import { Link } from 'react-router-dom'
 import { Download, FileText, ArrowLeft } from 'lucide-react'
 import { PrimaryButton, MissingItemsNote, scrollToMissingItem } from '../components/items/shared.jsx'
 import CrisisLifelineNote, { CRISIS_LIFELINE_TEXT_PLAN } from '../components/CrisisLifelineNote.jsx'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 import { downloadSvgStringAsPng } from '../lib/imageDownload.js'
 import { PLAN_DEMO_DATA, ALL_BELONGING_SKILLS } from '../lib/planDemoData.js'
 import { buildRealPlanData, buildFullSkillsList } from '../lib/planRealData.js'
@@ -63,11 +64,17 @@ const TYPE_ORDER = ['practical', 'emotional', 'social']
 
 // ---------- Small shared bits ----------
 
-function ScreenShell({ heading, sub, children }) {
+// Draft 109 (2026-09-10 narration batch): headingAudioUrl/subAudioUrl are
+// optional per-screen "read this to me" narration for the two text blocks
+// every screen already renders through this shared shell — centralizing
+// it here instead of repeating the same NarrationControls call 5 times.
+function ScreenShell({ heading, headingAudioUrl, sub, subAudioUrl, children }) {
   return (
     <div>
       <h2 className="text-[22px] font-bold text-ctac-navy mb-1">{heading}</h2>
+      {headingAudioUrl && <NarrationControls className="mb-2" questionAudioUrl={headingAudioUrl} />}
       {sub && <p className="text-[14px] text-slate-500 mb-5">{sub}</p>}
+      {subAudioUrl && <NarrationControls className="mb-3" questionAudioUrl={subAudioUrl} />}
       {children}
     </div>
   )
@@ -156,10 +163,11 @@ export function Keepsake({ children, className = '' }) {
 }
 
 // The safety qualifier as a subtle "important note" callout.
-function QualifierNote({ className = '' }) {
+function QualifierNote({ className = '', audioUrl }) {
   return (
     <div className={`border-l-4 border-amber-300 bg-amber-50 rounded-r-2xl px-4 py-3 ${className}`}>
       <p className="text-sm italic text-slate-600">{BPB_QUALIFIER}</p>
+      {audioUrl && <NarrationControls className="mt-2" questionAudioUrl={audioUrl} />}
     </div>
   )
 }
@@ -336,7 +344,8 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
 
   if (screen === 1) {
     return (
-      <ScreenShell heading="Your Plan.">
+      <ScreenShell heading="Your Plan." headingAudioUrl="/narration/plan_00_heading.mp3">
+        <NarrationControls className="mb-2" questionAudioUrl="/narration/plan_01_intro_body.mp3" />
         <p className="text-[16px] leading-relaxed text-slate-700">
           You worked through a lot. Now let’s pull it together into something
           you can keep — the skill you want to try first, the thoughts you’ve
@@ -352,7 +361,9 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
     return (
       <ScreenShell
         heading="New Skills to Try"
+        headingAudioUrl="/narration/plan_02_skills_heading.mp3"
         sub="Pick one skill to focus on. You can come back to the others later."
+        subAudioUrl="/narration/plan_03_skills_instructions.mp3"
       >
         {/* Draft 49 A caveat — demo/preview mode only (v4.0: real
             sessions render the kid's actual willing-to-try bucket, so the
@@ -368,10 +379,13 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
             in willing-to-try, so the full skills list is offered instead —
             they still do the practice, GU-v5.9 style. */}
         {d.skillsFromFullList && (
-          <p className="text-sm italic text-slate-600 mb-4">
-            You didn&apos;t put anything in your willing-to-try bucket — no
-            problem. Pick one from the full list that feels worth a try.
-          </p>
+          <>
+            <NarrationControls className="mb-2" questionAudioUrl="/narration/plan_04_skills_empty.mp3" />
+            <p className="text-sm italic text-slate-600 mb-4">
+              You didn&apos;t put anything in your willing-to-try bucket — no
+              problem. Pick one from the full list that feels worth a try.
+            </p>
+          </>
         )}
         {showFullSkillList && !d.skillsFromFullList && (
           <p className="text-sm italic text-slate-600 mb-4">
@@ -427,6 +441,7 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
                       <label className="block text-[14px] font-medium text-slate-700 mb-1">
                         How could you demonstrate this skill?
                       </label>
+                      <NarrationControls className="mb-1" questionAudioUrl="/narration/plan_05_skills_how.mp3" />
                       <input
                         type="text"
                         value={c.how || ''}
@@ -440,6 +455,7 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
                       <label className="block text-[14px] font-medium text-slate-700 mb-1">
                         Who could you try this with?
                       </label>
+                      <NarrationControls className="mb-1" questionAudioUrl="/narration/plan_06_skills_who.mp3" />
                       <select
                         value={c.who || ''}
                         onChange={(e) => updateSkill(s.id, { who: e.target.value })}
@@ -468,6 +484,7 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
                       <label className="block text-[14px] font-medium text-slate-700 mb-2">
                         When could you try it?
                       </label>
+                      <NarrationControls className="mb-2" questionAudioUrl="/narration/plan_07_skills_when.mp3" />
                       <WhenChips
                         value={c.when}
                         otherValue={c.whenOther}
@@ -511,7 +528,12 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
         prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
       )
     return (
-      <ScreenShell heading="When you felt included." sub="Think back to what you wrote earlier.">
+      <ScreenShell
+        heading="When you felt included."
+        headingAudioUrl="/narration/plan_08_included_heading.mp3"
+        sub="Think back to what you wrote earlier."
+        subAudioUrl="/narration/plan_09_included_instructions.mp3"
+      >
         <Keepsake>
           <p className="text-[16px] leading-relaxed text-slate-800 font-serif italic">
             “{d.inclusionText}”
@@ -521,6 +543,7 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
           Which belonging-promoting behaviors were you using before, during, or
           after this happened?
         </p>
+        <NarrationControls className="mb-3" questionAudioUrl="/narration/plan_10_included_question.mp3" />
         <div className="space-y-2">
           {ALL_BELONGING_SKILLS.map((s) => {
             const checked = inclusionBehaviors.includes(s.id)
@@ -572,7 +595,7 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
             />
           )}
         </div>
-        <QualifierNote className="mt-5" />
+        <QualifierNote className="mt-5" audioUrl="/narration/plan_11_bpb_qualifier.mp3" />
         <NavFooter onBack={() => go(2)} onNext={() => go(4)} />
       </ScreenShell>
     )
@@ -580,7 +603,7 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
 
   if (screen === 4 || (screen === 3 && !hasInclusion)) {
     return (
-      <ScreenShell heading="Here’s your plan.">
+      <ScreenShell heading="Here’s your plan." headingAudioUrl="/narration/plan_12_review_heading.mp3">
         <Keepsake>
           <PlanReview model={model} />
         </Keepsake>
@@ -606,7 +629,8 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
   // the live flow this screen is never reached anyway (the engine
   // advances as soon as onSave resolves) — it exists for the sandbox.
   return (
-    <ScreenShell heading="Saved." sub="This is yours. Come back to it any time.">
+    <ScreenShell heading="Saved." headingAudioUrl="/narration/plan_20_saved.mp3" sub="This is yours. Come back to it any time.">
+      <NarrationControls className="mb-2" questionAudioUrl="/narration/plan_21_saved_note.mp3" />
       <p className="text-[14px] text-slate-600 mb-5">
         You&apos;ll get to save your plan at the very end, after the last few
         questions.
@@ -739,13 +763,17 @@ export function PlanReview({ model, showCrisisNote = true }) {
             <span className="block text-[14px] italic text-slate-600">How: {m.skill.how}</span>
           </p>
         ) : (
-          <p className="text-[14px] text-slate-400 italic">No skill picked yet — that’s okay.</p>
+          <div>
+            <p className="text-[14px] text-slate-400 italic">No skill picked yet — that’s okay.</p>
+            <NarrationControls className="mt-1" questionAudioUrl="/narration/plan_13_review_noskill.mp3" />
+          </div>
         )}
         {m.otherSkills.length > 0 && (
           <div className="mt-2">
             <p className="text-[13px] font-medium text-slate-500 mb-1">
               Your other willing-to-try skills, for later:
             </p>
+            <NarrationControls className="mb-1" questionAudioUrl="/narration/plan_14_review_otherskills.mp3" />
             <ul className="list-disc pl-5 space-y-0.5">
               {m.otherSkills.map((s, i) => (
                 <li key={i} className="text-[14px] text-slate-600">{s}</li>
@@ -770,6 +798,17 @@ export function PlanReview({ model, showCrisisNote = true }) {
 
       {m.people.length > 0 && (
         <Section title="Your people">
+          {/* Draft 109: "Who could that be?"/"What's one thing you could
+              do?" repeat per person below (inline labels, awkward hosts for
+              their own pill each time) — narrated once here instead, ahead
+              of the list. Using question+answers so the two pills get
+              distinct labels rather than two identical "Read me the
+              question" buttons. */}
+          <NarrationControls
+            className="mb-2"
+            questionAudioUrl="/narration/plan_15_review_whocould.mp3"
+            answersAudioUrl="/narration/plan_16_review_whatcould.mp3"
+          />
           <div className="space-y-3">
             {m.people.map((p) => (
               <div key={p.typeKey}>
@@ -795,6 +834,7 @@ export function PlanReview({ model, showCrisisNote = true }) {
           <p className="text-[13px] italic text-slate-500 mt-3">
             Stuck? You could ask another supportive person for a recommendation.
           </p>
+          <NarrationControls className="mt-1" questionAudioUrl="/narration/plan_17_review_stuck.mp3" />
         </Section>
       )}
 
@@ -803,12 +843,13 @@ export function PlanReview({ model, showCrisisNote = true }) {
           {m.inclusionText && (
             <p className="text-[15px] italic text-slate-600 mb-2">“{m.inclusionText}”</p>
           )}
-          <QualifierNote className="mb-3" />
+          <QualifierNote className="mb-3" audioUrl="/narration/plan_11_bpb_qualifier.mp3" />
           {(m.behaviorsUsed.length > 0 || m.inclusionOther) && (
             <>
               <p className="text-[14px] font-medium text-slate-500 mb-1">
                 Belonging-promoting behaviors you were using — keep doing these:
               </p>
+              <NarrationControls className="mb-1" questionAudioUrl="/narration/plan_18_review_bpb_used.mp3" />
               <ul className="list-disc pl-5 space-y-0.5 mb-3">
                 {m.behaviorsUsed.map((b, i) => (
                   <li key={i} className="text-[15px] text-slate-700">{b}</li>
@@ -824,6 +865,7 @@ export function PlanReview({ model, showCrisisNote = true }) {
               <p className="text-[14px] font-medium text-slate-500 mb-1">
                 Some other belonging-promoting behaviors to keep on your radar:
               </p>
+              <NarrationControls className="mb-1" questionAudioUrl="/narration/plan_19_review_bpb_other.mp3" />
               <ul className="list-disc pl-5 space-y-0.5">
                 {m.notTried.map((b, i) => (
                   <li key={i} className="text-[15px] text-slate-700">{b}</li>

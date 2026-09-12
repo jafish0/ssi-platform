@@ -7,6 +7,7 @@ import {
 } from '../components/items/shared.jsx'
 import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
+import NarrationControls from '../components/items/NarrationControls.jsx'
 
 // Getting Unstuck — Ready for Roots' stuck-thought / strategy / reflection activity.
 //
@@ -417,7 +418,9 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-3">Saved</h2>
-        <p className="text-[16px] text-slate-700">That&apos;s real work. Let&apos;s keep going.</p>
+        <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_19_saved_heading.mp3" />
+        <p className="text-[16px] text-slate-700 mb-2">That&apos;s real work. Let&apos;s keep going.</p>
+        <NarrationControls questionAudioUrl="/narration/unstuck_20_saved_body.mp3" />
       </div>
     )
   }
@@ -437,13 +440,15 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-1">Stuck thoughts</h2>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
+        <NarrationControls className="mb-2" questionAudioUrl="/narration/unstuck_00_rate_heading.mp3" />
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-3">
           These are thoughts that can keep someone feeling stuck. For each
           one, rate how true it feels for you right now.
         </p>
+        <NarrationControls className="mb-5" questionAudioUrl="/narration/unstuck_01_rate_instructions.mp3" />
 
         <div className="space-y-4 mb-6">
-          {APPRAISAL_ITEMS.map((it) => {
+          {APPRAISAL_ITEMS.map((it, idx) => {
             const a = items[it.id] || {}
             return (
               <div
@@ -451,9 +456,16 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 id={`item-${it.id}`}
                 className="rounded-2xl border bg-white border-slate-200 p-4"
               >
-                <div className="text-[15px] leading-relaxed text-slate-800 mb-4">
+                <div className="text-[15px] leading-relaxed text-slate-800 mb-2">
                   {it.text}
                 </div>
+                {/* Draft 109: reuses the Draft 102 survey narration for
+                    these same 6 appraisal items instead of re-recording —
+                    appraisals_01..06 map 1:1 to a1..a6 by position. */}
+                <NarrationControls
+                  className="mb-2"
+                  questionAudioUrl={`/narration/appraisals_0${idx + 1}_question.mp3`}
+                />
                 <TruthRatingScale
                   label="How true does this feel for you?"
                   value={a.truth_rating ?? null}
@@ -562,10 +574,12 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-3">One more.</h2>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
+        <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_02_other_heading.mp3" />
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-3">
           Is there another thought you&apos;ve had that we didn&apos;t
           list here?
         </p>
+        <NarrationControls className="mb-5" questionAudioUrl="/narration/unstuck_03_other_instructions.mp3" />
 
         <div id="item-other-choice" className="grid grid-cols-2 gap-3 mb-6">
           <button
@@ -657,9 +671,10 @@ export default function GettingUnstuck({ onSave = console.log }) {
           : `Pick ${pickRemaining} more thoughts before continuing.`
     return (
       <div>
-        <h2 className="text-[22px] font-semibold mb-5">
+        <h2 className="text-[22px] font-semibold mb-2">
           Pick the top two thoughts you would like to work on.
         </h2>
+        <NarrationControls className="mb-5" questionAudioUrl="/narration/unstuck_04_pick_instructions.mp3" />
 
         <div className="space-y-3 mb-2">
           {eligibleItems.map((it) => {
@@ -767,10 +782,12 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div className="py-4 text-center">
         <h2 className="text-[22px] font-semibold mb-3">That&apos;s great!</h2>
-        <p className="text-[16px] leading-relaxed text-slate-700 mb-8 max-w-[480px] mx-auto">
+        <NarrationControls className="mb-3 justify-center" questionAudioUrl="/narration/unstuck_05_zero_heading.mp3" />
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-3 max-w-[480px] mx-auto">
           Try out the following exercise in case a new thought pops up that
           you need to deal with in the future.
         </p>
+        <NarrationControls className="mb-8 justify-center" questionAudioUrl="/narration/unstuck_06_zero_body.mp3" />
         <div className="flex items-center justify-between">
           <GhostButton
             onClick={() => {
@@ -913,11 +930,13 @@ export default function GettingUnstuck({ onSave = console.log }) {
           <div className="text-[13px] font-medium text-ctac-teal-800 mb-1">
             Stuck thought
           </div>
+          <NarrationControls className="mb-2" questionAudioUrl="/narration/unstuck_07_strategy_label.mp3" />
           <p className="text-[16px] text-slate-800">{item.text}</p>
         </div>
 
-        <p className="text-[14px] text-slate-600 mb-3">Pick a strategy:</p>
-        <div id="strategy-picker" className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+        <p className="text-[14px] text-slate-600 mb-2">Pick a strategy:</p>
+        <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_08_strategy_pick.mp3" />
+        <div id="strategy-picker" className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
           <button
             type="button"
             onClick={() => setStrategy(item.id, 'challenge')}
@@ -950,6 +969,16 @@ export default function GettingUnstuck({ onSave = console.log }) {
             </div>
           </button>
         </div>
+        {/* Draft 109: each option's own read-aloud lives outside the two
+            buttons (NarrationControls renders its own <button>, which can't
+            nest inside these without becoming invalid/conflicting HTML) —
+            question/answers labels reused here for the two co-equal
+            strategy cards, not a literal question+answer pair. */}
+        <NarrationControls
+          className="mb-5"
+          questionAudioUrl="/narration/unstuck_09_strategy_challenge.mp3"
+          answersAudioUrl="/narration/unstuck_10_strategy_bothand.mp3"
+        />
 
         {r.strategy === 'challenge' && (
           <div id="strategy-response" className="mb-5">
@@ -962,12 +991,14 @@ export default function GettingUnstuck({ onSave = console.log }) {
                   <li key={i}>{q}</li>
                 ))}
               </ul>
+              <NarrationControls className="mt-2" questionAudioUrl="/narration/unstuck_11_challenge_prompts.mp3" />
             </div>
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
               Now that you&apos;ve thought about your statement in different
               ways, what is a more helpful or more accurate statement you could
               tell yourself?
             </label>
+            <NarrationControls className="mb-2" questionAudioUrl="/narration/unstuck_12_challenge_writeup.mp3" />
             <textarea
               rows={5}
               value={r.response || ''}
@@ -983,6 +1014,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
               Build the Both/And:
             </label>
+            <NarrationControls className="mb-2" questionAudioUrl="/narration/unstuck_13_bothand_label.mp3" />
             <div className="bg-white border border-slate-200 rounded-2xl p-4">
               {/* Seed uses the softened `both_and_root` (v5.8) — you can't
                   coherently AND-extend the absolute original. Falls back to
@@ -1030,6 +1062,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
                   Here are some other ways to think about it. Tap one to use it
                   as a starting point, then make it your own.
                 </p>
+                <NarrationControls className="mb-2" questionAudioUrl="/narration/unstuck_14_help_intro.mp3" />
                 <ul className="space-y-2">
                   {helpSuggestions.map((s, i) => (
                     <li key={i}>
@@ -1105,7 +1138,16 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div className="text-center py-8">
         <h2 className="text-[24px] font-semibold mb-2">{cycleHeading}</h2>
+        {/* Draft 109: the recording script names 4 clips (unstuck_15a-d),
+            one per randomized heading, but only unstuck_15d.mp3 actually
+            exists on disk (verified against the delivered file set) — the
+            other 3 were never recorded. Wiring the one that exists to this
+            heading regardless of which of the 4 texts is showing is a
+            reasonable stand-in until the other 3 are recorded; flagged in
+            WORKING_NOTES rather than silently dropping narration here. */}
+        <NarrationControls className="mb-2 justify-center" questionAudioUrl="/narration/unstuck_15d.mp3" />
         <p className="text-[16px] text-slate-700 mb-8">Let&apos;s try the next one.</p>
+        <NarrationControls className="mb-8 justify-center" questionAudioUrl="/narration/unstuck_16_next.mp3" />
         <div className="flex items-center justify-end">
           <PrimaryButton
             onClick={() => {
@@ -1129,9 +1171,11 @@ export default function GettingUnstuck({ onSave = console.log }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">Your work</h2>
-      <p className="text-[16px] leading-relaxed text-slate-700 mb-5">
+      <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_17_review_heading.mp3" />
+      <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
         Here&apos;s what you wrote. Take a moment with it.
       </p>
+      <NarrationControls className="mb-5" questionAudioUrl="/narration/unstuck_18_review_body.mp3" />
 
       <div className="space-y-4 mb-6">
         {selectedItems.map((it) => {
