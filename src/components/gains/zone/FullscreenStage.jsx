@@ -21,7 +21,7 @@ export default function FullscreenStage({ section, onRestart, showRestart = fals
         <Link
           to="/gains-demo"
           className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold"
-          style={{ color: 'var(--text-muted)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
+          style={{ color: 'var(--text-body)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
         >
           <ArrowLeft size={14} strokeWidth={2} />
           GAINS demo
@@ -32,7 +32,7 @@ export default function FullscreenStage({ section, onRestart, showRestart = fals
               type="button"
               onClick={onRestart}
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold"
-              style={{ color: 'var(--text-muted)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
+              style={{ color: 'var(--text-body)', background: 'var(--action-quiet)', border: '1px solid var(--border-soft)' }}
             >
               <RotateCcw size={13} strokeWidth={2} />
               Restart

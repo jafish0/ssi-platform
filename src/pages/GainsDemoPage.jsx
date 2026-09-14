@@ -470,7 +470,7 @@ export default function GainsDemoPage() {
             <h2 className="text-[20px] font-bold mb-1" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
               Ideas &amp; Demos for Review
             </h2>
-            <p className="text-[14px] italic leading-relaxed mb-5 max-w-[720px]" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-[14px] italic leading-relaxed mb-5 max-w-[720px]" style={{ color: 'var(--text-body)' }}>
               These are proposals and previews under discussion. Comment on any
               item below before we fold it into the official zones.
             </p>
@@ -501,7 +501,7 @@ export default function GainsDemoPage() {
           <h2 className="text-[14px] font-semibold uppercase" style={SECTION_LABEL_STYLE}>
             World and Development Map
           </h2>
-          <span className="text-[12px] italic" style={{ color: 'var(--text-faint)' }}>updated as we go</span>
+          <span className="text-[12px] italic" style={{ color: 'var(--text-body)' }}>updated as we go</span>
         </div>
         <div className="rounded-[24px] p-5" style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}>
           <div className="flex flex-col lg:flex-row gap-5">
@@ -517,7 +517,7 @@ export default function GainsDemoPage() {
             <div className="flex-1 overflow-x-auto">
               <table className="w-full min-w-[720px] text-[13px] leading-relaxed border-collapse">
                 <thead>
-                  <tr className="text-left text-[11px] uppercase" style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)' }}>
+                  <tr className="text-left text-[11px] uppercase" style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-body)' }}>
                     <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Zone &amp; scenery</th>
                     <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Video</th>
                     <th className="px-3 py-2 align-bottom" style={{ borderBottom: '2px solid var(--border-strong)' }}>Activity</th>
@@ -530,7 +530,7 @@ export default function GainsDemoPage() {
                     <tr key={r.zone} className="align-top">
                       <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)' }}>
                         <span className="font-semibold whitespace-nowrap" style={{ color: 'var(--text-bright)' }}>{r.zone}</span>
-                        <span className="block text-[12px]" style={{ color: 'var(--text-faint)' }}>{r.scene}</span>
+                        <span className="block text-[12px]" style={{ color: 'var(--text-body)' }}>{r.scene}</span>
                       </td>
                       <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)', color: 'var(--text-body)' }}>{r.video}</td>
                       <td className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border-soft)', color: 'var(--text-body)' }}>{r.activity}</td>
@@ -569,7 +569,7 @@ export default function GainsDemoPage() {
         <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
           Prototypes and In Development
         </h2>
-        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-body)' }}>
           Playable traversals, both built on the same game engine and both to
           be fully developed. Below them, everything the team has adopted and
           that is now being built out: the arcade ideas, the growing gear
@@ -629,7 +629,7 @@ export default function GainsDemoPage() {
                 <p key={i} className="leading-relaxed">{p}</p>
               ))}
             </div>
-            <p className="text-[13px] italic pl-3 mt-3" style={{ color: 'var(--text-muted)', borderLeft: '2px solid var(--border-warm)' }}>
+            <p className="text-[13px] italic pl-3 mt-3" style={{ color: 'var(--text-body)', borderLeft: '2px solid var(--border-warm)' }}>
               {REVIEW_GEAR_THEME}
             </p>
           </div>
@@ -648,7 +648,7 @@ export default function GainsDemoPage() {
           <h3 className="text-[15px] font-bold mb-2" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
             Final Boss: the summit script
           </h3>
-          <p className="mb-3 italic text-[14px]" style={{ color: 'var(--text-muted)' }}>
+          <p className="mb-3 italic text-[14px]" style={{ color: 'var(--text-body)' }}>
             Holly’s first-draft script for the final summit: the last climb
             to the Beacon, where the gear you’ve earned helps you move past
             mixed feelings about starting therapy. Adopted; the actual
@@ -658,7 +658,7 @@ export default function GainsDemoPage() {
             {FINAL_BOSS_SCRIPT.map((line, i) => {
               if (line.type === 'direction') {
                 return (
-                  <p key={i} className="italic" style={{ color: 'var(--text-faint)' }}>
+                  <p key={i} className="italic" style={{ color: 'var(--text-body)' }}>
                     {line.text}
                   </p>
                 )
@@ -696,11 +696,11 @@ export default function GainsDemoPage() {
             the team's adopted voice (Option F). Moved here in Draft 71. */}
         <h3
           className="text-[12px] font-semibold uppercase mt-8 mb-2"
-          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-body)', fontFamily: 'var(--font-core)' }}
         >
           Playable Character
         </h3>
-        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-body)' }}>
           One traveler, the whole way up. The darkness they arrive with lightens
           as they climb, until everyone can see the person they’ve always been.
         </p>
@@ -709,14 +709,14 @@ export default function GainsDemoPage() {
             <ArtCard key={c.name} {...c} uniform />
           ))}
         </div>
-        <p className="text-[12px] italic mt-3 max-w-[680px]" style={{ color: 'var(--text-faint)' }}>
+        <p className="text-[12px] italic mt-3 max-w-[680px]" style={{ color: 'var(--text-body)' }}>
           These stage images will be regenerated with an inner light — a glow
           in the chest that grows brighter across the stages.
         </p>
 
         <h3
           className="text-[12px] font-semibold uppercase mt-6 mb-2"
-          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-body)', fontFamily: 'var(--font-core)' }}
         >
           Narrator
         </h3>
@@ -728,11 +728,11 @@ export default function GainsDemoPage() {
             `npcs` feedback tag is unchanged. */}
         <h3
           className="text-[12px] font-semibold uppercase mt-8 mb-2"
-          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+          style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-body)', fontFamily: 'var(--font-core)' }}
         >
           NPCs
         </h3>
-        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-[13px] italic mb-4 max-w-[760px]" style={{ color: 'var(--text-body)' }}>
           The characters you meet along the way. Voice lines to come.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[760px]">
@@ -844,7 +844,7 @@ function ArtCard({ src, name, tag, blurb, placeholder, uniform }) {
         {tag && (
           <GainsBadge tone="water" style={{ marginTop: 4, height: 22, fontSize: 10 }}>{tag}</GainsBadge>
         )}
-        {blurb && <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-muted)' }}>{blurb}</p>}
+        {blurb && <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-body)' }}>{blurb}</p>}
       </figcaption>
     </figure>
   )
@@ -871,7 +871,7 @@ function NarratorCard() {
           Spark
         </h4>
         <GainsBadge tone="water" style={{ marginTop: 4, height: 22, fontSize: 10 }}>Narrator</GainsBadge>
-        <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-[12px] leading-relaxed mt-1.5" style={{ color: 'var(--text-body)' }}>
           Your guide through Shadowmend.
         </p>
         <audio
@@ -903,7 +903,7 @@ function PrototypeCard({ img, title, blurb, href }) {
         <h3 className="text-[15px] font-semibold leading-tight mb-1" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
           {title}
         </h3>
-        <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{blurb}</p>
+        <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-body)' }}>{blurb}</p>
         <Link
           to={href}
           className="inline-flex items-center gap-1.5 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
@@ -933,7 +933,7 @@ function Beat({ label, children }) {
     <div>
       <div
         className="text-[11px] uppercase font-semibold mb-1.5"
-        style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-faint)', fontFamily: 'var(--font-core)' }}
+        style={{ letterSpacing: 'var(--tracking-wide)', color: 'var(--text-body)', fontFamily: 'var(--font-core)' }}
       >
         {label}
       </div>
@@ -957,7 +957,7 @@ function CharacterChips({ names }) {
             <img src={c.src} alt="" loading="lazy" className="w-6 h-6 rounded-full object-cover" />
             <span className="text-[12px] font-medium" style={{ color: 'var(--text-body)' }}>
               {c.name}
-              {c.role ? <span style={{ color: 'var(--text-faint)' }}> · {c.role}</span> : null}
+              {c.role ? <span style={{ color: 'var(--text-body)' }}> · {c.role}</span> : null}
             </span>
           </span>
         )
@@ -973,7 +973,7 @@ function ZoneSection({ zone }) {
       <h3 className="text-[18px] font-bold" style={{ fontFamily: 'var(--font-core)', color: 'var(--text-bright)' }}>
         {zone.n} · {zone.name}
       </h3>
-      <p className="text-[13px] mb-3" style={{ color: 'var(--text-muted)' }}>{zone.scenery}</p>
+      <p className="text-[13px] mb-3" style={{ color: 'var(--text-body)' }}>{zone.scenery}</p>
 
       <div
         className="rounded-[24px] p-5 flex flex-col md:flex-row gap-5"
@@ -1004,9 +1004,9 @@ function ZoneSection({ zone }) {
                   <div className="mb-2">
                     <Pill icon={Film}>Video in production</Pill>
                   </div>
-                  {v.note && <p className="text-[12px] italic mb-1.5" style={{ color: 'var(--text-faint)' }}>{v.note}</p>}
+                  {v.note && <p className="text-[12px] italic mb-1.5" style={{ color: 'var(--text-body)' }}>{v.note}</p>}
                   {v.pending ? (
-                    <p className="text-[13px] italic" style={{ color: 'var(--text-faint)' }}>{v.pendingNote}</p>
+                    <p className="text-[13px] italic" style={{ color: 'var(--text-body)' }}>{v.pendingNote}</p>
                   ) : (
                     <p className="text-[13px] leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-body)' }}>{v.script}</p>
                   )}

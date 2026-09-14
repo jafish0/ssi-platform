@@ -788,7 +788,7 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
             </div>
           ) : null}
 
-          <div className="text-[12px] text-center mb-1.5" style={{ color: 'var(--text-muted)' }}>
+          <div className="text-[12px] text-center mb-1.5" style={{ color: 'var(--text-body)' }}>
             {mode === 'see' ? `${seen.length} of 3 found` : `${heard.length} of 3 heard`}
           </div>
 

@@ -48,7 +48,7 @@ export default function ExpositionIntro({ line }) {
                   style={{
                     fontSize: 'var(--text-small)',
                     lineHeight: 'var(--leading-normal)',
-                    color: 'var(--text-muted)',
+                    color: 'var(--text-body)',
                     textAlign: 'center',
                     animation: 'sm-bloom var(--dur-slow) var(--ease-bloom) both',
                   }}

@@ -46,7 +46,7 @@ export default function LikertScale({ count, startAt = 1, minLabel, maxLabel, va
         })}
       </div>
       {(minLabel || maxLabel) && (
-        <div className="flex justify-between mt-1.5 text-[11px]" style={{ color: 'var(--text-faint)' }}>
+        <div className="flex justify-between mt-1.5 text-[11px]" style={{ color: 'var(--text-body)' }}>
           <span>{minLabel}</span>
           <span>{maxLabel}</span>
         </div>

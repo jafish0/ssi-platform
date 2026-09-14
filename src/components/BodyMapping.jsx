@@ -168,7 +168,7 @@ function PanelBox({ label, text, muted }) {
       )}
       <div
         className="text-[12.5px] leading-snug"
-        style={{ color: muted ? 'var(--text-faint)' : 'var(--text-body)' }}
+        style={{ color: 'var(--text-body)' }}
       >
         {text}
       </div>
@@ -178,7 +178,7 @@ function PanelBox({ label, text, muted }) {
 
 function ProgressLine({ revealed }) {
   return (
-    <div className="text-[12px] text-center mt-1.5" style={{ color: 'var(--text-faint)' }}>
+    <div className="text-[12px] text-center mt-1.5" style={{ color: 'var(--text-body)' }}>
       {revealed} of {REGIONS.length} revealed
     </div>
   )
@@ -194,7 +194,7 @@ function OtherAreaField({ value, onChange }) {
         type="button"
         onClick={() => onChange('')}
         className="w-full text-left mt-1.5 px-3.5 py-2.5 rounded-2xl text-[12px] leading-snug border border-dashed hover:border-[var(--border-warm)] hover:text-[var(--text-warm)] transition-colors"
-        style={{ borderColor: 'var(--border-soft)', color: 'var(--text-faint)' }}
+        style={{ borderColor: 'var(--border-soft)', color: 'var(--text-body)' }}
       >
         Is there another area where you feel a trauma reaction in your body? If so, write it in the box below.
       </button>

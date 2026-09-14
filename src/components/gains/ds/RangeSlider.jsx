@@ -175,7 +175,7 @@ export default function RangeSlider({ min = 1, max = 10, value, onChange, anchor
         </div>
       </div>
       {(anchorLow || anchorHigh) && (
-        <div className="relative text-[10px] font-semibold leading-tight" style={{ height: 14, color: 'var(--text-muted)' }} aria-hidden="true">
+        <div className="relative text-[10px] font-semibold leading-tight" style={{ height: 14, color: 'var(--text-body)' }} aria-hidden="true">
           <span className="absolute" style={{ left: PAD_LEFT - 10 }}>
             {anchorLow}
           </span>
@@ -190,7 +190,7 @@ export default function RangeSlider({ min = 1, max = 10, value, onChange, anchor
             {value}
           </span>
         ) : (
-          <span className="text-[12px] italic" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[12px] italic" style={{ color: 'var(--text-body)' }}>
             Drag the slider to choose.
           </span>
         )}

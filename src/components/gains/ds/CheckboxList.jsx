@@ -73,7 +73,7 @@ export default function CheckboxList({ options, value, onChange, otherOption, ot
               type="button"
               onClick={() => setOtherEngaged(true)}
               className="w-full text-left px-3.5 rounded-2xl text-[13px] leading-snug border border-dashed"
-              style={{ minHeight: grid ? 44 : 'var(--tap-min)', padding: grid ? '6px 14px' : '10px 14px', borderColor: 'var(--border-soft)', color: 'var(--text-faint)' }}
+              style={{ minHeight: grid ? 44 : 'var(--tap-min)', padding: grid ? '6px 14px' : '10px 14px', borderColor: 'var(--border-soft)', color: 'var(--text-body)' }}
             >
               {otherOption}
             </button>

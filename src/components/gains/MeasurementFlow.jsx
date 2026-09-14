@@ -76,7 +76,7 @@ export default function MeasurementFlow({ flow }) {
         </div>
         {!done && (
           <>
-            <p className="text-[11px] font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-[11px] font-semibold mb-1.5" style={{ color: 'var(--text-body)' }}>
               Step {page + 1} of {pages.length}
             </p>
             <div className="flex gap-1">

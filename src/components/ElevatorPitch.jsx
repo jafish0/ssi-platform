@@ -167,7 +167,7 @@ function SelectStep({ options, selected, onChange }) {
         type="button"
         onClick={() => onChange('')}
         className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border border-dashed hover:border-[var(--border-warm)] hover:text-[var(--text-warm)] transition-colors"
-        style={{ borderColor: 'var(--border-soft)', color: 'var(--text-faint)' }}
+        style={{ borderColor: 'var(--border-soft)', color: 'var(--text-body)' }}
       >
         Write your own
       </button>
@@ -319,7 +319,7 @@ export default function ElevatorPitch() {
               <p className="text-[14px] leading-relaxed italic pl-3" style={{ color: 'var(--text-bright)', borderLeft: '2px solid var(--border-warm)' }}>
                 {message}
               </p>
-              <p className="text-[12px] mt-2" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-[12px] mt-2" style={{ color: 'var(--text-body)' }}>
                 You can go back and change any part before you save it.
               </p>
               <p
