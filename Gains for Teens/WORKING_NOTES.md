@@ -132,6 +132,40 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **b2978fa** (2026-09-14) — Draft 80: **Zone 3 "The Mistfields" walkable
+  zone -- the template goes data-driven.** The second instance of the
+  walkable-zone template (Zone 4, Draft 68-70/75): the path climbs from an
+  entry at the bottom to an old rope bridge at the top, out and
+  impassable; off the path is a waystone + lantern where you plan your
+  message to your guardian (`ElevatorPitch`, given a new `onComplete`
+  prop, standalone demo unaffected); earning the Wingsuit means you fly
+  across instead (the existing flight traversal), landing in Zone 4.
+  Made the template config-driven first so Zone 4 didn't fork into a
+  second scene file: `zoneWalkScene.js`'s plate geometry is now two
+  sibling data blocks (ZONE4 moved verbatim, byte-identical, plus the new
+  ZONE3) selected by `cfg.zoneId`, with the pond ellipse/frog now optional
+  for zones without one; `ZoneStage.jsx` takes an optional `spriteBase` so
+  Zone 3 reuses Zone 4's Traveler/Spark art and SFX pack (one copy of the
+  files, not two); `GearHud.jsx` is now a canonical 4-slot gear order
+  (Lantern, Lens, Wingsuit, Mask) driven by which gear is earned-before vs.
+  this zone's own; `ZoneOverlays.jsx`'s 5 ambient layers are now a
+  per-zone `layers` prop (this one was a real bug caught in testing --
+  they were hardcoded to Zone 4's filenames, so Zone 3's own mist/lantern/
+  motes/sway/beyond set silently never loaded until fixed); `zone/zones.js`
+  holds every other per-zone value (Spark's 8 lines, the video, the
+  station's activity, the gear, the traversal, the end card); `GainsZonePage.jsx`
+  is the one generic page both zones now render on. Zone 3's plate/gear art
+  converted to webp, its 5 overlay SVGs + motion.css, 8 VO clips and
+  ambience copied into `public/long-light/zone3/`. Review card inserted
+  before Zone 4 (`review-zone3`, cards renumbered 1-8); `/gains-demo/zone3`
+  routed. Verified in the browser: Zone 4 plays identically end to end;
+  Zone 3 plays end to end (walk, video, waystone activity incl. the
+  onComplete hand-off, Wingsuit equip with correct HUD earned/empty
+  states, exit, transition, the flight traversal, the end card's Continue-
+  to-Zone-4 link); the Traveler stays on the path throughout; the 5
+  Mistfields overlay layers render as real SVGs; clean console on a fresh
+  tab; Ready for Roots untouched.
+
 - **e030fa6** (2026-09-14) — Draft 79: **no light-gray text anywhere in
   GAINS.** Raised every `--text-faint`/`--text-muted` participant-facing use
   to `--text-body` across the pre/post measures (the "Step X of Y" progress
@@ -4145,7 +4179,7 @@ From the 9/14 check-in: there's still **light-gray text in the pre/post test** a
 *End of Draft 79.*
 
 
-### Draft 80 — Zone 3 "The Mistfields" walkable zone: second instance of the template (walk → Spark → Video 3 → the rest spot → Message to Your Guardian → Wingsuit → the broken bridge → the flight)
+### Draft 80 — Zone 3 "The Mistfields" walkable zone: second instance of the template (walk → Spark → Video 3 → the rest spot → Message to Your Guardian → Wingsuit → the broken bridge → the flight) — ✅ SHIPPED b2978fa (2026-09-14)
 
 Build Zone 3 on the Zone 4 walkable-zone template (Draft 68–70, 75). **Same loop, new data:** the Mistfields plate, the Guardian activity as the station, the Wingsuit as the gear, the existing **flight** traversal as the exit, and eight new Spark lines. **Reuses Zone 4's Traveler sprites and Spark flicker frames** (Zones 3 and 4 share Traveler stage 3) and Zone 4's SFX pack.
 
