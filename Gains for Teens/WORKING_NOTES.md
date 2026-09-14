@@ -132,6 +132,21 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **60a7012** (2026-09-14) — Draft 77: **Body Mapping, Guardian and Mindful
+  Place back in the review section.** Reverses Draft 74's graduation:
+  `gainsReviewCards.js` is seven cards again in the fixed order Pre/Post ·
+  Body Mapping · Message to Your Guardian · Mindful Place · The Ascent ·
+  Zone 4 · Videos (numbered 1–7), the three restored cards using the Draft
+  77 blurbs verbatim, "Open …" to their existing dedicated pages, and the
+  original comment tags (`review-bodymap` / `review-zone3pitch` /
+  `review-mindfulness`). The `live` links came off the Zone 1 / 3 / 4
+  activity beats (they show the "Interactive version in development" pill
+  again; the generic `live` render path stays for whatever graduates next).
+  `CANON_ACTIVITY_BLURBS` is gone -- the dedicated pages read the new blurbs
+  through `reviewCard()`. Divider still follows the last card (Videos).
+  Routes unchanged. Verified in the browser (order, numbering, links, tag
+  per comment box, zone cards, dedicated-page blurbs, clean console/build).
+
 - **1a51156** (2026-09-11) — Draft 76: **Readiness Ruler as a real ruler.**
   `ds/RangeSlider.jsx` rebuilt as a custom accessible number line: ten
   evenly spaced ticks labeled 1–10 under a 4px track; unanswered, the thumb
@@ -4047,3 +4062,30 @@ Refine the Draft 73 `ds/RangeSlider.jsx` used by the three Motivation / Readines
 **Verify.** `/gains-demo/pretest` (and posttest) ruler pages: each slider shows a 1–10 number line with labeled ticks; the thumb starts parked left of 1 and the item is unanswered until dragged; dragging snaps to ticks, highlights the chosen one, shows the big number; Continue still blocks while parked; the anchor slots exist but are empty; pages fit at 375px; Ready for Roots untouched; clean build. `src/components/gains/ds/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 76.*
+
+
+### Draft 77 — Review section: bring Body Mapping, Message to Your Guardian, and Mindful Place back as review cards; reorder to Pre/Post · Body Mapping · Guardian · Mindful Place · Ascent · Zone 4 · Videos — ✅ SHIPPED 60a7012 (2026-09-14)
+
+Reversal of Draft 74's graduation. Josh wants **all three activities back in the "Proposals — comment before we make them official" section** as review cards (they're still under active review, and the team wants them together).
+
+**1. Restore three review cards** (`src/pages/GainsDemoPage.jsx`), using the same card pattern as the others — title, "what's new" blurb, **Open →** to the existing dedicated page, and the item's comment box:
+- **Body Mapping** — `review-bodymap`, Open → `/gains-demo/bodymap`. Blurb: "The write-in prompt now reads 'Is there another area where you feel a trauma reaction in your body? If so, write it in the box below,' the stomach sits a little lower, and the closing summary text is larger."
+- **Message to Your Guardian** — `review-zone3pitch`, Open → `/gains-demo/guardian`. Blurb: "The Wingsuit screen makes clear that planning your message is what earns it and no longer suggests waiting for the perfect moment. The safety page explains what 988 is. Step 4 now reads 'Therapy can help me…' (the 'also' is gone)."
+- **Mindful Place** — `review-mindfulness`, Open → `/gains-demo/mindful`. Blurb: "Formerly Calm Place. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music), the breathing is guided by concentric rings that expand and contract with Spark's count, the frog is the new painterly one and breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. The choice chips now sit in even rows."
+
+**2. Remove all three from the Zone cards** — Body Mapping off **Zone 1**, Message to Your Guardian off **Zone 3**, Mindful Place off **Zone 4** (fully undoing Draft 74 §4).
+
+**3. Reorder and renumber the review cards to exactly:**
+1. Pre/Post test
+2. Body Mapping
+3. Message to Your Guardian
+4. Mindful Place
+5. The Ascent
+6. Zone 4: The Bright Reaches — walkable zone
+7. Videos
+
+Keep every card's existing buttons, blurbs, and feedback tags; the round-closing divider still follows the last card (now Videos). Dedicated pages/routes unchanged.
+
+**Verify.** `/gains-demo` review section shows seven cards in the order above with correct numbering; each activity card opens its page and its comment box tags correctly (`review-bodymap` / `review-zone3pitch` / `review-mindfulness`); the Zone 1, 3, and 4 cards no longer list those activities; divider follows card 7; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 77.*
