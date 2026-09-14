@@ -132,6 +132,17 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **4fe19a6** (2026-09-14) — Draft 78: **Ascent red feelings show their name
+  immediately + a per-hit flash.** `climbScene.js`: the descending red
+  obstacle's feeling word is fully legible from the first frame instead of
+  fading/revealing in per hit; the tap-to-blast progression (cloud lightens,
+  shatters into gold) is unchanged. Each beam hit now gets its own visible
+  feedback since the word no longer reveals -- a quick bright ADD-blended
+  pulse over the cloud plus a small burst of light-motes, both scaling up
+  slightly as it nears shattering. Verified in the browser locally and live
+  (label alpha 1 immediately and through descent, cloud fade/shatter timing
+  unchanged, clean console); `src/game/` so no version bump.
+
 - **60a7012** (2026-09-14) — Draft 77: **Body Mapping, Guardian and Mindful
   Place back in the review section.** Reverses Draft 74's graduation:
   `gainsReviewCards.js` is seven cards again in the fixed order Pre/Post ·
@@ -4089,3 +4100,76 @@ Keep every card's existing buttons, blurbs, and feedback tags; the round-closing
 **Verify.** `/gains-demo` review section shows seven cards in the order above with correct numbering; each activity card opens its page and its comment box tags correctly (`review-bodymap` / `review-zone3pitch` / `review-mindfulness`); the Zone 1, 3, and 4 cards no longer list those activities; divider follows card 7; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 77.*
+
+
+### Draft 78 — The Ascent: show the red feeling's name immediately when it descends (no fade-in) — ✅ SHIPPED 4fe19a6 (2026-09-14)
+
+One tweak from the 9/14 check-in (team approved everything else). In `src/game/climbScene.js`: when a red obstacle **drifts down into the lane (Draft 72)**, its **feeling word should be visible right away** at full legibility — not fading in or being revealed progressively as it arrives. The word is part of the obstacle from the moment it appears; the player should know what feeling is blocking them at a glance.
+
+**Keep the tap-to-blast progression** (the cloud lightens step by step, shatters into gold) — this changes the *entrance*: the name is on the red as it descends, no fade/reveal on arrival.
+
+**Add a visible hit effect per beam hit.** Since the word no longer "reveals" on each hit, give every tap-hit its own feedback so hitting still feels like it does something: a quick bright **flash/pulse** on the cloud, a small burst of light-motes or a **crack/fracture** spreading across it, and a soft hit sound if one exists — escalating slightly as it gets closer to shattering. Short and satisfying, not violent (it's light, per the "protecting yourself" framing).
+
+**Verify.** On `/gains-demo/climb`: a red descends with its feeling word fully readable from the first frame; blasting behavior unchanged; nothing else changes; clean build. `src/game/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 78.*
+
+
+### Draft 79 — No light-gray text anywhere in GAINS: finish the pre/post pass and audit the rest
+
+From the 9/14 check-in: there's still **light-gray text in the pre/post test** after Draft 73's bolding pass (Josh spotted it live; Stephanie agreed it needs to be more noticeable). **Standing rule from Josh: we don't want light-gray text anywhere in GAINS** — it reads as disabled/unimportant on the dark Shadowmend surfaces, and this is for teens on phones.
+
+**1. Pre/Post first** (`MeasurementPacket.jsx` + `ds/`): find every remaining use of muted/faint tones on participant-facing text — helper lines ("Drag the slider to choose.", "Please answer this question."), the ruler's tick labels and any anchors, placeholder text in inputs, progress "Step X of Y", option sublabels, the matrix headers — and lift them to `--text-body` or `--text-bright` (placeholders can stay one step softer than body text but must still be clearly readable). Nothing on these pages should be `--text-faint`/`--text-muted` or a low-opacity gray.
+
+**2. Then audit the whole GAINS demo** (`/gains-demo`, its dedicated pages, the activities, the Ascent and Zone 4 HUD/hints): grep for `--text-faint`, `--text-muted`, `text-slate-4xx`, `opacity` on text, and gray hex values in GAINS components, and raise anything participant-facing to a readable tone. Reviewer-only chrome (badges, "Prototype · not yet wired…" footers) can stay softer but still legible. Don't touch Ready for Roots.
+
+**3. Record the rule** in the Shadowmend design notes (`Design System Assets/Design Tokens.md` or the style guide): *"No light-gray body/helper text. Participant-facing text uses `--text-body` or brighter."*
+
+**Verify.** Pre/post pages have no faint gray text (helpers, ticks, placeholders, progress all readable at 375px on the dark surface); the same across the activities, Ascent, and Zone 4; Ready for Roots unaffected; clean build. `src/components/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 79.*
+
+
+### Draft 80 — Zone 3 "The Mistfields" walkable zone: second instance of the template (walk → Spark → Video 3 → the rest spot → Message to Your Guardian → Wingsuit → the broken bridge → the flight)
+
+Build Zone 3 on the Zone 4 walkable-zone template (Draft 68–70, 75). **Same loop, new data:** the Mistfields plate, the Guardian activity as the station, the Wingsuit as the gear, the existing **flight** traversal as the exit, and eight new Spark lines. **Reuses Zone 4's Traveler sprites and Spark flicker frames** (Zones 3 and 4 share Traveler stage 3) and Zone 4's SFX pack.
+
+**In-world story:** the path leads up to an old rope bridge that has collapsed into the mist — the way to the Bright Reaches, uncrossable. Off the path is a **waystone with a lantern** (a rest spot) where you plan your message to your guardian. Earning the Wingsuit means you don't need the bridge: you fly across.
+
+---
+## Do this first: make the template data-driven
+Refactor so a zone is a **config object**, not a bespoke page: `src/components/gains/zone/zones.js` (or similar) exporting per-zone configs — `{ id, title, welcomeCard, plateUrl, overlayUrls[], motionCssUrl, ambienceUrl, walkablePolygon, waypoints, positions: { entry, spark, station, exit }, stationKind, video: { id, h }, ActivityComponent, gear: { name, itemSrc, equippedSrc, title, subline, sparkLine }, traversalMode, vo: { welcome, arrive, followMe, ready, transition, redirectStationFirst, redirectExitBeforeVideo, redirectExitBeforeActivity }, endCard: { title, nextHref? } }`. **Move Zone 4's current values into its config** (no behavior change — verify Zone 4 plays identically), and have a generic `GainsZonePage` (or `GainsZone4Page` → `GainsZonePage({ zone })`) render any config. Then Zone 3 is a second config + a route. Keep `?dev` skips.
+
+## Assets manifest (source → served; convert PNG→webp, keep VO as mp3). Source: `Gains for Teens/Walkable Zones/Zone 3/`
+- **Plate:** `zone3-map.png` (1296×2304) → `public/long-light/zone3/map.webp`
+- **Overlays (Claude Design, Mistfields set):** `overlays/layer-mist.svg`, `layer-lantern.svg`, `layer-motes.svg`, `layer-sway.svg`, `layer-beyond.svg`, `motion.css` → `public/long-light/zone3/ov/` (same loader as Zone 4: viewBox 1080×1920, `xMidYMid slice`; mist/lantern/motes/beyond = screen, sway = normal — see each file's `<desc>`)
+- **Gear:** `sprites/gear-wingsuit.png` (item), `sprites/traveler-stage3-wingsuit-celebrate.png` (equipped figure) → `public/long-light/zone3/gear/`
+- **Spark VO:** `z3-00-welcome.mp3`, `z3-01-arrive.mp3`, `z3-02-follow-me.mp3`, `z3-03-ready.mp3`, `z3-04-exit-transition.mp3`, `z3-05-redirect-spot-first.mp3`, `z3-06-redirect-exit-before-video.mp3`, `z3-07-redirect-exit-before-activity.mp3` → `public/long-light/zone3/audio/`
+- **Ambience:** `ambience.mp3` (152.5s, loudness-matched, loop-ready) → `public/long-light/zone3/audio/ambience.mp3`
+- **Reuse from Zone 4 (already served):** Traveler sprites (`public/long-light/zone4/traveler/`), Spark flicker (`…/zone4/spark/`), SFX (`…/zone4/sfx/`) — reference the existing served paths (or move shared assets to `public/long-light/shared/` if cleaner; either way, one copy).
+- **Video 3:** Vimeo id `1223207965`, h `d0c77b8f23`.
+- **Activity:** `ElevatorPitch` — **add an `onComplete()` prop** (as done for `MindfulnessCalmPlace`): when provided, finishing the flow (the Wingsuit/done step) hands off instead of showing its standalone ending; standalone demo unchanged without the prop.
+- **Traversal:** existing `TraversalGame mode="flight"`.
+
+## Zone 3 config (positions in the 1080×1920 logical plate; fine-tune by eye)
+- `title`: "Zone 3: The Mistfields" · welcome card: **"Welcome to the Mistfields"** (+ `z3-00`, arrive-swell)
+- **entry:** bottom center of the path, ~(540, 1780)
+- **spark (waiting):** off the path, lower-left verge, ~(250, 1180) (Zone 4 pattern)
+- **station = the waystone + lantern**, right of the path mid-frame, ~(770, 890); tap target = the waystone; the Traveler walks to the path beside it
+- **exit = the bridge head** at the top of the path, ~(545, 420); the chasm/bridge beyond is **non-walkable**
+- **walkablePolygon:** the lit stone path bottom→bridge head plus the grass verges beside it; exclude the chasm, the mist, and the broken bridge. Surface tags: stone on the path, grass on the verges.
+- **vo:** the eight z3 clips mapped as in Zone 4 (arrive → after title; follow-me → after video ends; ready → after gear award; transition → on exit; the three redirects on wrong-order taps)
+- **video:** Video 3 in-frame via the Vimeo SDK; `ended` → follow-me, Spark companion glides to the waystone, station active
+- **gear (GearAward):** `name: "Wingsuit"`, item + equipped figure above, `title: "You earned the Wingsuit!"`, `subline: "It'll carry you across to the Bright Reaches."`, `sparkLine: "The bridge doesn't matter anymore. You can fly."`; mask/Wingsuit slot in the HUD fills (HUD order: Lantern · Lens · Wingsuit · Mask — in Zone 3 the first two show earned, Wingsuit empty until now, Mask empty)
+- **traversalMode:** `flight` — transition card **"We're headed for the Bright Reaches!"** + `z3-04`, then the flight mounts in-frame; its `onComplete` → end card
+- **endCard:** "You reached the Bright Reaches." + result line + **"Continue to the Bright Reaches →"** linking to `/gains-demo/zone4` (chain the zones), plus Play again
+
+## Page + review
+- Route **`/gains-demo/zone3`**; page title "GAINS for Teens — Zone 3: The Mistfields (walkable prototype)"; full-screen stage like Zone 4; feedback default `review-zone3` (add `{ value: 'review-zone3', label: 'Review: Zone 3 walkable zone' }`).
+- **Review card**, placed **right before the Zone 4 card**: "Zone 3: The Mistfields — walkable zone (playable prototype)", tag `review-zone3`, "Play Zone 3 →". Blurb: "The Mistfields as a place you move through. Find Spark, watch the video, follow Spark to the waystone to plan your message to your guardian, earn and equip your Wingsuit, then head for the broken bridge and fly across to the Bright Reaches. Same template as Zone 4, new world." Renumber (Zone 3 → 6, Zone 4 → 7, Videos → 8).
+
+**Keep** everything from the Zone 4 template: tap-to-move + tap-to-approach, depth scaling, footsteps by surface, tap marker + the persistent "Tap the path to walk" cue, companion Spark with trail/nudge, glow-the-next-step gating with voiced redirects, path-lights-up on exit unlock, ambience ducking under VO, soft-bloom transitions, non-fail, reduced-motion.
+
+**Verify.** Zone 4 still plays identically from its config. `/gains-demo/zone3`: Begin → "Welcome to the Mistfields" + arrive line; walk the path (stone) and verges (grass), can't enter the chasm/bridge; Spark → Video 3 in-frame → follow-me → companion glides to the waystone; waystone → Message to Your Guardian → `onComplete` → GearAward (Wingsuit reveal → Equip → celebrate figure → HUD slot fills) → ready line, bridge exit glows, path lights up; exit → "headed for the Bright Reaches" + VO → the **flight** runs in-frame → end card with Continue to Zone 4 + Play again; the five mist overlays animate with correct blends; ambience loops; redirects fire on wrong-order taps; review card + `review-zone3` tag work; clean console; Ready for Roots unaffected; clean build. `src/game/`, `src/components/`, `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 80.*
