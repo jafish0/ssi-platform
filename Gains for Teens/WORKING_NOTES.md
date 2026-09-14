@@ -132,6 +132,21 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **e030fa6** (2026-09-14) — Draft 79: **no light-gray text anywhere in
+  GAINS.** Raised every `--text-faint`/`--text-muted` participant-facing use
+  to `--text-body` across the pre/post measures (the "Step X of Y" progress
+  label, the ruler's anchor row and "Drag the slider to choose." helper, the
+  "Another"/write-in prompts) and the whole `/gains-demo` demo hub (roadmap
+  table, section eyebrow labels, zone/cast blurbs and captions), plus
+  BodyMapping's idle/revealed prompts and progress line, ElevatorPitch's
+  "Write your own" button and helper line, Mindfulness's "X of 3 found/heard"
+  line, ExpositionIntro's transition line, and the Ascent/Zone 4 full-screen
+  header's back-link and Restart chip. Left alone as genuine reviewer-only
+  chrome: Badge's unused 'quiet' tone, the art-placeholder box, the video
+  duration pill, the "Skip (testers)" button, and the Ascent/Zone 4 HUD text
+  (already warm-white). Documented the rule in `Design Tokens.md`. Verified
+  live: pre-test measures body scans at zero sub-1.0-alpha text.
+
 - **4fe19a6** (2026-09-14) — Draft 78: **Ascent red feelings show their name
   immediately + a per-hit flash.** `climbScene.js`: the descending red
   obstacle's feeling word is fully legible from the first frame instead of
@@ -4115,7 +4130,7 @@ One tweak from the 9/14 check-in (team approved everything else). In `src/game/c
 *End of Draft 78.*
 
 
-### Draft 79 — No light-gray text anywhere in GAINS: finish the pre/post pass and audit the rest
+### Draft 79 — No light-gray text anywhere in GAINS: finish the pre/post pass and audit the rest — ✅ SHIPPED e030fa6 (2026-09-14)
 
 From the 9/14 check-in: there's still **light-gray text in the pre/post test** after Draft 73's bolding pass (Josh spotted it live; Stephanie agreed it needs to be more noticeable). **Standing rule from Josh: we don't want light-gray text anywhere in GAINS** — it reads as disabled/unimportant on the dark Shadowmend surfaces, and this is for teens on phones.
 
