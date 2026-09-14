@@ -175,7 +175,14 @@ function SelectStep({ options, selected, onChange }) {
   )
 }
 
-export default function ElevatorPitch() {
+// --- Draft 80: `onComplete` ---
+// Inside the Zone 3 walkable zone this activity is one scene in a larger
+// in-frame loop, and the Wingsuit is awarded by a real Gear Award scene
+// right after. When the `onComplete()` prop is provided, finishing the
+// safety-disclaimer step hands off to it instead of advancing to the
+// standalone `done` screen (the "You did it" ending + Start over). Without
+// the prop (the review-list demo) the behavior is unchanged.
+export default function ElevatorPitch({ onComplete = null }) {
   const [step, setStep] = useState('intro')
   const [greeting, setGreeting] = useState('')
   const [situation, setSituation] = useState(null)
@@ -392,7 +399,7 @@ export default function ElevatorPitch() {
         {step !== 'review' && step !== 'done' && (
           <button
             type="button"
-            onClick={next}
+            onClick={() => (step === 'safety' && onComplete ? onComplete() : next())}
             disabled={
               (step === 'greeting' && !greeting.trim()) ||
               (step === 'situation' && !situation) ||

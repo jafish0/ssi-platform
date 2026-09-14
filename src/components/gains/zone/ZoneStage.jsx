@@ -14,7 +14,10 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 const SCENE_KEY = 'ZoneWalk'
 
-const ZoneStage = forwardRef(function ZoneStage({ base, reducedMotion = false, onEvent, progress, paused = true, started = false }, ref) {
+const ZoneStage = forwardRef(function ZoneStage(
+  { zoneId, base, spriteBase, frogUrl, reducedMotion = false, onEvent, progress, paused = true, started = false },
+  ref,
+) {
   const containerRef = useRef(null)
   const gameRef = useRef(null)
   const onEventRef = useRef(onEvent)
@@ -38,9 +41,13 @@ const ZoneStage = forwardRef(function ZoneStage({ base, reducedMotion = false, o
   useEffect(() => {
     let game = null
     let cancelled = false
-    const travelerUrls = { 'idle-front': `${base}/traveler/idle-front.webp`, 'idle-back': `${base}/traveler/idle-back.webp` }
+    // Zone 3 (Draft 80) reuses Zone 4's Traveler + Spark art wholesale
+    // (they share Traveler stage 3) rather than duplicating the files, so
+    // the sprite URLs can come from a different base than the map/audio.
+    const sb = spriteBase || base
+    const travelerUrls = { 'idle-front': `${sb}/traveler/idle-front.webp`, 'idle-back': `${sb}/traveler/idle-back.webp` }
     for (const d of ['walk-back', 'walk-front', 'walk-side', 'walk-side-left']) {
-      for (let i = 1; i <= 6; i++) travelerUrls[`${d}-${i}`] = `${base}/traveler/${d}-${i}.webp`
+      for (let i = 1; i <= 6; i++) travelerUrls[`${d}-${i}`] = `${sb}/traveler/${d}-${i}.webp`
     }
 
     Promise.all([import('phaser'), import('../../../game/zoneWalkScene.js')])
@@ -60,10 +67,11 @@ const ZoneStage = forwardRef(function ZoneStage({ base, reducedMotion = false, o
           scene: [Scene],
         })
         game.registry.set('zoneConfig', {
+          zoneId,
           mapUrl: `${base}/map.webp`,
           travelerUrls,
-          sparkUrls: [1, 2, 3, 4].map((i) => `${base}/spark/flicker-${i}.webp`),
-          frogUrl: '/long-light/art/mindfulness/frog-painterly.png',
+          sparkUrls: [1, 2, 3, 4].map((i) => `${sb}/spark/flicker-${i}.webp`),
+          frogUrl, // optional -- only Zone 4's pond has a frog
           reducedMotion,
           onEvent: (evt) => {
             if (evt.type === 'ready') {
@@ -99,7 +107,7 @@ const ZoneStage = forwardRef(function ZoneStage({ base, reducedMotion = false, o
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base, reducedMotion])
+  }, [zoneId, base, spriteBase, frogUrl, reducedMotion])
 
   useEffect(() => {
     const s = scene()

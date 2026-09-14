@@ -19,16 +19,23 @@ const POND_DUCKS_AMBIENCE = 0.4 // ambience ×(1 - this×pond)
 const SPEECH_DUCK = 0.3
 const SFX_VOL = { default: 0.7, step: 0.45, 'arrive-swell': 0.6, 'chime-unlock': 0.7 }
 
-export function createZoneAudio({ base, pondUrl }) {
+// `pondUrl` is optional (Draft 80): not every zone's station has its own
+// proximity-crossfaded soundscape (Zone 3's waystone doesn't). `sfxBase`
+// defaults to `base` but can point elsewhere so a zone can reuse another
+// zone's SFX pack instead of duplicating the files (Zone 3 reuses Zone 4's).
+export function createZoneAudio({ base, sfxBase, pondUrl }) {
+  const sfxDir = sfxBase || base
   const ambience = new Audio(`${base}/audio/ambience.mp3`)
   ambience.loop = true
   ambience.preload = 'auto'
-  const pond = new Audio(pondUrl)
-  pond.loop = true
-  pond.preload = 'auto'
+  const pond = pondUrl ? new Audio(pondUrl) : null
+  if (pond) {
+    pond.loop = true
+    pond.preload = 'auto'
+  }
   const vo = new Audio()
   vo.preload = 'auto'
-  const els = [ambience, pond, vo]
+  const els = [ambience, vo, ...(pond ? [pond] : [])]
 
   let bedsOn = false
   let pondFactor = 0
@@ -45,7 +52,7 @@ export function createZoneAudio({ base, pondUrl }) {
     const duck = speaking ? SPEECH_DUCK : 1
     try {
       ambience.volume = bedsOn ? AMBIENCE_VOL * (1 - POND_DUCKS_AMBIENCE * pondFactor) * duck : 0
-      pond.volume = bedsOn ? POND_MAX_VOL * pondFactor * duck : 0
+      if (pond) pond.volume = bedsOn ? POND_MAX_VOL * pondFactor * duck : 0
     } catch {
       /* iOS ignores volume writes; fine */
     }
@@ -107,7 +114,7 @@ export function createZoneAudio({ base, pondUrl }) {
       bedsOn = true
       applyVolumes()
       ambience.play().catch(() => {})
-      pond.play().catch(() => {})
+      if (pond) pond.play().catch(() => {})
     },
 
     // Pause (not stop) so the pond bed resumes where it left off.
@@ -116,13 +123,15 @@ export function createZoneAudio({ base, pondUrl }) {
       applyVolumes()
       try {
         ambience.pause()
-        pond.pause()
+        if (pond) pond.pause()
       } catch {
         /* ignore */
       }
     },
 
+    // No-op when the zone has no proximity-crossfaded bed (see `pond` above).
     setPond(f) {
+      if (!pond) return
       pondFactor = Math.max(0, Math.min(1, f || 0))
       applyVolumes()
     },
@@ -186,7 +195,7 @@ export function createZoneAudio({ base, pondUrl }) {
       if (cached === null) return // known missing
       if (cached) return play(cached)
       buffers[name] = undefined
-      fetch(`${base}/sfx/${name}.mp3`)
+      fetch(`${sfxDir}/sfx/${name}.mp3`)
         .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
         .then((ab) => ctx.decodeAudioData(ab))
         .then((buf) => {
@@ -204,7 +213,7 @@ export function createZoneAudio({ base, pondUrl }) {
       names.forEach((name) => {
         if (buffers[name] !== undefined) return
         buffers[name] = undefined
-        fetch(`${base}/sfx/${name}.mp3`)
+        fetch(`${sfxDir}/sfx/${name}.mp3`)
           .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
           .then((ab) => ctx.decodeAudioData(ab))
           .then((buf) => {

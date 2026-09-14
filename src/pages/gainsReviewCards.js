@@ -6,8 +6,9 @@
 // Draft 77: Body Mapping, Message to Your Guardian and Mindful Place are
 // back here as review cards (reversing Draft 74's graduation -- the team
 // wants the three activities together while they're still under review).
-// Order is fixed: Pre/Post · Body Mapping · Guardian · Mindful Place ·
-// Ascent · Zone 4 · Videos.
+// Draft 80 adds Zone 3 (walkable) right before Zone 4. Order is fixed:
+// Pre/Post · Body Mapping · Guardian · Mindful Place · Ascent · Zone 3 ·
+// Zone 4 · Videos.
 
 export const REVIEW_CARDS = [
   {
@@ -59,8 +60,17 @@ export const REVIEW_CARDS = [
     links: [{ label: 'Play the Ascent', to: '/gains-demo/climb', play: true }],
   },
   {
-    key: 'zone4',
+    key: 'zone3',
     n: 6,
+    title: 'Zone 3: The Mistfields — walkable zone',
+    section: 'review-zone3',
+    blurb:
+      'The Mistfields as a place you move through. Find Spark, watch the video, follow Spark to the waystone to plan your message to your guardian, earn and equip your Wingsuit, then head for the broken bridge and fly across to the Bright Reaches. Same template as Zone 4, new world.',
+    links: [{ label: 'Play Zone 3', to: '/gains-demo/zone3', play: true }],
+  },
+  {
+    key: 'zone4',
+    n: 7,
     title: 'Zone 4: The Bright Reaches — walkable zone',
     section: 'review-zone4',
     blurb:
@@ -69,7 +79,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'videos',
-    n: 7,
+    n: 8,
     title: 'Videos',
     section: 'review-videos',
     blurb:

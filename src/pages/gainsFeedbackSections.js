@@ -37,6 +37,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-mindfulness', label: 'Review: Mindfulness Mindful Place' },
   { value: 'review-zone3pitch', label: 'Review: Zone 3 Elevator Pitch' },
   { value: 'review-ascent', label: 'Review: The Ascent (climb)' },
+  { value: 'review-zone3', label: 'Review: Zone 3 walkable zone' },
   { value: 'review-zone4', label: 'Review: Zone 4 walkable zone' },
   // The official breakdown
   // assent-measures — superseded by review-pretest/review-posttest (Draft

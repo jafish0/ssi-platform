@@ -1,18 +1,19 @@
-// Ambient overlay layers for the walkable zone (GAINS Draft 68 Phase C).
+// Ambient overlay layers for the walkable zone (GAINS Draft 68 Phase C,
+// genericized Draft 80).
 //
-// The five Claude Design SVG layers for the Bright Reaches plate (clouds,
-// light-motes, swaying tufts, the beacon's breathing bloom, pond glints) plus
-// their shared motion.css, in exactly the Mindfulness `_ov` format: each is a
-// full-frame SVG with viewBox 0 0 1080 1920 that sits over the plate. They
-// render as DOM layers ABOVE the Phaser canvas (pointer-events: none), each
-// with the blend mode the set was designed for (screen for light, normal for
-// the tufts). motion.css already falls back to static under
-// prefers-reduced-motion. Every file is optional: a layer that fails to
-// fetch is simply skipped, so the set can land file by file.
-
+// Five Claude Design SVG layers per zone plus their shared motion.css, in
+// exactly the Mindfulness `_ov` format: each is a full-frame SVG with
+// viewBox 0 0 1080 1920 that sits over the plate. They render as DOM layers
+// ABOVE the Phaser canvas (pointer-events: none), each with the blend mode
+// the set was designed for (screen for light, normal for things like sway).
+// motion.css already falls back to static under prefers-reduced-motion.
+// Every file is optional: a layer that fails to fetch is simply skipped, so
+// a set can land file by file. `layers` is the zone's own set (filenames +
+// blend modes differ per plate); defaults to Zone 4's Bright Reaches set so
+// existing callers are unaffected.
 import { useEffect, useState } from 'react'
 
-const LAYERS = [
+const DEFAULT_LAYERS = [
   { key: 'clouds', file: 'layer-clouds.svg', blend: 'screen' },
   { key: 'motes', file: 'layer-motes.svg', blend: 'screen' },
   { key: 'sway', file: 'layer-sway.svg', blend: 'normal' },
@@ -35,21 +36,22 @@ function prepSvg(svg) {
   return svg.replace(/preserveAspectRatio="[^"]*"/, '').replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ')
 }
 
-export default function ZoneOverlays({ base, visible = true }) {
+export default function ZoneOverlays({ base, layers: layerSet = DEFAULT_LAYERS, visible = true }) {
   const [layers, setLayers] = useState(null) // [{ key, blend, svg }]
   const [motion, setMotion] = useState('')
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchText(`${base}/ov/motion.css`), ...LAYERS.map((l) => fetchText(`${base}/ov/${l.file}`))]).then(([css, ...svgs]) => {
+    Promise.all([fetchText(`${base}/ov/motion.css`), ...layerSet.map((l) => fetchText(`${base}/ov/${l.file}`))]).then(([css, ...svgs]) => {
       if (cancelled) return
       setMotion(css || '')
-      setLayers(LAYERS.map((l, i) => (svgs[i] ? { ...l, svg: prepSvg(svgs[i]) } : null)).filter(Boolean))
+      setLayers(layerSet.map((l, i) => (svgs[i] ? { ...l, svg: prepSvg(svgs[i]) } : null)).filter(Boolean))
     })
     return () => {
       cancelled = true
     }
-  }, [base])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base, layerSet])
 
   if (!layers || !layers.length) return null
   return (

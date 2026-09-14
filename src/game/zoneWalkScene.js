@@ -20,8 +20,14 @@
 //   { type: 'step', surface: 'stone'|'grass' }             footstep
 //   { type: 'proximity', pond: 0..1 }                      ~8Hz, for audio
 //   { type: 'firstTap' }
-// Zone 4 is the first instance; the plate-specific data (spots, polygons,
-// waypoints) is the ZONE4 block below. A second zone is a second data block.
+// Zone 4 was the first instance; the plate-specific data (spots, polygons,
+// waypoints) is the ZONE4 block below. Zone 3 (Draft 80) is the second data
+// block, ZONE3 -- same scene, same mechanics, new plate. `init()` picks the
+// right block from `this.cfg.zoneId`. A "pond" here just means "the
+// station" (the second interactable, after Spark) -- not every zone's
+// station is literally water: Zone 3's is a waystone, so its `pond` ellipse
+// is simply omitted (see the `this.zone.pond &&` guards below) and there's
+// no `spots.frog`.
 //
 // Coordinates are the plate's logical 1080x1920 space (9:16, same as the
 // Claude Design overlay layers' viewBox), scaled to fit the phone frame.
@@ -117,6 +123,54 @@ const ZONE4 = {
   depth: { yNear: 1830, yFar: 460, sNear: 1.0, sFar: 0.6 },
 }
 
+
+// ---- Zone 3: the Mistfields -------------------------------------------
+const ZONE3 = {
+  // The path climbs from the bottom of the plate to the old rope bridge at
+  // the top (out/impassable -- the Wingsuit is how you actually cross).
+  // The waystone + lantern (the "station") sits in a small clearing just
+  // off the path to the right. Spark waits off the path in the verge to
+  // the left, same pattern as Zone 4.
+  spots: {
+    start: { x: 600, y: 1830 },
+    sparkWait: { x: 240, y: 1190 },
+    sparkStand: { x: 540, y: 1200 },
+    pond: { x: 760, y: 930 }, // the waystone -- the station trigger/stand point
+    exit: { x: 660, y: 410 }, // the bridge head
+    exitStand: { x: 600, y: 470 },
+  },
+  // Spark's "glide to the station" gesture target, hovering by the waystone.
+  pondHover: { x: 700, y: 900 },
+  // No water here -- the waystone needs no exclusion ellipse (see the
+  // `this.zone.pond &&` guards on isWalkable/hitInteractable/updateProximity).
+  // Walkable set: a ribbon following the path's gentle curve from the
+  // entry up to the bridge head, wide enough to include the waystone
+  // clearing without a separate bulge polygon.
+  polys: [
+    [[460, 1830], [740, 1830], [750, 1650], [470, 1650]],
+    [[470, 1650], [750, 1650], [755, 1450], [475, 1450]],
+    [[475, 1450], [755, 1450], [780, 1250], [500, 1250]],
+    [[500, 1250], [780, 1250], [800, 1050], [520, 1050]],
+    [[520, 1050], [800, 1050], [780, 850], [500, 850]],
+    [[500, 850], [780, 850], [760, 650], [480, 650]],
+    [[480, 650], [760, 650], [740, 470], [460, 470]],
+  ],
+  grassPolys: [], // one surface throughout (stone/dirt) -- no grass foley
+  // Waypoint graph along the path centerline (a straight chain -- the path
+  // doesn't fork the way Zone 4's does around the pond).
+  nodes: [
+    [600, 1830], [610, 1650], [615, 1450], [640, 1250], [660, 1050],
+    [640, 850], [620, 650], [600, 470],
+  ],
+  edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]],
+  // The exit's "path lights up" runs from the waystone's level up to the
+  // bridge head.
+  lightPathNodes: [4, 5, 6, 7],
+  depth: { yNear: 1830, yFar: 460, sNear: 1.0, sFar: 0.6 },
+}
+
+const ZONES = { zone4: ZONE4, zone3: ZONE3 }
+
 // ---- geometry helpers -------------------------------------------------
 function pointInPoly(px, py, poly) {
   let inside = false
@@ -152,7 +206,7 @@ export function makeZoneWalkScene(Phaser) {
 
     init() {
       this.cfg = this.registry.get('zoneConfig') || {}
-      this.zone = ZONE4
+      this.zone = ZONES[this.cfg.zoneId] || ZONE4
       this.ready = false
       this.began = false
       this.paused = true
@@ -517,7 +571,7 @@ export function makeZoneWalkScene(Phaser) {
 
     // ---- walkable geometry ----
     isWalkable(x, y) {
-      if (inEllipse(x, y, this.zone.pond)) return false
+      if (this.zone.pond && inEllipse(x, y, this.zone.pond)) return false
       return this.zone.polys.some((p) => pointInPoly(x, y, p))
     }
 
@@ -661,7 +715,7 @@ export function makeZoneWalkScene(Phaser) {
       // the pond can't steal the tap meant for them.
       if (Phaser.Math.Distance.Between(x, y, z.spots.exit.x, z.spots.exit.y) < INTERACT_R.exit) return 'exit'
       const pondHit =
-        inEllipse(x, y, { ...z.pond, rx: z.pond.rx + 40, ry: z.pond.ry + 40 }) ||
+        (z.pond && inEllipse(x, y, { ...z.pond, rx: z.pond.rx + 40, ry: z.pond.ry + 40 })) ||
         Phaser.Math.Distance.Between(x, y, z.spots.pond.x, z.spots.pond.y) < INTERACT_R.pond
       if (pondHit) return 'pond'
       if (this.spark && Phaser.Math.Distance.Between(x, y, this.spark.x, this.spark.y) < INTERACT_R.spark) return 'spark'
@@ -910,7 +964,7 @@ export function makeZoneWalkScene(Phaser) {
 
     // ---- ambient reporting ----
     updateProximity(time) {
-      if (!this.traveler || time - this.lastProximityAt < PROXIMITY_EVERY_MS) return
+      if (!this.traveler || !this.zone.pond || time - this.lastProximityAt < PROXIMITY_EVERY_MS) return
       this.lastProximityAt = time
       const z = this.zone
       const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, z.pond.x, z.pond.y)

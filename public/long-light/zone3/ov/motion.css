@@ -1,0 +1,46 @@
+/* motion.css — Zone 3 Mistfields overlay idle loops.
+   Inline the SVGs into the page, then include this file.
+   Per-element durations/delays live in each element's style attribute;
+   these rules supply the keyframes only. */
+:root{--ease-soft:cubic-bezier(.45,0,.2,1);--ease-drift:cubic-bezier(.4,0,.6,1)}
+
+/* layer-mist — screen */
+.mist{animation-name:mf-drift-l,mf-breathe;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;animation-direction:alternate;will-change:transform,opacity}
+.mist--r{animation-name:mf-drift-r,mf-breathe}
+@keyframes mf-drift-l{from{transform:translateX(0) scaleX(1)}to{transform:translateX(-88px) scaleX(1.06)}}
+@keyframes mf-drift-r{from{transform:translateX(0) scaleX(1)}to{transform:translateX(88px) scaleX(1.06)}}
+@keyframes mf-breathe{from{opacity:.65}to{opacity:1}}
+
+/* layer-motes — screen */
+.mote{animation-name:mf-rise-a;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;will-change:transform}
+.mote--b{animation-name:mf-rise-b}
+@keyframes mf-rise-a{0%{transform:translate(0,0)}30%{transform:translate(12px,-38px)}60%{transform:translate(-9px,-80px)}100%{transform:translate(5px,-124px)}}
+@keyframes mf-rise-b{0%{transform:translate(0,0)}35%{transform:translate(-14px,-44px)}65%{transform:translate(11px,-86px)}100%{transform:translate(-3px,-124px)}}
+.mote-core,.mote-glow{animation-name:mf-blink;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes mf-blink{0%,100%{opacity:.06}40%{opacity:1}70%{opacity:.45}}
+
+/* layer-lantern — screen */
+.lantern-bloom{animation-name:mf-bloom;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+.lantern-bloom--b{animation-direction:alternate}
+@keyframes mf-bloom{0%,100%{transform:scale(.9);opacity:.26}50%{transform:scale(1.1);opacity:.46}}
+.lantern-core{animation-name:mf-flicker;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+.lantern-core--b{animation-direction:alternate-reverse}
+@keyframes mf-flicker{0%{opacity:.7;transform:scale(.94)}22%{opacity:1;transform:scale(1.08)}44%{opacity:.82;transform:scale(1)}66%{opacity:1;transform:scale(1.06)}100%{opacity:.7;transform:scale(.94)}}
+
+/* layer-sway — normal */
+.tuft{animation-name:mf-sway;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes mf-sway{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.8deg)}}
+.strand{animation-name:mf-strand;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes mf-strand{0%,100%{transform:rotate(-0.8deg)}50%{transform:rotate(0.9deg)}}
+
+/* layer-beyond — screen */
+.beyond-glow,.beyond-ledge{animation:mf-beyond 8s var(--ease-soft) infinite}
+.beyond-glow--b{animation-delay:-1.6s}
+.beyond-ledge{animation-delay:-3.2s}
+@keyframes mf-beyond{0%,100%{transform:scale(.94);opacity:.26}50%{transform:scale(1.07);opacity:.5}}
+.beyond-band{animation:mf-band 8s var(--ease-soft) infinite}
+@keyframes mf-band{0%,100%{opacity:.2}50%{opacity:.36}}
+
+@media (prefers-reduced-motion:reduce){
+  .mist,.mote,.mote-core,.mote-glow,.lantern-bloom,.lantern-core,.tuft,.strand,.beyond-glow,.beyond-ledge,.beyond-band{animation:none}
+}

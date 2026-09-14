@@ -1,13 +1,30 @@
-// Gear HUD for the walkable zone (GAINS Draft 68): four small slots in the
-// frame's top-left. Lantern, Focusing Lens and Wingsuit show as earned but
-// dimmed placeholders (they're from earlier zones); the Oxygen Mask slot sits
-// empty until the Gear Award equips it, when the mask icon flies in from the
-// frame's center (see the `flyIn` prop). Unobtrusive by design.
+// Gear HUD for the walkable zone (GAINS Draft 68, genericized Draft 80):
+// four small slots in the frame's top-left, in a fixed canonical order --
+// Lantern, Focusing Lens, Wingsuit, Oxygen Mask -- the same order every
+// zone's gear is earned in across the game.
+//
+// Gear already earned in an EARLIER zone shows as a plain, neutral icon
+// (Draft 68's "dimmed placeholder" look -- see `earned`). THIS zone's own
+// gear (`newKey`) starts as an empty dashed slot with no icon at all, then
+// switches to `active` + the item's own image once `equipped`, flying in
+// from the frame's center (see `flyIn`, bumped by the host on equip/receive
+// -- `frameRef` measures against). Any other slot (gear not yet reached) is
+// a locked preview, same empty/dashed look as the current zone's gear
+// before it's earned.
 
 import { useEffect, useRef, useState } from 'react'
 import { Flame, Aperture, Wind } from 'lucide-react'
 
 const SLOT = 34
+
+const GEAR_ORDER = [
+  { key: 'lantern', label: 'Lantern', icon: <Flame size={16} strokeWidth={1.75} /> },
+  { key: 'lens', label: 'Focusing Lens', icon: <Aperture size={16} strokeWidth={1.75} /> },
+  { key: 'wingsuit', label: 'Wingsuit', icon: <Wind size={16} strokeWidth={1.75} /> },
+  // The Mask has no lucide stand-in -- like the others before it earned its
+  // own art, it shows nothing at all while locked/previewed.
+  { key: 'mask', label: 'Oxygen Mask', icon: null },
+]
 
 function Slot({ label, children, active, empty, slotRef }) {
   return (
@@ -35,16 +52,16 @@ function Slot({ label, children, active, empty, slotRef }) {
   )
 }
 
-export default function GearHud({ maskEquipped, maskSrc, flyIn, frameRef }) {
-  const maskSlotRef = useRef(null)
+export default function GearHud({ earned = [], newKey, iconSrc, equipped, flyIn, frameRef }) {
+  const newSlotRef = useRef(null)
   const [fly, setFly] = useState(null) // { x, y, w } target rect (frame-relative)
 
-  // Mask fly-in: render a copy of the icon at the frame's center, then on
-  // the next frame move it to the slot; the CSS transition carries it.
+  // Fly-in: render a copy of the icon at the frame's center, then on the
+  // next frame move it to the slot; the CSS transition carries it.
   useEffect(() => {
-    if (!flyIn || !frameRef?.current || !maskSlotRef.current) return
+    if (!flyIn || !frameRef?.current || !newSlotRef.current) return
     const f = frameRef.current.getBoundingClientRect()
-    const s = maskSlotRef.current.getBoundingClientRect()
+    const s = newSlotRef.current.getBoundingClientRect()
     setFly({ start: true, x: s.left - f.left + 3, y: s.top - f.top + 3, w: SLOT - 6 })
     const id = requestAnimationFrame(() => setFly((v) => (v ? { ...v, start: false } : v)))
     const done = setTimeout(() => setFly(null), 1000)
@@ -56,27 +73,21 @@ export default function GearHud({ maskEquipped, maskSrc, flyIn, frameRef }) {
 
   return (
     <>
-      <div
-        className="absolute z-10 flex items-center gap-1.5"
-        style={{ top: 12, left: 12, pointerEvents: 'none' }}
-        aria-label="Your gear"
-      >
-        <Slot label="Lantern">
-          <Flame size={16} strokeWidth={1.75} />
-        </Slot>
-        <Slot label="Focusing Lens">
-          <Aperture size={16} strokeWidth={1.75} />
-        </Slot>
-        <Slot label="Wingsuit">
-          <Wind size={16} strokeWidth={1.75} />
-        </Slot>
-        <Slot label="Oxygen Mask" active={maskEquipped} empty={!maskEquipped} slotRef={maskSlotRef}>
-          {maskEquipped && !fly && <img src={maskSrc} alt="" style={{ width: SLOT - 6, height: SLOT - 6, objectFit: 'contain' }} />}
-        </Slot>
+      <div className="absolute z-10 flex items-center gap-1.5" style={{ top: 12, left: 12, pointerEvents: 'none' }} aria-label="Your gear">
+        {GEAR_ORDER.map((g) => {
+          const isNew = g.key === newKey
+          const active = isNew && !!equipped
+          const empty = isNew ? !equipped : !earned.includes(g.key)
+          return (
+            <Slot key={g.key} label={g.label} active={active} empty={empty} slotRef={isNew ? newSlotRef : undefined}>
+              {isNew ? (equipped && !fly ? <img src={iconSrc} alt="" style={{ width: SLOT - 6, height: SLOT - 6, objectFit: 'contain' }} /> : null) : g.icon}
+            </Slot>
+          )
+        })}
       </div>
       {fly && (
         <img
-          src={maskSrc}
+          src={iconSrc}
           alt=""
           className="absolute z-20"
           style={{
