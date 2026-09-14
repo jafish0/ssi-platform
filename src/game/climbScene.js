@@ -614,7 +614,10 @@ export function makeClimbScene(Phaser) {
       const restY = GAME_H * 0.46
       const glow = this.add.image(0, 0, 'cloud-red').setDisplaySize(w, w)
       // Draft 72: bigger word, no outline (a soft drop-shadow instead), long
-      // words shrink a touch to fit the cloud.
+      // words shrink a touch to fit the cloud. Draft 78: full legibility
+      // from the first frame -- the feeling blocking you should be readable
+      // at a glance, not fade/reveal in as it's hit (see hitFlash for the
+      // per-hit feedback that replaced the old progressive reveal).
       const redFontPx = Math.max(20, 28 - Math.max(0, entry.word.length - 8))
       const label = this.add
         .text(0, 0, entry.word, {
@@ -626,7 +629,6 @@ export function makeClimbScene(Phaser) {
           shadow: { offsetX: 0, offsetY: 2, color: 'rgba(20,4,2,0.9)', blur: 8, fill: true },
         })
         .setOrigin(0.5, 0.5)
-        .setAlpha(0) // revealed progressively as the cloud lightens (hitRed)
       // Draft 72.3: enter from above and drift down into the lane, then hold
       // and block exactly as before (blocking starts as soon as it's on the
       // way; the stuck-hint timer waits until it has settled).
@@ -675,10 +677,11 @@ export function makeClimbScene(Phaser) {
       if (Phaser.Math.Distance.Between(x, y, m.x, m.y) < r) this.hitRed(m)
     }
 
-    // "Name it to tame it": each hit lightens the cloud and reveals the
-    // feeling's name a little more (surfacing as it clears); the tap hint
-    // (if showing) clears on first contact. Once fully cleared it shatters
-    // into gold feelings to gather -- see shatterRed.
+    // "Name it to tame it": the feeling's name is already fully visible
+    // (Draft 78) -- each hit lightens the cloud instead, plus a quick
+    // hit-flash (see hitFlash) so tapping still reads as doing something;
+    // the tap hint (if showing) clears on first contact. Once fully
+    // cleared it shatters into gold feelings to gather -- see shatterRed.
     hitRed(m) {
       m.hitsTaken += 1
       m.stuckMs = 0
@@ -686,12 +689,50 @@ export function makeClimbScene(Phaser) {
       this.fireBeam(m.x, m.y)
       const t = clamp(m.hitsTaken / m.hitsNeeded, 0, 1)
       const cloud = m.list[0]
-      const label = m.list[1]
       this.tweens.add({ targets: cloud, alpha: Math.max(0.12, 1 - t), duration: 260, ease: 'Quad.out' })
-      this.tweens.add({ targets: label, alpha: t, duration: 260, ease: 'Quad.out' })
+      this.hitFlash(m, t)
       if (m.hitsTaken >= m.hitsNeeded) {
         this.shatterRed(m)
       }
+    }
+
+    // Draft 78: a short, escalating hit-flash per beam hit -- a bright
+    // ADD-blended pulse over the cloud plus a small burst of light-motes
+    // (like a crack of light fracturing across it), both scaling up
+    // slightly as it nears shattering. Quick and satisfying, never
+    // violent -- it's light, per the "protecting yourself" framing.
+    hitFlash(m, t) {
+      if (this.reduced) return
+      const cloud = m.list[0]
+      const base = cloud.displayWidth
+      const flash = this.add
+        .image(m.x, m.y, 'cloud-red')
+        .setDisplaySize(base * 0.92, base * 0.92)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setTint(0xfff3d0)
+        .setAlpha(0.6 + t * 0.25)
+        .setDepth(41)
+      this.tweens.add({
+        targets: flash,
+        displayWidth: base * (1.08 + t * 0.08),
+        displayHeight: base * (1.08 + t * 0.08),
+        alpha: 0,
+        duration: 200 + t * 60,
+        ease: 'Quad.out',
+        onComplete: () => flash.destroy(),
+      })
+      const burst = this.add
+        .particles(m.x, m.y, 'glow', {
+          lifespan: 340,
+          speed: { min: 30, max: 70 + t * 40 },
+          scale: { start: 0.22, end: 0 },
+          alpha: { start: 0.9, end: 0 },
+          blendMode: 'ADD',
+          emitting: false,
+        })
+        .setDepth(42)
+      burst.explode(4 + Math.round(t * 5))
+      this.time.delayedCall(420, () => burst.destroy())
     }
 
     fireBeam(tx, ty) {
