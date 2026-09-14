@@ -3,11 +3,11 @@
 // for" text, VERBATIM -- they replace the long team email, so don't reword
 // them. `links` open the dedicated 9:16 pages in the same tab.
 //
-// Draft 74 (9/11 review): Body Mapping, Mindful Place and Message to Your
-// Guardian graduated to canon -- they now live on their Zone cards (Zone 1,
-// 4 and 3) with the same feedback tags -- so the review section is down to
-// four cards, renumbered 1-4. Their blurbs stay here (keyed, not numbered)
-// because the dedicated pages still show them at the top.
+// Draft 77: Body Mapping, Message to Your Guardian and Mindful Place are
+// back here as review cards (reversing Draft 74's graduation -- the team
+// wants the three activities together while they're still under review).
+// Order is fixed: Pre/Post · Body Mapping · Guardian · Mindful Place ·
+// Ascent · Zone 4 · Videos.
 
 export const REVIEW_CARDS = [
   {
@@ -23,17 +23,35 @@ export const REVIEW_CARDS = [
     ],
   },
   {
-    key: 'videos',
+    key: 'bodymap',
     n: 2,
-    title: 'Videos',
-    section: 'review-videos',
+    title: 'Body Mapping',
+    section: 'review-bodymap',
     blurb:
-      "All of the video feedback is in. Video 1 has the revised script (our minds and bodies react to keep us safe), the updated body map that matches the activity, and the 'you see something happen' wording. Video 2 lost the gray circle, the jittery bubble, and the busy animations in the middle of the screen. Video 3 no longer refers to 'these characters,' and it frames TF-CBT and EMDR as examples rather than the only options. Video 4 was re-rendered to take the narration text out. Video 5's glasses have stems. The narration text at the bottom of all the videos is gone; captions are a CC toggle in the player. Each video has its own comment box.",
-    links: [{ label: 'Open the videos', to: '/gains-demo/videos' }],
+      "The write-in prompt now reads 'Is there another area where you feel a trauma reaction in your body? If so, write it in the box below,' the stomach sits a little lower, and the closing summary text is larger.",
+    links: [{ label: 'Open Body Mapping', to: '/gains-demo/bodymap' }],
+  },
+  {
+    key: 'guardian',
+    n: 3,
+    title: 'Message to Your Guardian',
+    section: 'review-zone3pitch',
+    blurb:
+      "The Wingsuit screen makes clear that planning your message is what earns it and no longer suggests waiting for the perfect moment. The safety page explains what 988 is. Step 4 now reads 'Therapy can help me…' (the 'also' is gone).",
+    links: [{ label: 'Open Message to Your Guardian', to: '/gains-demo/guardian' }],
+  },
+  {
+    key: 'mindful',
+    n: 4,
+    title: 'Mindful Place',
+    section: 'review-mindfulness',
+    blurb:
+      "Formerly Calm Place. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music), the breathing is guided by concentric rings that expand and contract with Spark's count, the frog is the new painterly one and breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. The choice chips now sit in even rows.",
+    links: [{ label: 'Open Mindful Place', to: '/gains-demo/mindful' }],
   },
   {
     key: 'ascent',
-    n: 3,
+    n: 5,
     title: 'The Ascent',
     section: 'review-ascent',
     blurb:
@@ -42,29 +60,24 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone4',
-    n: 4,
+    n: 6,
     title: 'Zone 4: The Bright Reaches — walkable zone',
     section: 'review-zone4',
     blurb:
       'The first walkable zone: the Bright Reaches as a place you move through. Tap the ground to walk. Find Spark, watch the video, follow Spark to the pond for the Mindful Place, earn and equip your Oxygen Mask, then head for the exit and climb toward Mount Hope. Spark redirects you if you try something too early. It all happens inside one phone-sized frame, the way it will in the real app. Prototype stage. Does it feel like a game to you?',
     links: [{ label: 'Play Zone 4', to: '/gains-demo/zone4', play: true }],
   },
+  {
+    key: 'videos',
+    n: 7,
+    title: 'Videos',
+    section: 'review-videos',
+    blurb:
+      "All of the video feedback is in. Video 1 has the revised script (our minds and bodies react to keep us safe), the updated body map that matches the activity, and the 'you see something happen' wording. Video 2 lost the gray circle, the jittery bubble, and the busy animations in the middle of the screen. Video 3 no longer refers to 'these characters,' and it frames TF-CBT and EMDR as examples rather than the only options. Video 4 was re-rendered to take the narration text out. Video 5's glasses have stems. The narration text at the bottom of all the videos is gone; captions are a CC toggle in the player. Each video has its own comment box.",
+    links: [{ label: 'Open the videos', to: '/gains-demo/videos' }],
+  },
 ]
 
-// Blurbs for the three activities that graduated to their Zone cards (Draft
-// 74); their dedicated pages still open with these at the top.
-export const CANON_ACTIVITY_BLURBS = {
-  bodymap:
-    "The write-in prompt now reads 'Is there another area where you feel a trauma reaction in your body? If so, write it in the box below,' and the stomach sits a little lower.",
-  mindful:
-    "Formerly Calm Place, and now finished. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music, so everything is audible), the breathing is guided by concentric rings that expand and contract with Spark's count, the frog is the new painterly one and breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. The bug where 'done' sent you back to the beginning is fixed.",
-  guardian:
-    'The Wingsuit screen now makes clear that planning your message is what earns it, and it no longer suggests waiting for the perfect moment. The safety page explains what 988 is.',
-}
-
 export function reviewCard(key) {
-  const card = REVIEW_CARDS.find((c) => c.key === key)
-  if (card) return card
-  if (CANON_ACTIVITY_BLURBS[key]) return { key, blurb: CANON_ACTIVITY_BLURBS[key] }
-  return null
+  return REVIEW_CARDS.find((c) => c.key === key) || null
 }

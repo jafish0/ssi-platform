@@ -247,8 +247,6 @@ const ZONES = [
     videos: [{ title: 'Video 1 — What trauma is', duration: '25 sec', script: V1 }],
     activity: {
       title: 'Body Mapping',
-      // Draft 74 (9/11 review): graduated to canon -- playable from here.
-      live: { href: '/gains-demo/bodymap', section: 'review-bodymap' },
       desc: (
         <>
           <p>
@@ -307,7 +305,6 @@ const ZONES = [
     ],
     activity: {
       title: 'Message to Your Guardian',
-      live: { href: '/gains-demo/guardian', section: 'review-zone3pitch' },
       desc: (
         <>
           Holly’s and Dr. Sprang’s message-builder, step by step: greeting,
@@ -336,7 +333,6 @@ const ZONES = [
     ],
     activity: {
       title: 'Mindfulness: Mindful Place (3-3-3)',
-      live: { href: '/gains-demo/mindful', section: 'review-mindfulness' },
       desc: (
         <>
           Spark leads a Mindful Place visualization that doubles as the 3-3-3
@@ -480,7 +476,7 @@ export default function GainsDemoPage() {
             </p>
 
             <div className="space-y-4">
-              {/* Draft 71: seven cards, no inline embeds. Each opens its
+              {/* Draft 71 / 77: seven cards, no inline embeds. Each opens its
                   dedicated 9:16 page (the playable exactly as it will appear
                   in the game) and carries its own comment thread. Blurbs are
                   Josh's verbatim "what's new" text (gainsReviewCards.js). */}
@@ -1033,9 +1029,11 @@ function ZoneSection({ zone }) {
               )}
             </div>
             <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-body)' }}>{zone.activity.desc}</div>
-            {/* Draft 74: the built activities live here now (graduated out of
-                the review section), each opening its dedicated 9:16 page and
-                keeping its original comment thread/tag. */}
+            {/* An activity with `live` opens its dedicated 9:16 page and
+                carries its own comment thread/tag. (Draft 74 put the three
+                built activities here; Draft 77 moved them back to the review
+                cards, so none are `live` right now -- the path stays for
+                whatever graduates next.) */}
             {zone.activity.live && (
               <div className="mt-3 flex items-center gap-3 flex-wrap">
                 <Link
