@@ -132,6 +132,29 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **40d0a97** (2026-09-15) — Draft 82: **"The First Light" -- a lantern-lit
+  tap-to-move reveal through the dark.** A third traversal (Zone 1 -> Zone
+  2), distinct from the flight (steer+collect) and the climb (steer+blast):
+  it's dark, the Lantern lights only a small circle, and you tap toward
+  faint embers. Each one flares into a lamp and your light grows, until the
+  sixth opens the crest into the Lantern Path. `firstLightScene.js` reuses
+  the walkable-zone engine's movement wholesale (tap-to-move, waypoint
+  routing, footsteps, companion Spark) and adds one new mechanic: a
+  darkness mask (a RenderTexture erased in soft circles at the Traveler,
+  Spark, and every lit lamp's permanent pool) that hides only the plate --
+  the Traveler/embers/shapes render above it and manage their own
+  visibility (an unlit ember is always a faint glimmer; a shape silhouette
+  looms with a heartbeat, then fades once the light actually reaches it).
+  Six embers, four shapes (tree/boulder/signpost/creature), five Spark VO
+  cues, arrival bloom + `onComplete`. New `TraversalGame` mode `firstlight`
+  (its own 1080x1920 logical size) plus `skipMusic`/`onDuck` so a host zone
+  can hand its own ambience over into this traversal instead of restarting
+  it (for Zone 1, next). Standalone prototype at `/gains-demo/firstlight`,
+  review card after the Ascent. Verified in the browser: real tap-to-move,
+  a full scripted walkthrough of all 6 embers/4 shapes with correct light
+  growth and arrival counts, a heartbeat race fixed along the way; the
+  Ascent/flight/demo hub unaffected; clean console.
+
 - **c6dbee8** (2026-09-14) — Draft 81: **flight traversal art upgrade.**
   `TraversalGame mode="flight"` now renders the real Mistfields→Bright
   Reaches plates (chasm + broken bridge → clouds → the golden summit +
@@ -4265,3 +4288,73 @@ This upgrades **both** places the flight appears: the standalone `/gains-demo/tr
 **Verify.** On `/gains-demo/traversal` and at the end of `/gains-demo/zone3`: the Traveler in the Wingsuit glides (banks on steer, bobs idle) up a channel between misty cliff walls; the world pans from the chasm/bridge through clouds to the golden Bright Reaches as connections are gathered; plates are undistorted edge to edge; collectibles are warm gold lights; mist wisps thin out as you rise; arrival bloom + `onComplete` unchanged; no leftover references to the old ravine/bird files; clean console; clean build. `src/game/` + `src/components/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 81.*
+
+
+### Draft 82 — New traversal "The First Light" (Zone 1 → Zone 2): a lantern-lit tap-to-move reveal through the dark — ✅ SHIPPED 40d0a97 (2026-09-15)
+
+A third traversal mini-game, distinct from the flight (steer + collect) and the climb (steer + blast). **One line:** it's dark; your Lantern lights only a small circle; you tap toward faint embers and each one you reach flares into a lamp and widens your light, revealing the next few steps, until you crest the slope and the Lantern Path opens. **The lesson it plays:** "It only lights the next few steps — and that's all we ever need." Non-fail, no timer, nothing chases you. ~60–90s. Design doc: `Gains for Teens/Walkable Zones/Zone 1/Zone 1 — Prep Package (traversal design + VO + prompts).md` Part A.
+
+**Where it lives:** a new `TraversalGame mode="firstlight"` (`src/components/TraversalGame.jsx`) → `src/game/firstLightScene.js`. **Reuse the walkable-zone engine** (`zoneWalkScene` internals: tap-to-move over a walkable polygon + waypoint graph, y-depth sorting, direction-picked walk cycles, footsteps by surface, companion Spark with lag/bob/trail) rather than writing movement from scratch — this scene is that engine plus a light mask. Also add a standalone prototype page `/gains-demo/firstlight` (like `/gains-demo/climb`) so the team can play it on its own, with feedback default `review-firstlight` (add the section tag).
+
+**Assets (source `Gains for Teens/Walkable Zones/Zone 1/` → served `public/gains/firstlight/`):**
+- `traversal1-route.png` (1296×2304) → `route.webp` — the fully painted route: Abyss floor at the bottom, six lamp-post positions and four objects (leaning tree, boulder, signpost, sleeping creature) along the climbing path, the Lantern Path crest with strung lanterns at the top. Painted fully visible; the mask hides what you haven't reached.
+- `overlays/traversal/` (`layer-fog.svg`, `layer-dust.svg`, `layer-ember-drift.svg`, `layer-lantern-path.svg`, `motion.css`) → `public/gains/firstlight/ov/` — same loader/blend handling as the zone overlays; these sit **under the darkness mask** so they reveal with the light (except `layer-lantern-path` at the crest, which can sit above it once the crest is reached).
+- `sprites/ember-unlit.png`, `sprites/lamp-lit.png` → the lamp pair (same canvas, bottom-aligned; swap in place).
+- `sprites/shape-tree.png`, `shape-boulder.png`, `shape-signpost.png`, `shape-creature.png` → the four **silhouettes** (dark, jagged, faint blue rim) that sit OVER the painted objects and fade out as the light reaches them.
+- **Traveler = the stage-1 set** (`sprites/traveler-stage1-idle-front/back`, `walk-back/front/side/side-left-1..6`) → `public/long-light/zone1/traveler/` (shared with the Zone 1 zone; normalize to one height like the others).
+- **Spark** = the existing flicker frames (`public/long-light/zone4/spark/` or the shared copy).
+- **Music:** `ambience.mp3` (105.5s loop, the whole Zone 1 track) → shared with the zone. **SFX:** `sfx/heartbeat.mp3` (15s loop) → `public/gains/firstlight/audio/`; reuse Zone 4's chime-unlock, spark-whoosh, step-stone/grass, arrive-swell.
+- **VO** (Spark voice F): `t1-01-start.mp3`, `t1-02-first-ember.mp3`, `t1-03-shape.mp3`, `t1-04-halfway.mp3`, `t1-05-arrive.mp3` → `public/gains/firstlight/audio/`.
+
+**Mechanics:**
+1. **Darkness + light mask.** A near-black overlay covers the whole stage; a **soft radial light** (warm gold, soft feathered edge) follows the Traveler (centered on the lantern hand height), plus a smaller faint glow around companion Spark. Implement as a render-texture/mask or Phaser Light2D — whichever gives a soft edge cleanly on mobile. Everything outside the light is essentially invisible (keep a very faint ~3% ambient so it's not a void).
+2. **Embers → lamps (6).** Place six `ember-unlit` sprites at the route's lamp-post positions (author the coordinates against the plate). An unlit ember is **just visible as a tiny glimmer even outside the light** (so the player has something to walk toward). When the Traveler reaches one (walks into its radius), it **swaps to `lamp-lit` with a bloom + `chime-unlock`**, and the **player's light radius grows one step** (e.g. 6 steps from ~180px → ~520px logical). Each lit lamp also casts its own small permanent pool of light on the mask, so the path behind you stays lit.
+3. **Shapes in the dark (4).** Each silhouette sits over its painted object. It is **visible as a dark shape when it's just outside the light radius** (menacing), and **fades out over ~0.6s once the light reaches it**, revealing the painted, ordinary object beneath. While any silhouette is within ~1.5× the light radius but not yet lit, the **heartbeat loop plays** (fade in), and it **fades out** as soon as the shape resolves.
+4. **Walkable route.** Polygon = the painted path from the bottom to the crest; verges are grass, path is stone (footstep SFX). Taps outside → nearest walkable point.
+5. **Spark companion.** Follows as in the zones; on start he drifts slightly ahead toward the first ember (a gentle nudge), then falls back beside you.
+6. **Arrival.** After the 6th lamp the path rises; when the Traveler reaches the crest zone, the mask **blooms fully open** (arrive-swell), `layer-lantern-path` sways into view, `t1-05` plays, and `onComplete({ lampsLit: 6, shapesRevealed: n })` fires after ~2s.
+7. **VO cues:** `t1-01` on start (after Begin), `t1-02` on the first lamp, `t1-03` when the first silhouette resolves, `t1-04` on the third lamp, `t1-05` at the crest. Duck music under VO.
+8. **Non-fail:** no timer, no damage, no wrong moves. Reduced-motion: no bloom pulses, static flicker.
+
+**Verify.** `/gains-demo/firstlight`: Begin → dark stage with a small warm circle around the Traveler, Spark beside; a faint ember glimmers ahead; tap-to-move works on the path; reaching an ember flares it to a lit lamp (chime) and the light grows, and the lamp stays lit behind you; silhouettes loom at the edge of the light with the heartbeat, then fade to reveal the painted tree/boulder/signpost/creature (heartbeat stops); Spark's five lines fire at the right beats; after six lamps the crest opens with the Lantern Path lanterns and `onComplete` fires; music loops and ducks under VO; reduced-motion respected; clean console; Ready for Roots unaffected; clean build. `src/game/`, `src/components/`, `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 82.*
+
+
+### Draft 83 — Zone 1 "The Dark Abyss" walkable zone: two connected plates (arrival + main), the intro video, Body Mapping with narration at the Mirror Pool, the Lantern, and The First Light as the exit
+
+Zone 1 is the opening of the game. Build it on the zone-config template (Draft 80) with one new capability — an **intro plate** — and use the new First Light traversal (Draft 82) as the exit. Design doc: the Zone 1 prep package, Part B.
+
+**Assets (source `Gains for Teens/Walkable Zones/Zone 1/` → served `public/long-light/zone1/`):**
+- **Plate 1** `zone1-plate1.png` → `plate1.webp`; **Plate 2** `zone1-plate2.png` → `plate2.webp` (both 1296×2304).
+- **Overlays:** `overlays/plate1/` (fog, embers, candles, passage-glow, dust + motion.css) → `ov/plate1/`; `overlays/plate2/` (fog, candles, pool, embers, steps-glow + motion.css) → `ov/plate2/`. Same loader as Zones 3/4; blend modes per each file's `<desc>`.
+- **Traveler = stage 1** (the same set Draft 82 uses) → `public/long-light/zone1/traveler/`.
+- **Spark** = existing flicker frames.
+- **Gear:** `sprites/gear-lantern.png` (item), `sprites/traveler-stage1-lantern-celebrate.png` (equipped figure) → `gear/`.
+- **VO** (voice F) → `audio/`: `z1-00-welcome.mp3`, `z1-01-beckon.mp3`, `z1-02-arrive.mp3`, `z1-03-follow-me.mp3`, `z1-04-ready.mp3`, `z1-05-exit-transition.mp3`, `z1-06-redirect-pool-first.mp3`, `z1-07-redirect-exit-before-video.mp3`, `z1-08-redirect-exit-before-activity.mp3`.
+- **Body Mapping narration** (voice F) from `Gains for Teens/Activities/_bm/` → `public/long-light/audio/bodymap/`: `bm-01-intro` … `bm-10-done` (10 clips).
+- **Music:** `ambience.mp3` (105.5s loop) → `audio/ambience.mp3` — plays across both plates and into the traversal.
+- **Videos:** **Video 0 (intro)** Vimeo id `1227051194`, h `8c2fcaf83f`; **Video 1** = the current Zone 1 entry in `REVIEW_VIDEOS` (use whatever id is live; Josh's re-render will swap in later).
+- SFX: reuse Zone 4's pack.
+
+**1. Template: add an optional `introPlate` phase to the zone config.** `{ plateUrl, overlayUrls, motionCssUrl, entry, spark, walkablePolygon, waypoints, video: { id, h }, vo: { welcome, beckon } }`. Behavior: the zone opens on the intro plate with the title card + `welcome` VO; the **"Tap the path to walk" cue shows immediately** (Draft 75's persistent cue); **only Spark is interactable** (no station, no exit, no gating redirects); Spark **beckons** (`beckon` VO) once the cue shows and again if the player idles ~8s without moving; **tap Spark → walk up → the intro video plays in-frame** (Vimeo SDK, `ended` → continue; dev Skip under `?dev`); then a **soft-bloom cut to the main plate** with the Traveler at its entry and Spark a short way off, and the normal loop begins (`arrive` VO). Zones without `introPlate` behave exactly as today (Zones 3/4 unchanged).
+
+**2. Zone 1 config.**
+- `title`: "Zone 1: The Dark Abyss" · title card **"The Dark Abyss"** (+ `z1-00`).
+- **introPlate:** plate1; entry at the bottom of the long path (~540, 1800); **Spark waits far up at the top, just inside the passage mouth** (~560, 330 — where the pale glow is); walkable = the long path; video = Video 0; vo welcome = `z1-00`, beckon = `z1-01`.
+- **main plate:** plate2; entry at the bottom passage (~540, 1780); **Spark a short way off**, on the cavern floor left of the path (~330, 1350); **station = the Mirror Pool** — tap target the pool, the Traveler walks to its near bank (~680, 900 is the pool center; bank ~640, 1060); the pool water is **non-walkable**; **exit = the top of the stone steps** (~560, 300) toward the warm glow; walkable = the cavern floor + path + the steps' foot, minus the pool.
+- **vo:** arrive `z1-02`, followMe `z1-03`, ready `z1-04`, transition `z1-05`, redirectStationFirst `z1-06`, redirectExitBeforeVideo `z1-07`, redirectExitBeforeActivity `z1-08`.
+- **video:** Video 1 in-frame; `ended` → follow-me, Spark glides to the pool, pool active.
+- **ActivityComponent = `BodyMapping`** with **(a) a new `onComplete()` prop** (as done for Mindful Place / ElevatorPitch: when provided, finishing Part 2 / "Done" hands off instead of the standalone ending; standalone unchanged) and **(b) narration wired in**: the ten `bm-*` clips auto-play on their steps — `bm-01` on open; `bm-02..06` when each region (lungs/head/heart/stomach/body) is tapped, in whatever order (interrupt the previous clip if a new region is tapped); `bm-07` when the closing line appears; `bm-08` when Part 2 opens; `bm-09` when the write-in field is revealed/focused; `bm-10` on Done. Duck the zone music under narration. Narration is only active when a `narrate` prop is true (on by default in the zone; the standalone review page can pass it too).
+- **gear (GearAward):** name "Lantern", item + equipped figure above, title **"You earned the Lantern!"**, subline **"It only lights the next few steps — and that's all we ever need."**, sparkLine **"Hold it up. See? The dark isn't so big when you can see the next step."** The Lantern is the **first** gear, so the HUD shows all four slots empty and the Lantern flies into slot 1.
+- **traversalMode:** `firstlight` (Draft 82) — transition card **"We're headed for the Lantern Path!"** + `z1-05`, then The First Light mounts in-frame; its `onComplete` → end card.
+- **endCard:** "You reached the Lantern Path." + result line + **"Continue to the Lantern Path →"** (disabled/"coming soon" until Zone 2 exists) + Play again.
+- **ambience:** `ambience.mp3` across both plates; keep it running into the traversal (Draft 82 uses the same file — don't restart it, hand it over).
+
+**3. Page + review.** Route **`/gains-demo/zone1`**, full-screen stage like Zones 3/4, feedback default `review-zone1` (add the tag). **Review card** placed **before the Zone 3 card** (order: Pre/Post · Body Mapping · Guardian · Mindful Place · Ascent · **Zone 1** · Zone 3 · Zone 4 · Videos — renumber): "Zone 1: The Dark Abyss — walkable zone (playable prototype)", tag `review-zone1`, "Play Zone 1 →". Blurb: "The opening of the game. You arrive in the dark, walk up to a distant light to meet Spark, and watch the welcome video. Then, on the other side of the passage: the video on what trauma is, Body Mapping at the Mirror Pool (now with Spark narrating), your first gear, the Lantern, and a brand-new traversal, The First Light, where your lantern reveals the path a few steps at a time." Also add **Video 0** to `REVIEW_VIDEOS` (first, titled "Intro — Welcome to Shadowmend") so it appears on the videos page with its own comment box (`video-0`).
+
+**Keep** everything from the template; Zones 3 and 4 must play identically.
+
+**Verify.** `/gains-demo/zone1`: Begin → "The Dark Abyss" + welcome → the tap-to-walk cue shows at once and Spark is a small glow far up the path, beckoning (again on idle); walk up, tap Spark → Video 0 plays in-frame → cut to plate 2 with the Traveler at the passage and Spark a short way off → arrive line → Spark → Video 1 → follow-me → the Mirror Pool (water non-walkable) → Body Mapping with narration on every step (regions in any order) → `onComplete` → Lantern GearAward (reveal → Equip → celebrate figure → slot 1 fills) → ready line + steps exit glows + path lights up → exit → "headed for the Lantern Path" → **The First Light** runs in-frame with the same music continuing → end card. Redirects fire on wrong-order taps; both plates' overlays animate; Zones 3/4 unchanged; Video 0 on the videos page; review card + tag work; clean console; Ready for Roots unaffected; clean build. `src/game/`, `src/components/`, `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 83.*
