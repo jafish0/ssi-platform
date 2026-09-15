@@ -132,6 +132,32 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **edc10e9** (2026-09-15) — Draft 84: **Zone 1 first-play fixes, from
+  Josh's own playthrough of Draft 83.** Five things: (1) the Mirror
+  Pool station moves to the top bank (585,563), where the stone steps
+  actually meet the water -- fitted to the art itself (the candle ring
+  in `layer-candles.svg` and the poolSheen ellipse in `layer-pool.svg`
+  both converge on this footprint). (2) The pool is now truly
+  non-walkable: the old ellipse was ~180px off from where the water
+  actually is (which is exactly why you could walk straight through
+  it before) -- the route is rebuilt as a real ring, two arcs around
+  the pool from an entry-stem junction, rejoining at the landing, then
+  up the switchback stairs (waypoints are the actual stair-candle
+  positions) to the exit. (3) Spark's arrival line on the main plate
+  now actually plays, with movement locked until it finishes -- root
+  cause was a stale-ref read (`switchToMainPlate()` set the new plate
+  phase then called the arrival VO in the same tick, before the ref
+  that VO lookup depends on had re-synced, so it silently looked up
+  the wrong VO set and no-op'd). (4) The Traveler renders at one
+  consistent size, idle or walking, in Zone 1 and in The First Light
+  (which reuses this movement code) -- the old code applied one scale
+  factor assuming every frame shared one source height (true for Zone
+  3/4's asset set, false for Zone 1's, which varies by direction); the
+  scale is now derived from whichever frame is actually on screen, at
+  once, and confirmed a no-op for Zone 3/4. (5) All 27 Traveler
+  sprites re-copied with cleaner cutouts (the blue key-fringe along
+  the cloak/hood/sleeves removed). Zone 3/4 regression-tested
+  unaffected throughout.
 - **6c411a2** (2026-09-15, sfx fix **f5f6a16**) — Draft 83: **Zone 1, "The
   Dark Abyss," joins Zones 3/4 as a walkable zone -- and it opens the
   game.** New template capability: an **`introPlate`** a zone config can
@@ -4383,3 +4409,29 @@ Zone 1 is the opening of the game. Build it on the zone-config template (Draft 8
 **Verify.** `/gains-demo/zone1`: Begin → "The Dark Abyss" + welcome → the tap-to-walk cue shows at once and Spark is a small glow far up the path, beckoning (again on idle); walk up, tap Spark → Video 0 plays in-frame → cut to plate 2 with the Traveler at the passage and Spark a short way off → arrive line → Spark → Video 1 → follow-me → the Mirror Pool (water non-walkable) → Body Mapping with narration on every step (regions in any order) → `onComplete` → Lantern GearAward (reveal → Equip → celebrate figure → slot 1 fills) → ready line + steps exit glows + path lights up → exit → "headed for the Lantern Path" → **The First Light** runs in-frame with the same music continuing → end card. Redirects fire on wrong-order taps; both plates' overlays animate; Zones 3/4 unchanged; Video 0 on the videos page; review card + tag work; clean console; Ready for Roots unaffected; clean build. `src/game/`, `src/components/`, `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 83.*
+
+
+### Draft 84 — Zone 1 first-play fixes: Mirror Pool station moves to the top bank, the pool becomes truly non-walkable (walk around it, and up the steps), Traveler size is constant between idle and walking, cleaner Traveler cutouts, and Spark's arrival line locks the player until it finishes — ✅ SHIPPED edc10e9 (2026-09-15)
+
+Josh played Zone 1 live (Draft 83). Four fixes, all on the main plate (plate 2) unless noted.
+
+**1. Move the station to the top bank of the Mirror Pool.** The Body Mapping tap target currently sits on the bottom-left bank (the lock icon low-left of the pool). Move it to the **top bank — the point where the path from the stone steps meets the water's far edge**, centered on the pool horizontally (roughly x 540, y 560 in 1080×1920 logical; eyeball it against the plate: it is the small stone landing at the top of the pool, directly below the winding steps). The Traveler walks to that landing and faces the water (idle-front). Spark's follow-me glide targets the same landing. Nothing else about the station flow changes.
+
+**2. The pool is non-walkable; the route goes around it and then up the steps.** Right now you can walk straight through the water. Rebuild `walkablePolygon` + `waypoints` for plate 2 as a **ring around the pool** plus a **stem down to the entry** and a **path up to the exit**:
+- Entry stem: the bottom passage (~540, 1780) straight up to the pool's near (bottom) bank (~540, 1150).
+- Left arc: from the near bank, around the pool's left side (staying on the cavern floor, hugging the candle-lit rim ~100–150px outside the water) up to the top bank landing (~540, 560).
+- Right arc: same on the right side. Both arcs end at the top-bank landing, so the pool is an island of non-walkable water (the polygon has a hole, or is modeled as two arcs joined top and bottom — either way, no path crosses the water).
+- Exit path: from the top-bank landing, up the **winding stone steps** to the exit at the top (~560, 300): the steps snake right then back left — put waypoints at each visible switchback so the Traveler follows the stairs rather than cutting across rock.
+Taps on the water → nearest walkable point on the rim (existing behavior). Taps on the steps before the exit is unlocked → still redirect per the gating (the `redirectExit*` lines), unchanged.
+
+**3. Traveler is one size, idle or walking.** On arrival, and whenever the Traveler stops, the figure **jumps larger** than it is mid-walk. Cause: the stage-1 idle source PNGs were 837px tall while the walk frames are 545–640px, and the scene applied a single scale to every frame. Two-part fix: (a) I've **re-exported the idle frames at 640px tall** (same canvas height as the walk-front frames) and (b) in `zoneWalkScene` (and `firstLightScene`, which reuses it), **set every Traveler frame's `displayHeight` from a single per-zone `TRAVELER_H` constant** rather than a shared scale, so source-size differences can never leak through again. The **walking size is the correct one** — keep it; the idle should shrink to match. Check the same thing on Zones 3/4 (their sets are normalized, but the constant should apply there too).
+
+**4. Cleaner Traveler cutouts.** All 27 stage-1 files in `Gains for Teens/Walkable Zones/Zone 1/sprites/traveler-stage1-*.png` (idle ×2, walk ×24, lantern-celebrate) have been **re-keyed**: the blue key fringe along the cloak hem, hood, and sleeves is removed, the matte is tightened 1px, and the leftover blue spill is neutralized to cloak color (the boot glow accents are kept). **Re-copy all 27** over `public/long-light/zone1/traveler/` (they are also what The First Light uses). Originals are in `sprites/_orig/` if anything looks wrong.
+
+**5. Spark's arrival line on the main plate must fire — and lock the player until it's done.** After the welcome video (Video 0) and the bloom cut to plate 2, Spark's `arrive` line (`z1-02-arrive.mp3`) does not appear to play (Josh isn't 100% sure — verify with the console). Expected: the cut lands with the Traveler at the passage entry and Spark a short way off; **`z1-02` plays immediately, the Traveler is locked (taps ignored, the tap-to-walk cue hidden) until the clip ends**, then the cue shows and the normal loop begins. Likely suspects: the progress reset on the plate swap running after the VO trigger and clearing it, the video teardown stopping all audio including the just-started VO, or `arrive` only being wired to the standalone (non-intro) arrival path. Whatever the cause, fix it so the sequence is video `ended` → bloom → plate 2 → `z1-02` (locked) → cue → play. Zones 3/4 must keep their current arrival behavior.
+
+**Keep:** the intro plate, Video 0/1 flow, Body Mapping narration + gating, Lantern award, First Light hand-off, end card.
+
+**Verify.** `/gains-demo/zone1`: after Video 0, plate 2 appears and Spark's arrival line plays with the Traveler locked, then the tap cue shows; the Traveler is the same size standing and walking (arrival, every stop, before/after the video, and in The First Light); no blue fringe on the cloak edges; taps on the pool water walk you to its rim, never across it; you can walk around either side of the pool; the station tap target is the top bank landing below the steps and Body Mapping opens there; after the Lantern, the exit path follows the winding steps switchback by switchback to the top; Zones 3/4 unchanged; clean console; clean build. `src/game/`, `src/components/`, `public/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 84.*
