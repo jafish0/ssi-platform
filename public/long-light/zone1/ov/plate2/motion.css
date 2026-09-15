@@ -1,0 +1,48 @@
+/* motion.css — Dark Abyss (main plate) overlay idle loops.
+   Inline the SVGs into the page, then include this file.
+   Per-element durations/delays live in each element's style attribute.
+   Blend: layer-fog normal (low alpha) · candles / pool / embers / steps-glow screen. */
+:root{--ease-soft:cubic-bezier(.45,0,.2,1);--ease-drift:cubic-bezier(.4,0,.6,1)}
+
+/* layer-fog — normal */
+.fog{animation-name:da-drift-l,da-breathe;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;animation-direction:alternate;will-change:transform,opacity}
+.fog--r{animation-name:da-drift-r,da-breathe}
+@keyframes da-drift-l{from{transform:translateX(0) scaleX(1)}to{transform:translateX(-66px) scaleX(1.05)}}
+@keyframes da-drift-r{from{transform:translateX(0) scaleX(1)}to{transform:translateX(66px) scaleX(1.05)}}
+@keyframes da-breathe{from{opacity:.6}to{opacity:1}}
+
+/* layer-candles — screen */
+.candle-bloom{animation-name:da-bloom;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+.candle-bloom--b{animation-direction:alternate}
+@keyframes da-bloom{0%,100%{transform:scale(.9);opacity:.2}50%{transform:scale(1.12);opacity:.4}}
+.candle-flame{animation-name:da-flicker;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+.candle-flame--b{animation-direction:alternate-reverse}
+@keyframes da-flicker{0%{opacity:.62;transform:scale(.92,.88)}20%{opacity:1;transform:scale(1.05,1.12)}42%{opacity:.8;transform:scale(.98,1)}64%{opacity:1;transform:scale(1.02,1.08)}100%{opacity:.62;transform:scale(.92,.88)}}
+
+/* layer-pool — screen. Deliberately the slowest, faintest motion in the set. */
+.pool-ring{animation:da-pool-ring 18s ease-out infinite}
+@keyframes da-pool-ring{0%{transform:scale(.5);opacity:0}15%{opacity:.09}100%{transform:scale(2.4);opacity:0}}
+.pool-glint{animation-name:da-pool-glint;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite;animation-direction:alternate}
+@keyframes da-pool-glint{from{opacity:.04;transform:scaleX(.85)}to{opacity:.15;transform:scaleX(1.06)}}
+.pool-reflect{animation-name:da-pool-reflect;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite;animation-direction:alternate}
+@keyframes da-pool-reflect{from{opacity:.12;transform:scaleY(.94)}to{opacity:.28;transform:scaleY(1.06)}}
+
+/* layer-embers — screen */
+.ember{animation-name:da-rise-a;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;will-change:transform}
+.ember--b{animation-name:da-rise-b}
+@keyframes da-rise-a{0%{transform:translate(0,0)}30%{transform:translate(10px,-34px)}62%{transform:translate(-8px,-74px)}100%{transform:translate(4px,-118px)}}
+@keyframes da-rise-b{0%{transform:translate(0,0)}34%{transform:translate(-12px,-40px)}66%{transform:translate(9px,-80px)}100%{transform:translate(-3px,-118px)}}
+.ember-core,.ember-glow{animation-name:da-ember-blink;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes da-ember-blink{0%,100%{opacity:.04}40%{opacity:.85}72%{opacity:.3}}
+
+/* layer-steps-glow — screen */
+.steps-glow,.steps-core{animation:da-steps 8s var(--ease-soft) infinite}
+.steps-glow--b{animation-delay:-1.6s}
+.steps-core{animation-delay:-3.2s}
+@keyframes da-steps{0%,100%{transform:scale(.93);opacity:.3}50%{transform:scale(1.08);opacity:.56}}
+.steps-spill{animation:da-steps-spill 8s var(--ease-soft) infinite}
+@keyframes da-steps-spill{0%,100%{opacity:.18}50%{opacity:.34}}
+
+@media (prefers-reduced-motion:reduce){
+  .fog,.candle-bloom,.candle-flame,.pool-ring,.pool-glint,.pool-reflect,.ember,.ember-core,.ember-glow,.steps-glow,.steps-core,.steps-spill{animation:none}
+}

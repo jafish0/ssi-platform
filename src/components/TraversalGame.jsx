@@ -61,6 +61,54 @@ const MODES = {
       sfxOrbUrl: '/gains/climb/audio/sfx-air-intake.mp3',
     },
   },
+  // Draft 82: "The First Light" -- Zone 1's exit into Zone 2. Reuses the
+  // walkable-zone engine's movement, so it renders at that engine's own
+  // 1080x1920 logical size (see `width`/`height` below) rather than the
+  // other traversals' 540x960 -- its positions are authored against the
+  // route plate at that scale.
+  firstlight: {
+    sceneKey: 'FirstLight',
+    loadScene: () =>
+      import('../game/firstLightScene.js').then((m) => m.makeFirstLightScene),
+    width: 1080,
+    height: 1920,
+    assets: {
+      routeUrl: '/gains/firstlight/route.webp',
+      travelerUrls: (() => {
+        const urls = { 'idle-front': '/long-light/zone1/traveler/idle-front.webp', 'idle-back': '/long-light/zone1/traveler/idle-back.webp' }
+        for (const d of ['walk-back', 'walk-front', 'walk-side', 'walk-side-left']) {
+          for (let i = 1; i <= 6; i++) urls[`${d}-${i}`] = `/long-light/zone1/traveler/${d}-${i}.webp`
+        }
+        return urls
+      })(),
+      sparkUrls: [1, 2, 3, 4].map((i) => `/long-light/zone1/spark/flicker-${i}.webp`),
+      emberUrl: '/gains/firstlight/sprites/ember-unlit.png',
+      lampUrl: '/gains/firstlight/sprites/lamp-lit.png',
+      shapeUrls: {
+        tree: '/gains/firstlight/sprites/shape-tree.png',
+        boulder: '/gains/firstlight/sprites/shape-boulder.png',
+        signpost: '/gains/firstlight/sprites/shape-signpost.png',
+        creature: '/gains/firstlight/sprites/shape-creature.png',
+      },
+      // Standalone-only (Zone 1 hands its own ambience over instead --
+      // see TraversalGame's `skipMusic` prop, wired from GainsZonePage).
+      musicUrl: '/long-light/zone1/audio/ambience.mp3',
+      heartbeatUrl: '/gains/firstlight/audio/heartbeat.mp3',
+      sfxUrls: {
+        chime: '/long-light/zone4/sfx/chime-unlock.mp3',
+        whoosh: '/long-light/zone4/sfx/spark-whoosh.mp3',
+        stepStone: '/long-light/zone4/sfx/step-stone-1.mp3',
+        arriveSwell: '/long-light/zone4/sfx/arrive-swell.mp3',
+      },
+      voUrls: {
+        start: '/gains/firstlight/audio/t1-01-start.mp3',
+        firstEmber: '/gains/firstlight/audio/t1-02-first-ember.mp3',
+        shape: '/gains/firstlight/audio/t1-03-shape.mp3',
+        halfway: '/gains/firstlight/audio/t1-04-halfway.mp3',
+        arrive: '/gains/firstlight/audio/t1-05-arrive.mp3',
+      },
+    },
+  },
 }
 
 export default function TraversalGame({
@@ -72,12 +120,21 @@ export default function TraversalGame({
   reducedMotion = false,
   restartSignal = 0,
   onComplete,
+  // Draft 82: when a host zone hands its own ambience over into this
+  // traversal (Zone 1 -> The First Light) rather than restarting it, it
+  // passes skipMusic so the scene never loads its own `musicUrl`, and
+  // onDuck so the scene can duck the HOST's ambience under its own VO
+  // without needing to know anything about the host's audio manager.
+  skipMusic = false,
+  onDuck,
 }) {
   const containerRef = useRef(null)
   const gameRef = useRef(null)
   // Latest values without re-running the mount effect.
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
+  const onDuckRef = useRef(onDuck)
+  onDuckRef.current = onDuck
   const startedRef = useRef(started)
   startedRef.current = started
   const mutedRef = useRef(muted)
@@ -98,8 +155,8 @@ export default function TraversalGame({
         game = new Phaser.Game({
           type: Phaser.AUTO,
           parent: containerRef.current,
-          width: 540,
-          height: 960,
+          width: modeDef.width || 540,
+          height: modeDef.height || 960,
           backgroundColor: '#05070e',
           scale: {
             mode: Phaser.Scale.FIT,
@@ -114,11 +171,15 @@ export default function TraversalGame({
         // init() and polls 'traversalStarted' in update().
         game.registry.set('traversalConfig', {
           ...modeDef.assets,
+          ...(skipMusic ? { musicUrl: undefined } : {}),
           goal,
           ...(durationMs ? { durationMs } : {}),
           reducedMotion,
           onComplete: (result) => {
             if (onCompleteRef.current) onCompleteRef.current(result)
+          },
+          onDuck: (on) => {
+            if (onDuckRef.current) onDuckRef.current(on)
           },
         })
         game.registry.set('traversalStarted', startedRef.current)
@@ -144,7 +205,7 @@ export default function TraversalGame({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, goal, durationMs, reducedMotion])
+  }, [mode, goal, durationMs, reducedMotion, skipMusic])
 
   // Signal the flight to begin once the instructions are dismissed.
   useEffect(() => {

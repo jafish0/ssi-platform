@@ -1,0 +1,46 @@
+/* motion.css — Dark Abyss traversal route overlay idle loops.
+   Inline the SVGs into the page, then include this file.
+   Per-element durations/delays live in each element's style attribute.
+   Every layer is built from many small local elements so it reads correctly
+   under a partial darkness-mask reveal as well as all at once.
+   Blend: layer-fog normal (low alpha) · dust / lantern-path / ember-drift screen. */
+:root{--ease-soft:cubic-bezier(.45,0,.2,1);--ease-drift:cubic-bezier(.4,0,.6,1)}
+
+/* layer-fog — normal */
+.fog{animation-name:tr-drift-l,tr-breathe;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;animation-direction:alternate;will-change:transform,opacity}
+.fog--r{animation-name:tr-drift-r,tr-breathe}
+@keyframes tr-drift-l{from{transform:translateX(0) scaleX(1)}to{transform:translateX(-62px) scaleX(1.05)}}
+@keyframes tr-drift-r{from{transform:translateX(0) scaleX(1)}to{transform:translateX(62px) scaleX(1.05)}}
+@keyframes tr-breathe{from{opacity:.6}to{opacity:1}}
+
+/* layer-dust — screen */
+.dust{animation-name:tr-dust-0,tr-dust-fade;animation-timing-function:var(--ease-drift),var(--ease-soft);animation-iteration-count:infinite;animation-direction:alternate,alternate}
+.dust--1{animation-name:tr-dust-1,tr-dust-fade}
+.dust--2{animation-name:tr-dust-2,tr-dust-fade}
+@keyframes tr-dust-0{from{transform:translate(0,0)}to{transform:translate(26px,-18px)}}
+@keyframes tr-dust-1{from{transform:translate(0,0)}to{transform:translate(-22px,-24px)}}
+@keyframes tr-dust-2{from{transform:translate(0,0)}to{transform:translate(14px,-30px)}}
+@keyframes tr-dust-fade{from{opacity:.35}to{opacity:1}}
+
+/* layer-lantern-path — screen */
+.string-lantern{animation-name:tr-sway;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+.string-lantern--b{animation-direction:alternate-reverse}
+@keyframes tr-sway{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.4deg)}}
+.string-bloom{animation-name:tr-lamp-bloom;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite;animation-direction:alternate}
+@keyframes tr-lamp-bloom{from{transform:scale(.92);opacity:.24}to{transform:scale(1.1);opacity:.42}}
+.string-flame{animation-name:tr-lamp-flicker;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes tr-lamp-flicker{0%{opacity:.68;transform:scale(.94,.9)}30%{opacity:1;transform:scale(1.04,1.1)}60%{opacity:.84;transform:scale(1,1)}100%{opacity:.68;transform:scale(.94,.9)}}
+.crest-wash{animation:tr-crest 9s var(--ease-soft) infinite}
+@keyframes tr-crest{0%,100%{opacity:.4}50%{opacity:.58}}
+
+/* layer-ember-drift — screen */
+.ember{animation-name:tr-rise-a;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;will-change:transform}
+.ember--b{animation-name:tr-rise-b}
+@keyframes tr-rise-a{0%{transform:translate(0,0)}30%{transform:translate(10px,-34px)}62%{transform:translate(-8px,-74px)}100%{transform:translate(4px,-118px)}}
+@keyframes tr-rise-b{0%{transform:translate(0,0)}34%{transform:translate(-12px,-40px)}66%{transform:translate(9px,-80px)}100%{transform:translate(-3px,-118px)}}
+.ember-core,.ember-glow{animation-name:tr-ember-blink;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes tr-ember-blink{0%,100%{opacity:.04}40%{opacity:.85}72%{opacity:.3}}
+
+@media (prefers-reduced-motion:reduce){
+  .fog,.dust,.string-lantern,.string-bloom,.string-flame,.crest-wash,.ember,.ember-core,.ember-glow{animation:none}
+}

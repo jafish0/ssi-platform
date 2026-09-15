@@ -25,6 +25,7 @@ import IRBPreviewPage from './pages/IRBPreviewPage.jsx'
 import GainsDemoPage from './pages/GainsDemoPage.jsx'
 import GainsTraversalPage from './pages/GainsTraversalPage.jsx'
 import GainsClimbPage from './pages/GainsClimbPage.jsx'
+import GainsFirstLightPage from './pages/GainsFirstLightPage.jsx'
 import GainsZone3Page from './pages/GainsZone3Page.jsx'
 import GainsZone4Page from './pages/GainsZone4Page.jsx'
 import GainsPretestPage from './pages/GainsPretestPage.jsx'
@@ -140,6 +141,7 @@ export default function App() {
       <Route path="/gains-demo" element={<GainsDemoPage />} />
       <Route path="/gains-demo/traversal" element={<GainsTraversalPage />} />
       <Route path="/gains-demo/climb" element={<GainsClimbPage />} />
+      <Route path="/gains-demo/firstlight" element={<GainsFirstLightPage />} />
       {/* Walkable-zone prototypes (GAINS Draft 68, Zone 3 added Draft 80). */}
       <Route path="/gains-demo/zone3" element={<GainsZone3Page />} />
       <Route path="/gains-demo/zone4" element={<GainsZone4Page />} />
