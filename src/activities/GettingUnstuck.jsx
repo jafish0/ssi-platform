@@ -7,7 +7,7 @@ import {
 } from '../components/items/shared.jsx'
 import { APPRAISAL_ITEMS, APPRAISAL_SCALE } from '../lib/appraisals.js'
 import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
-import NarrationControls from '../components/items/NarrationControls.jsx'
+import NarrationControls, { NarrationButton } from '../components/items/NarrationControls.jsx'
 
 // Getting Unstuck — Ready for Roots' stuck-thought / strategy / reflection activity.
 //
@@ -471,6 +471,7 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 <NarrationControls
                   className="mb-2"
                   questionAudioUrl={`/narration/appraisals_0${idx + 1}_question.mp3`}
+                  answersAudioUrl="/narration/unstuck_21_rating_scale.mp3"
                 />
                 <TruthRatingScale
                   label="How true does this feel for you?"
@@ -942,49 +943,56 @@ export default function GettingUnstuck({ onSave = console.log }) {
 
         <p className="text-[14px] text-slate-600 mb-2">Pick a strategy:</p>
         <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_08_strategy_pick.mp3" />
-        <div id="strategy-picker" className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-          <button
-            type="button"
-            onClick={() => setStrategy(item.id, 'challenge')}
-            className={
-              'text-left rounded-2xl border p-4 transition-colors ' +
-              (r.strategy === 'challenge'
-                ? 'bg-ctac-teal-200 border-ctac-teal-400'
-                : 'bg-white border-slate-200 hover:border-ctac-teal-300')
-            }
-          >
-            <div className="font-semibold text-[16px] mb-1">Challenge it</div>
-            <div className="text-[13px] text-slate-600">
-              Push back on the thought. Is there another way to see this?
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => setStrategy(item.id, 'both_and')}
-            className={
-              'text-left rounded-2xl border p-4 transition-colors ' +
-              (r.strategy === 'both_and'
-                ? 'bg-ctac-teal-200 border-ctac-teal-400'
-                : 'bg-white border-slate-200 hover:border-ctac-teal-300')
-            }
-          >
-            <div className="font-semibold text-[16px] mb-1">Both/And it</div>
-            <div className="text-[13px] text-slate-600">
-              This thought might have a piece of truth, but it leaves out other
-              truths.
-            </div>
-          </button>
+        <div id="strategy-picker" className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <div>
+            <button
+              type="button"
+              onClick={() => setStrategy(item.id, 'challenge')}
+              className={
+                'w-full text-left rounded-2xl border p-4 transition-colors ' +
+                (r.strategy === 'challenge'
+                  ? 'bg-ctac-teal-200 border-ctac-teal-400'
+                  : 'bg-white border-slate-200 hover:border-ctac-teal-300')
+              }
+            >
+              <div className="font-semibold text-[16px] mb-1">Challenge it</div>
+              <div className="text-[13px] text-slate-600">
+                Push back on the thought. Is there another way to see this?
+              </div>
+            </button>
+            {/* Draft 111 Part D: each card's own read-aloud lives outside the
+                button (NarrationButton renders its own <button>, which can't
+                nest inside these without becoming invalid/conflicting HTML). */}
+            <NarrationButton
+              className="mt-2"
+              label="Read me this strategy"
+              src="/narration/unstuck_09_strategy_challenge.mp3"
+            />
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => setStrategy(item.id, 'both_and')}
+              className={
+                'w-full text-left rounded-2xl border p-4 transition-colors ' +
+                (r.strategy === 'both_and'
+                  ? 'bg-ctac-teal-200 border-ctac-teal-400'
+                  : 'bg-white border-slate-200 hover:border-ctac-teal-300')
+              }
+            >
+              <div className="font-semibold text-[16px] mb-1">Both/And it</div>
+              <div className="text-[13px] text-slate-600">
+                This thought might have a piece of truth, but it leaves out other
+                truths.
+              </div>
+            </button>
+            <NarrationButton
+              className="mt-2"
+              label="Read me this strategy"
+              src="/narration/unstuck_10_strategy_bothand.mp3"
+            />
+          </div>
         </div>
-        {/* Draft 109: each option's own read-aloud lives outside the two
-            buttons (NarrationControls renders its own <button>, which can't
-            nest inside these without becoming invalid/conflicting HTML) —
-            question/answers labels reused here for the two co-equal
-            strategy cards, not a literal question+answer pair. */}
-        <NarrationControls
-          className="mb-5"
-          questionAudioUrl="/narration/unstuck_09_strategy_challenge.mp3"
-          answersAudioUrl="/narration/unstuck_10_strategy_bothand.mp3"
-        />
 
         {r.strategy === 'challenge' && (
           <div id="strategy-response" className="mb-5">
@@ -997,14 +1005,23 @@ export default function GettingUnstuck({ onSave = console.log }) {
                   <li key={i}>{q}</li>
                 ))}
               </ul>
-              <NarrationControls className="mt-2" questionAudioUrl="/narration/unstuck_11_challenge_prompts.mp3" />
+              {/* Draft 111 Part D: one button reads both the "ask yourself"
+                  prompts and the write-up prompt back to back, covering the
+                  whole Challenge follow-up UI. */}
+              <NarrationButton
+                className="mt-2"
+                label="Read the questions to ask yourself"
+                src={[
+                  '/narration/unstuck_11_challenge_prompts.mp3',
+                  '/narration/unstuck_12_challenge_writeup.mp3',
+                ]}
+              />
             </div>
             <label className="block text-[14px] font-medium text-slate-700 mb-2">
               Now that you&apos;ve thought about your statement in different
               ways, what is a more helpful or more accurate statement you could
               tell yourself?
             </label>
-            <NarrationControls className="mb-2" questionAudioUrl="/narration/unstuck_12_challenge_writeup.mp3" />
             <textarea
               rows={5}
               value={r.response || ''}

@@ -35,12 +35,35 @@ import CrisisLifelineNote from '../CrisisLifelineNote.jsx'
 // not a replacement for it: most mobile browsers block audio without a
 // user gesture and will silently no-op here, leaving the pill exactly as
 // it always was, tap-to-reveal-and-play.
-function TextPromptNarration({ src, gated, onComplete, autoplayAttempt }) {
+//
+// 2026-09-15 fix + extension (two testers + Josh flagged the bug):
+// (a) the background autoplay-attempt and the manual pill used to be
+// completely independent — nothing stopped someone from tapping "Read
+// this to me" while the autoplay clip was already sounding, stacking a
+// second overlapping audio stream. `autoplayBusy` now tracks whether the
+// autoplay-attempt sequence is actually audibly playing (not just
+// "attempted" — a blocked/never-started attempt, the common mobile case,
+// leaves this false) and disables the pill button only for that window,
+// so it fails open the instant autoplay never actually started or
+// finishes/errors out. (b) `content_json.audio_url_2` is an optional
+// second clip (the 988 crisis-line paragraph, which TextPrompt renders
+// right after the main body via `showCrisisNote`) — when present, both
+// the autoplay-attempt AND the manual pill play `src` then `src2` back
+// to back, matching that reading order, instead of only ever narrating
+// the first clip.
+function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) {
   const audioRef = useRef(null)
+  const revealedAudioRef = useRef(null)
   const [revealed, setRevealed] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [completed, setCompleted] = useState(false)
+  // Which clip is currently loaded into the manual (revealed) player —
+  // 0 = src, 1 = src2. Only ever advances to 1 if src2 exists.
+  const [sequenceIndex, setSequenceIndex] = useState(0)
+  // True only while the background autoplay-attempt sequence is actually
+  // sounding. Drives disabling the manual pill (see fix above).
+  const [autoplayBusy, setAutoplayBusy] = useState(false)
 
   useEffect(() => {
     if (!gated) return
@@ -53,11 +76,56 @@ function TextPromptNarration({ src, gated, onComplete, autoplayAttempt }) {
 
   useEffect(() => {
     if (gated || !autoplayAttempt) return
-    const attempt = new Audio(src)
-    attempt.play().catch(() => {})
-    return () => attempt.pause()
+    let cancelled = false
+    let current = null
+    const clips = [src, src2].filter(Boolean)
+
+    function playAt(i) {
+      if (cancelled || i >= clips.length) {
+        setAutoplayBusy(false)
+        return
+      }
+      current = new Audio(clips[i])
+      const advance = () => playAt(i + 1)
+      current.addEventListener('ended', advance)
+      current.addEventListener('error', advance)
+      current
+        .play()
+        .then(() => {
+          if (!cancelled) setAutoplayBusy(true)
+        })
+        .catch(() => {
+          // Blocked by the browser's autoplay policy (the common mobile
+          // case) or otherwise failed to start — fail open immediately so
+          // the manual pill is never left disabled for a sequence that
+          // never actually made a sound.
+          cancelled = true
+          setAutoplayBusy(false)
+        })
+    }
+
+    playAt(0)
+
+    return () => {
+      cancelled = true
+      if (current) current.pause()
+      setAutoplayBusy(false)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gated, autoplayAttempt, src])
+  }, [gated, autoplayAttempt, src, src2])
+
+  // Advance the manual/revealed player to the second clip once the first
+  // one ends, and explicitly (re)issue play() on the src change — some
+  // browsers don't re-run the `autoplay` attribute's play-on-load behavior
+  // reliably when only the `src` attribute changes on an already-mounted
+  // element. Fails open: if this play() is blocked, native `controls` are
+  // still visible so the participant can just press play themselves.
+  useEffect(() => {
+    if (gated || !revealed || sequenceIndex === 0) return
+    const el = revealedAudioRef.current
+    if (!el) return
+    el.play().catch(() => {})
+  }, [gated, revealed, sequenceIndex])
 
   function handleError() {
     setLoadFailed(true)
@@ -160,8 +228,20 @@ function TextPromptNarration({ src, gated, onComplete, autoplayAttempt }) {
       <div className="text-center mb-5">
         <button
           type="button"
-          onClick={() => setRevealed(true)}
-          className="inline-flex items-center gap-2 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-4 py-2 min-h-[44px] text-[14px]"
+          onClick={() => {
+            // Belt-and-suspenders alongside `disabled` below: while the
+            // background autoplay-attempt is actually sounding, a tap here
+            // must not reveal-and-play a second overlapping stream.
+            if (autoplayBusy) return
+            setRevealed(true)
+          }}
+          disabled={autoplayBusy}
+          aria-disabled={autoplayBusy}
+          className={`inline-flex items-center gap-2 border rounded-full px-4 py-2 min-h-[44px] text-[14px] font-semibold ${
+            autoplayBusy
+              ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+              : 'bg-ctac-teal-50 hover:bg-ctac-teal-100 border-ctac-teal-200 text-ctac-teal-800'
+          }`}
         >
           <Volume2 size={16} strokeWidth={2} />
           Read this to me
@@ -178,11 +258,21 @@ function TextPromptNarration({ src, gated, onComplete, autoplayAttempt }) {
         </p>
       ) : (
         <audio
+          ref={revealedAudioRef}
           autoPlay
           controls
           preload="auto"
-          src={src}
-          onError={() => setLoadFailed(true)}
+          src={sequenceIndex === 0 ? src : src2}
+          onEnded={() => {
+            if (sequenceIndex === 0 && src2) setSequenceIndex(1)
+          }}
+          onError={() => {
+            // Fail open: only surface the "not available" message for the
+            // first clip. If the optional second clip (src2) breaks after
+            // the first already played fine, silently stop rather than
+            // showing an error for content the participant already heard.
+            if (sequenceIndex === 0) setLoadFailed(true)
+          }}
           className="w-full"
         >
           Your browser does not support the audio element.
@@ -221,6 +311,11 @@ export default function TextPrompt({ content, onSave, sessionData }) {
   const continueLabel = content?.continue_label || 'Keep going →'
   const downloadCfg = content?.download_button
   const audioUrl = content?.audio_url
+  // Optional second clip for the autoplay-attempt / manual-pill sequence —
+  // e.g. the 988 crisis-line paragraph read right after the main body, to
+  // match `showCrisisNote`'s reading-order placement below. See
+  // TextPromptNarration's 2026-09-15 comment for the full sequencing.
+  const audioUrl2 = content?.audio_url_2
   const audioGated = content?.audio_gated === true
   const audioAutoplayAttempt = content?.audio_autoplay_attempt === true
   const [narrationComplete, setNarrationComplete] = useState(false)
@@ -263,6 +358,7 @@ export default function TextPrompt({ content, onSave, sessionData }) {
       {audioUrl && (
         <TextPromptNarration
           src={audioUrl}
+          src2={audioUrl2}
           gated={audioGated}
           autoplayAttempt={audioAutoplayAttempt}
           onComplete={() => setNarrationComplete(true)}

@@ -4,7 +4,7 @@ import {
   MissingItemsNote,
   scrollToMissingItem,
 } from '../components/items/shared.jsx'
-import NarrationControls from '../components/items/NarrationControls.jsx'
+import { NarrationButton } from '../components/items/NarrationControls.jsx'
 
 // "Letter to Another Youth" — single-screen free-write activity.
 //
@@ -78,31 +78,36 @@ export default function LetterBuilder({ onSave = console.log }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">A letter to another teen</h2>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/letter_00_heading.mp3" />
+      {/* Consolidated single narration button (was 5 scattered
+          NarrationControls pills) — one "Read me the instructions" button
+          plays the heading, prompt, both scaffolding prompts, and the
+          textarea instructions back to back, in that order. */}
+      <NarrationButton
+        className="mb-2"
+        label="Read me the instructions"
+        src={[
+          '/narration/letter_00_heading.mp3',
+          '/narration/letter_01_prompt.mp3',
+          '/narration/letter_02_scaffold_skill.mp3',
+          '/narration/letter_03_scaffold_thought.mp3',
+          '/narration/letter_04_instructions.mp3',
+        ]}
+      />
       <p className="text-[16px] leading-relaxed text-slate-700 mb-2">{PROMPT}</p>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/letter_01_prompt.mp3" />
       {/* Two optional scaffolding prompts (Draft 26 Part B) — seeds for
           kids who freeze on the blank textarea, not required reading. */}
       <ul className="text-[14px] text-slate-500 italic mb-2 list-disc pl-5 space-y-0.5">
         <li>What is one skill you would recommend?</li>
         <li>What is one helpful thought you could share?</li>
       </ul>
-      {/* Draft 109: the two scaffolding bullets above share one narration
-          pair — question/answers labels reused here for two co-equal
-          prompts, not a literal question+answer pair. */}
-      <NarrationControls
-        className="mb-2"
-        questionAudioUrl="/narration/letter_02_scaffold_skill.mp3"
-        answersAudioUrl="/narration/letter_03_scaffold_thought.mp3"
-      />
-      <p className="text-[13px] text-slate-500 italic mb-5">
-        Example: {EXAMPLE}
-      </p>
+      <div className="flex flex-wrap items-center gap-2 mb-5">
+        <p className="text-[13px] text-slate-500 italic">
+          Example: {EXAMPLE}
+        </p>
+        <NarrationButton label="Read the example" src="/narration/letter_05_example.mp3" />
+      </div>
 
       <div id="item-letter">
-        {/* Draft 109: letter_04 narrates the textarea's placeholder
-            instructions, which disappear once the kid starts typing. */}
-        <NarrationControls className="mb-2" instructionsAudioUrl="/narration/letter_04_instructions.mp3" />
         <textarea
           rows={12}
           value={letter}

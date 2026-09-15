@@ -601,12 +601,26 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
     )
   }
 
+  // Draft 111 Part E (Stephanie/Jessica's 9/14 review pass, confirmed with
+  // Josh): participants were seeing their finished plan recapped TWICE —
+  // once here, right after building it, and again on the post-posttest
+  // CelebrationScreen keepsake (`DeliveryShellPage.jsx`), which is the one
+  // with the actual save/download actions (PlanDownloads — PNG/PDF). Josh's
+  // call: keep the second showing (the one with download) and remove this
+  // first, earlier one entirely. This screen still exists as the "you're
+  // done building — save it" checkpoint (handleSave still needs a Continue
+  // to hang off of), it just no longer re-displays the whole plan; `model`/
+  // `PlanReview` stay in this file for Screen 5 (sandbox-only) and for
+  // `buildSavedPlanModel`/`PlanReview`, which DeliveryShellPage imports for
+  // the real keepsake.
   if (screen === 4 || (screen === 3 && !hasInclusion)) {
     return (
       <ScreenShell heading="Here’s your plan." headingAudioUrl="/narration/plan_12_review_heading.mp3">
-        <Keepsake>
-          <PlanReview model={model} />
-        </Keepsake>
+        <p className="text-[16px] leading-relaxed text-slate-700">
+          You’ve pulled together your skill, your people, and your own words.
+          Save it now, and you’ll see it all again — with a way to download
+          it — as a keepsake at the very end.
+        </p>
         <div className="flex items-center justify-between mt-8 gap-3">
           <button
             type="button"
