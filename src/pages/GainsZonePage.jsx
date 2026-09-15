@@ -1,6 +1,6 @@
-// Generic walkable-zone page (GAINS Draft 68, genericized Draft 80): one
-// 9:16 phone frame, and EVERYTHING happens inside it. A scene-state machine
-// runs the loop:
+// Generic walkable-zone page (GAINS Draft 68, genericized Draft 80, two-
+// plate `introPlate` support added Draft 83). One 9:16 phone frame, and
+// EVERYTHING happens inside it. A scene-state machine runs the loop:
 //
 //   intro ─Begin─▶ walk ─tap Spark─▶ video ─ended─▶ walk (Spark follows)
 //     ─tap station─▶ activity ─done─▶ gear (award) ─equip─▶ walk (exit lights
@@ -15,10 +15,18 @@
 // Everything that differs zone to zone -- the plate, Spark's lines, the
 // station's activity, the zone's own gear, which traversal ends it, the end
 // card -- comes in through the `zone` config (`zone/zones.js`); this file is
-// the one template both Zone 3 and Zone 4 run on (`GainsZone3Page` /
+// the one template Zones 1/3/4 all run on (`GainsZone1Page`/`GainsZone3Page`/
 // `GainsZone4Page` are thin wrappers picking a config). The Phaser scene's
 // own plate-specific geometry (spots, polygons, waypoints) lives alongside
-// it in `zoneWalkScene.js`, selected by `zone.id`.
+// it in `zoneWalkScene.js`, selected by a zoneId.
+//
+// Draft 83: `zone.introPlate` (Zone 1 only) adds one extra PHASE before the
+// loop above -- a simpler plate where only Spark is interactable (no
+// station/exit, no arrival lock, the walk cue shows immediately and Spark
+// beckons on idle). Reaching Spark there plays the intro plate's own video;
+// `ended` soft-bloom-cuts to the zone's MAIN plate and the loop above begins
+// as normal (with the usual arrival lock + `arrive` line). Zones without
+// `introPlate` skip this phase entirely and are unaffected.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -48,6 +56,9 @@ const TITLE_CARD_MS = 2600
 // Soft-bloom crossfade: the veil rises, the scene swaps under it at the
 // peak, the veil melts away.
 const BLOOM_IN_MS = 380
+// Draft 83: how long the intro plate waits with no movement before Spark
+// beckons again.
+const BECKON_IDLE_MS = 8000
 
 export default function GainsZonePage({ zone }) {
   const [scene, setScene] = useState('intro') // intro|walk|video|activity|gear|transition|climb|end
@@ -55,7 +66,9 @@ export default function GainsZonePage({ zone }) {
   const [showTitle, setShowTitle] = useState(false)
   // 2026-09-03 (Josh): the Traveler can't move until Spark finishes the
   // arrive line -- the walk stays paused (and the tap hint waits) while the
-  // arrive clip plays; a tap during the line does nothing.
+  // arrive clip plays; a tap during the line does nothing. Draft 83: the
+  // intro plate never sets this (movement is available the moment the walk
+  // cue shows) -- only the main-plate arrival still locks.
   const [introLock, setIntroLock] = useState(false)
   const [veil, setVeil] = useState(false)
   // Draft 69: true from the moment a scene change starts until the veil
@@ -70,19 +83,33 @@ export default function GainsZonePage({ zone }) {
   const [gearEquipped, setGearEquipped] = useState(false)
   const [gearFly, setGearFly] = useState(0)
   const [travResult, setTravResult] = useState(null)
-  const [runKey, setRunKey] = useState(0) // bumps to remount the stage on Play again
+  const [runKey, setRunKey] = useState(0) // bumps to remount the stage on Play again / plate switch
+  // Draft 83: which plate is live. Zones without `introPlate` never leave
+  // 'main'.
+  const [platePhase, setPlatePhase] = useState(zone.introPlate ? 'intro' : 'main')
 
   const frameRef = useRef(null)
   const stageRef = useRef(null)
   const audioRef = useRef(null)
   const timersRef = useRef([])
+  const beckonTimerRef = useRef(null)
   const lastRedirectRef = useRef(0)
   const progressRef = useRef(progress)
   progressRef.current = progress
   const sceneRef = useRef(scene)
   sceneRef.current = scene
+  // `say()`/the beckon timer are long-lived callbacks (stable across
+  // renders) that still need the CURRENT phase, so they read this ref
+  // rather than the `platePhase` state closed over at creation time.
+  const platePhaseRef = useRef(platePhase)
+  platePhaseRef.current = platePhase
 
   const ActivityComponent = zone.ActivityComponent
+  const introActive = !!(zone.introPlate && platePhase === 'intro')
+  const plateZoneId = introActive ? zone.introPlate.zoneId : zone.mainZoneId || zone.id
+  const plateBase = introActive ? zone.introPlate.base : zone.base
+  const plateMapFile = introActive ? zone.introPlate.mapFile : zone.mapFile
+  const currentVideo = introActive ? zone.introPlate.video : zone.video
 
   const reducedMotion = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -103,6 +130,7 @@ export default function GainsZonePage({ zone }) {
     audioRef.current = a
     return () => {
       timersRef.current.forEach(clearTimeout)
+      clearTimeout(beckonTimerRef.current)
       a.dispose()
       audioRef.current = null
     }
@@ -113,14 +141,18 @@ export default function GainsZonePage({ zone }) {
     if (audioRef.current) audioRef.current.setMuted(muted)
   }, [muted])
 
-  // The beds belong to the walk; the video, activity and traversal bring
-  // their own sound.
+  // The beds belong to the walk; the video, activity and (usually) the
+  // traversal bring their own sound. Draft 83: a zone can ask to keep its
+  // own ambience running INTO the traversal instead (Zone 1 hands its
+  // track over to The First Light rather than restarting it) -- `transition`
+  // and `climb` count as "still playing" for a zone that opts in.
   useEffect(() => {
     const a = audioRef.current
     if (!a) return
-    if (scene === 'walk' && started) a.startBeds()
+    const keepGoing = zone.continueAmbienceIntoTraversal && (scene === 'transition' || scene === 'climb')
+    if ((scene === 'walk' && started) || keepGoing) a.startBeds()
     else a.stopBeds()
-  }, [scene, started])
+  }, [scene, started, zone.continueAmbienceIntoTraversal])
 
   function later(fn, ms) {
     const id = setTimeout(fn, ms)
@@ -134,7 +166,8 @@ export default function GainsZonePage({ zone }) {
 
   const say = useCallback(
     (key) => {
-      const line = zone.vo[key]
+      const voSet = zone.introPlate && platePhaseRef.current === 'intro' ? zone.introPlate.vo : zone.vo
+      const line = voSet[key]
       const a = audioRef.current
       if (!line) return Promise.resolve()
       setBubble({ text: line.text, visible: true })
@@ -143,7 +176,7 @@ export default function GainsZonePage({ zone }) {
         setBubble((b) => (b && b.text === line.text ? { ...b, visible: false } : b))
       })
     },
-    [zone.vo],
+    [zone.vo, zone.introPlate],
   )
 
   function transitionTo(next, after) {
@@ -161,6 +194,37 @@ export default function GainsZonePage({ zone }) {
     }, BLOOM_IN_MS)
   }
 
+  // Locks movement, plays the zone's own `arrive` line, unlocks once it
+  // finishes (resolves at once if the clip can't play, so nobody's ever
+  // stuck). Used for every MAIN-plate arrival -- the very first one for a
+  // one-plate zone, or the cut-in from Plate 1 for a two-plate one.
+  function lockAndArrive() {
+    audioRef.current?.sfx('chime-unlock')
+    setIntroLock(true)
+    say('arrive').then(() => setIntroLock(false))
+  }
+
+  // Draft 83: the intro plate's own settle -- no lock at all (the walk cue
+  // shows immediately), Spark beckons once right away and again on ~8s of
+  // idle until reached.
+  function clearBeckonTimer() {
+    clearTimeout(beckonTimerRef.current)
+  }
+  function armBeckonTimer() {
+    clearBeckonTimer()
+    if (!zone.introPlate || platePhaseRef.current !== 'intro' || progressRef.current.talked) return
+    beckonTimerRef.current = setTimeout(() => {
+      if (platePhaseRef.current === 'intro' && !progressRef.current.talked && sceneRef.current === 'walk' && !transitioningRef.current) {
+        say('beckon').then(() => armBeckonTimer())
+      }
+    }, BECKON_IDLE_MS)
+  }
+  function settleIntoIntroWalk() {
+    setStarted(true)
+    say('beckon')
+    armBeckonTimer()
+  }
+
   // ---- Begin: the audio-unlock gesture, then the arrival beat ----
   function begin() {
     const a = audioRef.current
@@ -175,14 +239,11 @@ export default function GainsZonePage({ zone }) {
     say('welcome')
     later(() => {
       setShowTitle(false)
-      setStarted(true)
-      // Spark is the first active objective: the same chime every objective
-      // gets when it lights up.
-      audioRef.current?.sfx('chime-unlock')
-      // Hold the walk until Spark has finished speaking (resolves at once if
-      // the clip can't play, so nobody is ever stuck).
-      setIntroLock(true)
-      say('arrive').then(() => setIntroLock(false))
+      if (zone.introPlate && platePhaseRef.current === 'intro') settleIntoIntroWalk()
+      else {
+        setStarted(true)
+        lockAndArrive()
+      }
     }, TITLE_CARD_MS)
   }
 
@@ -201,7 +262,9 @@ export default function GainsZonePage({ zone }) {
       // "Where do I go?" — once the video's been watched, Spark replays the
       // current objective. Between the first talk and the video's end there
       // is no objective line yet (Draft 69: this used to key off `talked`,
-      // which let "follow me" fire on the Spark tap itself).
+      // which let "follow me" fire on the Spark tap itself). On the intro
+      // plate `watched` never becomes true, so a re-tap there is simply
+      // silent -- there's nothing to replay before the video.
       if (p.watched) redirect(p.didActivity ? 'ready' : 'followMe')
     } else if (target === 'pond') {
       if (!p.watched) redirect('redirectStation')
@@ -216,6 +279,7 @@ export default function GainsZonePage({ zone }) {
     if (sceneRef.current !== 'walk' || transitioningRef.current) return
     if (target === 'spark' && !p.talked) {
       setProgress({ talked: true })
+      clearBeckonTimer()
       audioRef.current?.stopSpeech()
       setBubble(null)
       transitionTo('video')
@@ -239,6 +303,9 @@ export default function GainsZonePage({ zone }) {
     switch (evt.type) {
       case 'step':
         if (a) a.sfx(`step-${evt.surface}-${1 + Math.floor(Math.random() * 3)}`)
+        // Draft 83: moving resets the intro plate's idle-beckon countdown
+        // (a no-op once past the intro -- armBeckonTimer's own guard bails).
+        armBeckonTimer()
         break
       case 'proximity':
         if (a) a.setPond(evt.pond)
@@ -259,7 +326,23 @@ export default function GainsZonePage({ zone }) {
   }, [])
 
   // ---- hand-offs back into the walk ----
+  // Draft 83: on the intro plate, the video's end doesn't lead back into
+  // THIS plate's walk at all -- it cuts to the zone's main plate instead.
+  function switchToMainPlate() {
+    clearBeckonTimer()
+    transitionTo('walk', () => {
+      setPlatePhase('main')
+      setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
+      setRunKey((k) => k + 1)
+      lockAndArrive()
+    })
+  }
+
   function onVideoEnded() {
+    if (zone.introPlate && platePhaseRef.current === 'intro') {
+      switchToMainPlate()
+      return
+    }
     setProgress({ watched: true })
     transitionTo('walk', () => {
       audioRef.current?.sfx('chime-unlock')
@@ -298,10 +381,10 @@ export default function GainsZonePage({ zone }) {
     setTravResult(result || null)
     transitionTo('end')
   }
-
   function playAgain() {
     timersRef.current.forEach(clearTimeout)
     timersRef.current = []
+    clearBeckonTimer()
     audioRef.current?.stopSpeech()
     setBubble(null)
     setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
@@ -310,6 +393,7 @@ export default function GainsZonePage({ zone }) {
     setIntroLock(false)
     setStarted(false)
     setShowTitle(false)
+    setPlatePhase(zone.introPlate ? 'intro' : 'main')
     setRunKey((k) => k + 1)
     setScene('intro')
   }
@@ -327,7 +411,9 @@ export default function GainsZonePage({ zone }) {
   const stageMounted = scene !== 'climb' && scene !== 'end'
   const walkPaused = scene !== 'walk' || showTitle || transitioning || introLock
   // The scene's own "begin" (camera settle + tap hint) waits for the arrive
-  // line too, so the hint doesn't invite a tap that would be ignored.
+  // line too, so the hint doesn't invite a tap that would be ignored. The
+  // intro plate never sets introLock, so this is true the moment `started`
+  // is (i.e. immediately after the title card there).
   const walkBegun = started && !introLock
   const hudVisible = started && scene !== 'intro' && scene !== 'climb' && scene !== 'end'
 
@@ -341,8 +427,9 @@ export default function GainsZonePage({ zone }) {
             <ZoneStage
               key={runKey}
               ref={stageRef}
-              zoneId={zone.id}
-              base={zone.base}
+              zoneId={plateZoneId}
+              base={plateBase}
+              mapFile={plateMapFile}
               spriteBase={zone.spriteBase}
               frogUrl={zone.frogUrl}
               reducedMotion={reducedMotion}
@@ -355,8 +442,12 @@ export default function GainsZonePage({ zone }) {
         )}
 
         {/* Phase C: the Claude Design ambient layers over the plate. Faded
-            out under the in-frame scenes, gone with the stage. */}
-        {stageMounted && <ZoneOverlays base={zone.base} layers={zone.overlayLayers} visible={scene === 'walk' || scene === 'transition'} />}
+            out under the in-frame scenes, gone with the stage. Draft 83:
+            the intro plate doesn't wire its own overlay set yet, so this
+            only shows once on the main plate. */}
+        {stageMounted && !introActive && (
+          <ZoneOverlays base={zone.base} sub={zone.overlaySub} layers={zone.overlayLayers} visible={scene === 'walk' || scene === 'transition'} />
+        )}
 
         {hudVisible && <GearHud earned={zone.gearEarnedBefore} newKey={zone.gear.gearKey} iconSrc={zone.gear.itemSrc} equipped={gearEquipped} flyIn={gearFly} frameRef={frameRef} />}
 
@@ -404,14 +495,18 @@ export default function GainsZonePage({ zone }) {
           </div>
         )}
 
-        {/* Spark → the zone's video, in-frame; `ended` blooms back to the world. */}
-        {scene === 'video' && <VideoScene id={zone.video.id} h={zone.video.h} title={zone.video.title} onEnded={onVideoEnded} allowSkip={DEV_SKIP} />}
+        {/* Spark → the current plate's video, in-frame; `ended` blooms back
+            to the world (or, from the intro plate, cuts to the main one). */}
+        {scene === 'video' && <VideoScene id={currentVideo.id} h={currentVideo.h} title={currentVideo.title} onEnded={onVideoEnded} allowSkip={DEV_SKIP} />}
 
         {/* Station → the zone's activity; its close screen hands off via
-            onComplete (leveledUp if the activity supports it). */}
+            onComplete (leveledUp if the activity supports it). `onNarrate`
+            ducks this zone's own ambience under an activity's own narration
+            (Body Mapping, Draft 83) -- unused by activities that don't
+            accept it. */}
         {scene === 'activity' && (
           <div className="absolute inset-0 z-20">
-            <ActivityComponent onComplete={onActivityComplete} />
+            <ActivityComponent onComplete={onActivityComplete} onNarrate={(on) => audioRef.current?.duck(on)} {...(zone.activityExtraProps || {})} />
             {DEV_SKIP && (
               <button
                 type="button"
@@ -456,10 +551,21 @@ export default function GainsZonePage({ zone }) {
         {/* The zone's traversal, in-frame, started straight away (the exit
             tap was the gesture; the transition VO just carried the
             directions). The walk stage is unmounted underneath so only one
-            WebGL context is live. */}
+            WebGL context is live. Draft 83: a zone that hands its own
+            ambience over (`continueAmbienceIntoTraversal`) skips this
+            traversal's own music and ducks THIS zone's bed under its VO
+            instead. */}
         {scene === 'climb' && (
           <div className="absolute inset-0 z-20" style={{ background: '#05070e' }}>
-            <TraversalGame mode={zone.traversalMode} started muted={muted} reducedMotion={reducedMotion} onComplete={onTraversalComplete} />
+            <TraversalGame
+              mode={zone.traversalMode}
+              started
+              muted={muted}
+              reducedMotion={reducedMotion}
+              onComplete={onTraversalComplete}
+              skipMusic={!!zone.continueAmbienceIntoTraversal}
+              onDuck={zone.continueAmbienceIntoTraversal ? (on) => audioRef.current?.duck(on) : undefined}
+            />
           </div>
         )}
 
@@ -483,22 +589,45 @@ export default function GainsZonePage({ zone }) {
                   You gathered <strong>{travResult.motesCollected}</strong> {travResult.motesCollected === 1 ? 'connection' : 'connections'} on the flight across.
                 </p>
               )}
+              {travResult && zone.traversalMode === 'firstlight' && typeof travResult.lampsLit === 'number' && (
+                <p className="text-[14px] mb-1" style={{ color: zone.endCard.subTextColor }}>
+                  You lit <strong>{travResult.lampsLit}</strong> lamps and found your way past <strong>{travResult.shapesRevealed}</strong>{' '}
+                  {travResult.shapesRevealed === 1 ? 'thing' : 'things'} that only looked scary in the dark.
+                </p>
+              )}
               {zone.endCard.subtitle && (
                 <p className="text-[14px] mb-6" style={{ color: zone.endCard.subTextColor }}>
                   {zone.endCard.subtitle}
                 </p>
               )}
-              {zone.endCard.nextHref && (
+              {zone.endCard.nextDisabled ? (
                 <div className={zone.endCard.subtitle ? 'mb-5' : 'mt-2 mb-5'}>
-                  <Link
-                    to={zone.endCard.nextHref}
+                  <span
                     className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
-                    style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+                    style={{ background: 'rgba(0,0,0,.12)', color: zone.endCard.textColor, opacity: 0.55, cursor: 'not-allowed' }}
+                    aria-disabled="true"
+                    title="Zone 2 isn't built yet"
                   >
                     {zone.endCard.nextLabel}
                     <ArrowRight size={14} strokeWidth={2} />
-                  </Link>
+                  </span>
+                  <p className="text-[11px] italic mt-1.5" style={{ color: zone.endCard.subTextColor }}>
+                    Coming soon
+                  </p>
                 </div>
+              ) : (
+                zone.endCard.nextHref && (
+                  <div className={zone.endCard.subtitle ? 'mb-5' : 'mt-2 mb-5'}>
+                    <Link
+                      to={zone.endCard.nextHref}
+                      className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+                      style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+                    >
+                      {zone.endCard.nextLabel}
+                      <ArrowRight size={14} strokeWidth={2} />
+                    </Link>
+                  </div>
+                )
               )}
               <GainsButton onClick={playAgain} iconLeft={<RotateCcw size={16} strokeWidth={2} />}>
                 Play again

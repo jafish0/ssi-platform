@@ -7,9 +7,11 @@
 // back here as review cards (reversing Draft 74's graduation -- the team
 // wants the three activities together while they're still under review).
 // Draft 80 adds Zone 3 (walkable) right before Zone 4. Draft 82 adds The
-// First Light (a standalone traversal prototype) right after the Ascent.
-// Order is fixed: Pre/Post · Body Mapping · Guardian · Mindful Place ·
-// Ascent · The First Light · Zone 3 · Zone 4 · Videos.
+// First Light (a standalone traversal prototype) right after the Ascent --
+// the two bare-mechanic traversal prototypes sit together. Draft 83 adds
+// Zone 1 (walkable) right before Zone 3 -- the three walkable zones sit
+// together. Order is fixed: Pre/Post · Body Mapping · Guardian · Mindful
+// Place · Ascent · The First Light · Zone 1 · Zone 3 · Zone 4 · Videos.
 
 export const REVIEW_CARDS = [
   {
@@ -70,8 +72,17 @@ export const REVIEW_CARDS = [
     links: [{ label: 'Play The First Light', to: '/gains-demo/firstlight', play: true }],
   },
   {
-    key: 'zone3',
+    key: 'zone1',
     n: 7,
+    title: 'Zone 1: The Dark Abyss — walkable zone',
+    section: 'review-zone1',
+    blurb:
+      "The opening of the game. You arrive in the dark, walk up to a distant light to meet Spark, and watch the welcome video. Then, on the other side of the passage: the video on what trauma is, Body Mapping at the Mirror Pool (now with Spark narrating), your first gear, the Lantern, and a brand-new traversal, The First Light, where your lantern reveals the path a few steps at a time.",
+    links: [{ label: 'Play Zone 1', to: '/gains-demo/zone1', play: true }],
+  },
+  {
+    key: 'zone3',
+    n: 8,
     title: 'Zone 3: The Mistfields — walkable zone',
     section: 'review-zone3',
     blurb:
@@ -80,7 +91,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone4',
-    n: 8,
+    n: 9,
     title: 'Zone 4: The Bright Reaches — walkable zone',
     section: 'review-zone4',
     blurb:
@@ -89,7 +100,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'videos',
-    n: 9,
+    n: 10,
     title: 'Videos',
     section: 'review-videos',
     blurb:

@@ -169,7 +169,85 @@ const ZONE3 = {
   depth: { yNear: 1830, yFar: 460, sNear: 1.0, sFar: 0.6 },
 }
 
-const ZONES = { zone4: ZONE4, zone3: ZONE3 }
+// ---- Zone 1: the Dark Abyss (two connected plates, Draft 83) ----------
+// Plate 1 is the arrival: a long, empty walk up to Spark (waiting far up
+// near the passage), tap him, watch the intro video, cut to Plate 2. Only
+// Spark is ever interactable here -- `pond`/`exit` are parked far
+// off-canvas so the shared hit-testing/marker code (which always reads
+// `spots.pond`/`spots.exit`) has real numbers to read but can never
+// actually be reached or shown.
+const ZONE1_INTRO = {
+  spots: {
+    start: { x: 540, y: 1860 },
+    sparkWait: { x: 720, y: 150 },
+    sparkStand: { x: 700, y: 260 },
+    pond: { x: -4000, y: -4000 },
+    exit: { x: -4000, y: -3900 },
+    exitStand: { x: -4000, y: -3900 },
+  },
+  pondHover: { x: -4000, y: -4000 },
+  polys: [
+    [[390, 1860], [690, 1860], [705, 1600], [405, 1600]],
+    [[405, 1600], [705, 1600], [730, 1350], [430, 1350]],
+    [[430, 1350], [730, 1350], [760, 1100], [460, 1100]],
+    [[460, 1100], [760, 1100], [790, 870], [490, 870]],
+    [[490, 870], [790, 870], [820, 650], [520, 650]],
+    [[520, 650], [820, 650], [845, 430], [545, 430]],
+    [[545, 430], [845, 430], [860, 220], [560, 220]],
+  ],
+  grassPolys: [],
+  nodes: [
+    [540, 1860], [555, 1600], [580, 1350], [610, 1100], [640, 870],
+    [670, 650], [695, 430], [710, 220],
+  ],
+  edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]],
+  lightPathNodes: [],
+  depth: { yNear: 1860, yFar: 150, sNear: 1.0, sFar: 0.6 },
+}
+
+// Plate 2, the main map: the passage from Plate 1 lets out at the top of
+// this one (same palette/path stone -- Plate 1's exit and this entry are
+// the two sides of one doorway). Spark is now a short way off; the
+// station is the Mirror Pool (a wide, mostly-full-width basin, so the
+// path hugs its LEFT edge rather than the centerline); the exit is the
+// head of the stone steps.
+const ZONE1_MAIN = {
+  spots: {
+    start: { x: 540, y: 1780 },
+    sparkWait: { x: 300, y: 1300 },
+    sparkStand: { x: 460, y: 1300 },
+    pond: { x: 420, y: 880 },
+    exit: { x: 785, y: 120 },
+    exitStand: { x: 740, y: 220 },
+  },
+  // Spark's glide-to-the-pool target, and where the exit's light-path
+  // starts (the bank, heading up toward the steps).
+  pondHover: { x: 460, y: 850 },
+  // The Mirror Pool. Not centered under the path -- the path passes its
+  // LEFT edge, per "just off the path" (see the polys/nodes below).
+  pond: { x: 680, y: 880, rx: 240, ry: 110 },
+  polys: [
+    [[390, 1780], [690, 1780], [690, 1550], [390, 1550]],
+    [[390, 1550], [690, 1550], [650, 1300], [350, 1300]],
+    [[350, 1300], [650, 1300], [630, 1050], [330, 1050]],
+    [[330, 1050], [630, 1050], [650, 800], [350, 800]],
+    [[350, 800], [650, 800], [710, 580], [410, 580]],
+    [[410, 580], [710, 580], [800, 380], [500, 380]],
+    [[500, 380], [800, 380], [890, 200], [590, 200]],
+    [[590, 200], [890, 200], [860, 120], [710, 120]],
+  ],
+  grassPolys: [],
+  nodes: [
+    [540, 1780], [540, 1550], [500, 1300], [480, 1050], [500, 800],
+    [560, 580], [650, 380], [740, 200], [785, 120],
+  ],
+  edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8]],
+  // The exit's "path lights up" runs from the pool's level up to the steps.
+  lightPathNodes: [4, 5, 6, 7, 8],
+  depth: { yNear: 1780, yFar: 120, sNear: 1.0, sFar: 0.58 },
+}
+
+const ZONES = { zone4: ZONE4, zone3: ZONE3, zone1intro: ZONE1_INTRO, zone1main: ZONE1_MAIN }
 
 // ---- geometry helpers -------------------------------------------------
 function pointInPoly(px, py, poly) {

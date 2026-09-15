@@ -17,6 +17,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   // feedback maps per-video in the CSV export; review-videos stays as the
   // one "overall / general note" box for the group.
   { value: 'review-videos', label: 'Review: Videos — overall / general note' },
+  { value: 'video-0', label: 'Review: Video 0 — Intro (Welcome to Shadowmend)' },
   { value: 'video-1', label: 'Review: Video 1 — What is Trauma' },
   { value: 'video-2', label: 'Review: Video 2 — The Four Reactions' },
   { value: 'video-3', label: 'Review: Video 3 — Getting the Best Therapy' },

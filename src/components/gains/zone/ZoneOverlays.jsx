@@ -36,13 +36,17 @@ function prepSvg(svg) {
   return svg.replace(/preserveAspectRatio="[^"]*"/, '').replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ')
 }
 
-export default function ZoneOverlays({ base, layers: layerSet = DEFAULT_LAYERS, visible = true }) {
+export default function ZoneOverlays({ base, sub, layers: layerSet = DEFAULT_LAYERS, visible = true }) {
   const [layers, setLayers] = useState(null) // [{ key, blend, svg }]
   const [motion, setMotion] = useState('')
+  // Draft 83: Zone 1 keeps its two plates' overlay sets in their own
+  // subfolders (ov/plate1/, ov/plate2/) rather than one flat ov/ -- `sub`
+  // is that subfolder name, undefined for every other zone (flat ov/).
+  const dir = sub ? `${base}/ov/${sub}` : `${base}/ov`
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchText(`${base}/ov/motion.css`), ...layerSet.map((l) => fetchText(`${base}/ov/${l.file}`))]).then(([css, ...svgs]) => {
+    Promise.all([fetchText(`${dir}/motion.css`), ...layerSet.map((l) => fetchText(`${dir}/${l.file}`))]).then(([css, ...svgs]) => {
       if (cancelled) return
       setMotion(css || '')
       setLayers(layerSet.map((l, i) => (svgs[i] ? { ...l, svg: prepSvg(svgs[i]) } : null)).filter(Boolean))
@@ -51,7 +55,7 @@ export default function ZoneOverlays({ base, layers: layerSet = DEFAULT_LAYERS, 
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base, layerSet])
+  }, [dir, layerSet])
 
   if (!layers || !layers.length) return null
   return (

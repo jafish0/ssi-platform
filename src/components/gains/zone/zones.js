@@ -14,8 +14,122 @@
 
 import MindfulnessCalmPlace from '../../MindfulnessCalmPlace.jsx'
 import ElevatorPitch from '../../ElevatorPitch.jsx'
+import BodyMapping from '../../BodyMapping.jsx'
 
 export const ZONES = {
+  // Zone 1 is the opening of the game, so it gets one extra capability the
+  // template didn't need before: `introPlate` (Draft 83) -- a first, much
+  // simpler plate (only Spark is interactable, no station/exit, no
+  // arrival lock) that plays before `GainsZonePage`'s normal loop begins
+  // on the zone's own main plate. `introPlate.zoneId`/`base`/`mapFile`
+  // point zoneWalkScene.js/ZoneStage at that plate's own geometry and art;
+  // `introPlate.video`/`vo` are that plate's own content. Zones without
+  // `introPlate` are entirely unaffected -- GainsZonePage skips the whole
+  // phase for them.
+  zone1: {
+    id: 'zone1',
+    // The zoneWalkScene.js walkable-scene registry keys the two plates as
+    // 'zone1intro'/'zone1main' (distinct waypoint graphs) -- `mainZoneId`
+    // points GainsZonePage at the right one once it leaves the intro plate,
+    // since `id` alone ('zone1') isn't a key that registry recognizes.
+    mainZoneId: 'zone1main',
+    base: '/long-light/zone1',
+    mapFile: 'plate2.webp', // the MAIN plate; the intro plate names its own below
+    introPlate: {
+      zoneId: 'zone1intro',
+      base: '/long-light/zone1',
+      mapFile: 'plate1.webp',
+      video: { id: '1227051194', h: '8c2fcaf83f', title: 'Intro — Welcome to Shadowmend' },
+      vo: {
+        welcome: { file: 'z1-00-welcome.mp3', text: 'The Dark Abyss.' },
+        beckon: { file: 'z1-01-beckon.mp3', text: 'Hello? Over here — come find me.' },
+      },
+    },
+    docTitle: 'GAINS for Teens — Zone 1: The Dark Abyss (walkable prototype)',
+    eyebrow: 'Zone 1',
+    introTitle: 'The Dark Abyss',
+    introInstructions: 'Tap the path to move. Tap Spark to interact. Spark will guide you.',
+    welcomeTitle: 'The Dark Abyss',
+    transitionHeading: "We're headed for the Lantern Path!",
+    // The main plate's (Plate 2) five ambient SVG overlay layers -- fog,
+    // candles, the Mirror Pool's ripples, embers, the steps' breathing
+    // glow (see each file's <desc> in public/long-light/zone1/ov/plate2/).
+    // The intro plate (Plate 1) has its own set but Draft 83 doesn't wire
+    // a per-phase overlay swap yet -- see the WORKING_NOTES bullet.
+    overlayLayers: [
+      { key: 'fog', file: 'layer-fog.svg', blend: 'normal' },
+      { key: 'candles', file: 'layer-candles.svg', blend: 'screen' },
+      { key: 'pool', file: 'layer-pool.svg', blend: 'screen' },
+      { key: 'embers', file: 'layer-embers.svg', blend: 'screen' },
+      { key: 'stepsGlow', file: 'layer-steps-glow.svg', blend: 'screen' },
+    ],
+    overlaySub: 'plate2', // ZoneOverlays fetches `${base}/ov/${overlaySub}/${file}`
+    sfxPreload: ['step-stone-1', 'step-stone-2', 'step-stone-3', 'chime-unlock', 'spark-whoosh', 'ui-tap', 'equip-flash', 'arrive-swell'],
+    // Spark's lines (voice F), VERBATIM from
+    // `Gains for Teens/Walkable Zones/Zone 1/Zone 1 — Prep Package (traversal design + VO + prompts).md`.
+    vo: {
+      arrive: {
+        file: 'z1-02-arrive.mp3',
+        text: 'Come over here — let’s start with what trauma actually is.',
+      },
+      followMe: {
+        file: 'z1-03-follow-me.mp3',
+        text: 'Follow me. There’s a quiet pool just ahead — I want to try an activity with you to show you how your body reacts.',
+      },
+      ready: {
+        file: 'z1-04-ready.mp3',
+        text: "You've earned your Lantern. It only lights the next few steps — and that's all we ever need. Come on, this way.",
+      },
+      exitTransition: {
+        file: 'z1-05-exit-transition.mp3',
+        text: "We're headed for the Lantern Path! It's dark out there, but your Lantern will show you the next few steps. Tap where you see a little light, and we'll find our way together.",
+      },
+      redirectStation: { file: 'z1-06-redirect-pool-first.mp3', text: 'Hold on — come find me first.' },
+      redirectExitVideo: { file: 'z1-07-redirect-exit-before-video.mp3', text: 'Not yet! Come talk to me before you head out there.' },
+      redirectExitActivity: {
+        file: 'z1-08-redirect-exit-before-activity.mp3',
+        text: "It's too dark to go that way without a light. Let's visit the pool first.",
+      },
+    },
+    video: { id: '1223215595', h: '2b10eb8857', title: 'Zone 1 — What is Trauma' },
+    ActivityComponent: BodyMapping,
+    // Draft 83: Body Mapping's own narration (10 clips) -- on only inside
+    // the zone. `onNarrate` is wired generically by GainsZonePage (it
+    // ducks the zone's own ambience), not stored here.
+    activityExtraProps: { narrate: true },
+    gear: {
+      gearKey: 'lantern',
+      name: 'Lantern',
+      itemSrc: '/long-light/zone1/gear/lantern.webp',
+      equippedSrc: '/long-light/zone1/gear/celebrate.webp',
+      title: 'You earned the Lantern!',
+      subline: "It only lights the next few steps — and that's all we ever need.",
+      sparkLine: "Hold it up. See? The dark isn't so big when you can see the next step.",
+      equipLabel: 'Equip lantern',
+    },
+    // The Lantern is the FIRST gear -- every HUD slot starts empty.
+    gearEarnedBefore: [],
+    traversalMode: 'firstlight',
+    // The First Light (Draft 82) inherits this zone's own ambience rather
+    // than starting its own -- GainsZonePage keeps the beds running
+    // through 'transition'/'climb' instead of stopping them, and passes
+    // skipMusic + onDuck (duck-under-VO) to TraversalGame for this zone.
+    continueAmbienceIntoTraversal: true,
+    endCard: {
+      background: 'var(--sky-beacon)',
+      textColor: 'var(--text-on-warm)',
+      subTextColor: 'rgba(58,29,5,.85)',
+      heading: 'You reached the Lantern Path.',
+      subtitle: null,
+      // Zone 2 doesn't exist yet -- shown as a disabled preview rather
+      // than a real link (Draft 83).
+      nextHref: null,
+      nextLabel: 'Continue to the Lantern Path',
+      nextDisabled: true,
+    },
+    feedbackSection: 'review-zone1',
+  },
+
   zone4: {
     id: 'zone4',
     base: '/long-light/zone4',

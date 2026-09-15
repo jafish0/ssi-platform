@@ -129,6 +129,15 @@ export function createZoneAudio({ base, sfxBase, pondUrl }) {
       }
     },
 
+    // Draft 83: manual duck toggle for narration owned by an activity (e.g.
+    // Body Mapping) rather than this manager's own speak() -- same ducking
+    // as a VO line, just driven by the host reacting to the activity's own
+    // onNarrate(bool) callback instead of a speak() token.
+    duck(on) {
+      speaking = !!on
+      applyVolumes()
+    },
+
     // No-op when the zone has no proximity-crossfaded bed (see `pond` above).
     setPond(f) {
       if (!pond) return

@@ -17,7 +17,7 @@
 // flex-1, so a long region text stole its space). Region copy is VERBATIM
 // from Stephanie; don't reword it.
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Copy revised 2026-08-19 (Draft 32) — Stephanie's final wording, all five
 // regions. Body overtook Head as the longest text with this revision (254 vs
@@ -65,6 +65,19 @@ const INSTRUCTIONS = {
 
 const CLOSING =
   'Each of these things help us respond to danger, but these responses can stick around even after the danger has passed or can pop up if something reminds us of the danger or trauma.'
+
+// --- Draft 83: narration (Spark voice F) ---
+// Ten clips under public/long-light/audio/bodymap/. Only active when the
+// `narrate` prop is true (the Zone 1 Mirror Pool station passes it; the
+// standalone review page doesn't, so its demo stays silent by default).
+const NARRATION_BASE = '/long-light/audio/bodymap'
+const REGION_NARRATION = {
+  lungs: 'bm-02-lungs',
+  head: 'bm-03-head',
+  heart: 'bm-04-heart',
+  stomach: 'bm-05-stomach',
+  body: 'bm-06-body',
+}
 
 // Scoped so the region styles can't collide with anything else on the page.
 // Ported from the redrawn asset (Draft 32, 2026-08-19), which added the idle
@@ -228,7 +241,13 @@ function ClosingBox() {
   )
 }
 
-export default function BodyMapping() {
+// --- Draft 83: `onComplete` ---
+// Inside the Zone 1 walkable zone this activity is one scene in a larger
+// in-frame loop, and the Lantern is awarded by a real Gear Award scene
+// right after. When the `onComplete()` prop is provided, finishing Part 2
+// ("Done") hands off to it instead of showing the standalone `done` screen.
+// Without the prop (the review-list demo) the behavior is unchanged.
+export default function BodyMapping({ onComplete = null, narrate: narrateOn = false, onNarrate = null }) {
   const [mode, setMode] = useState('reveal') // reveal | select | done
   const [revealed, setRevealed] = useState([])
   const [selected, setSelected] = useState([])
@@ -240,12 +259,69 @@ export default function BodyMapping() {
   // '' or text = engaged (the input shows), and any non-empty value counts
   // toward the "N selected" total alongside the tapped regions.
   const [customArea, setCustomArea] = useState(null)
+  // Draft 83 follow-up (Josh, 2026-09-15): a region's description -- and the
+  // closing line after all five are revealed -- must finish playing before
+  // the next tap does anything. Only meaningful when narrateOn (the
+  // standalone review page has no audio, so nothing is ever gated there).
+  const [narrating, setNarrating] = useState(false)
+
+  const audioRef = useRef(null)
+  useEffect(() => {
+    audioRef.current = new Audio()
+    return () => {
+      const el = audioRef.current
+      if (el) {
+        el.pause()
+        el.src = ''
+      }
+    }
+  }, [])
+
+  function narrate(name) {
+    if (!narrateOn) return
+    const el = audioRef.current
+    if (!el) return
+    try {
+      el.pause()
+      el.currentTime = 0
+      el.src = `${NARRATION_BASE}/${name}.mp3`
+      onNarrate?.(true)
+      setNarrating(true)
+      el.onended = () => {
+        onNarrate?.(false)
+        setNarrating(false)
+      }
+      el.onerror = () => {
+        onNarrate?.(false)
+        setNarrating(false)
+      }
+      const p = el.play()
+      if (p && p.catch) {
+        p.catch(() => {
+          onNarrate?.(false)
+          setNarrating(false)
+        })
+      }
+    } catch {
+      onNarrate?.(false)
+      setNarrating(false)
+    }
+  }
+
+  // bm-01-intro plays once, on open.
+  useEffect(() => {
+    narrate('bm-01-intro')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const allRevealed = revealed.length === REGIONS.length
 
   function tapRegion(id) {
+    if (narrateOn && narrating) return
     if (mode === 'reveal') {
       setLastRevealed(id)
+      const clip = REGION_NARRATION[id]
+      if (clip) narrate(clip)
       if (revealed.includes(id)) {
         // Re-tapping an already-revealed region (most often the whole-body
         // one, since it's drawn underneath and left for last) always shows
@@ -261,8 +337,24 @@ export default function BodyMapping() {
   }
 
   function advance() {
-    if (mode === 'reveal') setMode('select')
-    else if (mode === 'select') setMode('done')
+    if (mode === 'reveal') {
+      narrate('bm-08-select')
+      setMode('select')
+    } else if (mode === 'select') {
+      narrate('bm-10-done')
+      if (onComplete) {
+        onComplete()
+        return
+      }
+      setMode('done')
+    }
+  }
+
+  // Draft 46 (Holly, 2026-08-24): engaging Part 2's write-in field (null ->
+  // engaged) plays bm-09-write-in once; typing afterward doesn't re-fire it.
+  function setCustomAreaNarrated(v) {
+    if (customArea === null && v !== null) narrate('bm-09-write-in')
+    setCustomArea(v)
   }
 
   // Draft 46 (Holly, 2026-08-24): the 5th reveal used to auto-flip to the
@@ -273,7 +365,9 @@ export default function BodyMapping() {
   // panel), then on a second tap advances to Part 2, exactly like every
   // other mode transition in this activity.
   function ctaClick() {
+    if (narrateOn && narrating) return
     if (mode === 'reveal' && allRevealed && !showClosing) {
+      narrate('bm-07-closing')
       setShowClosing(true)
       return
     }
@@ -580,7 +674,7 @@ export default function BodyMapping() {
                 <ProgressLine revealed={revealed.length} />
               )}
               {mode === 'select' && (
-                <OtherAreaField value={customArea} onChange={setCustomArea} />
+                <OtherAreaField value={customArea} onChange={setCustomAreaNarrated} />
               )}
             </>
           )}
@@ -599,7 +693,12 @@ export default function BodyMapping() {
 
         <div className="col-start-1 row-start-1 flex flex-col justify-end">
           {((mode === 'reveal' && allRevealed) || mode === 'select') && (
-            <button type="button" onClick={ctaClick} className={CTA_CLASS}>
+            <button
+              type="button"
+              onClick={ctaClick}
+              disabled={narrateOn && narrating}
+              className={CTA_CLASS + (narrateOn && narrating ? ' opacity-50 cursor-not-allowed' : '')}
+            >
               {mode === 'reveal' ? 'Continue' : 'Done'}
             </button>
           )}

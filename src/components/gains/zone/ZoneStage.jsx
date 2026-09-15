@@ -15,7 +15,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 const SCENE_KEY = 'ZoneWalk'
 
 const ZoneStage = forwardRef(function ZoneStage(
-  { zoneId, base, spriteBase, frogUrl, reducedMotion = false, onEvent, progress, paused = true, started = false },
+  { zoneId, base, mapFile = 'map.webp', spriteBase, frogUrl, reducedMotion = false, onEvent, progress, paused = true, started = false },
   ref,
 ) {
   const containerRef = useRef(null)
@@ -62,13 +62,15 @@ const ZoneStage = forwardRef(function ZoneStage(
           height: 1920,
           backgroundColor: '#1a1330',
           scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-          fps: { target: 60 },
           render: { antialias: true, powerPreference: 'high-performance' },
           scene: [Scene],
         })
         game.registry.set('zoneConfig', {
           zoneId,
-          mapUrl: `${base}/map.webp`,
+          // Draft 83: `mapFile` defaults to 'map.webp' (every zone so far),
+          // overridable for Zone 1's two differently-named plates sharing
+          // one `base` folder.
+          mapUrl: `${base}/${mapFile}`,
           travelerUrls,
           sparkUrls: [1, 2, 3, 4].map((i) => `${sb}/spark/flicker-${i}.webp`),
           frogUrl, // optional -- only Zone 4's pond has a frog
@@ -107,7 +109,7 @@ const ZoneStage = forwardRef(function ZoneStage(
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoneId, base, spriteBase, frogUrl, reducedMotion])
+  }, [zoneId, base, mapFile, spriteBase, frogUrl, reducedMotion])
 
   useEffect(() => {
     const s = scene()

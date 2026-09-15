@@ -19,6 +19,9 @@ import FeedbackButton from '../FeedbackButton.jsx'
 import { GAINS_FEEDBACK_SECTIONS } from '../../pages/gainsFeedbackSections.js'
 
 export const REVIEW_VIDEOS = [
+  // Draft 83: the new game-opening video (Zone 1's intro plate, plays when
+  // you reach Spark there), replacing the old Exposition card.
+  { title: 'Intro — Welcome to Shadowmend', id: '1227051194', h: '8c2fcaf83f', section: 'video-0' },
   { title: 'Zone 1 — What is Trauma', id: '1223215595', h: '2b10eb8857', section: 'video-1' },
   { title: 'Zone 2 — The Four Reactions', id: '1223210105', h: '315f412718', section: 'video-2' },
   { title: 'Zone 3 — Getting the Best Therapy', id: '1223207965', h: 'd0c77b8f23', section: 'video-3' },
