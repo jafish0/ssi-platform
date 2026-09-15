@@ -11,14 +11,21 @@
 // the class can't be declared at module top level.
 //
 // Vertical, no-fail ascent driven by collection: the player steers a
-// lower-centre bird with one thumb and gathers "connection" orbs that
+// lower-centre flyer with one thumb and gathers "connection" lights that
 // descend from the top of the channel. Each connection lifts the climb a
 // little (the world pans from dark bottom → gold top as connections are
 // gathered — understanding brightens the world). Reaching the GOAL count of
 // connections = arriving at the light: a warm bloom plays and
-// `onComplete({ motesCollected })` fires. Missing an orb costs nothing and
-// the bird is clamped to the open channel, so it can never crash, stall, or
-// fail — only take longer.
+// `onComplete({ motesCollected })` fires. Missing a connection costs nothing
+// and the flyer is clamped to the open channel, so it can never crash,
+// stall, or fail — only take longer.
+//
+// Draft 81: the flyer is the Traveler in the Wingsuit (was a placeholder
+// bird) and the plates are the Mistfields chasm/bridge → clouds → Bright
+// Reaches (was a generic ravine) now that this is the real Zone 3 exit, not
+// just a standalone prototype. `birdUrl`/`this.bird` keep their names below
+// (the mechanic -- steer, bank, collect -- is unchanged) but render the new
+// art.
 //
 // The scene idles (bird bobs, ambient motes rise) until React flips the
 // registry flag `traversalStarted` — that gates the flight behind the
@@ -28,17 +35,20 @@
 //   { bgUrl, fgUrl, birdUrl, musicUrl, sfxCollectUrl, goal,
 //     reducedMotion, palette, onComplete }
 
-// Source art is 768×1376; the game renders at a fixed 540×960 (9:16) base
+// Source art is 1296×2304; the game renders at a fixed 540×960 (9:16) base
 // and Phaser's Scale.FIT handles the device — so all layout math below is
 // in stable base-pixel coordinates and needs no resize recompute.
 const GAME_W = 540
 const GAME_H = 960
-const PLATE_RATIO = 1376 / 768 // height / width of the source plates
+const PLATE_RATIO = 2304 / 1296 // height / width of the source plates
 
 const DEFAULTS = {
   goal: 50,
   reducedMotion: false,
-  palette: { bloom: 0xfff3d0, mote: 0xffd27a, ink: 0x05070e },
+  // Draft 81: 0xffe3a0 matches the "warm gold light" used everywhere else
+  // in GAINS (the Ascent's gold feelings, Zone 4/3's light-path motes) --
+  // was a more orange 0xffd27a.
+  palette: { bloom: 0xfff3d0, mote: 0xffe3a0, ink: 0x05070e },
 }
 
 export function makeTraversalScene(Phaser) {
@@ -111,6 +121,34 @@ export function makeTraversalScene(Phaser) {
 
       this.positionPlates(0)
 
+      // --- mist wisps near the chasm floor, thinning as you rise (Draft
+      // 81): screen-blended, low-alpha, so breaking into the Bright Reaches
+      // reads as clearing the mist. Under reduced motion they hold still
+      // but still thin with real progress (same precedent as the plates
+      // panning below, which isn't gated on `reduced` either).
+      this.makeMistTexture()
+      this.mist = []
+      for (let i = 0; i < 6; i++) {
+        const x = Phaser.Math.Between(GAME_W * 0.12, GAME_W * 0.88)
+        const y = GAME_H * (0.55 + Math.random() * 0.4)
+        const w = this.add.image(x, y, 'mist-wisp').setDepth(8).setBlendMode('SCREEN')
+        const s2 = 0.9 + Math.random() * 0.6
+        w.setScale(s2, s2 * 0.8)
+        w.baseAlpha = 0.3 + Math.random() * 0.25
+        w.setAlpha(w.baseAlpha)
+        if (!this.reduced) {
+          this.tweens.add({
+            targets: w,
+            x: w.x + Phaser.Math.Between(-40, 40),
+            duration: 5200 + Math.random() * 2600,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.inOut',
+          })
+        }
+        this.mist.push(w)
+      }
+
       // --- ambient rising motes (skipped under reduced motion) ---
       if (!this.reduced) {
         this.ambient = this.add
@@ -129,15 +167,18 @@ export function makeTraversalScene(Phaser) {
           .setDepth(20)
       }
 
-      // --- bird ---
+      // --- the Traveler, gliding in the Wingsuit (Draft 81; was a bird) ---
+      // Source art is 1278×1427; 0.1 puts its wingspan (~128px) about 14%
+      // wider than the old bird's ~112px footprint (560px @ 0.2), matching
+      // the extra detail without dwarfing the channel.
       this.bird = this.add
         .image(GAME_W / 2, this.baseY, 'bird')
         .setDepth(45)
-        .setScale(0.2)
+        .setScale(0.1)
       if (!this.reduced) {
         this.tweens.add({
           targets: this.bird,
-          scaleY: 0.185,
+          scaleY: 0.0925,
           duration: 430,
           yoyo: true,
           repeat: -1,
@@ -365,6 +406,10 @@ export function makeTraversalScene(Phaser) {
         this.p += (targetP - this.p) * 0.06
         this.positionPlates(this.p)
       }
+      if (this.mist && this.mist.length) {
+        const mistFactor = clamp(1 - this.p * 1.8, 0, 1)
+        for (const w of this.mist) w.setAlpha(w.baseAlpha * mistFactor)
+      }
 
       // steering + bob
       if (!this.reduced) {
@@ -411,6 +456,31 @@ export function makeTraversalScene(Phaser) {
       g.fillCircle(R, R, 3)
       g.generateTexture('mote', R * 2, R * 2)
       g.destroy()
+    }
+
+    // A soft, horizontally-stretched lavender blob (Mistfields palette) for
+    // the clearing-mist wisps.
+    makeMistTexture() {
+      if (this.textures.exists('mist-wisp')) return
+      const W = 220
+      const H = 90
+      const tex = this.textures.createCanvas('mist-wisp', W, H)
+      if (!tex) return
+      const ctx = tex.getContext()
+      ctx.save()
+      ctx.translate(W / 2, H / 2)
+      ctx.scale(1, H / W)
+      const r = W / 2
+      const grd = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+      grd.addColorStop(0, 'rgba(196,178,232,0.55)')
+      grd.addColorStop(0.55, 'rgba(196,178,232,0.22)')
+      grd.addColorStop(1, 'rgba(196,178,232,0)')
+      ctx.fillStyle = grd
+      ctx.beginPath()
+      ctx.arc(0, 0, r, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+      tex.refresh()
     }
 
     makeVignetteTexture(ink) {

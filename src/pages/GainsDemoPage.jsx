@@ -164,7 +164,7 @@ const REVIEW_ARCADES = [
 ]
 
 const REVIEW_GEAR_POINTS = [
-  'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Lens. In the Mistfields it grows bird-of-light wings (a reskin of the existing bird traversal, with no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
+  'Everything you earn is one growing toolkit, not scattered pickups. It starts as a simple Lantern (Spark’s gift). Each psychoed character teaches a skill and gives you a part; the parts combine the Lantern into the Focusing Lens. In the Mistfields it grows bird-of-light wings (a reskin of the existing flight traversal, with no mechanical change). At the summit, the fully-built kit lights the Beacon at the Summit of Mount Hope.',
   'Intent for comment: tools grow stronger the more they’re used (practice), and the real power is in combining them. That is the coping-skills-toolbox idea.',
 ]
 
@@ -317,7 +317,7 @@ const ZONES = [
     },
     gear: 'A Wingsuit — lets you take flight.',
     traversal: {
-      text: 'The bird flight, “the power of connections.” Gather connections to climb from the Mistfields up to the Bright Reaches.',
+      text: 'The Wingsuit flight, “the power of connections.” Gather connections to climb from the Mistfields up to the Bright Reaches.',
       playable: true,
     },
     goal: 'Normalize and instill hope; bridge toward getting help.',
@@ -579,9 +579,9 @@ export default function GainsDemoPage() {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[760px]">
           <PrototypeCard
-            img="/gains/traversal/ravine-bg.webp"
+            img="/gains/traversal/flight-bg.webp"
             title="The Flight — Zone 3 → 4"
-            blurb="One-thumb bird flight. Gather 50 connections to reach the light."
+            blurb="One-thumb glide in the Wingsuit. Gather 50 connections to reach the light."
             href="/gains-demo/traversal"
           />
           <PrototypeCard

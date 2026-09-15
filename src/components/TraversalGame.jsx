@@ -28,9 +28,12 @@ const MODES = {
     loadScene: () =>
       import('../game/traversalScene.js').then((m) => m.makeTraversalScene),
     assets: {
-      bgUrl: '/gains/traversal/ravine-bg.webp',
-      fgUrl: '/gains/traversal/ravine-fg.png',
-      birdUrl: '/gains/traversal/bird.png',
+      // Draft 81: the Mistfields→Bright Reaches plates + the Traveler in
+      // the Wingsuit, replacing the placeholder ravine + bird now that this
+      // is the real Zone 3 exit (and not just the standalone prototype).
+      bgUrl: '/gains/traversal/flight-bg.webp',
+      fgUrl: '/gains/traversal/flight-fg.png',
+      birdUrl: '/gains/traversal/traveler-glide.png',
       musicUrl: '/gains/traversal/audio/music-ascent-loop.mp3',
       sfxCollectUrl: '/gains/traversal/audio/sfx-collect.mp3',
     },
