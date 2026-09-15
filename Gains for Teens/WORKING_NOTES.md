@@ -132,6 +132,31 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **6c411a2** (2026-09-15, sfx fix **f5f6a16**) — Draft 83: **Zone 1, "The
+  Dark Abyss," joins Zones 3/4 as a walkable zone -- and it opens the
+  game.** New template capability: an **`introPlate`** a zone config can
+  carry, for a first, simpler plate that plays before the normal loop.
+  Zone 1's intro is a long, empty walk up to Spark with **no arrival
+  lock** -- the tap-to-walk cue shows immediately, and Spark beckons
+  once, then again on ~8s of idling, until you reach him. Tapping him
+  plays the welcome video in-frame; on `ended`, a soft-bloom cut swaps
+  in the main plate (the Mirror Pool) with a full progress reset, and
+  the normal arrival-lock flow takes over from there: Video 1, Body
+  Mapping at the pool (now narrated by Spark line-by-line -- and, per
+  Josh's ask while reviewing, **you have to hear each region's full
+  line, and the closing line, before you can move to the next one or
+  hit Continue**), the Lantern (first gear -- HUD starts all-empty),
+  and The First Light (Draft 82) as the exit, carrying the same
+  ambience across the hand-off instead of restarting it. End card is a
+  disabled "Continue to the Lantern Path" placeholder since Zone 2
+  doesn't exist yet. Two real bugs turned up in testing and are fixed
+  in the same push: the main plate was resolving to Zone 4's geometry
+  instead of its own (a `zoneId` collision -- `zone.id` alone wasn't a
+  key the walkable-scene registry recognized once a second plate was
+  in play), and Zone 1's sound effects were silently 404ing (no sfx/
+  folder of its own; needed the same `sfxBase` borrow-from-Zone-4
+  pattern Zone 3 already uses). Zones 3 and 4 were regression-tested
+  and play identically to before.
 - **40d0a97** (2026-09-15) — Draft 82: **"The First Light" -- a lantern-lit
   tap-to-move reveal through the dark.** A third traversal (Zone 1 -> Zone
   2), distinct from the flight (steer+collect) and the climb (steer+blast):
@@ -4321,7 +4346,7 @@ A third traversal mini-game, distinct from the flight (steer + collect) and the 
 *End of Draft 82.*
 
 
-### Draft 83 — Zone 1 "The Dark Abyss" walkable zone: two connected plates (arrival + main), the intro video, Body Mapping with narration at the Mirror Pool, the Lantern, and The First Light as the exit
+### Draft 83 — Zone 1 "The Dark Abyss" walkable zone: two connected plates (arrival + main), the intro video, Body Mapping with narration at the Mirror Pool, the Lantern, and The First Light as the exit — ✅ SHIPPED f5f6a16 (2026-09-15)
 
 Zone 1 is the opening of the game. Build it on the zone-config template (Draft 80) with one new capability — an **intro plate** — and use the new First Light traversal (Draft 82) as the exit. Design doc: the Zone 1 prep package, Part B.
 
