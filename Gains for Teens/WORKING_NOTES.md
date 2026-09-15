@@ -132,6 +132,24 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **c6dbee8** (2026-09-14) — Draft 81: **flight traversal art upgrade.**
+  `TraversalGame mode="flight"` now renders the real Mistfields→Bright
+  Reaches plates (chasm + broken bridge → clouds → the golden summit +
+  beacon) with the Traveler in the Wingsuit gliding/banking in place of the
+  placeholder bird + ravine, at a scale sized ~10-15% larger than the old
+  bird's footprint (`PLATE_RATIO` updated for the new plates' aspect too).
+  Two polish passes: the connection lights are retinted to the warm gold
+  (`0xffe3a0`) used everywhere else in GAINS instead of a more orange tint,
+  and soft lavender mist wisps now drift near the chasm floor and thin out
+  as you climb, gone by the cloud layer -- breaking into the Bright Reaches
+  reads as clearing the mist (static under reduced motion, same precedent
+  as the plates panning). Old ravine/bird files removed; the demo hub's
+  "Playable traversals" thumbnail + blurb updated to match. Upgrades both
+  the standalone `/gains-demo/traversal` prototype and the Zone 3 exit
+  (Draft 80). Verified in the browser in both places: undistorted pan
+  chasm→clouds→gold, mist visibly thinning, arrival bloom + onComplete
+  unchanged (50/50 connections reached in both), clean console.
+
 - **b2978fa** (2026-09-14) — Draft 80: **Zone 3 "The Mistfields" walkable
   zone -- the template goes data-driven.** The second instance of the
   walkable-zone template (Zone 4, Draft 68-70/75): the path climbs from an
@@ -4222,3 +4240,28 @@ Refactor so a zone is a **config object**, not a bespoke page: `src/components/g
 **Verify.** Zone 4 still plays identically from its config. `/gains-demo/zone3`: Begin → "Welcome to the Mistfields" + arrive line; walk the path (stone) and verges (grass), can't enter the chasm/bridge; Spark → Video 3 in-frame → follow-me → companion glides to the waystone; waystone → Message to Your Guardian → `onComplete` → GearAward (Wingsuit reveal → Equip → celebrate figure → HUD slot fills) → ready line, bridge exit glows, path lights up; exit → "headed for the Bright Reaches" + VO → the **flight** runs in-frame → end card with Continue to Zone 4 + Play again; the five mist overlays animate with correct blends; ambience loops; redirects fire on wrong-order taps; review card + `review-zone3` tag work; clean console; Ready for Roots unaffected; clean build. `src/game/`, `src/components/`, `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 80.*
+
+
+### Draft 81 — Flight traversal art upgrade: Traveler in the Wingsuit replaces the bird; Mistfields→Bright Reaches plates replace the ravine; gold "connection" lights + clearing mist — ✅ SHIPPED c6dbee8 (2026-09-14)
+
+The flight traversal (`TraversalGame mode="flight"`, `src/game/traversalScene.js`) is now the Zone 3→4 exit, so its old bird + Alto-vector ravine look breaks the world. New painterly assets are ready; the mechanic is unchanged.
+
+**Assets (source `Gains for Teens/Walkable Zones/Zone 3/` → served `public/gains/traversal/`):**
+- `flight-bg.png` (1296×2304) → `flight-bg.webp` — the journey plate: Mistfields chasm + the broken bridge at the **bottom**, a pink cloud layer in the **middle**, the golden Bright Reaches + beacon at the **top**. Same structure as the old ravine (dark bottom → gold top, open channel up the center), so the existing pan-with-progress reads perfectly.
+- `sprites/flight-fg.png` (1296×2304, transparent channel/sky) → `flight-fg.png` — the near cliff walls framing the sides, tapering to nothing by the top third.
+- `sprites/traveler-wingsuit-glide.png` (transparent, symmetric, facing up) → `traveler-glide.png` — replaces the bird. Same top-down camera; banking is still done by the existing rotation lerp.
+- Update the `flight` asset config in `src/components/TraversalGame.jsx`: `bgUrl`, `fgUrl`, `birdUrl` → the new files. Remove the old `ravine-bg.webp` / `ravine-fg.png` / `bird.png` from `public/` if nothing else references them (keep copies under a `_old/` in the source folder if you like).
+- **`PLATE_RATIO`**: the new plates are 2304/1296 (1.778) vs the old 1376/768 (1.792) — update the constant so nothing stretches.
+
+**Sprite scale.** Size the Traveler so its wingspan is roughly the bird's footprint — maybe 10–15% larger since it carries more detail — and keep the pivot at the sprite center so banking rotation looks right. Keep the idle bob.
+
+**Polish (procedural, no art):**
+1. **"Connection" orbs → warm gold lights.** Restyle the collectibles to match the gold light-motes / air-blooms elsewhere (pale gold core, soft warm glow), with the same collect burst. They're "the people who lift you," per Spark's line — warm, not neon.
+2. **Mist that clears as you climb.** Soft, slow-drifting lavender mist wisps (screen-blended, low alpha) near the bottom of the channel at the start, thinning with progress and gone by the cloud layer — so breaking into the Bright Reaches feels like clearing the mist. Reduced-motion: static faint wisps or none.
+3. Keep the arrival bloom at the top; if easy, tint it to the plate's gold.
+
+This upgrades **both** places the flight appears: the standalone `/gains-demo/traversal` prototype and the Zone 3 exit (Draft 80).
+
+**Verify.** On `/gains-demo/traversal` and at the end of `/gains-demo/zone3`: the Traveler in the Wingsuit glides (banks on steer, bobs idle) up a channel between misty cliff walls; the world pans from the chasm/bridge through clouds to the golden Bright Reaches as connections are gathered; plates are undistorted edge to edge; collectibles are warm gold lights; mist wisps thin out as you rise; arrival bloom + `onComplete` unchanged; no leftover references to the old ravine/bird files; clean console; clean build. `src/game/` + `src/components/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 81.*
