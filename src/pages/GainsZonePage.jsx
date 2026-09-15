@@ -332,6 +332,12 @@ export default function GainsZonePage({ zone }) {
     clearBeckonTimer()
     transitionTo('walk', () => {
       setPlatePhase('main')
+      // lockAndArrive() below calls say('arrive') in this same tick, before
+      // React re-renders and updates platePhaseRef itself (see the effect
+      // above) -- without this, say() would still read the stale 'intro'
+      // value and look up 'arrive' in introPlate.vo (no such key), silently
+      // no-op the lock and the VO (Draft 84 bugfix).
+      platePhaseRef.current = 'main'
       setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
       setRunKey((k) => k + 1)
       lockAndArrive()

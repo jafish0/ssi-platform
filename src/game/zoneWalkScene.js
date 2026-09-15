@@ -35,11 +35,20 @@
 const W = 1080
 const H = 1920
 
-// Traveler on-screen height at depth-scale 1 (the bottom of the path). The
-// exported frames are all 560px tall with the feet on the canvas bottom, so
-// one scale factor + origin (0.5, 1) aligns every direction's baseline.
-const FIG_H = 250
-const SRC_FIG_H = 560
+// Traveler on-screen height at depth-scale 1 (the bottom of the path).
+// Draft 84: this used to be paired with a SRC_FIG_H assumed-shared source
+// height (560px) and one scale factor applied to every frame -- true for
+// Zone 3/4's asset set, but Zone 1's own frames vary source height by
+// direction (idle vs walk-back vs walk-front vs walk-side all differ), so a
+// shared ratio rendered them at different on-screen sizes. applyTravelerScale()
+// now derives the scale from whichever frame is actually on screen (Phaser
+// keeps `sprite.height` current on every setTexture()/animation frame), so
+// every frame always displays at exactly TRAVELER_H * depthScale regardless
+// of its source PNG's height.
+const TRAVELER_H = 250
+// One-time calibration used only to keep the shadow's size unchanged (the
+// shadow is a plain procedural ellipse, not tied to any Traveler source PNG).
+const SHADOW_SCALE_AT_1 = (TRAVELER_H / 560) * 3.1
 const SPARK_H = 180
 // Draft 69: Spark's frames are the alpha flame cut-outs (194x255), drawn in
 // NORMAL blend with a soft additive halo behind -- the on-black ADD frames
@@ -208,42 +217,61 @@ const ZONE1_INTRO = {
 // Plate 2, the main map: the passage from Plate 1 lets out at the top of
 // this one (same palette/path stone -- Plate 1's exit and this entry are
 // the two sides of one doorway). Spark is now a short way off; the
-// station is the Mirror Pool (a wide, mostly-full-width basin, so the
-// path hugs its LEFT edge rather than the centerline); the exit is the
-// head of the stone steps.
+// station is the Mirror Pool's top (far) bank, where the stone steps come
+// down to meet the water; the exit is the head of those steps.
+//
+// Draft 84 rebuild: the pool ellipse below is fitted to the actual art (the
+// candle-ring in public/long-light/zone1/ov/plate2/layer-candles.svg and the
+// poolSheen ellipse in layer-pool.svg both independently converge on this
+// footprint -- the previous {680,880,rx240,ry110} was ~180px off from where
+// the water actually is, which is why it used to be walkable straight
+// through). The route is now a real ring: an entry stem down to a
+// near-bank junction, two arcs around the pool (each point verified clear
+// of the ellipse with margin), rejoining at the top-bank landing station,
+// then up the switchback stairs (waypoints are the actual stair-candle
+// positions from layer-candles.svg) to the exit.
 const ZONE1_MAIN = {
   spots: {
     start: { x: 540, y: 1780 },
     sparkWait: { x: 300, y: 1300 },
     sparkStand: { x: 460, y: 1300 },
-    pond: { x: 420, y: 880 },
+    pond: { x: 586, y: 563 },
     exit: { x: 785, y: 120 },
     exitStand: { x: 740, y: 220 },
   },
-  // Spark's glide-to-the-pool target, and where the exit's light-path
-  // starts (the bank, heading up toward the steps).
-  pondHover: { x: 460, y: 850 },
-  // The Mirror Pool. Not centered under the path -- the path passes its
-  // LEFT edge, per "just off the path" (see the polys/nodes below).
-  pond: { x: 680, y: 880, rx: 240, ry: 110 },
+  // Spark's glide-to-the-station target, hovering just off the landing.
+  pondHover: { x: 630, y: 535 },
+  // The Mirror Pool -- fitted to the candle ring (see comment above).
+  pond: { x: 586, y: 793, rx: 340, ry: 200 },
   polys: [
     [[390, 1780], [690, 1780], [690, 1550], [390, 1550]],
     [[390, 1550], [690, 1550], [650, 1300], [350, 1300]],
-    [[350, 1300], [650, 1300], [630, 1050], [330, 1050]],
-    [[330, 1050], [630, 1050], [650, 800], [350, 800]],
-    [[350, 800], [650, 800], [710, 580], [410, 580]],
-    [[410, 580], [710, 580], [800, 380], [500, 380]],
-    [[500, 380], [800, 380], [890, 200], [590, 200]],
-    [[590, 200], [890, 200], [860, 120], [710, 120]],
+    [[350, 1300], [650, 1300], [630, 1150], [370, 1150]],
+    [[370, 1150], [630, 1150], [966, 1023], [206, 1023]],
+    // The pool clearing: a generous rectangle spanning both arcs: the
+    // `pond` ellipse above carves the water itself out of it.
+    [[150, 1050], [1020, 1050], [1020, 530], [150, 530]],
+    [[450, 563], [750, 563], [820, 350], [480, 350]],
+    [[480, 350], [820, 350], [900, 120], [560, 120]],
   ],
   grassPolys: [],
   nodes: [
-    [540, 1780], [540, 1550], [500, 1300], [480, 1050], [500, 800],
-    [560, 580], [650, 380], [740, 200], [785, 120],
+    [540, 1780], [540, 1550], [500, 1300], [520, 1150],
+    [586, 1023], // near-bank junction
+    [332, 956], [226, 793], [332, 630], // left arc, low -> wide -> high
+    [840, 956], [946, 793], [840, 630], // right arc, low -> wide -> high
+    [586, 563], // top-bank landing (= spots.pond)
+    [688, 412], [592, 363], [699, 256], // switchback stair candles
+    [785, 120], // exit
   ],
-  edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8]],
-  // The exit's "path lights up" runs from the pool's level up to the steps.
-  lightPathNodes: [4, 5, 6, 7, 8],
+  edges: [
+    [0, 1], [1, 2], [2, 3], [3, 4],
+    [4, 5], [5, 6], [6, 7], [7, 11],
+    [4, 8], [8, 9], [9, 10], [10, 11],
+    [11, 12], [12, 13], [13, 14], [14, 15],
+  ],
+  // The exit's "path lights up" runs from the top-bank landing to the exit.
+  lightPathNodes: [11, 12, 13, 14, 15],
   depth: { yNear: 1780, yFar: 120, sNear: 1.0, sFar: 0.58 },
 }
 
@@ -562,18 +590,22 @@ export function makeZoneWalkScene(Phaser) {
 
     placeTraveler(x, y) {
       const s = this.depthScale(y)
-      const k = (FIG_H / SRC_FIG_H) * s
       this.traveler.setPosition(x, y)
-      this.travelerBase = k
+      this.travelerDisplayH = TRAVELER_H * s
       this.applyTravelerScale()
       this.traveler.setDepth(y)
-      this.shadow.setPosition(x, y + 4 * s).setScale(k * 3.1, k * 3.1).setDepth(y - 0.5)
+      this.shadow.setPosition(x, y + 4 * s).setScale(SHADOW_SCALE_AT_1 * s, SHADOW_SCALE_AT_1 * s).setDepth(y - 0.5)
       this.dust.setDepth(y - 0.2)
     }
 
     applyTravelerScale() {
-      const k = this.travelerBase || FIG_H / SRC_FIG_H
+      const displayH = this.travelerDisplayH || TRAVELER_H
       const bobK = this.moving || !this.bob ? 1 : 1 + 0.014 * this.bob.v
+      // Derived from this sprite's own current native frame height (Phaser
+      // keeps it current on setTexture()/animation-frame-advance), never a
+      // shared source-height guess -- so a mismatched source PNG can never
+      // change this frame's on-screen size.
+      const k = displayH / this.traveler.height
       this.traveler.setScale(k, k * bobK)
     }
 

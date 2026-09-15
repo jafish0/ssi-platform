@@ -32,8 +32,12 @@
 const W = 1080
 const H = 1920
 
-const FIG_H = 250
-const SRC_FIG_H = 560
+// Draft 84: derived per-frame from the sprite's own live native height (see
+// applyTravelerScale()) rather than a shared source-height ratio -- Zone 1's
+// Traveler frames aren't all the same source height, so a shared ratio
+// rendered some frames larger than others (most visibly idle vs walking).
+const TRAVELER_H = 250
+const SHADOW_SCALE_AT_1 = (TRAVELER_H / 560) * 3.1
 const SPARK_H = 180
 const SPARK_SRC_H = 255
 const SPARK_ALPHA = 0.96
@@ -546,18 +550,22 @@ export function makeFirstLightScene(Phaser) {
 
     placeTraveler(x, y) {
       const s = this.depthScale(y)
-      const k = (FIG_H / SRC_FIG_H) * s
       this.traveler.setPosition(x, y)
-      this.travelerBase = k
+      this.travelerDisplayH = TRAVELER_H * s
       this.applyTravelerScale()
       this.traveler.setDepth(H + 50)
-      this.shadow.setPosition(x, y + 4 * s).setScale(k * 3.1, k * 3.1).setDepth(H + 49)
+      this.shadow.setPosition(x, y + 4 * s).setScale(SHADOW_SCALE_AT_1 * s, SHADOW_SCALE_AT_1 * s).setDepth(H + 49)
       this.dust.setDepth(H + 45)
     }
 
     applyTravelerScale() {
-      const k = this.travelerBase || FIG_H / SRC_FIG_H
+      const displayH = this.travelerDisplayH || TRAVELER_H
       const bobK = this.moving || !this.bob ? 1 : 1 + 0.014 * this.bob.v
+      // Derived from this sprite's own current native frame height (Phaser
+      // keeps it current on setTexture()/animation-frame-advance), never a
+      // shared source-height guess -- so a mismatched source PNG can never
+      // change this frame's on-screen size.
+      const k = displayH / this.traveler.height
       this.traveler.setScale(k, k * bobK)
     }
 
