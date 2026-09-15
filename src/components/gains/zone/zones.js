@@ -64,6 +64,9 @@ export const ZONES = {
       { key: 'stepsGlow', file: 'layer-steps-glow.svg', blend: 'screen' },
     ],
     overlaySub: 'plate2', // ZoneOverlays fetches `${base}/ov/${overlaySub}/${file}`
+    // Zone 1 has no sfx/ folder of its own -- footsteps/chime/whoosh are
+    // generic enough to borrow from Zone 4, same as Zone 3 does below.
+    sfxBase: '/long-light/zone4',
     sfxPreload: ['step-stone-1', 'step-stone-2', 'step-stone-3', 'chime-unlock', 'spark-whoosh', 'ui-tap', 'equip-flash', 'arrive-swell'],
     // Spark's lines (voice F), VERBATIM from
     // `Gains for Teens/Walkable Zones/Zone 1/Zone 1 — Prep Package (traversal design + VO + prompts).md`.
