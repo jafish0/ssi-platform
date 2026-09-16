@@ -132,6 +132,24 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **223481d** (2026-09-16) — Draft 88: **Swap in the re-rendered Videos
+  1-5 everywhere.** New Vimeo id + hash for each of the five zone
+  psychoeducation videos (Josh's 9/11-edit re-renders with the new
+  Spark cutout); Video 0 (the intro) is unchanged. Wired into
+  `REVIEW_VIDEOS` (`reviewVideos.jsx`, feeding both `/gains-demo/videos`
+  and the demo's review section) and the Zone 1/3/4 configs in
+  `zones.js`. Note: the "old ids to grep for" in the draft had drifted
+  slightly from what was actually wired (Video 1 had already been
+  swapped once since that log entry) -- matched every site by the
+  video's own title/topic instead of the literal old id string, then
+  confirmed zero old ids of any vintage remain in `src/`. Also
+  re-copies the re-recorded `t1-03-shape.mp3` (Draft 87 item 6's
+  signpost line) from its source folder into `public/`. Verified live:
+  all six players on `/gains-demo/videos` load the new renders (new
+  Spark cutout visible on each), and Zones 1/3/4's in-game videos each
+  load their new id via the walkable-zone flow; the new signpost audio
+  returns 200 and plays with a clean console. `src/pages/`, `src/game/`
+  → no version bump.
 - **3b20fe3** (2026-09-16) — Draft 87: **Zone template movement lock +
   narration courtesy; The First Light polish, from Josh's second
   play-through.** Ten items. Zone template (Zones 1/3/4):
@@ -4599,3 +4617,54 @@ Josh played Zone 1 and the redesigned First Light (Drafts 84/85). Ten items.
 **Verify.** Zone 1: after Video 1 the Traveler can't move until follow-me ends; Body Mapping's last line finishes before the Lantern appears; same lock holds for arrive/ready in Zones 3/4. First Light: visible pulsing glimmers from the first frame; tap ring appears on every tap; walking past a lamp lights it with the larger bloom and the Traveler stops and faces it; `t1-02/03/04/05` all fire once at their beats; the signpost resolves first and plays the (new) shape line; crest opens after six lamps with no random tapping needed. Clean console; clean build. `src/game/`, `src/components/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 87.*
+
+
+### Draft 88 — Swap in the re-rendered Videos 1–5 everywhere (review videos page + zone configs) — ✅ SHIPPED 223481d (2026-09-16)
+
+Josh re-rendered all five zone videos in Claude Design with the 9/11 edits and the new Spark cutout. Replace the Vimeo ids and hashes **everywhere they appear**: `REVIEW_VIDEOS` in `GainsDemoPage.jsx` (and any dedicated videos page), the zone configs in `zones.js` (Zone 1's `video`, Zone 3's, Zone 4's), and any zone card / prototype card that embeds a player. Video 0 is unchanged.
+
+| Video | New id | New h |
+|---|---|---|
+| 1 — What is Trauma | `1227441876` | `651daacb8a` |
+| 2 — The Four Reactions | `1227442904` | `46f782197e` |
+| 3 — You're Not Alone / Getting the Best Therapy | `1227443944` | `a507d992ff` |
+| 4 — What Therapy Actually Feels Like | `1227445659` | `3a88ca76d5` |
+| 5 — Growth Mindset | `1227447165` | `f4fe21450f` |
+| 0 — Intro (unchanged) | `1227051194` | `8c2fcaf83f` |
+
+Grep for each old id (`1223203599`, `1223210105`, `1223207965`, `1223708060`, `1223211325`) to be sure nothing is missed, including the Videos review page's per-video comment boxes (`video-1..5` tags stay the same). Also logged in `Gains for Teens/Videos/Video links (final renders).md`.
+
+**Verify.** Every player on the videos page and inside Zones 1, 3, 4 loads the new render (the new Spark cutout is the visible tell); captions show from Vimeo; comment tags unchanged; no old id remains in `src/`. `src/pages/`, `src/game/` → no version bump. Log Recently-shipped + mark shipped.
+
+**Addendum (2026-09-16):** the re-recorded `t1-03-shape.mp3` (signpost line, Draft 87 item 6) is now in `Walkable Zones/Zone 1/`. Re-copy it to `public/gains/firstlight/audio/` in this commit.
+
+*End of Draft 88.*
+
+
+### Draft 89 — Demo hub tidy-up: shorter header, review cards reordered (zones and videos first), Pre/Post moves to its own section after the map, Body Mapping's standalone page gets the narration, and four blurbs updated
+
+Josh's pass over `/gains-demo` before the next team round. Files: `GainsDemoPage.jsx`, `gainsReviewCards.js`, `GainsBodyMapPage.jsx` (or wherever `/gains-demo/bodymap` mounts `BodyMapping`).
+
+**1. Header.** Title `GAINS for Teens — Shadowmend / Long Light` → **`GAINS for Teens — Shadowmend`** (also `document.title` → `GAINS for Teens — Shadowmend · Team Demo`). **Delete** the intro paragraph ("An internal walkthrough of the intervention, laid out the way it plays… pick the section your comment is about.") and **delete** the line "The scroll-through concept pitch lives at /long-light/." The h1 stands alone above the dark panel.
+
+**2. Pre/Post test leaves the review section.** Remove the `prepost` card from `REVIEW_CARDS`. Add a new section **after the World and Development Map and before the Zone Cards**, in the same frosted-card style as the other canon sections: heading **"Pre/Post Test"**, one line — "The measures, paginated the way they'll be administered. Pre-test before Zone 1, post-test after the summit." — the two buttons (**Open the Pre-test** → `/gains-demo/pretest`, **Open the Post-test** → `/gains-demo/posttest`), and its own comment box on the existing `review-pretest` tag (keep the tag; history stays readable). The dedicated pretest/posttest pages keep repeating the current blurb at their tops.
+
+**3. Reorder the review cards** (renumber `n`): **Zone 1 · Zone 3 · Zone 4 · Videos · Body Mapping · Message to Your Guardian · Mindful Place · The Ascent · The First Light.** Update the order comment at the top of `gainsReviewCards.js`.
+
+**4. Body Mapping standalone page gets Spark's narration.** `/gains-demo/bodymap` still mounts the un-narrated version; pass `narrate` (the Draft 83 prop) so it plays every clip and gates the same way it does in Zone 1. Then replace its blurb with:
+"Spark narration added. Spark now reads the intro, names each body region as you tap it, and reads the closing line and the write-in prompt. You have to hear a region's line through before moving to the next. This is also wired into Zone 1 and testable there at the Mirror Pool."
+
+**5. Message to Your Guardian blurb** →
+"Spark narration added. Spark reads each step as it opens, and a Read to me button on the choice steps reads the options aloud one at a time. The 988 safety line plays through before you can continue. This is also wired into Zone 3 and testable there at the waystone."
+
+**6. Mindful Place blurb** →
+"Ready for final approval. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music), the breathing is guided by rings that expand and contract with Spark's count, the frog breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. This is also testable in the full Zone 4."
+
+**7. Videos blurb** →
+"All five zone videos were re-rendered from Friday's notes. Spark is the new clean cutout with a gentle flicker throughout. On-screen words now appear as Spark says them, and where text used to show early to fill the screen, Spark floats up larger instead. Video 1 says 'it can happen to you… or someone you love,' its opening words and examples are re-timed, and the stray mid-screen sentence is gone. Video 2 lost the closing line about the characters. Video 3's timing is tightened. Video 4's three bubbles are evenly spaced and 'Building your toolbox' is gone. Video 5 says 'It's your mindset,' the 'two pairs of glasses' text is out, the phrases highlight as Spark speaks, and the four bubbles sit two by two. A new intro video, Welcome to Shadowmend, opens Zone 1 and is first on the videos page. Each video has its own comment box."
+
+**Keep:** every other card's blurb and links verbatim; the round divider; the World and Development Map; the Zone Cards; the dev section; all feedback tags.
+
+**Verify.** `/gains-demo`: new title, no intro paragraph or pitch link; review cards in the new order, numbered 1–9; Pre/Post section sits between the map and the Zone Cards with both buttons and its comment box; `/gains-demo/bodymap` narrates and gates like Zone 1 does; the four updated blurbs read on their cards and at the top of their dedicated pages; nothing else moved. Clean console; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 89.*
