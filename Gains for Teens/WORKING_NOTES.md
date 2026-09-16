@@ -132,6 +132,23 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **a32fd40** (2026-09-16) — Zone 3: synced Spark's arrive-line caption
+  to the re-recorded VO (Josh re-recorded `z3-01-arrive.mp3` with new
+  opening wording -- "Oh! Something is changing..." -- the on-screen
+  Spark bubble now matches). In-conversation fix, no draft.
+- **c652334** (2026-09-16) — The First Light: two playtest fixes from
+  Josh. (1) The closing "you did that" line was getting cut off --
+  `onComplete` fired on a flat 2s post-bloom timer regardless of the
+  clip's actual length (~7s in the current recording); it now waits
+  for the line to actually finish (+300ms grace, ~12s hard cap) before
+  reporting back, same pattern as the zone template's activity -> gear
+  award courtesy. (2) Dropped the VO line tied to a shape resolving
+  ("it's just not working right") -- the visual reveal and the
+  heartbeat tension cue near an unresolved shape both stay, just
+  silent now. Verified live by instrumenting playVo/onComplete with
+  timestamps: the 6.92s arrive line now gets its full run plus grace
+  before onComplete fires, and no shape VO call ever fires.
+  In-conversation fix, no draft.
 - **71860ab** (2026-09-16) — Draft 89: **Demo hub tidy-up.** Header
   shortened to "GAINS for Teens — Shadowmend" (title tag too), and the
   walkthrough-explainer paragraph plus the /long-light/ pitch-site
