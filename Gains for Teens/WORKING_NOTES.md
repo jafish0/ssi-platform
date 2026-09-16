@@ -132,6 +132,30 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **c4f152a** (2026-09-16) — Draft 85: **The First Light, redesigned --
+  you bring the light to the lamps.** Flips Draft 82's premise: the
+  trail to the Lantern Path went dark, its six lamp posts (now painted
+  directly into a new route plate) stand unlit, and the Traveler
+  carries the first flame to relight them one by one. Each lamp's own
+  ~420px pool stays lit permanently behind you; your own ~220px circle
+  never grows. New route plate, positions, and all five VO lines
+  re-recorded; the ember/lamp sprites are retired (lamps are painted
+  in) and the fourth shape (a creature) is retired, down to three
+  (tree/boulder/signpost). Also fixes two real bugs surfaced while
+  rewriting this scene: (1) **the "ground not visible inside the
+  light" bug from Draft 82** -- a fuller-alpha plateau on the mask's
+  erase-stamp gradient; (2) the walkable area, which used to be
+  authored quads that badly overshot the trail's sharp S-curve bends
+  (caught by overlaying the math on the actual new plate before
+  shipping) -- rebuilt as a capsule ribbon around the route's node
+  polyline instead, which handles winding corners correctly by
+  construction. New beats: a lamp "raise" pause before it catches; a
+  temporary camera zoom-in on the halfway line so the three lit lamps
+  behind read clearly, then back; a staggered crest-lantern light-up
+  before the arrival bloom. Also fixed a latent replay bug (lit/
+  resolved flags lived on shared module-level data, not per-instance,
+  so a previous playthrough leaked into a replay). Zone 1's traversal
+  hand-off (shared ambience) and Zones 3/4 verified unaffected.
 - **edc10e9** (2026-09-15) — Draft 84: **Zone 1 first-play fixes, from
   Josh's own playthrough of Draft 83.** Five things: (1) the Mirror
   Pool station moves to the top bank (585,563), where the stone steps
@@ -4435,3 +4459,36 @@ Taps on the water → nearest walkable point on the rim (existing behavior). Tap
 **Verify.** `/gains-demo/zone1`: after Video 0, plate 2 appears and Spark's arrival line plays with the Traveler locked, then the tap cue shows; the Traveler is the same size standing and walking (arrival, every stop, before/after the video, and in The First Light); no blue fringe on the cloak edges; taps on the pool water walk you to its rim, never across it; you can walk around either side of the pool; the station tap target is the top bank landing below the steps and Body Mapping opens there; after the Lantern, the exit path follows the winding steps switchback by switchback to the top; Zones 3/4 unchanged; clean console; clean build. `src/game/`, `src/components/`, `public/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 84.*
+
+
+### Draft 85 — The First Light, redesigned: you bring the light to the lamps. New winding route plate, lamps cast the big pools (your circle stays small), a lit trail behind you, the crest lights in sequence, new Spark lines, and make the ground actually visible inside the light — ✅ SHIPPED c4f152a (2026-09-16)
+
+Josh played the Draft 82 build: the stage was a black void with a straight column of lamp silhouettes and no visible ground around the Traveler, and the premise was backwards (why walk to street lamps when you're carrying a lantern?). The redesign flips the meaning. **The trail up to the Lantern Path went dark. Its lamps still stand, unlit. You carry the first flame and relight them, one by one, for whoever comes after you.** Each lamp you light stays lit behind you, so by the crest the whole trail is a chain of light you left. Lesson: "every light you leave behind makes the way easier for the next person." Same route, mode, page, and file names as Draft 82; this changes the plate, the light model, the lamp objects, the shapes, the arrival, and the VO.
+
+**Assets (source `Gains for Teens/Walkable Zones/Zone 1/` → served `public/gains/firstlight/`):**
+- **`traversal1-route.png` — NEW plate (1296×2304, replaces the old one).** A trail winding in wide S-curves from bottom center to a crest, six unlit iron lamp posts painted into the plate on alternating sides, a wooden signpost (lower left), a mossy boulder (right, mid), a dead leaning tree (upper right), and strung lanterns at the crest, faintly lit. → `route.webp`. Reference markup with every position circled: `_src/traversal1-route v3 — positions marked.png`.
+- **VO — all five re-recorded, same file names:** `t1-01-start.mp3` (10.2s), `t1-02-first-ember.mp3` (7.3s), `t1-03-shape.mp3` (5.3s), `t1-04-halfway.mp3` (5.7s), `t1-05-arrive.mp3` (6.9s). Re-copy all five.
+- **Retire** `sprites/ember-unlit.png`, `sprites/lamp-lit.png` (the lamps are painted into the plate now) and `sprites/shape-creature.png` (three shapes, not four). Keep `shape-tree/boulder/signpost.png`.
+- Overlays (`overlays/traversal/`), heartbeat, Traveler stage-1 set (use the re-keyed Draft 84 files), Spark, ambience hand-off: unchanged.
+
+**Positions (1080×1920 logical; plate is the same 9:16 so it's a straight scale).** Entry (574, 1859). Lamp post bases, i.e. where the Traveler walks to, and lamp heads, where the flame/glow renders: L1 base (849, 1538) head (809, 1331) · L2 base (356, 1194) head (384, 1033) · L3 base (310, 918) head (319, 786) · L4 base (798, 763) head (784, 648) · L5 base (362, 505) head (370, 402) · L6 base (763, 344) head (757, 252). Crest arrival zone centered (712, 138). Shapes: signpost (241, 1377), boulder (826, 907), tree (953, 539). Walkable polygon = the painted trail, edge to edge, bottom to crest, following the S-curves; waypoints at each bend. Lamp bases sit just off the trail edge: the interaction radius (~90px) should reach them from the trail without the polygon having to include the rock they stand on.
+
+**1. Make the plate visible in the light — this is the bug from Draft 82.** Inside the Traveler's circle the ground must read clearly: dirt, stones, grass. Whatever the mask is doing now, the plate is not showing through (the screenshot was a solid void with only sprites visible). Check the erase alpha/blend on the RenderTexture, the draw order (mask above plate, below sprites), and that the darkness layer isn't fully opaque *and* the plate isn't being hidden by the mask's own fill. Target: a warm, feathered circle of clearly visible trail, ~220px radius, around the Traveler at all times; ~4% ambient elsewhere so the world is a presence rather than nothing.
+
+**2. The light model.** Three sources on the mask: (a) the **Traveler's lantern circle, fixed size** (~220px, never grows — this is the change from Draft 82); (b) **Spark's** small glow (~70px); (c) **each lit lamp's pool, ~420px radius, permanent**, warmer/brighter than the Traveler's. Lamp pools overlap along the trail so the lit stretch behind you reads as continuous.
+
+**3. Unlit lamps.** No sprite: the painted post is in the plate. Out in the dark, an unlit lamp shows only a **faint glimmer at its head** (a tiny warm dot, ~2px bloom, 20% alpha, gentle pulse) so the player has something to walk toward — always visible regardless of the mask. When the Traveler reaches the base: the Traveler faces the lamp (idle-back or side toward it), a short **lantern-raise beat (~0.5s)**, then the head **catches**: a flame sprite (reuse the ember/candle flicker from the overlays or a small additive sprite) + bloom + `chime-unlock`, and the pool opens on the mask over ~0.8s, revealing the trail around it and, usually, the next glimmer. Lit lamps flicker gently forever. The count HUD (if kept) reads "Lamps lit 1/6".
+
+**4. Shapes (three).** Silhouettes over the signpost, boulder, and tree as before: visible as dark shapes just outside any light, fade over ~0.6s when the Traveler's circle *or a lamp pool* reaches them, heartbeat while one looms unlit within ~1.5× the Traveler's radius. Retire the creature.
+
+**5. Arrival.** After L6, the crest zone unlocks. When the Traveler reaches it, the **strung lanterns light in sequence** across the crest (left to right, ~1.2s total, as if L6 passed the flame along) via `layer-lantern-path` + a few additive flame dots, the mask blooms open over the whole plate (arrive-swell) so the entire lit trail is visible below, `t1-05` plays, and `onComplete({ lampsLit: 6, shapesRevealed: n })` fires ~2s after the line ends.
+
+**6. VO cues (new lines, same files).** `t1-01` on start ("…let's bring it back, one lamp at a time."); `t1-02` on L1 lit; `t1-03` when the first shape resolves; `t1-04` on L3 lit — **during this line, pan/tilt the camera briefly down the trail (~2s) so the three lit lamps behind are on screen**, then return; `t1-05` at the crest. Duck music under VO as before.
+
+**7. Spark.** On start, drifts ahead toward L1's glimmer as the nudge, then companions as usual. At each lamp lighting he does a small happy bob.
+
+**Keep:** tap-to-move engine, footsteps, `skipMusic`/`onDuck` hand-off from Zone 1, the standalone page `/gains-demo/firstlight` and its review card (update the blurb: "The trail's lamps went out. You carry the first light and relight them one by one, leaving a lit path behind you for whoever comes next."), reduced-motion behavior, `?dev` skips.
+
+**Verify.** `/gains-demo/firstlight`: Begin → the ground is clearly visible in a warm circle around the Traveler (dirt, stones, grass legible), the rest near-black with a faint glimmer at L1; tapping the trail walks along the S-curves, never across rock; reaching L1 → raise beat → flame catches, chime, a large pool opens and stays lit, `t1-02` plays; the Traveler's own circle never changes size; shapes loom with the heartbeat then resolve (`t1-03` on the first); L3 → `t1-04` with the look-back showing three lit lamps; after L6 the crest lanterns light in sequence, the whole trail blooms visible, `t1-05`, `onComplete`. From `/gains-demo/zone1`, the hand-off still carries the ambience. Zones 3/4, Ascent, flight unaffected; clean console; clean build. `src/game/`, `src/components/`, `public/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 85.*
