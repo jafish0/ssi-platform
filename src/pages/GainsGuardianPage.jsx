@@ -9,7 +9,7 @@ export default function GainsGuardianPage() {
   const card = reviewCard('guardian')
   return (
     <PlayableShell title="Message to Your Guardian" blurb={card.blurb} section="review-zone3pitch" route="/gains-demo/guardian">
-      <ElevatorPitch />
+      <ElevatorPitch narrate />
     </PlayableShell>
   )
 }

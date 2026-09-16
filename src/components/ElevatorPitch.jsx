@@ -37,10 +37,29 @@
 // that (see SAFETY_DISCLAIMER's own comment, Draft 62) and is no longer
 // verbatim -- it's now a merged, Josh-approved version.
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Volume2 } from 'lucide-react'
 import { addActionPlanItem } from '../lib/gainsActionPlan.js'
 
 const ART = '/long-light/art/zone3'
+
+// --- Draft 86: narration (Spark voice F) ---
+// 32 clips under public/long-light/audio/guardian/. Only active when the
+// `narrate` prop is true (Zone 3's Message to Your Guardian station passes
+// it, and so does the standalone review page -- unlike Body Mapping, this
+// one is meant to be heard both places).
+const NARRATION_BASE = '/long-light/audio/guardian'
+const STEP_NARRATION = {
+  intro: 'gm-01-intro',
+  greeting: 'gm-02-greeting',
+  situation: 'gm-03-situation',
+  request: 'gm-04-request',
+  normalize: 'gm-05-normalize',
+  offer: 'gm-06-offer',
+  help: 'gm-07-help',
+  safety: 'gm-10-safety',
+  done: 'gm-11-done',
+}
 
 const SPARK_INTRO =
   'Sometimes things feel like a dead end. For some teens, getting their parents or caregivers on board with trauma therapy feels like a bridge that can’t be crossed. But with a little preparation and courage, you can overcome any obstacle. Take this time to plan out a message for your guardians.'
@@ -119,7 +138,7 @@ function endGreeting(s) {
 // `options` verbatim, or arbitrary custom text. Whether that's "custom mode"
 // is derived from the value rather than tracked separately -- see the
 // header comment.
-function SelectStep({ options, selected, onChange }) {
+function SelectStep({ options, selected, onChange, readingIndex = -1 }) {
   const customMode = selected !== null && !options.includes(selected)
 
   if (customMode) {
@@ -147,18 +166,19 @@ function SelectStep({ options, selected, onChange }) {
 
   return (
     <div className="space-y-2">
-      {options.map((opt) => (
+      {options.map((opt, i) => (
         <button
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
           aria-pressed={selected === opt}
           className="w-full text-left px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug border transition-colors"
-          style={
-            selected === opt
+          style={{
+            ...(selected === opt
               ? { background: 'var(--action-primary)', borderColor: 'var(--action-primary)', color: 'var(--text-on-warm)', fontWeight: 'var(--weight-bold)' }
-              : { background: 'var(--action-quiet)', borderColor: 'var(--border-soft)', color: 'var(--text-body)' }
-          }
+              : { background: 'var(--action-quiet)', borderColor: 'var(--border-soft)', color: 'var(--text-body)' }),
+            ...(i === readingIndex ? { boxShadow: '0 0 0 2px var(--border-warm)' } : {}),
+          }}
         >
           {opt}
         </button>
@@ -175,6 +195,23 @@ function SelectStep({ options, selected, onChange }) {
   )
 }
 
+// Draft 86: reads a select step's own options aloud, one after another.
+// The button itself is the only way options are voiced (never on plain
+// tap) so choosing stays quick for teens who don't need it.
+function ReadToMeButton({ active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mb-2 inline-flex items-center gap-1.5 px-3.5 rounded-full text-[13px] font-bold transition-colors"
+      style={{ height: 44, background: 'var(--action-quiet)', color: 'var(--text-bright)' }}
+    >
+      <Volume2 size={15} strokeWidth={2} />
+      {active ? 'Stop' : 'Read to me'}
+    </button>
+  )
+}
+
 // --- Draft 80: `onComplete` ---
 // Inside the Zone 3 walkable zone this activity is one scene in a larger
 // in-frame loop, and the Wingsuit is awarded by a real Gear Award scene
@@ -182,7 +219,7 @@ function SelectStep({ options, selected, onChange }) {
 // safety-disclaimer step hands off to it instead of advancing to the
 // standalone `done` screen (the "You did it" ending + Start over). Without
 // the prop (the review-list demo) the behavior is unchanged.
-export default function ElevatorPitch({ onComplete = null }) {
+export default function ElevatorPitch({ onComplete = null, narrate: narrateOn = false, onNarrate = null }) {
   const [step, setStep] = useState('intro')
   const [greeting, setGreeting] = useState('')
   const [situation, setSituation] = useState(null)
@@ -191,6 +228,103 @@ export default function ElevatorPitch({ onComplete = null }) {
   const [request, setRequest] = useState(null)
   const [help, setHelp] = useState(null)
   const [saved, setSaved] = useState(false)
+  const [narrating, setNarrating] = useState(false)
+  // Which select step is currently being read aloud, and which of its
+  // options is on -- { step, index } | null.
+  const [reading, setReading] = useState(null)
+
+  const audioRef = useRef(null)
+  const readTimerRef = useRef(null)
+  useEffect(() => {
+    audioRef.current = new Audio()
+    return () => {
+      clearTimeout(readTimerRef.current)
+      const el = audioRef.current
+      if (el) {
+        el.pause()
+        el.src = ''
+      }
+    }
+  }, [])
+
+  function narrate(name, onEnd) {
+    if (!narrateOn) return
+    const el = audioRef.current
+    if (!el) return
+    try {
+      el.pause()
+      el.currentTime = 0
+      el.src = `${NARRATION_BASE}/${name}.mp3`
+      onNarrate?.(true)
+      setNarrating(true)
+      el.onended = () => {
+        onNarrate?.(false)
+        setNarrating(false)
+        onEnd?.()
+      }
+      el.onerror = () => {
+        onNarrate?.(false)
+        setNarrating(false)
+      }
+      const p = el.play()
+      if (p && p.catch) {
+        p.catch(() => {
+          onNarrate?.(false)
+          setNarrating(false)
+        })
+      }
+    } catch {
+      onNarrate?.(false)
+      setNarrating(false)
+    }
+  }
+
+  // One clip per screen, on entry -- including the review screen's two
+  // back-to-back clips and the intro line on open. Re-fires whenever `step`
+  // changes, so "Change something" (which sets step back to a select step)
+  // and Start over (which resets to 'intro') both naturally replay the
+  // right prompt.
+  useEffect(() => {
+    if (step === 'review') narrate('gm-08-review', () => narrate('gm-09-reassurance'))
+    else if (STEP_NARRATION[step]) narrate(STEP_NARRATION[step])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step])
+
+  function stopReadAloud() {
+    clearTimeout(readTimerRef.current)
+    setReading(null)
+    audioRef.current?.pause()
+  }
+
+  function playReadStep(stepKey, options, index) {
+    if (index >= options.length) {
+      setReading(null)
+      return
+    }
+    setReading({ step: stepKey, index })
+    narrate(`gm-opt-${stepKey}-${index + 1}`, () => {
+      readTimerRef.current = setTimeout(() => playReadStep(stepKey, options, index + 1), 350)
+    })
+  }
+
+  function toggleReadAloud(stepKey, options) {
+    if (reading?.step === stepKey) stopReadAloud()
+    else playReadStep(stepKey, options, 0)
+  }
+
+  // Wraps a select step's setter so: a tap during "Read to me" stops the
+  // sequence first (then selects, same as any other tap), and the very tap
+  // that opens the "Write your own" field (value '' from a step that
+  // wasn't already in custom mode) plays its own cue -- but clearing typed
+  // text back to empty while ALREADY in custom mode doesn't re-fire it.
+  function makeStepChange(stepKey, options, currentVal, setter) {
+    return (val) => {
+      if (reading?.step === stepKey) stopReadAloud()
+      const wasCustom = currentVal !== null && !options.includes(currentVal)
+      if (val === '' && !wasCustom) narrate('gm-opt-custom')
+      setter(val)
+    }
+  }
 
   const stepIdx = STEPS.indexOf(step)
   const next = () => setStep(STEPS[stepIdx + 1])
@@ -209,6 +343,7 @@ export default function ElevatorPitch({ onComplete = null }) {
   }
 
   function restart() {
+    stopReadAloud()
     setStep('intro')
     setGreeting('')
     setSituation(null)
@@ -288,35 +423,65 @@ export default function ElevatorPitch({ onComplete = null }) {
           {step === 'situation' && (
             <>
               <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
-              <SelectStep options={SITUATION_OPTIONS} selected={situation} onChange={setSituation} />
+              <ReadToMeButton active={reading?.step === 'situation'} onClick={() => toggleReadAloud('situation', SITUATION_OPTIONS)} />
+              <SelectStep
+                options={SITUATION_OPTIONS}
+                selected={situation}
+                onChange={makeStepChange('situation', SITUATION_OPTIONS, situation, setSituation)}
+                readingIndex={reading?.step === 'situation' ? reading.index : -1}
+              />
             </>
           )}
 
           {step === 'request' && (
             <>
               <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
-              <SelectStep options={REQUEST_OPTIONS} selected={request} onChange={setRequest} />
+              <ReadToMeButton active={reading?.step === 'request'} onClick={() => toggleReadAloud('request', REQUEST_OPTIONS)} />
+              <SelectStep
+                options={REQUEST_OPTIONS}
+                selected={request}
+                onChange={makeStepChange('request', REQUEST_OPTIONS, request, setRequest)}
+                readingIndex={reading?.step === 'request' ? reading.index : -1}
+              />
             </>
           )}
 
           {step === 'normalize' && (
             <>
               <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
-              <SelectStep options={NORMALIZE_OPTIONS} selected={normalize} onChange={setNormalize} />
+              <ReadToMeButton active={reading?.step === 'normalize'} onClick={() => toggleReadAloud('normalize', NORMALIZE_OPTIONS)} />
+              <SelectStep
+                options={NORMALIZE_OPTIONS}
+                selected={normalize}
+                onChange={makeStepChange('normalize', NORMALIZE_OPTIONS, normalize, setNormalize)}
+                readingIndex={reading?.step === 'normalize' ? reading.index : -1}
+              />
             </>
           )}
 
           {step === 'offer' && (
             <>
               <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
-              <SelectStep options={OFFER_OPTIONS} selected={offer} onChange={setOffer} />
+              <ReadToMeButton active={reading?.step === 'offer'} onClick={() => toggleReadAloud('offer', OFFER_OPTIONS)} />
+              <SelectStep
+                options={OFFER_OPTIONS}
+                selected={offer}
+                onChange={makeStepChange('offer', OFFER_OPTIONS, offer, setOffer)}
+                readingIndex={reading?.step === 'offer' ? reading.index : -1}
+              />
             </>
           )}
 
           {step === 'help' && (
             <>
               <p className="text-[13px] font-semibold mb-2" style={{ color: 'var(--text-bright)' }}>{promptText}</p>
-              <SelectStep options={HELP_OPTIONS} selected={help} onChange={setHelp} />
+              <ReadToMeButton active={reading?.step === 'help'} onClick={() => toggleReadAloud('help', HELP_OPTIONS)} />
+              <SelectStep
+                options={HELP_OPTIONS}
+                selected={help}
+                onChange={makeStepChange('help', HELP_OPTIONS, help, setHelp)}
+                readingIndex={reading?.step === 'help' ? reading.index : -1}
+              />
             </>
           )}
 
@@ -406,7 +571,8 @@ export default function ElevatorPitch({ onComplete = null }) {
               (step === 'normalize' && !normalize) ||
               (step === 'offer' && !offer) ||
               (step === 'request' && !request) ||
-              (step === 'help' && !help)
+              (step === 'help' && !help) ||
+              (step === 'safety' && narrating)
             }
             className="w-full mt-2.5 py-2.5 rounded-full disabled:opacity-[.42] disabled:cursor-not-allowed text-[15px] font-extrabold"
             style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}

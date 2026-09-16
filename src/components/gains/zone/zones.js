@@ -263,6 +263,8 @@ export const ZONES = {
     },
     video: { id: '1223207965', h: 'd0c77b8f23', title: 'Zone 3 — Getting the Best Therapy' },
     ActivityComponent: ElevatorPitch,
+    // Draft 86: Spark narration + "Read to me" on the select steps.
+    activityExtraProps: { narrate: true },
     gear: {
       gearKey: 'wingsuit',
       name: 'Wingsuit',
