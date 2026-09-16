@@ -132,6 +132,27 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **71860ab** (2026-09-16) — Draft 89: **Demo hub tidy-up.** Header
+  shortened to "GAINS for Teens — Shadowmend" (title tag too), and the
+  walkthrough-explainer paragraph plus the /long-light/ pitch-site
+  pointer are gone -- the h1 stands alone. Pre/Post test moves out of
+  the review cards into its own canon section between the World and
+  Development Map and the Zone cards (same frosted-card treatment,
+  same `review-pretest` comment tag); the dedicated pretest/posttest
+  pages now source that blurb from a new `PREPOST_BLURB` export rather
+  than a review card that no longer exists. The remaining nine review
+  cards are reordered zones-and-videos-first: Zone 1 · Zone 3 · Zone 4
+  · Videos · Body Mapping · Guardian · Mindful Place · Ascent · The
+  First Light. `/gains-demo/bodymap` now mounts `BodyMapping` with
+  `narrate`, matching Zone 1's Mirror Pool. Five blurbs rewritten:
+  Body Mapping, Guardian, Mindful Place, Videos, and Zone 3 (its new
+  Wingsuit-flight upgrade, described to the team for the first time
+  here). Verified live: new title/header, card order and numbering,
+  Pre/Post section placement and both links, Body Mapping's standalone
+  narration (confirmed `bm-01-intro` fetches on mount, matching Zone
+  1's behavior), and all five updated blurbs reading correctly on both
+  their review card and their dedicated page. Clean console throughout.
+  `src/pages/` → no version bump.
 - **223481d** (2026-09-16) — Draft 88: **Swap in the re-rendered Videos
   1-5 everywhere.** New Vimeo id + hash for each of the five zone
   psychoeducation videos (Josh's 9/11-edit re-renders with the new
@@ -4641,7 +4662,7 @@ Grep for each old id (`1223203599`, `1223210105`, `1223207965`, `1223708060`, `1
 *End of Draft 88.*
 
 
-### Draft 89 — Demo hub tidy-up: shorter header, review cards reordered (zones and videos first), Pre/Post moves to its own section after the map, Body Mapping's standalone page gets the narration, and four blurbs updated
+### Draft 89 — Demo hub tidy-up: shorter header, review cards reordered (zones and videos first), Pre/Post moves to its own section after the map, Body Mapping's standalone page gets the narration, and five blurbs updated — ✅ SHIPPED 71860ab (2026-09-16)
 
 Josh's pass over `/gains-demo` before the next team round. Files: `GainsDemoPage.jsx`, `gainsReviewCards.js`, `GainsBodyMapPage.jsx` (or wherever `/gains-demo/bodymap` mounts `BodyMapping`).
 
@@ -4663,8 +4684,11 @@ Josh's pass over `/gains-demo` before the next team round. Files: `GainsDemoPage
 **7. Videos blurb** →
 "All five zone videos were re-rendered from Friday's notes. Spark is the new clean cutout with a gentle flicker throughout. On-screen words now appear as Spark says them, and where text used to show early to fill the screen, Spark floats up larger instead. Video 1 says 'it can happen to you… or someone you love,' its opening words and examples are re-timed, and the stray mid-screen sentence is gone. Video 2 lost the closing line about the characters. Video 3's timing is tightened. Video 4's three bubbles are evenly spaced and 'Building your toolbox' is gone. Video 5 says 'It's your mindset,' the 'two pairs of glasses' text is out, the phrases highlight as Spark speaks, and the four bubbles sit two by two. A new intro video, Welcome to Shadowmend, opens Zone 1 and is first on the videos page. Each video has its own comment box."
 
+**8. Zone 3 blurb** (the flight upgrade hasn't been described to the team yet) →
+"The Mistfields as a place you move through. Find Spark, watch the video, follow Spark to the waystone to plan your message to your guardian, earn and equip your Wingsuit, then head for the broken bridge and fly across to the Bright Reaches. The flight itself is new: you're now the Traveler in the Wingsuit instead of the bird, gliding and banking over painted Mistfields plates, up through the clouds to the golden summit and its beacon. The connection lights are warm gold, and the mist thins as you climb and clears as you break into the Bright Reaches."
+
 **Keep:** every other card's blurb and links verbatim; the round divider; the World and Development Map; the Zone Cards; the dev section; all feedback tags.
 
-**Verify.** `/gains-demo`: new title, no intro paragraph or pitch link; review cards in the new order, numbered 1–9; Pre/Post section sits between the map and the Zone Cards with both buttons and its comment box; `/gains-demo/bodymap` narrates and gates like Zone 1 does; the four updated blurbs read on their cards and at the top of their dedicated pages; nothing else moved. Clean console; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
+**Verify.** `/gains-demo`: new title, no intro paragraph or pitch link; review cards in the new order, numbered 1–9; Pre/Post section sits between the map and the Zone Cards with both buttons and its comment box; `/gains-demo/bodymap` narrates and gates like Zone 1 does; the five updated blurbs read on their cards and at the top of their dedicated pages; nothing else moved. Clean console; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 89.*
