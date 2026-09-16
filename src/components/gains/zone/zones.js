@@ -240,7 +240,7 @@ export const ZONES = {
       welcome: { file: 'z3-00-welcome.mp3', text: 'Welcome to the Mistfields.' },
       arrive: {
         file: 'z3-01-arrive.mp3',
-        text: "Oh — something's different about you again. The light inside you is brighter than when we met. Come over here for a moment. I want to tell you something important: you don't have to go through this alone.",
+        text: "Oh! Something is changing. The light inside you is brighter than when we met. Come over here for a moment. I want to tell you something important: you don't have to go through this alone.",
       },
       followMe: {
         file: 'z3-02-follow-me.mp3',
