@@ -14,6 +14,8 @@
 // Video 4 swapped (Draft 70, 2026-09-03) to a render without the burned-in
 // Spark subtitles; the Zone 4 walkable zone plays the same id (VIDEO4 in
 // GainsZone4Page) -- keep the two in step.
+// Draft 88 (2026-09-16): all five re-rendered again with the 9/11 edits and
+// the new Spark cutout -- same ids swapped in `zones.js` for Zones 1/3/4.
 
 import FeedbackButton from '../FeedbackButton.jsx'
 import { GAINS_FEEDBACK_SECTIONS } from '../../pages/gainsFeedbackSections.js'
@@ -22,11 +24,11 @@ export const REVIEW_VIDEOS = [
   // Draft 83: the new game-opening video (Zone 1's intro plate, plays when
   // you reach Spark there), replacing the old Exposition card.
   { title: 'Intro — Welcome to Shadowmend', id: '1227051194', h: '8c2fcaf83f', section: 'video-0' },
-  { title: 'Zone 1 — What is Trauma', id: '1223215595', h: '2b10eb8857', section: 'video-1' },
-  { title: 'Zone 2 — The Four Reactions', id: '1223210105', h: '315f412718', section: 'video-2' },
-  { title: 'Zone 3 — Getting the Best Therapy', id: '1223207965', h: 'd0c77b8f23', section: 'video-3' },
-  { title: 'Zone 4 — What Therapy Feels Like', id: '1223708060', h: '2ab5970912', section: 'video-4' },
-  { title: 'Zone 5 — Growth Mindset', id: '1223211325', h: 'b8579c9aa1', section: 'video-5' },
+  { title: 'Zone 1 — What is Trauma', id: '1227441876', h: '651daacb8a', section: 'video-1' },
+  { title: 'Zone 2 — The Four Reactions', id: '1227442904', h: '46f782197e', section: 'video-2' },
+  { title: 'Zone 3 — Getting the Best Therapy', id: '1227443944', h: 'a507d992ff', section: 'video-3' },
+  { title: 'Zone 4 — What Therapy Feels Like', id: '1227445659', h: '3a88ca76d5', section: 'video-4' },
+  { title: 'Zone 5 — Growth Mindset', id: '1227447165', h: 'f4fe21450f', section: 'video-5' },
 ]
 
 // One phone-portrait (9:16) player with its own comment box, laid out by

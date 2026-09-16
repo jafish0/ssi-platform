@@ -94,7 +94,7 @@ export const ZONES = {
         text: "It's too dark to go that way without a light. Let's visit the pool first.",
       },
     },
-    video: { id: '1223215595', h: '2b10eb8857', title: 'Zone 1 — What is Trauma' },
+    video: { id: '1227441876', h: '651daacb8a', title: 'Zone 1 — What is Trauma' },
     ActivityComponent: BodyMapping,
     // Draft 83: Body Mapping's own narration (10 clips) -- on only inside
     // the zone. `onNarrate` is wired generically by GainsZonePage (it
@@ -182,7 +182,7 @@ export const ZONES = {
     },
     // Video 4 (same unlisted id + hash as reviewVideos.jsx). Draft 70
     // (2026-09-03): new render without the burned-in Spark subtitles.
-    video: { id: '1223708060', h: '2ab5970912', title: 'Zone 4 — What Therapy Feels Like' },
+    video: { id: '1227445659', h: '3a88ca76d5', title: 'Zone 4 — What Therapy Feels Like' },
     ActivityComponent: MindfulnessCalmPlace,
     gear: {
       gearKey: 'mask',
@@ -261,7 +261,7 @@ export const ZONES = {
         text: "That bridge is out — there's no way across yet. Let's plan your message first, and then I'll show you how to get over.",
       },
     },
-    video: { id: '1223207965', h: 'd0c77b8f23', title: 'Zone 3 — Getting the Best Therapy' },
+    video: { id: '1227443944', h: 'a507d992ff', title: 'Zone 3 — Getting the Best Therapy' },
     ActivityComponent: ElevatorPitch,
     // Draft 86: Spark narration + "Read to me" on the select steps.
     activityExtraProps: { narrate: true },
