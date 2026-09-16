@@ -549,12 +549,13 @@ export function makeFirstLightScene(Phaser) {
         const loomR = TRAVELER_LIGHT_R * LOOM_FACTOR
         if (dTraveler <= TRAVELER_LIGHT_R || nearLampPool) {
           // The light reaches it: resolve (fade the silhouette, revealing
-          // the plate's own painted, now-lit object beneath).
+          // the plate's own painted, now-lit object beneath). No VO here
+          // (the "shape" line was cut per Josh's playtest -- the reveal and
+          // the heartbeat tension cue below stay, just silent now).
           s.resolved = true
           s.looming = false
           this.shapesRevealed += 1
           this.tweens.add({ targets: s.sprite, alpha: 0, duration: SHAPE_FADE_MS, ease: 'Sine.out' })
-          if (this.shapesRevealed === 1) this.playVo('shape')
         } else if (dTraveler <= loomR) {
           s.looming = true
           anyLooming = true
@@ -622,6 +623,7 @@ export function makeFirstLightScene(Phaser) {
       this.lightCrestLanterns(() => {
         this.playSfx('arriveSwell')
         this.playVo('arrive')
+        const arriveVo = this.currentVo
         if (this.music) this.tweens.add({ targets: this.music, volume: 0, duration: 900 })
         const bloom = this.add.rectangle(W / 2, H / 2, W, H, 0xffe9b0, 0).setDepth(H + 70)
         this.tweens.add({
@@ -630,11 +632,27 @@ export function makeFirstLightScene(Phaser) {
           duration: this.reduced ? 700 : 900,
           ease: 'Sine.out',
           onComplete: () => {
-            this.time.delayedCall(2000, () => {
+            const finish = () => {
               if (typeof this.cfg.onComplete === 'function') {
                 this.cfg.onComplete({ lampsLit: this.lampsLit, shapesRevealed: this.shapesRevealed })
               }
-            })
+            }
+            // Josh's playtest: the closing "you did that" line was getting
+            // cut off by onComplete firing on a flat 2s timer regardless of
+            // how long the line actually runs. Keep the same 2s beat, but
+            // past it, hold for the line to actually finish (+300ms grace),
+            // with a hard cap so a stuck/failed clip can never strand the
+            // player here -- same pattern as the zone template's activity ->
+            // gear award courtesy (GainsZonePage's onActivityComplete).
+            const deadline = this.time.now + 2000 + 12000
+            const waitForVo = () => {
+              if (arriveVo === this.currentVo && arriveVo.isPlaying && this.time.now < deadline) {
+                this.time.delayedCall(150, waitForVo)
+              } else {
+                this.time.delayedCall(300, finish)
+              }
+            }
+            this.time.delayedCall(2000, waitForVo)
           },
         })
       })
