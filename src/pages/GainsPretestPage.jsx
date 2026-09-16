@@ -5,14 +5,13 @@ import { HardHat } from 'lucide-react'
 import PlayableShell from '../components/gains/PlayableShell.jsx'
 import MeasurementFlow from '../components/gains/MeasurementFlow.jsx'
 import GainsBadge from '../components/gains/ds/Badge.jsx'
-import { reviewCard } from './gainsReviewCards.js'
+import { PREPOST_BLURB } from './gainsReviewCards.js'
 
 export default function GainsPretestPage() {
-  const card = reviewCard('prepost')
   return (
     <PlayableShell
       title="Pre-test: measures flow"
-      blurb={card.blurb}
+      blurb={PREPOST_BLURB}
       section="review-pretest"
       route="/gains-demo/pretest"
       note={

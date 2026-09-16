@@ -10,70 +10,16 @@
 // First Light (a standalone traversal prototype) right after the Ascent --
 // the two bare-mechanic traversal prototypes sit together. Draft 83 adds
 // Zone 1 (walkable) right before Zone 3 -- the three walkable zones sit
-// together. Order is fixed: Pre/Post · Body Mapping · Guardian · Mindful
-// Place · Ascent · The First Light · Zone 1 · Zone 3 · Zone 4 · Videos.
+// together. Draft 89: Pre/Post test moves out to its own canon section
+// (see GainsDemoPage.jsx) and is no longer a card here; the remaining nine
+// are reordered zones-and-videos-first. Order is fixed: Zone 1 · Zone 3 ·
+// Zone 4 · Videos · Body Mapping · Guardian · Mindful Place · Ascent · The
+// First Light.
 
 export const REVIEW_CARDS = [
   {
-    key: 'prepost',
-    n: 1,
-    title: 'Pre/Post test',
-    section: 'review-pretest',
-    blurb:
-      "The measures, paginated the way they'll be administered, one page at a time with a Continue button. Pre-test: demographics, the event and time since, the Child Trauma Screen, therapy history, Beck Hopelessness, the readiness ruler, Implicit Theories of Emotion, and Trauma & Treatment Beliefs. Post-test: the pre+post instruments again plus the Program Feedback Scale. Look for item wording, order, and anything missing.",
-    links: [
-      { label: 'Open the Pre-test', to: '/gains-demo/pretest' },
-      { label: 'Open the Post-test', to: '/gains-demo/posttest' },
-    ],
-  },
-  {
-    key: 'bodymap',
-    n: 2,
-    title: 'Body Mapping',
-    section: 'review-bodymap',
-    blurb:
-      "The write-in prompt now reads 'Is there another area where you feel a trauma reaction in your body? If so, write it in the box below,' the stomach sits a little lower, and the closing summary text is larger.",
-    links: [{ label: 'Open Body Mapping', to: '/gains-demo/bodymap' }],
-  },
-  {
-    key: 'guardian',
-    n: 3,
-    title: 'Message to Your Guardian',
-    section: 'review-zone3pitch',
-    blurb:
-      "The Wingsuit screen makes clear that planning your message is what earns it and no longer suggests waiting for the perfect moment. The safety page explains what 988 is. Step 4 now reads 'Therapy can help me…' (the 'also' is gone).",
-    links: [{ label: 'Open Message to Your Guardian', to: '/gains-demo/guardian' }],
-  },
-  {
-    key: 'mindful',
-    n: 4,
-    title: 'Mindful Place',
-    section: 'review-mindfulness',
-    blurb:
-      "Formerly Calm Place. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music), the breathing is guided by concentric rings that expand and contract with Spark's count, the frog is the new painterly one and breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. The choice chips now sit in even rows.",
-    links: [{ label: 'Open Mindful Place', to: '/gains-demo/mindful' }],
-  },
-  {
-    key: 'ascent',
-    n: 5,
-    title: 'The Ascent',
-    section: 'review-ascent',
-    blurb:
-      "The Zone 4 to 5 climb got the rework we talked about. The climber is bigger. The obstacles are now feelings that fall toward you. Gold feelings (hope, courage, curiosity, resilience, and more) you collect to refill your Second Wind. Red feelings (sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret) block your path. Tap one to fire your Focusing Lens. The cloud lightens, the feeling's name is revealed, and it shatters into gold you can gather. It's framed as protecting yourself rather than fighting.",
-    links: [{ label: 'Play the Ascent', to: '/gains-demo/climb', play: true }],
-  },
-  {
-    key: 'firstlight',
-    n: 6,
-    title: 'The First Light',
-    section: 'review-firstlight',
-    blurb:
-      "A traversal, Zone 1 → Zone 2: the trail's lamps went out. You carry the first light and relight them one by one, leaving a lit path behind you for whoever comes next. Your own circle of light never grows -- what changes is how much of the trail is already lit behind you. Things that loomed in the dark turn out to be ordinary once the light reaches them (a leaning tree, a boulder, a signpost). Six lamps in, the strung lanterns at the crest catch in sequence and the Lantern Path opens.",
-    links: [{ label: 'Play The First Light', to: '/gains-demo/firstlight', play: true }],
-  },
-  {
     key: 'zone1',
-    n: 7,
+    n: 1,
     title: 'Zone 1: The Dark Abyss — walkable zone',
     section: 'review-zone1',
     blurb:
@@ -82,16 +28,16 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone3',
-    n: 8,
+    n: 2,
     title: 'Zone 3: The Mistfields — walkable zone',
     section: 'review-zone3',
     blurb:
-      'The Mistfields as a place you move through. Find Spark, watch the video, follow Spark to the waystone to plan your message to your guardian, earn and equip your Wingsuit, then head for the broken bridge and fly across to the Bright Reaches. Same template as Zone 4, new world.',
+      "The Mistfields as a place you move through. Find Spark, watch the video, follow Spark to the waystone to plan your message to your guardian, earn and equip your Wingsuit, then head for the broken bridge and fly across to the Bright Reaches. The flight itself is new: you're now the Traveler in the Wingsuit instead of the bird, gliding and banking over painted Mistfields plates, up through the clouds to the golden summit and its beacon. The connection lights are warm gold, and the mist thins as you climb and clears as you break into the Bright Reaches.",
     links: [{ label: 'Play Zone 3', to: '/gains-demo/zone3', play: true }],
   },
   {
     key: 'zone4',
-    n: 9,
+    n: 3,
     title: 'Zone 4: The Bright Reaches — walkable zone',
     section: 'review-zone4',
     blurb:
@@ -100,14 +46,66 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'videos',
-    n: 10,
+    n: 4,
     title: 'Videos',
     section: 'review-videos',
     blurb:
-      "All of the video feedback is in. Video 1 has the revised script (our minds and bodies react to keep us safe), the updated body map that matches the activity, and the 'you see something happen' wording. Video 2 lost the gray circle, the jittery bubble, and the busy animations in the middle of the screen. Video 3 no longer refers to 'these characters,' and it frames TF-CBT and EMDR as examples rather than the only options. Video 4 was re-rendered to take the narration text out. Video 5's glasses have stems. The narration text at the bottom of all the videos is gone; captions are a CC toggle in the player. Each video has its own comment box.",
+      "All five zone videos were re-rendered from Friday's notes. Spark is the new clean cutout with a gentle flicker throughout. On-screen words now appear as Spark says them, and where text used to show early to fill the screen, Spark floats up larger instead. Video 1 says 'it can happen to you… or someone you love,' its opening words and examples are re-timed, and the stray mid-screen sentence is gone. Video 2 lost the closing line about the characters. Video 3's timing is tightened. Video 4's three bubbles are evenly spaced and 'Building your toolbox' is gone. Video 5 says 'It's your mindset,' the 'two pairs of glasses' text is out, the phrases highlight as Spark speaks, and the four bubbles sit two by two. A new intro video, Welcome to Shadowmend, opens Zone 1 and is first on the videos page. Each video has its own comment box.",
     links: [{ label: 'Open the videos', to: '/gains-demo/videos' }],
   },
+  {
+    key: 'bodymap',
+    n: 5,
+    title: 'Body Mapping',
+    section: 'review-bodymap',
+    blurb:
+      "Spark narration added. Spark now reads the intro, names each body region as you tap it, and reads the closing line and the write-in prompt. You have to hear a region's line through before moving to the next. This is also wired into Zone 1 and testable there at the Mirror Pool.",
+    links: [{ label: 'Open Body Mapping', to: '/gains-demo/bodymap' }],
+  },
+  {
+    key: 'guardian',
+    n: 6,
+    title: 'Message to Your Guardian',
+    section: 'review-zone3pitch',
+    blurb:
+      "Spark narration added. Spark reads each step as it opens, and a Read to me button on the choice steps reads the options aloud one at a time. The 988 safety line plays through before you can continue. This is also wired into Zone 3 and testable there at the waystone.",
+    links: [{ label: 'Open Message to Your Guardian', to: '/gains-demo/guardian' }],
+  },
+  {
+    key: 'mindful',
+    n: 7,
+    title: 'Mindful Place',
+    section: 'review-mindfulness',
+    blurb:
+      "Ready for final approval. Spark narrates each step, the sounds are one balanced soundscape (rain, thunder, frogs, crickets, and music), the breathing is guided by rings that expand and contract with Spark's count, the frog breathes along with you, and finishing earns the Oxygen Mask with the option to practice again to level it up. This is also testable in the full Zone 4.",
+    links: [{ label: 'Open Mindful Place', to: '/gains-demo/mindful' }],
+  },
+  {
+    key: 'ascent',
+    n: 8,
+    title: 'The Ascent',
+    section: 'review-ascent',
+    blurb:
+      "The Zone 4 to 5 climb got the rework we talked about. The climber is bigger. The obstacles are now feelings that fall toward you. Gold feelings (hope, courage, curiosity, resilience, and more) you collect to refill your Second Wind. Red feelings (sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret) block your path. Tap one to fire your Focusing Lens. The cloud lightens, the feeling's name is revealed, and it shatters into gold you can gather. It's framed as protecting yourself rather than fighting.",
+    links: [{ label: 'Play the Ascent', to: '/gains-demo/climb', play: true }],
+  },
+  {
+    key: 'firstlight',
+    n: 9,
+    title: 'The First Light',
+    section: 'review-firstlight',
+    blurb:
+      "A traversal, Zone 1 → Zone 2: the trail's lamps went out. You carry the first light and relight them one by one, leaving a lit path behind you for whoever comes next. Your own circle of light never grows -- what changes is how much of the trail is already lit behind you. Things that loomed in the dark turn out to be ordinary once the light reaches them (a leaning tree, a boulder, a signpost). Six lamps in, the strung lanterns at the crest catch in sequence and the Lantern Path opens.",
+    links: [{ label: 'Play The First Light', to: '/gains-demo/firstlight', play: true }],
+  },
 ]
+
+// Draft 89: the Pre/Post test's own copy, now shown in a dedicated canon
+// section on GainsDemoPage.jsx rather than a review card -- kept here so
+// the dedicated pretest/posttest pages can still repeat the same blurb at
+// their tops the way every other reviewed item does.
+export const PREPOST_BLURB =
+  "The measures, paginated the way they'll be administered, one page at a time with a Continue button. Pre-test: demographics, the event and time since, the Child Trauma Screen, therapy history, Beck Hopelessness, the readiness ruler, Implicit Theories of Emotion, and Trauma & Treatment Beliefs. Post-test: the pre+post instruments again plus the Program Feedback Scale. Look for item wording, order, and anything missing."
 
 export function reviewCard(key) {
   return REVIEW_CARDS.find((c) => c.key === key) || null

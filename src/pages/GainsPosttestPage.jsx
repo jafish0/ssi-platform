@@ -4,12 +4,11 @@
 
 import PlayableShell from '../components/gains/PlayableShell.jsx'
 import MeasurementFlow from '../components/gains/MeasurementFlow.jsx'
-import { reviewCard } from './gainsReviewCards.js'
+import { PREPOST_BLURB } from './gainsReviewCards.js'
 
 export default function GainsPosttestPage() {
-  const card = reviewCard('prepost')
   return (
-    <PlayableShell title="Post-test: measures flow" blurb={card.blurb} section="review-posttest" route="/gains-demo/posttest">
+    <PlayableShell title="Post-test: measures flow" blurb={PREPOST_BLURB} section="review-posttest" route="/gains-demo/posttest">
       <MeasurementFlow flow="post" />
     </PlayableShell>
   )

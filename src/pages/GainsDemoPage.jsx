@@ -396,7 +396,7 @@ const ZONES = [
 export default function GainsDemoPage() {
   useEffect(() => {
     const prev = document.title
-    document.title = 'GAINS for Teens — The Long Light · Team Demo'
+    document.title = 'GAINS for Teens — Shadowmend · Team Demo'
     return () => {
       document.title = prev
     }
@@ -424,25 +424,12 @@ export default function GainsDemoPage() {
           commentary about the review page itself, not part of the in-world
           experience. */}
       <div className="gains-theme">
-      {/* Intro */}
+      {/* Intro (Draft 89: just the title now -- the walkthrough explainer
+          and the pitch-site pointer were dropped). */}
       <section className="mb-6">
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
-          GAINS for Teens — Shadowmend / Long Light
+          GAINS for Teens — Shadowmend
         </h1>
-        <p className="text-[14px] text-slate-600 leading-relaxed max-w-[760px]">
-          An internal walkthrough of the intervention, laid out the way it
-          plays: the roadmap first, then the characters you can be, then each
-          zone of the climb: video, activity, gear, and the arcade flight to
-          the next zone. Use <strong>Give feedback</strong> (top right) and pick
-          the section your comment is about.
-        </p>
-        <p className="text-[13px] text-slate-500 mt-2">
-          The scroll-through concept pitch lives at{' '}
-          <a href="/long-light/" target="_blank" rel="noreferrer" className="text-ctac-teal-700 hover:text-ctac-teal-900 underline">
-            /long-light/
-          </a>
-          .
-        </p>
       </section>
 
       {/* Draft 50: everything below is one dark "world" panel -- the
@@ -541,6 +528,51 @@ export default function GainsDemoPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* B. Pre/Post Test (Draft 89): broken out of the review section into
+          its own canon spot, between the map and the Zone Cards -- it's an
+          administered instrument, not a proposal under discussion. Keeps
+          its review-pretest comment tag so history stays readable. */}
+      <section className="mb-10">
+        <h2 className="text-[14px] font-semibold uppercase mb-2" style={SECTION_LABEL_STYLE}>
+          Pre/Post Test
+        </h2>
+        <div
+          className="rounded-[24px] p-5 max-w-[760px]"
+          style={{ background: 'var(--surface-card)', border: '1px solid var(--border-soft)', backdropFilter: 'var(--blur-panel)', boxShadow: 'var(--shadow-md)' }}
+        >
+          <p className="text-[14px] leading-relaxed mb-4" style={{ color: 'var(--text-body)' }}>
+            The measures, paginated the way they'll be administered. Pre-test before Zone 1, post-test after the summit.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/gains-demo/pretest"
+              className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+            >
+              Open the Pre-test
+              <ArrowRight size={14} strokeWidth={2} />
+            </Link>
+            <Link
+              to="/gains-demo/posttest"
+              className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+            >
+              Open the Post-test
+              <ArrowRight size={14} strokeWidth={2} />
+            </Link>
+          </div>
+          <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--border-soft)' }}>
+            <FeedbackButton
+              program="gains-teens"
+              sections={GAINS_FEEDBACK_SECTIONS}
+              defaultSection="review-pretest"
+              label="Comment on this"
+              subtle
+            />
           </div>
         </div>
       </section>

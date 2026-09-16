@@ -9,7 +9,7 @@ export default function GainsBodyMapPage() {
   const card = reviewCard('bodymap')
   return (
     <PlayableShell title="Body Mapping" blurb={card.blurb} section="review-bodymap" route="/gains-demo/bodymap">
-      <BodyMapping />
+      <BodyMapping narrate />
     </PlayableShell>
   )
 }
