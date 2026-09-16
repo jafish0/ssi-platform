@@ -132,6 +132,22 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **c59467f** (2026-09-16) — Draft 86: **Message to Your Guardian gets
+  Spark's voice (32 new clips from the batch narration pipeline).**
+  One clip auto-plays as each screen mounts -- intro through help, the
+  review screen's two back-to-back clips, safety, and done on the
+  standalone page -- interrupting whatever was playing before, same
+  as Body Mapping. Continue is gated only on the safety screen (the
+  988 line has to finish); every other step stays free to advance
+  mid-line. New: a "Read to me" pill on the five select steps reads
+  every option aloud in sequence with a moving highlight; tapping an
+  option mid-read stops the sequence and selects it; options are
+  never voiced on a plain tap. "Write your own" plays its own cue,
+  but only on the actual transition into custom mode -- not on every
+  keystroke that clears the field back to empty. Narration is on both
+  inside Zone 3 and on the standalone review page (unlike Body
+  Mapping, this one's meant to be heard both places). Zone 3's
+  hand-off to the Wingsuit award verified unaffected.
 - **c4f152a** (2026-09-16) — Draft 85: **The First Light, redesigned --
   you bring the light to the lamps.** Flips Draft 82's premise: the
   trail to the Lantern Path went dark, its six lamp posts (now painted
@@ -4492,3 +4508,24 @@ Josh played the Draft 82 build: the stage was a black void with a straight colum
 **Verify.** `/gains-demo/firstlight`: Begin → the ground is clearly visible in a warm circle around the Traveler (dirt, stones, grass legible), the rest near-black with a faint glimmer at L1; tapping the trail walks along the S-curves, never across rock; reaching L1 → raise beat → flame catches, chime, a large pool opens and stays lit, `t1-02` plays; the Traveler's own circle never changes size; shapes loom with the heartbeat then resolve (`t1-03` on the first); L3 → `t1-04` with the look-back showing three lit lamps; after L6 the crest lanterns light in sequence, the whole trail blooms visible, `t1-05`, `onComplete`. From `/gains-demo/zone1`, the hand-off still carries the ambience. Zones 3/4, Ascent, flight unaffected; clean console; clean build. `src/game/`, `src/components/`, `public/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 85.*
+
+
+### Draft 86 — Message to Your Guardian: Spark narration (auto-play on the screen lines, a "Read to me" button that reads the options aloud) — ✅ SHIPPED c59467f (2026-09-16)
+
+Body Mapping got Spark's voice in Draft 83; the Guardian message is next. 32 clips were generated with the new batch pipeline (`Gains for Teens/narration_batch/` — Spark 5, same settings as the hand-made lines) and normalized. Source: `Gains for Teens/Activities/_gm/gm-*.mp3` → served `public/long-light/audio/guardian/`. (`_gm/_raw/` is the un-normalized backup; don't copy it.)
+
+**Files.** Screen lines: `gm-01-intro`, `gm-02-greeting`, `gm-03-situation`, `gm-04-request`, `gm-05-normalize`, `gm-06-offer`, `gm-07-help`, `gm-08-review`, `gm-09-reassurance`, `gm-10-safety`, `gm-11-done`, `gm-opt-custom`. Options, verbatim, indexed in the order of the arrays in `ElevatorPitch.jsx`: `gm-opt-situation-1..4`, `gm-opt-request-1..3`, `gm-opt-normalize-1..4`, `gm-opt-offer-1..4`, `gm-opt-help-1..5`.
+
+**1. `narrate` prop on `ElevatorPitch`** (default true inside the Zone 3 walkable zone; the review page passes it too), same shape as Body Mapping's. Duck the zone music under any clip.
+
+**2. Auto-play, one clip per screen, when the step mounts:** intro → `gm-01`; greeting → `gm-02`; situation → `gm-03`; request → `gm-04`; normalize → `gm-05`; offer → `gm-06`; help → `gm-07`; review → `gm-08` then `gm-09` back-to-back (the reassurance box is on the same screen); safety → `gm-10`; done (standalone only) → `gm-11`. Tapping "Write your own" on any select step plays `gm-opt-custom`. Any new clip interrupts the previous one. **Gate Continue on the safety screen only**: the 988 line must finish before Continue enables (as Body Mapping gates its regions); every other step is free to advance mid-line. Coming back to a step via "Change something" replays its prompt.
+
+**3. "Read to me" on the five select steps.** Under the prompt line and above the option list, a small pill button: speaker icon + "Read to me" (Shadowmend quiet-action style, 44px tall, `--text-bright` on `--action-quiet`, never gray). Tapping it reads the step's options **in order, in one sequence** (`gm-opt-<step>-1`, `-2`, …, ~350ms gap), and the option currently being read gets a soft warm highlight (`--border-warm` ring, no layout shift). While reading, the button shows "Stop" (same pill). Tapping an option during the read stops the sequence and selects it, as a normal tap would. Tapping the button again after it finishes restarts from the first option. Do **not** read an option aloud on plain tap — the button is the only way options are voiced, so choosing stays quick for teens who don't need it.
+
+**4. Not narrated:** the assembled message on the review screen (it's built from the teen's own greeting and choices, so it can't be pre-recorded; leave it text-only), the free-text inputs, and button labels.
+
+**Keep:** all copy exactly as is; the standalone `/gains-demo/guardian` page and the Zone 3 flow both get narration; `onComplete` hand-off unchanged.
+
+**Verify.** `/gains-demo/guardian` and inside `/gains-demo/zone3`: intro line plays on open; each step's prompt plays on entry and interrupts the prior clip; "Read to me" appears on situation/request/normalize/offer/help, reads all options in order with the highlight moving, flips to Stop, and a tap on an option mid-read stops and selects; "Write your own" plays its cue; review plays `gm-08` then `gm-09`; safety plays `gm-10` and Continue enables only when it ends; done plays `gm-11` on the standalone page; music ducks under clips; no gray text introduced; Zone 3 hand-off to the Wingsuit award unchanged; clean console; clean build. `src/components/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 86.*
