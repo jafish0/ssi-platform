@@ -132,6 +132,43 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **3b20fe3** (2026-09-16) — Draft 87: **Zone template movement lock +
+  narration courtesy; The First Light polish, from Josh's second
+  play-through.** Ten items. Zone template (Zones 1/3/4):
+  `lockAndArrive()` generalized into `lockAndSay(key)`, now applied to
+  the **follow-me** and **ready** lines too (not just arrive) -- the
+  Traveler can no longer walk off and reach the next station before
+  Spark finishes a key line; short redirect lines stay unlocked on
+  purpose. `onActivityComplete` now polls the activity's own
+  `onNarrate` state and holds the Gear Award transition until a
+  closing narration clip actually ends (+300ms grace, ~12s hard cap)
+  -- fixes Body Mapping's "nice noticing" line (`bm-10-done`) getting
+  cut off by the Lantern mounting, and gives Zone 3's `gm-*` lines
+  (Draft 86) the same courtesy. Verified live: `introLock`/`paused`
+  traced through a monkey-patched scene on both Zone 1 and Zone 3 --
+  taps are provably ignored mid-lock and movement resumes the instant
+  each clip's `onended` fires; the Body Mapping hold was timed at the
+  actual clip boundary (~2.7s narrating, transition to `gear` landing
+  ~300-400ms after `narrating` cleared). The First Light: unlit lamps
+  now show a small pulsing glimmer (core + halo) rendered above the
+  darkness mask so the opening is never fully black, with the nearest
+  lamp pulsing brighter; catching a lamp is a bigger flare + a
+  light-ring pulse and the pool now opens to its full radius; the
+  Traveler halts and faces a lamp instead of playing its walk cycle
+  in place (root cause: `lightLamp()` was calling `face()` right after
+  `anims.stop()`, and `face()` unconditionally restarts the anim --
+  fixed by setting `this.facing` directly); the tap marker is back;
+  and lamps/shapes/the crest are proximity-only now -- `walkTo()` no
+  longer shortcuts or trims a long tap's path, so a single tap past
+  several lamps correctly routes through and lights every one in
+  between (this was the real cause of "VO cues aren't firing" --
+  `t1-02/04/05` were being silently skipped whenever a path-shortcut
+  let the Traveler cut past a lamp's 90px reach zone). Live-verified
+  end to end on `/gains-demo/firstlight`: lit all six lamps and
+  resolved all three shapes via natural taps (never precision-aimed),
+  confirmed `t1-01` through `t1-05` each fired exactly once at their
+  beat (including the halfway look-back on lamp 3), and reached "The
+  Lantern Path opens" with no console errors.
 - **c59467f** (2026-09-16) — Draft 86: **Message to Your Guardian gets
   Spark's voice (32 new clips from the batch narration pipeline).**
   One clip auto-plays as each screen mounts -- intro through help, the
@@ -4529,3 +4566,36 @@ Body Mapping got Spark's voice in Draft 83; the Guardian message is next. 32 cli
 **Verify.** `/gains-demo/guardian` and inside `/gains-demo/zone3`: intro line plays on open; each step's prompt plays on entry and interrupts the prior clip; "Read to me" appears on situation/request/normalize/offer/help, reads all options in order with the highlight moving, flips to Stop, and a tap on an option mid-read stops and selects; "Write your own" plays its cue; review plays `gm-08` then `gm-09`; safety plays `gm-10` and Continue enables only when it ends; done plays `gm-11` on the standalone page; music ducks under clips; no gray text introduced; Zone 3 hand-off to the Wingsuit award unchanged; clean console; clean build. `src/components/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 86.*
+
+
+### Draft 87 — Zone 1 second play-through: lock movement during Spark's key lines (all zones), let Body Mapping's last line finish before the Lantern, and First Light fixes (visible glimmer, bigger lamp glow, stop at the lamp, shape line, VO cues, tap marker, nothing requires tapping) — ✅ SHIPPED 3b20fe3 (2026-09-16)
+
+Josh played Zone 1 and the redesigned First Light (Drafts 84/85). Ten items.
+
+**A. Zone template (all three zones)**
+
+**1. Movement lock during key Spark lines.** After Video 1 ends, Spark says follow-me (`z1-03`) and the player can walk off and reach the pool before he finishes. Lock the Traveler (taps ignored, tap cue hidden, Spark's glide still plays) for the **arrive**, **follow-me**, and **ready** lines in every zone, releasing the moment the clip ends (or on `?dev` skip). The redirect lines stay unlocked (they're short and interrupting them is fine). Apply to Zones 1, 3, 4 alike so behavior is consistent.
+
+**2. Let the activity's last line finish before the gear award.** In Zone 1, Body Mapping's closing narration (the "nice noticing" line, `bm-10-done`) is cut off by the Lantern GearAward mounting. When an activity's `onComplete` fires while a narration clip is still playing, **wait for the clip to end (+300ms) before transitioning**, with a hard cap of ~12s. Make this generic in the zone scene so Zone 3's `gm-*` narration (Draft 86) gets the same courtesy.
+
+**B. The First Light (Draft 85 follow-ups)**
+
+**3. The glimmers aren't visible — the opening is fully black.** Spark's start line points at the first lamp and there's nothing there. Each unlit lamp head needs a **clearly visible glimmer**: a small warm point (~6px core) with a soft ~40px halo at ~55% alpha, pulsing slowly (1.6s), rendered **above the darkness mask** so the mask can never hide it. The nearest unlit lamp pulses a little brighter than the rest. Verify visually on a phone-sized frame, not just in code.
+
+**4. Bigger glow when a lamp lights.** The catch reads well but small. Roughly double it: the head flame + a ~160px additive bloom that flares to ~220px over 0.4s and settles; the mask pool opens to the full ~420px radius over ~0.8s (it may be opening smaller than spec now, check). A soft light-ring pulse outward once on catch.
+
+**5. Stop at the lamp.** On the first lamp the Traveler keeps playing the walk cycle, pressed against the post, while Spark talks. When the Traveler reaches a lamp's interaction radius: **halt movement, clear the path target, switch to idle facing the lamp**, play the raise beat, light it. Movement resumes on the next tap (after the VO line if one plays — same lock as item 1).
+
+**6. The first shape is the signpost, so the "just a tree" line is wrong there.** Josh is re-recording `t1-03-shape.mp3` as a signpost line (same filename; re-copy when it lands). Trigger `t1-03` on the **first shape that resolves, whichever it is**; the recorded line will match because the signpost is always first on this trail.
+
+**7. VO cues aren't firing.** Only the start line and (once) the shape line played; `t1-02` on L1, `t1-04` on L3, and `t1-05` at the crest didn't. Check the lamp-lit counter → cue mapping and the crest handler. Expected: `t1-01` start · `t1-02` L1 lit · `t1-03` first shape · `t1-04` L3 lit (with the ~2s look-back) · `t1-05` crest. Each cue plays once; a lamp cue should not be suppressed by the lock from item 1.
+
+**8. Bring back the tap marker.** The small ring that appears where you tap in the zones is missing here. Same marker, same fade, rendered above the mask (it's a UI cue, it should be visible in the dark).
+
+**9. Nothing in the traversal requires tapping an object.** Josh had to tap around at random to get the level to finish, which suggests lamps/shapes/crest are waiting on a tap or a precise hit. Make all three **proximity-only**: a lamp lights when the Traveler's walk path passes within its radius (~90px of the base) — even if the tap was aimed past it; a shape resolves when light reaches it; the crest fires when the Traveler enters the crest zone. Tapping a lamp head or base is fine too (route to the nearest walkable point beside it), but never required. If the sixth lamp can be bypassed by walking straight to the crest, gate the crest on `lampsLit === 6` and have Spark's redirect be a short glimmer-pulse on the missed lamp rather than a line.
+
+**10. Sanity pass on the standalone page:** with items 3–9 in, a first-time player should be able to finish `/gains-demo/firstlight` by tapping only on the trail, guided by the glimmers, with all five lines firing.
+
+**Verify.** Zone 1: after Video 1 the Traveler can't move until follow-me ends; Body Mapping's last line finishes before the Lantern appears; same lock holds for arrive/ready in Zones 3/4. First Light: visible pulsing glimmers from the first frame; tap ring appears on every tap; walking past a lamp lights it with the larger bloom and the Traveler stops and faces it; `t1-02/03/04/05` all fire once at their beats; the signpost resolves first and plays the (new) shape line; crest opens after six lamps with no random tapping needed. Clean console; clean build. `src/game/`, `src/components/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 87.*
