@@ -69,15 +69,13 @@ export default function GainsFirstLightPage() {
             The First Light
           </h2>
           <ul className="text-[14px] leading-relaxed space-y-2 mb-6 text-left max-w-[290px]" style={{ color: 'var(--text-body)' }}>
+            <li>• The trail went dark. Its lamps still stand, unlit.</li>
             <li>
-              • It's dark. Your <strong style={{ color: 'var(--text-bright)' }}>Lantern</strong> lights only a small circle.
+              • You carry the first <strong style={{ color: 'var(--text-bright)' }}>flame</strong> — tap toward each faint glimmer to
+              relight it.
             </li>
-            <li>• Tap toward the faint embers you can see in the dark.</li>
-            <li>
-              • Each one you reach flares into a <strong style={{ color: 'var(--text-bright)' }}>lamp</strong> and your light grows,
-              revealing the next few steps.
-            </li>
-            <li>• Things that loom in the dark turn out to be ordinary once you can see them.</li>
+            <li>• Your own circle of light stays the same size. Every lamp you light stays lit behind you.</li>
+            <li>• Things that loom in the dark turn out to be ordinary once the light reaches them.</li>
             <li>• Non-fail — take your time. Nothing hurts you, nothing chases you.</li>
           </ul>
           <GainsButton size="lg" onClick={() => setStarted(true)}>

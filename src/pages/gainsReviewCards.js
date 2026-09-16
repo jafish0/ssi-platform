@@ -68,7 +68,7 @@ export const REVIEW_CARDS = [
     title: 'The First Light',
     section: 'review-firstlight',
     blurb:
-      "A new traversal, Zone 1 → Zone 2: it's dark, your Lantern lights only a small circle, and you tap toward faint embers in the distance. Each one you reach flares into a lamp and your light grows, revealing the next stretch of path -- and things that loomed in the dark turn out to be ordinary once you can see them (a leaning tree, a boulder, a signpost, a sleeping creature). Six lamps in, the ground rises and the Lantern Path opens. The lesson it plays: it only lights the next few steps, and that's all we ever need.",
+      "A traversal, Zone 1 → Zone 2: the trail's lamps went out. You carry the first light and relight them one by one, leaving a lit path behind you for whoever comes next. Your own circle of light never grows -- what changes is how much of the trail is already lit behind you. Things that loomed in the dark turn out to be ordinary once the light reaches them (a leaning tree, a boulder, a signpost). Six lamps in, the strung lanterns at the crest catch in sequence and the Lantern Path opens.",
     links: [{ label: 'Play The First Light', to: '/gains-demo/firstlight', play: true }],
   },
   {
@@ -77,7 +77,7 @@ export const REVIEW_CARDS = [
     title: 'Zone 1: The Dark Abyss — walkable zone',
     section: 'review-zone1',
     blurb:
-      "The opening of the game. You arrive in the dark, walk up to a distant light to meet Spark, and watch the welcome video. Then, on the other side of the passage: the video on what trauma is, Body Mapping at the Mirror Pool (now with Spark narrating), your first gear, the Lantern, and a brand-new traversal, The First Light, where your lantern reveals the path a few steps at a time.",
+      "The opening of the game. You arrive in the dark, walk up to a distant light to meet Spark, and watch the welcome video. Then, on the other side of the passage: the video on what trauma is, Body Mapping at the Mirror Pool (now with Spark narrating), your first gear, the Lantern, and The First Light, a traversal where you carry that flame back up a dark trail, relighting its lamps one by one.",
     links: [{ label: 'Play Zone 1', to: '/gains-demo/zone1', play: true }],
   },
   {

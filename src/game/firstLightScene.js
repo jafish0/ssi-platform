@@ -1,14 +1,15 @@
-// "The First Light" — a new traversal (GAINS Draft 82), Zone 1's exit into
-// Zone 2. Reuses the walkable-zone engine's movement (tap-to-move over a
+// "The First Light" — Zone 1's exit into Zone 2 (GAINS Draft 82, redesigned
+// Draft 85). Reuses the walkable-zone engine's movement (tap-to-move over a
 // walkable polygon + waypoint graph, y-depth sorting, direction-picked walk
 // cycles, footsteps by surface, companion Spark with lag/bob/trail --
-// ported from zoneWalkScene.js) and adds the one new thing: a darkness mask
-// that reveals the route as six lamps are lit along the way.
+// ported from zoneWalkScene.js).
 //
-// One line: it's dark; the Lantern lights only a small circle; tap toward
-// faint embers and each one you reach flares into a lamp and widens your
-// light, revealing the next few steps, until the Lantern Path opens at the
-// crest. Non-fail, no timer, nothing chases you.
+// Draft 85 flips the premise. The trail up to the Lantern Path went dark --
+// its six lamp posts stand unlit, painted right into the plate. The
+// Traveler carries the first flame and relights them one by one; each lit
+// lamp's pool stays lit permanently, so the trail behind fills in with
+// light while the Traveler's own circle never changes size. By the crest,
+// the whole trail is a chain of light left for whoever comes after.
 //
 // Unlike the zones (progress pushed in from React), this traversal is
 // self-contained end to end like climbScene/traversalScene -- it owns its
@@ -19,8 +20,8 @@
 // host's audio manager.
 //
 // Config (via registry key 'traversalConfig'):
-//   { routeUrl, travelerUrls, sparkUrls, emberUrl, lampUrl,
-//     shapeUrls: { tree, boulder, signpost, creature },
+//   { routeUrl, travelerUrls, sparkUrls,
+//     shapeUrls: { tree, boulder, signpost },
 //     musicUrl, heartbeatUrl,
 //     sfxUrls: { chime, whoosh, stepStone, stepGrass, arriveSwell },
 //     voUrls: { start, firstEmber, shape, halfway, arrive },
@@ -32,7 +33,7 @@
 const W = 1080
 const H = 1920
 
-// Draft 84: derived per-frame from the sprite's own live native height (see
+// Derived per-frame from the sprite's own live native height (see
 // applyTravelerScale()) rather than a shared source-height ratio -- Zone 1's
 // Traveler frames aren't all the same source height, so a shared ratio
 // rendered some frames larger than others (most visibly idle vs walking).
@@ -48,65 +49,66 @@ const TAP_MAX_DIST = 14
 const TAP_MAX_MS = 350
 const SNAP_MAX = 170
 
-// Light radius grows one step per lamp lit (0..6).
-const LIGHT_MIN = 180
-const LIGHT_MAX = 520
-const SPARK_LIGHT_R = 110
-const LAMP_POOL_R = 190
-// A shape "looms" once within this multiple of the current light radius,
-// and resolves (silhouette fades, revealing the plate's own painted object)
-// once the light itself reaches it.
+// Draft 85: every light radius is now fixed -- nothing grows. The
+// Traveler's own circle stays this size the whole traversal; what changes
+// as you go is how much of the trail is ALREADY lit behind you (each lit
+// lamp's own permanent pool).
+const TRAVELER_LIGHT_R = 220
+const SPARK_LIGHT_R = 70
+const LAMP_POOL_R = 420
+const LAMP_POOL_OPEN_MS = 800
+const LAMP_REACH_R = 90
+const LAMP_RAISE_MS = 500
+// A shape "looms" once within this multiple of the Traveler's own light
+// radius, and resolves (silhouette fades, revealing the plate's own painted
+// object beneath) once the Traveler's circle OR a lit lamp's pool actually
+// reaches it.
 const LOOM_FACTOR = 1.5
 const SHAPE_FADE_MS = 600
-const EMBER_REACH_R = 90
 const CREST_TRIGGER_R = 260
+const CREST_SEQUENCE_MS = 1200
+// The "look back" beat on the halfway line: a temporary zoom-in centered
+// between lamps 1-3 so the lit trail behind reads clearly, then back.
+const LOOKBACK_ZOOM = 1.6
+const LOOKBACK_CENTER = { x: 550, y: 1150 }
+const LOOKBACK_HOLD_MS = 900
+const LOOKBACK_TWEEN_MS = 700
 
 // ---- the route (authored against the 1080x1920 plate) -----------------
+// Lamp `base` is where the Traveler walks to (and the reach-check origin);
+// `head` is where the flame/glow renders and the mask's pool is centered.
 const ROUTE = {
-  start: { x: 540, y: 1830 },
-  crest: { x: 555, y: 260 }, // where the ground rises into the Lantern Path
-  embers: [
-    { x: 560, y: 1650 },
-    { x: 520, y: 1440 },
-    { x: 580, y: 1200 },
-    { x: 540, y: 950 },
-    { x: 570, y: 660 },
-    { x: 555, y: 380 },
+  start: { x: 574, y: 1859 },
+  crest: { x: 712, y: 138 }, // where the ground rises into the Lantern Path
+  lamps: [
+    { base: { x: 849, y: 1538 }, head: { x: 809, y: 1331 } },
+    { base: { x: 356, y: 1194 }, head: { x: 384, y: 1033 } },
+    { base: { x: 310, y: 918 }, head: { x: 319, y: 786 } },
+    { base: { x: 798, y: 763 }, head: { x: 784, y: 648 } },
+    { base: { x: 362, y: 505 }, head: { x: 370, y: 402 } },
+    { base: { x: 763, y: 344 }, head: { x: 757, y: 252 } },
   ],
   shapes: [
-    { key: 'tree', x: 260, y: 800 },
-    { key: 'boulder', x: 260, y: 1260 },
-    { key: 'signpost', x: 800, y: 760 },
-    { key: 'creature', x: 820, y: 1010 },
+    { key: 'signpost', x: 241, y: 1377 },
+    { key: 'boulder', x: 826, y: 907 },
+    { key: 'tree', x: 953, y: 539 },
   ],
-  // A generous ribbon following the path's gentle curve, bottom to crest.
-  polys: [
-    [[420, 1830], [660, 1830], [660, 1650], [420, 1650]],
-    [[420, 1650], [660, 1650], [640, 1440], [400, 1440]],
-    [[400, 1440], [640, 1440], [700, 1200], [440, 1200]],
-    [[440, 1200], [700, 1200], [660, 950], [400, 950]],
-    [[400, 950], [660, 950], [690, 660], [430, 660]],
-    [[430, 660], [690, 660], [675, 380], [415, 380]],
-    [[415, 380], [675, 380], [660, 200], [430, 200]],
-  ],
+  // Walkable = within WALK_HALF_WIDTH of the polyline through these nodes
+  // (see isWalkable) -- a "capsule" ribbon rather than authored quads,
+  // since the trail's sharp S-curve bends made per-segment quads overshoot
+  // badly at each corner (verified by overlaying them on the actual plate).
   nodes: [
-    [540, 1830], [560, 1650], [520, 1440], [580, 1200], [540, 950],
-    [570, 660], [555, 380], [555, 260],
+    [574, 1859], [849, 1538], [356, 1194], [310, 918], [798, 763],
+    [362, 505], [763, 344], [712, 138],
   ],
   edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]],
-  depth: { yNear: 1830, yFar: 260, sNear: 1.0, sFar: 0.62 },
+  depth: { yNear: 1859, yFar: 138, sNear: 1.0, sFar: 0.6 },
 }
 
-function pointInPoly(px, py, poly) {
-  let inside = false
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i]
-    const [xj, yj] = poly[j]
-    const hit = yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi
-    if (hit) inside = !inside
-  }
-  return inside
-}
+// Half-width of the walkable ribbon around the trail's node polyline (a
+// "capsule" corridor -- see isWalkable/nearestWalkable), tuned against the
+// actual painted trail width in traversal1-route.png.
+const WALK_HALF_WIDTH = 105
 
 function projectOnSegment(px, py, ax, ay, bx, by) {
   const vx = bx - ax
@@ -129,17 +131,30 @@ export function makeFirstLightScene(Phaser) {
       this.cfg = this.registry.get('traversalConfig') || {}
       this.reduced = !!this.cfg.reducedMotion
       this.route = ROUTE
+      // Mutable per-lamp/shape state lives on the shared ROUTE object (a
+      // module-level singleton), not per-scene-instance -- reset it here so
+      // a replay (scene.restart()) doesn't inherit the previous
+      // playthrough's lit/resolved flags.
+      this.route.lamps.forEach((l) => {
+        l.lit = false
+        l.poolRadius = 0
+      })
+      this.route.shapes.forEach((s) => {
+        s.resolved = false
+        s.looming = false
+      })
       this.path = []
       this.pendingTarget = null
       this.facing = 'back'
       this.moving = false
       this.lampsLit = 0
       this.shapesRevealed = 0
-      this.lightRadius = LIGHT_MIN
       this.arrived = false
       this.started = false
       this.firstTapDone = false
       this.anyLooming = false
+      this.lightingLamp = false
+      this.lookedBack = false
     }
 
     preload() {
@@ -147,8 +162,6 @@ export function makeFirstLightScene(Phaser) {
       if (c.routeUrl) this.load.image('route', c.routeUrl)
       Object.entries(c.travelerUrls || {}).forEach(([k, url]) => this.load.image(`t-${k}`, url))
       ;(c.sparkUrls || []).forEach((url, i) => this.load.image(`spark-${i}`, url))
-      if (c.emberUrl) this.load.image('ember', c.emberUrl)
-      if (c.lampUrl) this.load.image('lamp', c.lampUrl)
       Object.entries(c.shapeUrls || {}).forEach(([k, url]) => this.load.image(`shape-${k}`, url))
       if (c.musicUrl) this.load.audio('fl-music', c.musicUrl)
       if (c.heartbeatUrl) this.load.audio('fl-heartbeat', c.heartbeatUrl)
@@ -170,7 +183,7 @@ export function makeFirstLightScene(Phaser) {
       }
 
       // Ambient dust, always faintly visible in the dark (above the mask --
-      // see the depth notes in makeMask). Reduced motion: none.
+      // see the depth notes in buildMask). Reduced motion: none.
       if (!this.reduced) {
         this.dustAmbient = this.add
           .particles(0, 0, 'glow', {
@@ -189,12 +202,15 @@ export function makeFirstLightScene(Phaser) {
           .setDepth(H + 60)
       }
 
-      this.buildEmbers()
+      this.buildLamps()
       this.buildShapes()
       this.buildTraveler()
       this.buildSpark()
       this.buildMask()
       this.buildInput()
+
+      this.camDefaultZoom = 1
+      this.cameras.main.setZoom(this.camDefaultZoom).setScroll(0, 0)
 
       // Music: skipped entirely when the host hands its own ambience over
       // (see TraversalGame's skipMusic -> no musicUrl in cfg).
@@ -220,7 +236,7 @@ export function makeFirstLightScene(Phaser) {
       }
       this.updateTraveler(delta)
       this.updateSpark(time, delta)
-      this.updateEmbers()
+      this.updateLamps()
       this.updateShapes(delta)
       this.updateMask()
       if (!this.arrived) this.maybeArrive()
@@ -233,9 +249,9 @@ export function makeFirstLightScene(Phaser) {
         else this.music.play()
       }
       this.playVo('start')
-      // A gentle nudge: Spark drifts a little ahead toward the first ember
+      // A gentle nudge: Spark drifts a little ahead toward the first lamp
       // for a few seconds, then settles into normal companion lag.
-      const first = this.route.embers[0]
+      const first = this.route.lamps[0].head
       this.sparkGesture = { x: first.x, y: first.y + 120, until: this.time.now + 3000 }
     }
 
@@ -275,11 +291,11 @@ export function makeFirstLightScene(Phaser) {
     // ---- darkness mask ----
     // A RenderTexture, cleared and refilled near-opaque every frame, then
     // erased (soft radial stamps) at the Traveler, Spark, and every lit
-    // lamp -- so it hides the PLATE (and only the plate: the traveler,
-    // spark, embers and shapes render at a higher depth than the mask and
-    // manage their own visibility, since a shape must still be visible as
-    // it looms even though it's outside the erased area). A very faint
-    // ~3% ambient stays everywhere so it never reads as a true void.
+    // lamp's own permanent pool -- so it hides the PLATE (and only the
+    // plate: the traveler, spark, and shapes render at a higher depth than
+    // the mask and manage their own visibility, since a shape must still be
+    // visible as it looms even though it's outside the erased area). A
+    // faint ~4% ambient stays everywhere so it never reads as a true void.
     buildMask() {
       if (!this.textures.exists('light-soft')) {
         const R = 256
@@ -287,7 +303,8 @@ export function makeFirstLightScene(Phaser) {
         const ctx = tex.getContext()
         const grd = ctx.createRadialGradient(R, R, 0, R, R, R)
         grd.addColorStop(0, 'rgba(255,255,255,1)')
-        grd.addColorStop(0.72, 'rgba(255,255,255,0.92)')
+        grd.addColorStop(0.6, 'rgba(255,255,255,1)')
+        grd.addColorStop(0.85, 'rgba(255,255,255,0.85)')
         grd.addColorStop(1, 'rgba(255,255,255,0)')
         ctx.fillStyle = grd
         ctx.beginPath()
@@ -305,79 +322,123 @@ export function makeFirstLightScene(Phaser) {
       if (!this.mask) return
       const rt = this.mask
       rt.clear()
-      rt.fill(0x03060d, 0.97)
+      rt.fill(0x03060d, 0.96)
       const stampAt = (x, y, radius) => {
+        if (radius <= 0) return
         this.lightStamp.setPosition(x, y).setScale(radius / this.lightTexR)
         rt.erase(this.lightStamp)
       }
-      for (const e of this.route.embers) {
-        if (e.lit) stampAt(e.x, e.y, LAMP_POOL_R)
+      for (const l of this.route.lamps) {
+        if (l.lit) stampAt(l.head.x, l.head.y, l.poolRadius)
       }
       if (this.spark) stampAt(this.spark.x, this.spark.y, SPARK_LIGHT_R)
-      if (this.traveler) stampAt(this.traveler.x, this.traveler.y - 130, this.lightRadius)
+      if (this.traveler) stampAt(this.traveler.x, this.traveler.y - 130, TRAVELER_LIGHT_R)
     }
 
-    // ---- embers -> lamps ----
-    buildEmbers() {
-      this.emberSprites = this.route.embers.map((e) => {
-        const img = this.textures.exists('ember')
-          ? this.add.image(e.x, e.y, 'ember').setOrigin(0.5, 1)
-          : this.add.rectangle(e.x, e.y, 24, 70, 0x3a2a10).setOrigin(0.5, 1)
-        // Lamp-post height, normalized like the shapes/traveler -- the
-        // source art (273x895) is a full waist-to-finial iron lamp post,
-        // scaled down to a sensible in-world prop height rather than
-        // rendered at its native pixel size.
-        const srcH = img.height || 380
-        img.setScale(Math.min(1, 380 / srcH))
-        img.setDepth(H + 50)
-        // Always a faint glimmer, even far away, so there's something to
-        // walk toward -- brightens a touch once truly nearby.
-        img.setAlpha(0.5)
-        e.sprite = img
-        e.lit = false
-        return e
+    // ---- lamps: unlit glimmer -> reached -> raised -> caught -> pool opens ----
+    buildLamps() {
+      this.lampSprites = this.route.lamps.map((l) => {
+        // No sprite for the post itself -- it's painted into the plate.
+        // Out in the dark, only a faint pulsing glimmer at the head, always
+        // visible regardless of the mask, so there's something to walk
+        // toward.
+        const glimmer = this.add.image(l.head.x, l.head.y, 'glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffcf8a)
+        glimmer.setScale(0.12).setAlpha(0.2).setDepth(H + 48)
+        if (!this.reduced) {
+          this.tweens.add({ targets: glimmer, alpha: 0.34, scale: 0.16, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' })
+        }
+        l.glimmer = glimmer
+        return l
       })
     }
 
-    updateEmbers() {
-      if (!this.traveler) return
-      for (const e of this.route.embers) {
-        if (e.lit) continue
-        const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, e.x, e.y)
-        const near = clamp(1 - (d - EMBER_REACH_R) / 260, 0, 1)
-        e.sprite.setAlpha(0.5 + near * 0.4)
-        if (d <= EMBER_REACH_R) this.lightEmber(e)
+    updateLamps() {
+      if (!this.traveler || this.lightingLamp) return
+      for (const l of this.route.lamps) {
+        if (l.lit) continue
+        const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, l.base.x, l.base.y)
+        if (d <= LAMP_REACH_R) {
+          this.lightLamp(l)
+          return
+        }
       }
     }
 
-    lightEmber(e) {
-      e.lit = true
-      this.lampsLit += 1
-      if (this.textures.exists('lamp')) e.sprite.setTexture('lamp')
-      e.sprite.setAlpha(1)
-      if (!this.reduced) {
-        const burst = this.add
-          .particles(e.x, e.y - 60, 'glow', {
-            lifespan: 520,
-            speed: { min: 40, max: 140 },
-            scale: { start: 0.4, end: 0 },
-            alpha: { start: 0.95, end: 0 },
-            tint: 0xffe3a0,
-            blendMode: 'ADD',
-            emitting: false,
+    lightLamp(l) {
+      this.lightingLamp = true
+      this.path = []
+      this.setMoving(false)
+      // Face the lamp for the raise beat.
+      this.face(l.head.x - this.traveler.x, l.head.y - this.traveler.y)
+      this.time.delayedCall(this.reduced ? 0 : LAMP_RAISE_MS, () => {
+        l.lit = true
+        this.lampsLit += 1
+        this.tweens.killTweensOf(l.glimmer)
+        l.glimmer.setAlpha(1).setScale(0.32)
+        if (!this.reduced) {
+          this.tweens.add({
+            targets: l.glimmer,
+            scale: { from: 0.32, to: 0.24 },
+            alpha: { from: 1, to: 0.86 },
+            duration: 700,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
           })
-          .setDepth(H + 55)
-        burst.explode(14)
-        this.time.delayedCall(650, () => burst.destroy())
-      }
-      this.playSfx('chime')
-      const targetRadius = LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (this.lampsLit / this.route.embers.length)
-      if (this.reduced) this.lightRadius = targetRadius
-      else {
-        this.tweens.add({ targets: this, lightRadius: targetRadius, duration: 900, ease: 'Sine.out' })
-      }
-      if (this.lampsLit === 1) this.playVo('firstEmber')
-      if (this.lampsLit === 3) this.playVo('halfway')
+          const burst = this.add
+            .particles(l.head.x, l.head.y, 'glow', {
+              lifespan: 520,
+              speed: { min: 40, max: 140 },
+              scale: { start: 0.4, end: 0 },
+              alpha: { start: 0.95, end: 0 },
+              tint: 0xffe3a0,
+              blendMode: 'ADD',
+              emitting: false,
+            })
+            .setDepth(H + 55)
+          burst.explode(14)
+          this.time.delayedCall(650, () => burst.destroy())
+        }
+        this.playSfx('chime')
+        if (this.reduced) l.poolRadius = LAMP_POOL_R
+        else this.tweens.add({ targets: l, poolRadius: LAMP_POOL_R, duration: LAMP_POOL_OPEN_MS, ease: 'Sine.out' })
+        if (this.lampsLit === 1) this.playVo('firstEmber')
+        if (this.lampsLit === 3) {
+          this.playVo('halfway')
+          this.lookBack()
+        }
+        this.lightingLamp = false
+      })
+    }
+
+    // ---- the "look back" beat on the halfway line: zoom in on the lit
+    // lamps behind, hold, then return to the normal full-plate view. ----
+    lookBack() {
+      if (this.reduced || this.lookedBack) return
+      this.lookedBack = true
+      const cam = this.cameras.main
+      const cx = LOOKBACK_CENTER.x - W / (2 * LOOKBACK_ZOOM)
+      const cy = LOOKBACK_CENTER.y - H / (2 * LOOKBACK_ZOOM)
+      this.tweens.add({
+        targets: cam,
+        zoom: LOOKBACK_ZOOM,
+        scrollX: cx,
+        scrollY: cy,
+        duration: LOOKBACK_TWEEN_MS,
+        ease: 'Sine.easeInOut',
+        onComplete: () => {
+          this.time.delayedCall(LOOKBACK_HOLD_MS, () => {
+            this.tweens.add({
+              targets: cam,
+              zoom: this.camDefaultZoom,
+              scrollX: 0,
+              scrollY: 0,
+              duration: LOOKBACK_TWEEN_MS,
+              ease: 'Sine.easeInOut',
+            })
+          })
+        },
+      })
     }
 
     // ---- shapes in the dark ----
@@ -396,20 +457,21 @@ export function makeFirstLightScene(Phaser) {
         img.setDepth(H + 50) // above the mask (H+40) -- see buildMask's depth notes
         img.setAlpha(0)
         s.sprite = img
-        s.resolved = false
-        s.looming = false
         return s
       })
     }
 
-    updateShapes(delta) {
+    updateShapes() {
       if (!this.traveler) return
       let anyLooming = false
       for (const s of this.route.shapes) {
         if (s.resolved) continue
-        const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, s.x, s.y)
-        const loomR = this.lightRadius * LOOM_FACTOR
-        if (d <= this.lightRadius) {
+        const dTraveler = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, s.x, s.y)
+        const nearLampPool = this.route.lamps.some(
+          (l) => l.lit && Phaser.Math.Distance.Between(l.head.x, l.head.y, s.x, s.y) <= l.poolRadius,
+        )
+        const loomR = TRAVELER_LIGHT_R * LOOM_FACTOR
+        if (dTraveler <= TRAVELER_LIGHT_R || nearLampPool) {
           // The light reaches it: resolve (fade the silhouette, revealing
           // the plate's own painted, now-lit object beneath).
           s.resolved = true
@@ -417,7 +479,7 @@ export function makeFirstLightScene(Phaser) {
           this.shapesRevealed += 1
           this.tweens.add({ targets: s.sprite, alpha: 0, duration: SHAPE_FADE_MS, ease: 'Sine.out' })
           if (this.shapesRevealed === 1) this.playVo('shape')
-        } else if (d <= loomR) {
+        } else if (dTraveler <= loomR) {
           s.looming = true
           anyLooming = true
           if (s.sprite.alpha < 0.88) {
@@ -454,7 +516,7 @@ export function makeFirstLightScene(Phaser) {
 
     // ---- arrival ----
     maybeArrive() {
-      if (this.lampsLit < this.route.embers.length) return
+      if (this.lampsLit < this.route.lamps.length) return
       const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, this.route.crest.x, this.route.crest.y)
       if (d <= CREST_TRIGGER_R) this.arrive()
     }
@@ -464,23 +526,57 @@ export function makeFirstLightScene(Phaser) {
       this.arrived = true
       this.path = []
       this.setMoving(false)
-      this.playSfx('arriveSwell')
-      this.playVo('arrive')
-      if (this.music) this.tweens.add({ targets: this.music, volume: 0, duration: 900 })
-      const bloom = this.add.rectangle(W / 2, H / 2, W, H, 0xffe9b0, 0).setDepth(H + 70)
-      this.tweens.add({
-        targets: bloom,
-        fillAlpha: this.reduced ? 0.4 : 0.92,
-        duration: this.reduced ? 700 : 900,
-        ease: 'Sine.out',
-        onComplete: () => {
-          this.time.delayedCall(1100, () => {
-            if (typeof this.cfg.onComplete === 'function') {
-              this.cfg.onComplete({ lampsLit: this.lampsLit, shapesRevealed: this.shapesRevealed })
-            }
-          })
-        },
+      this.lightCrestLanterns(() => {
+        this.playSfx('arriveSwell')
+        this.playVo('arrive')
+        if (this.music) this.tweens.add({ targets: this.music, volume: 0, duration: 900 })
+        const bloom = this.add.rectangle(W / 2, H / 2, W, H, 0xffe9b0, 0).setDepth(H + 70)
+        this.tweens.add({
+          targets: bloom,
+          fillAlpha: this.reduced ? 0.4 : 0.92,
+          duration: this.reduced ? 700 : 900,
+          ease: 'Sine.out',
+          onComplete: () => {
+            this.time.delayedCall(2000, () => {
+              if (typeof this.cfg.onComplete === 'function') {
+                this.cfg.onComplete({ lampsLit: this.lampsLit, shapesRevealed: this.shapesRevealed })
+              }
+            })
+          },
+        })
       })
+    }
+
+    // A handful of small flame dots strung across the crest, catching left
+    // to right as if the last lamp passed its flame along -- purely
+    // decorative (the mask's own bloom right after is what actually
+    // reveals the whole trail below).
+    lightCrestLanterns(onDone) {
+      if (this.reduced) {
+        onDone()
+        return
+      }
+      const dots = [
+        { x: 580, y: 150 },
+        { x: 640, y: 128 },
+        { x: 700, y: 112 },
+        { x: 760, y: 120 },
+        { x: 820, y: 140 },
+        { x: 870, y: 165 },
+      ]
+      dots.forEach((p, i) => {
+        this.time.delayedCall((CREST_SEQUENCE_MS / dots.length) * i, () => {
+          const dot = this.add
+            .image(p.x, p.y, 'glow')
+            .setBlendMode(Phaser.BlendModes.ADD)
+            .setTint(0xffd9a0)
+            .setAlpha(0)
+            .setScale(0.05)
+            .setDepth(H + 56)
+          this.tweens.add({ targets: dot, alpha: 0.8, scale: 0.16, duration: 220, ease: 'Sine.out' })
+        })
+      })
+      this.time.delayedCall(CREST_SEQUENCE_MS, onDone)
     }
 
     // ---- audio ----
@@ -553,9 +649,9 @@ export function makeFirstLightScene(Phaser) {
       this.traveler.setPosition(x, y)
       this.travelerDisplayH = TRAVELER_H * s
       this.applyTravelerScale()
-      this.traveler.setDepth(H + 50)
-      this.shadow.setPosition(x, y + 4 * s).setScale(SHADOW_SCALE_AT_1 * s, SHADOW_SCALE_AT_1 * s).setDepth(H + 49)
-      this.dust.setDepth(H + 45)
+      this.traveler.setDepth(y)
+      this.shadow.setPosition(x, y + 4 * s).setScale(SHADOW_SCALE_AT_1 * s, SHADOW_SCALE_AT_1 * s).setDepth(y - 0.5)
+      this.dust.setDepth(y - 0.2)
     }
 
     applyTravelerScale() {
@@ -627,32 +723,35 @@ export function makeFirstLightScene(Phaser) {
       const { x, y } = this.traveler
       const s = this.depthScale(y)
       if (!this.reduced && this.dust) {
-        this.dust.setDepth(H + 45)
+        this.dust.setDepth(y - 0.2)
         this.dust.explode(4, x + Phaser.Math.Between(-14, 14) * s, y - 2)
       }
       this.playSfx('stepStone')
     }
 
-    // ---- walkable geometry (ported from zoneWalkScene.js) ----
+    // ---- walkable geometry: a capsule ribbon around the node polyline ----
     isWalkable(x, y) {
-      return this.route.polys.some((p) => pointInPoly(x, y, p))
+      const nodes = this.route.nodes
+      for (let i = 0; i + 1 < nodes.length; i++) {
+        const [ax, ay] = nodes[i]
+        const [bx, by] = nodes[i + 1]
+        const p = projectOnSegment(x, y, ax, ay, bx, by)
+        if (Math.hypot(x - p.x, y - p.y) <= WALK_HALF_WIDTH) return true
+      }
+      return false
     }
 
     nearestWalkable(x, y) {
-      if (this.isWalkable(x, y)) return { x, y, d: 0 }
+      const nodes = this.route.nodes
       let best = null
-      for (const poly of this.route.polys) {
-        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-          const p = projectOnSegment(x, y, poly[j][0], poly[j][1], poly[i][0], poly[i][1])
-          const cx = poly.reduce((a, q) => a + q[0], 0) / poly.length
-          const cy = poly.reduce((a, q) => a + q[1], 0) / poly.length
-          const px = p.x + (cx - p.x) * 0.03
-          const py = p.y + (cy - p.y) * 0.03
-          if (!this.isWalkable(px, py)) continue
-          const d = Math.hypot(px - x, py - y)
-          if (!best || d < best.d) best = { x: px, y: py, d }
-        }
+      for (let i = 0; i + 1 < nodes.length; i++) {
+        const [ax, ay] = nodes[i]
+        const [bx, by] = nodes[i + 1]
+        const p = projectOnSegment(x, y, ax, ay, bx, by)
+        const d = Math.hypot(x - p.x, y - p.y)
+        if (!best || d < best.d) best = { x: p.x, y: p.y, d }
       }
+      if (best && best.d <= WALK_HALF_WIDTH) return { x, y, d: 0 }
       return best
     }
 

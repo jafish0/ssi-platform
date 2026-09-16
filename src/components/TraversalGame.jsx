@@ -65,7 +65,9 @@ const MODES = {
   // walkable-zone engine's movement, so it renders at that engine's own
   // 1080x1920 logical size (see `width`/`height` below) rather than the
   // other traversals' 540x960 -- its positions are authored against the
-  // route plate at that scale.
+  // route plate at that scale. Draft 85: redesigned -- the lamps are
+  // painted into the plate now (no ember/lamp sprites), and there are only
+  // three shapes (the creature is retired).
   firstlight: {
     sceneKey: 'FirstLight',
     loadScene: () =>
@@ -82,13 +84,10 @@ const MODES = {
         return urls
       })(),
       sparkUrls: [1, 2, 3, 4].map((i) => `/long-light/zone1/spark/flicker-${i}.webp`),
-      emberUrl: '/gains/firstlight/sprites/ember-unlit.png',
-      lampUrl: '/gains/firstlight/sprites/lamp-lit.png',
       shapeUrls: {
         tree: '/gains/firstlight/sprites/shape-tree.png',
         boulder: '/gains/firstlight/sprites/shape-boulder.png',
         signpost: '/gains/firstlight/sprites/shape-signpost.png',
-        creature: '/gains/firstlight/sprites/shape-creature.png',
       },
       // Standalone-only (Zone 1 hands its own ambience over instead --
       // see TraversalGame's `skipMusic` prop, wired from GainsZonePage).
