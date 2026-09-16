@@ -67,6 +67,18 @@ const LOOM_FACTOR = 1.5
 const SHAPE_FADE_MS = 600
 const CREST_TRIGGER_R = 260
 const CREST_SEQUENCE_MS = 1200
+// Draft 87: an unlit lamp's glimmer -- a small bright core plus a soft
+// pulsing halo, both above the darkness mask so they're always visible.
+// Sizes are diameters in px; the 'glow' texture is 32px native.
+const GLIMMER_CORE_PX = 8
+const GLIMMER_HALO_PX = 40
+const GLIMMER_PULSE_MS = 1600
+// The catch: the head flame's bloom roughly doubles the old size, flares
+// briefly, then settles into a steady (still gently flickering) glow.
+const LAMP_FLARE_PX = 160
+const LAMP_FLARE_PEAK_PX = 220
+const LAMP_FLARE_MS = 400
+const LAMP_REDIRECT_COOLDOWN_MS = 2000
 // The "look back" beat on the halfway line: a temporary zoom-in centered
 // between lamps 1-3 so the lit trail behind reads clearly, then back.
 const LOOKBACK_ZOOM = 1.6
@@ -286,6 +298,18 @@ export function makeFirstLightScene(Phaser) {
         g.generateTexture('shadow', 160, 56)
         g.destroy()
       }
+      // Draft 87: the tap-ring, ported from zoneWalkScene.js's recipe --
+      // a UI cue, so it renders above the mask (see showTapMarker).
+      if (!this.textures.exists('ring')) {
+        const R = 96
+        const g = this.make.graphics({ x: 0, y: 0, add: false })
+        g.lineStyle(10, 0xffffff, 1)
+        g.strokeCircle(R, R, R - 8)
+        g.lineStyle(22, 0xffffff, 0.22)
+        g.strokeCircle(R, R, R - 8)
+        g.generateTexture('ring', R * 2, R * 2)
+        g.destroy()
+      }
     }
 
     // ---- darkness mask ----
@@ -336,24 +360,51 @@ export function makeFirstLightScene(Phaser) {
     }
 
     // ---- lamps: unlit glimmer -> reached -> raised -> caught -> pool opens ----
+    // Draft 87: split into a small bright CORE (a "there's a lamp here" dot)
+    // and a soft pulsing HALO, both above the mask (H+40) so they're always
+    // visible in the dark regardless of the light circle -- the original
+    // single tiny sprite (scaled well under its own texture size) read as
+    // invisible in practice.
     buildLamps() {
       this.lampSprites = this.route.lamps.map((l) => {
-        // No sprite for the post itself -- it's painted into the plate.
-        // Out in the dark, only a faint pulsing glimmer at the head, always
-        // visible regardless of the mask, so there's something to walk
-        // toward.
-        const glimmer = this.add.image(l.head.x, l.head.y, 'glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffcf8a)
-        glimmer.setScale(0.12).setAlpha(0.2).setDepth(H + 48)
-        if (!this.reduced) {
-          this.tweens.add({ targets: glimmer, alpha: 0.34, scale: 0.16, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' })
-        }
-        l.glimmer = glimmer
+        const halo = this.add.image(l.head.x, l.head.y, 'glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffcf8a)
+        halo.setScale(GLIMMER_HALO_PX / 32).setAlpha(0.5).setDepth(H + 47)
+        const core = this.add.image(l.head.x, l.head.y, 'glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xfff0c8)
+        core.setScale(GLIMMER_CORE_PX / 32).setAlpha(0.85).setDepth(H + 48)
+        l.glimmerHalo = halo
+        l.glimmerCore = core
         return l
       })
     }
 
+    // Drives the unlit glimmers' pulse directly off scene time (rather than
+    // a per-lamp tween) so the nearest-unlit lamp can be boosted brighter
+    // without fighting a tween already in flight, and checks proximity for
+    // the catch -- proximity only: reaching a lamp's radius lights it even
+    // if the tap that's walking you past it was aimed further up the trail
+    // (Draft 87 item 9).
     updateLamps() {
-      if (!this.traveler || this.lightingLamp) return
+      if (!this.traveler) return
+      let nearest = null
+      let nearestD = Infinity
+      for (const l of this.route.lamps) {
+        if (l.lit) continue
+        const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, l.base.x, l.base.y)
+        if (d < nearestD) {
+          nearestD = d
+          nearest = l
+        }
+      }
+      const phase = this.reduced ? 0.5 : (Math.sin((this.time.now / GLIMMER_PULSE_MS) * Math.PI * 2) + 1) / 2
+      for (const l of this.route.lamps) {
+        if (l.lit) continue
+        const isNearest = l === nearest
+        const base = isNearest ? 0.6 : 0.48
+        const swing = isNearest ? 0.22 : 0.14
+        l.glimmerHalo.setAlpha(base + phase * swing)
+        l.glimmerCore.setAlpha(isNearest ? 1 : 0.82)
+      }
+      if (this.lightingLamp) return
       for (const l of this.route.lamps) {
         if (l.lit) continue
         const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, l.base.x, l.base.y)
@@ -367,24 +418,47 @@ export function makeFirstLightScene(Phaser) {
     lightLamp(l) {
       this.lightingLamp = true
       this.path = []
+      this.pendingTarget = null
+      // Face the lamp for the raise beat -- set the idle facing directly
+      // rather than calling face() (which plays the WALK animation; calling
+      // it right after stopping was why the Traveler kept walking in place
+      // pressed against the post).
+      this.facing = l.head.y - this.traveler.y < 0 ? 'back' : 'front'
       this.setMoving(false)
-      // Face the lamp for the raise beat.
-      this.face(l.head.x - this.traveler.x, l.head.y - this.traveler.y)
       this.time.delayedCall(this.reduced ? 0 : LAMP_RAISE_MS, () => {
         l.lit = true
         this.lampsLit += 1
-        this.tweens.killTweensOf(l.glimmer)
-        l.glimmer.setAlpha(1).setScale(0.32)
+        const haloPx0 = LAMP_FLARE_PX / 32
+        const haloPx1 = LAMP_FLARE_PEAK_PX / 32
+        l.glimmerCore.setAlpha(1).setScale((GLIMMER_CORE_PX * 1.3) / 32)
+        l.glimmerHalo.setScale(haloPx0).setAlpha(0.85)
         if (!this.reduced) {
           this.tweens.add({
-            targets: l.glimmer,
-            scale: { from: 0.32, to: 0.24 },
-            alpha: { from: 1, to: 0.86 },
-            duration: 700,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut',
+            targets: l.glimmerHalo,
+            scale: haloPx1,
+            duration: LAMP_FLARE_MS,
+            ease: 'Sine.out',
+            onComplete: () => {
+              this.tweens.add({
+                targets: l.glimmerHalo,
+                scale: { from: haloPx1, to: haloPx0 * 1.15 },
+                alpha: { from: 0.85, to: 0.66 },
+                duration: 900,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut',
+              })
+            },
           })
+          // A soft light-ring, expanding outward once and fading.
+          const ring = this.add
+            .image(l.head.x, l.head.y, 'glow')
+            .setBlendMode(Phaser.BlendModes.ADD)
+            .setTint(0xffe3a0)
+            .setAlpha(0.7)
+            .setScale(haloPx0 * 0.6)
+            .setDepth(H + 54)
+          this.tweens.add({ targets: ring, scale: haloPx1 * 2.4, alpha: 0, duration: 700, ease: 'Sine.out', onComplete: () => ring.destroy() })
           const burst = this.add
             .particles(l.head.x, l.head.y, 'glow', {
               lifespan: 520,
@@ -398,6 +472,8 @@ export function makeFirstLightScene(Phaser) {
             .setDepth(H + 55)
           burst.explode(14)
           this.time.delayedCall(650, () => burst.destroy())
+        } else {
+          l.glimmerHalo.setScale(haloPx1).setAlpha(0.8)
         }
         this.playSfx('chime')
         if (this.reduced) l.poolRadius = LAMP_POOL_R
@@ -516,9 +592,26 @@ export function makeFirstLightScene(Phaser) {
 
     // ---- arrival ----
     maybeArrive() {
-      if (this.lampsLit < this.route.lamps.length) return
       const d = Phaser.Math.Distance.Between(this.traveler.x, this.traveler.y, this.route.crest.x, this.route.crest.y)
-      if (d <= CREST_TRIGGER_R) this.arrive()
+      if (d > CREST_TRIGGER_R) return
+      // The route always walks the Traveler past every lamp on the way
+      // here (see walkTo), so this shouldn't be reachable with any lamp
+      // still unlit -- but if it ever is, pulse the nearest miss instead
+      // of silently doing nothing.
+      if (this.lampsLit < this.route.lamps.length) {
+        this.pulseMissedLamp()
+        return
+      }
+      this.arrive()
+    }
+
+    pulseMissedLamp() {
+      const now = this.time.now
+      if (this.lastMissPulseAt && now - this.lastMissPulseAt < LAMP_REDIRECT_COOLDOWN_MS) return
+      this.lastMissPulseAt = now
+      const unlit = this.route.lamps.find((l) => !l.lit)
+      if (!unlit) return
+      this.tweens.add({ targets: unlit.glimmerHalo, scale: unlit.glimmerHalo.scale * 1.7, alpha: 0.95, duration: 260, yoyo: true, ease: 'Sine.easeOut' })
     }
 
     arrive() {
@@ -668,7 +761,9 @@ export function makeFirstLightScene(Phaser) {
     setMoving(m) {
       if (m === this.moving) return
       this.moving = m
-      if (!m) {
+      if (m) {
+        if (this.tapMarker) this.fadeTapMarker()
+      } else {
         this.traveler.anims.stop()
         const idle = this.facing === 'back' ? 't-idle-back' : 't-idle-front'
         if (this.textures.exists(idle)) this.traveler.setTexture(idle)
@@ -803,19 +898,46 @@ export function makeFirstLightScene(Phaser) {
       return out
     }
 
+    // Draft 87 item 9: deliberately no shortcut-trimming across nodes here
+    // (unlike zoneWalkScene.js). The node chain IS the sequence of lamp
+    // waypoints, and proximity-only lighting depends on every tap walking
+    // the Traveler past each lamp between here and there, never around it
+    // -- a "clear" straight line that stayed inside the walkable ribbon
+    // could otherwise cut a corner wide enough to miss a lamp's own reach
+    // radius. A direct line is only used when the tap lands on the SAME
+    // local stretch (nearest to the same node) as the Traveler already is,
+    // where there's no intervening lamp to skip.
     walkTo(x, y) {
       const { x: fx, y: fy } = this.traveler
-      if (this.segmentClear(fx, fy, x, y)) {
+      const na = this.nearestNode(fx, fy)
+      const nb = this.nearestNode(x, y)
+      if (na === nb && this.segmentClear(fx, fy, x, y)) {
         this.path = [{ x, y }]
       } else {
-        const na = this.nearestNode(fx, fy)
-        const nb = this.nearestNode(x, y)
         const pts = this.nodePath(na, nb).map((i) => ({ x: this.route.nodes[i][0], y: this.route.nodes[i][1] }))
-        while (pts.length > 1 && this.segmentClear(fx, fy, pts[1].x, pts[1].y)) pts.shift()
-        while (pts.length > 1 && this.segmentClear(pts[pts.length - 2].x, pts[pts.length - 2].y, x, y)) pts.pop()
         this.path = [...pts, { x, y }]
       }
       if (this.path.length) this.face(this.path[0].x - fx, this.path[0].y - fy)
+    }
+
+    // ---- tap marker (Draft 87 item 8, ported from zoneWalkScene.js) ----
+    // A UI cue, not part of the world -- rendered above the mask so it's
+    // visible in the dark like the glimmers.
+    showTapMarker(x, y) {
+      if (this.tapMarker) this.tapMarker.destroy()
+      const ring = this.add.image(x, y, 'ring').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffe9b8).setDepth(H + 49)
+      ring.setScale(0.25).setAlpha(0.9)
+      this.tweens.add({ targets: ring, scale: 0.75, alpha: 0, duration: 650, ease: 'Sine.easeOut', onComplete: () => ring.destroy() })
+      const spot = this.add.image(x, y, 'glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xffe9b8).setDepth(H + 49)
+      spot.setScale(0.55).setAlpha(0.42)
+      this.tapMarker = spot
+    }
+
+    fadeTapMarker() {
+      const m = this.tapMarker
+      this.tapMarker = null
+      if (!m) return
+      this.tweens.add({ targets: m, alpha: 0, scale: m.scale * 0.6, duration: 320, onComplete: () => m.destroy() })
     }
 
     // ---- input ----
@@ -834,10 +956,11 @@ export function makeFirstLightScene(Phaser) {
     }
 
     handleTap(x, y) {
-      if (!this.started || this.arrived) return
+      if (!this.started || this.arrived || this.lightingLamp) return
       this.firstTapDone = true
       const w = this.nearestWalkable(x, y)
       if (!w || w.d > SNAP_MAX) return
+      this.showTapMarker(w.x, w.y)
       this.walkTo(w.x, w.y)
     }
 

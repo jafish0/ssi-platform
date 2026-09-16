@@ -94,6 +94,10 @@ export default function GainsZonePage({ zone }) {
   const timersRef = useRef([])
   const beckonTimerRef = useRef(null)
   const lastRedirectRef = useRef(0)
+  // Draft 87: whether the current activity's own narration is playing
+  // right now -- set imperatively via onNarrate, read by onActivityComplete
+  // to hold the Gear Award transition until it's done.
+  const narratingRef = useRef(false)
   const progressRef = useRef(progress)
   progressRef.current = progress
   const sceneRef = useRef(scene)
@@ -194,14 +198,23 @@ export default function GainsZonePage({ zone }) {
     }, BLOOM_IN_MS)
   }
 
-  // Locks movement, plays the zone's own `arrive` line, unlocks once it
-  // finishes (resolves at once if the clip can't play, so nobody's ever
-  // stuck). Used for every MAIN-plate arrival -- the very first one for a
-  // one-plate zone, or the cut-in from Plate 1 for a two-plate one.
+  // Locks movement (taps ignored, the tap cue hidden -- Spark's own glide/
+  // light-path gestures are untouched, since those are driven imperatively
+  // and don't check this), plays the given line, unlocks once it finishes
+  // (resolves at once if the clip can't play, so nobody's ever stuck).
+  // Draft 87: used for every key Spark line a player could otherwise walk
+  // off during -- arrive, follow-me, and ready -- in every zone alike. The
+  // short redirect lines stay unlocked on purpose.
+  function lockAndSay(key) {
+    setIntroLock(true)
+    return say(key).then(() => setIntroLock(false))
+  }
+
+  // Used for every MAIN-plate arrival -- the very first one for a one-plate
+  // zone, or the cut-in from Plate 1 for a two-plate one.
   function lockAndArrive() {
     audioRef.current?.sfx('chime-unlock')
-    setIntroLock(true)
-    say('arrive').then(() => setIntroLock(false))
+    lockAndSay('arrive')
   }
 
   // Draft 83: the intro plate's own settle -- no lock at all (the walk cue
@@ -353,15 +366,32 @@ export default function GainsZonePage({ zone }) {
     transitionTo('walk', () => {
       audioRef.current?.sfx('chime-unlock')
       stageRef.current?.sparkGlideTo('pond')
-      say('followMe')
+      lockAndSay('followMe')
     })
   }
 
+  // Draft 87: an activity's own closing narration (Body Mapping's "nice
+  // noticing" line, Zone 3's gm-* lines) shouldn't get cut off by the Gear
+  // Award mounting right under it. Generic here so any ActivityComponent
+  // that reports its own narration state via onNarrate gets the same
+  // courtesy -- +300ms once the clip actually ends, or a ~12s hard cap so
+  // a stuck/failed clip can never block the zone forever.
   function onActivityComplete(result) {
     setProgress({ leveledUp: !!(result && result.leveledUp) })
     // 2026-09-03 (Josh): the equip sound also marks RECEIVING the gear -- it
     // plays as the Gear Award reveal blooms in, and again on Equip.
-    transitionTo('gear', () => audioRef.current?.sfx('equip-flash'))
+    const proceed = () => transitionTo('gear', () => audioRef.current?.sfx('equip-flash'))
+    if (!narratingRef.current) {
+      proceed()
+      return
+    }
+    const deadline = Date.now() + 12000
+    const poll = () => {
+      if (!narratingRef.current) later(proceed, 300)
+      else if (Date.now() >= deadline) proceed()
+      else later(poll, 150)
+    }
+    poll()
   }
 
   function onGearEquip() {
@@ -379,7 +409,7 @@ export default function GainsZonePage({ zone }) {
     transitionTo('walk', () => {
       audioRef.current?.sfx('chime-unlock')
       stageRef.current?.lightPath()
-      say('ready')
+      lockAndSay('ready')
     })
   }
 
@@ -393,6 +423,7 @@ export default function GainsZonePage({ zone }) {
     clearBeckonTimer()
     audioRef.current?.stopSpeech()
     setBubble(null)
+    narratingRef.current = false
     setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
     setGearEquipped(false)
     setTravResult(null)
@@ -512,7 +543,14 @@ export default function GainsZonePage({ zone }) {
             accept it. */}
         {scene === 'activity' && (
           <div className="absolute inset-0 z-20">
-            <ActivityComponent onComplete={onActivityComplete} onNarrate={(on) => audioRef.current?.duck(on)} {...(zone.activityExtraProps || {})} />
+            <ActivityComponent
+              onComplete={onActivityComplete}
+              onNarrate={(on) => {
+                narratingRef.current = on
+                audioRef.current?.duck(on)
+              }}
+              {...(zone.activityExtraProps || {})}
+            />
             {DEV_SKIP && (
               <button
                 type="button"
