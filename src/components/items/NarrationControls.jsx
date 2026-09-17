@@ -12,7 +12,8 @@
 // URLs that exist for a given item; a prop left undefined renders no
 // button for that clip at all (e.g. an open-response demographics field
 // has a question clip but no options clip).
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { claim, release } from '../../lib/narrationCoordinator.js'
 
 // NarrationPill — `src` is one URL or an array of URLs played back to back
 // (e.g. LetterBuilder's "Read me the instructions" reading 5 separate
@@ -22,15 +23,29 @@ import { useRef, useState } from 'react'
 // current clip, which is confusing) in favor of the same collapsed-pill
 // look for the whole sequence, matching KaiNarrationPlayer/TextPrompt's
 // own no-visible-scrubber precedent for anything longer than one clip.
+//
+// Draft 113 (answering Draft 112's investigation): every reveal claims the
+// shared narrationCoordinator, so revealing a NEW pill collapses whichever
+// ONE pill (or Kai clip, or Assent's player) was previously active — not
+// just pausing it, fully collapsing back to the unrevealed button, which
+// discards its <audio> element. This is what actually bounds how many
+// narration <audio> elements can be mounted at once app-wide to one,
+// which a long scale page with many revealed pills could otherwise stack
+// up indefinitely (Draft 112 Part A's leading hypothesis for the mobile
+// playback failures), and what stops two independently-triggered pills
+// from ever sounding at the same time (Part B, Getting Unstuck).
 export function NarrationPill({ label, src }) {
   const [revealed, setRevealed] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [playing, setPlaying] = useState(false)
   const audioRef = useRef(null)
   const indexRef = useRef(0)
+  const token = useRef({}).current
 
   const srcs = Array.isArray(src) ? src.filter(Boolean) : src ? [src] : []
   const isSequence = srcs.length > 1
+
+  useEffect(() => () => release(token), [token])
 
   if (srcs.length === 0) return null
 
@@ -40,6 +55,7 @@ export function NarrationPill({ label, src }) {
         type="button"
         onClick={() => {
           indexRef.current = 0
+          claim(token, () => setRevealed(false))
           setRevealed(true)
         }}
         className="inline-flex items-center gap-1.5 bg-ctac-teal-50 hover:bg-ctac-teal-100 border border-ctac-teal-200 text-ctac-teal-800 font-semibold rounded-full px-3 py-1.5 min-h-[36px] text-[13px]"
@@ -64,6 +80,7 @@ export function NarrationPill({ label, src }) {
         controls
         preload="auto"
         src={srcs[0]}
+        onEnded={() => release(token)}
         onError={() => setLoadFailed(true)}
         className="h-9 max-w-[220px]"
       >
@@ -76,6 +93,7 @@ export function NarrationPill({ label, src }) {
     const next = indexRef.current + 1
     if (next >= srcs.length) {
       setPlaying(false)
+      release(token)
       return
     }
     indexRef.current = next
@@ -91,8 +109,12 @@ export function NarrationPill({ label, src }) {
       onClick={() => {
         const el = audioRef.current
         if (!el) return
-        if (playing) el.pause()
-        else el.play().catch(() => {})
+        if (playing) {
+          el.pause()
+        } else {
+          claim(token, () => setRevealed(false))
+          el.play().catch(() => {})
+        }
       }}
       className="inline-flex items-center gap-1.5 bg-ctac-teal-100 hover:bg-ctac-teal-200 border border-ctac-teal-300 text-ctac-teal-900 font-semibold rounded-full px-3 py-1.5 min-h-[36px] text-[13px]"
     >

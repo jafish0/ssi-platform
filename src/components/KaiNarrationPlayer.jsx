@@ -42,6 +42,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Volume2, Pause, RotateCcw } from 'lucide-react'
+import { claim, release } from '../lib/narrationCoordinator.js'
 
 export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete }) {
   const audioRef = useRef(null)
@@ -49,6 +50,21 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
   const [completed, setCompleted] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [progress, setProgress] = useState(0) // 0..1
+  const token = useRef({}).current
+
+  // Draft 113 (answering Draft 112 Part B): claim the shared
+  // narrationCoordinator wherever this player starts sounding, so a
+  // participant tapping a nearby "read this to me" pill while Kai is
+  // still speaking pauses Kai first instead of both playing at once —
+  // and vice versa, tapping Kai's own Play after a pill claimed the slot
+  // stops that pill. `stop` pauses (doesn't hide) Kai's player — unlike a
+  // NarrationPill, there's no "collapsed" state to fall back to.
+  function claimSlot() {
+    claim(token, () => {
+      const el = audioRef.current
+      if (el) el.pause()
+    })
+  }
 
   // Attempt auto-play on mount. Browsers block this without prior user
   // interaction — the participant has already interacted with the page to
@@ -59,7 +75,9 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
     setLoadFailed(false)
     const el = audioRef.current
     if (!el) return
+    claimSlot()
     el.play().catch(() => {})
+    return () => release(token)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioSrc])
 
@@ -72,6 +90,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
     setPlaying(false)
     setLoadFailed(true)
     setCompleted(true)
+    release(token)
     onComplete?.()
   }
 
@@ -81,6 +100,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
     if (playing) {
       el.pause()
     } else {
+      claimSlot()
       el.play().catch(() => {})
     }
   }
@@ -88,6 +108,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
   function handleReplay() {
     const el = audioRef.current
     if (!el) return
+    claimSlot()
     el.currentTime = 0
     el.play().catch(() => {})
   }
@@ -101,6 +122,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
   function handleEnded() {
     setPlaying(false)
     setCompleted(true)
+    release(token)
     onComplete?.()
   }
 

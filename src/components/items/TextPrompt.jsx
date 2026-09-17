@@ -4,6 +4,7 @@ import { interpolate } from '../../lib/tokens.js'
 import { PrimaryButton } from './shared.jsx'
 import { downloadPdf } from '../../lib/pdf.js'
 import CrisisLifelineNote from '../CrisisLifelineNote.jsx'
+import { claim, release } from '../../lib/narrationCoordinator.js'
 
 // "Read this to me" narration — a collapsed pill, not an always-visible
 // player: ported from Assent.jsx's AssentNarration, made src-driven so any
@@ -51,6 +52,17 @@ import CrisisLifelineNote from '../CrisisLifelineNote.jsx'
 // the autoplay-attempt AND the manual pill play `src` then `src2` back
 // to back, matching that reading order, instead of only ever narrating
 // the first clip.
+//
+// 2026-09-17 (Draft 113, answering Draft 112): `autoplayBusy` only ever
+// coordinated this ONE item's own two mechanisms against each other. It
+// says nothing about an unrelated narration source elsewhere on the same
+// screen (a NarrationPill, a KaiNarrationPlayer) — today that can't
+// actually happen on the two items that use this component (Assent,
+// Welcome), but the shared narrationCoordinator makes the guarantee
+// hold everywhere, not just by coincidence of today's content. Every
+// place this component starts sounding now also calls the coordinator's
+// `claim`, on top of (not instead of) the existing autoplayBusy logic,
+// which still drives the visible disabled state.
 function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) {
   const audioRef = useRef(null)
   const revealedAudioRef = useRef(null)
@@ -64,13 +76,16 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
   // True only while the background autoplay-attempt sequence is actually
   // sounding. Drives disabling the manual pill (see fix above).
   const [autoplayBusy, setAutoplayBusy] = useState(false)
+  const token = useRef({}).current
 
   useEffect(() => {
     if (!gated) return
     setLoadFailed(false)
     const el = audioRef.current
     if (!el) return
+    claim(token, () => el.pause())
     el.play().catch(() => {})
+    return () => release(token)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gated, src])
 
@@ -80,9 +95,16 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
     let current = null
     const clips = [src, src2].filter(Boolean)
 
+    function stopThisAttempt() {
+      cancelled = true
+      if (current) current.pause()
+      setAutoplayBusy(false)
+    }
+
     function playAt(i) {
       if (cancelled || i >= clips.length) {
         setAutoplayBusy(false)
+        release(token)
         return
       }
       current = new Audio(clips[i])
@@ -92,7 +114,10 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
       current
         .play()
         .then(() => {
-          if (!cancelled) setAutoplayBusy(true)
+          if (!cancelled) {
+            setAutoplayBusy(true)
+            claim(token, stopThisAttempt)
+          }
         })
         .catch(() => {
           // Blocked by the browser's autoplay policy (the common mobile
@@ -110,9 +135,17 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
       cancelled = true
       if (current) current.pause()
       setAutoplayBusy(false)
+      release(token)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gated, autoplayAttempt, src, src2])
+
+  // The manual-reveal player's own claim (see the `!revealed` button
+  // below) isn't tied to an effect with a natural cleanup point the way
+  // the two above are — release it too if this whole item unmounts while
+  // that player is still mid-playback (e.g. the participant navigates
+  // away). A harmless no-op if something else already released it.
+  useEffect(() => () => release(token), [token])
 
   // Advance the manual/revealed player to the second clip once the first
   // one ends, and explicitly (re)issue play() on the src change — some
@@ -134,6 +167,7 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
       // permanently lock Continue behind audio that will never play.
       setPlaying(false)
       setCompleted(true)
+      release(token)
       onComplete?.()
     }
   }
@@ -144,6 +178,7 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
     if (playing) {
       el.pause()
     } else {
+      claim(token, () => el.pause())
       el.play().catch(() => {})
     }
   }
@@ -151,6 +186,7 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
   function handleReplay() {
     const el = audioRef.current
     if (!el) return
+    claim(token, () => el.pause())
     el.currentTime = 0
     el.play().catch(() => {})
   }
@@ -158,6 +194,7 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
   function handleEnded() {
     setPlaying(false)
     setCompleted(true)
+    release(token)
     onComplete?.()
   }
 
@@ -233,6 +270,8 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
             // background autoplay-attempt is actually sounding, a tap here
             // must not reveal-and-play a second overlapping stream.
             if (autoplayBusy) return
+            setSequenceIndex(0)
+            claim(token, () => setRevealed(false))
             setRevealed(true)
           }}
           disabled={autoplayBusy}
@@ -264,7 +303,11 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
           preload="auto"
           src={sequenceIndex === 0 ? src : src2}
           onEnded={() => {
-            if (sequenceIndex === 0 && src2) setSequenceIndex(1)
+            if (sequenceIndex === 0 && src2) {
+              setSequenceIndex(1)
+            } else {
+              release(token)
+            }
           }}
           onError={() => {
             // Fail open: only surface the "not available" message for the
