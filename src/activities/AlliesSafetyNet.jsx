@@ -57,7 +57,7 @@
 
 import { useMemo, useState } from 'react'
 import { Check } from 'lucide-react'
-import { PrimaryButton, GhostButton } from '../components/items/shared.jsx'
+import { PrimaryButton, GhostButton, MissingItemsNote, scrollToMissingItem } from '../components/items/shared.jsx'
 import NarrationControls from '../components/items/NarrationControls.jsx'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
 import TrampolineNet from '../components/TrampolineNet.jsx'
@@ -466,8 +466,29 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
   const [introNarrationDone, setIntroNarrationDone] = useState(false)
   const [inspectNarrationDone, setInspectNarrationDone] = useState(false)
 
+  // Draft 114 Part C (2026-09-18, Holly's feedback): the Strengthen
+  // screen's "Who could that be?" field had no gate at all — a kid could
+  // write an action ("invite them over") with no name and hit Continue,
+  // leaving a blank-named entry that reads broken once Plan.jsx pulls it
+  // in (buildPlanModel's people list keys off person-or-action, so a
+  // name-less entry with an action still shows up, just with nobody named
+  // in it). Only required when the kid is actually contributing something
+  // here — an entirely untouched screen still advances via Continue same
+  // as "Skip this one" does, both correctly produce no entry downstream.
+  const strengthenMissing =
+    screen?.type === 'strengthen' &&
+    (strengthened[screen.supportType]?.action || '').trim().length > 0 &&
+    (strengthened[screen.supportType]?.additional_person || '').trim().length === 0
+  const [showStrengthenMissing, setShowStrengthenMissing] = useState(false)
+
   // ---- Navigation ----
   function goNext() {
+    if (strengthenMissing) {
+      setShowStrengthenMissing(true)
+      scrollToMissingItem('strengthen-person-input')
+      return
+    }
+    setShowStrengthenMissing(false)
     setScreenIdx((i) => Math.min(i + 1, screens.length - 1))
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
     // Mark inspect-xout as complete when the kid hits Continue from it.
@@ -649,6 +670,13 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
           inspectNarrationDone={inspectNarrationDone}
         />
       </div>
+      <MissingItemsNote
+        message={
+          showStrengthenMissing && strengthenMissing
+            ? 'Add a name, or clear what you wrote and tap "Skip this one" instead.'
+            : null
+        }
+      />
     </div>
   )
 }
@@ -1199,6 +1227,7 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
         </label>
         <NarrationControls className="mb-1" questionAudioUrl="/narration/safetynet_18_strengthen_who.mp3" />
         <input
+          id="strengthen-person-input"
           type="text"
           value={additionalPerson}
           onChange={(e) => onChange({ additional_person: e.target.value, skipped: false })}

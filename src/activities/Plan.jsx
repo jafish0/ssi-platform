@@ -196,23 +196,73 @@ function joinList(items) {
   return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`
 }
 
+// Draft 114 Part B (2026-09-18, Holly's feedback): the engine's Back
+// button re-mounts this whole custom_activity fresh, same class of bug as
+// Draft 108 Part B.1's Safety Net fix — CustomActivity.jsx already
+// forwards `existingResponse` generically, Plan just never read it. Only
+// helps once the plan was actually saved at least once (existingResponse
+// is the engine's own saved-responses lookup, nothing earlier) — same
+// scope as the Safety Net fix, not a mid-flow autosave.
+function hydrateFromResponse(existingResponse, baseData) {
+  const sc = existingResponse?.skill_commitment
+  const ir = existingResponse?.inclusion_reflection
+  const skillCommits = {}
+  if (sc) {
+    skillCommits[sc.skill_id] = {
+      how: sc.how || '',
+      who: sc.who_is_ally ? sc.who : '__other__',
+      whoOther: sc.who_is_ally ? '' : sc.who || '',
+      when: sc.when_is_freetext ? 'Other…' : sc.when,
+      whenOther: sc.when_is_freetext ? sc.when || '' : '',
+    }
+  }
+  return {
+    selectedSkillId: sc?.skill_id ?? null,
+    skillCommits,
+    inclusionBehaviors: ir?.behaviors_used || [],
+    otherUsed: !!ir?.other_used,
+    otherText: ir?.other_text || '',
+    // If the saved skill isn't in the current willing-to-try bucket, the
+    // kid must have picked from the full list (Draft 108 Part B.2's "Pick
+    // a different skill" path) — restore that too, or Screen 2 wouldn't
+    // show their actual pick as an option at all.
+    showFullSkillList: !!(
+      sc &&
+      baseData?.willingToTrySkills &&
+      !baseData.willingToTrySkills.some((s) => s.id === sc.skill_id)
+    ),
+  }
+}
+
 // ---------- Component ----------
 
-export default function Plan({ onSave = console.log, planData, sessionData }) {
+export default function Plan({ onSave = console.log, planData, sessionData, existingResponse }) {
   // Data source priority (v4.0): explicit planData prop (testing hook) →
   // real cross-activity payloads from the session → synthetic demo data
   // (sandbox / IRB preview, where sessionData is {} or absent).
   const realData = useMemo(() => buildRealPlanData(sessionData), [sessionData])
   const baseData = planData || realData || PLAN_DEMO_DATA
   const usingDemoData = !planData && !realData
-  const [screen, setScreen] = useState(1)
+  // Land on Screen 5 (Saved) when re-entering an already-saved plan,
+  // same convention as AlliesSafetyNet's hydrateFromResponse comment.
+  const [screen, setScreen] = useState(() => (existingResponse ? 5 : 1))
   // Pick-one flow (Draft 51 A): the kid selects a single willing-to-try
   // skill to work through; skillCommits keeps its how/who/when.
-  const [selectedSkillId, setSelectedSkillId] = useState(null)
-  const [skillCommits, setSkillCommits] = useState({})
-  const [inclusionBehaviors, setInclusionBehaviors] = useState([])
-  const [otherUsed, setOtherUsed] = useState(false)
-  const [otherText, setOtherText] = useState('')
+  const [selectedSkillId, setSelectedSkillId] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse, baseData).selectedSkillId : null,
+  )
+  const [skillCommits, setSkillCommits] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse, baseData).skillCommits : {},
+  )
+  const [inclusionBehaviors, setInclusionBehaviors] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse, baseData).inclusionBehaviors : [],
+  )
+  const [otherUsed, setOtherUsed] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse, baseData).otherUsed : false,
+  )
+  const [otherText, setOtherText] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse, baseData).otherText : '',
+  )
   const [saving, setSaving] = useState(false)
   // Draft 100: Screen 2's Continue stays tappable even when its gate isn't
   // satisfied; tapping it while incomplete surfaces what's missing instead
@@ -231,7 +281,9 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
   // than swapping only what screen 2 renders, keeps `buildPlanModel`/
   // `buildPayload` below in sync automatically if the kid ends up picking
   // a skill that was never in the original bucket.
-  const [showFullSkillList, setShowFullSkillList] = useState(false)
+  const [showFullSkillList, setShowFullSkillList] = useState(() =>
+    existingResponse ? hydrateFromResponse(existingResponse, baseData).showFullSkillList : false,
+  )
   const d = useMemo(() => {
     if (showFullSkillList) {
       // Deliberately NOT setting skillsFromFullList here — that flag
@@ -278,7 +330,10 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
   // Wraps Screen 2's NavFooter onNext: if the gate isn't satisfied, show
   // the message (and scroll to the first missing field, when there is a
   // specific one to point at — there isn't when no skill is picked yet)
-  // instead of advancing.
+  // instead of advancing. Draft 114 Part E: Screen 4 (the old "here's your
+  // plan, save it" checkpoint) is gone — when there's no inclusion screen
+  // to show next, Screen 2 is the last stop, so its Continue saves
+  // directly instead of routing through a removed screen number.
   function handleSkillNext() {
     if (skillMissingMessage) {
       setShowMissing(true)
@@ -286,7 +341,11 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
       return
     }
     setShowMissing(false)
-    go(hasInclusion ? 3 : 4)
+    if (hasInclusion) {
+      go(3)
+    } else {
+      handleSave()
+    }
   }
 
   const model = useMemo(
@@ -515,7 +574,9 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
         <NavFooter
           onBack={() => go(1)}
           onNext={handleSkillNext}
-          skip={() => go(hasInclusion ? 3 : 4)}
+          nextLabel={hasInclusion ? 'Continue' : saving ? 'Saving…' : 'Save my plan'}
+          nextDisabled={!hasInclusion && saving}
+          skip={() => (hasInclusion ? go(3) : handleSave())}
         />
         <MissingItemsNote message={showMissing ? skillMissingMessage : null} />
       </ScreenShell>
@@ -596,46 +657,26 @@ export default function Plan({ onSave = console.log, planData, sessionData }) {
           )}
         </div>
         <QualifierNote className="mt-5" audioUrl="/narration/plan_11_bpb_qualifier.mp3" />
-        <NavFooter onBack={() => go(2)} onNext={() => go(4)} />
+        <NavFooter
+          onBack={() => go(2)}
+          onNext={handleSave}
+          nextLabel={saving ? 'Saving…' : 'Save my plan'}
+          nextDisabled={saving}
+        />
       </ScreenShell>
     )
   }
 
-  // Draft 111 Part E (Stephanie/Jessica's 9/14 review pass, confirmed with
-  // Josh): participants were seeing their finished plan recapped TWICE —
-  // once here, right after building it, and again on the post-posttest
-  // CelebrationScreen keepsake (`DeliveryShellPage.jsx`), which is the one
-  // with the actual save/download actions (PlanDownloads — PNG/PDF). Josh's
-  // call: keep the second showing (the one with download) and remove this
-  // first, earlier one entirely. This screen still exists as the "you're
-  // done building — save it" checkpoint (handleSave still needs a Continue
-  // to hang off of), it just no longer re-displays the whole plan; `model`/
-  // `PlanReview` stay in this file for Screen 5 (sandbox-only) and for
-  // `buildSavedPlanModel`/`PlanReview`, which DeliveryShellPage imports for
-  // the real keepsake.
-  if (screen === 4 || (screen === 3 && !hasInclusion)) {
-    return (
-      <ScreenShell heading="Here’s your plan." headingAudioUrl="/narration/plan_12_review_heading.mp3">
-        <p className="text-[16px] leading-relaxed text-slate-700">
-          You’ve pulled together your skill, your people, and your own words.
-          Save it now, and you’ll see it all again — with a way to download
-          it — as a keepsake at the very end.
-        </p>
-        <div className="flex items-center justify-between mt-8 gap-3">
-          <button
-            type="button"
-            onClick={() => go(hasInclusion ? 3 : 2)}
-            className="text-ctac-teal-700 hover:text-ctac-teal-900 text-[14px] font-medium"
-          >
-            Back
-          </button>
-          <PrimaryButton onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save my plan'}
-          </PrimaryButton>
-        </div>
-      </ScreenShell>
-    )
-  }
+  // Draft 111 Part E added a "here's your plan, save it" checkpoint screen
+  // here (replacing the old full-plan recap that duplicated the real
+  // keepsake at the very end). Draft 114 Part E (2026-09-18, Holly's
+  // feedback): that checkpoint itself read as confusing on mobile — it
+  // referenced "the plan" without showing it, right before the posttest.
+  // Removed entirely; Screen 2/3's own Continue now saves directly (see
+  // handleSkillNext and the NavFooter above). The real plan still displays
+  // exactly once, at the very end, on the post-posttest keepsake — same
+  // intended behavior the team already decided on, just with one fewer
+  // stop to get there.
 
   // screen === 5 — Saved. Draft 88 Part B: the download buttons moved to
   // the post-posttest completion screen (DeliveryShellPage), so nothing

@@ -826,23 +826,25 @@ export default function GettingUnstuck({ onSave = console.log }) {
     const cameFromFallback = eligibleItems.length === 0
     // Draft 108 Part I (2026-09-10 team meeting): true whenever at least
     // one of the thoughts about to be practiced wasn't the participant's
-    // own top pick — either the 0-endorsement fallback (both thoughts
-    // randomly drawn) or the 1-endorsement case (their one pick plus a
-    // randomly drawn second). This is the one screen both paths pass
-    // through before practicing, so it's the right place for a single
-    // explanatory line covering either case.
-    const hasRandomlyAssigned = selectedItems.some((it) => items[it.id]?.randomly_selected)
+    // own top pick — the 1-endorsement case (their one pick plus a
+    // randomly drawn second) — "we picked one more thought for you" only
+    // makes sense when the participant DID pick one themselves.
+    //
+    // Draft 114 Part A (2026-09-18, Holly's feedback): this used to also
+    // read true on the 0-endorsement fallback (both thoughts randomly
+    // drawn, not "one more" of anything the participant chose) — that
+    // path already has its own explanatory screen (zero_endorsement_intro,
+    // "That's great!"), so this message on top of it was both wrong
+    // ("one more" when the participant picked none) and redundant. Gated
+    // on !cameFromFallback so it only ever shows for the true "picked one
+    // thought, we added a second" case.
+    const hasRandomlyAssigned =
+      !cameFromFallback && selectedItems.some((it) => items[it.id]?.randomly_selected)
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-4">
           Two ways to get unstuck.
         </h2>
-        {hasRandomlyAssigned && (
-          <p className="text-[14px] text-slate-600 italic mb-4">
-            We picked one more thought for you to practice with. This helps
-            you get used to working through different kinds of thoughts.
-          </p>
-        )}
         <KaiNarrationPlayer
           audioSrc="/kai-narration/getting-unstuck-strategies-intro.mp3"
           transcript={KAI_STRATEGY_TRANSCRIPT}
@@ -867,8 +869,13 @@ export default function GettingUnstuck({ onSave = console.log }) {
                 return
               }
               setShowMissingNarration(false)
-              setThoughtIdx(0)
-              setPhase('strategy')
+              // Draft 114 Part D (2026-09-18, Holly's feedback): this
+              // notice used to sit as a small italic line above Kai's
+              // player on this same screen, easy to miss next to the
+              // gated narration. Now its own page, shown only when it
+              // actually applies (see hasRandomlyAssigned above).
+              setPhase(hasRandomlyAssigned ? 'random_thought_added' : 'strategy')
+              if (!hasRandomlyAssigned) setThoughtIdx(0)
               scrollTop()
             }}
           >
@@ -878,6 +885,43 @@ export default function GettingUnstuck({ onSave = console.log }) {
         <MissingItemsNote
           message={showMissingNarration && !strategyIntroNarrationDone ? 'Finish listening to the narration before continuing.' : null}
         />
+      </div>
+    )
+  }
+
+  // ---- Phase: random_thought_added ----
+  // Draft 114 Part D — split out of kai_strategy_intro so this notice gets
+  // its own moment instead of competing with Kai's gated narration for
+  // attention. Only reached when hasRandomlyAssigned was true back there
+  // (the 1-endorsement case); the 0-endorsement fallback never routes
+  // here at all (it has its own "That's great!" screen already).
+  if (phase === 'random_thought_added') {
+    return (
+      <div className="py-4 text-center">
+        <h2 className="text-[22px] font-semibold mb-3">One more thought.</h2>
+        <p className="text-[16px] leading-relaxed text-slate-700 mb-8 max-w-[480px] mx-auto">
+          We picked one more thought for you to practice with. This helps
+          you get used to working through different kinds of thoughts.
+        </p>
+        <div className="flex items-center justify-between">
+          <GhostButton
+            onClick={() => {
+              setPhase('kai_strategy_intro')
+              scrollTop()
+            }}
+          >
+            ← Back
+          </GhostButton>
+          <PrimaryButton
+            onClick={() => {
+              setThoughtIdx(0)
+              setPhase('strategy')
+              scrollTop()
+            }}
+          >
+            Keep going →
+          </PrimaryButton>
+        </div>
       </div>
     )
   }
