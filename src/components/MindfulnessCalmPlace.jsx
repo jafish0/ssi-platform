@@ -581,8 +581,16 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
           setMode('arrive')
           if (bed) rampBedVolume(bed, BED_VOLUME, BED_RESTORE_MS)
         }
-        el.onended = restore
-        el.onerror = restore
+        // Draft 92 (item 2): `el.onended =`/`el.onerror =` are property
+        // assignments that are never cleared once they fire -- every later
+        // step's own `addEventListener('ended', ..., {once:true})` clip (the
+        // stepKey effect below) also fires 'ended' on this same shared
+        // element, so `restore()` kept re-firing and snapping `mode` back to
+        // 'arrive' after every subsequent clip, anywhere in the activity.
+        // `{ once: true }` self-removes after firing, exactly like every
+        // other listener registered on this element.
+        el.addEventListener('ended', restore, { once: true })
+        el.addEventListener('error', restore, { once: true })
         const p = el.play()
         if (p && p.catch) p.catch(restore)
         return

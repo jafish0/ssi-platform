@@ -157,8 +157,8 @@ export default function GainsZonePage({ zone }) {
   // right now -- set imperatively via onNarrate, read by onActivityComplete
   // to hold the Gear Award transition until it's done.
   const narratingRef = useRef(false)
-  // Draft 90 (item 4): gates GearAward's Continue button while its own
-  // recorded sparkLine plays.
+  // Draft 92 (item 3): gates GearAward's Equip button while its own
+  // recorded sparkLine plays on the reveal screen.
   const [gearNarrating, setGearNarrating] = useState(false)
   const progressRef = useRef(progress)
   progressRef.current = progress
@@ -460,13 +460,15 @@ export default function GainsZonePage({ zone }) {
     poll()
   }
 
-  // Draft 90 (item 4): voices the Spark bubble on the award screen, through
-  // the zone's own shared audio manager (already unlocked at Begin) rather
-  // than a fresh, unproven `<audio>` element -- exactly the "route every
-  // clip through the shared manager" fix the iOS audio-unlock sweep asked
-  // for. Zones without a recorded line for their gear (Zone 4's mask isn't
-  // recorded yet) simply skip this -- `continueDisabled` stays false.
-  function onGearEquipped() {
+  // Draft 92 (item 3): voices the Spark bubble the moment the Gear Award
+  // screen MOUNTS on its reveal stage (before Equip is tapped), through the
+  // zone's own shared audio manager (already unlocked at Begin) rather than
+  // a fresh, unproven `<audio>` element -- exactly the "route every clip
+  // through the shared manager" fix the iOS audio-unlock sweep asked for.
+  // Used to fire after Equip and gate Continue (Draft 90); Josh's post-90
+  // replay flagged that as the wrong screen. Zones without a recorded line
+  // for their gear simply skip this -- `gearNarrating` stays false.
+  function onGearReveal() {
     const file = zone.gear.sparkLineAudio
     if (!file || !audioRef.current) return
     setGearNarrating(true)
@@ -687,8 +689,8 @@ export default function GainsZonePage({ zone }) {
             leveledUp={progress.leveledUp}
             equipLabel={zone.gear.equipLabel}
             onEquip={onGearEquip}
-            onEquipped={onGearEquipped}
-            continueDisabled={gearNarrating}
+            onReveal={onGearReveal}
+            equipDisabled={gearNarrating}
             onContinue={onGearContinue}
           />
         )}

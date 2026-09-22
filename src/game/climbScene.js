@@ -78,12 +78,14 @@ const CLIMB_FRAMES = [
   'climb-s3-1', 'climb-s3-2', 'climb-s3-3', 'climb-s3-4',
   'climb-s3-5', 'climb-s3-6', 'climb-s3-7', 'climb-s3-8',
 ]
-// One cycle frame per ~2.5% of the wall climbed (distance-driven, not
+// One cycle frame per ~0.6% of the wall climbed (distance-driven, not
 // time-driven): she freezes solid whenever climb progress itself pauses
 // (a stage-arrival beat, a rest ledge, a blocking red) and speeds up
 // whenever it surges, rather than animating on her own clock regardless of
-// whether the climb is actually advancing.
-const CLIMB_FRAME_STEP_P = 0.025
+// whether the climb is actually advancing. Draft 92 (item 6): Draft 91's
+// 0.025 read as slow motion (about 4x too slow) -- named CLIMB_FRAME_STEP
+// (dropping the internal "_P" suffix) so it's the one place to retune.
+const CLIMB_FRAME_STEP = 0.006
 // Reduced motion holds on this frame (both hands roughly level) instead of
 // cycling.
 const CLIMB_REDUCED_FRAME = 2
@@ -1037,7 +1039,7 @@ export function makeClimbScene(Phaser) {
             this.climber.setTexture(CLIMB_FRAMES[this.frameIdx])
             this.climber.setDisplaySize(CLIMB_S3_W * this.climbScale, CLIMB_S3_H * this.climbScale)
           }
-        } else if (this.p - this.frameP >= CLIMB_FRAME_STEP_P) {
+        } else if (this.p - this.frameP >= CLIMB_FRAME_STEP) {
           // Distance-driven, not time-driven: she freezes solid whenever
           // climb progress itself pauses (a stage beat, a rest ledge, a
           // blocking red) and speeds up whenever it surges.

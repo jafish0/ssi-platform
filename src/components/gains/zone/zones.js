@@ -194,6 +194,7 @@ export const ZONES = {
       leveledUpTitle: 'Your Oxygen Mask leveled up!',
       subline: "It'll help you breathe easy on the climb ahead.",
       sparkLine: 'Perfect fit. Now you can breathe easy up there.',
+      sparkLineAudio: 'z4-08-gear-spark.mp3',
       equipLabel: 'Equip mask',
     },
     gearEarnedBefore: ['lantern', 'lens', 'wingsuit'],
@@ -262,7 +263,9 @@ export const ZONES = {
         text: "That bridge is out — there's no way across yet. Let's plan your message first, and then I'll show you how to get over.",
       },
     },
-    video: { id: '1227443944', h: 'a507d992ff', title: 'Zone 3 — Getting the Best Therapy' },
+    // Draft 92 (item 5, 2026-09-22): new render, five treatment types + a
+    // four-reaction opener.
+    video: { id: '1229296920', h: 'fff67e51d4', title: 'Zone 3 — Getting the Best Therapy' },
     ActivityComponent: ElevatorPitch,
     // Draft 86: Spark narration + "Read to me" on the select steps.
     activityExtraProps: { narrate: true },

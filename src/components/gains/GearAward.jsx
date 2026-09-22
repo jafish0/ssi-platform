@@ -3,17 +3,19 @@
 //
 //   reveal   — the world behind dims/blurs; a soft radial bloom; the item
 //              floats center, gently turning, with a sparkle. Title + subline
-//              + one big amber pill ("Equip mask").
+//              + (if recorded) Spark's line, gating one big amber pill
+//              ("Equip mask") until it ends -- Draft 92 (item 3): this used
+//              to play on the equipped stage and gate Continue instead.
 //   equipped — a quick light-flash, then the equipped figure (mask on, fist
-//              up), "Equipped!", a short Spark line, and Continue. The host
-//              plays the SFX and flies the icon into the HUD via onEquip.
+//              up), "Equipped!", and Continue. The host plays the SFX and
+//              flies the icon into the HUD via onEquip.
 //
 // Parameterized by { name, itemSrc, equippedSrc, title, subline, sparkLine,
 // leveledUp } so the Lantern, Focusing Lens, Wingsuit and Goggles reuse it;
 // `leveledUp` swaps the title and brightens the glow (same screens, no new
 // art).
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import GainsButton from './ds/Button.jsx'
 
@@ -41,25 +43,29 @@ export default function GearAward({
   onEquip,
   onContinue,
   equipLabel,
-  // Draft 90 (item 4): when the host has a recorded line for this gear's
+  // Draft 92 (item 3): when the host has a recorded line for this gear's
   // Spark bubble, it plays it (through the zone's own already-unlocked
-  // audio manager -- see GainsZonePage's onEquipped) the moment this
-  // screen reaches the `equipped` stage, and `continueDisabled` gates
-  // Continue until it ends (same "don't let them advance past a still-
-  // talking screen" pattern as ElevatorPitch's safety step).
-  onEquipped,
-  continueDisabled = false,
+  // audio manager -- see GainsZonePage's onGearReveal) the moment this
+  // screen MOUNTS on the reveal stage, before Equip is even tapped --
+  // `equipDisabled` gates the Equip button until it ends (same "don't let
+  // them advance past a still-talking screen" pattern as ElevatorPitch's
+  // safety step). Used to fire on the equipped stage instead and gate
+  // Continue; Josh's post-90 replay flagged that as the wrong screen.
+  onReveal,
+  equipDisabled = false,
 }) {
   const [stage, setStage] = useState('reveal') // reveal | equipped
   const [flash, setFlash] = useState(false)
 
+  useEffect(() => {
+    onReveal?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function equip() {
     setFlash(true)
     if (onEquip) onEquip()
-    setTimeout(() => {
-      setStage('equipped')
-      onEquipped?.()
-    }, 180)
+    setTimeout(() => setStage('equipped'), 180)
     setTimeout(() => setFlash(false), 600)
   }
 
@@ -103,7 +109,12 @@ export default function GearAward({
           <p className="text-[14px] leading-relaxed mb-6 max-w-[280px]" style={{ color: 'var(--text-body)' }}>
             {subline}
           </p>
-          <GainsButton size="lg" onClick={equip}>
+          {sparkLine && (
+            <p className="text-[13px] leading-relaxed mb-4 max-w-[280px]" style={{ color: 'var(--text-body)' }}>
+              <span className="font-extrabold" style={{ color: 'var(--text-warm)' }}>Spark:</span> {sparkLine}
+            </p>
+          )}
+          <GainsButton size="lg" onClick={equip} disabled={equipDisabled}>
             {equipLabel || `Equip ${name.toLowerCase().split(' ').pop()}`}
           </GainsButton>
         </div>
@@ -118,12 +129,7 @@ export default function GearAward({
           <h2 className="text-[26px] font-extrabold mb-2" style={{ color: 'var(--text-bright)' }}>
             Equipped!
           </h2>
-          {sparkLine && (
-            <p className="text-[14px] leading-relaxed mb-6 max-w-[280px]" style={{ color: 'var(--text-body)' }}>
-              <span className="font-extrabold" style={{ color: 'var(--text-warm)' }}>Spark:</span> {sparkLine}
-            </p>
-          )}
-          <GainsButton size="lg" onClick={onContinue} disabled={continueDisabled}>
+          <GainsButton size="lg" onClick={onContinue}>
             Continue
           </GainsButton>
         </div>
