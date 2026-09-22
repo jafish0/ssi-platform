@@ -4872,3 +4872,48 @@ The climber is still the black stage-1 figure with three poses (right/mid/left, 
 **Verify.** `/gains-demo/climb`: the pale-cloaked, masked Traveler climbs with a smooth eight-frame cycle that pauses when the player stops; same size and anchor as before; reds/golds/blast unchanged; clean console; clean build. `src/game/`, `public/` → no version bump. Paste into WORKING_NOTES, mark shipped, log Recently-shipped.
 
 *End of Draft 91.*
+
+
+(Draft 92 below was also delivered as a standalone file,
+`Gains for Teens/DRAFT 92 — post-90 fixes, Video 3 swap, Oxygen Mask
+line.md`, because Cowork's shell was still down. Pasted here verbatim.)
+
+## Draft 92 — Guardian clip loudness (the real cause), Mindful Place regression, gear-line placement, Video 3 swap, Oxygen Mask line
+
+Josh replayed Zones 1, 3, 4 after Drafts 90/91. Zone 1 is clean. Five items.
+
+### 1. Guardian Read-to-me: the quiet clips are the SHORT files, not the sequencer
+
+Josh's pass, per step: step 3 options 1 and 2 quiet, 3 fine; step 4 option 2 quiet; step 5 the prompt itself (`gm-06-offer`) quiet and option 2 quiet; step 6 option 1 (`gm-opt-help-1`) effectively silent; "Write your own" (`gm-opt-custom`) quiet on every step. Every quiet clip is one of the shortest (about 2 s). Cause: Cowork's single-pass `loudnorm` on the 9/16 batch. Single-pass loudnorm needs roughly 3 s of program to measure; on shorter clips it misestimates and applies far too little gain (near-silent in the worst case). Draft 90's sequencer change was correct in itself but could not fix a file-level problem.
+
+Fix (asset prep, Code does it): re-normalize **all 33 Guardian clips** from the raw originals in `Gains for Teens/Activities/_gm/_raw/` using **two-pass loudnorm with linear gain**:
+1. Measure: `ffmpeg -i raw.mp3 -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -` and read `input_i`, `input_tp`, `input_lra`, `input_thresh`, `target_offset`.
+2. Apply: `ffmpeg -i raw.mp3 -af "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.12,areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.25,areverse,loudnorm=I=-16:TP=-1.5:LRA=11:measured_I=<input_i>:measured_TP=<input_tp>:measured_LRA=<input_lra>:measured_thresh=<input_thresh>:offset=<target_offset>:linear=true" -ar 44100 -b:a 128k out.mp3`.
+3. Verify: measure every output; all 33 should land within ±1 LU of −16 integrated. Print the table in the log.
+Overwrite `Activities/_gm/*.mp3` and re-copy to `public/long-light/audio/guardian/`. Do the same two-pass treatment for the eight Zone 2 friend clips in `Walkable Zones/Zone 2/friends/` (raw in `_raw/`) so they're right before they're ever wired. Leave Draft 90's sequencer change in place.
+
+### 2. Mindful Place loops back to the arrive screen (regression from Draft 90 items 17/18)
+
+Repro: Begin → intro line → "Welcome to your mindful place, let's use our senses to really arrive" → tap "I'm here" → the See screen appears → before the See narration finishes, the activity snaps back to the arrive screen. Repeats indefinitely; you can only progress by racing the audio. Also fires during the breathing.
+
+Something added yesterday resets `mode` when a clip ends (or when `narrating` clears). Find it and fix the cause, not a guard. Requirement: once the player advances, the activity never returns to an earlier screen on its own; clip endings only ever clear `narrating`. Verify the full path intro → arrive → see → hear → ready → breathe (both cycles) → done → close, letting every clip finish, and again racing through it.
+
+### 3. GearAward spark line plays on the wrong screen
+
+The Wingsuit line (`z3-08-gear-spark`) plays on the *Equipped* screen. It belongs on the **reveal** screen, where "You earned the Wingsuit!" and Spark's bubble appear, before the Equip button; Equip stays gated until the line ends (as Draft 90 intended). Same for the Lantern. Apply to the component, not per zone.
+
+### 4. Oxygen Mask award line
+
+New file `Walkable Zones/Zone 4/z4-08-gear-spark.mp3` ("Perfect fit. Now you can breathe easy up there."). Two-pass normalize per item 1, copy, wire to Zone 4's GearAward `sparkLineAudio`. If the file isn't there yet, wire the path and note it.
+
+### 5. Video 3 swap
+
+New render: Vimeo id `1229296920`, hash `fff67e51d4` (old: `1227443944` / `a507d992ff`). Swap everywhere Video 3 appears: `REVIEW_VIDEOS`, the videos page, Zone 3's config. Grep the old id to be sure. Log it in `Gains for Teens/Videos/Video links (final renders).md` under the Sept 16 list as "Video 3 (rev. Sept 22, five treatment types, four-reaction opener)".
+
+### 6. Ascent climb cycle is 4× too slow
+
+Draft 91 advances one frame per ~2.5% of the wall, which reads as slow motion. Make it one frame per ~0.6% of wall climbed (4× faster) and keep the freeze-when-stopped behavior. Expose the value as a named constant (`CLIMB_FRAME_STEP`) so it can be tuned in one place. Check the Second Wind refill and reduced-motion still behave.
+
+**Verify.** Zone 3 Guardian: every option on steps 2–6, every step prompt, and "Write your own" play at the same level; step 6 option 1 audible; loudness table in the log. Zone 4 Mindful Place: full run-through with no involuntary return to an earlier screen, both letting clips finish and tapping fast; breathing still locked to Spark's count. GearAward: Spark's line plays on the reveal screen before Equip in Zones 1, 3, 4. Videos page and Zone 3 show the new Video 3 (opens with the four reactions). Ascent: climb cycle visibly 4× faster, still freezes when progress stops. Clean console, clean build. `src/`, `public/` → no version bump. Paste into WORKING_NOTES, mark shipped, log Recently-shipped.
+
+*End of Draft 92.*
