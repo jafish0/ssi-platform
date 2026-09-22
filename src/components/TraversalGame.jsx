@@ -48,11 +48,18 @@ const MODES = {
         '/gains/climb/stage-mountain.webp',
         '/gains/climb/stage-spire.webp',
       ],
-      // right → mid → left (the scene cycles right→mid→left→mid)
+      // Draft 91: the stage-3 Traveler (Oxygen Mask + Lantern), an
+      // eight-frame climb cycle sliced from Josh's sprite sheet -- replaces
+      // the old stage-1 climber's three-pose right/mid/left swap.
       climbUrls: [
-        '/gains/climb/climb-right.png',
-        '/gains/climb/climb-mid.png',
-        '/gains/climb/climb-left.png',
+        '/gains/climb/climb-s3-1.png',
+        '/gains/climb/climb-s3-2.png',
+        '/gains/climb/climb-s3-3.png',
+        '/gains/climb/climb-s3-4.png',
+        '/gains/climb/climb-s3-5.png',
+        '/gains/climb/climb-s3-6.png',
+        '/gains/climb/climb-s3-7.png',
+        '/gains/climb/climb-s3-8.png',
       ],
       orbUrl: '/gains/climb/orb.png',
       // (no pursuer art — tension is a procedural darkness aura at the edges)

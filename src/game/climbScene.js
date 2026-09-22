@@ -65,8 +65,28 @@ const PLATE_ZOOM = 1.4 // >1 so there's vertical travel to pan through
 // little climber seems so small, could it be bigger?") — reads as a real
 // character rather than a speck. COLLECT_R is scaled up to match.
 const CLIMB_FIG_H = 100 // on-screen height of the climber figure
-const CLIMB_SRC_FIG_H = 1010 // opaque figure height inside the 1351px canvas
-const CLIMB_SRC_H = 1351
+// Draft 91: the stage-3 Traveler (pale cloak, Oxygen Mask, Lantern) replaces
+// the old black stage-1 climber's three-pose swap with a real eight-frame
+// cycle, sliced from Josh's sprite sheet (see the slicing note in the Draft
+// 90/91 WORKING_NOTES entry). All eight frames share one bottom-aligned,
+// horizontally-centered canvas -- these are that canvas's own dimensions,
+// replacing the old CLIMB_SRC_FIG_H/CLIMB_SRC_H pair (this normalized canvas
+// has no separate "opaque figure vs. padded canvas" distinction to track).
+const CLIMB_S3_W = 314
+const CLIMB_S3_H = 690
+const CLIMB_FRAMES = [
+  'climb-s3-1', 'climb-s3-2', 'climb-s3-3', 'climb-s3-4',
+  'climb-s3-5', 'climb-s3-6', 'climb-s3-7', 'climb-s3-8',
+]
+// One cycle frame per ~2.5% of the wall climbed (distance-driven, not
+// time-driven): she freezes solid whenever climb progress itself pauses
+// (a stage-arrival beat, a rest ledge, a blocking red) and speeds up
+// whenever it surges, rather than animating on her own clock regardless of
+// whether the climb is actually advancing.
+const CLIMB_FRAME_STEP_P = 0.025
+// Reduced motion holds on this frame (both hands roughly level) instead of
+// cycling.
+const CLIMB_REDUCED_FRAME = 2
 // Draft 64: gold was too small to read its word while falling -- bigger and
 // a little slower so it's both legible and catchable.
 const ORB_W = 36 // gold-mote width on screen (height derived from its 256×408 art)
@@ -217,9 +237,8 @@ export function makeClimbScene(Phaser) {
       this.feelingsCleared = 0
       this.targetX = GAME_W / 2
       this.frameIdx = 0
-      this.frameMs = 0
+      this.frameP = 0
       this.aura = 0 // 0 = clear edges, 1 = darkness pressed all the way in
-      this.onLedge = false
       this.pauseMs = 0 // stage-arrival beat: holds the climb briefly
       // Draft 64: the current blocking red (null = none up right now) and
       // how far through RED_CHECKPOINTS we've gotten.
@@ -235,10 +254,8 @@ export function makeClimbScene(Phaser) {
     preload() {
       const c = this.cfg
       STAGES.forEach((s, i) => this.load.image(s.key, c.stageUrls[i]))
-      // right → mid → left → mid
-      this.load.image('climb-right', c.climbUrls[0])
-      this.load.image('climb-mid', c.climbUrls[1])
-      this.load.image('climb-left', c.climbUrls[2])
+      // Draft 91: the stage-3 Traveler's eight-frame climb cycle.
+      CLIMB_FRAMES.forEach((key, i) => this.load.image(key, c.climbUrls[i]))
       this.load.image('orb', c.orbUrl)
       // (no pursuer sprite — the darkness aura is drawn procedurally)
       if (c.musicUrl) this.load.audio('climb-music', c.musicUrl)
@@ -303,12 +320,12 @@ export function makeClimbScene(Phaser) {
         .setAlpha(0)
 
       // --- the climber (bottom-anchored so the feet stay planted) ---
-      const scale = CLIMB_FIG_H / CLIMB_SRC_FIG_H
+      const scale = CLIMB_FIG_H / CLIMB_S3_H
       this.climbScale = scale
       this.climber = this.add
-        .image(GAME_W / 2, this.baseY, 'climb-mid')
+        .image(GAME_W / 2, this.baseY, CLIMB_FRAMES[0])
         .setOrigin(0.5, 1)
-        .setDisplaySize(520 * scale, CLIMB_SRC_H * scale)
+        .setDisplaySize(CLIMB_S3_W * scale, CLIMB_S3_H * scale)
         .setDepth(40)
 
       // --- warm brightening overlay + arrival bloom + vignette ---
@@ -347,15 +364,6 @@ export function makeClimbScene(Phaser) {
         })
         .setOrigin(0.5, 0.5)
         .setAlpha(0.85)
-      this.ledgeText = this.add
-        .text(GAME_W / 2, GAME_H * 0.3, 'A rest ledge — catch your breath.', {
-          fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
-          fontSize: '15px',
-          color: '#fff3d0',
-        })
-        .setOrigin(0.5, 0.5)
-        .setDepth(72)
-        .setAlpha(0)
       // Stage-arrival beat ("You reached the Great Mountain!") — shown for
       // STAGE_PAUSE_MS while the climb holds.
       this.stageText = this.add
@@ -920,17 +928,11 @@ export function makeClimbScene(Phaser) {
         if (beat) this.pauseMs -= delta
 
         // --- rest ledges: drain pauses, the edges clear ---
-        // (suppressed during a stage beat so the two messages never overlap)
+        // (suppressed during a stage beat so the two effects never overlap;
+        // Draft 91 drops the caption that used to announce this -- the
+        // Second Wind meter already communicates the pause)
         const ledge =
           !beat && LEDGES.some((l) => this.p >= l.from && this.p <= l.to)
-        if (ledge !== this.onLedge) {
-          this.onLedge = ledge
-          this.tweens.add({
-            targets: this.ledgeText,
-            alpha: ledge ? 0.9 : 0,
-            duration: 400,
-          })
-        }
 
         // A ledge or a stage beat both ease off the climb.
         const hold = beat || ledge
@@ -1028,16 +1030,21 @@ export function makeClimbScene(Phaser) {
       }
 
       if (!this.arrived) {
-        const stepMs = this.breath <= 0 ? 420 : this.surgeMs > 0 ? 190 : 260
-        this.frameMs += delta
-        if (this.frameMs >= stepMs) {
-          this.frameMs = 0
-          this.frameIdx = (this.frameIdx + 1) % 4
-          const key = ['climb-right', 'climb-mid', 'climb-left', 'climb-mid'][
-            this.frameIdx
-          ]
-          this.climber.setTexture(key)
-          this.climber.setDisplaySize(520 * this.climbScale, CLIMB_SRC_H * this.climbScale)
+        if (this.reduced) {
+          // Hold on one frame (both hands roughly level) rather than cycling.
+          if (this.frameIdx !== CLIMB_REDUCED_FRAME) {
+            this.frameIdx = CLIMB_REDUCED_FRAME
+            this.climber.setTexture(CLIMB_FRAMES[this.frameIdx])
+            this.climber.setDisplaySize(CLIMB_S3_W * this.climbScale, CLIMB_S3_H * this.climbScale)
+          }
+        } else if (this.p - this.frameP >= CLIMB_FRAME_STEP_P) {
+          // Distance-driven, not time-driven: she freezes solid whenever
+          // climb progress itself pauses (a stage beat, a rest ledge, a
+          // blocking red) and speeds up whenever it surges.
+          this.frameP = this.p
+          this.frameIdx = (this.frameIdx + 1) % CLIMB_FRAMES.length
+          this.climber.setTexture(CLIMB_FRAMES[this.frameIdx])
+          this.climber.setDisplaySize(CLIMB_S3_W * this.climbScale, CLIMB_S3_H * this.climbScale)
         }
         // reach/pull bob: rises on the reach frames, settles on mid.
         // Kept proportional to the (small) figure so it reads as effort, not jitter.

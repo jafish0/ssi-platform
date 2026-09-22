@@ -86,7 +86,7 @@ export const REVIEW_CARDS = [
     title: 'The Ascent',
     section: 'review-ascent',
     blurb:
-      "The Zone 4 to 5 climb got the rework we talked about. The climber is bigger. The obstacles are now feelings that fall toward you. Gold feelings (hope, courage, curiosity, resilience, and more) you collect to refill your Second Wind. Red feelings (sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret) block your path. Tap one to fire your Focusing Lens. The cloud lightens, the feeling's name is revealed, and it shatters into gold you can gather. It's framed as protecting yourself rather than fighting.",
+      "The Zone 4 to 5 climb got the rework we talked about. The climber is bigger. The obstacles are now feelings that fall toward you. Gold feelings (hope, courage, curiosity, resilience, and more) you collect to refill your Second Wind. Red feelings (sadness, shame, guilt, anger, resentment, helplessness, hopelessness, regret) block your path. Tap one to fire your Focusing Lens. The cloud lightens, the feeling's name is revealed, and it shatters into gold you can gather. It's framed as protecting yourself rather than fighting. The climber is now the Traveler as she looks in Zone 4, mask on and Lantern at her hip, with a full climbing cycle.",
     links: [{ label: 'Play the Ascent', to: '/gains-demo/climb', play: true }],
   },
   {
