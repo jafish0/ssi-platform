@@ -132,6 +132,69 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **cd83c05** (2026-09-22) — Draft 91: **The Ascent's stage-3 Traveler,
+  eight-frame climb cycle.** The climber is now the Traveler as she
+  looks in Zone 4 (pale cloak, breathing mask, Lantern on the bag),
+  replacing the old black stage-1 figure's stiff three-pose swap.
+  Sliced the eight frames myself from Josh's sprite sheet (keyed off
+  its flat blue background, edge-despilled, bottom-aligned and
+  centered on one shared canvas); two of the eight source figures
+  touched at the hands/cape, split at the thinnest connecting column
+  closest to each expected even-spaced boundary. The cycle now
+  advances by distance climbed (~2.5% of the wall per frame) instead
+  of its own clock, so she freezes solid whenever climb progress
+  itself pauses and speeds up when it surges; reduced motion holds on
+  one frame. Also drops the "A rest ledge, catch your breath" caption
+  (the Second Wind meter already says it) without touching the
+  underlying ledge-drain pause. Verified live: smooth eight-frame
+  cycle at the same on-screen size as before, frame advance locked to
+  climb progress, freezes correctly while a red feeling blocks the
+  path. `src/game/`, `public/` → no version bump.
+- **f79284e** (2026-09-22) — Draft 90: **Sept 17-21 team review, 47
+  comments.** Zone template: a "Tap here" pointer over whichever
+  target is currently the one thing to do; GearAward gets a
+  sparkLineAudio slot (Zone 1's Lantern, Zone 3's Wingsuit) routed
+  through the zone's own already-unlocked audio manager, gating
+  Continue until it ends; videos start unmuted off the same Spark tap
+  that opened them, with a "Tap for sound" fallback; Gear HUD no
+  longer shows a false-full icon for unearned gear that happens to
+  have a lucide icon (lens/wingsuit); the three activities' eyebrow
+  labels are gone. Body Mapping: each region gets a real, clearly
+  visible glow that now persists through its own spoken line, not just
+  until the tap; select-step copy + narration match; figure gets a
+  height floor, copy panel a height cap + scroll, so the body stays
+  the biggest thing on a short phone frame; a one-line instruction
+  card on both the standalone and in-zone First Light hand-off. Zone 3
+  (Message to Your Guardian): fixed the Read-to-me sequencer's first-
+  option-quiet / step-6-silent bug (it now waits for the step's own
+  line to actually finish, +150ms, before the sequence's first clip
+  ever fires -- root cause was racing a still-mid-flight clip on the
+  one shared audio element); a second clip now plays right after the
+  intro with its own text underneath; the flight track preloads the
+  moment the exit unlocks instead of waiting for the traversal itself
+  to mount. Zone 4 (Mindful Place): new intro line fires inside the
+  real Begin gesture (its only available user gesture, since it airs
+  before that tap); new breathing-ready line + updated panel text;
+  "Begin box breathing" → "Breathe with Spark"; the breathing rings
+  and frog swell are now driven by continuous interpolation off the
+  real audio position instead of a jump-then-5s-CSS-transition (that
+  independent clock was the actual cause of the reported drift -- ruled
+  out both of Josh's hypotheses first: the served clip is byte-
+  identical CBR to the source, and this component never touched the
+  shared audio manager); soundscape -6dB across the board, a further
+  -6dB duck under Spark easing back over ~600ms instead of snapping.
+  Seven clips normalized per the recipe and copied in (raw originals
+  kept in sibling `_raw/` folders). Verified live: all three zone
+  pointers, Body Mapping's glow through narration then clearing, the
+  read-to-me fix (all four options fire), the guardian intro chain,
+  gear-award spark line + Continue gating on Zones 1/3 and its correct
+  absence on Zone 4, Mindful Place's intro line firing pre-arrive and
+  the ready line on schedule. **No real iPhone was available in this
+  environment to test the item-2 iOS audio-unlock fixes on actual
+  hardware** -- verified instead that each new/changed narration path
+  routes through an already-unlocked element rather than a fresh,
+  unproven one; flagging for a real-device pass before this reaches
+  participants. `src/` → no version bump.
 - **a32fd40** (2026-09-16) — Zone 3: synced Spark's arrive-line caption
   to the re-recorded VO (Josh re-recorded `z3-01-arrive.mp3` with new
   opening wording -- "Oh! Something is changing..." -- the on-screen
@@ -4722,7 +4785,7 @@ Audio normalization recipe for every new mp3 below (Cowork's standard): `ffmpeg 
 
 ---
 
-## Draft 90 — Sept 17–21 team review: 47 comments from Ginny, Holly, Bianca, Stephanie, Maggie, plus Josh's own pass. Zones 1, 3, 4 and the activities.
+## Draft 90 — Sept 17–21 team review: 47 comments from Ginny, Holly, Bianca, Stephanie, Maggie, plus Josh's own pass. Zones 1, 3, 4 and the activities. — ✅ SHIPPED f79284e (2026-09-22)
 
 All decisions below are Josh's. Comments are in the `feedback` table (program gains, created_at >= 2026-09-16) if you want the verbatim text.
 
@@ -4792,7 +4855,7 @@ All: normalize per the recipe, then copy to the served folders.
 
 ---
 
-## Draft 91 — The Ascent: stage-3 Traveler with Oxygen Mask and Lantern, eight-frame climb cycle
+## Draft 91 — The Ascent: stage-3 Traveler with Oxygen Mask and Lantern, eight-frame climb cycle — ✅ SHIPPED cd83c05 (2026-09-22)
 
 The climber is still the black stage-1 figure with three poses (right/mid/left, mid repeated), which reads stiff. Josh generated the stage-3 climber (pale cloak, breathing mask, lantern on the bag) as an eight-frame sprite sheet.
 
