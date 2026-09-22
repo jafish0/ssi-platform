@@ -4709,3 +4709,103 @@ Josh's pass over `/gains-demo` before the next team round. Files: `GainsDemoPage
 **Verify.** `/gains-demo`: new title, no intro paragraph or pitch link; review cards in the new order, numbered 1–9; Pre/Post section sits between the map and the Zone Cards with both buttons and its comment box; `/gains-demo/bodymap` narrates and gates like Zone 1 does; the five updated blurbs read on their cards and at the top of their dedicated pages; nothing else moved. Clean console; clean build. `src/pages/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 89.*
+
+
+(Drafts 90 and 91 below were delivered as a standalone file,
+`Gains for Teens/DRAFT 90 and 91 — Sept 17-21 feedback round.md`,
+because Cowork's shell was down at the time. Pasted here verbatim,
+heading level and all, so the record stays intact.)
+
+Cowork's shell is down (Windows mount issue), so these two drafts are delivered as a file instead of appended to `Gains for Teens/WORKING_NOTES.md`. Code: treat them exactly as Drafts 90 and 91. When you log each ship, paste the draft verbatim into WORKING_NOTES under Ideas/drafts, mark it shipped, and log Recently-shipped as usual. Also do the asset prep Cowork normally does (slicing, keying, loudnorm), called out per item.
+
+Audio normalization recipe for every new mp3 below (Cowork's standard): `ffmpeg -i in.mp3 -af "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.12,areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.25,areverse,loudnorm=I=-16:TP=-1.5:LRA=11" -ar 44100 -b:a 128k out.mp3`. Keep the raw file in a `_raw/` sibling folder.
+
+---
+
+## Draft 90 — Sept 17–21 team review: 47 comments from Ginny, Holly, Bianca, Stephanie, Maggie, plus Josh's own pass. Zones 1, 3, 4 and the activities.
+
+All decisions below are Josh's. Comments are in the `feedback` table (program gains, created_at >= 2026-09-16) if you want the verbatim text.
+
+### A. Zone template (all zones)
+
+1. **"Tap here" pointer on the next target.** Four reviewers couldn't tell how to "follow" Spark after a video. Add a small floating tag, "Tap here", with a soft bob, anchored above whatever the next interactable is: Spark on arrival, the station after follow-me, the exit after the gear award. It shows when the target becomes active and disappears on the player's first tap on that target. Shadowmend pill style, `--text-bright` on `--action-quiet`, never gray. Zones 1, 3, 4.
+
+2. **iOS audio unlock for timer-fired lines.** Maggie (iPhone) got no audio on the Ascent end card, the Mindful Place intro, and the breathing-ready screen; Josh hears them on desktop. Cause: lines fired from timers/state changes rather than a tap are blocked by Safari unless they go through an audio context unlocked by a user gesture. Route every Spark/narration clip through the shared audio manager that is unlocked on the zone's first tap (Begin), and sweep for other timer-fired lines: the First Light crest line, Zone 1's arrive line after the Video 0 cut, GearAward lines. Test on a real iPhone.
+
+3. **Videos autoplay muted (Bianca, Maggie, two devices).** The in-frame Vimeo players start muted. Since every video starts from a tap on Spark, start the player unmuted off that gesture (`muted: false` in the embed, play() from the tap handler). If a browser still refuses, show a one-tap "Tap for sound" overlay on the frame instead of leaving the tiny Vimeo unmute icon.
+
+4. **GearAward gets a `sparkLineAudio` slot** so the Spark bubble on the award screen is voiced. Wire Zone 1 to `z1-09-gear-spark.mp3` (Lantern) and Zone 3 to `z3-08-gear-spark.mp3` (Wingsuit; source file is `Walkable Zones/Zone 3/Gear you earned the wingsuit.mp3`, rename on copy). Zone 4's Oxygen Mask line is not recorded yet; leave the slot empty there. Gate the Equip button until the line ends.
+
+5. **Gear HUD at the start of Zone 1 shows slots 2 and 3 filled and 1 and 4 empty (Maggie).** All four should be empty outlines until earned. Likely the Wingsuit/Oxygen Mask placeholder icons drawing at full opacity.
+
+6. **Remove the eyebrow labels on all three activities:** "Activity 1 · Body mapping" in `BodyMapping.jsx`, "Zone 3 · Message to Your Guardian" in `ElevatorPitch.jsx`, "Zone 4 · Mindfulness" in `MindfulnessCalmPlace.jsx`.
+
+### B. Zone 1
+
+7. **Body Mapping regions glow until heard.** Three reviewers: "click the glowing areas but nothing glows." Each un-tapped region gets a soft pulsing glow; it stops once that region has been tapped and its line has finished. Instruction text stays "Tap a glowing area to learn what it does."
+
+8. **Body Mapping copy + narration.** `INSTRUCTIONS.select` → "Tap each reaction you've felt recently." Panel text "You can pick as many as fit." → "Pick as many as you feel." Replace the narration clip: `Activities/_bm/bm-08-select.mp3` is re-recorded to match ("Now tap each reaction you've felt recently. Pick as many as you feel. There's no wrong answer."). Normalize and copy.
+
+9. **Body Mapping figure bigger on mobile (Stephanie).** In the 9:16 frame the body should fill the available height; the panel below can shrink or scroll. On a phone the body is the biggest thing on screen.
+
+10. **First Light instruction card (Bianca).** Before Begin on `/gains-demo/firstlight` and when the traversal mounts inside Zone 1: one line, "Tap the trail to walk. Reach each lamp to light it."
+
+### C. Zone 3
+
+11. **Read to me sequencer bug (five reporters).** Symptoms: step 5 of 6's prompt (`gm-06-offer`) plays quiet; within Read to me sequences the first option is quieter than later ones or, on step 6, doesn't play at all (`gm-opt-help-1` exists in both source and `public/long-light/audio/guardian/`, so it's not a missing file). Everything was normalized to −16 LUFS before wiring, so this is the queue/ducking: the first clip is probably starting while the step prompt is still ducked or being faded, and on step 6 it's getting cut. Fix the sequencer so each clip starts at full level after the previous has ended (+150 ms), and the step prompt's duck is released before Read to me starts. Verify all six steps.
+
+12. **`gm-opt-offer-3.mp3` regenerated** (Spark said "telly-health"). Normalize and re-copy.
+
+13. **Transition into the message (Ginny).** After Holly's intro (`gm-01-intro`) plays, play a second clip `Activities/_gm/gm-01b-what-it-is.mp3` and show its text beneath the intro on the same screen: "This message is you asking a parent or guardian to help you start trauma therapy. We'll build it together, one piece at a time, and you can change anything before you save it." Normalize and copy.
+
+14. **Flight music starts ~10 s late (Bianca).** Preload the flight track when the Zone 3 exit unlocks (or when the transition card shows) so it starts with the first frame of the flight.
+
+15. **Video 3 swap** — Josh is re-rendering in Claude Design (new narration: names the four reactions up front, "our friends back at the camp," five treatment types). New Vimeo id/hash will follow; when it lands, swap it everywhere Video 3 appears (videos page + Zone 3 config), same as Draft 88.
+
+Not a fix: captions showing by default is Vimeo remembering the viewer's own CC choice.
+
+### D. Zone 4
+
+16. **Remove "box breathing."** Button "Begin box breathing" → "Breathe with Spark". No other copy uses the phrase.
+
+17. **Mindful Place intro line voiced.** Source `Activities/Mindfulness/Very beginning.mp3` → rename `mind-00-intro.mp3`, normalize, copy. Plays on the intro screen when the activity opens (before Begin). Text unchanged.
+
+18. **Breathing-ready screen voiced.** Source `Activities/Mindfulness/mind-03b-breathe-ready.mp3`, normalize, copy. Plays when the ready screen appears. Panel text becomes "Now, let's feel. Feel your lungs fill as you breathe with me. When you're ready, tap the button and follow my count."
+
+19. **Breathing sync drift (Bianca, confirmed by Josh).** Was frame-accurate before; now the rings run ahead of Spark's count by a growing amount, small at the first hold, close to a second by the last breath out. Progressive drift means clock mismatch, not a wrong constant, so do NOT re-tune `LEAD_IN`/`PHASE_DUR`. Check (a) whether the served `mind-04-breathe.mp3` still matches the source byte-for-byte; if it was re-encoded VBR, browsers report `currentTime` inaccurately — re-encode CBR 128k with proper headers; (b) whether `breatheElapsed` is still read from the same audio element that is actually playing (Draft 87's ducking/courtesy changes may have moved playback into the shared manager while the poller stayed on the old element). Fix the cause and re-verify against the clip.
+
+20. **Soundscape levels (Maggie, Josh).** Zone 4 ambience and the Mindful Place rain/frogs/crickets bed: −6 dB across the board, and duck a further −6 dB while any Spark clip plays (the count included), easing back over ~600 ms.
+
+21. **Ascent: remove the ledge captions** ("A rest ledge, catch your breath" and siblings). The Second Wind meter already communicates it.
+
+### Assets manifest for Draft 90
+- `Activities/_bm/bm-08-select.mp3` (replace)
+- `Activities/_gm/gm-01b-what-it-is.mp3` (new), `gm-opt-offer-3.mp3` (replace)
+- `Activities/Mindfulness/Very beginning.mp3` → `mind-00-intro.mp3` (new), `mind-03b-breathe-ready.mp3` (new)
+- `Walkable Zones/Zone 1/z1-09-gear-spark.mp3` (new)
+- `Walkable Zones/Zone 3/Gear you earned the wingsuit.mp3` → `z3-08-gear-spark.mp3` (new)
+All: normalize per the recipe, then copy to the served folders.
+
+**Verify.** Zone 1: Tap here on Spark/pool/exit; regions glow until heard; new select copy + clip; body fills the phone frame; HUD all empty at start; Lantern award voiced; First Light card. Zone 3: all six Read to me sequences full level with no skipped first option; tele-health pronounced right; intro then the what-it-is line; Wingsuit award voiced; flight music on frame one. Zone 4: intro and ready screens voiced; "Breathe with Spark"; rings locked to Spark's count through both cycles; soundscape sits under Spark; no ledge captions; end-card line plays on an iPhone. All zones: videos start with sound off the Spark tap; no eyebrow labels. Clean console, clean build. `src/` → no version bump. Paste this draft into WORKING_NOTES, mark shipped, log Recently-shipped.
+
+*End of Draft 90.*
+
+---
+
+## Draft 91 — The Ascent: stage-3 Traveler with Oxygen Mask and Lantern, eight-frame climb cycle
+
+The climber is still the black stage-1 figure with three poses (right/mid/left, mid repeated), which reads stiff. Josh generated the stage-3 climber (pale cloak, breathing mask, lantern on the bag) as an eight-frame sprite sheet.
+
+**Assets (source `Gains for Teens/game-assets/climb/`):**
+- `climb-stage3-sheet.png` — 2304×1296, eight figures in one row on flat blue #3A7BD5, all on one baseline. **Code does the slicing:** key the blue (alpha from color distance to the key, ~40–110 threshold band, despill the edge), find the eight figure spans by column occupancy, crop each, normalize all eight to one height (bottom-aligned, centered on a shared canvas width), save as `public/gains/climb/climb-s3-1.png` … `climb-s3-8.png`. Keep the sheet and a copy of the frames in `game-assets/climb/frames/`.
+- `climb-stage3-hero.png` — single stage-3 climber still; key it and keep it at `public/long-light/art/traveler-stage3-climb.webp` for later use on the Zone 5 card.
+
+**1. Eight-frame cycle.** In `climbScene.js`, replace the `['climb-right','climb-mid','climb-left','climb-mid']` swap with `climb-s3-1..8` in order. Advance frames by distance climbed (e.g. one frame per ~2.5% of the wall) so she freezes when the player stops and speeds up when they move; keep the existing bob/sway. Keep `CLIMB_FIG_H` and the bottom anchor; recompute the display size from the new frame aspect (replace `CLIMB_SRC_H`/520 with the normalized frame dimensions). Reduced motion: hold frame 3 (both hands level).
+
+**2. Remove** the old `climb-right/mid/left.png` from `public/gains/climb/` and their loads.
+
+**3. Demo card blurb** for the Ascent: append "The climber is now the Traveler as she looks in Zone 4, mask on and Lantern at her hip, with a full climbing cycle."
+
+**Verify.** `/gains-demo/climb`: the pale-cloaked, masked Traveler climbs with a smooth eight-frame cycle that pauses when the player stops; same size and anchor as before; reds/golds/blast unchanged; clean console; clean build. `src/game/`, `public/` → no version bump. Paste into WORKING_NOTES, mark shipped, log Recently-shipped.
+
+*End of Draft 91.*
