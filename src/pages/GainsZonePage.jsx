@@ -59,6 +59,56 @@ const BLOOM_IN_MS = 380
 // Draft 83: how long the intro plate waits with no movement before Spark
 // beckons again.
 const BECKON_IDLE_MS = 8000
+// Draft 90 (item 14): the flight track used to only start loading once
+// TraversalGame's own scene mounted (well after the exit tap), which on a
+// cold cache read as ~10s of silence before the music caught up. Kicking
+// off a plain browser fetch as soon as the exit unlocks gives it a head
+// start; by the time the traversal actually mounts, Phaser's own loader
+// (same URL) hits a warm HTTP cache instead of a cold network fetch.
+const TRAVERSAL_MUSIC_PRELOAD = {
+  flight: '/gains/traversal/audio/music-ascent-loop.mp3',
+  climb: '/gains/climb/audio/climb-music.mp3',
+}
+
+// Draft 90 (item 1): a small floating "Tap here" pointer over whichever
+// target is currently the one thing to do -- Spark on arrival, the station
+// after follow-me, the exit after the gear award. Positioned by percentage
+// against the 1080x1920 logical canvas (the phone frame is always exactly
+// 9:16, so it lines up with the Phaser world without needing a live bridge
+// to the scene). Coordinates are each plate's own `sparkStand`/`pond`/
+// `exitStand` spot from zoneWalkScene.js's per-zone geometry.
+const POINTER_SPOTS = {
+  zone1intro: { spark: { x: 700, y: 260 } },
+  zone1main: { spark: { x: 460, y: 1300 }, pond: { x: 586, y: 563 }, exit: { x: 740, y: 220 } },
+  zone3: { spark: { x: 540, y: 1200 }, pond: { x: 760, y: 930 }, exit: { x: 600, y: 470 } },
+  zone4: { spark: { x: 412, y: 1128 }, pond: { x: 770, y: 862 }, exit: { x: 400, y: 532 } },
+}
+
+function TapHerePointer({ x, y }) {
+  return (
+    <div
+      className="absolute z-10 flex flex-col items-center"
+      style={{
+        left: `${(x / 1080) * 100}%`,
+        top: `${(y / 1920) * 100}%`,
+        transform: 'translate(-50%, calc(-100% - 14px))',
+        pointerEvents: 'none',
+        animation: 'gz-tap-here-bob 1.6s ease-in-out infinite',
+      }}
+    >
+      <span
+        className="rounded-full px-3 py-1.5 text-[12px] font-bold whitespace-nowrap"
+        style={{ background: 'var(--action-quiet)', color: 'var(--text-bright)', border: '1px solid var(--border-warm)', boxShadow: 'var(--glow-sm)' }}
+      >
+        Tap here
+      </span>
+      <span
+        className="mt-1"
+        style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '7px solid var(--action-quiet)' }}
+      />
+    </div>
+  )
+}
 
 export default function GainsZonePage({ zone }) {
   const [scene, setScene] = useState('intro') // intro|walk|video|activity|gear|transition|climb|end
@@ -84,6 +134,15 @@ export default function GainsZonePage({ zone }) {
   const [gearFly, setGearFly] = useState(0)
   const [travResult, setTravResult] = useState(null)
   const [runKey, setRunKey] = useState(0) // bumps to remount the stage on Play again / plate switch
+  // Draft 90 (item 10): a brief one-line instruction card the moment the
+  // First Light traversal mounts inside a zone (the standalone
+  // /gains-demo/firstlight page has its own pre-Begin instructions screen;
+  // this covers the in-zone hand-off, which has none).
+  const [travHint, setTravHint] = useState(false)
+  // Draft 90 (item 1): which "Tap here" target the player has already
+  // tapped once -- cleared implicitly whenever the active target moves on
+  // (see pointerTarget below), so a NEW target always gets its own pointer.
+  const [dismissedTarget, setDismissedTarget] = useState(null)
   // Draft 83: which plate is live. Zones without `introPlate` never leave
   // 'main'.
   const [platePhase, setPlatePhase] = useState(zone.introPlate ? 'intro' : 'main')
@@ -98,6 +157,9 @@ export default function GainsZonePage({ zone }) {
   // right now -- set imperatively via onNarrate, read by onActivityComplete
   // to hold the Gear Award transition until it's done.
   const narratingRef = useRef(false)
+  // Draft 90 (item 4): gates GearAward's Continue button while its own
+  // recorded sparkLine plays.
+  const [gearNarrating, setGearNarrating] = useState(false)
   const progressRef = useRef(progress)
   progressRef.current = progress
   const sceneRef = useRef(scene)
@@ -327,7 +389,10 @@ export default function GainsZonePage({ zone }) {
         if (a) a.sfx(evt.name)
         break
       case 'tap':
-        if (evt.target) handleTap(evt.target)
+        if (evt.target) {
+          handleTap(evt.target)
+          setDismissedTarget(evt.target)
+        }
         break
       case 'arrive':
         if (evt.target) handleArrive(evt.target)
@@ -352,6 +417,7 @@ export default function GainsZonePage({ zone }) {
       // no-op the lock and the VO (Draft 84 bugfix).
       platePhaseRef.current = 'main'
       setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
+      setDismissedTarget(null)
       setRunKey((k) => k + 1)
       lockAndArrive()
     })
@@ -394,6 +460,19 @@ export default function GainsZonePage({ zone }) {
     poll()
   }
 
+  // Draft 90 (item 4): voices the Spark bubble on the award screen, through
+  // the zone's own shared audio manager (already unlocked at Begin) rather
+  // than a fresh, unproven `<audio>` element -- exactly the "route every
+  // clip through the shared manager" fix the iOS audio-unlock sweep asked
+  // for. Zones without a recorded line for their gear (Zone 4's mask isn't
+  // recorded yet) simply skip this -- `continueDisabled` stays false.
+  function onGearEquipped() {
+    const file = zone.gear.sparkLineAudio
+    if (!file || !audioRef.current) return
+    setGearNarrating(true)
+    audioRef.current.speak(file).then(() => setGearNarrating(false))
+  }
+
   function onGearEquip() {
     const a = audioRef.current
     if (a) {
@@ -405,6 +484,8 @@ export default function GainsZonePage({ zone }) {
   }
 
   function onGearContinue() {
+    const preloadUrl = TRAVERSAL_MUSIC_PRELOAD[zone.traversalMode]
+    if (preloadUrl && !zone.continueAmbienceIntoTraversal) new Audio(preloadUrl).load()
     setProgress({ didActivity: true, exitUnlocked: true })
     transitionTo('walk', () => {
       audioRef.current?.sfx('chime-unlock')
@@ -412,6 +493,14 @@ export default function GainsZonePage({ zone }) {
       lockAndSay('ready')
     })
   }
+
+  useEffect(() => {
+    if (scene === 'climb' && zone.traversalMode === 'firstlight') {
+      setTravHint(true)
+      later(() => setTravHint(false), 4000)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene])
 
   function onTraversalComplete(result) {
     setTravResult(result || null)
@@ -424,6 +513,8 @@ export default function GainsZonePage({ zone }) {
     audioRef.current?.stopSpeech()
     setBubble(null)
     narratingRef.current = false
+    setGearNarrating(false)
+    setDismissedTarget(null)
     setProgressState({ talked: false, watched: false, didActivity: false, exitUnlocked: false, leveledUp: false })
     setGearEquipped(false)
     setTravResult(null)
@@ -447,6 +538,24 @@ export default function GainsZonePage({ zone }) {
 
   const stageMounted = scene !== 'climb' && scene !== 'end'
   const walkPaused = scene !== 'walk' || showTitle || transitioning || introLock
+  // Draft 90 (item 1): the one target "Tap here" should point at right now
+  // -- these three states are mutually exclusive in the normal zone flow
+  // (spark active until talked, then pond until the activity's done, then
+  // exit once it's unlocked), and match exactly the three moments the draft
+  // calls out: Spark on arrival, the station after follow-me, the exit
+  // after the gear award.
+  const pointerTarget =
+    walkPaused
+      ? null
+      : zoneProgress.spark === 'active'
+        ? 'spark'
+        : zoneProgress.pond === 'active'
+          ? 'pond'
+          : zoneProgress.exit === 'active'
+            ? 'exit'
+            : null
+  const pointerSpot = pointerTarget && POINTER_SPOTS[plateZoneId]?.[pointerTarget]
+  const showPointer = !!pointerSpot && dismissedTarget !== pointerTarget
   // The scene's own "begin" (camera settle + tap hint) waits for the arrive
   // line too, so the hint doesn't invite a tap that would be ignored. The
   // intro plate never sets introLock, so this is true the moment `started`
@@ -489,6 +598,8 @@ export default function GainsZonePage({ zone }) {
         {hudVisible && <GearHud earned={zone.gearEarnedBefore} newKey={zone.gear.gearKey} iconSrc={zone.gear.itemSrc} equipped={gearEquipped} flyIn={gearFly} frameRef={frameRef} />}
 
         {scene === 'walk' && <SparkBubble text={bubble?.text} visible={!!bubble?.visible} />}
+
+        {scene === 'walk' && showPointer && <TapHerePointer x={pointerSpot.x} y={pointerSpot.y} />}
 
         {/* Intro: the Begin tap (audio unlock). */}
         {scene === 'intro' && (
@@ -576,6 +687,8 @@ export default function GainsZonePage({ zone }) {
             leveledUp={progress.leveledUp}
             equipLabel={zone.gear.equipLabel}
             onEquip={onGearEquip}
+            onEquipped={onGearEquipped}
+            continueDisabled={gearNarrating}
             onContinue={onGearContinue}
           />
         )}
@@ -610,6 +723,21 @@ export default function GainsZonePage({ zone }) {
               skipMusic={!!zone.continueAmbienceIntoTraversal}
               onDuck={zone.continueAmbienceIntoTraversal ? (on) => audioRef.current?.duck(on) : undefined}
             />
+            {travHint && (
+              <p
+                className="absolute left-1/2 z-10 text-[13px] font-semibold text-center px-4 py-2 rounded-full"
+                style={{
+                  top: 24,
+                  transform: 'translateX(-50%)',
+                  background: 'var(--action-quiet)',
+                  color: 'var(--text-bright)',
+                  border: '1px solid var(--border-warm)',
+                  pointerEvents: 'none',
+                }}
+              >
+                Tap the trail to walk. Reach each lamp to light it.
+              </p>
+            )}
           </div>
         )}
 
@@ -709,6 +837,7 @@ export default function GainsZonePage({ zone }) {
 
       <style>{`
         @keyframes z4-title-veil { 0% { opacity: 1 } 70% { opacity: 1 } 100% { opacity: 0 } }
+        @keyframes gz-tap-here-bob { 0%, 100% { margin-top: 0 } 50% { margin-top: -6px } }
       `}</style>
     </FullscreenStage>
   )

@@ -30,14 +30,36 @@ const CSS = `
 @media (prefers-reduced-motion: reduce) { .ga-item, .ga-twinkle, .ga-bloom { animation: none; } .ga-flash { animation-duration: 1ms; } }
 `
 
-export default function GearAward({ name, itemSrc, equippedSrc, title, subline, sparkLine, leveledUp = false, onEquip, onContinue, equipLabel }) {
+export default function GearAward({
+  name,
+  itemSrc,
+  equippedSrc,
+  title,
+  subline,
+  sparkLine,
+  leveledUp = false,
+  onEquip,
+  onContinue,
+  equipLabel,
+  // Draft 90 (item 4): when the host has a recorded line for this gear's
+  // Spark bubble, it plays it (through the zone's own already-unlocked
+  // audio manager -- see GainsZonePage's onEquipped) the moment this
+  // screen reaches the `equipped` stage, and `continueDisabled` gates
+  // Continue until it ends (same "don't let them advance past a still-
+  // talking screen" pattern as ElevatorPitch's safety step).
+  onEquipped,
+  continueDisabled = false,
+}) {
   const [stage, setStage] = useState('reveal') // reveal | equipped
   const [flash, setFlash] = useState(false)
 
   function equip() {
     setFlash(true)
     if (onEquip) onEquip()
-    setTimeout(() => setStage('equipped'), 180)
+    setTimeout(() => {
+      setStage('equipped')
+      onEquipped?.()
+    }, 180)
     setTimeout(() => setFlash(false), 600)
   }
 
@@ -101,7 +123,7 @@ export default function GearAward({ name, itemSrc, equippedSrc, title, subline, 
               <span className="font-extrabold" style={{ color: 'var(--text-warm)' }}>Spark:</span> {sparkLine}
             </p>
           )}
-          <GainsButton size="lg" onClick={onContinue}>
+          <GainsButton size="lg" onClick={onContinue} disabled={continueDisabled}>
             Continue
           </GainsButton>
         </div>

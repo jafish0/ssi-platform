@@ -169,7 +169,11 @@ const SCENE_CSS = `
    individually-tracked math. Draft 58: thicker strokes, a bigger box-shadow
    glow, and a wider min/max scale range (see RING_TARGETS) so the swell
    reads as obvious motion rather than static circles. */
-.om-ring-group { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 50%; transition: transform 5s ease-in-out, opacity 5s ease-in-out, filter 5s ease-in-out; }
+/* Draft 90 (item 19): a short, poll-interval-scale transition just smooths
+   between ticks -- the values themselves are now computed continuously
+   from the real audio position (ringVisualAt), so there's no long,
+   independent CSS clock left to drift out of sync with it. */
+.om-ring-group { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 50%; transition: transform 160ms linear, opacity 160ms linear, filter 160ms linear; }
 .om-ring-group.om-shimmer { animation: omShimmer 1.1s ease-in-out infinite; }
 @keyframes omShimmer { 0%, 100% { filter: brightness(1.1); } 50% { filter: brightness(1.4); } }
 .om-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); aspect-ratio: 1 / 1; border-radius: 9999px; border-style: solid; border-color: rgba(253,230,138,.9); box-shadow: 0 0 32px rgba(245,158,11,.45); }
@@ -224,8 +228,31 @@ const PULSE_MS = 900
 
 // Draft 57: one quiet looping bed for the whole activity, ducked while a
 // narration clip is speaking (see the stepKey effect below), then restored.
-const BED_VOLUME = 0.3
-const BED_DUCK_MULT = 0.4
+// Draft 90 (item 20): -6dB on the bed itself, and a further -6dB while any
+// Spark clip plays (the breathing count included) -- linear ×0.501 ≈ -6dB.
+const BED_VOLUME = 0.15
+const BED_DUCK_MULT = 0.2
+const BED_RESTORE_MS = 600
+
+// Manual volume ramp, same reasoning as zoneAudio.js's rampVolume -- eases
+// the bed back up over ~600ms once a clip ends rather than snapping to
+// full instantly. Not shared with zoneAudio.js (this component owns its
+// audio elements entirely independently, see the file header).
+function rampBedVolume(el, to, ms) {
+  if (!el) return
+  const from = el.volume
+  const start = performance.now()
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / ms)
+    try {
+      el.volume = from + (to - from) * t
+    } catch {
+      /* iOS ignores volume writes; fine */
+    }
+    if (t < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
 
 // Spark voice-F narration, one clip per step, keyed by the `stepKey` derived
 // below from mode/breatheStage/completionCount. Fires once per step entry
@@ -234,6 +261,9 @@ const NARRATION_CLIPS = {
   arrive: 'mind-01-arrive.mp3',
   see: 'mind-02-see.mp3',
   hear: 'mind-03-hear.mp3',
+  // Draft 90 (item 18): plays when the ready screen appears (a plain
+  // tap-triggered mode change, same shape as every other step here).
+  breatheReady: 'mind-03b-breathe-ready.mp3',
   breathe: 'mind-04-breathe.mp3',
   breatheDone: 'mind-05-done.mp3',
   'close-1': 'mind-06-close.mp3',
@@ -244,6 +274,7 @@ function stepKeyFor(mode, breatheStage, completionCount, finished) {
   if (mode === 'arrive') return 'arrive'
   if (mode === 'see') return 'see'
   if (mode === 'hear') return 'hear'
+  if (mode === 'breathe' && breatheStage === 'ready') return 'breatheReady'
   if (mode === 'breathe' && breatheStage === 'active') return 'breathe'
   if (mode === 'breathe' && breatheStage === 'done') return 'breatheDone'
   if (mode === 'close' && !finished) return `close-${completionCount}`
@@ -316,6 +347,48 @@ const RING_TARGETS = {
   hold2: { scale: 0.42, opacity: 0.3, brightness: 0.65 },
 }
 
+// Draft 90 (item 19): the rings used to jump to a new RING_TARGETS entry and
+// let a CSS `transition: ... 5s ease-in-out` carry it there -- a SECOND,
+// independent wall clock racing the audio's real position. Any lag between
+// when a poll tick (every ~150ms) notices a new phase and when the CSS
+// transition actually starts compounds over the clip's 49s (small at the
+// first hold, close to a second by the last breath out -- exactly Bianca's
+// report), because the transition's own 5000ms duration never re-syncs to
+// the true clock in between. Ruled out both of Josh's hypotheses first: the
+// served mind-04-breathe.mp3 is byte-identical to the source (CBR 128k, not
+// re-encoded), and this component has never used the shared zone audio
+// manager -- narrationRef is the one thing driving breatheElapsed, and
+// always has been. The actual fix is to stop having a second clock at all:
+// compute the ring's scale/opacity/brightness AS a continuous function of
+// the real elapsed time on every poll tick, so there is nothing left to
+// drift out of sync with the audio.
+function easeInOut(t) {
+  return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2
+}
+function lerpTargets(a, b, t) {
+  return {
+    scale: a.scale + (b.scale - a.scale) * t,
+    opacity: a.opacity + (b.opacity - a.opacity) * t,
+    brightness: a.brightness + (b.brightness - a.brightness) * t,
+  }
+}
+// Continuous per-phase visual, driven straight off breatheElapsed (not a
+// discrete jump to one of RING_TARGETS' five entries): ramps from idle to
+// the 'in' target across the inhale, holds flat through hold1 (same
+// target), ramps back down across the exhale, holds flat through hold2.
+function ringVisualAt(phaseInfo) {
+  if (phaseInfo.kind !== 'cycle') return RING_TARGETS.idle
+  const { phase, elapsedInPhase } = phaseInfo
+  const t = easeInOut(clamp(elapsedInPhase / PHASE_DUR, 0, 1))
+  if (phase.key === 'in') return lerpTargets(RING_TARGETS.idle, RING_TARGETS.in, t)
+  if (phase.key === 'hold1') return RING_TARGETS.in
+  if (phase.key === 'out') return lerpTargets(RING_TARGETS.in, RING_TARGETS.out, t)
+  return RING_TARGETS.out // hold2
+}
+function clamp(v, lo, hi) {
+  return v < lo ? lo : v > hi ? hi : v
+}
+
 // Draft 47 (Maggie/Holly, 2026-08-24): the frog "breathes along" with the
 // count during the active breathing stage. Draft 57: retargeted onto the
 // painterly PNG's wrapper div (bottom-anchored via transform-origin, see
@@ -332,6 +405,26 @@ const FROG_BREATHE_TARGETS = {
   hold1: { translateY: -4, scaleX: 1.01, scaleY: 1.05 },
   out: { translateY: 1, scaleX: 0.995, scaleY: 0.97 },
   hold2: { translateY: 1, scaleX: 0.995, scaleY: 0.97 },
+}
+
+// Draft 90 (item 19): same continuous-interpolation fix as ringVisualAt --
+// the frog's own swell used the identical long-CSS-transition pattern
+// (see the frogSwellRef effect below) and would drift for the same reason.
+function lerpFrog(a, b, t) {
+  return {
+    translateY: a.translateY + (b.translateY - a.translateY) * t,
+    scaleX: a.scaleX + (b.scaleX - a.scaleX) * t,
+    scaleY: a.scaleY + (b.scaleY - a.scaleY) * t,
+  }
+}
+function frogVisualAt(phaseInfo) {
+  if (phaseInfo.kind !== 'cycle') return FROG_BREATHE_TARGETS.idle
+  const { phase, elapsedInPhase } = phaseInfo
+  const t = easeInOut(clamp(elapsedInPhase / PHASE_DUR, 0, 1))
+  if (phase.key === 'in') return lerpFrog(FROG_BREATHE_TARGETS.idle, FROG_BREATHE_TARGETS.in, t)
+  if (phase.key === 'hold1') return FROG_BREATHE_TARGETS.in
+  if (phase.key === 'out') return lerpFrog(FROG_BREATHE_TARGETS.in, FROG_BREATHE_TARGETS.out, t)
+  return FROG_BREATHE_TARGETS.out // hold2
 }
 
 // Draft 57: arrive/close now carry a single narration-matched line as the
@@ -469,6 +562,34 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
       bed.volume = BED_VOLUME
       bed.play().catch(() => {})
     }
+    // Draft 90 (item 17): the intro screen's own line (mind-00-intro,
+    // voicing the text already on screen) has nowhere earlier to fire from
+    // -- this component's very first available user gesture IS this Begin
+    // tap, so it plays here, in the same real gesture, then advances to
+    // 'arrive' only once it ends (mode stays 'intro' meanwhile, so the
+    // screen the player is looking at doesn't change out from under the
+    // line still being read). A failed/missing clip still advances so
+    // nobody's ever stuck on a silent screen.
+    const el = narrationRef.current
+    if (el) {
+      try {
+        el.pause()
+        el.currentTime = 0
+        el.src = `${AUDIO}/mind-00-intro.mp3`
+        if (bed) bed.volume = BED_VOLUME * BED_DUCK_MULT
+        const restore = () => {
+          setMode('arrive')
+          if (bed) rampBedVolume(bed, BED_VOLUME, BED_RESTORE_MS)
+        }
+        el.onended = restore
+        el.onerror = restore
+        const p = el.play()
+        if (p && p.catch) p.catch(restore)
+        return
+      } catch {
+        /* fall through to the no-audio path below */
+      }
+    }
     setMode('arrive')
   }
 
@@ -555,7 +676,7 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
     const bed = soundscapeRef.current
     if (!el) return
     const restoreBed = () => {
-      if (bed) bed.volume = BED_VOLUME
+      if (bed) rampBedVolume(bed, BED_VOLUME, BED_RESTORE_MS)
     }
     el.pause()
     el.currentTime = 0
@@ -588,19 +709,24 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
   const breathePhase = phaseInfo.kind === 'cycle' ? phaseInfo.phase : null
   const breatheTargetKey = breathePhase ? breathePhase.key : 'idle'
   const breatheCount = breathePhase ? tickFromElapsed(phaseInfo.elapsedInPhase) : null
-  const ringTarget = RING_TARGETS[breatheTargetKey]
-  const frogTarget = FROG_BREATHE_TARGETS[breatheTargetKey]
+  // Draft 90 (item 19): computed continuously from breatheElapsed every poll
+  // tick -- see ringVisualAt/frogVisualAt's own comment for why (no more
+  // independent 5s CSS clock to drift out of sync with the audio).
+  const ringTarget = ringVisualAt(phaseInfo)
+  const frogTarget = frogVisualAt(phaseInfo)
 
   // Draft 57: drives the frog wrapper's scale/lift straight onto its own
   // element (frogSwellRef), the same technique the old code used on the
   // SVG's #frog-body. Only takes over while breathingAlong; Draft 60: the
   // frog has no motion of its own otherwise, so clearing the inline style
   // on exit just leaves it static (was: resume an idle CSS keyframe).
+  // Draft 90: a short (poll-interval-scale) transition just smooths between
+  // ticks, rather than the old 5s CSS clock racing the audio.
   useEffect(() => {
     const el = frogSwellRef.current
     if (!el) return
     if (breathingAlong) {
-      el.style.transition = `transform ${PHASE_DUR}s ease-in-out`
+      el.style.transition = 'transform 160ms linear'
       el.style.transform = `translateY(${frogTarget.translateY}px) scale(${frogTarget.scaleX}, ${frogTarget.scaleY})`
     } else {
       el.style.transition = ''
@@ -638,7 +764,7 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
     panelText =
       breatheStage === 'done'
         ? 'Beautifully done.'
-        : 'Now, let’s feel. Feel your lungs fill as you breathe with me.'
+        : 'Now, let’s feel. Feel your lungs fill as you breathe with me. When you’re ready, tap the button and follow my count.'
   } else if (mode === 'close') {
     if (finished) {
       panelLabel = null
@@ -750,9 +876,6 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
           shared space with, covered too much of the scene). */}
       {inSelectionStep && (
         <div className="relative px-4 pt-4 pb-5 bg-gradient-to-b from-slate-950/90 via-slate-950/70 to-transparent">
-          <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-1" style={{ color: 'var(--text-warm)' }}>
-            Zone 4 · Mindfulness
-          </div>
           <div className="text-[12px] mb-2" style={{ color: 'var(--text-body)' }}>{instruction}</div>
 
           <div className="flex flex-wrap justify-center gap-2 mb-2">
@@ -814,9 +937,6 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
           undercut that. */}
       {!inSelectionStep && !(mode === 'breathe' && breatheStage === 'active') && (
         <div className="relative mt-auto px-4 pb-4 pt-10 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-transparent">
-          <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-1" style={{ color: 'var(--text-warm)' }}>
-            Zone 4 · Mindfulness
-          </div>
           <div
             className="rounded-2xl px-3.5 py-2.5 mb-2"
             style={{ background: 'var(--surface-sheet)', backdropFilter: 'var(--blur-sheet)', border: '1px solid var(--border-soft)' }}
@@ -860,7 +980,7 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
               className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
               style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
             >
-              Begin box breathing
+              Breathe with Spark
             </button>
           )}
 

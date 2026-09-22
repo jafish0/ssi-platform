@@ -71,6 +71,9 @@ export default function GainsFirstLightPage() {
           <ul className="text-[14px] leading-relaxed space-y-2 mb-6 text-left max-w-[290px]" style={{ color: 'var(--text-body)' }}>
             <li>• The trail went dark. Its lamps still stand, unlit.</li>
             <li>
+              • <strong style={{ color: 'var(--text-bright)' }}>Tap the trail to walk.</strong> Reach each lamp to light it.
+            </li>
+            <li>
               • You carry the first <strong style={{ color: 'var(--text-bright)' }}>flame</strong> — tap toward each faint glimmer to
               relight it.
             </li>

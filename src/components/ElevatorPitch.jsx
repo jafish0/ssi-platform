@@ -50,7 +50,8 @@ const ART = '/long-light/art/zone3'
 // one is meant to be heard both places).
 const NARRATION_BASE = '/long-light/audio/guardian'
 const STEP_NARRATION = {
-  intro: 'gm-01-intro',
+  // 'intro' isn't listed here -- it chains two clips (see the step effect
+  // below), not a single lookup.
   greeting: 'gm-02-greeting',
   situation: 'gm-03-situation',
   request: 'gm-04-request',
@@ -63,6 +64,12 @@ const STEP_NARRATION = {
 
 const SPARK_INTRO =
   'Sometimes things feel like a dead end. For some teens, getting their parents or caregivers on board with trauma therapy feels like a bridge that can’t be crossed. But with a little preparation and courage, you can overcome any obstacle. Take this time to plan out a message for your guardians.'
+
+// Draft 90 (item 13): a second clip right after the intro, chained the same
+// way the review screen chains gm-08/gm-09 -- its text shows beneath the
+// intro's on the same screen, not in place of it.
+const WHAT_IT_IS =
+  "This message is you asking a parent or guardian to help you start trauma therapy. We'll build it together, one piece at a time, and you can change anything before you save it."
 
 const SITUATION_OPTIONS = [
   'I’ve been having a hard time lately.',
@@ -229,6 +236,8 @@ export default function ElevatorPitch({ onComplete = null, narrate: narrateOn = 
   const [help, setHelp] = useState(null)
   const [saved, setSaved] = useState(false)
   const [narrating, setNarrating] = useState(false)
+  const narratingRef = useRef(false)
+  narratingRef.current = narrating
   // Which select step is currently being read aloud, and which of its
   // options is on -- { step, index } | null.
   const [reading, setReading] = useState(null)
@@ -286,6 +295,7 @@ export default function ElevatorPitch({ onComplete = null, narrate: narrateOn = 
   // right prompt.
   useEffect(() => {
     if (step === 'review') narrate('gm-08-review', () => narrate('gm-09-reassurance'))
+    else if (step === 'intro') narrate('gm-01-intro', () => narrate('gm-01b-what-it-is'))
     else if (STEP_NARRATION[step]) narrate(STEP_NARRATION[step])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
@@ -307,9 +317,38 @@ export default function ElevatorPitch({ onComplete = null, narrate: narrateOn = 
     })
   }
 
+  // Draft 90 (item 11): five reporters found the first Read-to-me option
+  // playing quiet, and step 6's first option sometimes not playing at all.
+  // Root cause -- narrate() unconditionally does el.pause()/el.src=.../
+  // el.play() on the ONE shared audio element; tapping Read-to-me while the
+  // step's own entrance line (or a prior read-aloud clip) was still mid-
+  // flight cut it off mid-load, and the option clip's own play() could
+  // start into a not-yet-settled element (quiet first bytes, or on a slow
+  // step, silently dropped). Now it waits for narrating to actually clear
+  // (+150ms) before the sequence's first clip ever fires, exactly like the
+  // draft's own fix note: "each clip starts at full level after the
+  // previous has ended, and the step prompt's duck is released first."
   function toggleReadAloud(stepKey, options) {
-    if (reading?.step === stepKey) stopReadAloud()
-    else playReadStep(stepKey, options, 0)
+    if (reading?.step === stepKey) {
+      stopReadAloud()
+      return
+    }
+    const begin = () => playReadStep(stepKey, options, 0)
+    if (!narratingRef.current) {
+      begin()
+      return
+    }
+    const deadline = Date.now() + 6000
+    const wait = () => {
+      if (!narratingRef.current) {
+        readTimerRef.current = setTimeout(begin, 150)
+      } else if (Date.now() >= deadline) {
+        begin()
+      } else {
+        readTimerRef.current = setTimeout(wait, 100)
+      }
+    }
+    wait()
   }
 
   // Wraps a select step's setter so: a tap during "Read to me" stops the
@@ -388,16 +427,15 @@ export default function ElevatorPitch({ onComplete = null, narrate: narrateOn = 
           mist), so the message-builder card sits near the top on its own
           scrim, leaving that part of the scene clear. */}
       <div className="relative px-4 pt-4 pb-5 bg-gradient-to-b from-slate-950/90 via-slate-950/75 to-transparent">
-        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase mb-1" style={{ color: 'var(--text-warm)' }}>
-          Zone 3 · Message to Your Guardian
-        </div>
-
         <div
           className="rounded-2xl px-3.5 py-3"
           style={{ background: 'var(--surface-sheet)', backdropFilter: 'var(--blur-sheet)', border: '1px solid var(--border-soft)' }}
         >
           {step === 'intro' && (
-            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-bright)' }}>{SPARK_INTRO}</p>
+            <>
+              <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-bright)' }}>{SPARK_INTRO}</p>
+              <p className="text-[13px] leading-relaxed mt-2" style={{ color: 'var(--text-bright)' }}>{WHAT_IT_IS}</p>
+            </>
           )}
 
           {promptLabel && (

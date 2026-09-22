@@ -59,7 +59,7 @@ const LONGEST_REGION = REGIONS.reduce((a, b) =>
 
 const INSTRUCTIONS = {
   reveal: 'Click to reveal different areas of the body that react during and after a trauma.',
-  select: 'Click on each of these reactions you have had recently.',
+  select: 'Tap each reaction you’ve felt recently.',
   done: 'Nice noticing.',
 }
 
@@ -89,15 +89,16 @@ const REGION_NARRATION = {
 const SVG_CSS = `
 .bm-region { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .bm-region .bm-target {
-  fill: #CBD5E1; fill-opacity: .08;
-  stroke: #CBD5E1; stroke-opacity: .4; stroke-width: 1.6; stroke-dasharray: 5 5;
+  fill: #FDE68A; fill-opacity: .1;
+  stroke: #FDE68A; stroke-opacity: .55; stroke-width: 1.6; stroke-dasharray: 5 5;
   transform-box: fill-box; transform-origin: center;
+  filter: url(#bmIdleGlow);
   transition: fill .3s ease, fill-opacity .3s ease, stroke .3s ease,
               stroke-opacity .3s ease, stroke-width .3s ease;
   animation: bmIdlePulse 2.6s ease-in-out infinite;
 }
 .bm-region .bm-icon {
-  fill: none; stroke: #CBD5E1; stroke-opacity: .65; stroke-width: 3.2;
+  fill: none; stroke: #FDE68A; stroke-opacity: .7; stroke-width: 3.2;
   stroke-linecap: round; stroke-linejoin: round;
   transition: stroke .3s ease, stroke-opacity .3s ease, stroke-width .3s ease;
   animation: bmIdleIcon 2.6s ease-in-out infinite;
@@ -112,16 +113,16 @@ const SVG_CSS = `
 #bm-region-body    .bm-target, #bm-region-body    .bm-icon { animation-delay: 1.4s; }
 
 @keyframes bmIdlePulse {
-  0%, 100% { transform: scale(1);    stroke-opacity: .32; }
-  50%      { transform: scale(1.07); stroke-opacity: .6;  }
+  0%, 100% { transform: scale(1);    stroke-opacity: .4; fill-opacity: .08; }
+  50%      { transform: scale(1.1); stroke-opacity: .85; fill-opacity: .18; }
 }
 @keyframes bmIdleIcon {
-  0%, 100% { stroke-opacity: .5; }
-  50%      { stroke-opacity: .8; }
+  0%, 100% { stroke-opacity: .55; }
+  50%      { stroke-opacity: .95; }
 }
 
-.bm-region:hover .bm-target { fill-opacity: .11; stroke-opacity: .55; }
-.bm-region:hover .bm-icon { stroke-opacity: .85; }
+.bm-region:hover .bm-target { fill-opacity: .2; stroke-opacity: .8; }
+.bm-region:hover .bm-icon { stroke-opacity: 1; }
 .bm-region:focus { outline: none; }
 .bm-region:focus-visible .bm-target { stroke-opacity: .9; stroke-width: 2.4; }
 
@@ -132,6 +133,21 @@ const SVG_CSS = `
   animation: none; transform: scale(1);
 }
 .bm-region.is-active .bm-icon { stroke: #B45309; stroke-opacity: 1; stroke-width: 3.6; animation: none; }
+
+/* Draft 90 (item 7): a region keeps its glow through its own spoken line,
+   not just until the tap -- three reviewers tapped regions and reported
+   "nothing glows" because the glow died the instant they tapped, before
+   they'd actually heard anything. The bm-glowing class is added alongside
+   is-active for exactly as long as narration for THIS region is playing
+   (see the stillGlowing() helper in the component below), and re-enables
+   the idle pulse/glow animation the plain is-active rule turns off. */
+.bm-region.is-active.bm-glowing .bm-target {
+  animation: bmIdlePulse 1.1s ease-in-out infinite;
+  transform: none;
+}
+.bm-region.is-active.bm-glowing .bm-icon {
+  animation: bmIdleIcon 1.1s ease-in-out infinite;
+}
 
 .bm-region.is-selected .bm-target {
   fill: #F59E0B; fill-opacity: .4;
@@ -383,12 +399,20 @@ export default function BodyMapping({ onComplete = null, narrate: narrateOn = fa
     setCustomArea(null)
   }
 
+  // Draft 90 (item 7): a region keeps glowing through its own spoken line,
+  // not just until the tap that reveals it -- true whenever it's still
+  // unrevealed, OR it's revealed but its own clip is the one currently
+  // narrating (only meaningful when narrateOn; the standalone review page
+  // has no audio, so nothing ever narrates there and this is always false).
+  const stillGlowing = (id) => narrateOn && narrating && mode === 'reveal' && lastRevealed === id
+
   const regionClass = (id) => {
     const on =
       (mode === 'reveal' && revealed.includes(id)) ||
       (mode !== 'reveal' && selected.includes(id))
     if (!on) return 'bm-region'
-    return 'bm-region ' + (mode === 'reveal' ? 'is-active' : 'is-selected')
+    const base = 'bm-region ' + (mode === 'reveal' ? 'is-active' : 'is-selected')
+    return stillGlowing(id) ? base + ' bm-glowing' : base
   }
 
   const regionProps = (id, label) => ({
@@ -422,7 +446,7 @@ export default function BodyMapping({ onComplete = null, narrate: narrateOn = fa
         : {
             muted: false,
             label: selectedCount + ' selected',
-            text: 'You can pick as many as fit.',
+            text: 'Pick as many as you feel.',
           }
   } else if (mode === 'done') {
     instruction = INSTRUCTIONS.done
@@ -440,9 +464,6 @@ export default function BodyMapping({ onComplete = null, narrate: narrateOn = fa
     >
       {/* header */}
       <div className="flex-shrink-0">
-        <div className="text-[10px] font-extrabold tracking-[0.16em] uppercase" style={{ color: 'var(--text-warm)' }}>
-          Activity 1 · Body mapping
-        </div>
         <h3 className="text-[17px] font-extrabold leading-tight mt-0.5 mb-1.5" style={{ color: 'var(--text-bright)' }}>
           Where trauma shows up
         </h3>
@@ -489,7 +510,7 @@ export default function BodyMapping({ onComplete = null, narrate: narrateOn = fa
           min-h-0 is load-bearing: a column flex item defaults to
           min-height:auto, which clamps it up to the SVG's intrinsic aspect
           height and would let it push the rest of the layout around. */}
-      <div className="flex-1 min-h-0 my-2 flex items-center justify-center">
+      <div className="flex-1 min-h-0 my-2 flex items-center justify-center" style={{ minHeight: '42vh' }}>
         <svg
           viewBox={VIEW_BOX}
           preserveAspectRatio="xMidYMid meet"
@@ -505,6 +526,23 @@ export default function BodyMapping({ onComplete = null, narrate: narrateOn = fa
                 in="b"
                 type="matrix"
                 values="0 0 0 0 0.96  0 0 0 0 0.62  0 0 0 0 0.04  0 0 0 0.75 0"
+                result="g"
+              />
+              <feMerge>
+                <feMergeNode in="g" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Draft 90 (item 7): a softer, warm glow behind each untapped
+                region's dashed outline -- the plain opacity pulse the SVG_CSS
+                idle animation used to rely on alone read as too faint to
+                notice ("click the glowing areas but nothing glows"). */}
+            <filter id="bmIdleGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="6" result="b" />
+              <feColorMatrix
+                in="b"
+                type="matrix"
+                values="0 0 0 0 0.99  0 0 0 0 0.85  0 0 0 0 0.36  0 0 0 0.55 0"
                 result="g"
               />
               <feMerge>
@@ -638,9 +676,12 @@ export default function BodyMapping({ onComplete = null, narrate: narrateOn = fa
           take every pixel this block doesn't need. The live copy is bottom
           aligned in the cell so the text sits against the CTA rather than
           floating in the middle (Josh, 2026-08-13). */}
-      <div className="flex-none grid">
-        {/* Worst case is the longest region panel plus the counter, plus the
-            Part-2 write-in field (it never appears alongside the counter, but
+      <div className="flex-none grid overflow-y-auto" style={{ maxHeight: '26vh' }}>
+        {/* Draft 90 (item 9): capped and scrollable on short phone frames so
+            the body figure above (now with a min-height floor) stays the
+            biggest thing on screen instead of being squeezed by the longest
+            region's copy. Worst case is the longest region panel plus the
+            counter, plus the Part-2 write-in field (it never appears alongside the counter, but
             reserving both keeps this one spacer correct for every mode
             without needing a second, mode-specific spacer). The closing
             REPLACES the region panel rather than stacking under it, and it is

@@ -80,7 +80,7 @@ export default function GearHud({ earned = [], newKey, iconSrc, equipped, flyIn,
           const empty = isNew ? !equipped : !earned.includes(g.key)
           return (
             <Slot key={g.key} label={g.label} active={active} empty={empty} slotRef={isNew ? newSlotRef : undefined}>
-              {isNew ? (equipped && !fly ? <img src={iconSrc} alt="" style={{ width: SLOT - 6, height: SLOT - 6, objectFit: 'contain' }} /> : null) : g.icon}
+              {isNew ? (equipped && !fly ? <img src={iconSrc} alt="" style={{ width: SLOT - 6, height: SLOT - 6, objectFit: 'contain' }} /> : null) : earned.includes(g.key) ? g.icon : null}
             </Slot>
           )
         })}

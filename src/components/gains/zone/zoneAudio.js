@@ -13,11 +13,39 @@
 // Every file is optional: a fetch/decode/play failure is a silent no-op, so
 // a late-arriving asset never breaks the zone.
 
-const AMBIENCE_VOL = 0.28
-const POND_MAX_VOL = 0.55
+// Draft 90 (item 20): -6dB across the board (Maggie/Josh, ambience was
+// sitting over Spark) -- linear amplitude ×0.501 ≈ -6dB.
+const AMBIENCE_VOL = 0.14
+const POND_MAX_VOL = 0.28
 const POND_DUCKS_AMBIENCE = 0.4 // ambience ×(1 - this×pond)
-const SPEECH_DUCK = 0.3
+// A further -6dB while Spark speaks (on top of the level above), easing
+// back over ~600ms once she's done rather than snapping back instantly.
+const SPEECH_DUCK = 0.15
+const DUCK_RESTORE_MS = 600
 const SFX_VOL = { default: 0.7, step: 0.45, 'arrive-swell': 0.6, 'chime-unlock': 0.7 }
+
+// Manual volume ramp (no Phaser/tween runtime available in this plain
+// module) -- used only for the duck RELEASE, so it eases back in rather
+// than snapping to full the instant speech ends. Cancels any ramp already
+// in flight on the same element first.
+const rampState = new WeakMap()
+function rampVolume(el, to, ms) {
+  const prev = rampState.get(el)
+  if (prev) cancelAnimationFrame(prev)
+  const from = el.volume
+  const start = performance.now()
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / ms)
+    try {
+      el.volume = from + (to - from) * t
+    } catch {
+      /* iOS ignores volume writes; fine */
+    }
+    if (t < 1) rampState.set(el, requestAnimationFrame(step))
+    else rampState.delete(el)
+  }
+  rampState.set(el, requestAnimationFrame(step))
+}
 
 // `pondUrl` is optional (Draft 80): not every zone's station has its own
 // proximity-crossfaded soundscape (Zone 3's waystone doesn't). `sfxBase`
@@ -48,11 +76,23 @@ export function createZoneAudio({ base, sfxBase, pondUrl }) {
   const buffers = {}
   let voToken = 0
 
-  function applyVolumes() {
+  // Draft 90 (item 20): duck-IN stays snappy (a line starting under a still
+  // -full bed would read as a jarring overlap), but duck-release eases back
+  // over DUCK_RESTORE_MS rather than snapping to full the instant speech
+  // ends -- `ease` is true only on that specific speaking:true->false edge
+  // (see duck() below).
+  function applyVolumes(ease) {
     const duck = speaking ? SPEECH_DUCK : 1
+    const targetAmbience = bedsOn ? AMBIENCE_VOL * (1 - POND_DUCKS_AMBIENCE * pondFactor) * duck : 0
+    const targetPond = bedsOn ? POND_MAX_VOL * pondFactor * duck : 0
     try {
-      ambience.volume = bedsOn ? AMBIENCE_VOL * (1 - POND_DUCKS_AMBIENCE * pondFactor) * duck : 0
-      if (pond) pond.volume = bedsOn ? POND_MAX_VOL * pondFactor * duck : 0
+      if (ease) {
+        rampVolume(ambience, targetAmbience, DUCK_RESTORE_MS)
+        if (pond) rampVolume(pond, targetPond, DUCK_RESTORE_MS)
+      } else {
+        ambience.volume = targetAmbience
+        if (pond) pond.volume = targetPond
+      }
     } catch {
       /* iOS ignores volume writes; fine */
     }
@@ -134,8 +174,9 @@ export function createZoneAudio({ base, sfxBase, pondUrl }) {
     // as a VO line, just driven by the host reacting to the activity's own
     // onNarrate(bool) callback instead of a speak() token.
     duck(on) {
+      const releasing = speaking && !on
       speaking = !!on
-      applyVolumes()
+      applyVolumes(releasing)
     },
 
     // No-op when the zone has no proximity-crossfaded bed (see `pond` above).
@@ -156,7 +197,7 @@ export function createZoneAudio({ base, sfxBase, pondUrl }) {
         const finish = () => {
           if (token !== voToken) return resolve()
           speaking = false
-          applyVolumes()
+          applyVolumes(true)
           resolve()
         }
         try {

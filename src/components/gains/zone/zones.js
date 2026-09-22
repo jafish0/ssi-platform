@@ -108,6 +108,7 @@ export const ZONES = {
       title: 'You earned the Lantern!',
       subline: "It only lights the next few steps — and that's all we ever need.",
       sparkLine: "Hold it up. See? The dark isn't so big when you can see the next step.",
+      sparkLineAudio: 'z1-09-gear-spark.mp3',
       equipLabel: 'Equip lantern',
     },
     // The Lantern is the FIRST gear -- every HUD slot starts empty.
@@ -273,6 +274,7 @@ export const ZONES = {
       title: 'You earned the Wingsuit!',
       subline: "It'll carry you across to the Bright Reaches.",
       sparkLine: "The bridge doesn't matter anymore. You can fly.",
+      sparkLineAudio: 'z3-08-gear-spark.mp3',
       equipLabel: 'Equip wingsuit',
     },
     gearEarnedBefore: ['lantern', 'lens'],
