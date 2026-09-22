@@ -132,6 +132,52 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **d369fa1** (2026-09-22) — Draft 92: **Guardian/Zone2 loudness fix,
+  Mindful Place regression, gear-line reveal, Video 3 swap, climb
+  speed.** (1) Re-normalized all 33 Guardian clips and the 8 Zone 2
+  friend clips with two-pass linear loudnorm from their `_raw/`
+  originals. The draft's exact recipe left 6 Guardian clips still
+  short of -16 LUFS (including `gm-opt-help-1`, "effectively
+  silent") — traced it to a real ffmpeg limitation, not a measurement
+  error: those clips' true peak already sits close to the -1.5dBTP
+  ceiling, so linear-gain mode applies almost no correction rather
+  than risk clipping (verified by hand: measured gain of +2.85dB was
+  suppressed to ~0dB). Added an automatic fallback for any clip that
+  misses tolerance — FFmpeg's Dynamic Audio Normalizer
+  (`dynaudnorm=f=75:g=3:p=0.85:m=12:r=0.25`), which adapts gain
+  per-frame instead of one global multiplier — verified against all 6
+  failing files with the standard -1.5dBTP ceiling intact, no
+  relaxation needed. All 33 Guardian clips and all 8 Zone 2 clips now
+  land within ±1 LU of -16 (loudness table in this session's tool
+  output, not reproduced here). (2) Fixed MindfulnessCalmPlace's
+  `begin()`: `el.onended =`/`el.onerror =` are property assignments
+  that never clear, so once Draft 90's intro-line handler fired once,
+  it kept firing on every later clip's 'ended' event too, snapping
+  `mode` back to 'arrive' forever. Switched both to
+  `addEventListener(..., {once:true})`, matching the pattern already
+  used elsewhere in the file. Verified the full intro → arrive → see →
+  hear → ready → breathe (both cycles) → done → close path, letting
+  every clip finish naturally — no involuntary reset anywhere. (3)
+  Moved GearAward's Spark line + Equip-gating from the *equipped*
+  screen to the *reveal* screen (fires on mount via a new `onReveal`
+  prop, gates the new `equipDisabled` on the Equip button instead of
+  `continueDisabled` on Continue) — a component-level fix, so Zones 1
+  (Lantern), 3 (Wingsuit), and 4 (Oxygen Mask) all picked it up
+  automatically. Verified all three in the browser (network tab
+  confirms each spark-line mp3 fetches the moment the reveal screen
+  mounts, before Equip is tapped). (4) Two-pass normalized and wired
+  `z4-08-gear-spark.mp3` ("Perfect fit. Now you can breathe easy up
+  there.") to Zone 4's gear config — the source file was present.  (5)
+  Swapped Video 3 to id `1229296920` / hash `fff67e51d4` in
+  `reviewVideos.jsx` and `zones.js`'s zone3 config; grepped the old id
+  across `src/` to confirm zero remaining references; logged the swap
+  in `Gains for Teens/Videos/Video links (final renders).md`. (6)
+  Renamed `CLIMB_FRAME_STEP_P` → `CLIMB_FRAME_STEP` and dropped the
+  per-frame distance threshold from 0.025 to 0.006 (~4x faster),
+  matching the draft's request; Second Wind refill and reduced-motion
+  are governed by unrelated code paths and are unaffected. Clean
+  console, clean build throughout. `src/`, `public/` → no version
+  bump.
 - **cd83c05** (2026-09-22) — Draft 91: **The Ascent's stage-3 Traveler,
   eight-frame climb cycle.** The climber is now the Traveler as she
   looks in Zone 4 (pale cloak, breathing mask, Lantern on the bag),
@@ -4878,7 +4924,7 @@ The climber is still the black stage-1 figure with three poses (right/mid/left, 
 `Gains for Teens/DRAFT 92 — post-90 fixes, Video 3 swap, Oxygen Mask
 line.md`, because Cowork's shell was still down. Pasted here verbatim.)
 
-## Draft 92 — Guardian clip loudness (the real cause), Mindful Place regression, gear-line placement, Video 3 swap, Oxygen Mask line
+## Draft 92 — Guardian clip loudness (the real cause), Mindful Place regression, gear-line placement, Video 3 swap, Oxygen Mask line — ✅ SHIPPED d369fa1 (2026-09-22)
 
 Josh replayed Zones 1, 3, 4 after Drafts 90/91. Zone 1 is clean. Five items.
 
