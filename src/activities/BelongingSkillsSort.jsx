@@ -55,7 +55,11 @@ import NarrationControls from '../components/items/NarrationControls.jsx'
 // so the buckets read as chunky labels rather than a wall of sentences
 // (Draft 55 / 2026-07-27 meeting, Bianca's crowding note); the full sentence
 // still shows on the card and in the end-of-activity summary.
-const BEHAVIORS = [
+// Draft 116 Part C (2026-09-23): exported so BelongingSkillsSortMobile.jsx
+// (the Draft 115 Part J mobile-layout proposal, built out for the team to
+// try hands-on) can reuse the exact same content + save-payload shape
+// rather than a drifting duplicate.
+export const BEHAVIORS = [
   {
     id: 'bs1',
     stem: 'Pay close attention',
@@ -119,7 +123,7 @@ const BEHAVIORS = [
 // attention …") we drop the duplicated words; otherwise (the stem is a
 // paraphrase label, e.g. "Use inclusive language") we show the whole
 // sentence after the stem.
-function behaviorRest(b) {
+export function behaviorRest(b) {
   if (!b.stem) return b.text
   const startsWithStem = b.text.toLowerCase().startsWith(b.stem.toLowerCase())
   return startsWithStem
@@ -127,7 +131,7 @@ function behaviorRest(b) {
     : b.text
 }
 
-const BUCKETS = [
+export const BUCKETS = [
   { id: 'already_doing',  label: "What I'm already doing", audio: 'skills_03_bucket_doing.mp3' },
   { id: 'willing_to_try', label: "What I'm willing to try", audio: 'skills_04_bucket_try.mp3' },
   { id: 'not_interested', label: 'Not interested right now', audio: 'skills_05_bucket_no.mp3' },
@@ -1135,7 +1139,7 @@ function ReconsiderScreen({ unplaced, onYes, onNo, submitting }) {
 // was never reached anyway: the engine advances as soon as onSave
 // resolves. It renders in the sandbox.)
 
-function SortSnapshotScreen({ placement, lookup }) {
+export function SortSnapshotScreen({ placement, lookup }) {
   return (
     <div className="text-center">
       <h2 className="text-[22px] font-semibold mb-2">Nice work!</h2>

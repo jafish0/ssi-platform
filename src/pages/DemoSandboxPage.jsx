@@ -4,9 +4,10 @@
 // AdminLayout.
 
 import { Suspense, useCallback, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, RotateCcw, Smartphone, Monitor } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
+import FeedbackButton from '../components/FeedbackButton.jsx'
 import { findTestEntry } from '../lib/testRegistry.js'
 import { getActivityVersion } from '../lib/activityVersions.js'
 import { resolveTokenPath } from '../lib/tokens.js'
@@ -22,9 +23,17 @@ function LoadingFallback() {
 export default function DemoSandboxPage() {
   const { activityId } = useParams()
   const entry = findTestEntry(activityId)
+  const [searchParams] = useSearchParams()
+  // Draft 116 addendum (2026-09-23): "?full=1" strips every bit of the
+  // normal sandbox chrome (the SSI Platform header, the demo banner, the
+  // toolbar, the entry description, the footer) so opening the link on an
+  // actual phone feels like the real mobile experience rather than a
+  // sandbox page with extra navigation wrapped around it. Built for the
+  // Belonging Skills Sort mobile-layout entry, but works for any entry.
+  const fullscreen = searchParams.get('full') === '1'
 
   const [resetCounter, setResetCounter] = useState(0)
-  const [viewport, setViewport] = useState('desktop')
+  const [viewport, setViewport] = useState(fullscreen ? 'mobile' : 'desktop')
 
   // We deliberately don't surface the onSave payload as a JSON panel on
   // /demo — reviewers found the wall of JSON distracting. The admin-side
@@ -57,6 +66,42 @@ export default function DemoSandboxPage() {
     viewport === 'mobile'
       ? 'mx-auto w-full max-w-[400px] border border-dashed border-ctac-teal-300 rounded-2xl p-2'
       : ''
+
+  if (fullscreen) {
+    return (
+      <div className="min-h-screen bg-ctac-teal-50">
+        {/* Minimal bar — a way back and a way to reset/give feedback, but
+            none of the "SSI Platform · Demo" header, banner, viewport
+            toggle, or entry description a reviewer doesn't need once
+            they're specifically here to feel the mobile experience. */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <Link
+            to="/demo"
+            aria-label="Back to demo"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-card text-slate-600"
+          >
+            <ArrowLeft size={16} strokeWidth={2} />
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={reset}
+              aria-label="Reset"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-card text-slate-600"
+            >
+              <RotateCcw size={16} strokeWidth={2} />
+            </button>
+            <FeedbackButton subtle label="Feedback" initialArea={entry.displayName} />
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-[480px] px-4 pb-10">
+          <Suspense fallback={<LoadingFallback />}>
+            <Component key={resetCounter} {...props} />
+          </Suspense>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <DemoPageLayout banner={false}>

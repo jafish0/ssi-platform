@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Play, Download, AlertCircle } from 'lucide-react'
+import { Play, Download, AlertCircle, Smartphone } from 'lucide-react'
 import DemoPageLayout from '../components/DemoPageLayout.jsx'
 import FeedbackButton from '../components/FeedbackButton.jsx'
 import SplashScreen from '../components/SplashScreen.jsx'
@@ -456,6 +456,55 @@ export default function DemoPage() {
         <h1 className="text-[28px] font-bold text-slate-800 mb-2">
           Ready for Roots — Activities Testing, Videos and Data Export Demo
         </h1>
+      </section>
+
+      {/* Draft 116 Part C + addendum (2026-09-23): the Draft 115 Part J
+          mobile-layout proposal, built out for hands-on team review
+          rather than just described. Pinned above even "For Review This
+          Week" per Josh's explicit ask, with a clear stop line right
+          below it so the team doesn't spend time on anything else this
+          round — remove this whole section (and the stop line) once the
+          team's given feedback and this round is done. */}
+      <section className="mb-8">
+        <div className="bg-ctac-teal-500 text-white rounded-2xl p-6 max-w-[760px] mx-auto shadow-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Smartphone size={20} strokeWidth={2} />
+            <span className="text-[12px] font-bold uppercase tracking-wide">
+              New — please try this on your phone
+            </span>
+          </div>
+          <h2 className="text-[20px] font-bold mb-2">
+            Belonging Skills Sort — mobile layout proposal
+          </h2>
+          <p className="text-[14px] leading-relaxed text-ctac-teal-50 mb-4">
+            Adrienne and a teammate flagged that the current drag-and-drop
+            sort is hard to use on a phone — three buckets and up to seven
+            cards compete for a short, narrow screen. This is a different
+            layout, not a restyle: one skill at a time, with three big
+            buttons underneath it. Same seven skills, same three
+            categories — just one decision at a time instead of
+            everything at once. Please try it on your own phone, then
+            compare it against the current layout.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/demo/sandbox/belonging-skills-sort-mobile?full=1"
+              className="inline-flex items-center justify-center gap-2 bg-white hover:bg-ctac-teal-50 text-ctac-teal-800 font-semibold rounded-full px-5 py-3 min-h-[48px] text-[14px]"
+            >
+              <Play size={14} strokeWidth={2} />
+              Try the new mobile layout
+            </Link>
+            <Link
+              to="/demo/sandbox/belonging-skills-sort"
+              className="inline-flex items-center justify-center gap-2 bg-ctac-teal-600 hover:bg-ctac-teal-700 border border-ctac-teal-400 text-white font-semibold rounded-full px-5 py-3 min-h-[48px] text-[14px]"
+            >
+              Compare with the current layout
+            </Link>
+          </div>
+        </div>
+        <p className="text-center text-[13px] font-semibold text-slate-500 mt-6">
+          Nothing below here needs review right now.
+        </p>
       </section>
 
       {/* For Review This Week (Draft 60) — replaces Draft 57 + 59's

@@ -16,6 +16,8 @@ const GettingUnstuck = lazy(() => import('../activities/GettingUnstuck.jsx'))
 const AlliesSafetyNet = lazy(() => import('../activities/AlliesSafetyNet.jsx'))
 const SelfReflection = lazy(() => import('../activities/SelfReflection.jsx'))
 const BelongingSkillsSort = lazy(() => import('../activities/BelongingSkillsSort.jsx'))
+// Draft 116 Part C (2026-09-23) — mobile-layout proposal, for team review.
+const BelongingSkillsSortMobile = lazy(() => import('../activities/BelongingSkillsSortMobile.jsx'))
 const WhoIAmPoem = lazy(() => import('../activities/WhoIAmPoem.jsx'))
 const LetterBuilder = lazy(() => import('../activities/LetterBuilder.jsx'))
 const Plan = lazy(() => import('../activities/Plan.jsx'))
@@ -89,6 +91,20 @@ export const TEST_REGISTRY = [
     category: 'Ready for Roots activity',
     description: 'Drag-and-drop seven behaviors into "already doing" / "willing to try".',
     component: BelongingSkillsSort,
+    mockProps: {},
+  },
+  // Draft 116 Part C (2026-09-23): the Draft 115 Part J mobile-layout
+  // proposal, built out for hands-on team review — a different category
+  // (not 'Ready for Roots activity') so it doesn't also show up in the
+  // regular Activities grid; it's featured at the top of /demo instead
+  // (see DemoPage.jsx) and reachable directly at its own sandbox URL.
+  {
+    id: 'belonging-skills-sort-mobile',
+    displayName: 'Belonging Skills Sort — mobile layout proposal',
+    category: 'Ready for Roots delivery-flow',
+    description:
+      'PROTOTYPE for review, not live: one skill card at a time with three big tap targets below it, instead of the current three-bucket drag-and-drop. Same content and save shape as Belonging Skills Sort.',
+    component: BelongingSkillsSortMobile,
     mockProps: {},
   },
   {
