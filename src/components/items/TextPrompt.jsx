@@ -78,11 +78,22 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
   const [autoplayBusy, setAutoplayBusy] = useState(false)
   const token = useRef({}).current
 
+  // Draft 117 Part C (2026-09-23): the gated path used to only ever play
+  // one clip (`src`). Extended to an optional sequence (`src`, `src2`) —
+  // reuses the same `sequenceIndex` state the revealed/manual path
+  // already has, since a given item is either gated or manually-revealed,
+  // never both at once. Prepared ahead of the actual second clip
+  // (assent_narration_intro.mp3) existing, so wiring it in later is a
+  // content_json.audio_url_2 addition, not another code change.
+  const gatedClips = [src, src2].filter(Boolean)
+
   useEffect(() => {
     if (!gated) return
     setLoadFailed(false)
+    setSequenceIndex(0)
     const el = audioRef.current
     if (!el) return
+    el.src = gatedClips[0]
     claim(token, () => el.pause())
     el.play().catch(() => {})
     // Draft 115 Part F.4: pause on unmount too, not just release() — a
@@ -93,7 +104,7 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
       release(token)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gated, src])
+  }, [gated, src, src2])
 
   useEffect(() => {
     if (gated || !autoplayAttempt) return
@@ -203,11 +214,23 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
     const el = audioRef.current
     if (!el) return
     claim(token, () => el.pause())
+    setSequenceIndex(0)
+    el.src = gatedClips[0]
     el.currentTime = 0
     el.play().catch(() => {})
   }
 
   function handleEnded() {
+    const next = sequenceIndex + 1
+    if (next < gatedClips.length) {
+      setSequenceIndex(next)
+      const el = audioRef.current
+      if (el) {
+        el.src = gatedClips[next]
+        el.play().catch(() => {})
+      }
+      return
+    }
     setPlaying(false)
     setCompleted(true)
     release(token)
@@ -227,7 +250,7 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
                 gesture to police, same reasoning as KaiNarrationPlayer. */}
             <audio
               ref={audioRef}
-              src={src}
+              src={gatedClips[0]}
               preload="auto"
               onPlay={() => setPlaying(true)}
               onPause={() => setPlaying(false)}

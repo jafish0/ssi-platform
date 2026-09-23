@@ -56,12 +56,30 @@
 // skipped:false).
 
 import { useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { PrimaryButton, GhostButton, MissingItemsNote, scrollToMissingItem } from '../components/items/shared.jsx'
 import NarrationControls from '../components/items/NarrationControls.jsx'
 import { ALLY_TILES, SUPPORT_TYPES } from '../lib/allyTiles.js'
 import TrampolineNet from '../components/TrampolineNet.jsx'
 import KaiNarrationPlayer from '../components/KaiNarrationPlayer.jsx'
+
+// Draft 117 Part D (2026-09-23) — correction to Draft 115 Part C, which
+// overshot: it removed the intro-screen Kai gate entirely, when the real
+// ask was only to stop forcing a REPEAT listen on a return visit, not to
+// drop the first-time requirement. `introNarrationDone` is component
+// state, so it can't tell "genuinely never listened" apart from "listened
+// once earlier this session, then the engine remounted this activity via
+// Back navigation" — the exact case Draft 115 was chasing. sessionStorage
+// (not the saved response — that only exists after a participant hits
+// this activity's own final Save, too late for a mid-activity remount)
+// survives both remounts and a full page reload within the same browser
+// tab, same mechanism DeliveryShellPage.jsx already uses for the
+// once-per-session splash screen. Falls back to a generic key outside a
+// real session (e.g. the /demo sandbox, which has no :sessionId param).
+function introNarrationStorageKey(sessionId) {
+  return `rsr_safetynet_intro_narration_done_${sessionId || 'sandbox'}`
+}
 
 // Which tile ids are custom-name-entry tiles. ALLY_TILES is the source
 // of truth (via `custom: true`); this is a derived set.
@@ -294,6 +312,7 @@ function hydrateFromResponse(existingResponse) {
 }
 
 export default function AlliesSafetyNet({ onSave = console.log, existingResponse }) {
+  const { sessionId } = useParams()
   // ---- Build phase state ----
   const [selection, setSelection] = useState(() =>
     existingResponse ? hydrateFromResponse(existingResponse).selection : initialSelection().sel,
@@ -462,9 +481,34 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
   // Kai narration gating (Draft 62 Part B) — Continue is disabled on the
   // inspect-education screen until its KaiNarrationPlayer fires onComplete
   // at least once. Sticky once true (a later replay doesn't re-lock
-  // Continue). The matching intro-screen gate was removed in Draft 115
-  // Part C — see IntroScreen's KaiNarrationPlayer call.
+  // Continue).
   const [inspectNarrationDone, setInspectNarrationDone] = useState(false)
+  // Draft 115 Part C removed this same gate on the INTRO screen entirely,
+  // on the theory that it was purely a "forced repeat listen" bug — but
+  // Draft 117 Part D corrected that: the actual ask was to stop re-
+  // arming the gate on a return visit, not to drop the first-time
+  // requirement. Hydrated from sessionStorage (see
+  // introNarrationStorageKey above) so a participant who already
+  // completed it once this session doesn't get re-gated by a later
+  // remount, while a genuinely first-time participant still is.
+  const [introNarrationDone, setIntroNarrationDone] = useState(() => {
+    try {
+      return sessionStorage.getItem(introNarrationStorageKey(sessionId)) === '1'
+    } catch {
+      return false
+    }
+  })
+  function markIntroNarrationDone() {
+    setIntroNarrationDone(true)
+    try {
+      sessionStorage.setItem(introNarrationStorageKey(sessionId), '1')
+    } catch {
+      // sessionStorage unavailable (private browsing, etc.) — fails open,
+      // same as this gate did before Draft 117: worst case the gate
+      // re-arms on a remount, which is the exact bug being fixed here,
+      // but not a crash.
+    }
+  }
 
   // Draft 114 Part C (2026-09-18, Holly's feedback): the Strengthen
   // screen's "Who could that be?" field had no gate at all — a kid could
@@ -590,7 +634,12 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
         </div>
       </div>
 
-      {screen?.type === 'intro' && <IntroScreen />}
+      {screen?.type === 'intro' && (
+        <IntroScreen
+          narrationDone={introNarrationDone}
+          onNarrationComplete={markIntroNarrationDone}
+        />
+      )}
 
       {screen?.type === 'transition' && (
         // Draft 115 Part F.4: `key` so React remounts a fresh instance per
@@ -671,6 +720,7 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
           onNext={goNext}
           onSubmit={handleSubmit}
           isReview={isReviewScreen}
+          introNarrationDone={introNarrationDone}
           inspectNarrationDone={inspectNarrationDone}
         />
       </div>
@@ -741,6 +791,7 @@ function PrimaryAdvanceButton({
   onNext,
   onSubmit,
   isReview,
+  introNarrationDone,
   inspectNarrationDone,
 }) {
   if (!screen) return null
@@ -752,11 +803,14 @@ function PrimaryAdvanceButton({
     )
   }
   if (screen.type === 'intro') {
-    // Draft 62 Part B gated this until Kai's intro narration played once;
-    // removed per Draft 115 Part C (2026-09-22) — see the KaiNarrationPlayer
-    // call in IntroScreen for why.
+    // Draft 62 Part B — gated until Kai's intro narration has played once.
+    // Draft 115 Part C removed this gate entirely (overcorrection); Draft
+    // 117 Part D restored it for a genuine first pass, while
+    // introNarrationDone itself (sessionStorage-backed, see its
+    // declaration above) is what actually skips re-gating on a return
+    // visit within the same session.
     return (
-      <PrimaryButton onClick={onNext}>
+      <PrimaryButton onClick={onNext} disabled={!introNarrationDone}>
         Let&apos;s build it →
       </PrimaryButton>
     )
@@ -789,7 +843,7 @@ function PrimaryAdvanceButton({
 
 // ---------- Intro screen ----------
 
-function IntroScreen() {
+function IntroScreen({ narrationDone, onNarrationComplete }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">
@@ -797,46 +851,32 @@ function IntroScreen() {
       </h2>
 
       {/* Kai narration (Draft 62 Part B) — replaces what would otherwise
-          be a "Video Coming Soon" spot. Draft 115 Part C (2026-09-22):
-          Continue used to be gated on this having played at least once
-          (see PrimaryAdvanceButton), but introNarrationDone is plain,
-          unpersisted component state — this activity remounts fresh every
-          time a participant returns to it after navigating away (the
-          engine mounts one item at a time), so anyone who'd already heard
-          these definitions in an earlier visit was forced to sit through
-          the whole clip again before Continue would unlock. Gate removed;
-          `gated={false}` also suppresses the now-inaccurate "Continue
-          unlocks when Kai finishes" messaging. */}
+          be a "Video Coming Soon" spot; Continue is gated on this having
+          played at least once (see PrimaryAdvanceButton). Draft 115 Part C
+          removed that gate entirely, reasoning the whole thing was a
+          "forced repeat listen" bug; Draft 117 Part D corrected that —
+          the gate should still hold for a genuine first pass, only skip
+          re-arming on a return visit. `gated={!narrationDone}` keeps the
+          "Continue unlocks when Kai finishes" messaging accurate either
+          way: shown on a first pass, suppressed once already completed
+          (narrationDone is sessionStorage-backed — see its declaration
+          in the main component — so it survives the remount a return
+          visit causes). */}
       <KaiNarrationPlayer
         audioSrc="/kai-narration/safety-net-allies-intro.mp3"
         transcript={KAI_INTRO_TRANSCRIPT}
-        gated={false}
+        onComplete={onNarrationComplete}
+        gated={!narrationDone}
       />
 
-      {/* Draft 65 B.1 (2026-08-13): the ally-definition sentence was
-          removed — it duplicated the transcript above almost verbatim.
-          This sentence survives because it's additive, not in the
-          narration. */}
-      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
-        They might not always get it right, but you know they care about
-        you, they&apos;re a positive influence, and they try to help.
-      </p>
-      <NarrationControls className="mb-3" questionAudioUrl="/narration/safetynet_01_intro_body.mp3" />
-      <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
-        We&apos;ll walk through three kinds of support — one at a time:
-      </p>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/safetynet_02_intro_setup.mp3" />
-      <ul className="space-y-2 mb-4 text-[15px] leading-relaxed text-slate-800">
-        {SUPPORT_TYPES.map((t) => {
-          const tones = TONE_TOKENS[t.tone] || TONE_TOKENS.amber
-          return (
-            <li key={t.id} className="flex gap-2">
-              <span className={`font-semibold ${tones.word}`}>{t.label}</span>
-              <span>— {t.definition}</span>
-            </li>
-          )
-        })}
-      </ul>
+      {/* Draft 117 Part F (2026-09-23, Josh's walkthrough): removed the
+          "They might not always get it right..." sentence plus the
+          "We'll walk through three kinds of support" setup line and its
+          Practical/Emotional/Social definition list — confirmed with
+          Josh as redundant with what's covered elsewhere in the
+          activity (the transcript above already gives the same three
+          definitions, and each type gets its own transition/selection
+          screen right after this one). */}
     </div>
   )
 }
