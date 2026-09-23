@@ -132,6 +132,58 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **32fffaf** (2026-09-22) — Draft 93: **Zone 1-only tap pointer, Mindful
+  Place intro-before-Begin, measured breathing sync, instant climb
+  resume.** (1) "Tap here" is now `zone.showTapHere` (Zone 1 only,
+  false for Zones 3/4). Replaced the Draft 90 hand-copied static
+  position table with a live query straight from the Phaser scene
+  (`pointerPosFor`, exposed through `ZoneStage`'s imperative handle) --
+  Spark's real position isn't static once it becomes a companion
+  (rides at the Traveler's shoulder), which is exactly the stale-
+  position bug Josh's Zone 3 screenshot caught. Reading the live
+  position surfaced a genuine secondary bug it exposed: the intro
+  plate's Spark sits close enough to the canvas top (~y=70 of 1920)
+  that the pointer pill, which renders above its target, clipped past
+  FullscreenStage's overflow-hidden frame edge and was invisible --
+  fixed with a floor on the rendered position. Verified live: all
+  three Zone 1 anchors (Spark on both plates, the Mirror Pool, the
+  steps exit) track correctly with the pointer fully visible; Zones 3
+  and 4 show no pointer at all. (2) Mindful Place: the intro line now
+  plays before Begin is tappable -- auto-plays on mount inside a zone
+  (`onComplete` prop present means the walk there already unlocked
+  audio), gating Begin disabled until it ends; the standalone page's
+  first button reads "Tap to start," which plays the line (the
+  unlocking gesture) and relabels to "Begin" once it's done. Hit a
+  real StrictMode-only race while verifying: the mount effect has no
+  natural cleanup, so React's dev-only double-invoke let another
+  effect's pre-existing cleanup (which pauses both audio refs on a
+  genuine unmount) collide with the still-pending `play()` call,
+  aborting it and marking the intro "done" before it had actually
+  played -- fixed by deferring the call past the same synchronous tick
+  (`setTimeout(..., 0)`) so it only ever fires once, after any
+  StrictMode replay has settled. Verified both surfaces frame by frame
+  (disabled while genuinely playing, enabled exactly at
+  `currentTime === duration`). (3) Breathing: replaced the uniform-
+  5.0s-per-phase arithmetic with a timestamp table of each phase's
+  actual onset in `mind-04-breathe.mp3`, found via a silence-gap
+  analysis (cross-checked against the clip's own waveform -- both
+  "breathe out" onsets carry the same tell-tale micro-pause between
+  "breathe" and "out" that "breathe in"/"hold" don't, confirming real
+  word boundaries rather than noise). Verified by scrubbing to every
+  one of the 9 table entries: the previously-late cycle-2 "breathe
+  out" (old assumption 39.0s, measured 40.05s) and "hold" (old 44.0s,
+  measured 45.47s) now land exactly on the real recording instead of
+  ~1-1.5s early. (4) Ascent: traced "waits for the shatter animation"
+  by hand first -- `this.activeRed`/`blocked` already clear
+  synchronously the instant the final hit lands (verified live: `p`
+  advancing normally within moments of a shatter, no code-level
+  freeze). The actual gap was reward, not blocking: shattering granted
+  no rate surge, so the climb kept moving at the same base rate while
+  the burst and staggered gold-gather played out over a couple of
+  seconds, unlike `collectGold`'s own immediate surge -- fixed by
+  granting the same surge (1100ms) the instant a red shatters, so the
+  resume is unmistakable rather than merely technically true. Clean
+  console, clean build throughout. `src/` → no version bump.
 - **d369fa1** (2026-09-22) — Draft 92: **Guardian/Zone2 loudness fix,
   Mindful Place regression, gear-line reveal, Video 3 swap, climb
   speed.** (1) Re-normalized all 33 Guardian clips and the 8 Zone 2
@@ -4963,3 +5015,36 @@ Draft 91 advances one frame per ~2.5% of the wall, which reads as slow motion. M
 **Verify.** Zone 3 Guardian: every option on steps 2–6, every step prompt, and "Write your own" play at the same level; step 6 option 1 audible; loudness table in the log. Zone 4 Mindful Place: full run-through with no involuntary return to an earlier screen, both letting clips finish and tapping fast; breathing still locked to Spark's count. GearAward: Spark's line plays on the reveal screen before Equip in Zones 1, 3, 4. Videos page and Zone 3 show the new Video 3 (opens with the four reactions). Ascent: climb cycle visibly 4× faster, still freezes when progress stops. Clean console, clean build. `src/`, `public/` → no version bump. Paste into WORKING_NOTES, mark shipped, log Recently-shipped.
 
 *End of Draft 92.*
+
+---
+
+(Draft 93 below was also delivered as a standalone file,
+`Gains for Teens/DRAFT 93 — Tap-here Zone 1 only, Mindful Place intro
+order + count table, Ascent resume.md`, because Cowork's shell was
+still down. Pasted here verbatim.)
+
+## "Tap here" becomes Zone 1 only; Mindful Place intro plays before Begin; breathing driven by measured count onsets; Ascent climb resumes the instant a red shatters — ✅ SHIPPED 32fffaf (2026-09-22)
+
+Josh's pass after Draft 92. Zone 1 is perfect. Four items.
+
+### 1. "Tap here" pointer: Zone 1 only
+
+Josh's call: the pointer teaches the game in Zone 1 and is training wheels after that. Make it a per-zone config flag (`showTapHere: true` on Zone 1 only) and turn it off for Zones 3 and 4. Also note the bug it exposed in Zone 3 (screenshot): the tag sat mid-path, not over Spark — it was anchored to a stale target position. With the flag off in Zones 3/4 that's moot, but make sure Zone 1's three anchors (Spark on plate 1, the Mirror Pool, the steps exit) track the live target position, not a cached one.
+
+### 2. Mindful Place: intro line plays first, then Begin
+
+Today the intro line (`mind-00-intro`) fires on the Begin tap (Draft 90's iOS workaround), so the player taps and then hears the intro. Josh wants: hear the intro, then tap Begin.
+- **Inside Zone 4** the audio manager is already unlocked by the walk to the pond, so play `mind-00-intro` on mount and keep Begin disabled until it ends (same gating pattern as the gear line).
+- **On the standalone review page** (`/gains-demo/mindful`) there is no prior gesture. The first button reads "Tap to start"; tapping it plays the intro line (that tap unlocks audio) and, when the line ends, the button becomes "Begin" and proceeds. Net effect on both surfaces: intro heard, then Begin.
+
+### 3. Breathing sync: drive phases from measured count onsets, not a uniform 5.0 s
+
+After Draft 90 the rings track Spark through both cycles until the very last "breathe out, 2, 3, 4" and "hold, 2, 3, 4," which land slightly late. Spark's recording doesn't count the final phases in exactly 5.0 s. Replace `LEAD_IN`/`PHASE_DUR`/`AGAIN_BRIDGE` arithmetic with a **timestamp table** measured from `mind-04-breathe.mp3`: detect the onset of each phase word ("breathe in," "hold," "breathe out," "hold" × 2 cycles, plus "again") using an onset/energy analysis or by ear at the waveform, and store `[{phase:'in', t:7.02}, {phase:'hold1', t:12.1}, …]`. `breathePhaseAt(t)` looks up the table. The 1-2-3-4 tick within a phase scales to that phase's actual length. Keep the frog and rings interpolating continuously off audio time as Draft 90 did. Verify by ear against the clip at each of the eight phase starts and the "again" bridge; the last two phases must land exactly.
+
+### 4. Ascent: climb animation resumes when the red shatters
+
+The cycle correctly stops while a red blocks the path, but after the tap-to-blast it waits until the shatter/gold-gather animation finishes before resuming, which reads as a hang. Resume the climb cycle (and progress) the instant the red is destroyed; the shatter and gold gather can play over the moving climber. Leave the freeze-while-blocked behavior alone.
+
+**Verify.** Zone 1: pointer still appears on Spark, the pool, and the exit, correctly anchored; Zones 3 and 4: no pointer anywhere. Mindful Place in Zone 4: intro line plays as the activity opens, Begin enables when it ends; standalone page: "Tap to start" → intro → "Begin". Breathing: rings and frog land on every one of Spark's phase starts including the final breathe-out and hold. Ascent: blast a red, climbing resumes immediately while the shatter plays. Clean console, clean build. `src/` → no version bump. Paste into WORKING_NOTES, mark shipped, log Recently-shipped.
+
+*End of Draft 93.*
