@@ -110,6 +110,38 @@ A bidirectional scratchpad shared between Josh, Claude Cowork (Claude desktop ch
 > What's been built recently, so Claude Cowork has the running context without re-reading the entire git log.
 
 
+- **`da77da9` · 2026-09-23** — **Draft 118 — wire the now-generated audio, confirm the Welcome clip, retest zero-endorsement on v19, fix the thought-accumulation bug.** Follow-up to Draft 117, now that v19 is published. All four parts shipped.
+
+  **A. Seven narration files wired.** Confirmed all 8 files this draft touches (the 7 new ones plus the file for Part B) actually exist now — they were only in `Final Measures/Narrated Measures Files/`, not `public/narration/` where the app serves from, so copied them over first and verified each one decodes as real, valid audio before wiring anything (durations 2.9s–11.8s, all plausible). Investigated exactly where each of the 6 intro-line files belonged — all six turned out to be DB-authored `text_prompt` items sitting in the section immediately before their respective activity's `custom_activity` item (Sam's Story picker, Your Story, Who I Am, Your Safety Net, Getting Unstuck, A Letter), each with body text matching the intended narration verbatim and `audio_url` previously null — wired all six via `content_json.audio_url`. The 7th (`plan_22_skills_fulllist.mp3`, Draft 117 Part B's gap) is a code fix: added a `NarrationControls` pill on `Plan.jsx`'s "Here's the full list — pick a different one to focus on." message, matching its narrated sibling right above it.
+
+  **B. Welcome/Assent orientation clip wired.** Added `assent_narration_intro.mp3` as `content_json.audio_url_2` on the Welcome item — the second-clip support built into `TextPrompt.jsx`'s gated path in the previous commit was exactly for this. Live-verified with the real file (not just the earlier scratch mock): full two-clip sequence plays back to back, Continue only unlocks after both finish.
+
+  **C. Zero-endorsement retest — confirmed working, no bug in the base flow.** Live-tested end-to-end in the sandbox: rated every stuck-thought 0, declined "Other," reached the "That's great!" screen, and confirmed the participant is correctly walked through Kai's narration into 2 full Challenge/Both-And practice screens. Matches Draft 117 Part E's conclusion that the original report didn't match the code — recommend checking the deployed build/cache next time this comes up, since the source itself is and was correct.
+
+  **D. Thought-accumulation bug — fixed and stress-tested.** The zero-endorsement fallback's own comment claimed its random 2-thought pair "stays fixed" across back-navigation, but nothing enforced that: re-entering the fallback branch (Back to "Other," then Continue again) drew a brand-new random pair every time without clearing the old one, and the eligibility sweep running just above it would *also* strip `selected` off the earlier pair on every re-entry (their `truth_rating` is below threshold by definition — that's why they weren't naturally eligible). Fixed by exempting `randomly_selected` items from that sweep and skipping the random draw entirely once a fixed pair already exists. Live stress-test: rated everything 0, declined Other, then bounced back into the fallback branch 3 times before proceeding — exactly 2 distinct thoughts reached the review screen every time, not 3+.
+
+  **Still needs Publish.** Part A's 6 DB `audio_url` edits and Part B's `audio_url_2` edit are mutable-`items`-table changes, same category as Draft 117's page_break hides and Welcome text fix — they won't reach real participants until an admin opens the Builder and clicks Publish. I still don't have (and didn't try to obtain) admin credentials to do that step myself.
+
+  Version bumps: `getting-unstuck` v5.19 (Part D), `plan` v7.2 (Part A's `plan_22` wiring) — both MINOR, no save-payload shape change. Build clean throughout.
+
+  <details>
+  <summary>Draft 118 (verbatim, Claude Cowork → Claude Code)</summary>
+
+## Draft 118 — Wire the now-generated audio, confirm the Welcome clip, retest zero-endorsement on v19, fix the thought-accumulation bug
+
+Follow-up to Draft 117. Version 19 is now published (Welcome's text fix and the two transition-screen hides are live for real participants). Four parts.
+
+**A. Wire in the seven now-generated audio files.** All seven exist in `Final Measures/Narrated Measures Files/` — the six from Draft 117 Part A (`story_13_sam_picker`, `story_14_intro_body`, `poem_10_intro_body`, `safetynet_22_intro_lean`, `unstuck_22_intro_kai_recap`, `letter_06_intro_body`) plus the newly-authored `plan_22_skills_fulllist.mp3` (Draft 117 Part B's gap — "Here's the full list, pick a different one to focus on.", wire it as the sibling of `plan_04_skills_empty.mp3`, same screen). Confirm each before wiring, don't assume.
+
+**B. Confirm the Welcome/Assent orientation clip is actually wired.** Draft 117 Part C prepped `TextPrompt.jsx`'s gated path to support two sequential clips and fixed the on-screen text, but wiring `assent_narration_intro.mp3` in as `audio_url_2` on that item's `content_json` was blocked on the file existing. It exists now (confirmed) — please add it and confirm the full two-clip sequence plays correctly, Continue only unlocking after both finish, same as already verified for the 988 case.
+
+**C. Retest zero-endorsement Getting Unstuck on a fresh v19 session.** Draft 117 Part E found no bug in the source and suspected the original report was against a stale/cached deployed build rather than actual current behavior. Now that v19 is published, please retest end-to-end on a brand-new session and confirm whether a zero-endorsement participant is correctly assigned a random thought and walked through practice. Report back either way.
+
+**D. Fix the thought-accumulation bug found during Part C's investigation.** Repeated back-and-forth navigation through the "Other thought" screen in the zero-endorsement path can let more than 2 thoughts accumulate into `selectedItems`, when exactly 2 is correct. Please fix so re-visiting that screen doesn't keep appending — same selection state should be preserved/reset correctly regardless of how many times a participant navigates back into it.
+
+  </details>
+
+
 - **`1133538` · 2026-09-23** — **Draft 117 (+ correction) — Josh's own 9/23 walkthrough: new narration gaps, two corrections to recent fixes, content removals.** Eight parts; three shipped as code, two are live-content edits awaiting Publish, one investigated-and-reported (no fix — the report's premise didn't match reality), two blocked on audio that doesn't exist yet.
 
   **A. Six new narration gaps — blocked, per the draft's own correction.** Checked `public/` directly: none of the six mp3s (`story_13_sam_picker`, `story_14_intro_body`, `poem_10_intro_body`, `safetynet_22_intro_lean`, `unstuck_22_intro_kai_recap`, `letter_06_intro_body`) exist yet, confirming the correction. Not wired — holding until Josh generates them.
@@ -12375,5 +12407,3 @@ New `src/lib/treeProgressStage.js` derives a 0-5 growth stage from how many of t
 **Two exceptions — kept as small in-app screens, NOT moved to video, per Josh's explicit call (not the default "everything moves to video" rule):** `BelongingSkillsSort` and `Plan` never trigger the tree-growth interstitial (they land on "flat" growth stages under the 7-activities→5-stages mapping — see `treeProgressStage.js`'s own comment). Since there's no video adjacent to either one's completion to hang an end-screen off of, and neither gets the tree's positive reinforcement, **"Almost there." (after Belonging Skills Sort) and "That's your plan." (after Plan) both stay exactly as they are today** — small app screens, unchanged. Considered and explicitly rejected for now: extending the tree interstitial's growth-stage math to also cover these two activities (the more thorough fix, but bigger scope — a candidate for its own future draft if it ever becomes worth doing, not this one).
 
 **Next step, whenever Josh has graphics:** wire each `youtube_id`/`vimeo_url` video item's begin/end screens (Vimeo-side, per-video settings — not an app content change) to match the above, then hide the now-redundant in-app `page_break` items this replaces (same `content_json.hidden` mechanism already used throughout this file), leaving the two named exceptions alone.
-
-
