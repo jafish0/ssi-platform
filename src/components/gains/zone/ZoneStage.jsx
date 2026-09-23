@@ -135,6 +135,13 @@ const ZoneStage = forwardRef(function ZoneStage(
       const s = scene()
       if (s) s.lightPath()
     },
+    // Draft 93 (item 1): the live position for React's "Tap here" pointer
+    // (Zone 1 only) -- see zoneWalkScene.js's pointerPosFor for why this
+    // can't be a static table.
+    pointerPosFor(target) {
+      const s = scene()
+      return s ? s.pointerPosFor(target) : null
+    },
   }))
 
   return <div ref={containerRef} className="w-full h-full" style={{ touchAction: 'none' }} />

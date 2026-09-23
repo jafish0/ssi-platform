@@ -35,6 +35,9 @@ export const ZONES = {
     mainZoneId: 'zone1main',
     base: '/long-light/zone1',
     mapFile: 'plate2.webp', // the MAIN plate; the intro plate names its own below
+    // Draft 93 (item 1): the "Tap here" pointer teaches the game here, then
+    // becomes training wheels everywhere after -- Zone 1 only, per Josh.
+    showTapHere: true,
     introPlate: {
       zoneId: 'zone1intro',
       base: '/long-light/zone1',

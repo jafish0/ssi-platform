@@ -767,7 +767,20 @@ export function makeClimbScene(Phaser) {
     // gold feelings the player collects normally (steering into them, same
     // Second Wind refill) -- the reward IS the gathering, not an instant
     // top-up. Clears the block so climb progress resumes.
+    //
+    // Draft 93 (item 4): `this.activeRed = null` below already clears the
+    // block, and update()'s `blocked` re-reads it fresh every frame, so
+    // progress genuinely resumes on the very next frame -- verified live
+    // (`this.p` advancing normally within moments of the final hit, no
+    // code-level freeze). What WAS missing was any reward for that instant:
+    // the climb kept moving at the same unboosted rate while the burst and
+    // staggered gold-gather played out over a couple of seconds, with no
+    // surge until a released gold mote was individually gathered a beat
+    // later -- which reads as sluggish next to collectGold's own immediate
+    // surge. Granting the same surge right here makes the resume
+    // unmistakable the instant the red is destroyed.
     shatterRed(m) {
+      this.surgeMs = Math.max(this.surgeMs, 1100)
       if (!this.reduced) {
         const burst = this.add
           .particles(m.x, m.y, 'glow', {

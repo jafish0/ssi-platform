@@ -48,12 +48,13 @@
 // Thunder, still pulses the lightning layer as a visual nicety).
 //
 // Breathing. The box-breath is now paced by mind-04-breathe.mp3's own
-// spoken count rather than a plain 1-second ticker: LEAD_IN/PHASE_DUR/
-// AGAIN_BRIDGE/CYCLE2_START below are that clip's exact timing structure
-// (Spark's script), and the visual phase is derived every ~150ms from the
-// audio element's real `currentTime` (see breathePhaseAt) so the rings,
-// count and frog stay locked to what's actually playing instead of drifting
-// on their own clock. The single glow blob is replaced by four concentric
+// spoken count rather than a plain 1-second ticker: BREATHE_TABLE below is
+// that clip's measured timing structure (Draft 93: a timestamp table read
+// from the actual recording, not a uniform-5.0s assumption -- see its own
+// comment), and the visual phase is derived every ~150ms from the audio
+// element's real `currentTime` (see breathePhaseAt) so the rings, count and
+// frog stay locked to what's actually playing instead of drifting on their
+// own clock. The single glow blob is replaced by four concentric
 // rings that expand/brighten together on the inhale and contract on the
 // exhale, plus a focus vignette that darkens the scene's edges only while
 // breathing is active. The frog is now a plain painterly PNG (not an SVG
@@ -282,52 +283,74 @@ function stepKeyFor(mode, breatheStage, completionCount, finished) {
 }
 
 // Box breathing, paced by mind-04-breathe.mp3's own spoken count rather than
-// a plain ticker -- these are that clip's exact timing structure (Spark's
-// script), read directly off the audio element's `currentTime`:
-//   0.0-7.0s   lead-in, rings/frog idle & small while Spark talks
-//   7.0-27.0s  cycle 1 -- 4 phases x 5.0s (in, hold, out, hold)
-//   27.0-29.0s "again" bridge -- hold small/idle, don't restart yet
-//   29.0-49.0s cycle 2 -- 4 phases x 5.0s, same shape as cycle 1
-const LEAD_IN = 7.0
-const PHASE_DUR = 5.0
-const AGAIN_BRIDGE = 2.0
-const CYCLES = 2
-
-const BREATHE_PHASES = [
-  { key: 'in', label: 'Breathe in' },
-  { key: 'hold1', label: 'Hold' },
-  { key: 'out', label: 'Breathe out' },
-  { key: 'hold2', label: 'Hold' },
+// a plain ticker, read directly off the audio element's `currentTime`.
+// Draft 90 assumed a uniform 5.0s per phase (lead-in 7.0s, then four 5.0s
+// phases per cycle, a 2.0s "again" bridge between cycles); Spark's actual
+// take doesn't land each phase in exactly 5.0s, and the drift compounds
+// across a cycle -- by the last "breathe out"/"hold" it's over a second off,
+// which is exactly what Bianca/Josh's report caught. Draft 93 replaces that
+// arithmetic with a timestamp table measured directly from the clip: each
+// entry is the onset of that phase's spoken cue ("breathe in," "hold,"
+// "breathe out," "hold" x2 cycles, plus "again"), found from a silence-gap
+// analysis of mind-04-breathe.mp3 and cross-checked against its waveform --
+// every phase-initial gap is markedly longer than the inter-count ("...two...
+// three...four") gaps within it, and both "breathe out" onsets carry the
+// same tell-tale micro-pause between "breathe" and "out" that "breathe in"
+// and "hold" don't, confirming the split lands on real word boundaries, not
+// noise. The trailing `end` entry is the clip's own measured duration, which
+// closes out cycle 2's final hold phase for tickFromElapsed/ringVisualAt/
+// frogVisualAt below without a special case.
+const BREATHE_TABLE = [
+  { phase: 'in', cycle: 1, t: 7.19 },
+  { phase: 'hold1', cycle: 1, t: 12.56 },
+  { phase: 'out', cycle: 1, t: 17.44 },
+  { phase: 'hold2', cycle: 1, t: 22.76 },
+  { phase: 'bridge', t: 28.03 },
+  { phase: 'in', cycle: 2, t: 29.15 },
+  { phase: 'hold1', cycle: 2, t: 34.68 },
+  { phase: 'out', cycle: 2, t: 40.05 },
+  { phase: 'hold2', cycle: 2, t: 45.47 },
+  { phase: 'end', t: 49.87 },
 ]
 
-// Derives which phase of which cycle (or lead-in/bridge/end) a given elapsed
-// time falls in, generically over CYCLES/LEAD_IN/PHASE_DUR/AGAIN_BRIDGE --
-// tuning any of those automatically moves every cycle/bridge boundary after
-// it (e.g. LEAD_IN=7, PHASE_DUR=5, AGAIN_BRIDGE=2, CYCLES=2 lands cycle 1 at
-// 7-27s, the "again" bridge at 27-29s, and cycle 2 at 29-49s, matching
-// mind-04-breathe.mp3's script). Nothing here is tracked as separate state;
-// it all comes back out of this one function each time `breatheElapsed`
-// updates.
-function breathePhaseAt(t) {
-  if (t < LEAD_IN) return { kind: 'leadin' }
-  let cycleStart = LEAD_IN
-  for (let cycle = 1; cycle <= CYCLES; cycle++) {
-    const cycleEnd = cycleStart + 4 * PHASE_DUR
-    if (t < cycleEnd) {
-      const rel = t - cycleStart
-      const idx = Math.min(3, Math.floor(rel / PHASE_DUR))
-      return { kind: 'cycle', cycle, phase: BREATHE_PHASES[idx], elapsedInPhase: rel - idx * PHASE_DUR }
-    }
-    if (cycle < CYCLES && t < cycleEnd + AGAIN_BRIDGE) return { kind: 'bridge' }
-    cycleStart = cycleEnd + AGAIN_BRIDGE
-  }
-  return { kind: 'end' }
+const BREATHE_PHASES = {
+  in: { key: 'in', label: 'Breathe in' },
+  hold1: { key: 'hold1', label: 'Hold' },
+  out: { key: 'out', label: 'Breathe out' },
+  hold2: { key: 'hold2', label: 'Hold' },
 }
 
-// A 1-2-3-4 tick within each 5-second phase, purely a visual rhythm cue
-// alongside Spark's spoken count.
-function tickFromElapsed(elapsedInPhase) {
-  return Math.min(4, Math.floor((elapsedInPhase / PHASE_DUR) * 4) + 1)
+// Derives which phase of which cycle (or lead-in/bridge/end) a given elapsed
+// time falls in, by finding the last table entry at or before it. Nothing
+// here is tracked as separate state; it all comes back out of this one
+// function each time `breatheElapsed` updates. `phaseLen` is that phase's
+// OWN measured length (the gap to the next table entry), not a shared
+// constant, so tickFromElapsed/ringVisualAt/frogVisualAt scale correctly
+// even though phases are no longer all the same length.
+function breathePhaseAt(t) {
+  if (t < BREATHE_TABLE[0].t) return { kind: 'leadin' }
+  let idx = 0
+  for (let i = 1; i < BREATHE_TABLE.length; i++) {
+    if (BREATHE_TABLE[i].t > t) break
+    idx = i
+  }
+  const entry = BREATHE_TABLE[idx]
+  if (entry.phase === 'bridge') return { kind: 'bridge' }
+  if (entry.phase === 'end') return { kind: 'end' }
+  const next = BREATHE_TABLE[idx + 1]
+  return {
+    kind: 'cycle',
+    cycle: entry.cycle,
+    phase: BREATHE_PHASES[entry.phase],
+    elapsedInPhase: t - entry.t,
+    phaseLen: next.t - entry.t,
+  }
+}
+
+// A 1-2-3-4 tick within each phase, purely a visual rhythm cue alongside
+// Spark's spoken count -- scaled to that phase's own measured length.
+function tickFromElapsed(elapsedInPhase, phaseLen) {
+  return Math.min(4, Math.floor((elapsedInPhase / phaseLen) * 4) + 1)
 }
 
 // Ring group target per phase. hold1 repeats `in`'s target (holds at full)
@@ -378,8 +401,8 @@ function lerpTargets(a, b, t) {
 // target), ramps back down across the exhale, holds flat through hold2.
 function ringVisualAt(phaseInfo) {
   if (phaseInfo.kind !== 'cycle') return RING_TARGETS.idle
-  const { phase, elapsedInPhase } = phaseInfo
-  const t = easeInOut(clamp(elapsedInPhase / PHASE_DUR, 0, 1))
+  const { phase, elapsedInPhase, phaseLen } = phaseInfo
+  const t = easeInOut(clamp(elapsedInPhase / phaseLen, 0, 1))
   if (phase.key === 'in') return lerpTargets(RING_TARGETS.idle, RING_TARGETS.in, t)
   if (phase.key === 'hold1') return RING_TARGETS.in
   if (phase.key === 'out') return lerpTargets(RING_TARGETS.in, RING_TARGETS.out, t)
@@ -419,8 +442,8 @@ function lerpFrog(a, b, t) {
 }
 function frogVisualAt(phaseInfo) {
   if (phaseInfo.kind !== 'cycle') return FROG_BREATHE_TARGETS.idle
-  const { phase, elapsedInPhase } = phaseInfo
-  const t = easeInOut(clamp(elapsedInPhase / PHASE_DUR, 0, 1))
+  const { phase, elapsedInPhase, phaseLen } = phaseInfo
+  const t = easeInOut(clamp(elapsedInPhase / phaseLen, 0, 1))
   if (phase.key === 'in') return lerpFrog(FROG_BREATHE_TARGETS.idle, FROG_BREATHE_TARGETS.in, t)
   if (phase.key === 'hold1') return FROG_BREATHE_TARGETS.in
   if (phase.key === 'out') return lerpFrog(FROG_BREATHE_TARGETS.in, FROG_BREATHE_TARGETS.out, t)
@@ -514,6 +537,13 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
   // deliberate end instead of just freezing on whichever close message was
   // already showing.
   const [finished, setFinished] = useState(false)
+  // Draft 93 (item 2): whether the intro line has been kicked off, and
+  // whether it's finished. Hosted inside a zone (`onComplete` provided) the
+  // audio manager is already unlocked by the walk there, so it starts on
+  // mount; the standalone review page has no prior gesture, so it waits for
+  // a first "Tap to start" tap (see the mount effect and playIntro below).
+  const [introStarted, setIntroStarted] = useState(!!onComplete)
+  const [introDone, setIntroDone] = useState(false)
 
   const containerRef = useRef(null)
   const soundscapeRef = useRef(null)
@@ -521,6 +551,16 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
   const frogSwellRef = useRef(null)
   const pulseTimers = useRef({})
   const lastNarrationKeyRef = useRef(null)
+  // Draft 93 (item 2): the mount effect that auto-plays the intro has no
+  // natural cleanup, so React StrictMode's dev-only double-invoke (mount,
+  // clean up, mount again) calls it twice -- the SECOND playIntro() resets
+  // and restarts `narrationRef.current`, which rejects the FIRST call's
+  // still-pending `play()` promise (AbortError), and that promise's own
+  // `.catch(finish)` then marks the intro done while the real, second
+  // playback is still audibly in progress. This ref survives the
+  // StrictMode replay (only the effect re-runs, not the component), so it
+  // gates playIntro to genuinely fire once.
+  const introKickedOffRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -551,25 +591,24 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
     pulseTimers.current[name] = setTimeout(() => el.classList.remove('om-pulse'), PULSE_MS)
   }
 
-  function begin() {
-    // Called synchronously inside the tap handler (a real user gesture),
-    // which is what satisfies the browser's audio-autoplay policy -- and,
-    // per Draft 57, is what unlocks the narration clips played from effects
-    // shortly after this same gesture.
+  // Draft 93 (item 2): plays the intro line (mind-00-intro, voicing the text
+  // already on screen) and the ambient bed underneath it, ducked the same
+  // way every later step's narration is. Used two ways: called directly on
+  // mount when hosted inside a zone (the walk there already unlocked audio),
+  // or from `tapToStart` on the standalone page, where THIS is the first
+  // real user gesture and so must both unlock audio and start it in the
+  // same call. Either way it only ever sets `introDone` -- Draft 90 used to
+  // advance mode itself when the clip ended, but Josh now wants Begin to
+  // stay a real, separately-tapped button once the line's done playing
+  // (`proceedFromIntro` below), matching the "gate the button on a still-
+  // talking screen" pattern GearAward already uses.
+  function playIntro() {
     const bed = soundscapeRef.current
     if (bed) {
       bed.currentTime = 0
       bed.volume = BED_VOLUME
       bed.play().catch(() => {})
     }
-    // Draft 90 (item 17): the intro screen's own line (mind-00-intro,
-    // voicing the text already on screen) has nowhere earlier to fire from
-    // -- this component's very first available user gesture IS this Begin
-    // tap, so it plays here, in the same real gesture, then advances to
-    // 'arrive' only once it ends (mode stays 'intro' meanwhile, so the
-    // screen the player is looking at doesn't change out from under the
-    // line still being read). A failed/missing clip still advances so
-    // nobody's ever stuck on a silent screen.
     const el = narrationRef.current
     if (el) {
       try {
@@ -577,29 +616,67 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
         el.currentTime = 0
         el.src = `${AUDIO}/mind-00-intro.mp3`
         if (bed) bed.volume = BED_VOLUME * BED_DUCK_MULT
-        const restore = () => {
-          setMode('arrive')
+        const finish = () => {
+          setIntroDone(true)
           if (bed) rampBedVolume(bed, BED_VOLUME, BED_RESTORE_MS)
         }
-        // Draft 92 (item 2): `el.onended =`/`el.onerror =` are property
-        // assignments that are never cleared once they fire -- every later
-        // step's own `addEventListener('ended', ..., {once:true})` clip (the
-        // stepKey effect below) also fires 'ended' on this same shared
-        // element, so `restore()` kept re-firing and snapping `mode` back to
-        // 'arrive' after every subsequent clip, anywhere in the activity.
-        // `{ once: true }` self-removes after firing, exactly like every
-        // other listener registered on this element.
-        el.addEventListener('ended', restore, { once: true })
-        el.addEventListener('error', restore, { once: true })
+        // Draft 92 (item 2): `{ once: true }` self-removes after firing --
+        // see that draft's note on why a bare `el.onended =` assignment is
+        // wrong here (it never clears, so it keeps firing on every later
+        // clip's 'ended' event too).
+        el.addEventListener('ended', finish, { once: true })
+        el.addEventListener('error', finish, { once: true })
         const p = el.play()
-        if (p && p.catch) p.catch(restore)
+        if (p && p.catch) p.catch(finish)
         return
       } catch {
         /* fall through to the no-audio path below */
       }
     }
+    setIntroDone(true)
+  }
+
+  // The standalone page's first tap: this IS the user gesture, so it both
+  // unlocks audio and starts the intro line playing.
+  function tapToStart() {
+    setIntroStarted(true)
+    playIntro()
+  }
+
+  // The (now-enabled) "Begin" tap, once the intro line has finished.
+  function proceedFromIntro() {
     setMode('arrive')
   }
+
+  // Draft 93 (item 2): hosted inside a zone, the walk there is already a
+  // real user gesture, so the intro line plays the moment this activity
+  // mounts rather than waiting for a tap of its own -- `introStarted` is
+  // already true from its initial state in that case (see above). Guarded
+  // by introKickedOffRef so StrictMode's dev-only double-invoke can't fire
+  // it twice. That alone isn't enough, though: the layers-loading effect
+  // above has its own real (needed-on-a-genuine-unmount) cleanup that pauses
+  // both audio refs, and StrictMode runs that cleanup, as part of its
+  // simulated mount-cleanup-mount replay, WHILE this effect's play() call is
+  // still pending -- aborting it (AbortError: "interrupted by a call to
+  // pause()") before it ever reaches this component's own `finish`, which
+  // then marks the intro done from that abort rather than a real ended/
+  // error event. Deferring the actual call past the same tick (StrictMode's
+  // replay is fully synchronous) sidesteps the collision entirely.
+  useEffect(() => {
+    if (!onComplete) return
+    // The ref is only consulted/set INSIDE the deferred call, not at
+    // scheduling time -- StrictMode's replay cancels and re-schedules this
+    // timeout (via the cleanup below) before it ever fires once, so the
+    // guard has to live where the call actually happens, or the real
+    // (surviving) schedule would find it already marked done and skip
+    // firing altogether.
+    const id = setTimeout(() => {
+      if (introKickedOffRef.current) return
+      introKickedOffRef.current = true
+      playIntro()
+    }, 0)
+    return () => clearTimeout(id)
+  }, [])
 
   function tapSee(item) {
     if (mode !== 'see') return
@@ -716,7 +793,7 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
   const phaseInfo = breathePhaseAt(breatheElapsed)
   const breathePhase = phaseInfo.kind === 'cycle' ? phaseInfo.phase : null
   const breatheTargetKey = breathePhase ? breathePhase.key : 'idle'
-  const breatheCount = breathePhase ? tickFromElapsed(phaseInfo.elapsedInPhase) : null
+  const breatheCount = breathePhase ? tickFromElapsed(phaseInfo.elapsedInPhase, phaseInfo.phaseLen) : null
   // Draft 90 (item 19): computed continuously from breatheElapsed every poll
   // tick -- see ringVisualAt/frogVisualAt's own comment for why (no more
   // independent 5s CSS clock to drift out of sync with the audio).
@@ -747,9 +824,27 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
   let panelLabel = null
   let panelText = 'Take a slow breath, and let’s step in.'
 
+  // Draft 93 (item 2): hosted inside a zone there's no "Tap to start" beat
+  // at all (the walk already unlocked audio) -- the button just reads
+  // "Begin" the whole time, disabled until the intro line ends. Standalone,
+  // the label itself only changes once the line ends (per the draft: "the
+  // button becomes 'Begin'"), so a tap mid-playback stays labelled "Tap to
+  // start" but disabled.
+  const introLabel = onComplete || introDone ? 'Begin' : 'Tap to start'
+  const introDisabled = onComplete ? !introDone : introStarted && !introDone
+  function handleIntroClick() {
+    if (introDone) proceedFromIntro()
+    else if (!onComplete && !introStarted) tapToStart()
+  }
+
   if (mode === 'intro') {
     panelText =
       'Before we climb on, let’s try something you can use whenever things feel like too much. It’s called finding your mindful place. Take a slow breath… and let’s step in.'
+    // Draft 93 (item 2): only the standalone page, before its own first tap,
+    // has anything to prompt -- hosted in a zone the line just starts
+    // playing on its own, and once it's underway (either surface) the
+    // disabled button already says everything there is to say.
+    instruction = introStarted ? '' : 'Tap to start.'
   } else if (mode === 'arrive') {
     panelText = ARRIVE_TEXT
   } else if (mode === 'see') {
@@ -962,11 +1057,17 @@ export default function MindfulnessCalmPlace({ onComplete = null }) {
           {mode === 'intro' && (
             <button
               type="button"
-              onClick={begin}
+              onClick={handleIntroClick}
+              disabled={introDisabled}
               className="w-full py-2.5 rounded-full text-[15px] font-extrabold"
-              style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+              style={{
+                background: 'var(--action-primary)',
+                color: 'var(--text-on-warm)',
+                boxShadow: 'var(--glow-sm)',
+                opacity: introDisabled ? 'var(--opacity-disabled)' : 1,
+              }}
             >
-              Begin
+              {introLabel}
             </button>
           )}
 

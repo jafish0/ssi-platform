@@ -70,27 +70,33 @@ const TRAVERSAL_MUSIC_PRELOAD = {
   climb: '/gains/climb/audio/climb-music.mp3',
 }
 
-// Draft 90 (item 1): a small floating "Tap here" pointer over whichever
-// target is currently the one thing to do -- Spark on arrival, the station
-// after follow-me, the exit after the gear award. Positioned by percentage
-// against the 1080x1920 logical canvas (the phone frame is always exactly
-// 9:16, so it lines up with the Phaser world without needing a live bridge
-// to the scene). Coordinates are each plate's own `sparkStand`/`pond`/
-// `exitStand` spot from zoneWalkScene.js's per-zone geometry.
-const POINTER_SPOTS = {
-  zone1intro: { spark: { x: 700, y: 260 } },
-  zone1main: { spark: { x: 460, y: 1300 }, pond: { x: 586, y: 563 }, exit: { x: 740, y: 220 } },
-  zone3: { spark: { x: 540, y: 1200 }, pond: { x: 760, y: 930 }, exit: { x: 600, y: 470 } },
-  zone4: { spark: { x: 412, y: 1128 }, pond: { x: 770, y: 862 }, exit: { x: 400, y: 532 } },
-}
-
+// Draft 90 (item 1), Draft 93: a small floating "Tap here" pointer over
+// whichever target is currently the one thing to do -- Spark on arrival, the
+// station after follow-me, the exit after the gear award. Positioned by
+// percentage against the 1080x1920 logical canvas (the phone frame is always
+// exactly 9:16, so it lines up with the Phaser world). Draft 90 copied each
+// target's coordinate into a static table by hand; Spark's position isn't
+// static (companion mode rides at the Traveler's shoulder), so that table
+// went stale the moment Spark left its waiting stand -- Josh's Zone 3
+// screenshot caught the pointer sitting mid-path. Draft 93 reads the live
+// position straight from the scene instead (see ZoneStage's `pointerPosFor`)
+// and, per Josh's call, restricts the pointer to Zone 1 (`zone.showTapHere`)
+// -- it teaches the game there; after that it's just training wheels.
 function TapHerePointer({ x, y }) {
+  // Draft 93: reading Spark's live position turned up a real edge case the
+  // old (wrong) static table happened to avoid by accident -- the intro
+  // plate's Spark sits close enough to the top of the 1920-tall canvas
+  // (~70) that the pill, rendered ABOVE the point via the transform below,
+  // clipped past FullscreenStage's overflow-hidden frame edge and was
+  // invisible. Floored so the pill + arrow + gap always has room above it,
+  // regardless of how close to the top the live target actually is.
+  const safeY = Math.max(y, 200)
   return (
     <div
       className="absolute z-10 flex flex-col items-center"
       style={{
         left: `${(x / 1080) * 100}%`,
-        top: `${(y / 1920) * 100}%`,
+        top: `${(safeY / 1920) * 100}%`,
         transform: 'translate(-50%, calc(-100% - 14px))',
         pointerEvents: 'none',
         animation: 'gz-tap-here-bob 1.6s ease-in-out infinite',
@@ -143,6 +149,10 @@ export default function GainsZonePage({ zone }) {
   // tapped once -- cleared implicitly whenever the active target moves on
   // (see pointerTarget below), so a NEW target always gets its own pointer.
   const [dismissedTarget, setDismissedTarget] = useState(null)
+  // Draft 93 (item 1): the pointer's live on-screen position, polled from
+  // the scene (see the effect near pointerTarget below) rather than a
+  // static table -- Spark isn't always at a fixed spot (companion mode).
+  const [pointerPos, setPointerPos] = useState(null)
   // Draft 83: which plate is live. Zones without `introPlate` never leave
   // 'main'.
   const [platePhase, setPlatePhase] = useState(zone.introPlate ? 'intro' : 'main')
@@ -545,9 +555,11 @@ export default function GainsZonePage({ zone }) {
   // (spark active until talked, then pond until the activity's done, then
   // exit once it's unlocked), and match exactly the three moments the draft
   // calls out: Spark on arrival, the station after follow-me, the exit
-  // after the gear award.
+  // after the gear award. Draft 93: only shown at all when the zone opts in
+  // (`showTapHere` -- Zone 1 only, per Josh's call that it's training wheels
+  // everywhere else).
   const pointerTarget =
-    walkPaused
+    !zone.showTapHere || walkPaused
       ? null
       : zoneProgress.spark === 'active'
         ? 'spark'
@@ -556,8 +568,22 @@ export default function GainsZonePage({ zone }) {
           : zoneProgress.exit === 'active'
             ? 'exit'
             : null
-  const pointerSpot = pointerTarget && POINTER_SPOTS[plateZoneId]?.[pointerTarget]
-  const showPointer = !!pointerSpot && dismissedTarget !== pointerTarget
+  const showPointer = !!pointerPos && dismissedTarget !== pointerTarget
+
+  // Draft 93 (item 1): poll the live target position from the scene rather
+  // than trust a cached one -- Spark rides at the Traveler's shoulder once
+  // it's a companion, so its on-screen spot changes continuously.
+  useEffect(() => {
+    if (!pointerTarget) {
+      setPointerPos(null)
+      return
+    }
+    const poll = () => setPointerPos(stageRef.current?.pointerPosFor(pointerTarget) || null)
+    poll()
+    const id = setInterval(poll, 120)
+    return () => clearInterval(id)
+  }, [pointerTarget])
+
   // The scene's own "begin" (camera settle + tap hint) waits for the arrive
   // line too, so the hint doesn't invite a tap that would be ignored. The
   // intro plate never sets introLock, so this is true the moment `started`
@@ -601,7 +627,7 @@ export default function GainsZonePage({ zone }) {
 
         {scene === 'walk' && <SparkBubble text={bubble?.text} visible={!!bubble?.visible} />}
 
-        {scene === 'walk' && showPointer && <TapHerePointer x={pointerSpot.x} y={pointerSpot.y} />}
+        {scene === 'walk' && showPointer && <TapHerePointer x={pointerPos.x} y={pointerPos.y} />}
 
         {/* Intro: the Begin tap (audio unlock). */}
         {scene === 'intro' && (

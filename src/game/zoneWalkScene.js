@@ -840,6 +840,23 @@ export function makeZoneWalkScene(Phaser) {
       return { x: this.traveler.x, y: this.traveler.y }
     }
 
+    // Draft 93 (item 1): the live on-screen position for React's "Tap here"
+    // pointer (Zone 1 only) to sit over. `this.spark.x/y` is the actual
+    // sprite -- updated every frame in update() -- so it's correct whether
+    // Spark is waiting at a fixed stand or riding along as a companion at
+    // the Traveler's shoulder; a static copy of `sparkStand` (the old Draft
+    // 90 approach) went stale the moment Spark became a companion, which is
+    // the bug Josh's Zone 3 screenshot caught (pointer sitting mid-path).
+    // Pond and exit don't move, but reading them from the zone's own spots
+    // here too means there's exactly one source of truth for all three.
+    pointerPosFor(target) {
+      const z = this.zone
+      if (target === 'spark') return this.spark ? { x: this.spark.x, y: this.spark.y } : null
+      if (target === 'pond') return z.spots.pond || null
+      if (target === 'exit') return z.spots.exitStand || null
+      return null
+    }
+
     showTapMarker(x, y) {
       const s = this.depthScale(y)
       if (this.tapMarker) this.tapMarker.destroy()
