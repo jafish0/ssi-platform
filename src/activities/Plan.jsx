@@ -64,15 +64,17 @@ const TYPE_ORDER = ['practical', 'emotional', 'social']
 
 // ---------- Small shared bits ----------
 
-// Draft 109 (2026-09-10 narration batch): headingAudioUrl/subAudioUrl are
-// optional per-screen "read this to me" narration for the two text blocks
-// every screen already renders through this shared shell — centralizing
-// it here instead of repeating the same NarrationControls call 5 times.
-function ScreenShell({ heading, headingAudioUrl, sub, subAudioUrl, children }) {
+// Draft 109 (2026-09-10 narration batch): subAudioUrl is optional
+// per-screen "read this to me" narration for the instruction text every
+// screen already renders through this shared shell — centralizing it here
+// instead of repeating the same NarrationControls call 5 times. The
+// matching heading narration (headingAudioUrl) was removed in Draft 115
+// Part A.3 — the team asked to stop narrating page titles/headers
+// entirely; callers may still pass it, it's just no longer rendered.
+function ScreenShell({ heading, sub, subAudioUrl, children }) {
   return (
     <div>
       <h2 className="text-[22px] font-bold text-ctac-navy mb-1">{heading}</h2>
-      {headingAudioUrl && <NarrationControls className="mb-2" questionAudioUrl={headingAudioUrl} />}
       {sub && <p className="text-[14px] text-slate-500 mb-5">{sub}</p>}
       {subAudioUrl && <NarrationControls className="mb-3" questionAudioUrl={subAudioUrl} />}
       {children}
@@ -403,7 +405,7 @@ export default function Plan({ onSave = console.log, planData, sessionData, exis
 
   if (screen === 1) {
     return (
-      <ScreenShell heading="Your Plan." headingAudioUrl="/narration/plan_00_heading.mp3">
+      <ScreenShell heading="Your Plan.">
         <NarrationControls className="mb-2" questionAudioUrl="/narration/plan_01_intro_body.mp3" />
         <p className="text-[16px] leading-relaxed text-slate-700">
           You worked through a lot. Now let’s pull it together into something
@@ -420,7 +422,6 @@ export default function Plan({ onSave = console.log, planData, sessionData, exis
     return (
       <ScreenShell
         heading="New Skills to Try"
-        headingAudioUrl="/narration/plan_02_skills_heading.mp3"
         sub="Pick one skill to focus on. You can come back to the others later."
         subAudioUrl="/narration/plan_03_skills_instructions.mp3"
       >
@@ -591,7 +592,6 @@ export default function Plan({ onSave = console.log, planData, sessionData, exis
     return (
       <ScreenShell
         heading="When you felt included."
-        headingAudioUrl="/narration/plan_08_included_heading.mp3"
         sub="Think back to what you wrote earlier."
         subAudioUrl="/narration/plan_09_included_instructions.mp3"
       >
@@ -684,7 +684,7 @@ export default function Plan({ onSave = console.log, planData, sessionData, exis
   // the live flow this screen is never reached anyway (the engine
   // advances as soon as onSave resolves) — it exists for the sandbox.
   return (
-    <ScreenShell heading="Saved." headingAudioUrl="/narration/plan_20_saved.mp3" sub="This is yours. Come back to it any time.">
+    <ScreenShell heading="Saved." sub="This is yours. Come back to it any time.">
       <NarrationControls className="mb-2" questionAudioUrl="/narration/plan_21_saved_note.mp3" />
       <p className="text-[14px] text-slate-600 mb-5">
         You&apos;ll get to save your plan at the very end, after the last few
@@ -898,9 +898,16 @@ export function PlanReview({ model, showCrisisNote = true }) {
           {m.inclusionText && (
             <p className="text-[15px] italic text-slate-600 mb-2">“{m.inclusionText}”</p>
           )}
-          <QualifierNote className="mb-3" audioUrl="/narration/plan_11_bpb_qualifier.mp3" />
+          {/* Draft 115 Part D (2026-09-22, Dr. Sprang screenshot): this note
+              is about the behaviors-to-use lists below, not the inclusion
+              story above — it used to sit unconditionally right after the
+              quote, reading like commentary on the participant's own
+              example. Now attached to whichever behaviors block actually
+              renders first (used-list, or the not-tried list if that's
+              empty), shown exactly once either way. */}
           {(m.behaviorsUsed.length > 0 || m.inclusionOther) && (
             <>
+              <QualifierNote className="mb-3" audioUrl="/narration/plan_11_bpb_qualifier.mp3" />
               <p className="text-[14px] font-medium text-slate-500 mb-1">
                 Belonging-promoting behaviors you were using — keep doing these:
               </p>
@@ -917,6 +924,9 @@ export function PlanReview({ model, showCrisisNote = true }) {
           )}
           {m.notTried.length > 0 && (
             <>
+              {!(m.behaviorsUsed.length > 0 || m.inclusionOther) && (
+                <QualifierNote className="mb-3" audioUrl="/narration/plan_11_bpb_qualifier.mp3" />
+              )}
               <p className="text-[14px] font-medium text-slate-500 mb-1">
                 Some other belonging-promoting behaviors to keep on your radar:
               </p>
@@ -1127,13 +1137,20 @@ function buildPlanKeepsakeSvg(model) {
   if (m.behaviorsUsed.length || m.inclusionOther || m.notTried.length) {
     heading('When you felt included')
     if (m.inclusionText) body(`“${m.inclusionText}”`, { italic: true })
-    body(BPB_QUALIFIER, { italic: true })
+    // Draft 115 Part D: qualifier belongs with the behaviors lists below,
+    // not right after the inclusion quote — same fix as PlanReview's
+    // on-screen recap card, kept in sync since this builds the matching
+    // PDF/PNG text.
     if (m.behaviorsUsed.length || m.inclusionOther) {
+      body(BPB_QUALIFIER, { italic: true })
       body('Belonging-promoting behaviors you were using — keep doing these:')
       for (const b of m.behaviorsUsed) body(`• ${b}`, { indent: 14 })
       if (m.inclusionOther) body(`• ${m.inclusionOther}`, { indent: 14 })
     }
     if (m.notTried.length) {
+      if (!(m.behaviorsUsed.length || m.inclusionOther)) {
+        body(BPB_QUALIFIER, { italic: true })
+      }
       body('Keep on your radar:')
       for (const b of m.notTried) body(`• ${b}`, { indent: 14 })
     }

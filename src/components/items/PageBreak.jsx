@@ -7,10 +7,10 @@ export default function PageBreak({ content, onSave }) {
   const body = content?.body
   // Draft 109 (2026-09-10 narration batch): this generic bridge-screen
   // renderer had zero narration wiring at all — every other content_json-
-  // driven item type already supports at least one audio field. Two
-  // separate optional clips (not one) since a bridge screen's heading and
-  // body are recorded as distinct lines (e.g. almostdone_00/01 vs. 02/03).
-  const headingAudioUrl = content?.heading_audio_url
+  // driven item type already supports at least one audio field.
+  // Draft 115 Part A.3 (2026-09-22): the matching heading_audio_url clip
+  // was removed — the team asked to stop narrating page titles/headers
+  // entirely — so this no longer reads that field at all.
   const bodyAudioUrl = content?.body_audio_url
   const continueLabel = content?.continue_label || 'Keep going →'
   const animation = content?.animation || 'fade'
@@ -53,19 +53,9 @@ export default function PageBreak({ content, onSave }) {
       ) : (
         <div className="text-center py-6">
           {heading && (
-            <h1
-              className={
-                'text-[28px] font-bold leading-tight text-slate-800 ' +
-                (headingAudioUrl ? 'mb-2' : 'mb-4')
-              }
-            >
+            <h1 className="text-[28px] font-bold leading-tight text-slate-800 mb-4">
               {heading}
             </h1>
-          )}
-          {headingAudioUrl && (
-            <div className="flex justify-center mb-2">
-              <NarrationControls questionAudioUrl={headingAudioUrl} />
-            </div>
           )}
           {body && (
             <p

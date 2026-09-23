@@ -110,7 +110,6 @@ export default function WhoIAmPoem({ onSave = console.log }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-1">Who I Am</h2>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/poem_00_heading.mp3" />
       <p className="text-[14px] text-slate-500 mb-4">
         A short poem about you. Fill in the lines and we&apos;ll put it together.
       </p>

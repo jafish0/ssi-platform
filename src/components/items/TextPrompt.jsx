@@ -85,7 +85,13 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
     if (!el) return
     claim(token, () => el.pause())
     el.play().catch(() => {})
-    return () => release(token)
+    // Draft 115 Part F.4: pause on unmount too, not just release() — a
+    // still-sounding <audio> element isn't silenced by removing it from
+    // the DOM alone (same gap KaiNarrationPlayer had).
+    return () => {
+      el.pause()
+      release(token)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gated, src])
 
@@ -145,7 +151,17 @@ function TextPromptNarration({ src, src2, gated, onComplete, autoplayAttempt }) 
   // the two above are — release it too if this whole item unmounts while
   // that player is still mid-playback (e.g. the participant navigates
   // away). A harmless no-op if something else already released it.
-  useEffect(() => () => release(token), [token])
+  // Draft 115 Part F.4: pause the revealed player's own element too —
+  // release() alone only forgets the coordinator claim, it doesn't stop
+  // a still-sounding <audio> element that's merely been unmounted.
+  useEffect(
+    () => () => {
+      const el = revealedAudioRef.current
+      if (el) el.pause()
+      release(token)
+    },
+    [token]
+  )
 
   // Advance the manual/revealed player to the second clip once the first
   // one ends, and explicitly (re)issue play() on the src change — some

@@ -460,10 +460,10 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
   const isReviewScreen = screen?.type === 'review'
 
   // Kai narration gating (Draft 62 Part B) — Continue is disabled on the
-  // intro + inspect-education screens until that screen's KaiNarrationPlayer
-  // fires onComplete at least once. Sticky once true (a later replay
-  // doesn't re-lock Continue).
-  const [introNarrationDone, setIntroNarrationDone] = useState(false)
+  // inspect-education screen until its KaiNarrationPlayer fires onComplete
+  // at least once. Sticky once true (a later replay doesn't re-lock
+  // Continue). The matching intro-screen gate was removed in Draft 115
+  // Part C — see IntroScreen's KaiNarrationPlayer call.
   const [inspectNarrationDone, setInspectNarrationDone] = useState(false)
 
   // Draft 114 Part C (2026-09-18, Holly's feedback): the Strengthen
@@ -590,16 +590,20 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
         </div>
       </div>
 
-      {screen?.type === 'intro' && (
-        <IntroScreen onNarrationComplete={() => setIntroNarrationDone(true)} />
-      )}
+      {screen?.type === 'intro' && <IntroScreen />}
 
       {screen?.type === 'transition' && (
-        <TransitionScreen typeId={screen.supportType} />
+        // Draft 115 Part F.4: `key` so React remounts a fresh instance per
+        // support type instead of reusing one across the practical/
+        // emotional/social trio (which otherwise carries stale narration
+        // state — e.g. `revealed` — across a prop change, see
+        // NarrationControls.jsx).
+        <TransitionScreen key={screen.supportType} typeId={screen.supportType} />
       )}
 
       {screen?.type === 'select' && (
         <TypeScreen
+          key={screen.supportType}
           typeId={screen.supportType}
           selectedIds={selection[screen.supportType]}
           isNone={!!noneFor[screen.supportType]}
@@ -636,6 +640,7 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
 
       {screen?.type === 'strengthen' && (
         <StrengthenScreen
+          key={screen.supportType}
           typeId={screen.supportType}
           allies={deduplicatedAllies}
           entry={strengthened[screen.supportType]}
@@ -666,7 +671,6 @@ export default function AlliesSafetyNet({ onSave = console.log, existingResponse
           onNext={goNext}
           onSubmit={handleSubmit}
           isReview={isReviewScreen}
-          introNarrationDone={introNarrationDone}
           inspectNarrationDone={inspectNarrationDone}
         />
       </div>
@@ -737,7 +741,6 @@ function PrimaryAdvanceButton({
   onNext,
   onSubmit,
   isReview,
-  introNarrationDone,
   inspectNarrationDone,
 }) {
   if (!screen) return null
@@ -749,9 +752,11 @@ function PrimaryAdvanceButton({
     )
   }
   if (screen.type === 'intro') {
-    // Draft 62 Part B — gated until Kai's intro narration has played once.
+    // Draft 62 Part B gated this until Kai's intro narration played once;
+    // removed per Draft 115 Part C (2026-09-22) — see the KaiNarrationPlayer
+    // call in IntroScreen for why.
     return (
-      <PrimaryButton onClick={onNext} disabled={!introNarrationDone}>
+      <PrimaryButton onClick={onNext}>
         Let&apos;s build it →
       </PrimaryButton>
     )
@@ -784,23 +789,28 @@ function PrimaryAdvanceButton({
 
 // ---------- Intro screen ----------
 
-function IntroScreen({ onNarrationComplete }) {
+function IntroScreen() {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">
         Who are the allies in your safety net?
       </h2>
-      <NarrationControls className="mb-3" questionAudioUrl="/narration/safetynet_00_intro_heading.mp3" />
 
       {/* Kai narration (Draft 62 Part B) — replaces what would otherwise
-          be a "Video Coming Soon" spot; Continue is gated on this having
-          played at least once (see PrimaryAdvanceButton). Left completely
-          alone per Draft 109 — this narration gap-fill only covers text
-          the Kai audio doesn't already read. */}
+          be a "Video Coming Soon" spot. Draft 115 Part C (2026-09-22):
+          Continue used to be gated on this having played at least once
+          (see PrimaryAdvanceButton), but introNarrationDone is plain,
+          unpersisted component state — this activity remounts fresh every
+          time a participant returns to it after navigating away (the
+          engine mounts one item at a time), so anyone who'd already heard
+          these definitions in an earlier visit was forced to sit through
+          the whole clip again before Continue would unlock. Gate removed;
+          `gated={false}` also suppresses the now-inaccurate "Continue
+          unlocks when Kai finishes" messaging. */}
       <KaiNarrationPlayer
         audioSrc="/kai-narration/safety-net-allies-intro.mp3"
         transcript={KAI_INTRO_TRANSCRIPT}
-        onComplete={onNarrationComplete}
+        gated={false}
       />
 
       {/* Draft 65 B.1 (2026-08-13): the ally-definition sentence was
@@ -1034,7 +1044,6 @@ function BuildFinalScreen({ allies, noneFor, lowSupport }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">Your safety net</h2>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/safetynet_07_summary_heading.mp3" />
       <p className="text-[14px] text-slate-600 mb-2 leading-relaxed">
         {allEmpty
           ? 'No allies yet — that\'s okay. We\'ll look at where support could grow.'
@@ -1065,7 +1074,6 @@ function InspectEducationScreen({ onNarrationComplete }) {
       <h2 className="text-[22px] font-semibold mb-3">
         Watch out for warning signs.
       </h2>
-      <NarrationControls className="mb-3" questionAudioUrl="/narration/safetynet_10_inspect_heading.mp3" />
       <p className="text-[15px] leading-relaxed text-slate-800 mb-2">
         Not everyone in your life belongs in your safety net. Sometimes
         people we&apos;re close to don&apos;t actually help us feel safer.
@@ -1200,9 +1208,6 @@ function StrengthenScreen({ typeId, allies, entry, onChange, onSkip }) {
       <h2 className={`text-[22px] font-bold mb-2 ${tones.word}`}>
         Let&apos;s strengthen your {t.label.toLowerCase()} support.
       </h2>
-      {/* Draft 109: three concrete per-type variants, typeId matches the
-          filename suffix directly. */}
-      <NarrationControls className="mb-3" questionAudioUrl={`/narration/safetynet_16_strengthen_heading_${t.id}.mp3`} />
       {alreadySelected.length > 0 && (
         <p className="text-[14px] leading-relaxed text-slate-500 mb-3">
           {alreadySelected.length === 1
@@ -1274,7 +1279,6 @@ function ReviewScreen({ allies, noneFor, strengthened, strengthenTypeIds, lowSup
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">Your safety net is ready!</h2>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/safetynet_20_review_heading.mp3" />
       <p className="text-[14px] text-slate-600 mb-2 leading-relaxed">
         Here&apos;s the net you came out with. You can come back to it any
         time.

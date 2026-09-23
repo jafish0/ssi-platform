@@ -44,7 +44,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Volume2, Pause, RotateCcw } from 'lucide-react'
 import { claim, release } from '../lib/narrationCoordinator.js'
 
-export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete }) {
+// Draft 115 Part C (2026-09-22): `gated = false` opts a specific usage out
+// of the "Continue unlocks when this finishes" messaging (and the parent
+// is expected not to actually gate its Continue button on `onComplete`
+// either) — for a spot where the gate itself has been removed rather than
+// just relaxed, so this component doesn't keep telling the participant
+// their Continue button is locked when it no longer is. `onComplete` still
+// fires either way; whether a caller acts on it is up to the caller.
+export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete, gated = true }) {
   const audioRef = useRef(null)
   const [playing, setPlaying] = useState(false)
   const [completed, setCompleted] = useState(false)
@@ -77,7 +84,15 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
     if (!el) return
     claimSlot()
     el.play().catch(() => {})
-    return () => release(token)
+    // Draft 115 Part F.4: a plain unmount does not stop a still-sounding
+    // <audio> element (removing it from the DOM doesn't pause it) — e.g.
+    // navigating Back off an intro screen mid-clip via goBack(), which
+    // isn't gated on narration completion. release() alone only forgets
+    // the coordinator claim; pause() is what actually silences it.
+    return () => {
+      el.pause()
+      release(token)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioSrc])
 
@@ -194,7 +209,7 @@ export default function KaiNarrationPlayer({ audioSrc, transcript, onComplete })
               Continue button below the fold, so its disabled state reads
               as broken rather than waiting — say what unlocks it
               (Draft 71 F). Hidden once the gate has released. */}
-          {!completed && (
+          {gated && !completed && (
             <p className="text-[12px] text-amber-700/80 italic mb-3">
               The Continue button unlocks when Kai finishes.
             </p>

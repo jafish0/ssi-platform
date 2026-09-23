@@ -80,13 +80,14 @@ export default function LetterBuilder({ onSave = console.log }) {
       <h2 className="text-[22px] font-semibold mb-2">A letter to another teen</h2>
       {/* Consolidated single narration button (was 5 scattered
           NarrationControls pills) — one "Read me the instructions" button
-          plays the heading, prompt, both scaffolding prompts, and the
-          textarea instructions back to back, in that order. */}
+          plays the prompt, both scaffolding prompts, and the textarea
+          instructions back to back, in that order. Draft 115 Part A.3
+          (2026-09-22): dropped letter_00_heading.mp3 from the sequence —
+          the team asked to stop narrating page titles/headers entirely. */}
       <NarrationButton
         className="mb-2"
         label="Read me the instructions"
         src={[
-          '/narration/letter_00_heading.mp3',
           '/narration/letter_01_prompt.mp3',
           '/narration/letter_02_scaffold_skill.mp3',
           '/narration/letter_03_scaffold_thought.mp3',

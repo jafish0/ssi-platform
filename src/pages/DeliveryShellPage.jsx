@@ -268,48 +268,74 @@ function ShellInner() {
 
   if (loading) return <LoadingScreen />
   if (error) return <ErrorScreen error={error} />
-  if (completed) return <CompletedScreen />
+
+  // Draft 103 Part B: a persistent feedback affordance on the real
+  // dogfooding build, matching /demo's existing per-page button — fixed
+  // top-right, below the 1px progress strip so the two never overlap.
+  // Draft 115 Part E fix (2026-09-22, Dr. Sprang had no way to comment on
+  // Plan's recap screen and had to email Josh directly): this used to live
+  // only in this function's FINAL return, below every early `if (...)
+  // return` branch — so despite this comment already claiming it "follows
+  // the participant across every screen ... including the completion/exit
+  // screens," `if (completed) return <CompletedScreen />` (which is what
+  // renders Plan's recap, via CelebrationScreen) never actually rendered
+  // it. Hoisted so every branch below gets it.
+  const feedbackButton = (
+    <div className="fixed top-3 right-3 z-40">
+      <FeedbackButton
+        subtle
+        label="Give feedback"
+        initialArea={
+          completed
+            ? 'Live session · completion/keepsake'
+            : `Live session · ${currentSection?.title || 'unknown section'}`
+        }
+      />
+    </div>
+  )
+
+  if (completed) {
+    return (
+      <>
+        {feedbackButton}
+        <CompletedScreen />
+      </>
+    )
+  }
   if (showSplash) {
     return (
-      <SplashScreen
-        onBegin={() => {
-          sessionStorage.removeItem(splashKey)
-          setShowSplash(false)
-          navigate(`/session/${sessionId}/step`, { replace: true })
-        }}
-      />
+      <>
+        {feedbackButton}
+        <SplashScreen
+          onBegin={() => {
+            sessionStorage.removeItem(splashKey)
+            setShowSplash(false)
+            navigate(`/session/${sessionId}/step`, { replace: true })
+          }}
+        />
+      </>
     )
   }
   if (!sections.length) {
     return (
-      <main className="min-h-screen flex items-start justify-center px-4 py-10">
-        <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6">
-          <h1 className="text-[22px] font-semibold mb-3">No content yet</h1>
-          <p className="text-[15px] text-slate-700">
-            This program doesn&apos;t have content to show yet. Check back soon.
-          </p>
-        </div>
-      </main>
+      <>
+        {feedbackButton}
+        <main className="min-h-screen flex items-start justify-center px-4 py-10">
+          <div className="w-full max-w-[540px] bg-white rounded-2xl shadow-card p-6">
+            <h1 className="text-[22px] font-semibold mb-3">No content yet</h1>
+            <p className="text-[15px] text-slate-700">
+              This program doesn&apos;t have content to show yet. Check back soon.
+            </p>
+          </div>
+        </main>
+      </>
     )
   }
 
   return (
     <>
       <ProgressBar />
-      {/* Draft 103 Part B: a persistent feedback affordance on the real
-          dogfooding build, matching /demo's existing per-page button —
-          fixed top-right, below the 1px progress strip so the two never
-          overlap. Lives in the shared shell (not DeliveryStepPage) so it
-          follows the participant across every screen in a real session,
-          including the completion/exit screens rendered by this same
-          component. */}
-      <div className="fixed top-3 right-3 z-40">
-        <FeedbackButton
-          subtle
-          label="Give feedback"
-          initialArea={`Live session · ${currentSection?.title || 'unknown section'}`}
-        />
-      </div>
+      {feedbackButton}
       <Outlet />
     </>
   )

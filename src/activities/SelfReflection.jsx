@@ -171,7 +171,6 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
         <h2 className="text-[22px] font-semibold text-ctac-navy leading-snug mb-2">
           Our experiences can drive our thoughts and feelings about belonging.
         </h2>
-        <NarrationControls className="mb-2" questionAudioUrl="/narration/story_11_closing_heading.mp3" />
         <p className="text-[16px] leading-relaxed text-slate-600">Thanks for sharing!</p>
         <NarrationControls className="mt-2" questionAudioUrl="/narration/story_12_closing_body.mp3" />
       </div>
@@ -197,7 +196,6 @@ export default function SelfReflection({ onSave = console.log, initialStep = 1 }
       </div>
 
       <h2 className="text-[22px] font-semibold mb-2">{screen.heading}</h2>
-      <NarrationControls className="mb-2" questionAudioUrl={`/narration/${screen.headingAudio}`} />
       <p className="text-[16px] leading-relaxed text-slate-700 mb-3">
         {screen.prompt}
       </p>

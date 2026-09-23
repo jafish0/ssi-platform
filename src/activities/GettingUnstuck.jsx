@@ -134,7 +134,8 @@ const KAI_STRATEGY_TRANSCRIPT = (
     <p className="mb-2">
       For this, it is important to recognize that two things that seem
       different can be true at the same time. Starting with your stuck
-      thought then saying AND… what else is also true. For example:
+      thought then saying <strong>AND</strong>… what else is also true. For
+      example:
     </p>
     <ul className="list-disc pl-5 space-y-1">
       <li>My foster family isn&apos;t my real family AND there can still be a place for them in my life</li>
@@ -424,7 +425,6 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-3">Saved</h2>
-        <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_19_saved_heading.mp3" />
         <p className="text-[16px] text-slate-700 mb-2">That&apos;s real work. Let&apos;s keep going.</p>
         <NarrationControls questionAudioUrl="/narration/unstuck_20_saved_body.mp3" />
       </div>
@@ -446,7 +446,6 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-1">Stuck thoughts</h2>
-        <NarrationControls className="mb-2" questionAudioUrl="/narration/unstuck_00_rate_heading.mp3" />
         <p className="text-[16px] leading-relaxed text-slate-700 mb-3">
           These are thoughts that can keep someone feeling stuck. For each
           one, rate how true it feels for you right now.
@@ -581,7 +580,6 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div>
         <h2 className="text-[22px] font-semibold mb-3">One more.</h2>
-        <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_02_other_heading.mp3" />
         <p className="text-[16px] leading-relaxed text-slate-700 mb-3">
           Is there another thought you&apos;ve had that we didn&apos;t
           list here?
@@ -789,7 +787,6 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div className="py-4 text-center">
         <h2 className="text-[22px] font-semibold mb-3">That&apos;s great!</h2>
-        <NarrationControls className="mb-3 justify-center" questionAudioUrl="/narration/unstuck_05_zero_heading.mp3" />
         <p className="text-[16px] leading-relaxed text-slate-700 mb-3 max-w-[480px] mx-auto">
           Try out the following exercise in case a new thought pops up that
           you need to deal with in the future.
@@ -1205,10 +1202,6 @@ export default function GettingUnstuck({ onSave = console.log }) {
     return (
       <div className="text-center py-8">
         <h2 className="text-[24px] font-semibold mb-2">{cycleAffirmation.text}</h2>
-        {/* Draft 110: each randomized heading now has its own matching
-            clip (Draft 109's single-clip fallback was a recording-script
-            authoring bug, not a real gap — see CYCLE_AFFIRMATIONS). */}
-        <NarrationControls className="mb-2 justify-center" questionAudioUrl={`/narration/${cycleAffirmation.audio}`} />
         <p className="text-[16px] text-slate-700 mb-8">Let&apos;s try the next one.</p>
         <NarrationControls className="mb-8 justify-center" questionAudioUrl="/narration/unstuck_16_next.mp3" />
         <div className="flex items-center justify-end">
@@ -1234,7 +1227,6 @@ export default function GettingUnstuck({ onSave = console.log }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-3">Your work</h2>
-      <NarrationControls className="mb-3" questionAudioUrl="/narration/unstuck_17_review_heading.mp3" />
       <p className="text-[16px] leading-relaxed text-slate-700 mb-2">
         Here&apos;s what you wrote. Take a moment with it.
       </p>

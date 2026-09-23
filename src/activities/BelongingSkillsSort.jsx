@@ -964,7 +964,6 @@ export default function BelongingSkillsSort({ onSave = console.log }) {
       `}</style>
 
       <h2 className="text-[22px] font-semibold mb-2">Belonging skills</h2>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/skills_00_heading.mp3" />
       <p className="text-[15px] leading-relaxed text-slate-700 mb-1">
         Tap each skill below to choose its bucket — or drag it in. If a
         skill isn&apos;t for you right now, put it in{' '}
@@ -1098,7 +1097,6 @@ function ReconsiderScreen({ unplaced, onYes, onNo, submitting }) {
   return (
     <div>
       <h2 className="text-[22px] font-semibold mb-2">You didn&apos;t sort these.</h2>
-      <NarrationControls className="mb-2" questionAudioUrl="/narration/skills_13_reconsider_heading.mp3" />
       <p className="text-[16px] leading-relaxed text-slate-700 mb-4">
         Are any of these worth reconsidering?
       </p>
@@ -1141,7 +1139,6 @@ function SortSnapshotScreen({ placement, lookup }) {
   return (
     <div className="text-center">
       <h2 className="text-[22px] font-semibold mb-2">Nice work!</h2>
-      <NarrationControls className="mb-2 justify-center" questionAudioUrl="/narration/skills_15_done_heading.mp3" />
       <p className="text-[15px] text-slate-700 mb-5">
         Think about when you could try out one of these skills.
       </p>
