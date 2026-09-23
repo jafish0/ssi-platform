@@ -529,12 +529,18 @@ export default function GettingUnstuck({ onSave = console.log }) {
       // threshold → the v5.9 0-endorsement fallback; otherwise → pick.
       const hasEligible = eligibleItems.length > 0
       // Defensive eligibility sweep before entering Pick, matching v3.0
-      // behavior.
+      // behavior. Draft 118 Part D: `&& !a.randomly_selected` exempts the
+      // v5.9 fallback's own random pair (below) — their truth_rating is
+      // usually below threshold by definition (that's why they weren't
+      // naturally eligible), so without this exemption, simply re-
+      // entering this function a second time (e.g. Back then Continue
+      // again) would strip `selected` right back off them here, one
+      // sweep before the fallback branch even runs.
       setItems((prev) => {
         const next = { ...prev }
         for (const it of APPRAISAL_ITEMS) {
           const a = next[it.id] || {}
-          if ((a.truth_rating ?? -1) < ELIGIBILITY_THRESHOLD && a.selected) {
+          if ((a.truth_rating ?? -1) < ELIGIBILITY_THRESHOLD && a.selected && !a.randomly_selected) {
             next[it.id] = { ...a, selected: false }
           }
         }
@@ -559,19 +565,31 @@ export default function GettingUnstuck({ onSave = console.log }) {
         // thought the kid just typed and dismissed doesn't fit "in case a
         // new thought pops up in the future"). Random per participant;
         // stored in `items` state so it stays fixed if they navigate back.
-        const pool = APPRAISAL_ITEMS.map((it) => it.id)
-        const chosen = []
-        while (chosen.length < Math.min(MAX_PICKS, pool.length)) {
-          const i = Math.floor(Math.random() * pool.length)
-          chosen.push(pool.splice(i, 1)[0])
-        }
-        setItems((prev) => {
-          const next = { ...prev }
-          for (const id of chosen) {
-            next[id] = { ...(next[id] || {}), selected: true, randomly_selected: true }
+        //
+        // Draft 118 Part D: that "stays fixed" claim wasn't actually true
+        // before this fix — re-entering this branch (e.g. Back to Other,
+        // then Continue again) drew a FRESH random pair every time
+        // without ever clearing the previous one, so `selectedItems`
+        // could accumulate 3, 4, or more items instead of exactly
+        // MAX_PICKS. Only pick when no fallback pair exists yet; a
+        // second pass through this branch reuses whatever was already
+        // chosen instead of adding to it.
+        const alreadyChosen = APPRAISAL_ITEMS.some((it) => items[it.id]?.randomly_selected)
+        if (!alreadyChosen) {
+          const pool = APPRAISAL_ITEMS.map((it) => it.id)
+          const chosen = []
+          while (chosen.length < Math.min(MAX_PICKS, pool.length)) {
+            const i = Math.floor(Math.random() * pool.length)
+            chosen.push(pool.splice(i, 1)[0])
           }
-          return next
-        })
+          setItems((prev) => {
+            const next = { ...prev }
+            for (const id of chosen) {
+              next[id] = { ...(next[id] || {}), selected: true, randomly_selected: true }
+            }
+            return next
+          })
+        }
         setPhase('zero_endorsement_intro')
       }
       scrollTop()

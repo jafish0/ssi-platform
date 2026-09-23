@@ -448,9 +448,12 @@ export default function Plan({ onSave = console.log, planData, sessionData, exis
           </>
         )}
         {showFullSkillList && !d.skillsFromFullList && (
-          <p className="text-sm italic text-slate-600 mb-4">
-            Here&apos;s the full list — pick a different one to focus on.
-          </p>
+          <>
+            <NarrationControls className="mb-2" questionAudioUrl="/narration/plan_22_skills_fulllist.mp3" />
+            <p className="text-sm italic text-slate-600 mb-4">
+              Here&apos;s the full list — pick a different one to focus on.
+            </p>
+          </>
         )}
         <div className="space-y-3">
           {d.willingToTrySkills.map((s) => {
