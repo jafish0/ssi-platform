@@ -16,12 +16,23 @@
 // Zone 4 · Videos · Body Mapping · Guardian · Mindful Place · Ascent · The
 // First Light. Draft 94 adds Zone 2 between Zone 1 and Zone 3 (renumbered).
 // Draft 95 adds The Fogline right after Zone 2's card (renumbered again) --
-// the Focusing Lens assembly and the traversal it unlocks.
+// the Focusing Lens assembly and the traversal it unlocks. Draft 97 adds
+// the title screen FIRST, above Zone 1 (renumbered again) -- the game's
+// front door, name not yet adopted by the team.
 
 export const REVIEW_CARDS = [
   {
-    key: 'zone1',
+    key: 'title',
     n: 1,
+    title: 'Title screen — Shadowmend: The Long Light (proposed)',
+    section: 'review-title',
+    blurb:
+      'A proposed name and the game’s first screen. The whole journey in one frame: the lantern at your feet, the trail up through the camp, the broken bridge, the pond, and the Beacon on Mount Hope. Tap to begin drops you into Zone 1. The name is a proposal, so tell us what you think of it.',
+    links: [{ label: 'Open the title screen', to: '/gains-demo/title', play: true }],
+  },
+  {
+    key: 'zone1',
+    n: 2,
     title: 'Zone 1: The Dark Abyss — walkable zone',
     section: 'review-zone1',
     blurb:
@@ -30,7 +41,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone2',
-    n: 2,
+    n: 3,
     title: 'Zone 2: The Lantern Path — walkable zone',
     section: 'review-zone2',
     blurb:
@@ -39,7 +50,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'fogline',
-    n: 3,
+    n: 4,
     title: 'The Fogline',
     section: 'review-fogline',
     blurb:
@@ -48,7 +59,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone3',
-    n: 4,
+    n: 5,
     title: 'Zone 3: The Mistfields — walkable zone',
     section: 'review-zone3',
     blurb:
@@ -57,7 +68,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone4',
-    n: 5,
+    n: 6,
     title: 'Zone 4: The Bright Reaches — walkable zone',
     section: 'review-zone4',
     blurb:
@@ -66,7 +77,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'videos',
-    n: 6,
+    n: 7,
     title: 'Videos',
     section: 'review-videos',
     blurb:
@@ -75,7 +86,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'bodymap',
-    n: 7,
+    n: 8,
     title: 'Body Mapping',
     section: 'review-bodymap',
     blurb:
@@ -84,7 +95,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'guardian',
-    n: 8,
+    n: 9,
     title: 'Message to Your Guardian',
     section: 'review-zone3pitch',
     blurb:
@@ -93,7 +104,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'mindful',
-    n: 9,
+    n: 10,
     title: 'Mindful Place',
     section: 'review-mindfulness',
     blurb:
@@ -102,7 +113,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'ascent',
-    n: 10,
+    n: 11,
     title: 'The Ascent',
     section: 'review-ascent',
     blurb:
@@ -111,7 +122,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'firstlight',
-    n: 11,
+    n: 12,
     title: 'The First Light',
     section: 'review-firstlight',
     blurb:

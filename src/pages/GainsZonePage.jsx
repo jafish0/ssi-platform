@@ -29,7 +29,7 @@
 // `introPlate` skip this phase entirely and are unaffected.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react'
 import FeedbackButton from '../components/FeedbackButton.jsx'
 import FullscreenStage from '../components/gains/zone/FullscreenStage.jsx'
@@ -117,7 +117,15 @@ function TapHerePointer({ x, y }) {
 }
 
 export default function GainsZonePage({ zone }) {
-  const [scene, setScene] = useState('intro') // intro|walk|video|activity|gear|transition|climb|end
+  // Draft 97: `useSearchParams` (not a module-level constant) so this reads
+  // the CURRENT route's query string -- an SPA client-side navigation from
+  // the title screen never re-evaluates a module-level `new URLSearchParams
+  // (window.location.search)` const, since the module itself isn't
+  // re-parsed. A fresh route mount (this component IS remounted on
+  // /gains-demo/title -> /gains-demo/zone1) does re-run this initializer.
+  const [searchParams] = useSearchParams()
+  const fromTitle = searchParams.has('fromTitle')
+  const [scene, setScene] = useState(fromTitle ? 'walk' : 'intro') // intro|walk|video|activity|gear|transition|climb|end
   const [started, setStarted] = useState(false) // the walk has begun (post title card)
   const [showTitle, setShowTitle] = useState(false)
   // 2026-09-03 (Josh): the Traveler can't move until Spark finishes the
@@ -216,6 +224,15 @@ export default function GainsZonePage({ zone }) {
   useEffect(() => {
     if (audioRef.current) audioRef.current.setMuted(muted)
   }, [muted])
+
+  // Draft 97: came from the title screen -- run the exact same beat
+  // `begin()` fires on a Begin tap, just automatically once on mount
+  // (the title screen's own tap-to-begin already served as the audio-
+  // unlock gesture; the SPA route change here doesn't cost the tab that).
+  useEffect(() => {
+    if (fromTitle) begin()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // The beds belong to the walk; the video, activity and (usually) the
   // traversal bring their own sound. Draft 83: a zone can ask to keep its

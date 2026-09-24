@@ -10,6 +10,7 @@
 
 export const GAINS_FEEDBACK_SECTIONS = [
   // Ideas & Demos for Review — one thread per proposal
+  { value: 'review-title', label: 'Review: Title screen (proposed name)' },
   { value: 'review-finalboss', label: 'Review: Final Boss summit script' },
   { value: 'review-pretest', label: 'Review: Pre-test measures flow' },
   { value: 'review-posttest', label: 'Review: Post-test measures flow' },
