@@ -372,15 +372,27 @@ const ZONE2_PLATE2 = {
   lightPathNodes: [2, 3, 4],
   depth: { yNear: 1836, yFar: 260, sNear: 1.0, sFar: 0.62 },
   // Draft 94 (item 1a): the four free-order friend stations. `x/y` is where
-  // the friend sits; `standX/standY` is ~90px toward the fire, where the
-  // Traveler stops to face them (see the concept doc's own stand-point
-  // note). Station data (name/answer/vo/part) lives in zones.js -- this is
-  // only the geometry the scene needs to hit-test and route to.
+  // the friend sits. Station data (name/answer/vo/part) lives in
+  // zones.js -- this is only the geometry the scene needs to hit-test and
+  // route to.
+  //
+  // `standX/standY` (Draft 96 item 2a): where the Traveler stops to face
+  // them. Emberwick/Mirefly sit ABOVE the fire (smaller y); the old
+  // straight toward-fire stand point put the Traveler at a LARGER y than
+  // the friend, which -- depth sorts on y, larger paints on top -- drew
+  // the Traveler in front of exactly the before/after change the beat is
+  // about (Josh's screenshot). Hollowshell/Dimmet sit BELOW the fire, so
+  // the same toward-fire point already lands at a smaller y than them and
+  // never had this problem; moved to the side anyway, purely so the
+  // Traveler doesn't plant themselves directly between the friend and the
+  // fire glow. `depthCapFor` (see setActiveStation/placeTraveler) is the
+  // real guarantee either way -- these values are chosen to already read
+  // right without leaning on that clamp.
   stations: [
-    { id: 'emberwick', x: 310, y: 626, standX: 384, standY: 677 },
-    { id: 'mirefly', x: 803, y: 637, standX: 726, standY: 684 },
-    { id: 'hollowshell', x: 293, y: 976, standX: 366, standY: 924 },
-    { id: 'dimmet', x: 803, y: 999, standX: 733, standY: 942 },
+    { id: 'emberwick', x: 310, y: 626, standX: 396, standY: 588 },
+    { id: 'mirefly', x: 803, y: 637, standX: 717, standY: 599 },
+    { id: 'hollowshell', x: 293, y: 976, standX: 203, standY: 950 },
+    { id: 'dimmet', x: 803, y: 999, standX: 893, standY: 973 },
   ],
 }
 
@@ -433,6 +445,13 @@ export function makeZoneWalkScene(Phaser) {
       this.began = false
       this.paused = true
       this.progress = { spark: 'active', pond: 'locked', exit: 'locked', sparkMode: 'waiting' }
+      // Draft 96 (item 2): which friend station is currently in its
+      // sequence (video through part-fly), if any -- set by React via
+      // `setActiveStation` the moment it mounts StationSequence, cleared
+      // when the station completes. Used to keep the Traveler and Spark
+      // from rendering in front of the friend they're supposed to be
+      // looking at (see placeTraveler/updateSpark/maybeNudge).
+      this.activeStationId = null
       this.path = []
       this.pendingTarget = null
       this.facing = 'back'
@@ -725,7 +744,11 @@ export function makeZoneWalkScene(Phaser) {
       this.traveler.setPosition(x, y)
       this.travelerDisplayH = TRAVELER_H * s
       this.applyTravelerScale()
-      this.traveler.setDepth(y)
+      // Draft 96 (item 2a): depth is normally just the ground y (nearer-
+      // to-camera paints on top), but while a station is active the
+      // Traveler must never win that ordering against the friend they're
+      // standing at -- clamp it behind them by a small margin instead.
+      this.traveler.setDepth(this.depthCapFor(y, 6))
       this.shadow.setPosition(x, y + 4 * s).setScale(SHADOW_SCALE_AT_1 * s, SHADOW_SCALE_AT_1 * s).setDepth(y - 0.5)
       this.dust.setDepth(y - 0.2)
     }
@@ -1148,13 +1171,30 @@ export function makeZoneWalkScene(Phaser) {
         const t = this.traveler
         const s = this.depthScale(t.y)
         // Hover on the side AWAY from the active objective (the pond is to
-        // the right of the path, the exit straight up it), so Spark never
-        // sits between the Traveler and the thing they're about to tap.
-        const obj = this.progress.pond === 'active' ? z.spots.pond : this.progress.exit === 'active' ? z.spots.exit : null
+        // the right of the path, the exit straight up it, an active
+        // friend station wherever that friend happens to be -- Draft 96
+        // item 2b), so Spark never sits between the Traveler and the
+        // thing they're about to tap, or on top of a friend mid-station.
+        const activeSt = this.activeStationFriend()
+        const obj = activeSt || (this.progress.pond === 'active' ? z.spots.pond : this.progress.exit === 'active' ? z.spots.exit : null)
         let side = -1
         if (obj && obj.x < t.x - 40) side = 1
         gx = t.x + side * 105 * s + (this.nudge ? this.nudge.dx : 0)
         gy = t.y - 20 * s + (this.nudge ? this.nudge.dy : 0)
+        // Draft 96 (item 2c): treat every friend's perch (+40px) as a
+        // no-hover zone for Spark's idle drift too, not just the active
+        // one -- otherwise she can still drift onto a friend she isn't
+        // currently visiting while the Traveler walks past the camp.
+        if (z.stations) {
+          for (const st of z.stations) {
+            const d = Math.hypot(gx - st.x, gy - st.y)
+            const minD = FRIEND_H * 0.5 + 40
+            if (d < minD && d > 0.01) {
+              gx = st.x + ((gx - st.x) / d) * minD
+              gy = st.y + ((gy - st.y) / d) * minD
+            }
+          }
+        }
       }
       const k = 1 - Math.exp(-delta / 320)
       this.sparkGround.x += (gx - this.sparkGround.x) * k
@@ -1162,7 +1202,7 @@ export function makeZoneWalkScene(Phaser) {
       const s = this.depthScale(this.sparkGround.y)
       const speed = Math.hypot(gx - this.sparkGround.x, gy - this.sparkGround.y)
       this.spark.setPosition(this.sparkGround.x, this.sparkGround.y - 215 * s + bob)
-      this.spark.setScale((SPARK_H / SPARK_SRC_H) * s).setDepth(this.sparkGround.y + 1)
+      this.spark.setScale((SPARK_H / SPARK_SRC_H) * s).setDepth(this.depthCapFor(this.sparkGround.y, 4) + 1)
       this.placeSparkHalo(s, this.sparkGround.y)
       if (this.trail) {
         this.trail.setDepth(this.sparkGround.y + 0.5)
@@ -1170,11 +1210,13 @@ export function makeZoneWalkScene(Phaser) {
       }
     }
 
-    // The halo rides on the flame's center, a hair behind it in depth.
+    // The halo rides on the flame's center, a hair behind it in depth --
+    // Draft 96 (item 2b): while a station is active, also capped behind
+    // that friend, same as the Traveler and Spark's own body.
     placeSparkHalo(s, groundY) {
       if (!this.sparkHalo) return
       this.sparkHalo.setPosition(this.spark.x, this.spark.y + 10 * s)
-      this.sparkHalo.setScale(1.9 * s).setDepth(groundY + 0.9)
+      this.sparkHalo.setScale(1.9 * s).setDepth(this.depthCapFor(groundY, 4) + 0.9)
     }
 
     // ---- Zone 2 camp friends (Draft 94, item 1) ----
@@ -1225,6 +1267,30 @@ export function makeZoneWalkScene(Phaser) {
       if (!st || !st.after) return
       st.after.setAlpha(Phaser.Math.Clamp(t, 0, 1))
       st.done = t >= 1
+    }
+
+    // Draft 96 (item 2): React calls this the moment a station sequence
+    // mounts/unmounts. See `depthCapFor` -- while a station is active, the
+    // Traveler and Spark are never allowed to render in front of that
+    // friend, however the exact stand point happens to fall.
+    setActiveStation(id) {
+      this.activeStationId = id || null
+    }
+
+    // The friend the Traveler/Spark should never draw in front of right
+    // now, if any -- `null` outside an active station sequence.
+    activeStationFriend() {
+      if (!this.activeStationId || !this.zone.stations) return null
+      return this.zone.stations.find((s) => s.id === this.activeStationId) || null
+    }
+
+    // Clamp a would-be depth so it stays behind the active friend by
+    // `margin` -- used for both the Traveler and Spark so neither can ever
+    // paint over the before/after cross-fade the station is all about,
+    // regardless of the exact stand point in play.
+    depthCapFor(y, margin) {
+      const friend = this.activeStationFriend()
+      return friend ? Math.min(y, friend.y - margin) : y
     }
 
     // The live on-screen position of a friend (for React to position the

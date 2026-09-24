@@ -134,6 +134,13 @@ export default function StationSequence({ station, posFor, onLight, speakSpark, 
 
   const leftPct = (pos.x / 1080) * 100
   const topPct = (pos.y / 1920) * 100
+  // Draft 96 (item 3): Emberwick/Mirefly sit near the top of the plate, so
+  // the thanks bubble's usual "above the friend" placement ran off the top
+  // of the frame and got drawn over them instead (Josh's screenshot).
+  // Below this threshold, anchor it beside the friend -- on the fire side,
+  // so it doesn't stray toward the plate's edge -- rather than above.
+  const bubbleAboveFriend = topPct >= 40
+  const bubbleOnRight = pos.x < 540
 
   return (
     <div className="absolute inset-0 z-20" style={{ pointerEvents: 'none' }}>
@@ -231,7 +238,11 @@ export default function StationSequence({ station, posFor, onLight, speakSpark, 
           style={{
             left: `${leftPct}%`,
             top: `${topPct}%`,
-            transform: 'translate(-50%, calc(-100% - 16px))',
+            transform: bubbleAboveFriend
+              ? 'translate(-50%, calc(-100% - 16px))'
+              : bubbleOnRight
+                ? 'translate(16px, -75%)'
+                : 'translate(calc(-100% - 16px), -75%)',
             maxWidth: 260,
             background: 'var(--surface-sheet)',
             backdropFilter: 'var(--blur-sheet)',

@@ -64,6 +64,12 @@ export default function GainsZone2Page() {
   const [exitUnlocked, setExitUnlocked] = useState(false)
   const [stationsDone, setStationsDone] = useState({})
   const [activeStationId, setActiveStationId] = useState(null)
+  // Draft 96 (item 2): keep the scene's own idea of the active station in
+  // sync so it can clamp the Traveler/Spark's depth behind that friend
+  // (see zoneWalkScene.js's setActiveStation/depthCapFor).
+  useEffect(() => {
+    stageRef.current?.setActiveStation(activeStationId)
+  }, [activeStationId])
   const [fireLevel, setFireLevel] = useState(0)
   const [runKey, setRunKey] = useState(0)
   // Draft 95
@@ -131,9 +137,17 @@ export default function GainsZone2Page() {
     })
   }, [])
 
+  // A hard cap on top of `say()`'s own promise, same reasoning as
+  // firstLightScene.js's arrive() courtesy: "a stuck/failed clip can never
+  // strand the player here." Every recorded line in this zone finishes
+  // well under this (the longest, `ready`, is ~17s) -- it only ever fires
+  // if a line's audio genuinely never settles (network hiccup, a browser
+  // that never emits 'ended'/'error' for some reason), so a lock doesn't
+  // become permanent over something outside this page's control.
+  const LOCK_TIMEOUT_MS = 22000
   function lockAndSay(line) {
     setIntroLock(true)
-    return say(line).then(() => setIntroLock(false))
+    return Promise.race([say(line), new Promise((resolve) => later(resolve, LOCK_TIMEOUT_MS))]).then(() => setIntroLock(false))
   }
 
   function transitionTo(next, after) {
@@ -162,13 +176,21 @@ export default function GainsZone2Page() {
     }
     setScene('walk')
     setShowTitle(true)
-    say(ZONE2.vo.welcome)
+    // Draft 96 (item 1): `arrive` used to fire off this same timer,
+    // unconditionally -- cutting `welcome` off mid-sentence whenever the
+    // line ran longer than TITLE_CARD_MS (it's 5.7s; the timer is 2.6s).
+    // The title card still hides and movement still starts on the timer
+    // (unchanged), but `arrive` now queues behind `welcome`'s own promise
+    // instead: zone-flow Spark lines shouldn't interrupt each other.
+    const welcomeDone = say(ZONE2.vo.welcome)
     later(() => {
       setShowTitle(false)
       setStarted(true)
+    }, TITLE_CARD_MS)
+    welcomeDone.then(() => {
       audioRef.current?.sfx('chime-unlock')
       lockAndSay(ZONE2.vo.arrive)
-    }, TITLE_CARD_MS)
+    })
   }
 
   function redirect(line) {

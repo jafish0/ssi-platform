@@ -154,6 +154,13 @@ const ZoneStage = forwardRef(function ZoneStage(
       const s = scene()
       return s ? s.stationPosFor(id) : null
     },
+    // Draft 96 (item 2): which friend's sequence is active right now, so
+    // the scene can keep the Traveler/Spark from drawing in front of them
+    // (see zoneWalkScene.js's depthCapFor). `null` clears it.
+    setActiveStation(id) {
+      const s = scene()
+      if (s) s.setActiveStation(id)
+    },
   }))
 
   return <div ref={containerRef} className="w-full h-full" style={{ touchAction: 'none' }} />
