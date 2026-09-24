@@ -152,6 +152,70 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **50f20d6** (2026-09-24) — Draft 95: **Zone 2 Phase B -- the Focusing
+  Lens assembly and the Fogline traversal.** Full spec in `### Draft 95`
+  below (marked SHIPPED there). After the fourth camp part: a new
+  drag-and-drop build view (`LensBuildView.jsx`) where the four parts
+  snap onto outline targets on the Lantern (pointer-events drag with a
+  tap-to-select fallback, same family of technique as
+  `BelongingSkillsSort.jsx`'s pointer-drag, not HTML5 DnD); the fourth
+  snap cross-fades the base Lantern image into the finished Focusing
+  Lens art with a ring-of-clarity reveal, then the standard `GearAward`
+  (`gearKey: 'lens'` -- Zones 3/4's `gearEarnedBefore` already assumed
+  it existed). `GearHud` now renders in Zone 2 for the first time.
+  New Fogline traversal (`TraversalGame mode="fogline"` ->
+  `foglineScene.js`): reuses the walkable-zone engine's Traveler/Spark
+  for hop-only movement between the concept doc's 12-stone graph, but
+  deliberately does NOT reimplement First Light's Phaser darkness-mask
+  for the fog -- the pre-converted `fog-a`/`fog-b` SVG overlays are
+  meant to be CSS-masked by the lens's live position (their own
+  motion.css says so directly: "mask #layer-fog-a and #layer-fog-b...
+  in code"), so the draggable lens, the fog reveal, the stone-focus
+  timer, and the two looming shapes all live in a new DOM layer
+  (`FoglineTraversal.jsx`) above the canvas instead. Extended
+  `TraversalGame.jsx` with a `forwardRef` host->scene command channel
+  (hop requests) and a generic `onEvent` scene->host channel (hop
+  confirmations), alongside the existing `onComplete`/`onDuck`.
+  `zone2Audio` gained a third virtual "plate" (`fogline`): music
+  crossfades to `z2-music-fogline` while forest ambience continues at
+  40%, keeping the whole traversal's audio React-owned like Zone 2's
+  other two plates. Wired into Zone 2's exit (a "Into the Mistfields!"
+  transition card, then the Fogline, then a real end card linking to
+  Zone 3 -- replacing Draft 94's temporary stub) and shipped as a new
+  standalone practice page at `/gains-demo/fogline` too, with its own
+  small audio bed for when there's no host zone to lean on. Review hub:
+  a Fogline card added right after Zone 2's, and Zone 2's own blurb
+  updated to drop the "Phase A only" caveat now that Phase B shipped.
+  Found and fixed two real bugs during live verification, both caught
+  by testing rather than by reading the code: (1) the stone-focus
+  "held still for 0.5s" timer was implemented as a `setInterval` kept
+  inside a `useEffect` keyed on the lens's OWN eased position -- which
+  re-mounted the interval on every single frame the lens was moving,
+  so the "how far did it move since last check" comparison sampled at
+  whatever cadence React's re-render happened to allow rather than a
+  true 100ms tick. Caught it because a stone read as "focused" (gold
+  rim, tappable) while the lens was still ~285px away on screen --
+  fixed by moving lens-follow + focus/shape/glimmer timers into ONE
+  stable `requestAnimationFrame` loop keyed only on `started`, reading
+  a plain ref for position instead of state, so the loop never tears
+  itself down. (2) "Try again" on the standalone Fogline page restarts
+  the underlying Phaser scene (via `TraversalGame`'s existing
+  restart-in-place) but `FoglineTraversal`'s OWN React state -- which
+  stone is next, resolved shapes, fired-once VO flags, the lens's
+  position -- has nothing to do with Phaser and didn't reset at all,
+  so a replay showed the Traveler back at the start while the game
+  still thought you were standing at the arrival stone with both
+  shapes already resolved. Fixed by adding a `restartSignal`-keyed
+  reset effect mirroring `TraversalGame`'s own first-run guard.
+  Verified live end to end, twice: the full Zone-2-hosted flow (all
+  four stations -> drag-assembly -> GearAward equip -> "Into the
+  Mistfields!" -> all 11 hops -> both looming shapes resolved -> the
+  real end card linking to `/gains-demo/zone3`) and the standalone
+  page on its own (including the restart-state-reset fix, replayed
+  clean). Draft 96 (three first-play fixes Josh found testing this
+  build) and Draft 97 (the title screen) are next in Ideas/drafts
+  below.
+
 - **3c4a257** (2026-09-24) — Draft 94: **Zone 2 "The Lantern Path," Phase
   A -- two plates, Video 2, the four-friend camp, per-plate music.** Full
   spec in `### Draft 94` below (marked SHIPPED there). Built as a
@@ -5165,7 +5229,7 @@ f. **Per-plate music + ambience.** A plate may declare `music` and `ambience` UR
 
 *End of Draft 94.*
 
-### Draft 95 — Zone 2, Phase B: build the Focusing Lens at the fire (drag the four parts onto the Lantern), the gear award with the clarity ring, and the Fogline traversal (drag a lens through fog, focus a stone, hop)
+### Draft 95 — Zone 2, Phase B: build the Focusing Lens at the fire (drag the four parts onto the Lantern), the gear award with the clarity ring, and the Fogline traversal (drag a lens through fog, focus a stone, hop) — ✅ SHIPPED 50f20d6 (2026-09-24)
 
 Runs on top of Draft 94. Design doc sections 5, 6, 7, 8, 8b of the Zone 2 concept. Replaces Phase A's temporary end card.
 
@@ -5201,3 +5265,38 @@ Runs on top of Draft 94. Design doc sections 5, 6, 7, 8, 8b of the Zone 2 concep
 **Verify.** Full run: Draft 94 flow → fourth part → `z2-10` → build view: drag each part, wrong drop drifts back, right drop snaps with chime; fourth snap → lantern becomes the Focusing Lens image → clarity ring sweeps out → GearAward reveal with Spark's line, Equip gated, celebrate figure, slot 2 fills, tray gone → back on the plate, `z2-11-ready` with the pause intact → exit open → "Into the Mistfields!" → Fogline: fog covers the slope, `t2-01`, lens appears; drag it, fog clears inside only, stones only rim after a still half-second on the **next** stone, tap → hop; the two shapes loom above the fog and shrink to a bush and a stump when focused; Spark lines fire at the right moments; idle glimmer after 12 s; arrival clears the fog onto the bridge → end card → Zone 3 link. Standalone `/gains-demo/fogline` works. Reduced motion paths. Zones 1/3/4 unchanged. Clean console, clean build. `src/`, `public/` → no version bump. Log Recently-shipped + mark shipped.
 
 *End of Draft 95.*
+
+### Draft 96 — Zone 2 first-play fixes: welcome line cut off, Spark and the Traveler stand clear of the friends, thank-you bubble above the friend
+
+Josh's first pass on Draft 94 (Supabase `review-zone2`, 2026-09-24). Zone 2 plays well; three fixes.
+
+**1. `z2-00-welcome` is interrupted by `z2-01-arrive`.** The welcome line ("The Lantern Path. Look at that…", 5.7 s) is cut mid-sentence when the arrive line starts. Whatever triggers `arrive` (the Traveler reaching Spark, or the title card dismiss) must wait for `welcome` to end: queue `arrive` behind it rather than interrupting. Check the same ordering in Zone 1 (`z1-00` → `z1-01` beckon) and make it a template rule: zone-flow Spark lines never interrupt each other; they queue.
+
+**2. Spark and the Traveler overlap the friends.** Screenshot: at Emberwick's station Spark's glow sits directly on top of the friend and the Traveler stands in front of him, hiding the before/after change the whole beat is about. Fix in the station sequence: (a) the Traveler's **stand point** is offset **toward the fire** from the friend by ~110 px on the friend-to-fire line and depth-sorted so the friend is never behind the Traveler when the friend is higher on the plate; if the friend is lower (Hollowshell, Dimmet) stand the Traveler to the side instead so they don't cover them either. (b) **Spark's companion offset at a station** goes to the **opposite side of the Traveler from the friend**, and her glow is drawn **below** the friend sprite in depth order while a station is active. (c) Also keep Spark off the friends while idling around the camp: treat the four perches (friend bounds + 40 px) as no-hover zones for her lag/bob drift.
+
+**3. The thank-you bubble covers the friend.** Screenshot: Dimmet's bubble is drawn over Dimmet. Anchor friend speech bubbles **above the friend's sprite top** (tail pointing down at the friend), clamped inside the frame; if there isn't room above (Emberwick and Mirefly sit near the top of the plate), place it **beside** the friend on the fire side, never over the sprite. Apply to all four friends' bubbles (the thank-you, and any future friend lines). Spark's own bubbles are unchanged.
+
+**Verify.** Welcome plays to the end before arrive on both Zone 2 and Zone 1. At each of the four stations the friend is fully visible during the video close, the chips, the hold-to-light (the before→after cross-fade is the point, it must be unobstructed), the lesson, and the thank-you; Spark is beside the Traveler on the far side, never over a friend; the bubble sits above or beside the friend. Clean console, clean build. `src/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 96.*
+
+### Draft 97 — Title screen: "Shadowmend: The Long Light" as `/gains-demo/title`, from the Design build, with intro-then-loop music and a Begin that opens Zone 1
+
+The game's front door. The name is a proposal to the team (they have not signed off), so the two text strings must stay trivially editable. Source: `Gains for Teens/Design System Assets/title-plate/`.
+
+**Assets → `public/long-light/title/`:**
+- `design/Title Screen.html` — the Design build. Read `design/README.md` first: it documents the layers, class hooks, the entrance timeline (`.is-entered` + per-group `--in` delays), the begin API (`TitleScreen.onBegin(fn)`, `TitleScreen.begin()`, the bubbling `titlescreen:begin` DOM event, `.is-begun`), the mute API (`TitleScreen.setMuted(bool)`, `titlescreen:mute` event), and reduced motion.
+- `design/assets/title-plate.png` (1080×1920) → `plate.webp`; `design/assets/spark-flicker-sheet.png` → `spark-sheet.webp` (keep alpha).
+- **Music:** `loops/title-music-intro.mp3` (46 s, plays once) then `loops/title-music-loop.mp3` (44 s, seamless loop). They are cut on beats to hand off gaplessly: start the loop exactly when the intro's `ended` fires (or schedule it on the Web Audio clock if the shared audio manager can; a 20–50 ms gap is audible here, so prefer the clock). Ambience: `Walkable Zones/Zone 2/Music/loops/z2-amb-forest.mp3` under it at 40 %. Levels are pre-set (−20 / −23 / −28 LUFS); do not re-normalize.
+
+**1. Port, don't rewrite.** Mount the Design HTML as a component the same way the zone overlay sets are inlined: plate as the base image, the SVG layers and `motion.css` on top, in the standard 9:16 phone frame, `contain`-scaled. Keep Design's class hooks and timings; swap the font stack variable (`--font-display`) to the app's display font if it differs. Replace the two image paths with the served webp paths. **Title text**: read the two strings from one place (`src/components/gains/title/titleCopy.js` or the zone config module): `TITLE = 'SHADOWMEND'`, `SUBTITLE = 'The Long Light'`, and inject them into `#title-line1` / `#title-line2` so a rename is a one-line change. The README notes the shimmer copy re-syncs on edit; make sure that still happens after injection.
+
+**2. Audio + begin.** The screen shows with audio unlocked only after a gesture, so: the first tap anywhere unlocks the audio manager and starts intro → loop (+ ambience) if not already playing; Design's begin fires on any tap, so **wrap it**: the first tap on the screen unlocks audio and does *not* begin if audio was locked (show the prompt pulsing a little brighter for 2 s as the acknowledgment); the next tap begins. If audio is already unlocked when the screen mounts (came from another page after a gesture), music starts with the entrance and the first tap begins. The mute icon toggles both tracks and remembers its state for the session. Reduced motion: as in the Design build.
+
+**3. Begin → Zone 1.** On begin: fade the music to 0 over 1.5 s while the screen fades to black over 1 s, then route to `/gains-demo/zone1` (the Dark Abyss ambience takes over there; the drop from the warm theme into near-silence is intentional). Pass a flag so Zone 1 knows it came from the title (so it can skip its own "Begin" button and open straight on the title card + `z1-00`). Zone 1 opened directly (no flag) behaves as today.
+
+**4. Page + review.** Route **`/gains-demo/title`**, feedback default `review-title` (add the tag). Review card **first** in the review list, above Zone 1: "Title screen — Shadowmend: The Long Light (proposed)", tag `review-title`, "Open the title screen →". Blurb: "A proposed name and the game's first screen. The whole journey in one frame: the lantern at your feet, the trail up through the camp, the broken bridge, the pond, and the Beacon on Mount Hope. Tap to begin drops you into Zone 1. The name is a proposal, so tell us what you think of it." Keep the demo hub's own header unchanged (the name is not adopted yet).
+
+**Verify.** `/gains-demo/title`: entrance runs as designed (lantern catches, lamps light bottom to top, Beacon blooms, title in the upper left, sparks and motes, prompt after ~3 s); one spark loops the title every 15–20 s; first tap unlocks and starts the music (intro, then a gapless hand-off into the loop; listen for the seam at ~46 s); mute works; second tap fades out and lands on Zone 1's title card with no Begin button in between; Zone 1 opened directly still shows its Begin. Reduced motion: static composition, fades only. Review card + tag. Clean console, clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 97.*
