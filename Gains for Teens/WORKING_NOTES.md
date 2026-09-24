@@ -152,6 +152,37 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **073c4a7** (2026-09-24) — Draft 96: **Zone 2 first-play fixes -- VO
+  queueing, friend occlusion, bubble placement.** Full spec in
+  `### Draft 96` below (marked SHIPPED there). Three fixes from Josh's
+  first playtest of Draft 94/95. (1) `z2-00-welcome` (5.7s) was getting
+  cut off by `z2-01-arrive`, which fired on the same fixed title-card
+  timer regardless of whether welcome had actually finished -- `arrive`
+  now queues behind welcome's own promise instead. Also added a hard
+  timeout to `lockAndSay` (mirroring `firstLightScene.js`'s `arrive()`
+  courtesy) so a VO line whose audio never settles can't soft-lock the
+  player forever -- a real robustness gap this exposed, not just a
+  symptom of this one call site, and worth watching for in other zones.
+  (2) The Traveler and Spark's glow were rendering in front of the
+  friend at a station, hiding the before/after cross-fade the beat is
+  about. `zoneWalkScene.js` gains `setActiveStation()`/`depthCapFor()`:
+  while a station is active, both are clamped to a depth just behind
+  that friend regardless of the exact stand point, so the fix holds
+  even if a stand point is off by a few px -- re-tuned the stand points
+  themselves too (Emberwick/Mirefly, above the fire, were landing at a
+  larger y than the friend; Hollowshell/Dimmet moved to the side
+  instead of toward the fire). Spark's idle hover now also treats every
+  friend's perch as a no-hover zone, not just the active one. (3) The
+  thanks bubble was drawn over the friend for Emberwick/Mirefly, who
+  sit close enough to the top of the plate that the usual "anchor
+  above" placement ran off-frame -- below a screen-position threshold,
+  `StationSequence` now anchors it beside the friend (on the fire side)
+  instead; Hollowshell/Dimmet keep the original above-anchor. Verified
+  live at all four stations: friend fully visible through the video
+  close, quiz, hold-to-light, lesson, and thanks, for both the
+  "friend above the fire" and "friend below the fire" cases. Draft 97
+  (the title screen) is next in Ideas/drafts below.
+
 - **50f20d6** (2026-09-24) — Draft 95: **Zone 2 Phase B -- the Focusing
   Lens assembly and the Fogline traversal.** Full spec in `### Draft 95`
   below (marked SHIPPED there). After the fourth camp part: a new
@@ -5266,7 +5297,7 @@ Runs on top of Draft 94. Design doc sections 5, 6, 7, 8, 8b of the Zone 2 concep
 
 *End of Draft 95.*
 
-### Draft 96 — Zone 2 first-play fixes: welcome line cut off, Spark and the Traveler stand clear of the friends, thank-you bubble above the friend
+### Draft 96 — Zone 2 first-play fixes: welcome line cut off, Spark and the Traveler stand clear of the friends, thank-you bubble above the friend — ✅ SHIPPED 073c4a7 (2026-09-24)
 
 Josh's first pass on Draft 94 (Supabase `review-zone2`, 2026-09-24). Zone 2 plays well; three fixes.
 
