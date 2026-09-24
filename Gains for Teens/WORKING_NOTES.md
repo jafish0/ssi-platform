@@ -152,6 +152,65 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **af18372** (2026-09-24) — Draft 97: **Title screen -- "Shadowmend: The
+  Long Light" at `/gains-demo/title`.** Full spec in `### Draft 97` below
+  (marked SHIPPED there). Ports the Design build (`Gains for Teens/Design
+  System Assets/title-plate/design/Title Screen.html`) close to verbatim
+  into a 9:16 React page (`GainsTitlePage.jsx`): plate + SVG layers +
+  `motion.css`, the procedural spark/mote field (drift/mid/quick tiers,
+  one "hero" spark that loops the title every ~15-20s), the entrance
+  timeline, and the two-tap gesture gate -- first tap unlocks audio and
+  shows an acknowledgment pulse (no navigation), second tap begins.
+  `titleCopy.js` holds the two strings (`SHADOWMEND` / `The Long Light`)
+  so the not-yet-adopted name is a one-line change. Music is a genuinely
+  gapless intro (46s) -> loop (44s) handoff, scheduled up front on the
+  Web Audio clock (`introSrc.start(startAt)`,
+  `loopSrc.start(startAt + introBuf.duration)`) rather than an
+  `ended`-event handoff -- the first Web-Audio-clock-scheduled gapless
+  audio in this codebase (everywhere else uses `zoneAudio.js`'s HTMLAudio
+  crossfade, chosen here specifically because a 20-50ms gap would be
+  audible on this loop). Begin fades music + screen to black, then routes
+  to `/gains-demo/zone1?fromTitle=1`.
+  **Two bugs found and fixed during live browser verification, not in the
+  original draft:** (1) Zone 1's own `FROM_TITLE` flag was written as a
+  module-level `const` evaluated once at module-load time
+  (`new URLSearchParams(window.location.search).has('fromTitle')`) --
+  since the title-screen -> Zone-1 navigation is a client-side SPA route
+  change, the module is never re-parsed, so the constant stayed frozen at
+  whatever it read the first time `GainsZonePage.jsx` was ever loaded in
+  the tab (effectively always `false`), and Zone 1's Begin screen showed
+  even with `?fromTitle=1` correctly in the URL. Fixed by replacing it
+  with `useSearchParams()` read inside the component body (`const
+  fromTitle = searchParams.has('fromTitle')`), which IS re-evaluated on
+  every fresh mount of the route. **Real, general bug class worth
+  remembering:** any `const X = ...window.location.search...` at module
+  scope in this SPA is a bug waiting to happen the first time something
+  navigates to it client-side rather than via a hard page load --
+  `DEV_SKIP` a few lines above `FROM_TITLE` has the identical latent
+  flaw, just not yet hit because nothing currently routes to a zone page
+  with `?dev` via `navigate()`. (2) `unlockAndPlay()`'s buffer
+  fetch+decode is the one real `await` in the unlock path; a fast second
+  tap navigates away and the unmount cleanup closes the `AudioContext`
+  before that decode resolves, so the resolved continuation tried to
+  `createBufferSource()`/`.start()` on an already-closed context --
+  harmless (Zone 1's own audio takes over regardless) but logged three
+  browser warnings every time, which would have failed the draft's own
+  "clean console" verify item. Fixed with an early return
+  (`if (ctx.state === 'closed') return`) right after the decode resolves.
+  Verified end-to-end in the browser, both locally and on
+  `ssi.ctac.app` post-deploy: entrance timeline, gapless music handoff
+  (code-reviewed: both sources scheduled up front on the same clock, no
+  timer-based handoff to race), mute, reduced-motion (CSS media query +
+  a JS branch that freezes sparks at a static resting frame instead of
+  animating -- code-reviewed, not runtime-toggled), the two-tap gate in a
+  fresh tab (first tap = unlock only, stays on title; second tap =
+  begins), a full replay with sessionStorage already unlocked (single tap
+  = begin immediately, per the draft's own documented shortcut), Zone 1
+  opened directly with no flag still shows its normal Begin screen (no
+  regression), the review card (now first, `review-title` tag) rendering
+  correctly on `/gains-demo`, and a clean console with zero errors or
+  warnings through the whole flow on both environments.
+
 - **073c4a7** (2026-09-24) — Draft 96: **Zone 2 first-play fixes -- VO
   queueing, friend occlusion, bubble placement.** Full spec in
   `### Draft 96` below (marked SHIPPED there). Three fixes from Josh's
@@ -5311,7 +5370,7 @@ Josh's first pass on Draft 94 (Supabase `review-zone2`, 2026-09-24). Zone 2 play
 
 *End of Draft 96.*
 
-### Draft 97 — Title screen: "Shadowmend: The Long Light" as `/gains-demo/title`, from the Design build, with intro-then-loop music and a Begin that opens Zone 1
+### Draft 97 — Title screen: "Shadowmend: The Long Light" as `/gains-demo/title`, from the Design build, with intro-then-loop music and a Begin that opens Zone 1 — ✅ SHIPPED af18372 (2026-09-24)
 
 The game's front door. The name is a proposal to the team (they have not signed off), so the two text strings must stay trivially editable. Source: `Gains for Teens/Design System Assets/title-plate/`.
 
