@@ -36,6 +36,8 @@ import GainsVideosPage from './pages/GainsVideosPage.jsx'
 import GainsBodyMapPage from './pages/GainsBodyMapPage.jsx'
 import GainsMindfulPage from './pages/GainsMindfulPage.jsx'
 import GainsGuardianPage from './pages/GainsGuardianPage.jsx'
+import ResilientDemoPage from './pages/ResilientDemoPage.jsx'
+import ResilientDesignSystemPage from './pages/ResilientDesignSystemPage.jsx'
 
 function AdminRoutes() {
   return (
@@ -156,6 +158,9 @@ export default function App() {
       <Route path="/gains-demo/bodymap" element={<GainsBodyMapPage />} />
       <Route path="/gains-demo/mindful" element={<GainsMindfulPage />} />
       <Route path="/gains-demo/guardian" element={<GainsGuardianPage />} />
+      {/* Resilient Roots review hub + its dedicated pages (Resilient Roots Draft 1). */}
+      <Route path="/resilient-demo" element={<ResilientDemoPage />} />
+      <Route path="/resilient-demo/design-system" element={<ResilientDesignSystemPage />} />
       {/* The Plan now ships as the seventh activity (Draft 39). The
           /the-plan entry point (montage closer CTA) redirects into the
           sandbox-hosted activity. */}
