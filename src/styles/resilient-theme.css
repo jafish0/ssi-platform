@@ -1,0 +1,220 @@
+/* Resilient Roots design tokens (Resilient Roots Draft 1, 2026-09-24).
+ *
+ * Imported from Holly's Claude Design export at
+ * `Resilient Roots/Design System Export/tokens/*.css` (colors, typography,
+ * spacing, elevation, motion) and ported verbatim except for scoping: the
+ * source declares everything on `:root`, but this app also serves Ready for
+ * Roots and GAINS, so every custom property below lives under
+ * `.resilient-theme` instead. Nothing outside an element carrying that
+ * class can see these variables. Apply `.resilient-theme` once on the
+ * Resilient Roots route root (see ResilientDemoPage / DemoPageShell) and
+ * everything under it inherits. The GAINS tokens use some of the same
+ * names (--surface-card, --shadow-card); the two scopes never nest, so
+ * they never collide.
+ *
+ * Product code should use the semantic aliases (--surface-card, --accent,
+ * --text-body), not the raw ramps.
+ */
+
+/* Figtree, the one family (display 600/700, body 400). The export pulls it
+ * via a Google Fonts @import; an @import that isn't first in Vite's CSS
+ * bundle is dropped by the browser, so these are the same font files as
+ * explicit @font-face rules (as gains-tokens.css does for Nunito).
+ * @font-face can't be scoped, but it has no effect anywhere font-family
+ * doesn't reference "Figtree", which only .resilient-theme does.
+ * SUBSTITUTION (flagged by the export, pending Holly's confirmation): the
+ * storyboard deck specifies Aptos Display + Calibri, which don't ship as
+ * webfonts. */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/figtree/v9/_Xms-HUzqDCFdgfMm4q9DbZs.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/figtree/v9/_Xms-HUzqDCFdgfMm4S9DQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------- tokens/colors.css ---------- */
+.resilient-theme{
+  /* ---- Base palette: sage (brand spine, from deck header bands) ---- */
+  --sage-900:#2F4A3D;--sage-800:#3D5B47;--sage-700:#4F7563;--sage-600:#6A9B84;
+  --sage-500:#84B59F;--sage-400:#A2C8B6;--sage-300:#C0DACE;--sage-200:#D8E8E0;
+  --sage-100:#E9F1ED;--sage-50:#F3F8F5;
+
+  /* ---- Base palette: teal (icon discs, interactive accents) ---- */
+  --teal-900:#25404A;--teal-800:#335863;--teal-700:#416B79;--teal-600:#50808E;
+  --teal-500:#6796A3;--teal-400:#8DB2BC;--teal-300:#B4CED5;--teal-200:#D5E4E8;--teal-100:#EAF1F3;
+
+  /* ---- Base palette: slate ink (body copy) ---- */
+  --ink-900:#222C33;--ink-800:#2C3A43;--ink-700:#36454F;--ink-600:#4E606B;
+  --ink-500:#6B7C86;--ink-400:#8E9CA4;--ink-300:#B4BEC4;--ink-200:#D6DCDF;--ink-100:#ECEFF1;
+
+  /* ---- Base palette: paper (from the logo's textured cream ground) ---- */
+  --paper-100:#FFFFFF;--paper-200:#FCFAF6;--paper-300:#FAF6F0;--paper-400:#F2EDE4;
+
+  /* ---- Base palette: gold (logo leaves; sparing highlight only) ---- */
+  --gold-700:#9C7A3D;--gold-600:#B98F4C;--gold-500:#C9A567;--gold-300:#E3CE9F;--gold-100:#F6EEDC;
+
+  /* ---- Semantic: surfaces ---- */
+  --surface-page:var(--paper-300);
+  --surface-card:var(--paper-100);
+  --surface-sunken:var(--sage-100);
+  --surface-band:var(--sage-500);
+  --surface-band-deep:var(--sage-800);
+  --surface-inverse:var(--ink-800);
+
+  /* ---- Semantic: text ---- */
+  --text-body:var(--ink-700);
+  --text-heading:var(--ink-800);
+  --text-muted:var(--ink-500);
+  --text-on-band:var(--paper-100);
+  --text-on-accent:var(--paper-100);
+  --text-link:var(--teal-700);
+  --text-link-hover:var(--teal-900);
+
+  /* ---- Semantic: interactive ---- */
+  --accent:var(--teal-600);
+  --accent-hover:var(--teal-700);
+  --accent-press:var(--teal-800);
+  --accent-soft:var(--teal-100);
+  --brand:var(--sage-500);
+  --brand-hover:var(--sage-600);
+  --brand-press:var(--sage-700);
+  --brand-soft:var(--sage-100);
+  --highlight:var(--gold-500);
+  --highlight-soft:var(--gold-100);
+
+  /* ---- Semantic: lines ---- */
+  --border-subtle:var(--ink-200);
+  --border-strong:var(--ink-300);
+  --border-brand:var(--sage-300);
+  --focus-ring:var(--teal-600);
+
+  /* ---- Semantic: status (clinical, low-alarm) ---- */
+  --ok:#4F7563;--ok-soft:#E4EFE9;
+  --caution:#B98F4C;--caution-soft:#F6EEDC;
+  --alert:#A85A4B;--alert-soft:#F6E7E3;
+  --info:var(--teal-600);--info-soft:var(--teal-100);
+}
+
+/* ---------- tokens/typography.css ---------- */
+.resilient-theme{
+  --font-display:"Figtree","Aptos Display","Segoe UI",system-ui,sans-serif;
+  --font-body:"Figtree","Segoe UI",system-ui,sans-serif;
+
+  --fw-regular:400; /* @kind other */
+  --fw-medium:500; /* @kind other */
+  --fw-semibold:600; /* @kind other */
+  --fw-bold:700; /* @kind other */
+
+  /* Screen scale (1rem = 16px) */
+  --fs-display:clamp(2.25rem,6vw,3.5rem); /* @kind font */
+  --fs-h1:2rem;--fs-h2:1.5rem;--fs-h3:1.25rem;--fs-h4:1.0625rem;
+  --fs-body-lg:1.125rem;--fs-body:1rem;--fs-body-sm:0.9375rem;
+  --fs-caption:0.8125rem;--fs-eyebrow:0.75rem;
+
+  --lh-tight:1.1; /* @kind other */
+  --lh-heading:1.25; /* @kind other */
+  --lh-body:1.5; /* @kind other */
+  --lh-relaxed:1.65; /* @kind other */
+
+  /* deck titles are wide-tracked all-caps */
+  --ls-display:0.06em; /* @kind other */
+  --ls-eyebrow:0.14em; /* @kind other */
+  --ls-body:0; /* @kind other */
+
+  /* Vertical-slide scale, 1080x1920 canvas, in px */
+  --slide-title:106px;--slide-body:64px;--slide-label:64px;
+  --slide-row-title:48px;--slide-row-body:37px;--slide-numeral:64px;
+}
+
+/* ---------- tokens/spacing.css ---------- */
+.resilient-theme{
+  --space-0:0;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;
+  --space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;
+  --space-16:64px;--space-20:80px;--space-24:96px;
+
+  --gutter-screen:20px;      /* mobile app edge gutter */
+  --gutter-screen-lg:32px;
+  --measure:62ch; /* @kind other */
+  --measure-narrow:46ch; /* @kind other */
+
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --radius-pill:999px;--radius-circle:50%;
+  --radius-card:var(--radius-lg);
+  --radius-control:var(--radius-pill);
+
+  --hit-min:44px;            /* never smaller: participants use phones */
+  --control-h-sm:36px;--control-h-md:44px;--control-h-lg:52px;
+
+  --border-w:1px; /* @kind spacing */
+  --border-w-strong:2px; /* @kind spacing */
+}
+
+/* ---------- tokens/elevation.css ---------- */
+.resilient-theme{
+  /* Shadows are soft, green-tinted and low-contrast: printed-paper, not glassy UI. */
+  --shadow-none:none;
+  --shadow-sm:0 1px 2px rgba(47,74,61,.06),0 1px 1px rgba(47,74,61,.04);
+  --shadow-card:0 2px 8px rgba(47,74,61,.07);
+  --shadow-raised:0 6px 20px rgba(47,74,61,.10);
+  --shadow-overlay:0 18px 48px rgba(34,44,51,.20);
+  --shadow-inset:inset 0 1px 2px rgba(47,74,61,.08);
+  --ring-focus:0 0 0 3px rgba(80,128,142,.32);
+  --scrim:rgba(34,44,51,.48); /* @kind color */
+  --blur-overlay:blur(6px); /* @kind other */
+}
+
+/* ---------- tokens/motion.css ---------- */
+.resilient-theme{
+  /* Calm and settled. Nothing bounces, nothing springs. */
+  --ease-standard:cubic-bezier(.4,0,.2,1); /* @kind other */
+  --ease-out:cubic-bezier(0,0,.2,1); /* @kind other */
+  --ease-in:cubic-bezier(.4,0,1,1); /* @kind other */
+  --dur-instant:80ms; /* @kind other */
+  --dur-fast:140ms; /* @kind other */
+  --dur-base:220ms; /* @kind other */
+  --dur-slow:360ms; /* @kind other */
+  --dur-breath:4000ms; /* @kind other */
+  --transition-control:background-color var(--dur-fast) var(--ease-standard),
+                       color var(--dur-fast) var(--ease-standard),
+                       border-color var(--dur-fast) var(--ease-standard),
+                       box-shadow var(--dur-fast) var(--ease-standard); /* @kind other */
+}
+@media (prefers-reduced-motion:reduce){.resilient-theme{
+  --dur-fast:0ms; /* @kind other */
+  --dur-base:0ms; /* @kind other */
+  --dur-slow:0ms; /* @kind other */
+  --dur-breath:0ms; /* @kind other */
+}}
+
+/* ---------- theme base ---------- */
+/* The route root paints the cream page and sets Figtree + slate body copy,
+ * so un-styled text under the scope reads as Resilient Roots. No element
+ * selectors beyond this: `.resilient-theme a` would outrank Tailwind
+ * utility classes on Link-buttons (0,1,1 beats 0,1,0). */
+.resilient-theme {
+  background: var(--surface-page);
+  color: var(--text-body);
+  font-family: var(--font-body);
+}
+/* Focus ring from the export (never removed). */
+.resilient-theme :focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+/* The export's loading spinner keyframes (Button `loading`). */
+@keyframes rr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

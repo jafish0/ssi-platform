@@ -14,6 +14,10 @@ import FeedbackButton from './FeedbackButton.jsx'
 // `homeTo` / `homeLabel` / `footerPath` let the GAINS demo reuse this
 // layout with its own identity; `feedbackProgram` / `feedbackSections`
 // pass through to FeedbackButton. Defaults keep the RfR /demo unchanged.
+// `rootClassName` replaces the page background class (Resilient Roots
+// passes its `.resilient-theme` scope, which paints its own cream ground);
+// `hero` renders full-bleed between the header and main (Resilient Roots'
+// sage band). Both default to the original behavior.
 export default function DemoPageLayout({
   children,
   narrow = false,
@@ -24,9 +28,11 @@ export default function DemoPageLayout({
   feedbackProgram = 'ready-for-roots',
   feedbackSections = null,
   feedbackDefaultSection = null,
+  rootClassName = 'bg-ctac-teal-50',
+  hero = null,
 }) {
   return (
-    <div className="min-h-screen bg-ctac-teal-50 flex flex-col">
+    <div className={'min-h-screen flex flex-col ' + rootClassName}>
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-[1100px] mx-auto px-4 py-4 flex items-center justify-between gap-3 flex-wrap">
           <Link to={homeTo} className="inline-flex items-center gap-2 text-slate-800">
@@ -49,6 +55,8 @@ export default function DemoPageLayout({
           involved.
         </div>
       )}
+
+      {hero}
 
       <main className={'flex-1 px-4 py-6 ' + (narrow ? 'max-w-[760px] mx-auto w-full' : 'max-w-[1100px] mx-auto w-full')}>
         {children}
