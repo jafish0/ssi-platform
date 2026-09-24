@@ -36,6 +36,18 @@ live in their own file, `Gains for Teens/WORKING_NOTES.md`, with independent dra
 numbering. When working on GAINS, read that file; the root `WORKING_NOTES.md` stays
 Ready for Roots plus any shared-platform / SessionEngine work that affects both.
 
+**Third program — Resilient Roots.** A third single-session intervention (for
+expecting parents who have experienced trauma; PI Holly Huber Gifford) is in
+development on this same app. Its planning and history live in
+`Resilient Roots/WORKING_NOTES.md`, with independent draft numbering. When working
+on Resilient Roots, read that file; Cowork drafts there, Code implements and logs
+there. Code uses the short prefix `resilient` (routes `/resilient-demo…`, files,
+the `.resilient-theme` token scope, `public/resilient/`) and the feedback program
+slug `resilient-roots`.
+
+The three programs' notes files look alike (same sections, same conventions), so
+confirm which program the task is for before reading one.
+
 ## After every push (Claude Code only)
 
 1. If the change came from a draft in "Ideas / drafts," move that draft
