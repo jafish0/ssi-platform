@@ -72,6 +72,15 @@ function deriveContext(pathname, params) {
   }
   const gainsKey = Object.keys(gainsPages).find((k) => pathname === k || pathname.startsWith(k + '/'))
   if (gainsKey) return { area: gainsPages[gainsKey], activity_id: null, activity_version: null }
+  // Resilient Roots Draft 1: the demo hub and its dedicated review pages.
+  if (pathname === '/resilient-demo' || pathname === '/resilient-demo/') {
+    return { area: 'Resilient Roots demo', activity_id: null, activity_version: null }
+  }
+  const resilientPages = {
+    '/resilient-demo/design-system': 'Resilient Roots: Design system',
+  }
+  const resilientKey = Object.keys(resilientPages).find((k) => pathname === k || pathname.startsWith(k + '/'))
+  if (resilientKey) return { area: resilientPages[resilientKey], activity_id: null, activity_version: null }
   return { area: pathname, activity_id: null, activity_version: null }
 }
 

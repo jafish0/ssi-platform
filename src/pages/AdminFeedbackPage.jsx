@@ -10,6 +10,7 @@ import { RefreshCw, MessageSquare, ChevronDown, ChevronRight, Download } from 'l
 import AdminLayout from '../components/AdminLayout.jsx'
 import { supabase } from '../lib/supabase.js'
 import { rowsToCSV, downloadCSV, todayStamp } from '../lib/csv.js'
+import { RESILIENT_FEEDBACK_SECTIONS } from './resilientFeedbackSections.js'
 
 const STATUSES = [
   { value: 'new', label: 'New', cls: 'bg-ctac-teal-100 text-ctac-teal-800' },
@@ -30,6 +31,7 @@ const CATEGORIES = [
 const PROGRAMS = [
   { value: 'ready-for-roots', label: 'Ready for Roots', cls: 'bg-emerald-100 text-emerald-800' },
   { value: 'gains-teens', label: 'GAINS Teens', cls: 'bg-amber-100 text-amber-800' },
+  { value: 'resilient-roots', label: 'Resilient Roots', cls: 'bg-lime-100 text-lime-800' },
 ]
 
 // GAINS demo section slugs → readable labels (see GainsDemoPage). Current
@@ -75,6 +77,24 @@ const SECTION_LABELS = {
   'pre-post': 'Pre/Post Measures',
   'concept-art': 'Concept Art',
   pitch: 'The pitch (written)',
+}
+
+// Resilient Roots section slugs → labels (Resilient Roots Draft 1). Kept in
+// their own map because the programs reuse slugs ('general' reads
+// "General" for GAINS, "General note" here); sectionLabel() checks the
+// row's program first. When a Resilient Roots tag is retired, add its
+// slug + label to this object so historical rows still label.
+const RESILIENT_SECTION_LABELS = {
+  ...Object.fromEntries(RESILIENT_FEEDBACK_SECTIONS.map((s) => [s.value, s.label])),
+  // (no retired tags yet)
+}
+
+function sectionLabel(row) {
+  if (!row.section) return null
+  if (row.program === 'resilient-roots' && RESILIENT_SECTION_LABELS[row.section]) {
+    return RESILIENT_SECTION_LABELS[row.section]
+  }
+  return SECTION_LABELS[row.section] || row.section
 }
 
 const SUBMITTER_LABELS = {
@@ -419,10 +439,10 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
         </td>
         <td className="px-3 py-3 text-slate-700">
           <ProgramBadge value={row.program} />
-          <span className={row.program === 'gains-teens' ? 'ml-2' : ''}>{row.area || '—'}</span>
+          <span className={row.program && row.program !== 'ready-for-roots' ? 'ml-2' : ''}>{row.area || '—'}</span>
           {row.section && (
             <span className="ml-2 text-[12px] text-slate-500">
-              · {SECTION_LABELS[row.section] || row.section}
+              · {sectionLabel(row)}
             </span>
           )}
           {row.activity_version && (
@@ -470,7 +490,7 @@ function FeedbackRow({ row, expanded, saving, onToggle, onUpdate }) {
                 </div>
                 <div>
                   <div className="text-[12px] uppercase tracking-wide text-slate-500">Section</div>
-                  <div className="text-slate-700">{row.section ? (SECTION_LABELS[row.section] || row.section) : '—'}</div>
+                  <div className="text-slate-700">{row.section ? sectionLabel(row) : '—'}</div>
                 </div>
                 <div>
                   <div className="text-[12px] uppercase tracking-wide text-slate-500">Activity version</div>
