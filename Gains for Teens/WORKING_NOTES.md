@@ -70,6 +70,26 @@ Asks pointed the other way — things Cowork/Josh need to source or decide.
 
 ---
 
+## 🅿 Parked ideas (Cowork/Josh; not for the current zone, do not pick up unprompted)
+
+- **Spark rides along on the Flight and the Ascent (Josh, 2026-09-24).** Today Spark is
+  absent from the Zone 3 wingsuit traversal and the Zone 4 climb; both play as solo arcades.
+  Idea: put her in the frame (small, tucked to a corner or trailing the Traveler) and give
+  her lines: reinforce the controls at the start ("Tilt to steer, catch the gold"), then
+  shared-adventure reactions during play ("Woo-hoo! We're flying!", "Second Wind, right
+  there, grab it!", a relieved line on arrival). Same pattern as the First Light and the
+  Fogline, where she already talks the player through. Needs: a few Spark 5 lines per
+  traversal, a small Spark sprite or glow for the arcade frame, and cue points in
+  flightScene / climbScene. Pick up after Zone 2 ships.
+
+- **Real gameplay b-roll in Spark's intro video (Josh, 2026-09-24).** Once the game is
+  content-complete, re-cut Video 0 (Spark's intro) with screenshots and screen-recorded
+  gameplay of the actual zones, traversals, and activities as b-roll under her narration,
+  replacing the concept-art stills. Cowork/Josh job (capture + Design/Premiere re-render +
+  Vimeo swap), then a one-line Code draft to swap the Vimeo id. Not before all zones ship.
+
+---
+
 ## ✍ Writing style (standing rule)
 
 - **No em dashes inside a sentence.** Josh, 2026-08-06: "I really don't like them, let's
@@ -131,6 +151,50 @@ gradients and layered depth.
 ---
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
+
+- **3c4a257** (2026-09-24) — Draft 94: **Zone 2 "The Lantern Path," Phase
+  A -- two plates, Video 2, the four-friend camp, per-plate music.** Full
+  spec in `### Draft 94` below (marked SHIPPED there). Built as a
+  bespoke `GainsZone2Page` alongside the shared walkable-zone template
+  (`GainsZonePage`/`zones.js`), not a retrofit of it -- Zone 2's shape
+  (free-order multi-station plate, no activity/gear beat on plate 1,
+  per-plate music/ambience with hard duck rules) is different enough
+  from Zones 1/3/4 that extending the shared template risked regressing
+  them. `zoneWalkScene.js` gained an optional `stations` array and a
+  `noPondTarget` escape hatch (Zone 2's plate 2 reuses the single-
+  ellipse exclusion field for the fire, not as a tappable target) --
+  Zones 1/3/4's single-`pond` shape is untouched. New
+  `createZone2Audio` audio manager (parallel to `createZoneAudio`) for
+  the per-plate music/ambience/duck-context rules item 1f specifies.
+  New `StationSequence.jsx` (the quiz-chip → hold-the-lantern →
+  lesson+thanks → part-to-tray beat, data-driven off each station in
+  `zone2Config.js`) and `PartsTray.jsx` (the 4-slot HUD strip). Verified
+  live end to end: all four stations (Dimmet, Emberwick, Mirefly,
+  Hollowshell) in free order, the fire brightening each time, the parts
+  tray filling, and the exit unlocking only once all four are done --
+  including the temporary Phase-A end card ("You've gathered all four
+  parts... The Focusing Lens is coming in the next build."). Fixed two
+  real bugs found in that verification pass: (1) `exitUnlocked` is one
+  flag shared across both plates, so it read as already-open the
+  instant plate 2 loaded (carried over from plate 1) -- now reset to
+  `false` on the plate1→plate2 transition; (2) `handleArrivePlate2` had
+  no case at all for arriving at the exit, so reaching it after all
+  four stations did nothing -- added the `transitionTo('end')` case,
+  then re-verified the fix live (confirmed the scene reaches `'end'`
+  and the end card renders). Also fixed a stale-`onended`-handler bug
+  (React StrictMode's dev-only double-invoke orphaning an earlier
+  `speak()` call's promise) that had resurfaced in the new
+  `StationSequence`/`createZone2Audio` code -- same fix as Draft 92,
+  `addEventListener(..., {once:true})` instead of a bare property
+  assignment, applied to both audio managers this time. Wired into
+  review: new `review-zone2` card between Zone 1 and Zone 3 (all
+  later cards renumbered), the four station videos added to
+  `REVIEW_VIDEOS`/`gainsFeedbackSections.js`, and Zone 1's end card
+  ("Continue to the Lantern Path →") now links live instead of being
+  disabled. Confirmed `redirectExitVideo` (tapping plate 1's exit
+  before Video 2) fires the correct line. Draft 95 (Phase B -- the
+  Focusing Lens build-view assembly, its GearAward, and the new
+  Fogline traversal type) is queued next in Ideas/drafts below.
 
 - **32fffaf** (2026-09-22) — Draft 93: **Zone 1-only tap pointer, Mindful
   Place intro-before-Begin, measured breathing sync, instant climb
@@ -5048,3 +5112,92 @@ The cycle correctly stops while a red blocks the path, but after the tap-to-blas
 **Verify.** Zone 1: pointer still appears on Spark, the pool, and the exit, correctly anchored; Zones 3 and 4: no pointer anywhere. Mindful Place in Zone 4: intro line plays as the activity opens, Begin enables when it ends; standalone page: "Tap to start" → intro → "Begin". Breathing: rings and frog land on every one of Spark's phase starts including the final breathe-out and hold. Ascent: blast a red, climbing resumes immediately while the shatter plays. Clean console, clean build. `src/` → no version bump. Paste into WORKING_NOTES, mark shipped, log Recently-shipped.
 
 *End of Draft 93.*
+
+### Draft 94 — Zone 2 "The Lantern Path", Phase A: two plates, Video 2, the camp with four free-order friend stations (station video → name it → hold the lantern → thank-you → part to tray), the fire that grows, per-plate music — ✅ SHIPPED 3c4a257 (2026-09-24)
+
+Zone 2 is the second zone and the first one with more than one station. Design doc: `Gains for Teens/Walkable Zones/Zone 2/Zone 2 — Concept (…).md` (sections 1–4, 7, 8, 8b). Build it on the zone-config template (Drafts 80/83) with the new capabilities below. Phase B (Draft 95, right after this one) adds the Focusing Lens assembly, the gear award, and the Fogline traversal; **stub the Phase B hand-off** so Phase A is playable end to end today (after the fourth friend, Spark's `z2-10` line plays and an end card appears).
+
+**Assets (source `Gains for Teens/Walkable Zones/Zone 2/` → served `public/long-light/zone2/`). Convert PNGs to webp; VO stays mp3.**
+- **Plates:** `zone2-plate1.png` (the Lantern Path), `zone2-plate2.png` (the camp), both 1296×2304 → `plate1.webp`, `plate2.webp`.
+- **Overlays:** `overlays/plate1/` (lamp-glow, embers, lantern-sway, fog, exit-glow + motion.css) → `ov/plate1/`; `overlays/plate2/` (fire, sparks, fog, motes, exit-glow + motion.css) → `ov/plate2/`. Same loader as Zone 1; blend modes per each file's `<desc>`. **Plate 2 specifics:** `layer-fire.svg` reads a CSS variable `--fire-level` (0–4) on an ancestor; `layer-exit-glow.svg` brightens when it has class `is-open`. Read `overlays/plate2/motion.css` for the exact hooks.
+- **Traveler = stage 2:** `sprites/traveler-stage2-*.png` (idle front/back, walk front/back/side/side-left 1–6, 26 frames, 640 px tall, already keyed) → `traveler/`. Apply `TRAVELER_H` as in Zone 1.
+- **Spark** = existing flicker frames.
+- **Friends** (keyed, transparent; each before/after pair shares one canvas and is bottom-aligned, so swapping them in place needs no offset): `friends/emberwick-before.png` + `-after.png` (1112×1083), `friends/mirefly-before/after.png` (658×1092), `friends/hollowshell-before/after.png` (1124×1074), `friends/dimmet-before/after.png` (682×984) → `friends/`. Display them at roughly the Traveler's waist height (about 0.75 × `TRAVELER_H`); Hollowshell and Emberwick are wide, scale by height.
+- **Friend VO** (four ElevenLabs voices, normalized −16 LUFS): `friends/f2-<friend>-01-say.mp3` (the station video's audio; not played in-game, the video carries it) and `friends/f2-<friend>-02-thanks.mp3` (played in-game after the light) → `audio/friends/`.
+- **Station videos (Vimeo, 704×1280, 16–19 s, no on-screen text):** Emberwick id `1229872174` h `af0ffa46d4`; Mirefly id `1229872199` h `36e4d74a97`; Hollowshell id `1229872207` h `c2e7c80508`; Dimmet id `1229872170` h `7bc6212f82`. (Local masters in `friends/videos/` if a fallback is ever needed.)
+- **Parts** (keyed, shared 1605×1605 canvas, centered): `parts/part-steadyring.png`, `part-clearglass.png`, `part-openclasp.png`, `part-kindlewick.png` → `parts/`. Serve at ~256 px for the tray.
+- **Spark VO** (Spark 5, −16 LUFS) from `Walkable Zones/Zone 2/`: `z2-00-welcome`, `z2-01-arrive`, `z2-02-follow-me`, `z2-03-camp-arrive`, `z2-04-name-it`, `z2-05-hint-emberwick`, `z2-05-hint-mirefly`, `z2-05-hint-hollowshell`, `z2-05-hint-dimmet`, `z2-06-hold-lantern`, `z2-lesson-emberwick`, `z2-lesson-mirefly`, `z2-lesson-hollowshell`, `z2-lesson-dimmet`, `z2-07-part-hint-1`, `z2-08-part-hint-2`, `z2-09-part-hint-3`, `z2-10-all-parts`, `z2-13-redirect-friends-first`, `z2-14-redirect-exit-before-video` → `audio/`. (Phase B uses `z2-gear-spark`, `z2-11-ready`, `z2-12-exit-transition`, `z2-15-redirect-exit-before-lens`, `t2-*`; copy them now too.)
+- **Music + ambience** (loop-ready, seams baked in): `Music/loops/z2-music-plate1.mp3` (−20 LUFS, 150 s), `z2-music-plate2.mp3` (−20, 95 s), `z2-amb-campfire.mp3` (−26, 91 s), `z2-amb-forest.mp3` (−28, 137 s) → `audio/`. (`z2-music-fogline.mp3` is for Phase B; copy it now.)
+- **Video 2** = the Four Reactions, id `1227442904` h `46f782197e` (already in `REVIEW_VIDEOS`).
+- SFX: reuse Zone 4's pack; plus a soft "part snap / chime" — reuse the gear-equip chime for now.
+
+**1. Template additions (keep Zones 1/3/4 playing identically).**
+
+a. **Multiple free-order stations.** A zone config may carry `stations: [ … ]` instead of a single `station`. Each station: `{ id, name, position, sprites: { before, after }, video: { id, h }, answer, vo: { hint, lesson, thanks }, part: { id, src } }`. Any order; all required before the exit opens. A station already completed is inert (tapping it does nothing, or Spark says a one-line "They're okay now" bubble with no VO). While a station is mid-sequence, other stations and the exit are not interactable.
+
+b. **The station sequence** (one component, data-driven, same for all four; movement locked throughout via `lockAndSay` semantics):
+   1. **Tap the friend** → the Traveler walks to a stand point just in front of the friend (offset ~90 px toward the fire) and faces them. Spark glides alongside.
+   2. **Watch:** the station video plays **in-frame** (Vimeo SDK, same player as the zone videos; unmuted off the tap that started this, "Tap for sound" fallback as elsewhere). `ended` → close the player.
+   3. **Name it:** Spark says `z2-04-name-it` and a **four-chip picker** appears over the lower third: *Reactivity · Intrusion · Avoidance · Negative mood and thoughts* (fixed order, same every time). Correct chip → it lights gold, the others fade; go to 4. Wrong chip → it dims and stays dimmed, Spark plays that station's **`vo.hint`**, the player picks again. No score, no fail, no counter.
+   4. **Hold the lantern:** Spark says `z2-06-hold-lantern`; a press-and-hold ring appears on the friend. While held, a warm pool of lantern light grows over the friend (reuse the First Light pool shader/graphic) and the sprite **cross-fades `before` → `after` over ~2 s**, driven by hold time. Release early → it pauses where it is; hold again → continues. On complete: a small flare, the ring goes away.
+   5. **Lesson + thanks:** Spark plays `vo.lesson` (this is also the "correct!" confirmation; there is no separate confirm line), then the friend's `vo.thanks` plays with a speech bubble from the friend (their name as the bubble label). **Audio only, no second video.**
+   6. **Part to tray:** the part sprite pops out of the friend, arcs, and lands in the **parts tray** (item e). Then Spark's part hint: `z2-07` after the first part, `z2-08` after the second, `z2-09` after the third, `z2-10-all-parts` after the fourth (that one is the Phase B hand-off).
+   7. **Fire brightens:** `--fire-level` on plate 2 steps up by one (0 → 4 over the four friends), with a 1 s ease so the flicker layer doesn't jump. Unlock movement.
+
+c. **Before/after sprites** are static images (no idle animation needed); keep a soft breathing scale (±1.5 %, 4 s) on both states so they read as alive. Depth-sort them with the Traveler.
+
+d. **Redirects:** tapping the exit before all four → `z2-13-redirect-friends-first`; tapping the exit on plate 1 before Video 2 → `z2-14-redirect-exit-before-video`. When the fourth friend is done: exit-glow gets `is-open`, exit becomes tappable.
+
+e. **Parts tray:** a slim HUD strip at the top of the stage (below the existing gear HUD if both show; otherwise same row), four empty slots with faint outlines, filling left to right in the order collected. Persist across plates within the zone. Reduced motion: the part fades into its slot instead of arcing.
+
+f. **Per-plate music + ambience.** A plate may declare `music` and `ambience` URLs. On plate change: fade the outgoing music out over 2 s, then fade the incoming in over 3 s (**no overlap** — the tracks are in different keys). Ambience crossfades normally (2 s overlap). **Ducking:** during the **zone video** (Video 2), duck music to **0** (the video carries its own score) and ambience to 30 %; during a **station video**, music to **35 %**, ambience to 50 % (those videos have no music); during Spark or friend VO, the usual duck. Restore over 1 s.
+
+**2. Zone 2 config** (positions in the 1080×1920 logical plate; fine-tune by eye).
+- `title`: "Zone 2: The Lantern Path" · title card **"The Lantern Path"** + `z2-00-welcome`. Traveler = stage 2.
+- **Plate 1** (`plate1.webp`, `ov/plate1/`, music `z2-music-plate1`, ambience `z2-amb-forest`): entry at the bottom of the path (~560, 1800); the path winds up: waypoints roughly (560,1800) → (600,1500) → (600,1300) → (470,1100) → (480,950) → (600,800) → (620,650) → (500,520) → (560,400) → (650,300) → (700,180); **Spark waits on the path about a third of the way up** (~470, 1000); station = Spark herself: tap → walk → `z2-01-arrive` → **Video 2 in-frame** → `ended` → `z2-02-follow-me` → the **exit is the lit gate at the top** (~715, 120); exit → plate 2. Walkable = the paved path only. No "Tap here" pointer (`showTapHere: false`, Zone 1 only).
+- **Plate 2** (`plate2.webp`, `ov/plate2/`, music `z2-music-plate2`, ambience `z2-amb-campfire` **plus** keep `z2-amb-forest` running underneath at 60 %): entry bottom center (~562, 1836); Spark waits between the entry and the fire (~551, 1148) → `z2-03-camp-arrive` on arrival (lock during it). **Fire** center (~551, 792), non-walkable disc r≈120 with its stone ring. **Stations:** Emberwick on the upper-left rock (~310, 626); Mirefly on the upper-right log (~803, 637); Hollowshell on the lower-left log (~293, 976); Dimmet on the lower-right rock (~803, 999). Each friend sits on their rock/log, facing the fire. **Exit** at the top right between the two rocks (~872, 333), locked until all four. Walkable = the clearing floor minus the fire disc and minus the four friend perches. `--fire-level` starts at 0.
+- **Station data:** Emberwick answer = Reactivity, part `steadyring`; Mirefly = Intrusion, `clearglass`; Hollowshell = Avoidance, `openclasp`; Dimmet = Negative mood and thoughts, `kindlewick`. Hints/lessons/thanks per the filenames above (`z2-05-hint-<friend>`, `z2-lesson-<friend>`, `f2-<friend>-02-thanks`).
+- **Phase A hand-off (temporary):** after the fourth part and `z2-10-all-parts`, show an end card: "You've gathered all four parts." + "The Focusing Lens is coming in the next build." + Play again. Draft 95 replaces this with the assembly.
+
+**3. Page + review.** Route **`/gains-demo/zone2`**, full-screen stage like the others, feedback default `review-zone2` (add the tag). Review card **between Zone 1 and Zone 3** (renumber): "Zone 2: The Lantern Path — walkable zone (playable prototype)", tag `review-zone2`, "Play Zone 2 →". Blurb: "After the First Light, the trail is lit. Spark shows you the video on the four trauma reactions, then takes you to a camp where four other travelers have gotten stuck, one with each reaction. Listen to each of them, name what's going on, and hold your lantern up to help them see it. Each one gives you a lantern part. (The Focusing Lens and the Fogline traversal come in the next build.)" Also add the four station videos to `REVIEW_VIDEOS` after Video 5, titled "Zone 2 station — Emberwick (reactivity)", "… Mirefly (intrusion)", "… Hollowshell (avoidance)", "… Dimmet (negative mood and thoughts)", each with its own comment box (`video-z2-emberwick` etc.). Zone 1's end card "Continue to the Lantern Path →" becomes live and links to `/gains-demo/zone2`.
+
+**Verify.** `/gains-demo/zone2`: Begin → "The Lantern Path" + welcome, plate 1 music fades in → walk up to Spark → arrive line → Video 2 in-frame with music at 0 → follow-me → exit at the gate (redirect if tapped early) → plate 2, music switches cleanly (out, then in), campfire + forest ambience → camp-arrive line → **each station in any order:** walk over → station video (music at 35 %) → four chips, wrong pick dims + hint, right pick lights → hold-to-light with a visible before→after cross-fade that pauses on release → lesson → friend's thank-you bubble + audio → part arcs to the tray → part hint → fire visibly brighter. Completed friends are inert. Exit locked until four, then glows and opens → `z2-10` → temporary end card. Reduced motion: no arc, fades only. Zones 1/3/4 unchanged. Review card, tag, four videos on the videos page, Zone 1 end-card link. Clean console, clean build. `src/`, `public/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 94.*
+
+### Draft 95 — Zone 2, Phase B: build the Focusing Lens at the fire (drag the four parts onto the Lantern), the gear award with the clarity ring, and the Fogline traversal (drag a lens through fog, focus a stone, hop)
+
+Runs on top of Draft 94. Design doc sections 5, 6, 7, 8, 8b of the Zone 2 concept. Replaces Phase A's temporary end card.
+
+**Assets (same source/served folders as Draft 94):**
+- **Gear:** `gear/gear-focusing-lens.png` (1683×1683, keyed, no light beam baked in) → `gear/`; **equipped figure** `gear/traveler-stage2-lens-celebrate.png` (1117×2189) → `gear/`. Zone 1's Lantern gear image `gear-lantern.png` is the assembly's base object (already served for Zone 1; reuse).
+- **Parts:** the four from Draft 94.
+- **Fogline plate:** `fogline-slope.png` (already 1080×1920) → `fogline/plate.webp`; **overlays** `overlays/fogline/` (fog-a, fog-b, mist-top, motes, lamp-glow + motion.css) → `ov/fogline/`.
+- **Spark VO:** `z2-gear-spark`, `z2-11-ready`, `z2-12-exit-transition`, `z2-15-redirect-exit-before-lens`, `t2-01-start`, `t2-02-first-stone`, `t2-03a-first-shape`, `t2-03b-shape-resolves`, `t2-04-halfway`, `t2-05-arrive`.
+- **Music:** `z2-music-fogline.mp3` (−20 LUFS, 72 s loop) for the traversal; `z2-amb-forest` continues under it at 40 %.
+- SFX: part snap (reuse chime), a soft "clarity swell" for the ring (reuse the gear reveal swell), a stone-focus tick (reuse the First Light glimmer tick), hop footsteps by surface.
+
+**1. The assembly (after `z2-10-all-parts`).** Spark glides to the fire; the Traveler auto-walks to a stand point just below the fire (~551, 940). Then a full-frame **build view** slides up over the plate (the plate stays dimmed behind; music continues):
+- The **Lantern** (Zone 1's gear image) large in the center. Around the edges, the **four parts** from the tray, draggable. On the Lantern, **four faint outlines** where each part goes: the **Steadyring** around the brass collar under the cap; the **Clearglass** on the front face; the **Openclasp** on the front edge of the door (left of the glass); the **Kindlewick** inside at the base of the flame. (Match the finished `gear-focusing-lens.png`: the ring at the collar, the glass front and center, the clasp at the door edge, the wick at the flame base.)
+- Drag a part onto its outline → **snap** with a chime and a small flare; the outline fills. Drop it anywhere else → it drifts back to the edge, no penalty, no message. Any order. Touch targets generous (the outline plus ~40 px).
+- **Fourth snap:** the Lantern pulses, the whole build view cross-fades the base Lantern image to `gear-focusing-lens.png`, and a **ring of clarity** expands from the lens outward across the full frame (a circular mask that sharpens/brightens as it passes; the dimmed plate behind comes up to full as the ring reaches it). About 1.5 s, with the swell. **No beam sweep.** Reduced motion: no ring, a 0.5 s fade.
+- Then cut to the standard **GearAward**: name "Focusing Lens", item `gear-focusing-lens`, equipped figure `traveler-stage2-lens-celebrate`, title **"You built the Focusing Lens!"**, subline **"Look closely at something and it gets clearer, and smaller, and you can see the next step."**, `sparkLineAudio` = `z2-gear-spark` (plays on the **reveal** screen, Equip gated until it ends, per Draft 92). Slot **2** fills. The parts tray empties (parts fly into the lens on the reveal) and then hides.
+- Back on plate 2: the friends are all in their after states, fire at level 4, `z2-11-ready` plays (lock during it; it is a 17 s line, with a pause in the middle where Spark turns from the friends to the player). Exit glow `is-open`. Tapping the exit before the lens is built (i.e., between `z2-10` and the assembly, if the player somehow can) → `z2-15-redirect-exit-before-lens`.
+
+**2. The Fogline traversal — new `TraversalGame mode="fogline"` → `src/game/foglineScene.js`.** Reuse the walkable-zone engine for the Traveler, Spark companion, depth sort, and footsteps; movement here is **hop-to-stone only**, no free walking.
+- **Stage:** `fogline/plate.webp` with `ov/fogline/` layers. The **fog** is `layer-fog-a` + `layer-fog-b` at high opacity (~0.9 combined) over the whole plate above the lamps, plus `mist-top` at the plateau. Below the fog, the plate is fully painted (the stones and objects exist in the art).
+- **The lens:** a circle (radius ~150 px at 1080 logical; make it a constant) with a thin brass rim, drawn from the Focusing Lens's glass. **Drag it anywhere** (it follows the finger/pointer with a little lag; on release it stays where it is). Inside the lens the fog layers are **masked out** (alpha mask) so the plate shows sharp; a soft feathered edge (~30 px). Outside, fog drifts as the overlays animate. The lens is **independent of the Traveler**: it can be far ahead of them.
+- **Stones (the hop graph, bottom to top, from concept §8b):** start (540, 1720) between the lamps; S1 (545, 1435), S2 (445, 1275), S3 (575, 1130), S4 (485, 985), S5 (590, 860), S6 (525, 725), S7 (605, 605), S8 (515, 500), S9 (590, 415), S10 (530, 315); arrival (540, 225). Wire all ten; each stone's hop target is the **next** stone only (linear).
+- **Focus rule:** the next stone is **inert until focused**: the lens center must be within ~140 px of the stone and **held still (movement < 8 px) for 0.5 s**. When it focuses: a soft tick and a thin **gold rim** fades in around the stone; it is now tappable. Moving the lens away keeps it focused (once seen, stays seen). Tap the focused stone → the Traveler **hops** (a short arc, ~0.5 s, walk-front/back frames are fine) and lands; Spark trails. Only the next stone can be focused; stones further up don't rim even if the lens passes over them (they still show in the lens, as art).
+- **Looming shapes:** two silhouettes drawn **above the fog** as dark soft blobs: a **hunched figure** over the bush (250, 590) and a **tall thin figure** over the stump (845, 1195). When the lens is held on a shape for 0.5 s, the silhouette **shrinks and fades out** over ~0.8 s, leaving the real bush/stump visible inside the lens (the art). Each resolves once. First resolve triggers `t2-03b`.
+- **Spark lines:** `t2-01-start` on mount (lock the lens until it ends; then the lens appears with a brief pulse). `t2-02-first-stone` when S1 first focuses. `t2-03a-first-shape` when the lens **first passes within ~200 px of either looming shape** without stopping (nudge to hold), `t2-03b-shape-resolves` when the first shape resolves. `t2-04-halfway` on landing S5. `t2-05-arrive` on landing at the arrival point: the fog layers fade out over 2 s, revealing the plateau and the broken bridge; then the end card.
+- **Assist:** if the player has not focused the next stone within ~12 s, a faint glimmer (the First Light glimmer) pulses once at that stone's position; repeat every 8 s. No timer, no fail, no text hints beyond Spark.
+- **Music:** `z2-music-fogline` fades in as the traversal mounts (plate 2's music faded out during the transition card), forest ambience at 40 %.
+- **Reduced motion:** fog layers static at 0.8, lens still draggable, hop is an instant reposition with a fade, no looming-shape shrink (they just fade).
+- **Standalone page** `/gains-demo/fogline` (like `/gains-demo/firstlight`), feedback default `review-fogline` (add the tag), review card after Zone 2's card: "The Fogline — traversal (Zone 2 → 3)", "Play the Fogline →", blurb: "Fog makes everything look bigger than it is. Drag the Focusing Lens around to see what's really there, hold it on a stone to bring it into focus, then hop. Look closely and the path shows itself one step at a time."
+
+**3. Wiring into Zone 2.** `traversalMode: 'fogline'`; transition card **"Into the Mistfields!"** + `z2-12-exit-transition`, then the Fogline mounts in-frame. `onComplete` → end card: **"You reached the Mistfields."** + result line + **"Continue to the Mistfields →"** linking to `/gains-demo/zone3` + Play again. Remove Phase A's temporary end card. Update the Zone 2 review blurb (drop the parenthetical) and add the Fogline card.
+
+**Verify.** Full run: Draft 94 flow → fourth part → `z2-10` → build view: drag each part, wrong drop drifts back, right drop snaps with chime; fourth snap → lantern becomes the Focusing Lens image → clarity ring sweeps out → GearAward reveal with Spark's line, Equip gated, celebrate figure, slot 2 fills, tray gone → back on the plate, `z2-11-ready` with the pause intact → exit open → "Into the Mistfields!" → Fogline: fog covers the slope, `t2-01`, lens appears; drag it, fog clears inside only, stones only rim after a still half-second on the **next** stone, tap → hop; the two shapes loom above the fog and shrink to a bush and a stump when focused; Spark lines fire at the right moments; idle glimmer after 12 s; arrival clears the fog onto the bridge → end card → Zone 3 link. Standalone `/gains-demo/fogline` works. Reduced motion paths. Zones 1/3/4 unchanged. Clean console, clean build. `src/`, `public/` → no version bump. Log Recently-shipped + mark shipped.
+
+*End of Draft 95.*
