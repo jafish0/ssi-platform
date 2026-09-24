@@ -27,6 +27,7 @@ import GainsTraversalPage from './pages/GainsTraversalPage.jsx'
 import GainsClimbPage from './pages/GainsClimbPage.jsx'
 import GainsFirstLightPage from './pages/GainsFirstLightPage.jsx'
 import GainsZone1Page from './pages/GainsZone1Page.jsx'
+import GainsZone2Page from './pages/GainsZone2Page.jsx'
 import GainsZone3Page from './pages/GainsZone3Page.jsx'
 import GainsZone4Page from './pages/GainsZone4Page.jsx'
 import GainsPretestPage from './pages/GainsPretestPage.jsx'
@@ -145,6 +146,7 @@ export default function App() {
       <Route path="/gains-demo/firstlight" element={<GainsFirstLightPage />} />
       {/* Walkable-zone prototypes (GAINS Draft 68, Zone 3 added Draft 80). */}
       <Route path="/gains-demo/zone1" element={<GainsZone1Page />} />
+      <Route path="/gains-demo/zone2" element={<GainsZone2Page />} />
       <Route path="/gains-demo/zone3" element={<GainsZone3Page />} />
       <Route path="/gains-demo/zone4" element={<GainsZone4Page />} />
       {/* Dedicated 9:16 pages for the review cards (GAINS Draft 71). */}

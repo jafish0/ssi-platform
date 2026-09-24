@@ -57,6 +57,13 @@ const SPARK_SRC_H = 255
 const SPARK_ALPHA = 0.96
 const SPARK_HALO_ALPHA = 0.26
 const FROG_W = 105 // at depth-scale 1; scaled down with distance like everything else
+// Draft 94 (Zone 2, item 1): the four camp friends -- "roughly the
+// Traveler's knee to waist height" -- displayed bottom-anchored like the
+// frog, scaled by height like everything else at depth-scale 1.
+const FRIEND_H = TRAVELER_H * 0.75
+// A tap within this of a station friend's own spot counts as tapping them
+// (matches INTERACT_R.pond's scale -- friends are a similar-sized target).
+const STATION_R = 150
 const WALK_SPEED = 250 // logical px/s at depth-scale 1
 // Phase C tune: 8 fps over the 6-frame cycle puts the two footfalls at
 // ~2.7 steps/s, closer to a walk than 9 fps's near-jog cadence.
@@ -275,7 +282,116 @@ const ZONE1_MAIN = {
   depth: { yNear: 1780, yFar: 120, sNear: 1.0, sFar: 0.58 },
 }
 
-const ZONES = { zone4: ZONE4, zone3: ZONE3, zone1intro: ZONE1_INTRO, zone1main: ZONE1_MAIN }
+// Draft 94 (Zone 2): a uniform-width walkable ribbon along a waypoint
+// chain, generated rather than hand-authored per segment -- Zone 2's trail
+// winds through many more waypoints than Zones 1/3/4's, and the overlay art
+// (not this polygon) is what actually reads as "the path" to the player, so
+// a consistent width is a fair trade for not hand-tuning ~10 quads by eye.
+function ribbon(points, width) {
+  const half = width / 2
+  const polys = []
+  for (let i = 1; i < points.length; i++) {
+    const [ax, ay] = points[i - 1]
+    const [bx, by] = points[i]
+    const dx = bx - ax
+    const dy = by - ay
+    const len = Math.hypot(dx, dy) || 1
+    const nx = (-dy / len) * half
+    const ny = (dx / len) * half
+    polys.push([
+      [ax + nx, ay + ny],
+      [bx + nx, by + ny],
+      [bx - nx, by - ny],
+      [ax - nx, ay - ny],
+    ])
+  }
+  return polys
+}
+
+// ---- Zone 2: The Lantern Path (two connected plates, Draft 94) --------
+// Plate 1: the arrival trail, same shape as Zone 1's -- walk up to Spark
+// (the station is Spark herself, no separate pond/activity spot), watch
+// Video 2, then to the exit at the top. Coordinates verbatim from the
+// draft (`Gains for Teens/Walkable Zones/Zone 2/Zone 2 — Concept...md` §2).
+const ZONE2_PLATE1_PATH = [
+  [560, 1800], [600, 1500], [600, 1300], [470, 1100], [480, 950],
+  [600, 800], [620, 650], [500, 520], [560, 400], [650, 300], [700, 180],
+]
+const ZONE2_PLATE1 = {
+  spots: {
+    start: { x: 560, y: 1800 },
+    sparkWait: { x: 300, y: 960 },
+    sparkStand: { x: 470, y: 1000 },
+    // No separate station on this plate -- Spark herself is it (see the
+    // file header's note on what a "pond" here means). Parked off-canvas
+    // so the shared hit-test code always has real numbers to read.
+    pond: { x: -4000, y: -4000 },
+    exit: { x: 715, y: 120 },
+    exitStand: { x: 715, y: 120 },
+  },
+  pondHover: { x: -4000, y: -4000 },
+  polys: ribbon(ZONE2_PLATE1_PATH, 260),
+  grassPolys: [],
+  nodes: ZONE2_PLATE1_PATH,
+  edges: ZONE2_PLATE1_PATH.slice(1).map((_, i) => [i, i + 1]),
+  lightPathNodes: [3, 4, 5, 6, 7, 8, 9, 10],
+  depth: { yNear: 1800, yFar: 180, sNear: 1.0, sFar: 0.6 },
+}
+
+// Plate 2: the camp clearing. No single "station" -- `stations` (Draft 94,
+// item 1a) lists the four friends, any order, all required. The fire is a
+// non-walkable disc (reusing the existing single-ellipse exclusion field,
+// `pond`, despite the name -- it's just "the one thing you can't walk
+// through").
+const ZONE2_PLATE2 = {
+  spots: {
+    start: { x: 562, y: 1836 },
+    sparkWait: { x: 551, y: 1148 },
+    sparkStand: { x: 551, y: 1148 },
+    pond: { x: -4000, y: -4000 }, // no single station here -- see `stations`
+    exit: { x: 872, y: 333 },
+    exitStand: { x: 872, y: 333 },
+  },
+  pondHover: { x: -4000, y: -4000 },
+  // The fire -- not walkable, r≈120. Reuses the single-ellipse exclusion
+  // field but is NOT an interactable (see `noPondTarget`/hitInteractable).
+  pond: { x: 551, y: 792, rx: 120, ry: 120 },
+  noPondTarget: true,
+  // A generous clearing floor; the fire ellipse above carves out its disc.
+  polys: [
+    [[380, 1836], [744, 1836], [744, 1500], [380, 1500]],
+    [[300, 1500], [820, 1500], [900, 1000], [220, 1000]],
+    [[180, 1000], [940, 1000], [1000, 500], [120, 500]],
+    [[300, 500], [960, 500], [960, 260], [300, 260]],
+  ],
+  grassPolys: [0, 1, 2, 3],
+  nodes: [
+    [562, 1836], [551, 1450], [551, 1148], [551, 950], [872, 333],
+  ],
+  edges: [[0, 1], [1, 2], [2, 3], [3, 4]],
+  lightPathNodes: [2, 3, 4],
+  depth: { yNear: 1836, yFar: 260, sNear: 1.0, sFar: 0.62 },
+  // Draft 94 (item 1a): the four free-order friend stations. `x/y` is where
+  // the friend sits; `standX/standY` is ~90px toward the fire, where the
+  // Traveler stops to face them (see the concept doc's own stand-point
+  // note). Station data (name/answer/vo/part) lives in zones.js -- this is
+  // only the geometry the scene needs to hit-test and route to.
+  stations: [
+    { id: 'emberwick', x: 310, y: 626, standX: 384, standY: 677 },
+    { id: 'mirefly', x: 803, y: 637, standX: 726, standY: 684 },
+    { id: 'hollowshell', x: 293, y: 976, standX: 366, standY: 924 },
+    { id: 'dimmet', x: 803, y: 999, standX: 733, standY: 942 },
+  ],
+}
+
+const ZONES = {
+  zone4: ZONE4,
+  zone3: ZONE3,
+  zone1intro: ZONE1_INTRO,
+  zone1main: ZONE1_MAIN,
+  zone2plate1: ZONE2_PLATE1,
+  zone2plate2: ZONE2_PLATE2,
+}
 
 // ---- geometry helpers -------------------------------------------------
 function pointInPoly(px, py, poly) {
@@ -336,6 +452,12 @@ export function makeZoneWalkScene(Phaser) {
       Object.entries(c.travelerUrls || {}).forEach(([k, url]) => this.load.image(`t-${k}`, url))
       ;(c.sparkUrls || []).forEach((url, i) => this.load.image(`spark-${i}`, url))
       if (c.frogUrl) this.load.image('frog', c.frogUrl)
+      // Draft 94 (Zone 2): the camp friends' before/after textures, keyed
+      // by station id (matches `zone.stations[].id`).
+      ;(c.friends || []).forEach((f) => {
+        this.load.image(`friend-${f.id}-before`, f.before)
+        this.load.image(`friend-${f.id}-after`, f.after)
+      })
       // A missing file must never take the zone down.
       this.load.on('loaderror', (file) => {
         // eslint-disable-next-line no-console
@@ -366,6 +488,7 @@ export function makeZoneWalkScene(Phaser) {
 
       this.buildTraveler()
       this.buildSpark()
+      this.buildStations()
       this.buildMarkers()
       this.buildInput()
 
@@ -424,6 +547,15 @@ export function makeZoneWalkScene(Phaser) {
     setProgress(p) {
       this.progress = { ...this.progress, ...p }
       if (this.ready) this.applyProgress()
+      // Draft 94: a station marked done by React (its sequence completed)
+      // but not yet reflected here (e.g. the scene just (re)mounted) snaps
+      // straight to its after-image -- the crossfade itself only plays out
+      // live, driven by setStationLight during the actual hold gesture.
+      if (p.stationsDone && this.stations) {
+        Object.keys(p.stationsDone).forEach((id) => {
+          if (p.stationsDone[id] && this.stations[id] && !this.stations[id].done) this.setStationLight(id, 1)
+        })
+      }
     }
 
     // Spark glides toward a spot (the "follow me" gesture toward the pond),
@@ -807,7 +939,14 @@ export function makeZoneWalkScene(Phaser) {
       const target = this.hitInteractable(x, y)
       if (target) {
         this.emit({ type: 'tap', target })
-        const stand = target === 'spark' ? this.sparkStandPoint() : target === 'pond' ? z.spots.pond : z.spots.exitStand
+        const st = target.startsWith('station:') && z.stations && z.stations.find((s) => `station:${s.id}` === target)
+        const stand = st
+          ? { x: st.standX, y: st.standY }
+          : target === 'spark'
+            ? this.sparkStandPoint()
+            : target === 'pond'
+              ? z.spots.pond
+              : z.spots.exitStand
         this.showTapMarker(stand.x, stand.y)
         this.walkTo(stand.x, stand.y, target)
         return
@@ -824,9 +963,23 @@ export function makeZoneWalkScene(Phaser) {
       // Objectives first, so a companion Spark hovering near the exit or
       // the pond can't steal the tap meant for them.
       if (Phaser.Math.Distance.Between(x, y, z.spots.exit.x, z.spots.exit.y) < INTERACT_R.exit) return 'exit'
+      // Draft 94 (Zone 2, item 1a): free-order stations. A completed one is
+      // inert -- `this.stations[id].done` -- so re-tapping it falls through
+      // to a plain walk-there tap instead of retriggering the sequence.
+      if (z.stations) {
+        for (const st of z.stations) {
+          if (this.stations && this.stations[st.id] && this.stations[st.id].done) continue
+          if (Phaser.Math.Distance.Between(x, y, st.x, st.y) < STATION_R) return `station:${st.id}`
+        }
+      }
+      // Draft 94: Zone 2's plate 2 reuses `z.pond` purely as a walkable
+      // exclusion (the fire) with no matching interactable -- `stations`
+      // replaces it as the tap target, so this whole check is skipped
+      // there (`noPondTarget`).
       const pondHit =
-        (z.pond && inEllipse(x, y, { ...z.pond, rx: z.pond.rx + 40, ry: z.pond.ry + 40 })) ||
-        Phaser.Math.Distance.Between(x, y, z.spots.pond.x, z.spots.pond.y) < INTERACT_R.pond
+        !z.noPondTarget &&
+        ((z.pond && inEllipse(x, y, { ...z.pond, rx: z.pond.rx + 40, ry: z.pond.ry + 40 })) ||
+          Phaser.Math.Distance.Between(x, y, z.spots.pond.x, z.spots.pond.y) < INTERACT_R.pond)
       if (pondHit) return 'pond'
       if (this.spark && Phaser.Math.Distance.Between(x, y, this.spark.x, this.spark.y) < INTERACT_R.spark) return 'spark'
       return null
@@ -1022,6 +1175,64 @@ export function makeZoneWalkScene(Phaser) {
       if (!this.sparkHalo) return
       this.sparkHalo.setPosition(this.spark.x, this.spark.y + 10 * s)
       this.sparkHalo.setScale(1.9 * s).setDepth(groundY + 0.9)
+    }
+
+    // ---- Zone 2 camp friends (Draft 94, item 1) ----
+    // Each friend is two stacked images (before, after) at the same spot;
+    // the "after" one starts at alpha 0 (or 1, for a station already
+    // completed in an earlier run/StrictMode remount) and ramps up as the
+    // player holds the lantern on them -- a plain crossfade, not a texture
+    // swap, so it can pause and resume mid-fade. Inserted in before-then-
+    // after order so "after" naturally paints on top at the same depth.
+    buildStations() {
+      const z = this.zone
+      if (!z.stations || !z.stations.length) return
+      this.stations = {}
+      z.stations.forEach((st) => {
+        const beforeKey = `friend-${st.id}-before`
+        const afterKey = `friend-${st.id}-after`
+        if (!this.textures.exists(beforeKey)) return
+        const s = this.depthScale(st.y)
+        const scaleFor = (img) => (FRIEND_H * s) / img.height
+        const before = this.add.image(st.x, st.y, beforeKey).setOrigin(0.5, 1)
+        before.setScale(scaleFor(before)).setDepth(st.y)
+        const after = this.textures.exists(afterKey)
+          ? this.add.image(st.x, st.y, afterKey).setOrigin(0.5, 1).setScale(scaleFor(before)).setDepth(st.y).setAlpha(0)
+          : null
+        if (!this.reduced) {
+          const targets = after ? [before, after] : [before]
+          this.tweens.add({
+            targets,
+            scaleX: '+=0.015',
+            scaleY: '+=0.015',
+            duration: 4000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          })
+        }
+        this.stations[st.id] = { before, after, done: false }
+      })
+    }
+
+    // Draft 94: driven by the React-side press-and-hold gesture (see
+    // StationSequence) -- `t` is 0..1, the after-image's alpha. Setting it
+    // to 1 (or back below 1, though the host never does that once lit)
+    // is exactly what "release early, pauses; hold again, continues" needs
+    // -- there's no separate paused/resumed state to track here at all.
+    setStationLight(id, t) {
+      const st = this.stations && this.stations[id]
+      if (!st || !st.after) return
+      st.after.setAlpha(Phaser.Math.Clamp(t, 0, 1))
+      st.done = t >= 1
+    }
+
+    // The live on-screen position of a friend (for React to position the
+    // quiz chips / hold-ring overlay precisely over them), same technique
+    // as `pointerPosFor`.
+    stationPosFor(id) {
+      const st = this.zone.stations && this.zone.stations.find((s) => s.id === id)
+      return st ? { x: st.x, y: st.y } : null
     }
 
     // ---- interactable markers ----

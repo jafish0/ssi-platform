@@ -15,7 +15,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 const SCENE_KEY = 'ZoneWalk'
 
 const ZoneStage = forwardRef(function ZoneStage(
-  { zoneId, base, mapFile = 'map.webp', spriteBase, frogUrl, reducedMotion = false, onEvent, progress, paused = true, started = false },
+  { zoneId, base, mapFile = 'map.webp', spriteBase, frogUrl, friends, reducedMotion = false, onEvent, progress, paused = true, started = false },
   ref,
 ) {
   const containerRef = useRef(null)
@@ -74,6 +74,7 @@ const ZoneStage = forwardRef(function ZoneStage(
           travelerUrls,
           sparkUrls: [1, 2, 3, 4].map((i) => `${sb}/spark/flicker-${i}.webp`),
           frogUrl, // optional -- only Zone 4's pond has a frog
+          friends, // optional -- Draft 94 (Zone 2): [{ id, before, after }]
           reducedMotion,
           onEvent: (evt) => {
             if (evt.type === 'ready') {
@@ -109,7 +110,7 @@ const ZoneStage = forwardRef(function ZoneStage(
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoneId, base, mapFile, spriteBase, frogUrl, reducedMotion])
+  }, [zoneId, base, mapFile, spriteBase, frogUrl, friends, reducedMotion])
 
   useEffect(() => {
     const s = scene()
@@ -141,6 +142,17 @@ const ZoneStage = forwardRef(function ZoneStage(
     pointerPosFor(target) {
       const s = scene()
       return s ? s.pointerPosFor(target) : null
+    },
+    // Draft 94 (Zone 2): the camp friends' crossfade + live position, for
+    // the press-and-hold lantern gesture and its overlay UI (both owned by
+    // React -- see StationSequence.jsx).
+    setStationLight(id, t) {
+      const s = scene()
+      if (s) s.setStationLight(id, t)
+    },
+    stationPosFor(id) {
+      const s = scene()
+      return s ? s.stationPosFor(id) : null
     },
   }))
 

@@ -40,8 +40,14 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-ascent', label: 'Review: The Ascent (climb)' },
   { value: 'review-firstlight', label: 'Review: The First Light (traversal)' },
   { value: 'review-zone1', label: 'Review: Zone 1 walkable zone' },
+  { value: 'review-zone2', label: 'Review: Zone 2 walkable zone' },
   { value: 'review-zone3', label: 'Review: Zone 3 walkable zone' },
   { value: 'review-zone4', label: 'Review: Zone 4 walkable zone' },
+  // Draft 94: the four Zone 2 camp station videos, each its own comment box.
+  { value: 'video-z2-emberwick', label: 'Review: Zone 2 station — Emberwick (reactivity)' },
+  { value: 'video-z2-mirefly', label: 'Review: Zone 2 station — Mirefly (intrusion)' },
+  { value: 'video-z2-hollowshell', label: 'Review: Zone 2 station — Hollowshell (avoidance)' },
+  { value: 'video-z2-dimmet', label: 'Review: Zone 2 station — Dimmet (negative mood and thoughts)' },
   // The official breakdown
   // assent-measures — superseded by review-pretest/review-posttest (Draft
   // 54, 2026-09-01): the packet moved back into the review section since

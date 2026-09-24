@@ -128,11 +128,9 @@ export const ZONES = {
       subTextColor: 'rgba(58,29,5,.85)',
       heading: 'You reached the Lantern Path.',
       subtitle: null,
-      // Zone 2 doesn't exist yet -- shown as a disabled preview rather
-      // than a real link (Draft 83).
-      nextHref: null,
+      // Draft 94: Zone 2 now exists (Phase A) -- live link.
+      nextHref: '/gains-demo/zone2',
       nextLabel: 'Continue to the Lantern Path',
-      nextDisabled: true,
     },
     feedbackSection: 'review-zone1',
   },

@@ -1,0 +1,44 @@
+/* motion.css — Zone 2 Fogline slope (traversal) overlay idle loops.
+   Inline the SVGs, then include this file. Per-element durations/delays are in each element's style attribute.
+   Blend: fog-a / fog-b / mist-top normal · motes / lamp-glow screen.
+   The lens: mask #layer-fog-a and #layer-fog-b (or their containers) in code; set their final opacity there too. */
+:root{--ease-soft:cubic-bezier(.45,0,.2,1);--ease-drift:cubic-bezier(.4,0,.6,1)}
+
+/* layer-fog-a / layer-fog-b — normal. Linear, seamless wrap: each loop moves exactly one tile. */
+.layer-fog-a__x{animation:fl-a-x 180s linear infinite}
+.layer-fog-a__y{animation:fl-a-y 900s linear infinite}
+@keyframes fl-a-x{from{transform:translateX(0)}to{transform:translateX(-1080px)}}
+@keyframes fl-a-y{from{transform:translateY(0)}to{transform:translateY(1920px)}}
+.layer-fog-b__x{animation:fl-b-x 240s linear infinite}
+.layer-fog-b__y{animation:fl-b-y 600s linear infinite}
+@keyframes fl-b-x{from{transform:translateX(-1080px)}to{transform:translateX(0)}}
+@keyframes fl-b-y{from{transform:translateY(0)}to{transform:translateY(-1920px)}}
+
+/* layer-mist-top — normal */
+.mist{animation-name:fl-drift-l,fl-breathe;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;animation-direction:alternate}
+.mist--r{animation-name:fl-drift-r,fl-breathe}
+@keyframes fl-drift-l{from{transform:translateX(0) scaleX(1)}to{transform:translateX(-70px) scaleX(1.05)}}
+@keyframes fl-drift-r{from{transform:translateX(0) scaleX(1)}to{transform:translateX(70px) scaleX(1.05)}}
+@keyframes fl-breathe{from{opacity:.7}to{opacity:1}}
+.mist-floor{animation:fl-floor 12s var(--ease-soft) infinite alternate}
+@keyframes fl-floor{from{opacity:.5}to{opacity:.7}}
+
+/* layer-motes — screen */
+.mote{animation-name:fl-mote-a;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;will-change:transform}
+.mote--b{animation-name:fl-mote-b}
+@keyframes fl-mote-a{0%,100%{transform:translate(0,0)}25%{transform:translate(30px,-20px)}50%{transform:translate(10px,-52px)}75%{transform:translate(-22px,-26px)}}
+@keyframes fl-mote-b{0%,100%{transform:translate(0,0)}25%{transform:translate(-28px,-16px)}50%{transform:translate(-8px,-48px)}75%{transform:translate(24px,-22px)}}
+.mote-core,.mote-glow{animation-name:fl-blink;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes fl-blink{0%,100%{opacity:.08}40%{opacity:1}70%{opacity:.45}}
+
+/* layer-lamp-glow — screen */
+.lamp-bloom,.lamp-pool{animation-name:fl-lamp;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes fl-lamp{0%,100%{transform:scale(.95);opacity:.34}50%{transform:scale(1.06);opacity:.48}}
+.lamp-core{animation-name:fl-flicker;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes fl-flicker{0%,100%{opacity:.7}30%{opacity:.95}55%{opacity:.8}80%{opacity:1}}
+
+/* Reduced motion: static layers at mid-opacity. */
+@media (prefers-reduced-motion:reduce){
+  .layer-fog-a__x,.layer-fog-a__y,.layer-fog-b__x,.layer-fog-b__y,.mist,.mist-floor,.mote,.mote-core,.mote-glow,.lamp-bloom,.lamp-pool,.lamp-core{animation:none}
+  #layer-fog-a,#layer-fog-b,#layer-mist-top,#layer-motes,#layer-lamp-glow{opacity:.5}
+}

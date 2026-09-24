@@ -1,0 +1,64 @@
+/* motion.css — Zone 2 campfire clearing overlay idle loops.
+   Inline the SVGs, then include this file. Per-element durations/delays are in each element's style attribute.
+   Blend: fire / sparks / motes / exit-glow screen · fog normal (low alpha).
+
+   Game-state hooks:
+     --fire-level: 0-4   set on any ancestor (e.g. the scene root). Steps are eased over 2.4s.
+     .is-open            add to the exit-glow svg or any ancestor once all four friends are helped. */
+:root{--ease-soft:cubic-bezier(.45,0,.2,1);--ease-drift:cubic-bezier(.4,0,.6,1)}
+
+/* layer-fire — screen. Level wrappers hold intensity; inner elements animate. */
+#fire-core-level{opacity:calc(.6 + var(--fire-level,0) * .1);transform:scale(calc(1 + var(--fire-level,0) * .1));transition:opacity 2.4s var(--ease-soft),transform 2.4s var(--ease-soft)}
+#fire-bloom-level{opacity:calc(.45 + var(--fire-level,0) * .14);transform:scale(calc(1 + var(--fire-level,0) * .22));transition:opacity 2.4s var(--ease-soft),transform 2.4s var(--ease-soft)}
+#fire-wash-level{opacity:calc(var(--fire-level,0) * .25);transform:scale(calc(.7 + var(--fire-level,0) * .1));transition:opacity 2.4s var(--ease-soft),transform 2.4s var(--ease-soft)}
+.fire-flicker{animation-timing-function:steps(1,end);animation-iteration-count:infinite}
+.fire-flicker--a{animation-name:cf-flick-a;animation-duration:.87s}
+.fire-flicker--b{animation-name:cf-flick-b;animation-duration:.61s;animation-delay:-.2s}
+.fire-flicker--c{animation-name:cf-flick-c;animation-duration:.43s;animation-delay:-.1s}
+@keyframes cf-flick-a{0%{opacity:.5;transform:scale(1)}17%{opacity:.62;transform:scale(1.03,1.05)}38%{opacity:.46;transform:scale(.98)}55%{opacity:.58;transform:scale(1.02)}74%{opacity:.52;transform:scale(1,1.03)}91%{opacity:.6;transform:scale(1.03)}}
+@keyframes cf-flick-b{0%{opacity:.44;transform:scale(1)}22%{opacity:.58;transform:scale(1.04,1.08)}47%{opacity:.4;transform:scale(.97)}68%{opacity:.54;transform:scale(1.02,1.05)}86%{opacity:.48;transform:scale(1)}}
+@keyframes cf-flick-c{0%{opacity:.55;transform:scale(1)}25%{opacity:.72;transform:scale(1.06,1.12)}51%{opacity:.5;transform:scale(.95)}77%{opacity:.66;transform:scale(1.03,1.08)}}
+.fire-breathe{animation:cf-breathe 5s var(--ease-soft) infinite}
+@keyframes cf-breathe{0%,100%{transform:scale(.94);opacity:.5}50%{transform:scale(1.07);opacity:.7}}
+.fire-wash{animation:cf-wash 5s var(--ease-soft) infinite;animation-delay:-1.4s}
+@keyframes cf-wash{0%,100%{opacity:.82}50%{opacity:1}}
+
+/* layer-sparks — screen */
+.spark{animation-timing-function:cubic-bezier(.2,.6,.4,1);animation-iteration-count:infinite;will-change:transform,opacity}
+.spark--a{animation-name:cf-spark-a}
+.spark--b{animation-name:cf-spark-b}
+.spark--c{animation-name:cf-spark-c}
+.spark--far{animation-name:cf-spark-far;animation-timing-function:var(--ease-drift)}
+@keyframes cf-spark-a{0%{transform:translate(0,0) scale(.6);opacity:0}8%{opacity:1;transform:translate(0,-10px) scale(1.3)}20%{transform:translate(4px,-40px) scale(1)}100%{transform:translate(18px,-150px) scale(.5);opacity:0}}
+@keyframes cf-spark-b{0%{transform:translate(0,0) scale(.6);opacity:0}8%{opacity:1;transform:translate(0,-12px) scale(1.4)}22%{transform:translate(-6px,-46px) scale(1)}100%{transform:translate(-22px,-170px) scale(.5);opacity:0}}
+@keyframes cf-spark-c{0%{transform:translate(0,0) scale(.6);opacity:0}10%{opacity:1;transform:translate(0,-8px) scale(1.2)}25%{transform:translate(2px,-36px) scale(.9)}100%{transform:translate(-6px,-120px) scale(.4);opacity:0}}
+@keyframes cf-spark-far{0%{transform:translate(0,0) scale(.8);opacity:0}8%{opacity:1}35%{transform:translate(26px,-150px) scale(1)}70%{transform:translate(-12px,-310px) scale(.8);opacity:.7}100%{transform:translate(20px,-420px) scale(.5);opacity:0}}
+
+/* layer-fog — normal */
+.fog{animation-name:cf-drift-l,cf-fog-breathe;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;animation-direction:alternate}
+.fog--r{animation-name:cf-drift-r,cf-fog-breathe}
+@keyframes cf-drift-l{from{transform:translateX(0)}to{transform:translateX(-56px)}}
+@keyframes cf-drift-r{from{transform:translateX(0)}to{transform:translateX(56px)}}
+@keyframes cf-fog-breathe{from{opacity:.65}to{opacity:1}}
+
+/* layer-motes — screen */
+.mote{animation-name:cf-mote-a;animation-timing-function:var(--ease-drift);animation-iteration-count:infinite;will-change:transform}
+.mote--b{animation-name:cf-mote-b}
+@keyframes cf-mote-a{0%,100%{transform:translate(0,0)}25%{transform:translate(26px,-22px)}50%{transform:translate(8px,-48px)}75%{transform:translate(-20px,-24px)}}
+@keyframes cf-mote-b{0%,100%{transform:translate(0,0)}25%{transform:translate(-24px,-18px)}50%{transform:translate(-6px,-44px)}75%{transform:translate(22px,-20px)}}
+.mote-core,.mote-glow{animation-name:cf-blink;animation-timing-function:var(--ease-soft);animation-iteration-count:infinite}
+@keyframes cf-blink{0%,100%{opacity:.08}40%{opacity:1}70%{opacity:.45}}
+
+/* layer-exit-glow — screen */
+#exit-level{opacity:.35;transform:scale(.9);transition:opacity 3s var(--ease-soft),transform 3s var(--ease-soft)}
+.is-open #exit-level,.is-open#layer-exit-glow #exit-level{opacity:1;transform:scale(1.15)}
+.exit-glow,.exit-core{animation:cf-exit 10s var(--ease-soft) infinite}
+.exit-glow--b{animation-delay:-2s}
+.exit-core{animation-delay:-4s}
+@keyframes cf-exit{0%,100%{transform:scale(.95);opacity:.34}50%{transform:scale(1.06);opacity:.56}}
+
+@media (prefers-reduced-motion:reduce){
+  .fire-flicker,.fire-breathe,.fire-wash,.fog,.mote,.mote-core,.mote-glow,.exit-glow,.exit-core{animation:none}
+  .spark{animation:none;opacity:0}
+  .spark--far{opacity:.5}
+}

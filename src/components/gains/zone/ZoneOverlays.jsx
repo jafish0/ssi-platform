@@ -11,6 +11,15 @@
 // a set can land file by file. `layers` is the zone's own set (filenames +
 // blend modes differ per plate); defaults to Zone 4's Bright Reaches set so
 // existing callers are unaffected.
+//
+// Draft 94 (Zone 2): two more optional, purely additive props for layers
+// that react to zone state rather than just idling -- `cssVars` sets CSS
+// custom properties on the wrapper (e.g. `--fire-level`, read by
+// layer-fire.svg's own internal <style>; custom properties inherit through
+// a dangerouslySetInnerHTML'd SVG same as any other DOM descendant) and
+// `activeLayers` (a Set of layer keys) adds an `is-open` class to a
+// matching layer's wrapper (layer-exit-glow.svg brightens on it). Callers
+// that omit both are unaffected.
 import { useEffect, useState } from 'react'
 
 const DEFAULT_LAYERS = [
@@ -36,7 +45,7 @@ function prepSvg(svg) {
   return svg.replace(/preserveAspectRatio="[^"]*"/, '').replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ')
 }
 
-export default function ZoneOverlays({ base, sub, layers: layerSet = DEFAULT_LAYERS, visible = true }) {
+export default function ZoneOverlays({ base, sub, layers: layerSet = DEFAULT_LAYERS, visible = true, cssVars, activeLayers }) {
   const [layers, setLayers] = useState(null) // [{ key, blend, svg }]
   const [motion, setMotion] = useState('')
   // Draft 83: Zone 1 keeps its two plates' overlay sets in their own
@@ -59,11 +68,21 @@ export default function ZoneOverlays({ base, sub, layers: layerSet = DEFAULT_LAY
 
   if (!layers || !layers.length) return null
   return (
-    <div className="absolute inset-0" style={{ zIndex: 5, pointerEvents: 'none', opacity: visible ? 1 : 0, transition: 'opacity var(--dur-slow) var(--ease-soft)' }} aria-hidden="true">
+    <div
+      className="absolute inset-0"
+      style={{ zIndex: 5, pointerEvents: 'none', opacity: visible ? 1 : 0, transition: 'opacity var(--dur-slow) var(--ease-soft)', ...cssVars }}
+      aria-hidden="true"
+    >
       <style>{CSS}</style>
       {motion && <style>{motion}</style>}
       {layers.map((l) => (
-        <div key={l.key} className="z4-ov" data-layer={l.key} style={{ mixBlendMode: l.blend }} dangerouslySetInnerHTML={{ __html: l.svg }} />
+        <div
+          key={l.key}
+          className={'z4-ov' + (activeLayers && activeLayers.has(l.key) ? ' is-open' : '')}
+          data-layer={l.key}
+          style={{ mixBlendMode: l.blend }}
+          dangerouslySetInnerHTML={{ __html: l.svg }}
+        />
       ))}
     </div>
   )

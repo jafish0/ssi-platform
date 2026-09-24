@@ -31,6 +31,12 @@ export const REVIEW_VIDEOS = [
   { title: 'Zone 3 — Getting the Best Therapy', id: '1229296920', h: 'fff67e51d4', section: 'video-3' },
   { title: 'Zone 4 — What Therapy Feels Like', id: '1227445659', h: '3a88ca76d5', section: 'video-4' },
   { title: 'Zone 5 — Growth Mindset', id: '1227447165', h: 'f4fe21450f', section: 'video-5' },
+  // Draft 94: the four Zone 2 camp station videos (OpenArt lip-sync
+  // renders, done 2026-09-23), added after Video 5 per that draft's item 3.
+  { title: 'Zone 2 station — Emberwick (reactivity)', id: '1229872174', h: 'af0ffa46d4', section: 'video-z2-emberwick' },
+  { title: 'Zone 2 station — Mirefly (intrusion)', id: '1229872199', h: '36e4d74a97', section: 'video-z2-mirefly' },
+  { title: 'Zone 2 station — Hollowshell (avoidance)', id: '1229872207', h: 'c2e7c80508', section: 'video-z2-hollowshell' },
+  { title: 'Zone 2 station — Dimmet (negative mood and thoughts)', id: '1229872170', h: '7bc6212f82', section: 'video-z2-dimmet' },
 ]
 
 // One phone-portrait (9:16) player with its own comment box, laid out by
