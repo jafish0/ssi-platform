@@ -17,7 +17,7 @@
 // context that WebKit starts suspended with no gesture left to unlock it, so
 // replayed audio would go silent (esp. in reduced motion, which has no touch).
 
-import { useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 // Each mode is a scene + its asset set. The wrapper (lifecycle, audio
 // unlock, dispose, restart-in-place) is shared — that's the reusable
@@ -115,9 +115,40 @@ const MODES = {
       },
     },
   },
+  // Draft 95: "The Fogline" -- Zone 2's exit into Zone 3. Reuses the
+  // walkable-zone engine's Traveler/Spark (same 1080x1920 scale as
+  // firstlight), but the interesting interaction (the draggable Focusing
+  // Lens, the fog it reveals, stone-focus timers, the two looming shapes)
+  // lives entirely in the DOM layer above the canvas -- see
+  // `FoglineTraversal.jsx`. This scene only animates hop commands sent
+  // through `sendCommand` (below) and reports each one back via `onEvent`;
+  // VO/music/ambience are owned by the host's own audio manager (or, for
+  // the standalone practice page, FoglineTraversal's own simple player) --
+  // never loaded here, unlike firstlight's dual hosted/standalone split.
+  fogline: {
+    sceneKey: 'Fogline',
+    loadScene: () => import('../game/foglineScene.js').then((m) => m.makeFoglineScene),
+    width: 1080,
+    height: 1920,
+    assets: {
+      plateUrl: '/long-light/zone2/fogline/plate.webp',
+      travelerUrls: (() => {
+        const urls = { 'idle-front': '/long-light/zone2/traveler/idle-front.webp', 'idle-back': '/long-light/zone2/traveler/idle-back.webp' }
+        for (const d of ['walk-back', 'walk-front', 'walk-side', 'walk-side-left']) {
+          for (let i = 1; i <= 6; i++) urls[`${d}-${i}`] = `/long-light/zone2/traveler/${d}-${i}.webp`
+        }
+        return urls
+      })(),
+      sparkUrls: [1, 2, 3, 4].map((i) => `/long-light/zone2/spark/flicker-${i}.webp`),
+      sfxUrls: {
+        hop: '/long-light/zone4/sfx/step-stone-2.mp3',
+        whoosh: '/long-light/zone4/sfx/spark-whoosh.mp3',
+      },
+    },
+  },
 }
 
-export default function TraversalGame({
+const TraversalGame = forwardRef(function TraversalGame({
   mode = 'flight',
   goal = 50,
   durationMs,
@@ -133,14 +164,22 @@ export default function TraversalGame({
   // without needing to know anything about the host's audio manager.
   skipMusic = false,
   onDuck,
-}) {
+  // Draft 95: a generic scene->host event channel (fogline's per-hop
+  // 'hopped' reports), same idea as onDuck but not boolean -- separate
+  // field rather than overloading onComplete, which stays "fired exactly
+  // once, at the very end" for every mode.
+  onEvent,
+}, ref) {
   const containerRef = useRef(null)
   const gameRef = useRef(null)
+  const commandTokenRef = useRef(0)
   // Latest values without re-running the mount effect.
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
   const onDuckRef = useRef(onDuck)
   onDuckRef.current = onDuck
+  const onEventRef = useRef(onEvent)
+  onEventRef.current = onEvent
   const startedRef = useRef(started)
   startedRef.current = started
   const mutedRef = useRef(muted)
@@ -185,6 +224,9 @@ export default function TraversalGame({
           },
           onDuck: (on) => {
             if (onDuckRef.current) onDuckRef.current(on)
+          },
+          onEvent: (evt) => {
+            if (onEventRef.current) onEventRef.current(evt)
           },
         })
         game.registry.set('traversalStarted', startedRef.current)
@@ -240,6 +282,20 @@ export default function TraversalGame({
     if (gameRef.current) gameRef.current.sound.mute = muted
   }, [muted])
 
+  // Draft 95: fogline's one-way host->scene channel -- the DOM lens/focus
+  // layer asks for a hop by writing into the registry; the scene polls it
+  // in update() (see foglineScene.js). A monotonic token (not the command
+  // object's identity) is what the scene compares against, so sending the
+  // exact same command twice in a row still re-triggers it.
+  useImperativeHandle(ref, () => ({
+    sendCommand(cmd) {
+      const game = gameRef.current
+      if (!game) return
+      commandTokenRef.current += 1
+      game.registry.set('foglineCommand', { ...cmd, token: commandTokenRef.current })
+    },
+  }))
+
   return (
     <div
       ref={containerRef}
@@ -247,4 +303,6 @@ export default function TraversalGame({
       style={{ touchAction: 'none' }}
     />
   )
-}
+})
+
+export default TraversalGame

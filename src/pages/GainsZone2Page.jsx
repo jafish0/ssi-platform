@@ -1,4 +1,5 @@
-// /gains-demo/zone2 — Zone 2 "The Lantern Path" (GAINS Draft 94, Phase A).
+// /gains-demo/zone2 — Zone 2 "The Lantern Path" (GAINS Draft 94 Phase A,
+// Draft 95 Phase B).
 //
 // A bespoke page rather than another `zone` entry for GainsZonePage.jsx:
 // Zone 2 is genuinely a different SHAPE from Zones 1/3/4 (free-order
@@ -7,28 +8,32 @@
 // risked the three already-shipped zones for a shape only this one needs.
 // It reuses every LOWER-level shared piece instead: ZoneStage (the Phaser
 // walkable scene, extended for Zone 2's stations/friends), ZoneOverlays,
-// GearHud is NOT used here (Draft 94 has no gear yet -- PartsTray fills
-// that role until Draft 95's Focusing Lens), SparkBubble, VideoScene,
-// FullscreenStage, and a Zone-2-specific audio manager (createZone2Audio).
+// GearHud (added Draft 95, once there's finally gear to show), GearAward,
+// SparkBubble, VideoScene, FullscreenStage, and a Zone-2-specific audio
+// manager (createZone2Audio).
 //
 // Scene state machine:
 //   intro -Begin-> walk(plate1) -tap Spark-> video(zone) -ended->
 //     walk(plate1, exit lit) -tap exit-> walk(plate2) -any order-
 //     [tap friend -> video(station) -ended-> station sequence -> part] x4
-//     -> end (Phase A stub; Draft 95 replaces with the assembly + Fogline)
-//
-// Draft 95 will add: the build-view lens assembly, the GearAward, and the
-// Fogline traversal, replacing this file's temporary end card.
+//     -> assembly (drag parts onto the Lantern) -> gear (GearAward) ->
+//     walk(plate2, exit lit) -tap exit-> transition ("Into the Mistfields!")
+//     -> fogline (the traversal) -> end
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Sparkles, Volume2, VolumeX, RotateCcw } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight } from 'lucide-react'
 import FullscreenStage from '../components/gains/zone/FullscreenStage.jsx'
 import ZoneStage from '../components/gains/zone/ZoneStage.jsx'
 import ZoneOverlays from '../components/gains/zone/ZoneOverlays.jsx'
+import GearHud from '../components/gains/zone/GearHud.jsx'
+import GearAward from '../components/gains/GearAward.jsx'
 import SparkBubble from '../components/gains/zone/SparkBubble.jsx'
 import VideoScene from '../components/gains/zone/VideoScene.jsx'
 import PartsTray from '../components/gains/zone/PartsTray.jsx'
 import StationSequence from '../components/gains/zone/StationSequence.jsx'
+import LensBuildView from '../components/gains/zone/LensBuildView.jsx'
+import FoglineTraversal from '../components/gains/zone/FoglineTraversal.jsx'
 import GainsButton from '../components/gains/ds/Button.jsx'
 import { createZone2Audio } from '../components/gains/zone/zoneAudio.js'
 import { ZONE2 } from '../components/gains/zone/zone2Config.js'
@@ -43,7 +48,7 @@ const TITLE_CARD_MS = 2600
 const BLOOM_IN_MS = 380
 
 export default function GainsZone2Page() {
-  const [scene, setScene] = useState('intro') // intro|walk|video|end
+  const [scene, setScene] = useState('intro') // intro|walk|video|assembly|gear|transition|fogline|end
   const [plate, setPlate] = useState('plate1')
   const [started, setStarted] = useState(false)
   const [showTitle, setShowTitle] = useState(false)
@@ -61,6 +66,11 @@ export default function GainsZone2Page() {
   const [activeStationId, setActiveStationId] = useState(null)
   const [fireLevel, setFireLevel] = useState(0)
   const [runKey, setRunKey] = useState(0)
+  // Draft 95
+  const [gearNarrating, setGearNarrating] = useState(false)
+  const [gearEquipped, setGearEquipped] = useState(false)
+  const [gearFly, setGearFly] = useState(0)
+  const [travResult, setTravResult] = useState(null)
 
   const frameRef = useRef(null)
   const stageRef = useRef(null)
@@ -206,13 +216,19 @@ export default function GainsZone2Page() {
 
   // ---- plate 2: any of the four friends, then the exit ----
   function handleTapPlate2(target) {
-    if (target === 'exit' && !exitUnlockedRef.current) redirect(ZONE2.vo.redirectFriendsFirst)
+    if (target === 'exit' && !exitUnlockedRef.current) {
+      const allFriendsDone = ZONE2.stations.every((s) => stationsDoneRef.current[s.id])
+      redirect(allFriendsDone ? ZONE2.vo.redirectExitLens : ZONE2.vo.redirectFriendsFirst)
+    }
   }
   function handleArrivePlate2(target) {
     if (target === 'exit' && exitUnlockedRef.current) {
       audioRef.current?.stopSpeech()
       setBubble(null)
-      transitionTo('end')
+      transitionTo('transition', () => {
+        audioRef.current?.setPlate('fogline')
+        lockAndSay(ZONE2.vo.exitTransition).then(() => later(() => transitionTo('fogline'), 300))
+      })
       return
     }
     if (target.startsWith('station:')) {
@@ -281,10 +297,54 @@ export default function GainsZone2Page() {
       setFireLevel(count)
       audioRef.current?.sfx('chime-unlock')
       const hint = ZONE2.vo.partHints[count - 1]
-      if (hint) later(() => say(hint), 250)
-      if (count >= 4) later(() => setExitUnlocked(true), 250)
+      if (hint) {
+        later(() => {
+          say(hint).then(() => {
+            if (count >= 4) later(() => transitionTo('assembly'), 300)
+          })
+        }, 250)
+      } else if (count >= 4) {
+        later(() => transitionTo('assembly'), 250)
+      }
       return next
     })
+  }
+
+  // ---- Draft 95: the build-view assembly -> GearAward -> back on the
+  // plate with the exit finally open. ----
+  function onAssemblyComplete() {
+    transitionTo('gear', () => audioRef.current?.sfx('equip-flash'))
+  }
+
+  function onGearReveal() {
+    const file = ZONE2.gear.sparkLineAudio
+    if (!file || !audioRef.current) return
+    setGearNarrating(true)
+    audioRef.current.speak(file).then(() => setGearNarrating(false))
+  }
+
+  function onGearEquip() {
+    const a = audioRef.current
+    if (a) {
+      a.sfx('ui-tap')
+      later(() => a.sfx('equip-flash'), 120)
+    }
+    setGearEquipped(true)
+    setGearFly((n) => n + 1)
+  }
+
+  function onGearContinue() {
+    transitionTo('walk', () => {
+      setExitUnlocked(true)
+      audioRef.current?.sfx('chime-unlock')
+      stageRef.current?.lightPath()
+      lockAndSay(ZONE2.vo.ready)
+    })
+  }
+
+  function onFoglineComplete(result) {
+    setTravResult(result)
+    transitionTo('end')
   }
 
   function playAgain() {
@@ -302,13 +362,16 @@ export default function GainsZone2Page() {
     setIntroLock(false)
     setStarted(false)
     setShowTitle(false)
+    setGearNarrating(false)
+    setGearEquipped(false)
+    setTravResult(null)
     setPlate('plate1')
     plateRef.current = 'plate1'
     setRunKey((k) => k + 1)
     setScene('intro')
   }
 
-  const stageMounted = scene !== 'end'
+  const stageMounted = scene !== 'fogline' && scene !== 'end'
   const walkPaused = scene !== 'walk' || showTitle || transitioning || introLock || !!activeStationId
   const walkBegun = started && !introLock
 
@@ -360,7 +423,11 @@ export default function GainsZone2Page() {
           />
         )}
 
-        {plate === 'plate2' && started && scene !== 'end' && <PartsTray stations={ZONE2.stations} filled={doneCount} />}
+        {plate === 'plate2' && started && doneCount < 4 && <PartsTray stations={ZONE2.stations} filled={doneCount} />}
+
+        {started && (scene === 'gear' || scene === 'walk') && plate === 'plate2' && doneCount >= 4 && (
+          <GearHud earned={ZONE2.gearEarnedBefore} newKey={ZONE2.gear.gearKey} iconSrc={ZONE2.gear.itemSrc} equipped={gearEquipped} flyIn={gearFly} frameRef={frameRef} />
+        )}
 
         {scene === 'walk' && !activeStationId && <SparkBubble text={bubble?.text} visible={!!bubble?.visible} />}
 
@@ -373,6 +440,57 @@ export default function GainsZone2Page() {
             speakFriend={(file) => (audioRef.current ? audioRef.current.speak(file) : Promise.resolve())}
             sfx={(name) => audioRef.current?.sfx(name)}
             onComplete={onStationComplete}
+          />
+        )}
+
+        {scene === 'assembly' && (
+          <LensBuildView
+            baseSrc={ZONE2.build.baseSrc}
+            finishedSrc={ZONE2.gear.itemSrc}
+            targets={ZONE2.build.targets}
+            parts={ZONE2.stations.map((s) => ({ partId: s.id, partSrc: s.partSrc, partLabel: s.partLabel }))}
+            reducedMotion={false}
+            onSfx={(name) => audioRef.current?.sfx(name)}
+            onComplete={onAssemblyComplete}
+          />
+        )}
+
+        {scene === 'gear' && (
+          <GearAward
+            name={ZONE2.gear.name}
+            itemSrc={ZONE2.gear.itemSrc}
+            equippedSrc={ZONE2.gear.equippedSrc}
+            title={ZONE2.gear.title}
+            subline={ZONE2.gear.subline}
+            sparkLine={ZONE2.gear.sparkLine}
+            equipLabel={ZONE2.gear.equipLabel}
+            onEquip={onGearEquip}
+            onReveal={onGearReveal}
+            equipDisabled={gearNarrating}
+            onContinue={onGearContinue}
+          />
+        )}
+
+        {scene === 'transition' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-7" style={{ background: 'var(--sky-beacon)' }}>
+            <div style={{ animation: 'sm-rise var(--dur-slow) var(--ease-settle) both' }}>
+              <Sparkles size={28} strokeWidth={1.5} style={{ color: 'var(--text-on-warm)', marginBottom: 12 }} />
+              <h2 className="text-[26px] font-extrabold" style={{ color: 'var(--text-on-warm)' }}>
+                {ZONE2.transitionHeading}
+              </h2>
+            </div>
+          </div>
+        )}
+
+        {scene === 'fogline' && (
+          <FoglineTraversal
+            started
+            muted={muted}
+            reducedMotion={false}
+            onComplete={onFoglineComplete}
+            speak={(file) => (audioRef.current ? audioRef.current.speak(file) : Promise.resolve())}
+            duck={(on) => audioRef.current?.duck(on)}
+            sfx={(name) => audioRef.current?.sfx(name)}
           />
         )}
 
@@ -425,11 +543,23 @@ export default function GainsZone2Page() {
             <div style={{ animation: 'sm-bloom var(--dur-bloom) var(--ease-bloom) both' }}>
               <Sparkles size={30} strokeWidth={1.5} style={{ color: 'var(--text-on-warm)', margin: '0 auto 12px' }} />
               <h2 className="text-[26px] font-extrabold mb-2" style={{ color: 'var(--text-on-warm)' }}>
-                You've gathered all four parts.
+                You reached the Mistfields.
               </h2>
-              <p className="text-[14px] mb-6" style={{ color: 'rgba(58,29,5,.85)' }}>
-                The Focusing Lens is coming in the next build.
-              </p>
+              {travResult && (
+                <p className="text-[14px] mb-5" style={{ color: 'rgba(58,29,5,.85)' }}>
+                  You found your way, stone by stone -- {travResult.stonesHopped} hops, {travResult.shapesRevealed} of 2 shapes brought into focus.
+                </p>
+              )}
+              <div className="mb-5">
+                <Link
+                  to="/gains-demo/zone3"
+                  className="inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 min-h-[48px] text-[13px]"
+                  style={{ background: 'var(--action-primary)', color: 'var(--text-on-warm)', boxShadow: 'var(--glow-sm)' }}
+                >
+                  Continue to the Mistfields
+                  <ArrowRight size={14} strokeWidth={2} />
+                </Link>
+              </div>
               <GainsButton onClick={playAgain} iconLeft={<RotateCcw size={16} strokeWidth={2} />}>
                 Play again
               </GainsButton>

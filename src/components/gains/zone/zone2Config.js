@@ -9,12 +9,14 @@
 const BASE = '/long-light/zone2'
 const FRIENDS = `${BASE}/friends`
 const PARTS = `${BASE}/parts`
+const GEAR = `${BASE}/gear`
 
 export const ZONE2 = {
   base: BASE,
   // No sfx/ folder of its own -- reuse Zone 4's pack, same as Zones 1/3.
   sfxBase: '/long-light/zone4',
   docTitle: 'GAINS for Teens — Zone 2: The Lantern Path (walkable prototype)',
+  transitionHeading: 'Into the Mistfields!',
   sfxPreload: ['step-stone-1', 'step-stone-2', 'step-stone-3', 'step-grass-1', 'step-grass-2', 'step-grass-3', 'chime-unlock', 'spark-whoosh', 'ui-tap', 'equip-flash', 'arrive-swell'],
   video: { id: '1227442904', h: '46f782197e', title: 'Zone 2 — The Four Reactions' },
 
@@ -156,4 +158,30 @@ export const ZONE2 = {
       thanksText: 'I feel a little more like me. Here. A Kindlewick. It brings a flame back. It’s a lantern part, I think.',
     },
   ],
+
+  // Draft 95: the build-view assembly (drag the four parts from `stations`
+  // onto the base Lantern image, below) and the GearAward that follows it.
+  // `gearKey: 'lens'` matches `GearHud`'s canonical GEAR_ORDER slot 2 --
+  // Zones 3/4's `gearEarnedBefore` already assume it (see zones.js).
+  build: {
+    baseSrc: '/long-light/zone1/gear/lantern.webp',
+    targets: [
+      { partId: 'emberwick', x: 50, y: 22, r: 15 }, // Steadyring -- the brass collar under the cap
+      { partId: 'mirefly', x: 50, y: 47, r: 17 }, // Clearglass -- the front face
+      { partId: 'hollowshell', x: 30, y: 58, r: 14 }, // Openclasp -- the door's front edge, left of the glass
+      { partId: 'dimmet', x: 50, y: 78, r: 15 }, // Kindlewick -- inside, at the base of the flame
+    ],
+  },
+  gear: {
+    gearKey: 'lens',
+    name: 'Focusing Lens',
+    itemSrc: `${GEAR}/gear-focusing-lens.webp`,
+    equippedSrc: `${GEAR}/celebrate.webp`,
+    title: 'You built the Focusing Lens!',
+    subline: 'Look closely at something and it gets clearer, and smaller, and you can see the next step.',
+    sparkLine: 'You didn’t find this. You built it, by helping four friends see what was happening to them. That’s what it does. It helps you see.',
+    sparkLineAudio: 'z2-gear-spark.mp3',
+    equipLabel: 'Equip lens',
+  },
+  gearEarnedBefore: ['lantern'],
 }

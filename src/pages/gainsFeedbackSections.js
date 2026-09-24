@@ -41,6 +41,7 @@ export const GAINS_FEEDBACK_SECTIONS = [
   { value: 'review-firstlight', label: 'Review: The First Light (traversal)' },
   { value: 'review-zone1', label: 'Review: Zone 1 walkable zone' },
   { value: 'review-zone2', label: 'Review: Zone 2 walkable zone' },
+  { value: 'review-fogline', label: 'Review: The Fogline (traversal)' },
   { value: 'review-zone3', label: 'Review: Zone 3 walkable zone' },
   { value: 'review-zone4', label: 'Review: Zone 4 walkable zone' },
   // Draft 94: the four Zone 2 camp station videos, each its own comment box.

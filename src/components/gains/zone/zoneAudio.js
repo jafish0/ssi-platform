@@ -319,6 +319,7 @@ const MUSIC_VOL = 0.32
 const CAMPFIRE_VOL = 0.16
 const FOREST_VOL = 0.13
 const FOREST_UNDER_CAMPFIRE_MULT = 0.6 // plate 2 keeps forest running under campfire at 60%
+const FOREST_UNDER_FOGLINE_MULT = 0.4 // Draft 95: the Fogline keeps forest ambience at 40%
 const MUSIC_FADE_OUT_MS = 2000
 const MUSIC_FADE_IN_MS = 3000
 const AMBIENCE_CROSSFADE_MS = 2000
@@ -372,7 +373,14 @@ export function createZone2Audio({ base, sfxBase }) {
     const d = duckMul()
     const targetMusic = plate ? MUSIC_VOL * d.music : 0
     const targetCampfire = plate === 'plate2' ? CAMPFIRE_VOL * d.ambience : 0
-    const targetForest = plate === 'plate1' ? FOREST_VOL * d.ambience : plate === 'plate2' ? FOREST_VOL * FOREST_UNDER_CAMPFIRE_MULT * d.ambience : 0
+    const targetForest =
+      plate === 'plate1'
+        ? FOREST_VOL * d.ambience
+        : plate === 'plate2'
+          ? FOREST_VOL * FOREST_UNDER_CAMPFIRE_MULT * d.ambience
+          : plate === 'fogline'
+            ? FOREST_VOL * FOREST_UNDER_FOGLINE_MULT * d.ambience
+            : 0
     try {
       if (ease) {
         rampVolume(music, targetMusic, DUCK_RESTORE_MS)
@@ -478,7 +486,13 @@ export function createZone2Audio({ base, sfxBase }) {
       rampVolume(campfire, which === 'plate2' ? CAMPFIRE_VOL * duckMul().ambience : 0, AMBIENCE_CROSSFADE_MS)
       rampVolume(
         forest,
-        which === 'plate1' ? FOREST_VOL * duckMul().ambience : which === 'plate2' ? FOREST_VOL * FOREST_UNDER_CAMPFIRE_MULT * duckMul().ambience : 0,
+        which === 'plate1'
+          ? FOREST_VOL * duckMul().ambience
+          : which === 'plate2'
+            ? FOREST_VOL * FOREST_UNDER_CAMPFIRE_MULT * duckMul().ambience
+            : which === 'fogline'
+              ? FOREST_VOL * FOREST_UNDER_FOGLINE_MULT * duckMul().ambience
+              : 0,
         AMBIENCE_CROSSFADE_MS,
       )
     },

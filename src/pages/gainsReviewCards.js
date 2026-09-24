@@ -15,6 +15,8 @@
 // are reordered zones-and-videos-first. Order is fixed: Zone 1 · Zone 3 ·
 // Zone 4 · Videos · Body Mapping · Guardian · Mindful Place · Ascent · The
 // First Light. Draft 94 adds Zone 2 between Zone 1 and Zone 3 (renumbered).
+// Draft 95 adds The Fogline right after Zone 2's card (renumbered again) --
+// the Focusing Lens assembly and the traversal it unlocks.
 
 export const REVIEW_CARDS = [
   {
@@ -29,15 +31,24 @@ export const REVIEW_CARDS = [
   {
     key: 'zone2',
     n: 2,
-    title: 'Zone 2: The Lantern Path — walkable zone (Phase A)',
+    title: 'Zone 2: The Lantern Path — walkable zone',
     section: 'review-zone2',
     blurb:
-      "The second walkable zone, and the first with more than one station. The trail continues from the First Light up to Spark, the video on the four trauma reactions, then a camp where four other travelers have gotten stuck, one with each reaction: Emberwick (reactivity), Mirefly (intrusion), Hollowshell (avoidance), Dimmet (negative mood and thoughts). Visit them in any order: watch their short video, name what's going on, then hold your lantern up to help them see it, and watch the change play out. Each one gives you a lantern part, and the campfire grows a little brighter each time. Phase A only -- the Focusing Lens assembly and the Fogline traversal out are next.",
+      "The second walkable zone, and the first with more than one station. The trail continues from the First Light up to Spark, the video on the four trauma reactions, then a camp where four other travelers have gotten stuck, one with each reaction: Emberwick (reactivity), Mirefly (intrusion), Hollowshell (avoidance), Dimmet (negative mood and thoughts). Visit them in any order: watch their short video, name what's going on, then hold your lantern up to help them see it, and watch the change play out. Each one gives you a lantern part and the campfire grows a little brighter each time. Once you've met all four, drag the parts onto the Lantern at the fire to build the Focusing Lens, then head for the Fogline.",
     links: [{ label: 'Play Zone 2', to: '/gains-demo/zone2', play: true }],
   },
   {
-    key: 'zone3',
+    key: 'fogline',
     n: 3,
+    title: 'The Fogline',
+    section: 'review-fogline',
+    blurb:
+      "A traversal, Zone 2 → Zone 3: fog makes everything look bigger than it is. Drag the Focusing Lens around to see what's really there, hold it on a stone to bring it into focus, then hop. Look closely and the path shows itself one step at a time. Two shapes loom in the fog and turn out to be a bush and a stump once the lens holds steady on them.",
+    links: [{ label: 'Play the Fogline', to: '/gains-demo/fogline', play: true }],
+  },
+  {
+    key: 'zone3',
+    n: 4,
     title: 'Zone 3: The Mistfields — walkable zone',
     section: 'review-zone3',
     blurb:
@@ -46,7 +57,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'zone4',
-    n: 4,
+    n: 5,
     title: 'Zone 4: The Bright Reaches — walkable zone',
     section: 'review-zone4',
     blurb:
@@ -55,7 +66,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'videos',
-    n: 5,
+    n: 6,
     title: 'Videos',
     section: 'review-videos',
     blurb:
@@ -64,7 +75,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'bodymap',
-    n: 6,
+    n: 7,
     title: 'Body Mapping',
     section: 'review-bodymap',
     blurb:
@@ -73,7 +84,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'guardian',
-    n: 7,
+    n: 8,
     title: 'Message to Your Guardian',
     section: 'review-zone3pitch',
     blurb:
@@ -82,7 +93,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'mindful',
-    n: 8,
+    n: 9,
     title: 'Mindful Place',
     section: 'review-mindfulness',
     blurb:
@@ -91,7 +102,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'ascent',
-    n: 9,
+    n: 10,
     title: 'The Ascent',
     section: 'review-ascent',
     blurb:
@@ -100,7 +111,7 @@ export const REVIEW_CARDS = [
   },
   {
     key: 'firstlight',
-    n: 10,
+    n: 11,
     title: 'The First Light',
     section: 'review-firstlight',
     blurb:
