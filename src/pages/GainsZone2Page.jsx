@@ -568,9 +568,7 @@ export default function GainsZone2Page() {
               </h2>
               {travResult && (
                 <p className="text-[14px] mb-5" style={{ color: 'rgba(58,29,5,.85)' }}>
-                  {travResult.motesCollected >= travResult.totalMotes
-                    ? `You ran the whole fogline and gathered every mote of light along the way.`
-                    : `You found your way through the fog, gathering ${travResult.motesCollected} of ${travResult.totalMotes} motes of light along the way.`}
+                  You found your way through the fog, one wall at a time.
                 </p>
               )}
               <div className="mb-5">

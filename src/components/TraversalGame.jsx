@@ -166,15 +166,12 @@ const MODES = {
         c: '/long-light/zone2/runner/fog-wall-c.webp',
       },
       gapTileUrl: '/long-light/zone2/runner/runner-gap-tile.webp',
-      // The last fog wall reveals Zone 3 rather than a prop -- reuse its
-      // already-served map plate (the broken bridge is painted into it).
-      mistfieldsUrl: '/long-light/zone3/map.webp',
       sparkUrls: [1, 2, 3, 4].map((i) => `/long-light/zone2/spark/flicker-${i}.webp`),
       sfxUrls: {
         jump: '/long-light/zone4/sfx/step-grass-1.mp3',
         stumble: '/long-light/zone4/sfx/step-grass-2.mp3',
         chime: '/long-light/zone4/sfx/ui-tap.mp3',
-        mote: '/long-light/zone4/sfx/chime-unlock.mp3',
+        wallclear: '/long-light/zone4/sfx/chime-unlock.mp3',
         whoosh: '/long-light/zone4/sfx/spark-whoosh.mp3',
       },
     },

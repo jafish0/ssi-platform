@@ -17,12 +17,12 @@
 // a nearly-static Phaser scene, see the deleted FoglineTraversal.jsx), EVERY
 // mechanic here is native Phaser: parallax scroll, a hand-rolled jump arc
 // (no other traversal scene in this codebase uses Arcade Physics, so this
-// one doesn't either -- see `updatePlayerVertical`), fog walls, motes, the
-// beam. VO is still host-owned (through zoneAudio's
-// speak/duck, so it can duck the host's own music/ambience) -- this scene
-// only asks for a cue by name via `cfg.onEvent({type:'cue', name})`; simple
-// one-shot SFX (jump/land/stumble/mote/gap-whoosh) are scene-local, same
-// split the old fogline scene used for its own sfx vs. host VO.
+// one doesn't either -- see `updatePlayerVertical`), fog walls, the beam.
+// VO is still host-owned (through zoneAudio's speak/duck, so it can duck
+// the host's own music/ambience) -- this scene only asks for a cue by name
+// via `cfg.onEvent({type:'cue', name})`; simple one-shot SFX (jump/land/
+// stumble/gap-whoosh) are scene-local, same split the old fogline scene
+// used for its own sfx vs. host VO.
 
 const FRAME_W = 1080
 const FRAME_H = 1920
@@ -31,19 +31,23 @@ const TRAIL_Y = 1150 // where the trail's walking surface sits (feet level)
 const PLAYER_X = 300 // the Traveler's fixed screen x
 const TRAVELER_H = 160 // display height (~1/12 of frame height)
 
-const GRAVITY_Y = 2600
-const JUMP_V0 = 620 // base upward speed on any tap (clears the ~180-220px gaps)
-const HOLD_MAX_MS = 250 // "Mario Run" hold window: keep lifting for up to this long
-const HOLD_GRAVITY_SCALE = 0.32 // gravity is cut to this fraction while boosting
+const GRAVITY_Y = 2100
+const JUMP_V0 = 980 // base upward speed on any tap (clears the ~180-220px gaps)
+const HOLD_MAX_MS = 300 // "Mario Run" hold window: keep lifting for up to this long
+const HOLD_GRAVITY_SCALE = 0.3 // gravity is cut to this fraction while boosting
 const COYOTE_MS = 100
 const INPUT_BUFFER_MS = 100
 
-const LENS_WINDOW_PX = 640 // ~4 body-lengths ahead: the window a wall enters
+const LENS_WINDOW_PX = 900 // ~6 body-lengths ahead: the window a wall enters
 const WALL_HALF_W = 180 // fog column is ~360px wide
 // The trail art's own walking surface, measured in from its top edge --
-// shared by the trail layer itself and the gap tile, which is cropped and
-// scaled identically to it (Draft 98 addendum).
-const TRAIL_ART_TOP_OFFSET = 73
+// shared by the trail layer itself, the gap tile (cropped/scaled
+// identically to it), and every standing entity's bottom-anchor Y
+// (`TRAIL_Y` itself never moves; this is which row of the ART lands on
+// that screen line). Draft 100 #1: Draft 98 addendum's "y 73" was the
+// grass-tuft line, not the walking surface -- the Traveler stood on TOP
+// of the tufts instead of the stone ground below them.
+const GROUND_Y_IN_LAYER = 150
 const GAP_TILE_CHASM_W = 304 // the tile's own native chasm width at scale 1
 const FOG_COL_H = 650 // bottom sits on the trail, top reaches roughly y=500
 const ACTIVATE_MS = 550 // hold-to-clear duration once the lens is engaged
@@ -52,7 +56,8 @@ const STUMBLE_EASE_IN_MS = 400 // resuming scroll after a fog stumble clears
 const GAP_DOWN_MS = 400
 const GAP_UP_MS = 500
 const WHOOP_MAX = 2
-const MOTE_NOTCH_CAP = 6
+const ARRIVE_SLOW_MS = 1500 // Draft 100 #9: slow-to-a-stop duration on the last wall
+const ARRIVE_VO_MS = 3600 // t2r-11-arrive.mp3's own runtime (~3.3s) + a small buffer
 
 // Where the beam originates -- the lantern at the Traveler's hand, roughly
 // chest height and slightly ahead of her screen-fixed body center.
@@ -79,15 +84,6 @@ const DISPLAY_H = {
 }
 const HITBOX_SHRINK = 0.8
 
-// Looming-shape sizes inside each fog wall (width x height, logical px).
-const SHAPE_SIZE = {
-  hunched: { w: 260, h: 200 },
-  tall: { w: 120, h: 420 },
-  wide: { w: 380, h: 150 },
-  big: { w: 320, h: 360 },
-  none: null,
-}
-
 // The level, transcribed from Draft 98's beat sheet. `x` is world position
 // in px along the ~23,200px trail. Walls reveal into a prop on the SAME
 // world x (the "wall(12800, wide, log)" case: the revealed log is ALSO a
@@ -113,20 +109,11 @@ const LEVEL = {
     { x: 14200, kind: 'log' },
   ],
   walls: [
-    { x: 3200, shape: 'hunched', prop: 'bush', first: true },
-    { x: 7800, shape: 'tall', prop: 'stump' },
-    { x: 12800, shape: 'wide', prop: 'log' },
-    { x: 17800, shape: 'big', prop: 'signpost' },
-    { x: 22600, shape: 'none', prop: null, last: true },
-  ],
-  motes: [
-    { x: 600, n: 5, pattern: 'line' },
-    { x: 2700, n: 5, pattern: 'arc' },
-    { x: 5200, n: 6, pattern: 'arc' },
-    { x: 11400, n: 7, pattern: 'arc-high' },
-    { x: 15900, n: 6, pattern: 'line' },
-    { x: 19700, n: 4, pattern: 'arc' },
-    { x: 20800, n: 4, pattern: 'arc' },
+    { x: 3200, prop: 'bush', first: true },
+    { x: 7800, prop: 'stump' },
+    { x: 12800, prop: 'log' },
+    { x: 17800, prop: 'signpost' },
+    { x: 22600, prop: null, last: true },
   ],
   arriveX: 23200,
   finalStretchX: 19000, // whoop line eligibility begins here
@@ -153,9 +140,6 @@ export function makeFoglineRunScene(Phaser) {
       this.activatingLens = false
       this.activeWall = null
       this.nextWallIdx = 0
-      this.moteNotches = 0
-      this.motesCollected = 0
-      this.totalMotes = LEVEL.motes.reduce((n, g) => n + g.n, 0)
       this.wallsClearedAhead = 0
       this.firstJumpFired = false
       this.firstStumbleFired = false
@@ -184,7 +168,6 @@ export function makeFoglineRunScene(Phaser) {
       Object.entries(c.propUrls || {}).forEach(([k, url]) => load(`prop-${k}`, url))
       Object.entries(c.fogWallUrls || {}).forEach(([k, url]) => load(`fogwall-${k}`, url))
       load('gaptile', c.gapTileUrl)
-      load('mistfields', c.mistfieldsUrl)
       ;(c.sparkUrls || []).forEach((url, i) => load(`spark-${i + 1}`, url))
       Object.entries(c.sfxUrls || {}).forEach(([k, url]) => {
         if (url) this.load.audio(`frun-sfx-${k}`, url)
@@ -202,11 +185,9 @@ export function makeFoglineRunScene(Phaser) {
       this.buildTrailAndGaps()
       this.buildObstacles()
       this.buildWalls()
-      this.buildMotes()
       this.buildPlayer()
       this.buildSpark()
       this.buildBeamGraphics()
-      this.buildMistfieldsReveal()
       this.setupInput()
       this.ready = true
       // `started` (below) only means "Begin was tapped" -- the actual go
@@ -214,9 +195,49 @@ export function makeFoglineRunScene(Phaser) {
       // that happens (never here at create(), which runs at PAGE LOAD
       // before any user gesture; the host's speak() would just be blocked
       // by autoplay policy this early anyway).
+      if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) {
+        this.devCheckJumpReach()
+      }
     }
 
-    // ---- procedural textures (glow dot for motes/beam bloom, dust puff) ----
+    // Draft 100 #3: a dev-only sanity check, run once at scene start -- logs
+    // any table gap the max (full-hold) jump can't clear by a 60px margin.
+    // Mirrors updatePlayerVertical's own per-frame integration (fixed
+    // 16ms steps) rather than a closed-form calculation, so it reflects
+    // what actually happens in play, not just the constants' theory.
+    devCheckJumpReach() {
+      const simulate = (holdMs) => {
+        const STEP = 16
+        let vy = -JUMP_V0
+        let y = 0
+        let minY = 0
+        let t = 0
+        let holdBoostMs = 0
+        for (let i = 0; i < 400; i++) {
+          holdBoostMs += STEP
+          const boosting = t <= holdMs && holdBoostMs <= HOLD_MAX_MS && vy < 0
+          const g = boosting ? GRAVITY_Y * HOLD_GRAVITY_SCALE : GRAVITY_Y
+          vy += (g * STEP) / 1000
+          y += (vy * STEP) / 1000
+          if (y < minY) minY = y
+          t += STEP
+          if (t > STEP && y >= 0) break
+        }
+        return { range: (RUN_SPEED * t) / 1000, apex: -minY }
+      }
+      const tap = simulate(0)
+      const hold = simulate(HOLD_MAX_MS)
+      LEVEL.gaps.forEach((g) => {
+        if (g.w + 60 > hold.range) {
+          // eslint-disable-next-line no-console
+          console.warn(`[FoglineRun] gap at x=${g.x} (w=${g.w}) may not clear: max hold range ~${hold.range.toFixed(0)}px`)
+        }
+      })
+      // eslint-disable-next-line no-console
+      console.info(`[FoglineRun] jump reach -- tap: range ${tap.range.toFixed(0)}px; hold: range ${hold.range.toFixed(0)}px, apex ${hold.apex.toFixed(0)}px`)
+    }
+
+    // ---- procedural textures (glow dot for the beam bloom, dust puff) ----
     makeTextures() {
       if (!this.textures.exists('frun-glow')) {
         const g = this.make.graphics({ add: false })
@@ -281,10 +302,10 @@ export function makeFoglineRunScene(Phaser) {
       // that cliff face instead of standing on the path.
       this.far = this.makeScrollLayer('bg-far', 0.15, 1, { originY: 1, anchorY: 1150 })
       this.ridge = this.makeScrollLayer('bg-ridge', 0.45, 2, { originY: 1, anchorY: 1180 })
-      // Draft 98 addendum: re-measured against the re-keyed art (the
-      // re-key also fixed grass/tree-top pixels that were still carrying
-      // key blue).
-      this.trailLayer = this.makeScrollLayer('bg-trail', 1.0, 3, { originY: 0, anchorY: TRAIL_Y - TRAIL_ART_TOP_OFFSET })
+      // Draft 100 #1: GROUND_Y_IN_LAYER is which row of the art itself
+      // lands on the TRAIL_Y screen line (re-measured -- the stone ground,
+      // not the grass-tuft line above it).
+      this.trailLayer = this.makeScrollLayer('bg-trail', 1.0, 3, { originY: 0, anchorY: TRAIL_Y - GROUND_Y_IN_LAYER })
     }
 
     makeScrollLayer(key, factor, depth, { originY, anchorY }) {
@@ -337,7 +358,7 @@ export function makeFoglineRunScene(Phaser) {
         if (hasTile) {
           const scaleX = Math.max(0.66, Math.min(1, g.w / GAP_TILE_CHASM_W))
           const img = this.add
-            .image(g.x + g.w / 2, TRAIL_Y - TRAIL_ART_TOP_OFFSET, 'gaptile')
+            .image(g.x + g.w / 2, TRAIL_Y - GROUND_Y_IN_LAYER, 'gaptile')
             .setOrigin(0.5, 0)
             .setDepth(4)
           img.setScale(scaleX, 1)
@@ -354,6 +375,35 @@ export function makeFoglineRunScene(Phaser) {
         container.add([body, rim])
         return { ...g, obj: container }
       })
+      this.buildGapMask()
+    }
+
+    // Draft 100 #2: the trail layer is a continuously-tiled scroll (no
+    // actual hole in it), so the gap tile's own painted chasm -- correctly
+    // transparent -- was letting the trail's plain ground texture show
+    // through from behind instead of the sky/far/ridge layers already
+    // drawn behind IT. An inverted geometry mask hides the trail layer's
+    // tiles under each gap's own world-x range (redrawn every frame in
+    // `updateGapMask`, since gap screen positions scroll); the gap tile
+    // itself sits on top at depth 4, unaffected (masks apply per-object).
+    buildGapMask() {
+      this.gapMaskGfx = this.make.graphics({ add: false })
+      const mask = this.gapMaskGfx.createGeometryMask()
+      mask.invertAlpha = true
+      this.trailLayer.tiles.forEach((t) => t.setMask(mask))
+    }
+
+    updateGapMask() {
+      const g = this.gapMaskGfx
+      g.clear()
+      g.fillStyle(0xffffff, 1)
+      const top = TRAIL_Y - GROUND_Y_IN_LAYER - 40
+      const height = FRAME_H - top + 100
+      for (const gap of LEVEL.gaps) {
+        const left = gap.x - this.scrollX
+        if (left + gap.w < -50 || left > FRAME_W + 50) continue
+        g.fillRect(left, top, gap.w, height)
+      }
     }
 
     buildObstacles() {
@@ -378,8 +428,8 @@ export function makeFoglineRunScene(Phaser) {
     // per-wall scale "wobble" plus a slow, continuous vertical "breathe"
     // (scaleY drifting a further 4% up and back) so five identical crops
     // of the same three sprites don't read as static cutouts. Cool tint
-    // for walls 1-4, a touch warmer for the last one (it opens onto the
-    // Mistfields instead of a prop).
+    // for walls 1-4, a touch warmer for the last one (it has no prop --
+    // clearing it ends the run, see beginArrive).
     buildWalls() {
       const FOG_WALL_KEYS = ['a', 'b', 'c']
       const FOG_WALL_DISPLAY_H = TRAVELER_H * 1.9
@@ -405,16 +455,10 @@ export function makeFoglineRunScene(Phaser) {
             ease: 'Sine.inOut',
           })
         }
-        let shapeObj = null
-        const size = SHAPE_SIZE[w.shape]
-        if (size) {
-          // Behind the sprite (depth 21) -- it reads as "something in the
-          // fog" through the painted cloud rather than floating in front.
-          shapeObj = this.add
-            .ellipse(w.x, TRAIL_Y, size.w, size.h, 0x0c1220, 0.55)
-            .setOrigin(0.5, 1)
-            .setDepth(20)
-        }
+        // Draft 100 #7: the looming blob is gone -- the painted fog sprite
+        // alone is "something in the way," and the prop reveals as the fog
+        // thins (see updateLensActivation) instead of needing its own
+        // stand-in shape.
         let propObj = null
         if (w.prop) {
           const key = `prop-${w.prop}`
@@ -423,29 +467,12 @@ export function makeFoglineRunScene(Phaser) {
             ? this.add.image(w.x, TRAIL_Y, key).setOrigin(0.5, 1)
             : this.add.rectangle(w.x, TRAIL_Y, targetH, targetH, 0x2a3550).setOrigin(0.5, 1)
           const srcH = propObj.height || targetH
-          propObj.setScale(targetH / srcH)
+          propObj.baseScale = targetH / srcH
+          propObj.setScale(propObj.baseScale * 1.3)
           propObj.setDepth(19)
           propObj.setAlpha(0)
         }
-        return { ...w, col, shapeObj, propObj, cleared: false, beamProgress: 0 }
-      })
-    }
-
-    buildMotes() {
-      this.motes = []
-      LEVEL.motes.forEach((group) => {
-        for (let i = 0; i < group.n; i++) {
-          const t = group.n > 1 ? i / (group.n - 1) : 0
-          let dx = t * 260
-          let dy
-          if (group.pattern === 'line') dy = -40
-          else if (group.pattern === 'arc') dy = -180 * Math.sin(t * Math.PI) - 40
-          else dy = -320 * Math.sin(t * Math.PI) - 60 // arc-high
-          const x = group.x + dx
-          const y = TRAIL_Y + dy
-          const img = this.add.image(x, y, 'frun-glow').setDisplaySize(20, 20).setDepth(15).setBlendMode(Phaser.BlendModes.ADD)
-          this.motes.push({ x, y, obj: img, collected: false })
-        }
+        return { ...w, col, propObj, cleared: false, beamProgress: 0 }
       })
     }
 
@@ -498,24 +525,18 @@ export function makeFoglineRunScene(Phaser) {
     // when the lens is actually needed (an earlier persistent "lantern
     // glow" for mote collection sat at this same fixed point but didn't
     // track the Traveler through a jump and had no real reason to be
-    // visible outside the lens window; removed).
+    // visible outside the lens window; removed). Draft 100 #6: the
+    // 'activate' texture is a full-body Traveler pose (see setPlayerTexture
+    // usage in updateLensActivation), not an icon -- the glyph uses the
+    // small procedural glow instead, tinted to read as a lantern spark.
     buildBeamGraphics() {
       this.beam = this.add.graphics().setDepth(50)
       this.lensGlyph = this.add
-        .image(BEAM_ORIGIN_X, BEAM_ORIGIN_Y, this.textures.exists('activate') ? 'activate' : 'frun-glow')
-        .setDisplaySize(48, 48)
+        .image(BEAM_ORIGIN_X, BEAM_ORIGIN_Y, 'frun-glow')
+        .setDisplaySize(40, 40)
+        .setTint(0xffe9b6)
         .setDepth(36)
         .setAlpha(0)
-    }
-
-    // Wall 5 clearing reveals the Mistfields (Zone 3's own map plate) rather
-    // than a prop -- placed behind everything, faded in as the fog opens.
-    buildMistfieldsReveal() {
-      if (!this.textures.exists('mistfields')) return
-      this.mistfields = this.add.image(FRAME_W / 2, FRAME_H / 2, 'mistfields').setDepth(1).setAlpha(0)
-      const src = this.textures.get('mistfields').getSourceImage()
-      const k = Math.max(FRAME_W / src.width, FRAME_H / src.height)
-      this.mistfields.setScale(k)
     }
 
     setupInput() {
@@ -527,6 +548,9 @@ export function makeFoglineRunScene(Phaser) {
     onPress() {
       if (!this.started) return
       this.pointerDown = true
+      // Draft 100 #6: both lens-routing checks below `return` before the
+      // jump logic runs, so a press that lands inside the window (or mid
+      // fog-stumble) is never ALSO read as a jump attempt.
       if (this.lensWindowActive && this.activeWall) {
         this.activatingLens = true
         return
@@ -663,9 +687,17 @@ export function makeFoglineRunScene(Phaser) {
     }
 
     // ---- lens activation progress (per-wall, persists across releases) ----
+    // Draft 100 #6: the Traveler switches to the 'activate' pose for the
+    // WHOLE hold (not just the run cycle continuing underneath), restored
+    // the instant the hold isn't active any more -- released early, wall
+    // cleared, or nothing to activate at all.
     updateLensActivation(delta) {
       const wall = this.activeWall
-      if (!wall || !this.activatingLens) return
+      if (!wall || !this.activatingLens) {
+        this.restorePoseAfterActivate()
+        return
+      }
+      this.setPlayerTexture('activate')
       wall.beamProgress = Math.min(ACTIVATE_MS, wall.beamProgress + delta)
       const t = wall.beamProgress / ACTIVATE_MS
       this.drawBeam(t)
@@ -673,7 +705,20 @@ export function makeFoglineRunScene(Phaser) {
       // "the beam builds... the wall thins" reads as one continuous
       // action, and a released-early hold keeps its partial progress.
       wall.col.setAlpha(1 - t * 0.65)
+      // Draft 100 #7: the prop reveals progressively over the LAST half of
+      // the hold (scale 1.3 -> 1.0, fading in) instead of popping in as a
+      // separate tween once the wall is already fully cleared.
+      if (wall.propObj) {
+        const revealT = Math.max(0, Math.min(1, (t - 0.5) / 0.5))
+        wall.propObj.setAlpha(revealT)
+        wall.propObj.setScale(wall.propObj.baseScale * (1.3 - 0.3 * revealT))
+      }
       if (t >= 1) this.clearWall(wall)
+    }
+
+    restorePoseAfterActivate() {
+      if (this.state === 'stumble-fog') this.setPlayerTexture('stumble-catch')
+      else if (this.state === 'run') this.setPlayerTexture(`run-${this.runFrame || 1}`)
     }
 
     drawBeam(t) {
@@ -714,18 +759,14 @@ export function makeFoglineRunScene(Phaser) {
         this.wallsClearedAhead += 1
         if (this.wallsClearedAhead === 1) this.emitCue('clear-ahead')
       }
-      if (wall.shapeObj) {
-        this.tweens.add({ targets: wall.shapeObj, alpha: 0, scale: wall.shapeObj.scale * 1.15, duration: 420, ease: 'Sine.out' })
-      }
       this.tweens.add({ targets: wall.col, alpha: 0, duration: 520, ease: 'Sine.out' })
-      if (wall.propObj) {
-        wall.propObj.setScale(wall.propObj.scale * 1.6)
-        this.tweens.add({ targets: wall.propObj, alpha: 1, scale: wall.propObj.scale / 1.6, duration: 480, ease: 'Back.out' })
-      }
+      // The prop is already fully revealed (alpha 1, base scale) by the
+      // per-frame ramp in updateLensActivation once beamProgress reaches
+      // ACTIVATE_MS -- nothing left to animate here.
       this.shrinkCount += 1
       if (this.shrinkCount === 1) this.emitCue('shrink-1')
       else if (this.shrinkCount === 2) this.emitCue('shrink-2')
-      else this.playSfx('mote')
+      else this.playSfx('wallclear')
       if (wall.last) {
         this.beginArrive()
         return
@@ -740,18 +781,22 @@ export function makeFoglineRunScene(Phaser) {
       this.desaturate(false)
     }
 
+    // Draft 100 #9: no cut to Zone 3, no bridge -- the run just ends. The
+    // world keeps scrolling but decelerates to a full stop over
+    // ARRIVE_SLOW_MS (the background keeps its normal look, no fade), THEN
+    // Spark's arrival line plays, and onComplete fires after its own
+    // runtime -- not the fixed guess used before this was two separate
+    // beats (`arriveSlowElapsed` drives the deceleration in update()).
     beginArrive() {
-      this.arrived = true
-      this.state = 'arrive'
-      this.emitCue('arrive')
-      if (this.mistfields) {
-        this.tweens.add({ targets: this.mistfields, alpha: 1, duration: 1600 })
-      }
-      const layersToFade = [this.far, this.ridge].filter(Boolean)
-      layersToFade.forEach((l) => l.tiles.forEach((img) => this.tweens.add({ targets: img, alpha: 0, duration: 1800 })))
-      this.tweens.add({ targets: this.player, x: this.player.x + 40, duration: 1800, onComplete: () => this.setPlayerTexture('run-1') })
-      this.time.delayedCall(2200, () => {
-        this.cfg.onComplete?.({ motesCollected: this.motesCollected, totalMotes: this.totalMotes })
+      this.state = 'arrive-slow'
+      this.arriveSlowElapsed = 0
+      this.time.delayedCall(ARRIVE_SLOW_MS, () => {
+        this.arrived = true
+        this.setPlayerTexture('run-1')
+        this.emitCue('arrive')
+        this.time.delayedCall(ARRIVE_VO_MS, () => {
+          this.cfg.onComplete?.({})
+        })
       })
     }
 
@@ -788,7 +833,10 @@ export function makeFoglineRunScene(Phaser) {
         this.state !== 'gap-rescue'
       if (scrolling) {
         let speed = RUN_SPEED
-        if (this.resumeEase) {
+        if (this.state === 'arrive-slow') {
+          this.arriveSlowElapsed += dt
+          speed = RUN_SPEED * Math.max(0, 1 - this.arriveSlowElapsed / ARRIVE_SLOW_MS)
+        } else if (this.resumeEase) {
           const k = Math.max(0, this.resumeEase - dt) / STUMBLE_EASE_IN_MS
           speed = RUN_SPEED * (1 - k)
           this.resumeEase = Math.max(0, this.resumeEase - dt)
@@ -807,10 +855,10 @@ export function makeFoglineRunScene(Phaser) {
       const worldX = this.scrollX + PLAYER_X
 
       this.updateWorldPositions()
+      this.updateGapMask()
       this.updatePlayerVertical(dt)
       this.updateGroundCollision(worldX)
       this.updateWalls(worldX)
-      this.updateMotes(worldX)
       this.updateRunAnimation(dt)
       this.updateSpark()
       this.updateLensActivation(dt)
@@ -921,7 +969,7 @@ export function makeFoglineRunScene(Phaser) {
 
     // Every level-table entity is stored and iterated in WORLD-space (its
     // fixed position along the ~23,200px trail); only the collision math
-    // (`updateGroundCollision`/`updateWalls`/`updateMotes`, all keyed off
+    // (`updateGroundCollision`/`updateWalls`, both keyed off
     // `worldX = scrollX + PLAYER_X`) accounted for that scrollX offset --
     // the sprites themselves were left sitting at their raw world-x
     // forever, correct-looking only in the opening seconds while scrollX
@@ -935,38 +983,15 @@ export function makeFoglineRunScene(Phaser) {
       }
       for (const w of this.walls) {
         w.col.x = w.x - this.scrollX
-        if (w.shapeObj) w.shapeObj.x = w.x - this.scrollX
         if (w.propObj) w.propObj.x = w.x - this.scrollX
       }
       for (const g of this.gapFills) {
         g.obj.x = g.x + g.w / 2 - this.scrollX
       }
-      for (const m of this.motes) {
-        if (!m.collected) m.obj.x = m.x - this.scrollX
-      }
-    }
-
-    updateMotes(worldX) {
-      for (const m of this.motes) {
-        if (m.collected) continue
-        const screenX = m.x - this.scrollX
-        const dx = screenX - PLAYER_X
-        const dy = m.y - this.player.y
-        if (Math.abs(dx) < 60 && Math.abs(dy) < 140) {
-          m.collected = true
-          this.motesCollected += 1
-          this.tweens.add({ targets: m.obj, alpha: 0, scale: 1.8, duration: 240, onComplete: () => m.obj.destroy() })
-          if (this.moteNotches < MOTE_NOTCH_CAP) {
-            this.moteNotches += 1
-            this.emit('mote-notch', { count: this.moteNotches })
-          }
-          this.playSfx('mote')
-        }
-      }
     }
 
     updateRunAnimation(dt) {
-      if (this.state !== 'run') return
+      if (this.state !== 'run' && this.state !== 'arrive-slow') return
       this.runFrameMs += dt
       if (this.runFrameMs >= RUN_FRAME_MS) {
         this.runFrameMs = 0

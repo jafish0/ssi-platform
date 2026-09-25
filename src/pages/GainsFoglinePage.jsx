@@ -203,14 +203,7 @@ export default function GainsFoglinePage() {
             You reached the Mistfields.
           </h2>
           <p className="text-[15px] mb-6" style={{ color: 'rgba(58,29,5,.85)' }}>
-            {result.motesCollected >= result.totalMotes ? (
-              <>You ran the whole fogline and gathered every mote of light along the way.</>
-            ) : (
-              <>
-                You found your way through the fog, gathering <strong>{result.motesCollected}</strong> of{' '}
-                <strong>{result.totalMotes}</strong> motes of light along the way.
-              </>
-            )}
+            You found your way through the fog, one wall at a time.
           </p>
           <GainsButton onClick={again} iconLeft={<RotateCcw size={16} strokeWidth={2} />}>
             Try again

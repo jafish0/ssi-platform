@@ -21,9 +21,9 @@ const CUE_FILES = {
   whoop: 't2r-08-whoop.mp3',
   'gap-rescue': 't2r-09-catch.mp3',
   'final-wall': 't2r-10-final-wall.mp3',
-  // The arrival line is the one holdover from the old Fogline -- same
-  // beat, same file, never retired.
-  arrive: 't2-05-arrive.mp3',
+  // Draft 100 #9: `t2-05-arrive` mentioned the (now-removed) bridge reveal
+  // -- retired in favor of a line written for this ending.
+  arrive: 't2r-11-arrive.mp3',
 }
 
 const FoglineRunTraversal = forwardRef(function FoglineRunTraversal(
