@@ -152,6 +152,26 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **7b2b150** (2026-09-25) — Draft 101: **Fogline runner, five
+  time-critical fixes.** Full spec in `### Draft 101` below (marked
+  SHIPPED there). Five items, no more: every runner pose (run/jump/
+  stumble/activate) now shares one identical 736x691 sprite canvas
+  (14 frames swapped in) scaled by one fixed ratio instead of each
+  texture's own differing native size, which is what made jump frames
+  read bigger than run frames; ridge/trail/gap-tile/far-mountains
+  byte-copied from the ready-made source with md5s confirmed matching,
+  no re-conversion; activation is now a single tap instead of a hold --
+  releasing no longer cancels it, the beam grows from the lantern to the
+  wall automatically over 900ms (up from the 550ms hold duration), a
+  repeat tap mid-run is ignored, and a fog-stumble's trip->catch pose
+  timer won't stomp an 'activate' pose set by a tap landing mid-trip;
+  and the ground line moved again (150 -> 235, mid stone-band instead of
+  its near edge). The fifth item ("walls appear mid-screen") was
+  investigated live by stepping the scene frame-by-frame while
+  approaching a wall -- walls already track pure world-x continuously
+  with no snap and are genuinely off-screen at the moment the lens
+  window opens, so no code change was needed there; noted as confirmed-
+  already-correct rather than silently skipped.
 - **7ed112b** (2026-09-25) — Draft 100: **Fogline runner first-play
   fixes.** Full spec in `### Draft 100` below (marked SHIPPED there).
   Josh's first pass on Draft 98 + addendum, from screenshots, ten items:
@@ -5640,3 +5660,21 @@ Josh's first pass on Draft 98 + addendum (2026-09-25, screenshots). Closer, stil
 **Verify.** Feet on the stones everywhere; gaps show the chasm through to the mist with no trail behind; every table gap is clearable (tap for 200/220, hold for the rest, measured); walls enter from the right, the glyph pulses at 900 px, holding shows the activate frame and the beam crosses real distance, the fog thins and the prop appears standing on the trail; no blob, no motes; the last wall clears into a plain slow-to-stop with the new line (or silence if the file is missing) and the end card. Clean console, clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
 
 *End of Draft 100.*
+
+### Draft 101 — Fogline runner: the five that must land today (uniform sprite canvas, ridge webp byte-copy, walls scroll in from the right, tap-to-activate stays in pose, ground line at mid-path) — ✅ SHIPPED 7b2b150 (2026-09-25)
+
+Time-critical; Josh needs this out today. Do exactly these five, nothing else, then push. Screenshots from 2026-09-25 are the reference.
+
+1. **Sprite scale mismatch (jump frames bigger than run frames).** Cause: frames were being sized to a common display height even though the source frames are different heights. Fix on the asset side is done: every runner frame is now on **one identical canvas, 736×691**, bottom-aligned, in `Walkable Zones/Zone 2/sprites/runner/uniform/` (PNG and ready-made webp, 14 files: run-1..8, jump-1-takeoff, jump-2-apex, jump-3-land, stumble-1-trip, stumble-2-catch, activate). **Replace the served runner frames with these** and set **one** `displayHeight` for all of them (691 × 0.25 ≈ **173 px**; use the same number for every frame). Do not size any frame individually. Body scale is now identical across run, jump, stumble, and activate by construction.
+
+2. **Ridge trees still blue.** The served ridge is stale; the re-keyed one was never picked up. **Copy `Walkable Zones/Zone 2/runner/runner-mid-ridge.webp` byte-for-byte** to the served path (md5 `2b6538b58ba0ffd4e88231c029f90336`); do not re-convert, do not re-key. Same for `runner-trail.webp`, `runner-gap-tile.webp`, `runner-far-mountains.webp` (all ready-made in that folder). Confirm the served ridge's md5 matches in the log.
+
+3. **Fog walls appear mid-screen.** They must be **world objects at their table x**, scrolling left with the trail like the logs and gaps, entering from **beyond the right edge** and never repositioned relative to the Traveler. If the current code spawns or snaps a wall when the lens window opens, remove that; the window is only a flag computed from the wall's world x (`wall.x - traveler.x < 900`). Josh's markup: the wall should be near the right side of the frame when it becomes activatable, the beam crossing most of the screen.
+
+4. **Activate: tap, not hold, and stay in the pose.** Change lens activation to a **single tap** while a wall is in the window (or during a fog stumble): on that tap the Traveler switches to `activate`, the beam grows from the lantern to the wall over 0.9 s **automatically** (no hold required, releasing does nothing), the fog fades and the prop appears, and the Traveler **stays in the activate frame until the wall is fully cleared**, then returns to the run cycle. Between the tap and the clear, no other frame (run, stumble) may show; ignore further taps during that time. During a fog stumble the same single tap does the same thing.
+
+5. **Ground line lower: feet at mid-path.** Move the walking surface to about **235 px below the trail layer's top edge** (the stone band runs roughly 150–330; the feet should sit near its middle so the Traveler reads as standing on the path, not on its far edge). One constant; the Traveler, obstacles, props, fog walls, and gap-tile edges all use it.
+
+**Verify (quick, then push).** Run/jump/stumble/activate frames are visibly one size; ridge pines have no blue; walls scroll in from the right and are activatable near the right side; one tap → activate pose held through the clear, beam crosses the screen; feet mid-path; gaps still work. Clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 101.*
