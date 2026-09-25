@@ -28,19 +28,45 @@ const FRAME_H = 1920
 const RUN_SPEED = 380 // px/s the world scrolls left under the fixed Traveler
 const TRAIL_Y = 1150 // where the trail's walking surface sits (feet level)
 const PLAYER_X = 300 // the Traveler's fixed screen x
-// Draft 103: every runner pose is now one FRAME of a single spritesheet
+// Draft 103: every runner pose is one FRAME of a single spritesheet
 // (7 cols x 2 rows, 736x691 per frame -- see traveler-runner-sheet.json)
-// instead of 14 separate texture files. One sprite object, one scale, set
-// ONCE at creation (applyPlayerScale takes no argument and is called
-// exactly once in buildPlayer) -- Draft 101/102's per-texture and
-// per-pose scaling were both symptomatic fixes for what turned out to be
-// (at least in significant part) individual pose files silently serving
-// stale, differently-sized bytes under unchanged filenames after an
-// update -- the same class of bug the ridge rename (Draft 102 #1) fixed.
-// A single shared texture makes that whole failure mode impossible: there
-// is no second file that could go stale out of sync with the first.
+// instead of 14 separate texture files -- one file, one cache entry, so
+// a per-file staleness bug (the class the ridge rename, Draft 102 #1,
+// fixed for the background layer) can no longer make one pose silently
+// render from different bytes than the rest.
 const PLAYER_CANVAS_H = 691
 const TRAVELER_H = 173 // 691 * 0.25
+
+// In-conversation follow-up to Draft 103, reported live -- "still bigger
+// on jump" persisted even after the spritesheet swap. Directly
+// measured the ASSEMBLED SHEET's own opaque-pixel bounding-box height per
+// frame (ffmpeg alphaextract + a pixel scan, cropping each frame's own
+// 736x691 region out of the sheet) and got numbers identical to Draft
+// 102's original per-file measurement: the source ART itself draws the
+// character at a different apparent size per pose on an otherwise-
+// identical canvas -- jump-land ~12% taller than the run cycle's own
+// frames average, jump-apex/takeoff ~15% shorter (a wide mid-air spread
+// reads shorter, not taller). This is a real asset inconsistency, logged
+// in WORKING_NOTES for the team; until the frames are redrawn at a
+// consistent scale, POSE_SCALE_CORRECTION compensates for it in code --
+// removing it (as Draft 103 did, chasing the wrong hypothesis) reopens
+// the exact bug being reported.
+const POSE_SCALE_CORRECTION = {
+  activate: 0.944,
+  'jump-apex': 1.157,
+  'jump-land': 0.891,
+  'jump-takeoff': 1.135,
+  'run-1': 0.963,
+  'run-2': 0.971,
+  'run-3': 1.071,
+  'run-4': 0.976,
+  'run-5': 0.989,
+  'run-6': 1.025,
+  'run-7': 1.031,
+  'run-8': 0.989,
+  'stumble-catch': 1.047,
+  'stumble-trip': 1.002,
+}
 
 // Maps this scene's own pose-key vocabulary (used throughout the state
 // machine below) to the spritesheet's frame index, per its own
@@ -535,19 +561,21 @@ export function makeFoglineRunScene(Phaser) {
       this.player = this.add.sprite(PLAYER_X, TRAIL_Y, hasSheet ? 'traveler-sheet' : '__DEFAULT', hasSheet ? FRAME_INDEX['run-1'] : undefined)
       this.player.setOrigin(0.5, 1)
       this.player.setDepth(30)
-      this.applyPlayerScale()
+      this.applyPlayerScale('run-1')
       this.playerVY = 0
       this.currentPoseKey = 'run-1'
     }
 
-    // Draft 103: ONE scale call, ever, right here at creation -- every
-    // pose is a same-size frame of the same spritesheet texture now, so
-    // there is no per-texture/per-pose case left to scale for (Draft
-    // 101/102's own scale calls, one per texture-swap, are gone with
-    // them). If jump/stumble/activate ever read a different size again,
-    // it did NOT come from this method.
-    applyPlayerScale() {
-      this.player.setScale(TRAVELER_H / PLAYER_CANVAS_H)
+    // The base scale (PLAYER_CANVAS_H -> TRAVELER_H) is the same for every
+    // pose -- they're all identical 736x691 frames of one spritesheet now
+    // (Draft 103). POSE_SCALE_CORRECTION layers a small per-pose multiplier
+    // on top of it, compensating for the source art's own real per-pose
+    // size inconsistency (see that constant's comment) -- still a single
+    // lookup, not a re-read of the texture's own metadata, so Draft 101's
+    // original stale-getter bug stays closed.
+    applyPlayerScale(key) {
+      const correction = POSE_SCALE_CORRECTION[key] || 1
+      this.player.setScale((TRAVELER_H / PLAYER_CANVAS_H) * correction)
     }
 
     setPlayerFrame(key) {
@@ -556,6 +584,7 @@ export function makeFoglineRunScene(Phaser) {
       if (idx === undefined || !this.textures.exists('traveler-sheet')) return
       this.currentPoseKey = key
       this.player.setFrame(idx)
+      this.applyPlayerScale(key)
       if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.info(
