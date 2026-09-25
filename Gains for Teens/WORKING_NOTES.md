@@ -152,6 +152,34 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **62e87db** (2026-09-25) — Fix: restored the per-pose scale correction
+  Draft 103 removed. **⚠️ Known asset issue, not fully code-fixable --
+  see below.** Josh, after Draft 103 shipped: the Traveler was still
+  visibly bigger on jump frames. Draft 103's spritesheet swap was built
+  on the hypothesis that 14 separate texture files meant one could go
+  stale under an unchanged name (the ridge-webp bug, Draft 102 #1) --
+  reasonable, but wrong here. This time I verified by cropping each
+  frame's own 736x691 region directly out of the assembled
+  `traveler-runner-sheet.webp` (not just checking file hashes or Phaser
+  properties) and measuring its opaque-pixel bounding-box height. The
+  numbers matched Draft 102's original per-file measurement exactly:
+  **the source art itself draws the character at a different apparent
+  size per pose, on an otherwise-identical 736x691 canvas** --
+  jump-land's silhouette fills ~12% more of its frame than the run
+  cycle's own frames average; jump-apex/takeoff ~15% less (the wide
+  mid-air spread reads shorter, not taller, than a standing pose).
+  Restored Draft 102's measured per-pose scale correction (wired to the
+  new spritesheet frame-index lookup) -- verified live, all 8 sampled
+  poses now converge to the same ~151px apparent character height. **The
+  asset team should know**: this correction is a code-side compensation
+  for real per-frame inconsistency in `traveler-runner-sheet.webp` (and
+  its 14-file predecessor) -- if any MORE runner poses are added later
+  (or these ones re-exported), they'll need the same treatment: measure
+  each new frame's own character-silhouette bounding-box height (not
+  just confirm the canvas is 736x691) and add/update its entry in
+  `POSE_SCALE_CORRECTION` in `foglineRunScene.js`, OR have the source
+  frames redrawn so the character is a consistent size within the canvas
+  to begin with, which would let the correction table be retired.
 - **2840dfe** (2026-09-25) — Draft 103: **one spritesheet, one sprite,
   one scale for the Traveler.** Full spec in `### Draft 103` below
   (marked SHIPPED there). Josh, after Draft 102: run size was right but
