@@ -133,7 +133,10 @@ const MODES = {
     assets: {
       skyUrl: '/long-light/zone2/runner/runner-sky.webp',
       farUrl: '/long-light/zone2/runner/runner-far-mountains.webp',
-      ridgeUrl: '/long-light/zone2/runner/runner-mid-ridge.webp',
+      // Draft 102 #1: renamed (not just re-copied) -- the old name kept
+      // serving stale bytes somewhere in the pipeline despite a byte-
+      // identical md5 on the source file.
+      ridgeUrl: '/long-light/zone2/runner/runner-mid-ridge-v2.webp',
       trailUrl: '/long-light/zone2/runner/runner-trail.webp',
       runUrls: (() => {
         const urls = {}

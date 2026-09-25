@@ -4,14 +4,13 @@
 // much like The First Light and framed the Focusing Lens as a magnifier
 // instead of the aimed beam the Ascent already established. This is an
 // auto-runner instead -- the Traveler runs in place at a fixed screen x
-// while the world scrolls left under her. One input: tap to jump (hold
-// longer to jump higher), and when a fog wall enters the "lens window"
-// a few body-lengths ahead, the SAME press-and-hold instead activates the
-// Focusing Lens (a beam from the lantern that thins the fog over ~0.9s,
-// shrinking the looming shape inside down to the ordinary object it always
-// was). Nothing here can end the run: an unactivated wall just stumbles you
-// to a stop (hold the lens to clear it and resume), and a missed gap has
-// Spark swoop down and lift you back onto the trail.
+// while the world scrolls left under her. Tap to jump (hold longer to jump
+// higher). Each fog wall brings the world to a full stop before she ever
+// reaches it (Draft 102 #2 -- she can no longer collide with fog at all);
+// a single tap then activates the Focusing Lens, growing a beam from the
+// lantern to the wall over ~0.9s that thins the fog and reveals the
+// ordinary object it always was, then the run eases back in. A missed gap
+// has Spark swoop down and lift the Traveler back onto the trail.
 //
 // Unlike the old Fogline (whose interesting bits lived in a DOM layer above
 // a nearly-static Phaser scene, see the deleted FoglineTraversal.jsx), EVERY
@@ -38,6 +37,34 @@ const PLAYER_X = 300 // the Traveler's fixed screen x
 const PLAYER_CANVAS_H = 691
 const TRAVELER_H = 173 // 691 * 0.25
 
+// Reported live after Draft 101 shipped: jump frames still read bigger
+// than run frames despite the uniform canvas -- a uniform CANVAS doesn't
+// mean the CHARACTER is drawn at a uniform size within it. Measured each
+// frame's own opaque-pixel bounding-box height (a one-off ffmpeg
+// alphaextract + pixel scan): jump-land's silhouette fills ~12% more of
+// its canvas than the run cycle's own frames average, jump-apex/takeoff
+// ~15% less (a wide mid-air spread reads shorter, not taller). A small
+// per-pose correction on top of the shared base scale evens every frame
+// out to the same apparent character height; run poses get a minor
+// version of the same correction since they already varied a little
+// among themselves. Keyed by texture key; missing keys fall back to 1.
+const POSE_SCALE_CORRECTION = {
+  activate: 0.944,
+  'jump-apex': 1.157,
+  'jump-land': 0.891,
+  'jump-takeoff': 1.135,
+  'run-1': 0.963,
+  'run-2': 0.971,
+  'run-3': 1.071,
+  'run-4': 0.976,
+  'run-5': 0.989,
+  'run-6': 1.025,
+  'run-7': 1.031,
+  'run-8': 0.989,
+  'stumble-catch': 1.047,
+  'stumble-trip': 1.002,
+}
+
 const GRAVITY_Y = 2100
 const JUMP_V0 = 980 // base upward speed on any tap (clears the ~180-220px gaps)
 const HOLD_MAX_MS = 300 // "Mario Run" hold window: keep lifting for up to this long
@@ -45,7 +72,13 @@ const HOLD_GRAVITY_SCALE = 0.3 // gravity is cut to this fraction while boosting
 const COYOTE_MS = 100
 const INPUT_BUFFER_MS = 100
 
-const LENS_WINDOW_PX = 900 // ~6 body-lengths ahead: the window a wall enters
+// Draft 102 #2: the world now STOPS at each wall instead of just opening a
+// window while still running toward it -- the Traveler can no longer
+// collide with fog at all. STOP_TRIGGER_PX is measured from the wall's
+// near edge; the deceleration itself covers a further ~115px (see
+// WALL_STOP_MS below), landing the wall in the right third of the frame
+// with the beam still a real distance to cross once tapped.
+const STOP_TRIGGER_PX = 560
 const WALL_HALF_W = 180 // fog column is ~360px wide
 // The trail art's own walking surface, measured in from its top edge --
 // shared by the trail layer itself, the gap tile (cropped/scaled
@@ -63,7 +96,10 @@ const FOG_COL_H = 650 // bottom sits on the trail, top reaches roughly y=500
 // tied to how long the pointer stays down.
 const ACTIVATE_MS = 900
 const STUMBLE_OBSTACLE_MS = 600
-const STUMBLE_EASE_IN_MS = 400 // resuming scroll after a fog stumble clears
+const STUMBLE_EASE_IN_MS = 400 // resuming scroll after an OBSTACLE stumble
+const WALL_STOP_MS = 600 // Draft 102 #2: decelerating to a stop at a wall
+const WALL_RESUME_EASE_MS = 500 // Draft 102 #2: easing back in once cleared
+const WALL_NUDGE_MS = 6000 // Draft 102 #2: t2r-04 nudge if not tapped by then
 const GAP_DOWN_MS = 400
 const GAP_UP_MS = 500
 const WHOOP_MAX = 2
@@ -142,7 +178,9 @@ export function makeFoglineRunScene(Phaser) {
       this.started = false
       this.beginRequested = false
       this.scrollX = 0
-      this.state = 'run' // run | jump | stumble-obstacle | stumble-fog | gap-fall | gap-rescue
+      // Draft 102 #2: 'stumble-fog' is gone -- the world now stops before
+      // a wall is ever reached, so fog can no longer be collided with.
+      this.state = 'run' // run | jump | stumble-obstacle | wall-stop | gap-fall | gap-rescue
       this.grounded = true
       this.airborneSinceGroundMs = 0 // coyote timer
       this.bufferedJumpMs = -1 // input buffer (negative = none pending)
@@ -153,7 +191,6 @@ export function makeFoglineRunScene(Phaser) {
       this.nextWallIdx = 0
       this.wallsClearedAhead = 0
       this.firstJumpFired = false
-      this.firstStumbleFired = false
       this.shrinkCount = 0
       this.whoopCount = 0
       this.arrived = false
@@ -161,6 +198,9 @@ export function makeFoglineRunScene(Phaser) {
       this.runFrameMs = 0
       this.holdBoostMs = 0
       this.resumeEase = 0
+      this.resumeEaseTotal = 0
+      this.wallStopElapsed = 0
+      this.wallNudgeFired = false
     }
 
     preload() {
@@ -497,27 +537,30 @@ export function makeFoglineRunScene(Phaser) {
       this.player = this.add.sprite(PLAYER_X, TRAIL_Y, 'run-1')
       this.player.setOrigin(0.5, 1)
       this.player.setDepth(30)
-      this.applyPlayerScale()
+      this.applyPlayerScale('run-1')
       this.playerVY = 0
     }
 
-    // Draft 101 #1: every run/jump/stumble/activate frame now shares one
-    // identical 736x691 canvas -- a FIXED scale (PLAYER_CANVAS_H ->
-    // TRAVELER_H), not read per-texture. Reading each texture's own source
-    // height used to be required (poses were different native sizes) and
-    // was ALSO the site of a real bug: once scaled, a GameObject's own
+    // Draft 101 #1: every run/jump/stumble/activate frame shares one
+    // identical 736x691 canvas -- a FIXED base scale (PLAYER_CANVAS_H ->
+    // TRAVELER_H), not read per-texture (reading each texture's own source
+    // height was the site of a real bug: once scaled, a GameObject's own
     // width/height getters could echo the PREVIOUS frame's already-scaled
     // size instead of the new frame's native size, compounding into a
-    // dramatically-too-large sprite on the next swap. A constant scale
-    // sidesteps that class of bug entirely rather than working around it.
-    applyPlayerScale() {
-      this.player.setScale(TRAVELER_H / PLAYER_CANVAS_H)
+    // dramatically-too-large sprite on the next swap). POSE_SCALE_CORRECTION
+    // layers a small per-pose multiplier on TOP of that fixed base scale --
+    // a uniform CANVAS turned out not to mean a uniform CHARACTER (see its
+    // own comment above); the key is still just a lookup, not a re-read of
+    // the texture's own metadata, so that bug class stays closed.
+    applyPlayerScale(key) {
+      const correction = POSE_SCALE_CORRECTION[key] || 1
+      this.player.setScale((TRAVELER_H / PLAYER_CANVAS_H) * correction)
     }
 
     setPlayerTexture(key) {
       if (this.textures.exists(key) && this.player.texture.key !== key) {
         this.player.setTexture(key)
-        this.applyPlayerScale()
+        this.applyPlayerScale(key)
       }
     }
 
@@ -566,14 +609,10 @@ export function makeFoglineRunScene(Phaser) {
       // attempt landing mid-activation; the Traveler must stay in the
       // 'activate' pose until the wall clears).
       if (this.activatingLens) return
-      // Both lens-routing checks below `return` before the jump logic
-      // runs, so a press that lands inside the window (or mid fog-
-      // stumble) is never ALSO read as a jump attempt.
+      // Draft 102 #2: the world is fully stopped at a wall by the time
+      // it's activatable (no more "still running toward it" window), and
+      // a tap here always activates -- jumping is disabled while stopped.
       if (this.lensWindowActive && this.activeWall) {
-        this.activatingLens = true
-        return
-      }
-      if (this.state === 'stumble-fog' && this.activeWall) {
         this.activatingLens = true
         return
       }
@@ -618,32 +657,18 @@ export function makeFoglineRunScene(Phaser) {
       })
     }
 
-    // ---- fog-wall stumble / lens-activate ----
-    beginStumble(kind, wall) {
-      this.state = kind === 'fog' ? 'stumble-fog' : 'stumble-obstacle'
+    // ---- obstacle stumble (logs/boulders only -- Draft 102 #2 removed
+    // the fog-wall stumble entirely; the world stops before a wall is
+    // ever reached, see updateWalls/beginWallStop) ----
+    beginObstacleStumble() {
+      this.state = 'stumble-obstacle'
       this.grounded = true
       this.playerVY = 0
       this.player.y = TRAIL_Y
-      if (kind === 'fog') {
-        this.activeWall = wall
-        this.setPlayerTexture('stumble-trip')
-        this.time.delayedCall(280, () => {
-          // Draft 101 #4: a tap during this trip animation can already have
-          // moved the Traveler into the 'activate' pose -- don't stomp it.
-          if (this.state === 'stumble-fog' && !this.activatingLens) this.setPlayerTexture('stumble-catch')
-        })
-        if (!this.firstStumbleFired) {
-          this.firstStumbleFired = true
-          this.emitCue('stumble')
-        }
-        // Reduced motion (Draft 98 §6): no desaturate on stumble.
-        if (!this.reduced) this.desaturate(true)
-      } else {
-        this.setPlayerTexture('stumble-trip')
-        this.playSfx('stumble', { rate: 0.8 })
-        this.time.delayedCall(220, () => this.setPlayerTexture('stumble-catch'))
-        this.time.delayedCall(STUMBLE_OBSTACLE_MS, () => this.resumeFromObstacleStumble())
-      }
+      this.setPlayerTexture('stumble-trip')
+      this.playSfx('stumble', { rate: 0.8 })
+      this.time.delayedCall(220, () => this.setPlayerTexture('stumble-catch'))
+      this.time.delayedCall(STUMBLE_OBSTACLE_MS, () => this.resumeFromObstacleStumble())
     }
 
     resumeFromObstacleStumble() {
@@ -651,14 +676,7 @@ export function makeFoglineRunScene(Phaser) {
       this.state = 'run'
       this.setPlayerTexture('run-1')
       this.resumeEase = STUMBLE_EASE_IN_MS
-    }
-
-    desaturate(on) {
-      // A light, reversible grey -- no pipeline dependency, just a tint on
-      // the whole scene's camera.
-      this.cameras.main.setAlpha(1)
-      if (on) this.cameras.main.setBackgroundColor('#1c2230')
-      else this.cameras.main.setBackgroundColor('#0b1220')
+      this.resumeEaseTotal = STUMBLE_EASE_IN_MS
     }
 
     // ---- gap fall / rescue ----
@@ -735,7 +753,7 @@ export function makeFoglineRunScene(Phaser) {
     }
 
     restorePoseAfterActivate() {
-      if (this.state === 'stumble-fog') this.setPlayerTexture('stumble-catch')
+      if (this.state === 'wall-stop') this.setPlayerTexture('stumble-catch')
       else if (this.state === 'run') this.setPlayerTexture(`run-${this.runFrame || 1}`)
     }
 
@@ -774,11 +792,8 @@ export function makeFoglineRunScene(Phaser) {
       this.lensWindowActive = false
       this.lensGlyph.setAlpha(0)
       this.beam.clear()
-      const wasStumbled = this.state === 'stumble-fog'
-      if (!wasStumbled) {
-        this.wallsClearedAhead += 1
-        if (this.wallsClearedAhead === 1) this.emitCue('clear-ahead')
-      }
+      this.wallsClearedAhead += 1
+      if (this.wallsClearedAhead === 1) this.emitCue('clear-ahead')
       this.tweens.add({ targets: wall.col, alpha: 0, duration: 520, ease: 'Sine.out' })
       // The prop is already fully revealed (alpha 1, base scale) by the
       // per-frame ramp in updateLensActivation once beamProgress reaches
@@ -791,14 +806,14 @@ export function makeFoglineRunScene(Phaser) {
         this.beginArrive()
         return
       }
-      if (wasStumbled) {
-        this.state = 'run'
-        this.grounded = true
-        this.playerVY = 0
-        // Ease back into the scroll rather than snapping to full speed.
-        this.resumeEase = STUMBLE_EASE_IN_MS
-      }
-      this.desaturate(false)
+      // Draft 102 #2: every wall clear now resumes from a full stop (the
+      // world never kept moving toward a wall in the first place) --
+      // ease back in rather than snapping straight to full speed.
+      this.state = 'run'
+      this.grounded = true
+      this.playerVY = 0
+      this.resumeEase = WALL_RESUME_EASE_MS
+      this.resumeEaseTotal = WALL_RESUME_EASE_MS
     }
 
     // Draft 100 #9: no cut to Zone 3, no bridge -- the run just ends. The
@@ -844,20 +859,20 @@ export function makeFoglineRunScene(Phaser) {
       const dt = Math.min(delta, 50)
 
       // Advance the scroll unless something is holding it (a jump doesn't
-      // stop the world; both stumble kinds and a gap fall/rescue do, then
-      // ease back in via `resumeEase`).
-      const scrolling =
-        this.state !== 'stumble-fog' &&
-        this.state !== 'stumble-obstacle' &&
-        this.state !== 'gap-fall' &&
-        this.state !== 'gap-rescue'
+      // stop the world; an obstacle stumble and a gap fall/rescue do, then
+      // ease back in via `resumeEase`; a wall stop decelerates itself down
+      // to zero over WALL_STOP_MS via `wallStopElapsed` -- see updateWalls).
+      const scrolling = this.state !== 'stumble-obstacle' && this.state !== 'gap-fall' && this.state !== 'gap-rescue'
       if (scrolling) {
         let speed = RUN_SPEED
         if (this.state === 'arrive-slow') {
           this.arriveSlowElapsed += dt
           speed = RUN_SPEED * Math.max(0, 1 - this.arriveSlowElapsed / ARRIVE_SLOW_MS)
+        } else if (this.state === 'wall-stop') {
+          this.wallStopElapsed += dt
+          speed = RUN_SPEED * Math.max(0, 1 - this.wallStopElapsed / WALL_STOP_MS)
         } else if (this.resumeEase) {
-          const k = Math.max(0, this.resumeEase - dt) / STUMBLE_EASE_IN_MS
+          const k = Math.max(0, this.resumeEase - dt) / this.resumeEaseTotal
           speed = RUN_SPEED * (1 - k)
           this.resumeEase = Math.max(0, this.resumeEase - dt)
         }
@@ -913,7 +928,7 @@ export function makeFoglineRunScene(Phaser) {
       if (this.state === 'gap-fall' || this.state === 'gap-rescue') return
       const overGap = this.gapFills.some((g) => worldX >= g.x - 4 && worldX <= g.x + g.w + 4)
       if (this.player.y >= TRAIL_Y) {
-        if (overGap && this.state !== 'stumble-obstacle' && this.state !== 'stumble-fog') {
+        if (overGap && this.state !== 'stumble-obstacle' && this.state !== 'wall-stop') {
           this.beginGapFall()
           return
         }
@@ -944,13 +959,17 @@ export function makeFoglineRunScene(Phaser) {
               // Only a grounded approach stumbles outright -- a jump still
               // rising toward clearance gets to keep trying each frame.
               o.cleared = true
-              this.beginStumble('obstacle', null)
+              this.beginObstacleStumble()
             }
           }
         }
       }
     }
 
+    // Draft 102 #2: the world now stops at each wall instead of opening a
+    // window while still running toward it. Once the wall's near edge is
+    // within STOP_TRIGGER_PX, `beginWallStop` takes over -- the Traveler
+    // can no longer reach (let alone collide with) the wall at all.
     updateWalls(worldX) {
       // Advance to the next uncleared wall as earlier ones fall behind.
       while (this.nextWallIdx < this.walls.length && this.walls[this.nextWallIdx].cleared && worldX > this.walls[this.nextWallIdx].x + 200) {
@@ -963,28 +982,41 @@ export function makeFoglineRunScene(Phaser) {
       }
       const leftEdge = wall.x - WALL_HALF_W
       const dist = leftEdge - worldX
-      if (!wall.cleared && dist <= LENS_WINDOW_PX && dist > -WALL_HALF_W) {
-        if (!this.lensWindowActive || this.activeWall !== wall) {
-          this.lensWindowActive = true
-          this.activeWall = wall
-          this.lensGlyph.setAlpha(1)
-          if (wall.first) this.emitCue('fog-ahead')
-          else this.playSfx('chime')
-        }
+      if (!wall.cleared && this.state === 'run' && dist <= STOP_TRIGGER_PX) {
+        this.beginWallStop(wall)
+        return
       }
       if (wall.last && this.lensWindowActive && this.activeWall === wall && !wall.calledLast) {
         wall.calledLast = true
         this.emitCue('final-wall')
       }
+      // A nudge, once per wall, if the player hasn't tapped a while after
+      // stopping (t2r-04 -- the old fog-stumble line, repurposed).
       if (
-        !wall.cleared &&
-        this.state !== 'stumble-fog' &&
-        this.state !== 'gap-fall' &&
-        this.state !== 'gap-rescue' &&
-        worldX >= leftEdge
+        this.state === 'wall-stop' &&
+        this.activeWall === wall &&
+        !this.activatingLens &&
+        !this.wallNudgeFired &&
+        this.wallStopElapsed >= WALL_NUDGE_MS
       ) {
-        this.beginStumble('fog', wall)
+        this.wallNudgeFired = true
+        this.emitCue('stumble')
       }
+    }
+
+    beginWallStop(wall) {
+      this.state = 'wall-stop'
+      this.wallStopElapsed = 0
+      this.wallNudgeFired = false
+      this.grounded = true
+      this.playerVY = 0
+      this.player.y = TRAIL_Y
+      this.lensWindowActive = true
+      this.activeWall = wall
+      this.lensGlyph.setAlpha(1)
+      this.setPlayerTexture('stumble-catch')
+      if (wall.first) this.emitCue('fog-ahead')
+      else this.playSfx('chime')
     }
 
     // Every level-table entity is stored and iterated in WORLD-space (its
