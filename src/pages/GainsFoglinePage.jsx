@@ -1,16 +1,20 @@
-// "The Fogline" traversal prototype at /gains-demo/fogline (GAINS Draft 95)
-// — Zone 2 (The Lantern Path) → Zone 3. Instructions → Begin (also the
-// mobile audio-unlock gesture) → the traversal → completion beat → replay
-// in place, same pattern as The First Light (GainsFirstLightPage.jsx).
+// "The Fogline" traversal prototype at /gains-demo/fogline (GAINS Draft 98,
+// replacing Draft 95's drag-the-lens version with an auto-runner) — Zone 2
+// (The Lantern Path) → Zone 3. Instructions → Begin (also the mobile
+// audio-unlock gesture) → the traversal → completion beat → replay in
+// place, same pattern as The First Light (GainsFirstLightPage.jsx).
 //
-// No host zone here, so this page runs its own small audio bed (fogline
-// music + forest ambience, both looped) rather than reaching for
-// createZone2Audio's full per-plate manager -- there's only ever one
-// "plate" to play.
+// No host zone here, so this page runs its own small audio bed rather than
+// reaching for createZone2Audio's full per-plate manager -- there's only
+// ever one "plate" to play. The runner's music needs a genuinely gapless
+// intro->loop splice (a 20-50ms gap is audible at the seam), so it's
+// scheduled on the Web Audio clock the same way the title screen's
+// `unlockAndPlay` does -- a single `<audio>` element with `.loop = true`
+// can't do that handoff without a seam.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react'
-import FoglineTraversal from '../components/gains/zone/FoglineTraversal.jsx'
+import FoglineRunTraversal from '../components/gains/zone/FoglineRunTraversal.jsx'
 import FullscreenStage from '../components/gains/zone/FullscreenStage.jsx'
 import GainsButton from '../components/gains/ds/Button.jsx'
 import '../styles/gains-tokens.css'
@@ -26,10 +30,8 @@ export default function GainsFoglinePage() {
   const [muted, setMuted] = useState(false)
   const [result, setResult] = useState(null)
 
-  const musicRef = useRef(null)
-  const ambienceRef = useRef(null)
+  const audioRef = useRef({ ctx: null, master: null, musicGain: null, ambienceGain: null, unlocked: false })
   const voRef = useRef(null)
-  const unlockedRef = useRef(false)
 
   const reducedMotion = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -39,36 +41,73 @@ export default function GainsFoglinePage() {
   useEffect(() => {
     const prev = document.title
     document.title = 'GAINS for Teens — The Fogline (traversal prototype)'
-    musicRef.current = new Audio(`${BASE}/audio/z2-music-fogline.mp3`)
-    musicRef.current.loop = true
-    musicRef.current.preload = 'auto'
-    ambienceRef.current = new Audio(`${BASE}/audio/z2-amb-forest.mp3`)
-    ambienceRef.current.loop = true
-    ambienceRef.current.preload = 'auto'
     voRef.current = new Audio()
     voRef.current.preload = 'auto'
     return () => {
       document.title = prev
-      musicRef.current?.pause()
-      ambienceRef.current?.pause()
       voRef.current?.pause()
+      if (audioRef.current.ctx) audioRef.current.ctx.close().catch(() => {})
     }
   }, [])
 
   useEffect(() => {
-    ;[musicRef.current, ambienceRef.current, voRef.current].forEach((el) => {
-      if (el) el.muted = muted
-    })
+    if (voRef.current) voRef.current.muted = muted
+    const a = audioRef.current
+    if (a.master) a.master.gain.value = muted ? 0 : 1
   }, [muted])
 
-  function unlockAndPlay() {
-    if (unlockedRef.current) return
-    unlockedRef.current = true
-    ;[musicRef.current, ambienceRef.current].forEach((el) => {
-      if (!el) return
-      el.volume = el === musicRef.current ? MUSIC_VOL : AMBIENCE_VOL
-      el.play().catch(() => {})
-    })
+  async function unlockAndPlay() {
+    const a = audioRef.current
+    if (a.unlocked) return
+    a.unlocked = true
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext
+      const ctx = new AC()
+      if (ctx.state === 'suspended') await ctx.resume().catch(() => {})
+      const master = ctx.createGain()
+      master.gain.value = muted ? 0 : 1
+      master.connect(ctx.destination)
+      const musicGain = ctx.createGain()
+      musicGain.connect(master)
+      const ambienceGain = ctx.createGain()
+      ambienceGain.gain.value = AMBIENCE_VOL
+      ambienceGain.connect(master)
+      a.ctx = ctx
+      a.master = master
+      a.musicGain = musicGain
+      a.ambienceGain = ambienceGain
+
+      const [introBuf, loopBuf, ambBuf] = await Promise.all(
+        [`${BASE}/audio/z2-music-runner-intro.mp3`, `${BASE}/audio/z2-music-runner-loop.mp3`, `${BASE}/audio/z2-amb-forest.mp3`].map((url) =>
+          fetch(url)
+            .then((r) => r.arrayBuffer())
+            .then((buf) => ctx.decodeAudioData(buf)),
+        ),
+      )
+      // The decode above is the one real await -- a fast unmount (or a
+      // second unlock attempt) could close the context before it resolves.
+      if (ctx.state === 'closed') return
+
+      const startAt = ctx.currentTime + 0.06
+      musicGain.gain.value = MUSIC_VOL
+      const introSrc = ctx.createBufferSource()
+      introSrc.buffer = introBuf
+      introSrc.connect(musicGain)
+      introSrc.start(startAt)
+      const loopSrc = ctx.createBufferSource()
+      loopSrc.buffer = loopBuf
+      loopSrc.loop = true
+      loopSrc.connect(musicGain)
+      loopSrc.start(startAt + introBuf.duration)
+
+      const ambSrc = ctx.createBufferSource()
+      ambSrc.buffer = ambBuf
+      ambSrc.loop = true
+      ambSrc.connect(ambienceGain)
+      ambSrc.start(startAt)
+    } catch {
+      /* audio is a nice-to-have here, never block begin on it */
+    }
   }
 
   function speak(file) {
@@ -87,8 +126,9 @@ export default function GainsFoglinePage() {
   }
 
   function duck(on) {
-    if (musicRef.current) musicRef.current.volume = on ? MUSIC_VOL * DUCK_MUL : MUSIC_VOL
-    if (ambienceRef.current) ambienceRef.current.volume = on ? AMBIENCE_VOL * DUCK_MUL : AMBIENCE_VOL
+    const a = audioRef.current
+    if (a.musicGain) a.musicGain.gain.value = on ? MUSIC_VOL * DUCK_MUL : MUSIC_VOL
+    if (a.ambienceGain) a.ambienceGain.gain.value = on ? AMBIENCE_VOL * DUCK_MUL : AMBIENCE_VOL
   }
 
   function begin() {
@@ -103,7 +143,7 @@ export default function GainsFoglinePage() {
 
   return (
     <FullscreenStage section="review-fogline" onRestart={again} showRestart={started && !result}>
-      <FoglineTraversal
+      <FoglineRunTraversal
         started={started}
         muted={muted}
         reducedMotion={reducedMotion}
@@ -111,7 +151,6 @@ export default function GainsFoglinePage() {
         onComplete={setResult}
         speak={speak}
         duck={duck}
-        sfx={() => {}}
       />
 
       {started && !result && (
@@ -139,11 +178,13 @@ export default function GainsFoglinePage() {
           <ul className="text-[14px] leading-relaxed space-y-2 mb-6 text-left max-w-[290px]" style={{ color: 'var(--text-body)' }}>
             <li>• Fog makes everything look bigger than it is.</li>
             <li>
-              • <strong style={{ color: 'var(--text-bright)' }}>Drag the Focusing Lens</strong> anywhere to see what's really there.
+              • <strong style={{ color: 'var(--text-bright)' }}>Tap to jump</strong> gaps and logs — hold a little longer for a bigger jump.
             </li>
-            <li>• Hold it still on the next stone to bring it into focus, then tap to hop.</li>
-            <li>• Look closely and the path shows itself one step at a time.</li>
-            <li>• Non-fail — take your time.</li>
+            <li>
+              • When a wall of fog rolls in, <strong style={{ color: 'var(--text-bright)' }}>hold to activate the Focusing Lens</strong>.
+            </li>
+            <li>• Look straight at what's looming in the fog and it gets smaller.</li>
+            <li>• Non-fail — nothing here can end the run.</li>
           </ul>
           <GainsButton size="lg" onClick={begin}>
             Begin
@@ -162,8 +203,14 @@ export default function GainsFoglinePage() {
             You reached the Mistfields.
           </h2>
           <p className="text-[15px] mb-6" style={{ color: 'rgba(58,29,5,.85)' }}>
-            You found your way in <strong>{result.stonesHopped}</strong> hops and brought{' '}
-            <strong>{result.shapesRevealed}</strong> of 2 looming shapes into focus.
+            {result.motesCollected >= result.totalMotes ? (
+              <>You ran the whole fogline and gathered every mote of light along the way.</>
+            ) : (
+              <>
+                You found your way through the fog, gathering <strong>{result.motesCollected}</strong> of{' '}
+                <strong>{result.totalMotes}</strong> motes of light along the way.
+              </>
+            )}
           </p>
           <GainsButton onClick={again} iconLeft={<RotateCcw size={16} strokeWidth={2} />}>
             Try again

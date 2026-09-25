@@ -47,6 +47,26 @@ function rampVolume(el, to, ms) {
   rampState.set(el, requestAnimationFrame(step))
 }
 
+// Same technique, for a Web Audio GainNode's `.gain.value` instead of an
+// HTMLAudio element's `.volume` -- Draft 98's runner music is scheduled on
+// the Web Audio clock (for a gapless intro->loop splice, see
+// `startRunnerMusic` below) so its own volume/duck ramps have to go through
+// a gain node rather than `rampVolume`'s `el.volume`. Shares the same
+// WeakMap; a GainNode is as valid a key as an HTMLAudioElement.
+function rampGain(node, to, ms) {
+  const prev = rampState.get(node)
+  if (prev) cancelAnimationFrame(prev)
+  const from = node.gain.value
+  const start = performance.now()
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / ms)
+    node.gain.value = from + (to - from) * t
+    if (t < 1) rampState.set(node, requestAnimationFrame(step))
+    else rampState.delete(node)
+  }
+  rampState.set(node, requestAnimationFrame(step))
+}
+
 // `pondUrl` is optional (Draft 80): not every zone's station has its own
 // proximity-crossfaded soundscape (Zone 3's waystone doesn't). `sfxBase`
 // defaults to `base` but can point elsewhere so a zone can reuse another
@@ -319,7 +339,9 @@ const MUSIC_VOL = 0.32
 const CAMPFIRE_VOL = 0.16
 const FOREST_VOL = 0.13
 const FOREST_UNDER_CAMPFIRE_MULT = 0.6 // plate 2 keeps forest running under campfire at 60%
-const FOREST_UNDER_FOGLINE_MULT = 0.4 // Draft 95: the Fogline keeps forest ambience at 40%
+// Draft 98: the Fogline Runner replaces Draft 95's drag-the-lens Fogline;
+// forest ambience keeps the same 40% mix under it.
+const FOREST_UNDER_FOGLINERUN_MULT = 0.4
 const MUSIC_FADE_OUT_MS = 2000
 const MUSIC_FADE_IN_MS = 3000
 const AMBIENCE_CROSSFADE_MS = 2000
@@ -348,7 +370,7 @@ export function createZone2Audio({ base, sfxBase }) {
   vo.preload = 'auto'
   const els = [music, campfire, forest, vo]
 
-  let plate = null // 'plate1' | 'plate2'
+  let plate = null // 'plate1' | 'plate2' | 'foglinerun'
   let duckCtx = 'none'
   let speaking = false
   let disposed = false
@@ -359,6 +381,16 @@ export function createZone2Audio({ base, sfxBase }) {
   const buffers = {}
   let voToken = 0
   let musicToken = 0
+  // Draft 98: the runner's music is scheduled directly on the Web Audio
+  // clock (gapless intro->loop splice, same technique as the title
+  // screen's `unlockAndPlay`) rather than swapped as an HTMLAudio `.src` --
+  // `runnerGain` is its own sub-bus under `master` so it ducks/fades like
+  // every other bed; `runnerSources` holds the two live BufferSourceNodes
+  // so leaving the plate can `.stop()` them (a looping source otherwise
+  // plays forever, silently, once its gain reaches 0).
+  let runnerGain = null
+  let runnerSources = null
+  let runnerToken = 0
 
   function duckMul() {
     // Speaking can layer over a station video's own lighter duck (Spark's
@@ -371,29 +403,94 @@ export function createZone2Audio({ base, sfxBase }) {
 
   function applyVolumes(ease) {
     const d = duckMul()
-    const targetMusic = plate ? MUSIC_VOL * d.music : 0
+    // The runner's music lives on `runnerGain` (Web Audio, gapless splice)
+    // instead of the plain `music` HTMLAudio element -- keep `music` silent
+    // for that plate so a stale `.src` from an earlier plate can't bleed in.
+    const targetMusic = plate && plate !== 'foglinerun' ? MUSIC_VOL * d.music : 0
+    const targetRunnerMusic = plate === 'foglinerun' ? MUSIC_VOL * d.music : 0
     const targetCampfire = plate === 'plate2' ? CAMPFIRE_VOL * d.ambience : 0
     const targetForest =
       plate === 'plate1'
         ? FOREST_VOL * d.ambience
         : plate === 'plate2'
           ? FOREST_VOL * FOREST_UNDER_CAMPFIRE_MULT * d.ambience
-          : plate === 'fogline'
-            ? FOREST_VOL * FOREST_UNDER_FOGLINE_MULT * d.ambience
+          : plate === 'foglinerun'
+            ? FOREST_VOL * FOREST_UNDER_FOGLINERUN_MULT * d.ambience
             : 0
     try {
       if (ease) {
         rampVolume(music, targetMusic, DUCK_RESTORE_MS)
         rampVolume(campfire, targetCampfire, DUCK_RESTORE_MS)
         rampVolume(forest, targetForest, DUCK_RESTORE_MS)
+        if (runnerGain) rampGain(runnerGain, targetRunnerMusic, DUCK_RESTORE_MS)
       } else {
         music.volume = targetMusic
         campfire.volume = targetCampfire
         forest.volume = targetForest
+        if (runnerGain) runnerGain.gain.value = targetRunnerMusic
       }
     } catch {
       /* iOS ignores volume writes; fine */
     }
+  }
+
+  // Draft 98: the runner's intro->loop is scheduled up front on the shared
+  // Web Audio clock, same technique as the title screen's `unlockAndPlay`
+  // (`introSrc.start(startAt)`, `loopSrc.start(startAt + introBuf.duration)`
+  // -- no `ended`-event handoff, so no audible gap at the splice).
+  function decodeCached(name) {
+    if (buffers[name]) return Promise.resolve(buffers[name])
+    if (buffers[name] === null) return Promise.reject(new Error('previously failed'))
+    return fetch(`${base}/audio/${name}.mp3`)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+      .then((ab) => ctx.decodeAudioData(ab))
+      .then((buf) => {
+        buffers[name] = buf
+        return buf
+      })
+      .catch((err) => {
+        buffers[name] = null
+        throw err
+      })
+  }
+
+  function stopRunnerMusic() {
+    runnerToken += 1
+    if (runnerSources) {
+      runnerSources.forEach((src) => {
+        try {
+          src.stop()
+        } catch {
+          /* already stopped */
+        }
+      })
+      runnerSources = null
+    }
+  }
+
+  function startRunnerMusic() {
+    if (!ctx) return
+    const token = ++runnerToken
+    Promise.all([decodeCached('z2-music-runner-intro'), decodeCached('z2-music-runner-loop')])
+      .then(([introBuf, loopBuf]) => {
+        // A fast plate change away (or dispose) while this decode was in
+        // flight -- don't schedule playback nobody asked for any more.
+        if (token !== runnerToken || !ctx || ctx.state === 'closed') return
+        const startAt = ctx.currentTime + 0.05
+        const introSrc = ctx.createBufferSource()
+        introSrc.buffer = introBuf
+        introSrc.connect(runnerGain)
+        introSrc.start(startAt)
+        const loopSrc = ctx.createBufferSource()
+        loopSrc.buffer = loopBuf
+        loopSrc.loop = true
+        loopSrc.connect(runnerGain)
+        loopSrc.start(startAt + introBuf.duration)
+        runnerSources = [introSrc, loopSrc]
+      })
+      .catch(() => {
+        /* the runner's music is a nice-to-have; a failed fetch/decode never blocks the traversal */
+      })
   }
 
   return {
@@ -424,6 +521,9 @@ export function createZone2Audio({ base, sfxBase }) {
           master = ctx.createGain()
           master.gain.value = muted ? 0 : 1
           master.connect(ctx.destination)
+          runnerGain = ctx.createGain()
+          runnerGain.gain.value = 0
+          runnerGain.connect(master)
           if (ctx.state === 'suspended') ctx.resume().catch(() => {})
         }
       } catch {
@@ -454,9 +554,29 @@ export function createZone2Audio({ base, sfxBase }) {
     setPlate(which) {
       if (which === plate || disposed) return
       const token = ++musicToken
+      const prevPlate = plate
       const goingSilent = plate !== null
       plate = which
-      if (goingSilent) {
+
+      // Leaving the runner plate: fade its bus out, then stop its
+      // BufferSourceNodes once silent (a looping source otherwise keeps
+      // playing forever, just inaudibly, once its gain reaches 0).
+      if (prevPlate === 'foglinerun') {
+        rampGain(runnerGain, 0, MUSIC_FADE_OUT_MS)
+        setTimeout(() => {
+          if (token === musicToken) stopRunnerMusic()
+        }, MUSIC_FADE_OUT_MS)
+      }
+
+      if (which === 'foglinerun') {
+        // This plate's music is scheduled on the Web Audio clock instead
+        // of swapped as `music.src` -- fade the plain HTMLAudio track out
+        // of the way (it may still be carrying the previous plate's track)
+        // and start the runner's own gapless intro->loop.
+        rampVolume(music, 0, MUSIC_FADE_OUT_MS)
+        startRunnerMusic()
+        rampGain(runnerGain, MUSIC_VOL * duckMul().music, MUSIC_FADE_IN_MS)
+      } else if (goingSilent) {
         rampVolume(music, 0, MUSIC_FADE_OUT_MS)
         setTimeout(() => {
           if (token !== musicToken) return
@@ -490,8 +610,8 @@ export function createZone2Audio({ base, sfxBase }) {
           ? FOREST_VOL * duckMul().ambience
           : which === 'plate2'
             ? FOREST_VOL * FOREST_UNDER_CAMPFIRE_MULT * duckMul().ambience
-            : which === 'fogline'
-              ? FOREST_VOL * FOREST_UNDER_FOGLINE_MULT * duckMul().ambience
+            : which === 'foglinerun'
+              ? FOREST_VOL * FOREST_UNDER_FOGLINERUN_MULT * duckMul().ambience
               : 0,
         AMBIENCE_CROSSFADE_MS,
       )
@@ -609,6 +729,7 @@ export function createZone2Audio({ base, sfxBase }) {
       disposed = true
       voToken++
       musicToken++
+      stopRunnerMusic()
       els.forEach((el) => {
         try {
           el.pause()

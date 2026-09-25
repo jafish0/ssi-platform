@@ -115,33 +115,57 @@ const MODES = {
       },
     },
   },
-  // Draft 95: "The Fogline" -- Zone 2's exit into Zone 3. Reuses the
-  // walkable-zone engine's Traveler/Spark (same 1080x1920 scale as
-  // firstlight), but the interesting interaction (the draggable Focusing
-  // Lens, the fog it reveals, stone-focus timers, the two looming shapes)
-  // lives entirely in the DOM layer above the canvas -- see
-  // `FoglineTraversal.jsx`. This scene only animates hop commands sent
-  // through `sendCommand` (below) and reports each one back via `onEvent`;
-  // VO/music/ambience are owned by the host's own audio manager (or, for
-  // the standalone practice page, FoglineTraversal's own simple player) --
-  // never loaded here, unlike firstlight's dual hosted/standalone split.
-  fogline: {
-    sceneKey: 'Fogline',
-    loadScene: () => import('../game/foglineScene.js').then((m) => m.makeFoglineScene),
+  // Draft 98: "The Fogline Runner" -- Zone 2's exit into Zone 3, replacing
+  // Draft 95's drag-the-lens Fogline (that traversal played too much like
+  // The First Light and framed the lens as a magnifier rather than the
+  // aimed beam the Ascent already established). Unlike the old Fogline,
+  // gameplay ownership moves entirely INTO Phaser -- there is no DOM
+  // overlay component; the scene captures its own tap/hold input directly
+  // and reports named cues back via `onEvent` for the host to speak
+  // (VO/music/ambience stay host-owned so they can duck the host's own
+  // audio, same split the old fogline scene used for its own sfx vs. host
+  // VO -- see `foglineRunScene.js`'s header).
+  foglinerun: {
+    sceneKey: 'FoglineRun',
+    loadScene: () => import('../game/foglineRunScene.js').then((m) => m.makeFoglineRunScene),
     width: 1080,
     height: 1920,
     assets: {
-      plateUrl: '/long-light/zone2/fogline/plate.webp',
-      travelerUrls: (() => {
-        const urls = { 'idle-front': '/long-light/zone2/traveler/idle-front.webp', 'idle-back': '/long-light/zone2/traveler/idle-back.webp' }
-        for (const d of ['walk-back', 'walk-front', 'walk-side', 'walk-side-left']) {
-          for (let i = 1; i <= 6; i++) urls[`${d}-${i}`] = `/long-light/zone2/traveler/${d}-${i}.webp`
-        }
+      skyUrl: '/long-light/zone2/runner/runner-sky.webp',
+      farUrl: '/long-light/zone2/runner/runner-far-mountains.webp',
+      ridgeUrl: '/long-light/zone2/runner/runner-mid-ridge.webp',
+      trailUrl: '/long-light/zone2/runner/runner-trail.webp',
+      runUrls: (() => {
+        const urls = {}
+        for (let i = 1; i <= 8; i++) urls[i] = `/long-light/zone2/runner/traveler/run-${i}.webp`
         return urls
       })(),
+      jumpUrls: {
+        takeoff: '/long-light/zone2/runner/traveler/jump-takeoff.webp',
+        apex: '/long-light/zone2/runner/traveler/jump-apex.webp',
+        land: '/long-light/zone2/runner/traveler/jump-land.webp',
+      },
+      stumbleUrls: {
+        trip: '/long-light/zone2/runner/traveler/stumble-trip.webp',
+        catch: '/long-light/zone2/runner/traveler/stumble-catch.webp',
+      },
+      activateUrl: '/long-light/zone2/runner/traveler/activate.webp',
+      propUrls: {
+        log: '/long-light/zone2/runner/props/log.webp',
+        boulder: '/long-light/zone2/runner/props/boulder.webp',
+        bush: '/long-light/zone2/runner/props/bush.webp',
+        stump: '/long-light/zone2/runner/props/stump.webp',
+        signpost: '/long-light/zone2/runner/props/signpost.webp',
+      },
+      // The last fog wall reveals Zone 3 rather than a prop -- reuse its
+      // already-served map plate (the broken bridge is painted into it).
+      mistfieldsUrl: '/long-light/zone3/map.webp',
       sparkUrls: [1, 2, 3, 4].map((i) => `/long-light/zone2/spark/flicker-${i}.webp`),
       sfxUrls: {
-        hop: '/long-light/zone4/sfx/step-stone-2.mp3',
+        jump: '/long-light/zone4/sfx/step-grass-1.mp3',
+        stumble: '/long-light/zone4/sfx/step-grass-2.mp3',
+        chime: '/long-light/zone4/sfx/ui-tap.mp3',
+        mote: '/long-light/zone4/sfx/chime-unlock.mp3',
         whoosh: '/long-light/zone4/sfx/spark-whoosh.mp3',
       },
     },

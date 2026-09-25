@@ -33,7 +33,7 @@ import VideoScene from '../components/gains/zone/VideoScene.jsx'
 import PartsTray from '../components/gains/zone/PartsTray.jsx'
 import StationSequence from '../components/gains/zone/StationSequence.jsx'
 import LensBuildView from '../components/gains/zone/LensBuildView.jsx'
-import FoglineTraversal from '../components/gains/zone/FoglineTraversal.jsx'
+import FoglineRunTraversal from '../components/gains/zone/FoglineRunTraversal.jsx'
 import GainsButton from '../components/gains/ds/Button.jsx'
 import { createZone2Audio } from '../components/gains/zone/zoneAudio.js'
 import { ZONE2 } from '../components/gains/zone/zone2Config.js'
@@ -248,7 +248,7 @@ export default function GainsZone2Page() {
       audioRef.current?.stopSpeech()
       setBubble(null)
       transitionTo('transition', () => {
-        audioRef.current?.setPlate('fogline')
+        audioRef.current?.setPlate('foglinerun')
         lockAndSay(ZONE2.vo.exitTransition).then(() => later(() => transitionTo('fogline'), 300))
       })
       return
@@ -505,14 +505,13 @@ export default function GainsZone2Page() {
         )}
 
         {scene === 'fogline' && (
-          <FoglineTraversal
+          <FoglineRunTraversal
             started
             muted={muted}
             reducedMotion={false}
             onComplete={onFoglineComplete}
             speak={(file) => (audioRef.current ? audioRef.current.speak(file) : Promise.resolve())}
             duck={(on) => audioRef.current?.duck(on)}
-            sfx={(name) => audioRef.current?.sfx(name)}
           />
         )}
 
@@ -569,7 +568,9 @@ export default function GainsZone2Page() {
               </h2>
               {travResult && (
                 <p className="text-[14px] mb-5" style={{ color: 'rgba(58,29,5,.85)' }}>
-                  You found your way, stone by stone -- {travResult.stonesHopped} hops, {travResult.shapesRevealed} of 2 shapes brought into focus.
+                  {travResult.motesCollected >= travResult.totalMotes
+                    ? `You ran the whole fogline and gathered every mote of light along the way.`
+                    : `You found your way through the fog, gathering ${travResult.motesCollected} of ${travResult.totalMotes} motes of light along the way.`}
                 </p>
               )}
               <div className="mb-5">

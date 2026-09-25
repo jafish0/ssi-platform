@@ -18,7 +18,10 @@
 // Draft 95 adds The Fogline right after Zone 2's card (renumbered again) --
 // the Focusing Lens assembly and the traversal it unlocks. Draft 97 adds
 // the title screen FIRST, above Zone 1 (renumbered again) -- the game's
-// front door, name not yet adopted by the team.
+// front door, name not yet adopted by the team. Draft 98 replaces The
+// Fogline's own blurb (same card, same position, same route) -- the
+// drag-the-lens traversal became an auto-runner (tap to jump, hold to
+// activate the lens on the fog).
 
 export const REVIEW_CARDS = [
   {
@@ -54,7 +57,7 @@ export const REVIEW_CARDS = [
     title: 'The Fogline',
     section: 'review-fogline',
     blurb:
-      "A traversal, Zone 2 → Zone 3: fog makes everything look bigger than it is. Drag the Focusing Lens around to see what's really there, hold it on a stone to bring it into focus, then hop. Look closely and the path shows itself one step at a time. Two shapes loom in the fog and turn out to be a bush and a stump once the lens holds steady on them.",
+      "A traversal, Zone 2 → Zone 3: fog makes everything look bigger than it is. Run the trail, tap to jump the gaps and logs, and when a wall of fog rolls in, hold to activate the Focusing Lens. Look straight at what's in the fog and it gets smaller.",
     links: [{ label: 'Play the Fogline', to: '/gains-demo/fogline', play: true }],
   },
   {
