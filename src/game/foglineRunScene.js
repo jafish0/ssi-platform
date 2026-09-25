@@ -33,40 +33,16 @@ const PLAYER_X = 300 // the Traveler's fixed screen x
 // instead of 14 separate texture files -- one file, one cache entry, so
 // a per-file staleness bug (the class the ridge rename, Draft 102 #1,
 // fixed for the background layer) can no longer make one pose silently
-// render from different bytes than the rest.
+// render from different bytes than the rest. Draft 105: the three jump
+// frames were re-exported (-v2 -- the original export drew them ~15%
+// too large, checked against the lantern, the one prop identical in
+// every pose and therefore the right ruler for body scale -- NOT
+// silhouette bounding-box height, which naturally varies by pose: a
+// tucked apex is SUPPOSED to have a shorter box than a standing frame).
+// All frames now share one body scale. Never normalize by bounding box
+// (Draft 104 deleted the table that did; don't bring it back).
 const PLAYER_CANVAS_H = 691
 const TRAVELER_H = 173 // 691 * 0.25
-
-// In-conversation follow-up to Draft 103, reported live -- "still bigger
-// on jump" persisted even after the spritesheet swap. Directly
-// measured the ASSEMBLED SHEET's own opaque-pixel bounding-box height per
-// frame (ffmpeg alphaextract + a pixel scan, cropping each frame's own
-// 736x691 region out of the sheet) and got numbers identical to Draft
-// 102's original per-file measurement: the source ART itself draws the
-// character at a different apparent size per pose on an otherwise-
-// identical canvas -- jump-land ~12% taller than the run cycle's own
-// frames average, jump-apex/takeoff ~15% shorter (a wide mid-air spread
-// reads shorter, not taller). This is a real asset inconsistency, logged
-// in WORKING_NOTES for the team; until the frames are redrawn at a
-// consistent scale, POSE_SCALE_CORRECTION compensates for it in code --
-// removing it (as Draft 103 did, chasing the wrong hypothesis) reopens
-// the exact bug being reported.
-const POSE_SCALE_CORRECTION = {
-  activate: 0.944,
-  'jump-apex': 1.157,
-  'jump-land': 0.891,
-  'jump-takeoff': 1.135,
-  'run-1': 0.963,
-  'run-2': 0.971,
-  'run-3': 1.071,
-  'run-4': 0.976,
-  'run-5': 0.989,
-  'run-6': 1.025,
-  'run-7': 1.031,
-  'run-8': 0.989,
-  'stumble-catch': 1.047,
-  'stumble-trip': 1.002,
-}
 
 // Maps this scene's own pose-key vocabulary (used throughout the state
 // machine below) to the spritesheet's frame index, per its own
@@ -561,21 +537,19 @@ export function makeFoglineRunScene(Phaser) {
       this.player = this.add.sprite(PLAYER_X, TRAIL_Y, hasSheet ? 'traveler-sheet' : '__DEFAULT', hasSheet ? FRAME_INDEX['run-1'] : undefined)
       this.player.setOrigin(0.5, 1)
       this.player.setDepth(30)
-      this.applyPlayerScale('run-1')
+      this.applyPlayerScale()
       this.playerVY = 0
       this.currentPoseKey = 'run-1'
     }
 
-    // The base scale (PLAYER_CANVAS_H -> TRAVELER_H) is the same for every
-    // pose -- they're all identical 736x691 frames of one spritesheet now
-    // (Draft 103). POSE_SCALE_CORRECTION layers a small per-pose multiplier
-    // on top of it, compensating for the source art's own real per-pose
-    // size inconsistency (see that constant's comment) -- still a single
-    // lookup, not a re-read of the texture's own metadata, so Draft 101's
-    // original stale-getter bug stays closed.
-    applyPlayerScale(key) {
-      const correction = POSE_SCALE_CORRECTION[key] || 1
-      this.player.setScale((TRAVELER_H / PLAYER_CANVAS_H) * correction)
+    // Draft 104/105: ONE scale call, ever, right here at creation. All
+    // frames share one body scale (verified by lantern size, the one prop
+    // identical in every pose) -- never normalize by bounding box; a
+    // crouched or tucked pose is SUPPOSED to have a shorter silhouette box
+    // than a standing one, so scaling to match bounding boxes actively
+    // fights correct animation instead of fixing anything.
+    applyPlayerScale() {
+      this.player.setScale(TRAVELER_H / PLAYER_CANVAS_H)
     }
 
     setPlayerFrame(key) {
@@ -584,7 +558,6 @@ export function makeFoglineRunScene(Phaser) {
       if (idx === undefined || !this.textures.exists('traveler-sheet')) return
       this.currentPoseKey = key
       this.player.setFrame(idx)
-      this.applyPlayerScale(key)
       if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.info(

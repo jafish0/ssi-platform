@@ -143,7 +143,10 @@ const MODES = {
       // sharing one texture rules out a per-file cache staleness (the
       // same class of bug the ridge rename fixed) ever causing one pose
       // to silently render from stale, differently-sized bytes again.
-      travelerSheetUrl: '/long-light/zone2/runner/traveler-runner-sheet.webp',
+      // Draft 105: -v2 -- the three jump frames were re-exported (the
+      // original export drew them ~15% too large; a new name so no cache
+      // can hand back the old sheet).
+      travelerSheetUrl: '/long-light/zone2/runner/traveler-runner-sheet-v2.webp',
       propUrls: {
         log: '/long-light/zone2/runner/props/log.webp',
         boulder: '/long-light/zone2/runner/props/boulder.webp',
