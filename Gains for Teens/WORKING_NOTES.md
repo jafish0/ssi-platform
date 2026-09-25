@@ -152,6 +152,27 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **a6019fa** (2026-09-25) — Draft 102: **ridge rename, world stops at
+  each wall, jump-scale follow-up.** Full spec in `### Draft 102` below
+  (marked SHIPPED there). The served ridge webp kept showing key blue
+  despite a byte-identical md5 on the source -- renamed to
+  `runner-mid-ridge-v2.webp` rather than keep fighting whatever was
+  serving stale bytes under the old name. The world now stops fully at
+  each fog wall (replacing the run-into-it stumble entirely): within
+  560px of a wall's near edge the world decelerates to a stop over 0.6s,
+  landing the wall in the right third of the frame (verified live at
+  screen-x ~924); the Traveler can no longer collide with fog at all,
+  jumping is disabled while stopped, and a tap always activates instead,
+  running the existing beam-and-clear sequence to completion regardless
+  of further input before easing the run back in over 0.5s; a one-time
+  nudge (the old fog-stumble VO line, repurposed) fires 6s after
+  stopping if the player still hasn't tapped. Also fixed, reported live
+  right after Draft 101 shipped rather than written into a draft: jump
+  frames still read bigger than run frames despite the uniform canvas,
+  because a uniform CANVAS doesn't mean a uniform CHARACTER -- measured
+  every pose's own opaque-pixel bounding-box height and added a small
+  per-pose scale correction so all seven distinct poses now measure the
+  same ~151px apparent character height.
 - **7b2b150** (2026-09-25) — Draft 101: **Fogline runner, five
   time-critical fixes.** Full spec in `### Draft 101` below (marked
   SHIPPED there). Five items, no more: every runner pose (run/jump/
@@ -5678,3 +5699,15 @@ Time-critical; Josh needs this out today. Do exactly these five, nothing else, t
 **Verify (quick, then push).** Run/jump/stumble/activate frames are visibly one size; ridge pines have no blue; walls scroll in from the right and are activatable near the right side; one tap → activate pose held through the clear, beam crosses the screen; feet mid-path; gaps still work. Clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
 
 *End of Draft 101.*
+
+### Draft 102 — Fogline runner: the ridge that won't update (rename it), and the world stops at each fog wall until the lens clears it — ✅ SHIPPED a6019fa (2026-09-25)
+
+Two items. Time-critical; do these, push.
+
+1. **The ridge pines are still showing key blue on ctac.app** (screenshot 2026-09-25, after 7b2b150). The md5 check passed on the file you copied, so the scene must be loading a different file, or the browser is serving the old bytes under the unchanged name. Stop fighting it: **rename**. Copy `Walkable Zones/Zone 2/runner/runner-mid-ridge-v2.webp` (identical to the clean file) to the served folder **as `runner-mid-ridge-v2.webp`**, point the scene's preload at the new name, delete the old `runner-mid-ridge.webp` from `public/`, and grep for any other reference to the old name (another loader, a preload list, a CSS url, the standalone page). Verify in the deployed preview with a hard reload that the pines have sky between their branches, not blue fill.
+
+2. **Stop the world at each fog wall.** Today the wall can end up right beside the Traveler before the tap, so the beam barely travels and the player can run into it. New rule: when a wall's near edge comes within **~560 px** of the Traveler (so the wall sits in the right third of the frame), the world **decelerates to a full stop over 0.6 s** while the Traveler drops to a standing idle (use `run-1` held, or the first frame of the stumble catch if it reads better as "stopped short"), the lens glyph pulses at the lantern, and Spark's cue plays (`t2r-03` the first time, a short chime after). The Traveler **cannot run into a wall**: nothing moves until the player taps. Tap → activate pose held, beam grows to the wall over 0.9 s, fog fades, prop appears standing on the trail → the run resumes with a 0.5 s ease-in. Remove the fog-stumble path entirely (no more running into fog); `t2r-04` now plays as a nudge if the player hasn't tapped 6 s after the stop, once per wall. Jumps are disabled while stopped at a wall (a tap always activates). Gaps and logs stay as they are; the table guarantees none sits inside the stop distance.
+
+**Verify.** Deployed preview, hard reload: no blue in the pines. Each of the five walls brings the run to a stop with the wall in the right third, glyph + cue; tapping plays the full activate + beam across the gap between them; the run resumes; no way to collide with fog; the 6 s nudge fires once. Clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 102.*
