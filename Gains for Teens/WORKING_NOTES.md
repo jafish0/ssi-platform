@@ -152,6 +152,21 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **2840dfe** (2026-09-25) — Draft 103: **one spritesheet, one sprite,
+  one scale for the Traveler.** Full spec in `### Draft 103` below
+  (marked SHIPPED there). Josh, after Draft 102: run size was right but
+  jump frames still rendered ~1.5x larger -- much bigger than the
+  ~12-15% Draft 102's measurement-based per-pose correction accounted
+  for, pointing at 14 separate texture files as the real culprit (one of
+  them could silently serve stale, differently-sized bytes under an
+  unchanged name after an update, the same class of bug the ridge rename
+  fixed for the background layer). Replaced with one combined
+  spritesheet (7 cols x 2 rows, every frame 736x691) -- one file, no
+  per-pose staleness possible any more. The player is now one sprite
+  whose scale is set exactly once, at creation; pose changes are
+  setFrame() calls by index, and Draft 102's per-pose correction table
+  is gone with it. Verified live: all 9 distinct poses tested report
+  byte-identical scale, display height, and frame width.
 - **a6019fa** (2026-09-25) — Draft 102: **ridge rename, world stops at
   each wall, jump-scale follow-up.** Full spec in `### Draft 102` below
   (marked SHIPPED there). The served ridge webp kept showing key blue
@@ -5711,3 +5726,15 @@ Two items. Time-critical; do these, push.
 **Verify.** Deployed preview, hard reload: no blue in the pines. Each of the five walls brings the run to a stop with the wall in the right third, glyph + cue; tapping plays the full activate + beam across the gap between them; the run resumes; no way to collide with fog; the 6 s nudge fires once. Clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
 
 *End of Draft 102.*
+
+### Draft 103 — Fogline runner: the Traveler still grows ~1.5× on jump frames. Load one spritesheet, one sprite, one scale. — ✅ SHIPPED 2840dfe (2026-09-25)
+
+Still wrong after 7b2b150 (Josh, 2026-09-25): run size is perfect, jump frames render about 1.5× larger. Every frame is already on an identical 736×691 canvas, so the only remaining causes are (a) the jump animation still points at the old, larger jump textures, or (b) something applies a per-animation scale (`setScale`, `setDisplaySize`, a body `setSize` that resizes the sprite, or a tween on scale) when the jump starts. Remove the possibility entirely:
+
+1. Replace the 14 individual frame textures with **one spritesheet**: `Walkable Zones/Zone 2/sprites/runner/traveler-runner-sheet.webp` (5152×1382, 7 columns × 2 rows, every frame 736×691) plus `traveler-runner-sheet.json` (frame order and pixel rects; anims: `run` = frames 0–7, `jump` = 8–10 (takeoff, apex, land), `stumble` = 11–12, `activate` = 13). Load it with `this.load.spritesheet(key, url, { frameWidth: 736, frameHeight: 691 })`. Delete the 14 per-frame textures from the preload and from `public/`.
+2. **One sprite object** for the Traveler, created once, `setScale(ONE_SCALE)` once (`ONE_SCALE ≈ 0.25`, giving ~173 px tall). All animations (`run`, `jump`, `stumble`, `activate`) are defined on that same sheet and switched with `play()` only. Grep the scene for every `setScale`, `setDisplaySize`, `displayHeight`, `displayWidth`, `scaleX/Y`, and scale tweens; there must be exactly one, at creation. If the physics body was sized per animation, size it once from the run frame and leave it.
+3. Log in dev: on every animation change, print `sprite.scaleX, sprite.displayHeight, sprite.frame.width`; all three must be constant across run → jump → land → run.
+
+**Verify.** Jump, land, stumble, activate: the Traveler is one size throughout, verified by the log and by eye. Clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 103.*
