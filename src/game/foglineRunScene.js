@@ -40,7 +40,8 @@ const INPUT_BUFFER_MS = 100
 
 const LENS_WINDOW_PX = 640 // ~4 body-lengths ahead: the window a wall enters
 const WALL_HALF_W = 180 // fog column is ~360px wide
-const ACTIVATE_MS = 900 // hold-to-clear duration once the lens is engaged
+const FOG_COL_H = 650 // bottom sits on the trail, top reaches roughly y=500
+const ACTIVATE_MS = 550 // hold-to-clear duration once the lens is engaged
 const STUMBLE_OBSTACLE_MS = 600
 const STUMBLE_EASE_IN_MS = 400 // resuming scroll after a fog stumble clears
 const GAP_DOWN_MS = 400
@@ -224,6 +225,36 @@ export function makeFoglineRunScene(Phaser) {
         g.generateTexture('frun-dust', 12, 12)
         g.destroy()
       }
+      // The fog wall's column: feathered ~60px on each side AND fading in
+      // from the top, so it reads as a soft drift of fog rather than a
+      // flat pale card standing in the trail (a one-time build, reused by
+      // every wall). Banded vertically (coarser than the per-pixel
+      // horizontal feather) purely to keep the one-time draw-call count
+      // reasonable.
+      if (!this.textures.exists('frun-fogcol')) {
+        const w = WALL_HALF_W * 2
+        const h = FOG_COL_H
+        const feather = 60
+        const topFadeFrac = 0.3 // top 30% of the column fades in from 0
+        const bands = 20
+        const g = this.make.graphics({ add: false })
+        for (let b = 0; b < bands; b++) {
+          const vFrac = b / bands
+          const vAlpha = vFrac < topFadeFrac ? vFrac / topFadeFrac : 1
+          const bandY = vFrac * h
+          const bandH = h / bands + 1
+          for (let x = 0; x < w; x++) {
+            let hAlpha = 1
+            if (x < feather) hAlpha = x / feather
+            else if (x > w - feather) hAlpha = (w - x) / feather
+            const a = Math.max(0, Math.min(1, hAlpha)) * Math.max(0, Math.min(1, vAlpha)) * 0.92
+            g.fillStyle(0xd7dde8, a)
+            g.fillRect(x, bandY, 1, bandH)
+          }
+        }
+        g.generateTexture('frun-fogcol', w, h)
+        g.destroy()
+      }
     }
 
     // ---- parallax background: sky is static, far/ridge/trail scroll at
@@ -243,7 +274,12 @@ export function makeFoglineRunScene(Phaser) {
       // that cliff face instead of standing on the path.
       this.far = this.makeScrollLayer('bg-far', 0.15, 1, { originY: 1, anchorY: 1150 })
       this.ridge = this.makeScrollLayer('bg-ridge', 0.45, 2, { originY: 1, anchorY: 1180 })
-      this.trailLayer = this.makeScrollLayer('bg-trail', 1.0, 3, { originY: 0, anchorY: TRAIL_Y - 70 })
+      // Measured directly against the art (sampling alpha down several
+      // columns of the keyed source): grass tips start ~70-90px into the
+      // image, but the ground isn't reliably SOLID until ~110-130px --
+      // anchoring at the old 70px put the Traveler's feet in the grass
+      // fringe, reading as floating above the path.
+      this.trailLayer = this.makeScrollLayer('bg-trail', 1.0, 3, { originY: 0, anchorY: TRAIL_Y - 210 })
     }
 
     makeScrollLayer(key, factor, depth, { originY, anchorY }) {
@@ -280,17 +316,26 @@ export function makeFoglineRunScene(Phaser) {
     }
 
     // ---- trail surface + visible gaps. The trail texture scrolls exactly
-    // like the other layers (factor 1.0, already built above); gaps are
-    // drawn as separate dark fill rectangles placed at their fixed world
-    // positions so the ground visibly breaks open rather than just being
-    // an invisible collision zone. ----
+    // like the other layers (factor 1.0, already built above) and never
+    // actually has a hole cut in it -- these overlays are the ONLY thing
+    // visually breaking the path open at each gap. A flat opaque rectangle
+    // read as a jarring solid black block once the world-position bug
+    // (see updateWorldPositions) was fixed and these became visible for
+    // the first time in practice; a top-down gradient (solid near the
+    // path, fading out with depth) plus a thin bright rim at the lip
+    // reads as an actual drop instead, and doubles as the "where do I
+    // jump" telegraph. ----
     buildTrailAndGaps() {
+      const GAP_DRAW_H = 420
       this.gapFills = LEVEL.gaps.map((g) => {
-        const rect = this.add
-          .rectangle(g.x + g.w / 2, TRAIL_Y + 60, g.w + 8, FRAME_H - TRAIL_Y - 60 + 40, 0x05070d, 1)
-          .setOrigin(0.5, 0)
-          .setDepth(4)
-        return { ...g, obj: rect }
+        const width = g.w + 8
+        const container = this.add.container(g.x + g.w / 2, TRAIL_Y).setDepth(4)
+        const body = this.add.graphics()
+        body.fillGradientStyle(0x11151f, 0x11151f, 0x11151f, 0x11151f, 0.95, 0.95, 0, 0)
+        body.fillRect(-width / 2, 0, width, GAP_DRAW_H)
+        const rim = this.add.rectangle(0, 1, width, 5, 0xd7dde8, 0.6).setOrigin(0.5, 0)
+        container.add([body, rim])
+        return { ...g, obj: container }
       })
     }
 
@@ -312,11 +357,10 @@ export function makeFoglineRunScene(Phaser) {
 
     buildWalls() {
       this.walls = LEVEL.walls.map((w) => {
-        const col = this.add
-          .rectangle(w.x, TRAIL_Y - 250, WALL_HALF_W * 2, 620, 0xcdd6e6, 0.92)
-          .setOrigin(0.5, 1)
-          .setDepth(20)
-        col.setBlendMode(Phaser.BlendModes.NORMAL)
+        // Bottom-anchored ON the trail so the column actually stands in
+        // the Traveler's path (it previously floated 250-870px up in the
+        // sky, nowhere near the ground she runs on).
+        const col = this.add.image(w.x, TRAIL_Y, 'frun-fogcol').setOrigin(0.5, 1).setDepth(20)
         let shapeObj = null
         const size = SHAPE_SIZE[w.shape]
         if (size) {
@@ -369,19 +413,27 @@ export function makeFoglineRunScene(Phaser) {
       this.player = this.add.sprite(PLAYER_X, TRAIL_Y, 'run-1')
       this.player.setOrigin(0.5, 1)
       this.player.setDepth(30)
-      this.applyPlayerScale()
+      this.applyPlayerScale('run-1')
       this.playerVY = 0
     }
 
-    applyPlayerScale() {
-      const srcH = this.player.height || TRAVELER_H
+    // Every run/jump/stumble/activate frame is its own source PNG at its
+    // own native size (feet-to-canvas-edge varies per pose), so the scale
+    // has to be recomputed per texture. Reading the RAW source image's
+    // height here (not `this.player.height`) sidesteps a real bug this
+    // scene hit live: once a GameObject has been scaled, its own
+    // width/height getters can echo the PREVIOUS frame's already-scaled
+    // display size instead of the new frame's native size, compounding
+    // into a dramatically-too-large sprite on the very next texture swap.
+    applyPlayerScale(key) {
+      const srcH = this.textures.get(key).getSourceImage().height || TRAVELER_H
       this.player.setScale(TRAVELER_H / srcH)
     }
 
     setPlayerTexture(key) {
       if (this.textures.exists(key) && this.player.texture.key !== key) {
         this.player.setTexture(key)
-        this.applyPlayerScale()
+        this.applyPlayerScale(key)
       }
     }
 
@@ -395,6 +447,12 @@ export function makeFoglineRunScene(Phaser) {
       this.sparkFlickerMs = 0
     }
 
+    // The activate glyph is the ONLY persistent lantern-area visual --
+    // alpha 0 until a wall enters the lens window, so it only ever shows
+    // when the lens is actually needed (an earlier persistent "lantern
+    // glow" for mote collection sat at this same fixed point but didn't
+    // track the Traveler through a jump and had no real reason to be
+    // visible outside the lens window; removed).
     buildBeamGraphics() {
       this.beam = this.add.graphics().setDepth(50)
       this.lensGlyph = this.add
@@ -402,15 +460,6 @@ export function makeFoglineRunScene(Phaser) {
         .setDisplaySize(48, 48)
         .setDepth(36)
         .setAlpha(0)
-      // The lantern glow at the Traveler's hand brightens a notch per mote
-      // collected (no HUD is on screen during the run to show it any other
-      // way -- this scene fully replaces the walkable-zone stage).
-      this.lanternGlow = this.add
-        .image(BEAM_ORIGIN_X, BEAM_ORIGIN_Y, 'frun-glow')
-        .setDepth(34)
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDisplaySize(18, 18)
-        .setAlpha(0.25)
     }
 
     // Wall 5 clearing reveals the Mistfields (Zone 3's own map plate) rather
@@ -574,6 +623,10 @@ export function makeFoglineRunScene(Phaser) {
       wall.beamProgress = Math.min(ACTIVATE_MS, wall.beamProgress + delta)
       const t = wall.beamProgress / ACTIVATE_MS
       this.drawBeam(t)
+      // The wall visibly thins WHILE held (not just at completion) --
+      // "the beam builds... the wall thins" reads as one continuous
+      // action, and a released-early hold keeps its partial progress.
+      wall.col.setAlpha(0.92 * (1 - t * 0.65))
       if (t >= 1) this.clearWall(wall)
     }
 
@@ -584,16 +637,19 @@ export function makeFoglineRunScene(Phaser) {
       const sy = BEAM_ORIGIN_Y
       const wall = this.activeWall
       if (!wall) return
-      const tx = wall.x - this.scrollX
-      const ty = TRAIL_Y - 120
-      const ex = sx + (tx - sx) * Math.min(1, t * 1.15)
-      const ey = sy + (ty - sy) * Math.min(1, t * 1.15)
-      this.beam.lineStyle(9, 0xfff3d0, 0.28)
+      const ex = wall.x - this.scrollX
+      const ey = TRAIL_Y - 120
+      // Full length instantly (the Ascent's beam is a one-shot flash, not
+      // a slow-growing wire) -- a quick flicker in width/alpha while held
+      // stands in for "progress"; the wall visibly dissolving (above) is
+      // what actually reads as the beam doing work.
+      const flicker = 0.85 + Math.sin(t * 40) * 0.15
+      this.beam.lineStyle(10, 0xfff3d0, 0.3 * flicker)
       this.beam.beginPath()
       this.beam.moveTo(sx, sy)
       this.beam.lineTo(ex, ey)
       this.beam.strokePath()
-      this.beam.lineStyle(4, 0xfff3d0, 0.95)
+      this.beam.lineStyle(4, 0xfff3d0, 0.95 * flicker)
       this.beam.beginPath()
       this.beam.moveTo(sx, sy)
       this.beam.lineTo(ex, ey)
@@ -704,6 +760,7 @@ export function makeFoglineRunScene(Phaser) {
 
       const worldX = this.scrollX + PLAYER_X
 
+      this.updateWorldPositions()
       this.updatePlayerVertical(dt)
       this.updateGroundCollision(worldX)
       this.updateWalls(worldX)
@@ -816,6 +873,33 @@ export function makeFoglineRunScene(Phaser) {
       }
     }
 
+    // Every level-table entity is stored and iterated in WORLD-space (its
+    // fixed position along the ~23,200px trail); only the collision math
+    // (`updateGroundCollision`/`updateWalls`/`updateMotes`, all keyed off
+    // `worldX = scrollX + PLAYER_X`) accounted for that scrollX offset --
+    // the sprites themselves were left sitting at their raw world-x
+    // forever, correct-looking only in the opening seconds while scrollX
+    // was still near zero, then silently scrolling off to the right
+    // forever (a wall thousands of px into the level was never once
+    // inside the visible 0-1080 screen range). This is the one place
+    // world-x becomes screen-x for every scrolling entity.
+    updateWorldPositions() {
+      for (const o of this.obstacles) {
+        if (o.obj) o.obj.x = o.x - this.scrollX
+      }
+      for (const w of this.walls) {
+        w.col.x = w.x - this.scrollX
+        if (w.shapeObj) w.shapeObj.x = w.x - this.scrollX
+        if (w.propObj) w.propObj.x = w.x - this.scrollX
+      }
+      for (const g of this.gapFills) {
+        g.obj.x = g.x + g.w / 2 - this.scrollX
+      }
+      for (const m of this.motes) {
+        if (!m.collected) m.obj.x = m.x - this.scrollX
+      }
+    }
+
     updateMotes(worldX) {
       for (const m of this.motes) {
         if (m.collected) continue
@@ -829,15 +913,6 @@ export function makeFoglineRunScene(Phaser) {
           if (this.moteNotches < MOTE_NOTCH_CAP) {
             this.moteNotches += 1
             this.emit('mote-notch', { count: this.moteNotches })
-            const k = this.moteNotches / MOTE_NOTCH_CAP
-            this.tweens.add({
-              targets: this.lanternGlow,
-              alpha: 0.25 + k * 0.55,
-              displayWidth: 18 + k * 22,
-              displayHeight: 18 + k * 22,
-              duration: 260,
-              ease: 'Sine.out',
-            })
           }
           this.playSfx('mote')
         }
