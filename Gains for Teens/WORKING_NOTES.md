@@ -152,6 +152,31 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **7ed112b** (2026-09-25) — Draft 100: **Fogline runner first-play
+  fixes.** Full spec in `### Draft 100` below (marked SHIPPED there).
+  Josh's first pass on Draft 98 + addendum, from screenshots, ten items:
+  the Traveler stood on the grass tufts instead of the stone ground below
+  them (a re-measured `GROUND_Y_IN_LAYER`, shared by everything that
+  stands -- walls, props, the gap tile -- so it fixed the "floating at
+  chest height" wall/prop complaint too); gaps showed the plain trail
+  strip through the painted chasm instead of the sky/mist behind it (an
+  inverted mask now hides the trail layer under each gap); the jump was
+  retuned so a tap clears the smallest gap with margin and a full hold
+  clears the largest with real margin (measured via a new dev-only
+  console check, not by eye), and the lens window widened so a wall is
+  first activatable near the right edge instead of a body-length away;
+  the Traveler now switches to the actual 'activate' pose for the whole
+  hold (that art was a full-body pose being squeezed into the small
+  glyph icon); the looming blob is gone and the prop reveals
+  progressively as the beam completes instead of via a separate tween;
+  motes (collectible, notch counter, chime) are gone entirely -- no HUD
+  ever consumed them; the Mistfields/bridge reveal is gone -- the last
+  wall now decelerates the world to a full stop over 1.5s, THEN Spark's
+  new arrival line plays (`t2r-11-arrive.mp3`, retiring the
+  bridge-mentioning `t2-05-arrive`), then the end card, with both host
+  pages' completion copy no longer citing mote counts; and
+  `runner-mid-ridge` was re-keyed again (pines still carrying key blue
+  between branches).
 - **123c511** (2026-09-25) — Draft 98 addendum + Draft 99: **painted fog
   walls/gap tile, title audio leak.** Full specs in `### Draft 98
   addendum` and `### Draft 99` below (both marked SHIPPED there). The
@@ -5587,3 +5612,31 @@ Also: `runner-trail.png` and `runner-mid-ridge.png` were re-keyed (grass tufts a
 On `/gains-demo/title` the title music is joined by other audio that sounds like Zone 2's campfire ambience and SFX (Josh, 2026-09-25). The title should play exactly two things: `title-music-intro` → `title-music-loop`, and the forest ambience at 40 % (or drop the ambience entirely if it's part of the problem; music alone is fine). Find the cause rather than muting: most likely the shared audio manager is still holding Zone 2's ambience/SFX channels from a previous page, or the title mounts a zone-style ambience set by default. Fix so the title screen starts from a silent manager (stop and release every channel on mount), and audit the other demo pages for the same leak (Zone 1 → title → Zone 2 in one session should never stack beds). Verify: open the title cold, then after playing Zone 2, then after the Fogline; in every case only the title music (and optional forest bed) is audible, mute silences everything, and beginning fades it all out. Clean console. `src/` → no version bump. Mark shipped, log Recently-shipped.
 
 *End of Draft 99.*
+
+### Draft 100 — Fogline runner, first-play fixes: ground line, real gaps, reachable jumps, walls on the ground and further out, the activate pose, no blob, no motes, no bridge reveal — ✅ SHIPPED 7ed112b (2026-09-25)
+
+Josh's first pass on Draft 98 + addendum (2026-09-25, screenshots). Closer, still off in nine places. All in `foglineRunScene.js` unless noted.
+
+1. **Ground line.** The Traveler stands on the tops of the grass tufts, not on the trail. The walking surface is the **stone surface** below the tufts, about **150 px** below the trail layer's top edge (my "y 73" was the tuft line; ignore it). Make it a constant (`GROUND_Y_IN_LAYER`) and tune by eye so the feet sit on the stones with the tufts partly in front of the boots. Everything that "stands" (Traveler, obstacles, props, fog walls, the gap tile's broken edges) uses this same line.
+
+2. **Gaps still look filled.** Screenshot 1: the chasm tile is drawn, but the trail strip continues behind it, so rock shows through the gap. The gap has to **replace** that segment of the strip, not overlay it: build the trail as a sequence of segments (trail-run, gap-tile, trail-run…) so no strip is drawn under a gap, or mask the strip under each tile. The chasm must show the sky/cliff/mist behind, nothing else.
+
+3. **Jumps are impossible.** Tune so a **tap** clears a 220 px gap with margin and a **full hold** clears 320 px with margin at `RUN_SPEED` 380: raise `JUMP_IMPULSE`/`HOLD_LIFT` (or lower gravity) until a held jump's horizontal range is ≥ 480 px and its apex ≥ 260 px; verify by measuring in-game, not by eye. Also add a **jump reach guard** in dev: log any table gap the max jump can't clear by ≥ 60 px.
+
+4. **Fog walls and their props float mid-air.** Screenshot 2: the wall, the blob, and the revealed prop all sit above the trail at the Traveler's chest. Bottom-align all three to the ground line (item 1). Props stand on the stones.
+
+5. **Walls spawn too close.** The wall appears a body-length from the Traveler, so the beam barely travels. Walls should **enter from the right edge of the frame** like everything else, and the **lens window opens at 900 px ahead** (not 640), so a wall is first activatable while it's still near the right edge and the beam has ~600 px to cross. Beam length = distance to the wall's near edge, growing over the 0.9 s hold.
+
+6. **The activate pose never shows.** While press-and-hold is routed to the lens (in the window, or during a fog stumble), the Traveler must switch to `traveler-stage2-activate` for the whole hold and return to the run cycle on release/clear. Right now the run cycle keeps playing; fix the routing (and make sure the pointerdown that starts a hold isn't also being consumed as a jump).
+
+7. **Remove the looming blob entirely.** The dark oval is still drawn (screenshot 2). With the painted fog sprite it isn't needed: the fog alone is the "something in the way", and the prop simply appears as the fog clears (scale 1.3 → 1.0, fading in over the last half of the beam). Delete the blob code.
+
+8. **Remove the motes.** No collectibles, no lantern-glow notches, no chime. Delete the mote group and the table entries.
+
+9. **Remove the Mistfields reveal.** No cut to the Zone 3 plate, no bridge (it looks pasted). The run simply ends: the last fog wall clears, the Traveler slows to a walk and stops over ~1.5 s while the background keeps its normal look, Spark plays the arrival line, then `onComplete`. **Arrival line changes**: `t2-05-arrive` mentions the bridge, so retire it here; use the new `t2r-11-arrive` ("That's the Mistfields up ahead. We made it. Come on.") from `Walkable Zones/Zone 2/t2r-11-arrive.mp3`; if the file isn't there yet, wire the path and fall back to no line.
+
+10. **Ridge re-keyed.** The mid-ridge pines were carrying key blue between the branches (screenshot). `runner/runner-mid-ridge.png` is re-keyed (3136×703); re-copy it.
+
+**Verify.** Feet on the stones everywhere; gaps show the chasm through to the mist with no trail behind; every table gap is clearable (tap for 200/220, hold for the rest, measured); walls enter from the right, the glyph pulses at 900 px, holding shows the activate frame and the beam crosses real distance, the fog thins and the prop appears standing on the trail; no blob, no motes; the last wall clears into a plain slow-to-stop with the new line (or silence if the file is missing) and the end card. Clean console, clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 100.*
