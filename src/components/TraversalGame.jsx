@@ -157,6 +157,15 @@ const MODES = {
         stump: '/long-light/zone2/runner/props/stump.webp',
         signpost: '/long-light/zone2/runner/props/signpost.webp',
       },
+      // Draft 98 addendum: painted fog-wall sprites (cycled a/b/c across
+      // the five walls) and a painted gap tile, replacing the original
+      // ship's procedural column/gradient.
+      fogWallUrls: {
+        a: '/long-light/zone2/runner/fog-wall-a.webp',
+        b: '/long-light/zone2/runner/fog-wall-b.webp',
+        c: '/long-light/zone2/runner/fog-wall-c.webp',
+      },
+      gapTileUrl: '/long-light/zone2/runner/runner-gap-tile.webp',
       // The last fog wall reveals Zone 3 rather than a prop -- reuse its
       // already-served map plate (the broken bridge is painted into it).
       mistfieldsUrl: '/long-light/zone3/map.webp',

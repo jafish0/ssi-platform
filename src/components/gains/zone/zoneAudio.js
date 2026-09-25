@@ -67,6 +67,23 @@ function rampGain(node, to, ms) {
   rampState.set(node, requestAnimationFrame(step))
 }
 
+// Draft 99: every zone page owns its own manager instance and disposes it
+// correctly on unmount -- but a belt-and-suspenders registry costs little
+// and means a page that mounts *after* a zone (namely the title screen,
+// reachable mid-session via the hub) can guarantee silence regardless of
+// whatever upstream page it came from, rather than trusting that every
+// past and future zone page's cleanup path is bug-free. Both manager
+// flavors below register themselves here and unregister in `dispose()`.
+const liveManagers = new Set()
+
+// Force-dispose every zone audio manager that hasn't already torn itself
+// down. Idempotent (each manager's own `disposed` flag no-ops a repeat
+// dispose), safe to call even when nothing is live.
+export function silenceAllZoneAudio() {
+  for (const m of liveManagers) m.dispose()
+  liveManagers.clear()
+}
+
 // `pondUrl` is optional (Draft 80): not every zone's station has its own
 // proximity-crossfaded soundscape (Zone 3's waystone doesn't). `sfxBase`
 // defaults to `base` but can point elsewhere so a zone can reuse another
@@ -118,7 +135,7 @@ export function createZoneAudio({ base, sfxBase, pondUrl }) {
     }
   }
 
-  return {
+  const api = {
     // Must be called synchronously inside a real user gesture.
     unlock() {
       if (unlocked || disposed) return
@@ -322,8 +339,11 @@ export function createZoneAudio({ base, sfxBase, pondUrl }) {
         }
         ctx = null
       }
+      liveManagers.delete(api)
     },
   }
+  liveManagers.add(api)
+  return api
 }
 
 // Draft 94 (Zone 2): a second, parallel audio manager rather than
@@ -493,7 +513,7 @@ export function createZone2Audio({ base, sfxBase }) {
       })
   }
 
-  return {
+  const api = {
     unlock() {
       if (unlocked || disposed) return
       unlocked = true
@@ -746,6 +766,9 @@ export function createZone2Audio({ base, sfxBase }) {
         }
         ctx = null
       }
+      liveManagers.delete(api)
     },
   }
+  liveManagers.add(api)
+  return api
 }

@@ -26,6 +26,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TITLE, SUBTITLE } from '../components/gains/title/titleCopy.js'
+import { silenceAllZoneAudio } from '../components/gains/zone/zoneAudio.js'
 import '../styles/gains-tokens.css'
 
 const BASE = '/long-light/title'
@@ -445,6 +446,13 @@ export default function GainsTitlePage() {
   useEffect(() => {
     const root = document.getElementById('title-screen')
     if (!root) return undefined
+
+    // Draft 99: the title screen is reachable mid-session from the hub
+    // (Zone 1/2/3/4 -> hub -> title), so it can't assume it's the first
+    // thing to ever mount -- force every zone page's audio manager silent
+    // before this page schedules its own music/ambience, regardless of
+    // whether the zone page it came from disposed itself correctly.
+    silenceAllZoneAudio()
 
     function fit() {
       const s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920)

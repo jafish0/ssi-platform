@@ -40,6 +40,11 @@ const INPUT_BUFFER_MS = 100
 
 const LENS_WINDOW_PX = 640 // ~4 body-lengths ahead: the window a wall enters
 const WALL_HALF_W = 180 // fog column is ~360px wide
+// The trail art's own walking surface, measured in from its top edge --
+// shared by the trail layer itself and the gap tile, which is cropped and
+// scaled identically to it (Draft 98 addendum).
+const TRAIL_ART_TOP_OFFSET = 73
+const GAP_TILE_CHASM_W = 304 // the tile's own native chasm width at scale 1
 const FOG_COL_H = 650 // bottom sits on the trail, top reaches roughly y=500
 const ACTIVATE_MS = 550 // hold-to-clear duration once the lens is engaged
 const STUMBLE_OBSTACLE_MS = 600
@@ -177,6 +182,8 @@ export function makeFoglineRunScene(Phaser) {
       Object.entries(c.stumbleUrls || {}).forEach(([k, url]) => load(`stumble-${k}`, url))
       load('activate', c.activateUrl)
       Object.entries(c.propUrls || {}).forEach(([k, url]) => load(`prop-${k}`, url))
+      Object.entries(c.fogWallUrls || {}).forEach(([k, url]) => load(`fogwall-${k}`, url))
+      load('gaptile', c.gapTileUrl)
       load('mistfields', c.mistfieldsUrl)
       ;(c.sparkUrls || []).forEach((url, i) => load(`spark-${i + 1}`, url))
       Object.entries(c.sfxUrls || {}).forEach(([k, url]) => {
@@ -268,18 +275,16 @@ export function makeFoglineRunScene(Phaser) {
       }
       // Far mountains and the ridge are bottom-anchored (their own art ends
       // at its base, "vanishing" behind the next layer down). The trail is
-      // TOP-anchored instead: its walking surface is only ~70px below the
+      // TOP-anchored instead: its walking surface sits well below the
       // art's own top edge, with a tall rocky cliff-face painted below that
       // -- anchoring by its bottom would put the Traveler waist-deep in
       // that cliff face instead of standing on the path.
       this.far = this.makeScrollLayer('bg-far', 0.15, 1, { originY: 1, anchorY: 1150 })
       this.ridge = this.makeScrollLayer('bg-ridge', 0.45, 2, { originY: 1, anchorY: 1180 })
-      // Measured directly against the art (sampling alpha down several
-      // columns of the keyed source): grass tips start ~70-90px into the
-      // image, but the ground isn't reliably SOLID until ~110-130px --
-      // anchoring at the old 70px put the Traveler's feet in the grass
-      // fringe, reading as floating above the path.
-      this.trailLayer = this.makeScrollLayer('bg-trail', 1.0, 3, { originY: 0, anchorY: TRAIL_Y - 210 })
+      // Draft 98 addendum: re-measured against the re-keyed art (the
+      // re-key also fixed grass/tree-top pixels that were still carrying
+      // key blue).
+      this.trailLayer = this.makeScrollLayer('bg-trail', 1.0, 3, { originY: 0, anchorY: TRAIL_Y - TRAIL_ART_TOP_OFFSET })
     }
 
     makeScrollLayer(key, factor, depth, { originY, anchorY }) {
@@ -318,21 +323,33 @@ export function makeFoglineRunScene(Phaser) {
     // ---- trail surface + visible gaps. The trail texture scrolls exactly
     // like the other layers (factor 1.0, already built above) and never
     // actually has a hole cut in it -- these overlays are the ONLY thing
-    // visually breaking the path open at each gap. A flat opaque rectangle
-    // read as a jarring solid black block once the world-position bug
-    // (see updateWorldPositions) was fixed and these became visible for
-    // the first time in practice; a top-down gradient (solid near the
-    // path, fading out with depth) plus a thin bright rim at the lip
-    // reads as an actual drop instead, and doubles as the "where do I
-    // jump" telegraph. ----
+    // visually breaking the path open at each gap. Draft 98 addendum:
+    // a painted tile (broken trail edges either side of a chasm) replaces
+    // the original ship's flat gradient overlay -- cropped/scaled
+    // identically to the trail layer itself, so its edges line up with
+    // the surrounding ground, and scaled HORIZONTALLY ONLY to match each
+    // gap's own width (the tile's chasm is ~304px wide at scale 1, its
+    // native size; the two 300px-wide gaps are close enough to ship at
+    // that native scale unmodified). ----
     buildTrailAndGaps() {
-      const GAP_DRAW_H = 420
+      const hasTile = this.textures.exists('gaptile')
       this.gapFills = LEVEL.gaps.map((g) => {
+        if (hasTile) {
+          const scaleX = Math.max(0.66, Math.min(1, g.w / GAP_TILE_CHASM_W))
+          const img = this.add
+            .image(g.x + g.w / 2, TRAIL_Y - TRAIL_ART_TOP_OFFSET, 'gaptile')
+            .setOrigin(0.5, 0)
+            .setDepth(4)
+          img.setScale(scaleX, 1)
+          return { ...g, obj: img }
+        }
+        // Fallback if the painted tile is ever missing: the flat gradient
+        // this shipped with originally.
         const width = g.w + 8
         const container = this.add.container(g.x + g.w / 2, TRAIL_Y).setDepth(4)
         const body = this.add.graphics()
         body.fillGradientStyle(0x11151f, 0x11151f, 0x11151f, 0x11151f, 0.95, 0.95, 0, 0)
-        body.fillRect(-width / 2, 0, width, GAP_DRAW_H)
+        body.fillRect(-width / 2, 0, width, 420)
         const rim = this.add.rectangle(0, 1, width, 5, 0xd7dde8, 0.6).setOrigin(0.5, 0)
         container.add([body, rim])
         return { ...g, obj: container }
@@ -355,19 +372,48 @@ export function makeFoglineRunScene(Phaser) {
       })
     }
 
+    // Draft 98 addendum: painted fog-wall sprites (cycled a/b/c across the
+    // five walls) replace the procedural column. Bottom-anchored ON the
+    // trail; scaled to ~1.9x the Traveler's display height; a small
+    // per-wall scale "wobble" plus a slow, continuous vertical "breathe"
+    // (scaleY drifting a further 4% up and back) so five identical crops
+    // of the same three sprites don't read as static cutouts. Cool tint
+    // for walls 1-4, a touch warmer for the last one (it opens onto the
+    // Mistfields instead of a prop).
     buildWalls() {
-      this.walls = LEVEL.walls.map((w) => {
-        // Bottom-anchored ON the trail so the column actually stands in
-        // the Traveler's path (it previously floated 250-870px up in the
-        // sky, nowhere near the ground she runs on).
-        const col = this.add.image(w.x, TRAIL_Y, 'frun-fogcol').setOrigin(0.5, 1).setDepth(20)
+      const FOG_WALL_KEYS = ['a', 'b', 'c']
+      const FOG_WALL_DISPLAY_H = TRAVELER_H * 1.9
+      const TINT_COOL = 0xcfe0f2
+      const TINT_WARM = 0xf5e3c9
+      this.walls = LEVEL.walls.map((w, i) => {
+        const wallKey = `fogwall-${FOG_WALL_KEYS[i % FOG_WALL_KEYS.length]}`
+        const hasSprite = this.textures.exists(wallKey)
+        const col = this.add.image(w.x, TRAIL_Y, hasSprite ? wallKey : 'frun-fogcol').setOrigin(0.5, 1).setDepth(21)
+        if (hasSprite) {
+          const srcH = this.textures.get(wallKey).getSourceImage().height
+          const wobble = 1 + (((i * 7 + 3) % 5) / 5 - 0.5) * 0.16 // deterministic, roughly ±8%
+          const baseScale = (FOG_WALL_DISPLAY_H / srcH) * wobble
+          col.setScale(baseScale)
+          col.setTint(w.last ? TINT_WARM : TINT_COOL)
+          const breatheMs = 3000 + ((i * 733) % 2000) // 3000-5000ms, varied per wall
+          this.tweens.add({
+            targets: col,
+            scaleY: baseScale * 1.04,
+            duration: breatheMs,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.inOut',
+          })
+        }
         let shapeObj = null
         const size = SHAPE_SIZE[w.shape]
         if (size) {
+          // Behind the sprite (depth 21) -- it reads as "something in the
+          // fog" through the painted cloud rather than floating in front.
           shapeObj = this.add
-            .ellipse(w.x, TRAIL_Y, size.w, size.h, 0x0c1220, 0.72)
+            .ellipse(w.x, TRAIL_Y, size.w, size.h, 0x0c1220, 0.55)
             .setOrigin(0.5, 1)
-            .setDepth(21)
+            .setDepth(20)
         }
         let propObj = null
         if (w.prop) {
@@ -626,7 +672,7 @@ export function makeFoglineRunScene(Phaser) {
       // The wall visibly thins WHILE held (not just at completion) --
       // "the beam builds... the wall thins" reads as one continuous
       // action, and a released-early hold keeps its partial progress.
-      wall.col.setAlpha(0.92 * (1 - t * 0.65))
+      wall.col.setAlpha(1 - t * 0.65)
       if (t >= 1) this.clearWall(wall)
     }
 
