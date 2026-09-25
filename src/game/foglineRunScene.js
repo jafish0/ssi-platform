@@ -29,7 +29,14 @@ const FRAME_H = 1920
 const RUN_SPEED = 380 // px/s the world scrolls left under the fixed Traveler
 const TRAIL_Y = 1150 // where the trail's walking surface sits (feet level)
 const PLAYER_X = 300 // the Traveler's fixed screen x
-const TRAVELER_H = 160 // display height (~1/12 of frame height)
+// Draft 101 #1: every runner pose (run/jump/stumble/activate) now shares
+// one identical sprite canvas -- no more per-frame scaling, which is what
+// caused jump frames to read bigger than run frames (each was scaled to
+// TRAVELER_H off its OWN differing native size). PLAYER_CANVAS_H is that
+// canvas's own height; TRAVELER_H is the one display height every frame
+// gets, applied uniformly (do not size any frame individually).
+const PLAYER_CANVAS_H = 691
+const TRAVELER_H = 173 // 691 * 0.25
 
 const GRAVITY_Y = 2100
 const JUMP_V0 = 980 // base upward speed on any tap (clears the ~180-220px gaps)
@@ -44,13 +51,17 @@ const WALL_HALF_W = 180 // fog column is ~360px wide
 // shared by the trail layer itself, the gap tile (cropped/scaled
 // identically to it), and every standing entity's bottom-anchor Y
 // (`TRAIL_Y` itself never moves; this is which row of the ART lands on
-// that screen line). Draft 100 #1: Draft 98 addendum's "y 73" was the
-// grass-tuft line, not the walking surface -- the Traveler stood on TOP
-// of the tufts instead of the stone ground below them.
-const GROUND_Y_IN_LAYER = 150
+// that screen line). Draft 100 #1 measured the stone band's NEAR edge
+// (73 -> 150); Draft 101 #5 moves it again, to the band's MIDDLE (the
+// stone band runs roughly 150-330) so the Traveler reads as standing ON
+// the path rather than right at its far edge.
+const GROUND_Y_IN_LAYER = 235
 const GAP_TILE_CHASM_W = 304 // the tile's own native chasm width at scale 1
 const FOG_COL_H = 650 // bottom sits on the trail, top reaches roughly y=500
-const ACTIVATE_MS = 550 // hold-to-clear duration once the lens is engaged
+// Draft 101 #4: activation is a single tap, not a hold -- the beam grows
+// to the wall automatically over this duration once tapped, no longer
+// tied to how long the pointer stays down.
+const ACTIVATE_MS = 900
 const STUMBLE_OBSTACLE_MS = 600
 const STUMBLE_EASE_IN_MS = 400 // resuming scroll after a fog stumble clears
 const GAP_DOWN_MS = 400
@@ -486,27 +497,27 @@ export function makeFoglineRunScene(Phaser) {
       this.player = this.add.sprite(PLAYER_X, TRAIL_Y, 'run-1')
       this.player.setOrigin(0.5, 1)
       this.player.setDepth(30)
-      this.applyPlayerScale('run-1')
+      this.applyPlayerScale()
       this.playerVY = 0
     }
 
-    // Every run/jump/stumble/activate frame is its own source PNG at its
-    // own native size (feet-to-canvas-edge varies per pose), so the scale
-    // has to be recomputed per texture. Reading the RAW source image's
-    // height here (not `this.player.height`) sidesteps a real bug this
-    // scene hit live: once a GameObject has been scaled, its own
-    // width/height getters can echo the PREVIOUS frame's already-scaled
-    // display size instead of the new frame's native size, compounding
-    // into a dramatically-too-large sprite on the very next texture swap.
-    applyPlayerScale(key) {
-      const srcH = this.textures.get(key).getSourceImage().height || TRAVELER_H
-      this.player.setScale(TRAVELER_H / srcH)
+    // Draft 101 #1: every run/jump/stumble/activate frame now shares one
+    // identical 736x691 canvas -- a FIXED scale (PLAYER_CANVAS_H ->
+    // TRAVELER_H), not read per-texture. Reading each texture's own source
+    // height used to be required (poses were different native sizes) and
+    // was ALSO the site of a real bug: once scaled, a GameObject's own
+    // width/height getters could echo the PREVIOUS frame's already-scaled
+    // size instead of the new frame's native size, compounding into a
+    // dramatically-too-large sprite on the next swap. A constant scale
+    // sidesteps that class of bug entirely rather than working around it.
+    applyPlayerScale() {
+      this.player.setScale(TRAVELER_H / PLAYER_CANVAS_H)
     }
 
     setPlayerTexture(key) {
       if (this.textures.exists(key) && this.player.texture.key !== key) {
         this.player.setTexture(key)
-        this.applyPlayerScale(key)
+        this.applyPlayerScale()
       }
     }
 
@@ -548,9 +559,16 @@ export function makeFoglineRunScene(Phaser) {
     onPress() {
       if (!this.started) return
       this.pointerDown = true
-      // Draft 100 #6: both lens-routing checks below `return` before the
-      // jump logic runs, so a press that lands inside the window (or mid
-      // fog-stumble) is never ALSO read as a jump attempt.
+      // Draft 101 #4: activation is now a single TAP -- once engaged,
+      // `activatingLens` drives itself to completion in
+      // updateLensActivation regardless of further presses or releases,
+      // so ignore any input for the rest of that run (also blocks a jump
+      // attempt landing mid-activation; the Traveler must stay in the
+      // 'activate' pose until the wall clears).
+      if (this.activatingLens) return
+      // Both lens-routing checks below `return` before the jump logic
+      // runs, so a press that lands inside the window (or mid fog-
+      // stumble) is never ALSO read as a jump attempt.
       if (this.lensWindowActive && this.activeWall) {
         this.activatingLens = true
         return
@@ -568,9 +586,9 @@ export function makeFoglineRunScene(Phaser) {
 
     onRelease() {
       this.pointerDown = false
-      // Releasing mid-activation freezes progress rather than resetting it
-      // -- "hold again and it continues" (Draft 98 §2).
-      this.activatingLens = false
+      // Draft 101 #4: activation auto-progresses once tapped -- releasing
+      // no longer freezes or cancels it (superseding Draft 98 §2's hold
+      // model).
     }
 
     beginJump() {
@@ -610,7 +628,9 @@ export function makeFoglineRunScene(Phaser) {
         this.activeWall = wall
         this.setPlayerTexture('stumble-trip')
         this.time.delayedCall(280, () => {
-          if (this.state === 'stumble-fog') this.setPlayerTexture('stumble-catch')
+          // Draft 101 #4: a tap during this trip animation can already have
+          // moved the Traveler into the 'activate' pose -- don't stomp it.
+          if (this.state === 'stumble-fog' && !this.activatingLens) this.setPlayerTexture('stumble-catch')
         })
         if (!this.firstStumbleFired) {
           this.firstStumbleFired = true
@@ -686,11 +706,11 @@ export function makeFoglineRunScene(Phaser) {
       })
     }
 
-    // ---- lens activation progress (per-wall, persists across releases) ----
-    // Draft 100 #6: the Traveler switches to the 'activate' pose for the
-    // WHOLE hold (not just the run cycle continuing underneath), restored
-    // the instant the hold isn't active any more -- released early, wall
-    // cleared, or nothing to activate at all.
+    // ---- lens activation progress (per-wall, auto-runs once tapped) ----
+    // Draft 101 #4: a single tap starts this; it now runs to completion on
+    // its own (ACTIVATE_MS), independent of the pointer. The Traveler
+    // stays in the 'activate' pose for the whole thing, restored the
+    // instant it's NOT running any more -- cleared, or nothing active.
     updateLensActivation(delta) {
       const wall = this.activeWall
       if (!wall || !this.activatingLens) {
@@ -701,13 +721,11 @@ export function makeFoglineRunScene(Phaser) {
       wall.beamProgress = Math.min(ACTIVATE_MS, wall.beamProgress + delta)
       const t = wall.beamProgress / ACTIVATE_MS
       this.drawBeam(t)
-      // The wall visibly thins WHILE held (not just at completion) --
-      // "the beam builds... the wall thins" reads as one continuous
-      // action, and a released-early hold keeps its partial progress.
+      // The wall visibly thins as the beam grows, not just at completion.
       wall.col.setAlpha(1 - t * 0.65)
       // Draft 100 #7: the prop reveals progressively over the LAST half of
-      // the hold (scale 1.3 -> 1.0, fading in) instead of popping in as a
-      // separate tween once the wall is already fully cleared.
+      // the activation (scale 1.3 -> 1.0, fading in) instead of popping in
+      // as a separate tween once the wall is already fully cleared.
       if (wall.propObj) {
         const revealT = Math.max(0, Math.min(1, (t - 0.5) / 0.5))
         wall.propObj.setAlpha(revealT)
@@ -721,6 +739,10 @@ export function makeFoglineRunScene(Phaser) {
       else if (this.state === 'run') this.setPlayerTexture(`run-${this.runFrame || 1}`)
     }
 
+    // Draft 101 #4: the beam now GROWS from the lantern to the wall over
+    // ACTIVATE_MS (an automatic tap-and-watch beat, not a held charge-up --
+    // superseding the instant-full-length flash from the earlier hold
+    // model), with a light flicker on the core line for some life.
     drawBeam(t) {
       this.beam.clear()
       if (t <= 0) return
@@ -728,14 +750,12 @@ export function makeFoglineRunScene(Phaser) {
       const sy = BEAM_ORIGIN_Y
       const wall = this.activeWall
       if (!wall) return
-      const ex = wall.x - this.scrollX
-      const ey = TRAIL_Y - 120
-      // Full length instantly (the Ascent's beam is a one-shot flash, not
-      // a slow-growing wire) -- a quick flicker in width/alpha while held
-      // stands in for "progress"; the wall visibly dissolving (above) is
-      // what actually reads as the beam doing work.
+      const exFull = wall.x - this.scrollX
+      const eyFull = TRAIL_Y - 120
+      const ex = sx + (exFull - sx) * t
+      const ey = sy + (eyFull - sy) * t
       const flicker = 0.85 + Math.sin(t * 40) * 0.15
-      this.beam.lineStyle(10, 0xfff3d0, 0.3 * flicker)
+      this.beam.lineStyle(10, 0xfff3d0, 0.3)
       this.beam.beginPath()
       this.beam.moveTo(sx, sy)
       this.beam.lineTo(ex, ey)
