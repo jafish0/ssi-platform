@@ -152,6 +152,43 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **123c511** (2026-09-25) — Draft 98 addendum + Draft 99: **painted fog
+  walls/gap tile, title audio leak.** Full specs in `### Draft 98
+  addendum` and `### Draft 99` below (both marked SHIPPED there). The
+  runner's procedural fog column and flat gradient gap overlay are
+  replaced with painted sprites (fog-wall-a/b/c cycled across the five
+  walls, tinted cool for walls 1-4 and warm for the last, with a per-wall
+  scale wobble and a slow vertical breathe; a painted gap tile scaled to
+  each gap's width). `runner-trail`/`runner-mid-ridge` re-keyed (grass
+  tufts and tree tops were still carrying key blue) and the trail layer
+  re-anchored to the re-keyed art's walking surface. Separately, the
+  title screen could inherit a previous zone page's still-playing
+  campfire/forest ambience and SFX when reached mid-session via the hub
+  -- live-confirmed an orphaned Zone 2 `AudioContext` surviving a full
+  Zone2 → hub navigation, undisposed by Zone2Page's own cleanup (which
+  only knows about its current audio-manager instance). Added a small
+  registry in `zoneAudio.js` every audio-manager instance joins and
+  leaves on dispose; the title screen force-silences the registry on
+  mount so it always starts silent regardless of what page it came from.
+  Also removed the temporary `window.__frunSeek`/`__frunScene` debug
+  hooks used to verify this session's earlier Fogline Runner position
+  fix.
+- **b6a6974** (2026-09-25) — Fix Fogline Runner: world-scrolling objects
+  never moved on screen. In-conversation fix (Josh's first-playthrough
+  bug report), no draft: obstacles/walls/gaps/motes were positioned once
+  at their level-table world-x and never converted to screen-x per frame
+  (only the collision math accounted for `scrollX`), so at any nontrivial
+  scroll distance the Traveler read as floating above the path with fog
+  walls and gap art far outside the visible frame. Fixed with a single
+  `updateWorldPositions()` pass at the top of `update()`. Also fixed:
+  jump caused a dramatic scale glitch (reading `player.height` after
+  `setTexture()` could echo the previous frame's scaled size instead of
+  the new texture's native size -- now reads
+  `textures.get(key).getSourceImage().height` directly), the beam now
+  draws full-length instantly with a flicker instead of growing in over
+  `ACTIVATE_MS` (cut 900ms → 550ms, matching the Ascent's beam), and the
+  lantern-area glow that didn't track jumps was removed (the lens glyph
+  already covers "show only when the lens is usable").
 - **84e0f55** (2026-09-24) — Draft 98: **The Fogline, take two -- the
   drag-the-lens traversal replaced with an auto-runner.** Full spec in
   `### Draft 98` below (marked SHIPPED there). Josh's call after playing
@@ -5532,3 +5569,21 @@ Shapes: hunched = wide blob 260×200 sitting on the trail; tall = 120×420; wide
 **Verify.** Standalone and in-zone: `t2r-01` gates the start; the run scrolls smoothly at 60 fps on a phone with all three layers mirrored seamlessly; tap hops and held jumps clear the table's gaps (every gap passable with a held jump, the 200 and 220 ones with a tap); coyote time and input buffer work; logs and boulders stumble and resume; gap rescue plays with Spark's line every time; the first wall stumbles a player who does nothing, the lens glyph pulses inside the window, hold builds the Ascent's beam and the fog clears while the blob shrinks to the bush; clearing ahead works and fires `t2r-07` once; the revealed log at wall 3 is jumpable; motes collect and brighten the lantern; the last wall opens on the Mistfields and the bridge; `t2-05` then the end card; all cues fire once where specified. Old `foglineScene.js` gone, old t2 clips gone from the build. Reduced-motion path. Zones 1/3/4 unchanged. Clean console, clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
 
 *End of Draft 98.*
+
+### Draft 98 addendum — painted fog walls and a painted gap tile (asset swaps for the runner) — ✅ SHIPPED 123c511 (2026-09-25)
+
+Two asset swaps for Draft 98, both in `Walkable Zones/Zone 2/runner/`:
+
+1. **Fog walls.** Replace the procedural column with the painted sprites `fog-wall-a.png`, `fog-wall-b.png`, `fog-wall-c.png` (329×650, transparent, near-white so a slight per-wall tint works: cool blue-grey for walls 1–4, a touch warmer for the last one). Bottom edge sits on the walking surface; scale each wall so it stands ~1.9× the Traveler's display height (≈ 300 px), width follows. Cycle a/b/c across the five walls, with a ±8 % scale wobble and a slow 3–5 s vertical breathe (scaleY 1.0 → 1.04) so they feel alive. Keep the looming blob behind the sprite (it reads as "something in the fog"), soft, alpha 0.55. Clearing = the sprite's alpha to 0 over the beam's 0.9 s while the blob shrinks to the prop.
+
+2. **Gaps.** Replace the missing-strip gap with the painted tile `runner-gap-tile.png` (824×826, same vertical crop and scale as `runner-trail.png`, a 304 px chasm with ~260 px of broken trail on each side). At every `gap(x, w)` in the level table, splice the tile into the trail strip centered on the gap so the ragged edges replace the trail's ends, and scale the tile horizontally (0.66–1.0) to hit the table's widths (200–300 px; the two 300s stay at 1.0). The trail strip resumes on both sides of the tile. The trail's walking surface is now at **y 73** of the layer (re-measured after the re-key); use that. Mist inside the chasm is painted; the existing bottom fog overlay drifts across it as before.
+
+Also: `runner-trail.png` and `runner-mid-ridge.png` were re-keyed (grass tufts and tree tops were carrying key blue); re-copy both.
+
+*End of Draft 98 addendum.*
+
+### Draft 99 — Title screen: only the title music plays — ✅ SHIPPED 123c511 (2026-09-25)
+
+On `/gains-demo/title` the title music is joined by other audio that sounds like Zone 2's campfire ambience and SFX (Josh, 2026-09-25). The title should play exactly two things: `title-music-intro` → `title-music-loop`, and the forest ambience at 40 % (or drop the ambience entirely if it's part of the problem; music alone is fine). Find the cause rather than muting: most likely the shared audio manager is still holding Zone 2's ambience/SFX channels from a previous page, or the title mounts a zone-style ambience set by default. Fix so the title screen starts from a silent manager (stop and release every channel on mount), and audit the other demo pages for the same leak (Zone 1 → title → Zone 2 in one session should never stack beds). Verify: open the title cold, then after playing Zone 2, then after the Fogline; in every case only the title music (and optional forest bed) is audible, mute silences everything, and beginning fades it all out. Clean console. `src/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 99.*
