@@ -28,41 +28,39 @@ const FRAME_H = 1920
 const RUN_SPEED = 380 // px/s the world scrolls left under the fixed Traveler
 const TRAIL_Y = 1150 // where the trail's walking surface sits (feet level)
 const PLAYER_X = 300 // the Traveler's fixed screen x
-// Draft 101 #1: every runner pose (run/jump/stumble/activate) now shares
-// one identical sprite canvas -- no more per-frame scaling, which is what
-// caused jump frames to read bigger than run frames (each was scaled to
-// TRAVELER_H off its OWN differing native size). PLAYER_CANVAS_H is that
-// canvas's own height; TRAVELER_H is the one display height every frame
-// gets, applied uniformly (do not size any frame individually).
+// Draft 103: every runner pose is now one FRAME of a single spritesheet
+// (7 cols x 2 rows, 736x691 per frame -- see traveler-runner-sheet.json)
+// instead of 14 separate texture files. One sprite object, one scale, set
+// ONCE at creation (applyPlayerScale takes no argument and is called
+// exactly once in buildPlayer) -- Draft 101/102's per-texture and
+// per-pose scaling were both symptomatic fixes for what turned out to be
+// (at least in significant part) individual pose files silently serving
+// stale, differently-sized bytes under unchanged filenames after an
+// update -- the same class of bug the ridge rename (Draft 102 #1) fixed.
+// A single shared texture makes that whole failure mode impossible: there
+// is no second file that could go stale out of sync with the first.
 const PLAYER_CANVAS_H = 691
 const TRAVELER_H = 173 // 691 * 0.25
 
-// Reported live after Draft 101 shipped: jump frames still read bigger
-// than run frames despite the uniform canvas -- a uniform CANVAS doesn't
-// mean the CHARACTER is drawn at a uniform size within it. Measured each
-// frame's own opaque-pixel bounding-box height (a one-off ffmpeg
-// alphaextract + pixel scan): jump-land's silhouette fills ~12% more of
-// its canvas than the run cycle's own frames average, jump-apex/takeoff
-// ~15% less (a wide mid-air spread reads shorter, not taller). A small
-// per-pose correction on top of the shared base scale evens every frame
-// out to the same apparent character height; run poses get a minor
-// version of the same correction since they already varied a little
-// among themselves. Keyed by texture key; missing keys fall back to 1.
-const POSE_SCALE_CORRECTION = {
-  activate: 0.944,
-  'jump-apex': 1.157,
-  'jump-land': 0.891,
-  'jump-takeoff': 1.135,
-  'run-1': 0.963,
-  'run-2': 0.971,
-  'run-3': 1.071,
-  'run-4': 0.976,
-  'run-5': 0.989,
-  'run-6': 1.025,
-  'run-7': 1.031,
-  'run-8': 0.989,
-  'stumble-catch': 1.047,
-  'stumble-trip': 1.002,
+// Maps this scene's own pose-key vocabulary (used throughout the state
+// machine below) to the spritesheet's frame index, per its own
+// documented frame order (run-1..8, jump-1-takeoff, jump-2-apex,
+// jump-3-land, stumble-1-trip, stumble-2-catch, activate).
+const FRAME_INDEX = {
+  'run-1': 0,
+  'run-2': 1,
+  'run-3': 2,
+  'run-4': 3,
+  'run-5': 4,
+  'run-6': 5,
+  'run-7': 6,
+  'run-8': 7,
+  'jump-takeoff': 8,
+  'jump-apex': 9,
+  'jump-land': 10,
+  'stumble-trip': 11,
+  'stumble-catch': 12,
+  activate: 13,
 }
 
 const GRAVITY_Y = 2100
@@ -212,10 +210,9 @@ export function makeFoglineRunScene(Phaser) {
       load('bg-far', c.farUrl)
       load('bg-ridge', c.ridgeUrl)
       load('bg-trail', c.trailUrl)
-      Object.entries(c.runUrls || {}).forEach(([k, url]) => load(`run-${k}`, url))
-      Object.entries(c.jumpUrls || {}).forEach(([k, url]) => load(`jump-${k}`, url))
-      Object.entries(c.stumbleUrls || {}).forEach(([k, url]) => load(`stumble-${k}`, url))
-      load('activate', c.activateUrl)
+      if (c.travelerSheetUrl) {
+        this.load.spritesheet('traveler-sheet', c.travelerSheetUrl, { frameWidth: 736, frameHeight: PLAYER_CANVAS_H })
+      }
       Object.entries(c.propUrls || {}).forEach(([k, url]) => load(`prop-${k}`, url))
       Object.entries(c.fogWallUrls || {}).forEach(([k, url]) => load(`fogwall-${k}`, url))
       load('gaptile', c.gapTileUrl)
@@ -534,33 +531,36 @@ export function makeFoglineRunScene(Phaser) {
     // `updatePlayerVertical()`, same manual-kinematics style as
     // `climbScene.js`'s falling feelings.
     buildPlayer() {
-      this.player = this.add.sprite(PLAYER_X, TRAIL_Y, 'run-1')
+      const hasSheet = this.textures.exists('traveler-sheet')
+      this.player = this.add.sprite(PLAYER_X, TRAIL_Y, hasSheet ? 'traveler-sheet' : '__DEFAULT', hasSheet ? FRAME_INDEX['run-1'] : undefined)
       this.player.setOrigin(0.5, 1)
       this.player.setDepth(30)
-      this.applyPlayerScale('run-1')
+      this.applyPlayerScale()
       this.playerVY = 0
+      this.currentPoseKey = 'run-1'
     }
 
-    // Draft 101 #1: every run/jump/stumble/activate frame shares one
-    // identical 736x691 canvas -- a FIXED base scale (PLAYER_CANVAS_H ->
-    // TRAVELER_H), not read per-texture (reading each texture's own source
-    // height was the site of a real bug: once scaled, a GameObject's own
-    // width/height getters could echo the PREVIOUS frame's already-scaled
-    // size instead of the new frame's native size, compounding into a
-    // dramatically-too-large sprite on the next swap). POSE_SCALE_CORRECTION
-    // layers a small per-pose multiplier on TOP of that fixed base scale --
-    // a uniform CANVAS turned out not to mean a uniform CHARACTER (see its
-    // own comment above); the key is still just a lookup, not a re-read of
-    // the texture's own metadata, so that bug class stays closed.
-    applyPlayerScale(key) {
-      const correction = POSE_SCALE_CORRECTION[key] || 1
-      this.player.setScale((TRAVELER_H / PLAYER_CANVAS_H) * correction)
+    // Draft 103: ONE scale call, ever, right here at creation -- every
+    // pose is a same-size frame of the same spritesheet texture now, so
+    // there is no per-texture/per-pose case left to scale for (Draft
+    // 101/102's own scale calls, one per texture-swap, are gone with
+    // them). If jump/stumble/activate ever read a different size again,
+    // it did NOT come from this method.
+    applyPlayerScale() {
+      this.player.setScale(TRAVELER_H / PLAYER_CANVAS_H)
     }
 
-    setPlayerTexture(key) {
-      if (this.textures.exists(key) && this.player.texture.key !== key) {
-        this.player.setTexture(key)
-        this.applyPlayerScale(key)
+    setPlayerFrame(key) {
+      if (this.currentPoseKey === key) return
+      const idx = FRAME_INDEX[key]
+      if (idx === undefined || !this.textures.exists('traveler-sheet')) return
+      this.currentPoseKey = key
+      this.player.setFrame(idx)
+      if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.info(
+          `[FoglineRun] pose=${key} scaleX=${this.player.scaleX.toFixed(4)} displayHeight=${this.player.displayHeight.toFixed(1)} frameW=${this.player.frame.width}`,
+        )
       }
     }
 
@@ -580,7 +580,7 @@ export function makeFoglineRunScene(Phaser) {
     // glow" for mote collection sat at this same fixed point but didn't
     // track the Traveler through a jump and had no real reason to be
     // visible outside the lens window; removed). Draft 100 #6: the
-    // 'activate' texture is a full-body Traveler pose (see setPlayerTexture
+    // 'activate' texture is a full-body Traveler pose (see setPlayerFrame
     // usage in updateLensActivation), not an icon -- the glyph uses the
     // small procedural glow instead, tinted to read as a lantern spark.
     buildBeamGraphics() {
@@ -635,7 +635,7 @@ export function makeFoglineRunScene(Phaser) {
       this.grounded = false
       this.playerVY = -JUMP_V0
       this.holdBoostMs = 0
-      this.setPlayerTexture('jump-takeoff')
+      this.setPlayerFrame('jump-takeoff')
       this.playSfx('jump')
       if (!this.firstJumpFired) {
         this.firstJumpFired = true
@@ -651,9 +651,9 @@ export function makeFoglineRunScene(Phaser) {
       this.state = 'run'
       this.grounded = true
       this.airborneSinceGroundMs = 0
-      this.setPlayerTexture('jump-land')
+      this.setPlayerFrame('jump-land')
       this.time.delayedCall(90, () => {
-        if (this.state === 'run') this.setPlayerTexture('run-1')
+        if (this.state === 'run') this.setPlayerFrame('run-1')
       })
     }
 
@@ -665,16 +665,16 @@ export function makeFoglineRunScene(Phaser) {
       this.grounded = true
       this.playerVY = 0
       this.player.y = TRAIL_Y
-      this.setPlayerTexture('stumble-trip')
+      this.setPlayerFrame('stumble-trip')
       this.playSfx('stumble', { rate: 0.8 })
-      this.time.delayedCall(220, () => this.setPlayerTexture('stumble-catch'))
+      this.time.delayedCall(220, () => this.setPlayerFrame('stumble-catch'))
       this.time.delayedCall(STUMBLE_OBSTACLE_MS, () => this.resumeFromObstacleStumble())
     }
 
     resumeFromObstacleStumble() {
       if (this.state !== 'stumble-obstacle') return
       this.state = 'run'
-      this.setPlayerTexture('run-1')
+      this.setPlayerFrame('run-1')
       this.resumeEase = STUMBLE_EASE_IN_MS
       this.resumeEaseTotal = STUMBLE_EASE_IN_MS
     }
@@ -684,7 +684,7 @@ export function makeFoglineRunScene(Phaser) {
       this.state = 'gap-fall'
       this.grounded = false
       this.playerVY = 0
-      this.setPlayerTexture('run-1')
+      this.setPlayerFrame('run-1')
       this.tweens.add({
         targets: this.player,
         y: TRAIL_Y + 260,
@@ -735,7 +735,7 @@ export function makeFoglineRunScene(Phaser) {
         this.restorePoseAfterActivate()
         return
       }
-      this.setPlayerTexture('activate')
+      this.setPlayerFrame('activate')
       wall.beamProgress = Math.min(ACTIVATE_MS, wall.beamProgress + delta)
       const t = wall.beamProgress / ACTIVATE_MS
       this.drawBeam(t)
@@ -753,8 +753,8 @@ export function makeFoglineRunScene(Phaser) {
     }
 
     restorePoseAfterActivate() {
-      if (this.state === 'wall-stop') this.setPlayerTexture('stumble-catch')
-      else if (this.state === 'run') this.setPlayerTexture(`run-${this.runFrame || 1}`)
+      if (this.state === 'wall-stop') this.setPlayerFrame('stumble-catch')
+      else if (this.state === 'run') this.setPlayerFrame(`run-${this.runFrame || 1}`)
     }
 
     // Draft 101 #4: the beam now GROWS from the lantern to the wall over
@@ -827,7 +827,7 @@ export function makeFoglineRunScene(Phaser) {
       this.arriveSlowElapsed = 0
       this.time.delayedCall(ARRIVE_SLOW_MS, () => {
         this.arrived = true
-        this.setPlayerTexture('run-1')
+        this.setPlayerFrame('run-1')
         this.emitCue('arrive')
         this.time.delayedCall(ARRIVE_VO_MS, () => {
           this.cfg.onComplete?.({})
@@ -921,7 +921,7 @@ export function makeFoglineRunScene(Phaser) {
       const g = boosting ? GRAVITY_Y * HOLD_GRAVITY_SCALE : GRAVITY_Y
       this.playerVY += (g * dt) / 1000
       this.player.y += (this.playerVY * dt) / 1000
-      if (this.playerVY > 0) this.setPlayerTexture('jump-apex')
+      if (this.playerVY > 0) this.setPlayerFrame('jump-apex')
     }
 
     updateGroundCollision(worldX) {
@@ -1014,7 +1014,7 @@ export function makeFoglineRunScene(Phaser) {
       this.lensWindowActive = true
       this.activeWall = wall
       this.lensGlyph.setAlpha(1)
-      this.setPlayerTexture('stumble-catch')
+      this.setPlayerFrame('stumble-catch')
       if (wall.first) this.emitCue('fog-ahead')
       else this.playSfx('chime')
     }
@@ -1048,7 +1048,7 @@ export function makeFoglineRunScene(Phaser) {
       if (this.runFrameMs >= RUN_FRAME_MS) {
         this.runFrameMs = 0
         this.runFrame = (this.runFrame % 8) + 1
-        this.setPlayerTexture(`run-${this.runFrame}`)
+        this.setPlayerFrame(`run-${this.runFrame}`)
       }
     }
 

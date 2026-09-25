@@ -138,21 +138,12 @@ const MODES = {
       // identical md5 on the source file.
       ridgeUrl: '/long-light/zone2/runner/runner-mid-ridge-v2.webp',
       trailUrl: '/long-light/zone2/runner/runner-trail.webp',
-      runUrls: (() => {
-        const urls = {}
-        for (let i = 1; i <= 8; i++) urls[i] = `/long-light/zone2/runner/traveler/run-${i}.webp`
-        return urls
-      })(),
-      jumpUrls: {
-        takeoff: '/long-light/zone2/runner/traveler/jump-takeoff.webp',
-        apex: '/long-light/zone2/runner/traveler/jump-apex.webp',
-        land: '/long-light/zone2/runner/traveler/jump-land.webp',
-      },
-      stumbleUrls: {
-        trip: '/long-light/zone2/runner/traveler/stumble-trip.webp',
-        catch: '/long-light/zone2/runner/traveler/stumble-catch.webp',
-      },
-      activateUrl: '/long-light/zone2/runner/traveler/activate.webp',
+      // Draft 103: one spritesheet (7 cols x 2 rows, every frame 736x691)
+      // instead of 14 separate files -- run/jump/stumble/activate frames
+      // sharing one texture rules out a per-file cache staleness (the
+      // same class of bug the ridge rename fixed) ever causing one pose
+      // to silently render from stale, differently-sized bytes again.
+      travelerSheetUrl: '/long-light/zone2/runner/traveler-runner-sheet.webp',
       propUrls: {
         log: '/long-light/zone2/runner/props/log.webp',
         boulder: '/long-light/zone2/runner/props/boulder.webp',
