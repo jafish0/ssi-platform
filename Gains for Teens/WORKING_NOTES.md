@@ -152,6 +152,86 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **84e0f55** (2026-09-24) — Draft 98: **The Fogline, take two -- the
+  drag-the-lens traversal replaced with an auto-runner.** Full spec in
+  `### Draft 98` below (marked SHIPPED there). Josh's call after playing
+  Draft 95: it played too much like The First Light (third slow beat in
+  a row) and framed the Focusing Lens as a magnifier rather than the
+  aimed beam the Ascent already established. Only the traversal changes
+  -- the camp, assembly, clarity ring, and Focusing Lens award ship
+  exactly as Draft 95 left them. New `src/game/foglineRunScene.js`: the
+  Traveler runs in place at screen x 300 while the world scrolls left
+  under her at 380px/s; one input (tap to jump, hold longer for a bigger
+  arc, "Mario Run" style); a contextual "lens window" ~4 body-lengths
+  before each of 5 fog walls routes the same press-and-hold to a
+  beam-builds-over-0.9s-then-clears interaction instead of a jump
+  (reaching an unactivated wall is a fail-soft stumble, not a fail --
+  hold the lens to clear it and resume); a missed jump over a gap gets a
+  Spark swoop-and-lift rescue, never a restart. Motes along the ~23,200px
+  trail brighten a lantern glow (no on-screen HUD counter -- the walkable-
+  zone stage is fully unmounted during the run) and feed the end card's
+  "gathered N of 37 motes" line. The last wall's clear reveals Zone 3's
+  own map plate (the broken bridge is already painted into it) instead of
+  a prop. Reduced motion: the two parallax layers behind the trail hold
+  still, and stumbles skip the camera's desaturate tint. Deletes
+  `foglineScene.js`, `foglineRoute.js`, and `FoglineTraversal.jsx` (the
+  old DOM lens/fog/focus overlay) entirely -- gameplay ownership moves
+  fully into Phaser, so there's no DOM layer left to own; new
+  `FoglineRunTraversal.jsx` is a thin host wrapper that just mounts
+  `TraversalGame mode="foglinerun"` and looks up which VO file each named
+  cue the scene emits maps to (no host-side one-shot bookkeeping needed,
+  since the scene already gates repeat-vs-first-time before ever emitting
+  a cue). `zoneAudio.js` gains a `'foglinerun'` plate whose music is
+  scheduled directly on the Web Audio clock (`introSrc.start(startAt)`,
+  `loopSrc.start(startAt + introBuf.duration)`) for a genuinely gapless
+  intro→loop splice, same technique Draft 97's title screen uses --
+  the first reuse of that pattern anywhere else in the app.
+  **Two real bugs found and fixed during live verification, neither in
+  the original draft:** (1) a large single-frame `delta` (a backgrounded
+  browser tab, a device hitch) could let the 380px/s scroll tunnel clean
+  through an obstacle's hitbox in one step, since the per-frame collision
+  check never got a chance to sample inside it -- `update()` now clamps
+  delta to 50ms, which also happens to be the exact class of bug the
+  session's title-screen work (Draft 97) had just fixed in a different
+  guise (an async gap letting stale/overlapping work run), worth
+  remembering as a recurring failure mode in this codebase's animation
+  loops. (2) The opening Spark line (`t2r-01-start`) was requested at
+  scene `create()` time -- which runs at PAGE LOAD, before any user
+  gesture, so the host's `speak()` would likely be silently blocked by
+  autoplay policy -- and separately, the "world stays frozen until the
+  line finishes" behavior was never actually wired to the line finishing
+  at all: the `started` prop (and the world-unfreeze it drives) flips the
+  instant the Begin button is tapped, not when VO resolves. Fixed by
+  requesting the cue only once `update()` observes the real Begin tap,
+  and holding the world frozen for the clip's own known ~9.7s length
+  (the scene has no channel to learn exactly when the host's `speak()`
+  promise resolves, since VO is intentionally host-owned so it can duck
+  the host's music/ambience -- timing against the known clip length is
+  the pragmatic fix, not a full new cross-component signal). Verified
+  live end-to-end, both locally and on `ssi.ctac.app` post-deploy, via
+  the standalone `/gains-demo/fogline` page (byte-identical components to
+  the Zone-2-hosted path): the full ~23,200px course including every fog
+  wall's stumble-then-clear and proactive-clear paths, the boulder/log
+  obstacle stumbles, multiple gap rescues (one caught mid-tween in a
+  screenshot -- Spark visibly swooped down beside the Traveler), mote
+  collection incrementing correctly to a final 19/37, arrival revealing
+  the Mistfields plate, the completion card's new copy, and Restart
+  correctly resetting every piece of scene state for a clean replay.
+  Clean console throughout. Confirmed real Phaser input delivery two
+  ways after an extended false alarm (repeated test taps kept landing
+  either during the intro freeze or after the Traveler had already
+  reached a wall, days apart in wall-clock terms even though the level
+  hadn't actually advanced far -- a real lesson about this specific
+  browser-automation environment's round-trip latency versus a ~60s
+  real-time game, not a bug in the app). Zone-2-hosted integration
+  (`GainsZone2Page.jsx`'s `setPlate('foglinerun')` + mounting
+  `FoglineRunTraversal`) was verified via careful code review and a clean
+  build/page-load rather than a full manual playthrough of Zone 2's own
+  (unchanged, already-shipped) video/station/assembly flow, which this
+  browser environment's per-interaction latency made impractically slow
+  to repeat just to reach the one new transition point -- worth a fresh
+  pair of eyes confirming the transition itself on a real device.
+
 - **af18372** (2026-09-24) — Draft 97: **Title screen -- "Shadowmend: The
   Long Light" at `/gains-demo/title`.** Full spec in `### Draft 97` below
   (marked SHIPPED there). Ports the Design build (`Gains for Teens/Design
@@ -5390,3 +5470,65 @@ The game's front door. The name is a proposal to the team (they have not signed 
 **Verify.** `/gains-demo/title`: entrance runs as designed (lantern catches, lamps light bottom to top, Beacon blooms, title in the upper left, sparks and motes, prompt after ~3 s); one spark loops the title every 15–20 s; first tap unlocks and starts the music (intro, then a gapless hand-off into the loop; listen for the seam at ~46 s); mute works; second tap fades out and lands on Zone 1's title card with no Begin button in between; Zone 1 opened directly still shows its Begin. Reduced motion: static composition, fades only. Review card + tag. Clean console, clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
 
 *End of Draft 97.*
+
+### Draft 98 — The Fogline, take two: replace the drag-the-lens traversal with an auto-runner (tap to jump, hold to activate the lens on the fog) — ✅ SHIPPED 84e0f55 (2026-09-24)
+
+Josh's call after playing Draft 95: the drag-the-lens Fogline played too much like the First Light, was the third slow beat in a row, and framed the lens as a magnifier when the Ascent already uses it as a beam you aim. Replace only the traversal; the camp, assembly, clarity ring, and Focusing Lens award stay exactly as shipped. Design doc: `Gains for Teens/Walkable Zones/Zone 2/Fogline Runner — Concept (replaces the drag-the-lens Fogline).md` (read it; sections 1–4 are the spec, 7 is the code shape). Vocabulary: the lens is **activated**, never fired.
+
+**Assets (source `Gains for Teens/Walkable Zones/Zone 2/` → served `public/long-light/zone2/runner/`; PNG → webp keeping alpha):**
+- **Traveler runner set** `sprites/runner/`: `traveler-stage2-run-1..8.png` (492×640, shared ground line, so airborne frames float; play at ~14 fps), `traveler-stage2-jump-1-takeoff.png`, `jump-2-apex.png`, `jump-3-land.png`, `traveler-stage2-stumble-1-trip.png`, `stumble-2-catch.png`, `traveler-stage2-activate.png`. All one body scale; feet at the bottom of each image. Display height for the run frames ≈ **160 px** (one twelfth of 1920); scale the others by the same factor, not to a common height.
+- **Backgrounds** `runner/`: `runner-sky.png` (1080×1920, static backdrop), `runner-far-mountains.png` (3136×603, transparent above the peaks; parallax 0.15), `runner-mid-ridge.png` (3136×704; parallax 0.45), `runner-trail.png` (3136×826; the walking surface is **70 px** below the layer's top edge; scrolls at 1.0). Tile each scrolling layer by **mirroring** (A, A-flipped, A, …) so there is no visible seam. Place the trail so its walking surface sits at **y ≈ 1150**; the far mountains' base around y 1150 too (they vanish behind the ridge), the ridge base at ~1180. Below the trail layer's bottom edge, fill to the frame bottom with the trail's bottom-row color plus the existing fog overlay drifting.
+- **Props** `runner/props/`: `obs-log.png` (755×377), `obs-boulder.png` (472×402), `prop-bush.png`, `prop-stump.png`, `prop-signpost.png` (blank board). Display heights: log ~110 px, boulder ~120, bush ~120, stump ~130, signpost ~200. Hitboxes 20 % smaller than the art.
+- **Spark VO** (normalized, in `Zone 2/`): `t2r-01-start` (9.7 s), `t2r-02-first-jump`, `t2r-03-fog-ahead`, `t2r-04-stumble`, `t2r-05-shrink-1`, `t2r-06-shrink-2`, `t2r-07-clear-ahead`, `t2r-08-whoop`, `t2r-09-catch`, `t2r-10-final-wall`; arrival reuses `t2-05-arrive`. The old `t2-01..t2-04` files are retired (copies in `Zone 2/_retired/`); remove them from the build.
+- **Music** `Music/loops/`: `z2-music-runner-intro.mp3` (32 s, plays once, starts with `t2r-01`) then `z2-music-runner-loop.mp3` (78 s, seamless; start it on the intro's `ended`, same gapless hand-off as the title screen). Forest ambience continues under at 40 %. Levels pre-set; do not re-normalize. `z2-music-fogline.mp3` is no longer used.
+- **Fog walls, looming shapes, motes, beam, lens glyph:** procedural. Fog wall = a tall soft column built from the existing fog overlay texture (`ov/fogline/layer-fog-a` style), ~360 px wide, full height from the trail up to y ≈ 500, alpha 0.92, edges feathered ~60 px, with a slow internal drift. Looming shape = a soft dark blob inside it (radial-gradient sprite, alpha 0.7) sized per the table. Beam = the Ascent's beam graphic from `climbScene`, emitted from the lantern. Lens glyph = the Focusing Lens gear icon at 48 px pulsing at the lantern.
+
+**1. Scene.** New `TraversalGame mode="foglinerun"` → `src/game/foglineRunScene.js`. **Delete** `foglineScene.js` and the "fogline" mode once the new one is wired (Zone 2 config + the standalone page both move). Frame 1080×1920. HUD top as now; the parts tray is gone by this point. The Traveler runs in place at **x = 300**, feet on the walking surface; the world scrolls left at **380 px/s** (`RUN_SPEED`, one constant). Spark rides **high above at about (420, 700)**, drifting and bobbing on a slow figure-eight, well clear of the action, her bubbles anchored to her; she dips toward the Traveler only for the gap rescue.
+
+**2. Controls (one input).**
+- **Tap anywhere = jump.** Impulse for a hop that clears ~180 px of gap; **holding** adds lift for up to 250 ms so a held tap clears ~400 px and reaches ~260 px high (`JUMP_IMPULSE`, `HOLD_LIFT`, `HOLD_MAX_MS` constants; tune so the level table below is comfortably passable). Frames: takeoff for 80 ms → apex while rising/near-apex → land when falling → run on touchdown.
+- **Coyote time** 100 ms after running off an edge; **input buffer** 100 ms before touchdown.
+- **Auto-vault**: nothing in the level table is below the vault threshold, but implement it (obstacles with `h < 60` are cosmetic, the run plays a small skip) so future levels can use it.
+- **Lens window**: while a fog wall's left edge is within **4 body-lengths (~640 px) ahead** and not yet cleared, the glyph pulses at the lantern and taps are routed to the lens: **press-and-hold** shows the `activate` frame, the run keeps scrolling, the beam builds from the lantern to the wall over **0.9 s** of hold, the wall's alpha fades to 0 and the looming blob **shrinks to the prop** (cross-fade blob → prop, scale 1.6 → 1.0) as the beam completes. Release early: beam retracts, wall stays at its current alpha, hold again to continue. A wall cleared before the Traveler reaches it → "cleared ahead" (counts for `t2r-07`). The level table guarantees no gap or obstacle inside any lens window.
+- **Stumble (fog)**: reaching an uncleared wall → the trip frame, scroll eases to 0 over 0.5 s, catch frame, the screen desaturates slightly, `t2r-04` (first time only). Any press-and-hold now activates the lens (same beam, same clear); on clear the run resumes with a 0.4 s ease-in.
+- **Stumble (obstacle)**: overlapping a log/boulder hitbox → trip, ease to stop, catch, 0.6 s, then resume with the obstacle behind (scroll it past). No line, just a soft thud SFX and a Spark bob.
+- **Gap rescue**: falling below the trail line → freeze scroll, Spark swoops down (0.4 s), both rise back to the trail just past the gap's right edge (0.5 s), `t2r-09` every time, resume.
+- **Motes**: small warm lights at authored positions (table), collected by overlap, chime + the lantern's glow steps up a notch (cap at 6 notches). No counter.
+- Nothing ends the run. No timer, no lives, no score.
+
+**3. Level table** (world x in px from the start line; the run is ~22,800 px ≈ 60 s at 380 px/s). `gap(x, w)`, `log(x)`, `boulder(x)`, `wall(x, shape, prop)`, `motes(x, n, arc|line)`:
+```
+start lamps at 0 (two lamp posts from the Zone 2 plate, decorative)
+motes(600, 5, line)
+gap(1400, 200)
+log(2300)
+motes(2700, 5, arc)
+wall(3200, hunched, bush)          # most players stumble here; that's the lesson
+gap(4600, 220)
+motes(5200, 6, arc)
+log(5900)
+gap(6700, 240)
+wall(7800, tall, stump)
+boulder(9200)
+gap(9900, 260)   gap(10700, 240)
+motes(11400, 7, arc-high)          # rewards a held jump
+wall(12800, wide, log)             # the revealed log must then be jumped: place obs-log at 12800+180
+log(14200)
+gap(15100, 280)
+motes(15900, 6, line)
+wall(17800, big, signpost)
+gap(19200, 240)  motes(19700, 4, arc)  gap(20300, 260)  motes(20800, 4, arc)  gap(21300, 300)
+wall(22600, none, none)            # the last wall: fog only, nothing looming; clearing it opens the Mistfields
+arrive at 23200
+```
+Shapes: hunched = wide blob 260×200 sitting on the trail; tall = 120×420; wide = 380×150; big = 320×360. `none` = fog only.
+
+**4. Spark cues.** `t2r-01` on mount, world frozen, run starts on its end (the intro music starts with it). `t2r-02` on the first successful tap jump. `t2r-03` the first time a wall enters the lens window (later walls: glyph + a short chime only). `t2r-04` on the first fog stumble only. `t2r-05` on the first shrink, `t2r-06` on the second; later shrinks: chime + Spark bob. `t2r-07` the first time a wall is cleared before reaching it. `t2r-08` on the first jump after x 19,000 and at most once more on a held jump. `t2r-09` on every gap rescue. `t2r-10` as the last wall enters the window. `t2-05-arrive` at arrival: the last wall clears, the fog layers over the whole frame fade out over 2 s, the ridge and mountains give way to the Mistfields backdrop (reuse Zone 3's map plate scaled into the parallax slot) with the broken bridge visible, the Traveler slows to a walk and stops, then `onComplete`.
+
+**5. Wiring.** Zone 2 config `traversalMode: 'foglinerun'`; transition card and `z2-12-exit-transition` unchanged; end card unchanged. Standalone page `/gains-demo/fogline` now hosts the runner (same route, same `review-fogline` tag); update its blurb: "Fog makes everything look bigger than it is. Run the trail, tap to jump the gaps and logs, and when a wall of fog rolls in, hold to activate the Focusing Lens. Look straight at what's in the fog and it gets smaller." Zone 2's review blurb: replace the Fogline sentence to match.
+
+**6. Reduced motion.** No parallax on the two background layers (only the trail scrolls), no camera bob, no desaturate on stumble, fog walls fade instead of drift, motes don't blink.
+
+**Verify.** Standalone and in-zone: `t2r-01` gates the start; the run scrolls smoothly at 60 fps on a phone with all three layers mirrored seamlessly; tap hops and held jumps clear the table's gaps (every gap passable with a held jump, the 200 and 220 ones with a tap); coyote time and input buffer work; logs and boulders stumble and resume; gap rescue plays with Spark's line every time; the first wall stumbles a player who does nothing, the lens glyph pulses inside the window, hold builds the Ascent's beam and the fog clears while the blob shrinks to the bush; clearing ahead works and fires `t2r-07` once; the revealed log at wall 3 is jumpable; motes collect and brighten the lantern; the last wall opens on the Mistfields and the bridge; `t2-05` then the end card; all cues fire once where specified. Old `foglineScene.js` gone, old t2 clips gone from the build. Reduced-motion path. Zones 1/3/4 unchanged. Clean console, clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 98.*
