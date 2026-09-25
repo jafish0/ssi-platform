@@ -152,6 +152,33 @@ gradients and layered depth.
 
 ## ⬇ Recently shipped (Claude Code → Claude Cowork)
 
+- **8280d99** (2026-09-25) — Drafts 104 + 105 (one commit; 105 supersedes
+  104): **the jump size, for real this time.** Full specs in `### Draft
+  104` and `### Draft 105` below (both marked SHIPPED there). My own
+  62e87db fix (below) was WRONG about the root cause: it normalized each
+  pose's silhouette bounding-box height to the run cycle's average, but
+  that premise is backwards for character animation -- a tucked apex or
+  crouched takeoff is SUPPOSED to have a shorter box than a standing
+  frame, so the "correction" was actively fighting correct animation,
+  not fixing anything. Cowork re-measured using the lantern instead (the
+  one prop identical in every pose, so the right ruler for body scale):
+  33-34px on all eight run frames, 38-40px on the three jump frames --
+  the source art really was drawn ~15% too large on takeoff/apex/land
+  (an export error), and my bounding-box table then multiplied those
+  already-oversized frames by another 1.13-1.16x, which is exactly the
+  ~1.5x growth Josh kept seeing. Fixed on both sides: the three jump
+  frames were re-rendered to match the run cycle's lantern size and
+  re-padded onto the same 736x691 canvas (`traveler-runner-sheet-v2.webp`,
+  served under a new name so no cache could hand back the old one), and
+  `POSE_SCALE_CORRECTION` was deleted outright -- one flat
+  `TRAVELER_H/PLAYER_CANVAS_H` scale, set once at creation, never per
+  pose. Verified live: every sampled pose reports the identical scaleX to
+  6 decimal places, and cropping run-1/jump-apex/jump-land directly out
+  of the new sheet shows the lantern and head reading as consistent
+  proportions across all three. This supersedes my own "known asset
+  issue, needs a permanent correction table" note two bullets down --
+  that diagnosis was incomplete; there is no code-side correction needed
+  once the frames are drawn at a consistent scale, which they now are.
 - **62e87db** (2026-09-25) — Fix: restored the per-pose scale correction
   Draft 103 removed. **⚠️ Known asset issue, not fully code-fixable --
   see below.** Josh, after Draft 103 shipped: the Traveler was still
@@ -5766,3 +5793,31 @@ Still wrong after 7b2b150 (Josh, 2026-09-25): run size is perfect, jump frames r
 **Verify.** Jump, land, stumble, activate: the Traveler is one size throughout, verified by the log and by eye. Clean build. `src/`, `public/` → no version bump. Mark shipped, log Recently-shipped.
 
 *End of Draft 103.*
+
+### Draft 104 — Fogline runner: delete POSE_SCALE_CORRECTION. It is the cause of the jump growing, not the cure. — ✅ SHIPPED 8280d99 (2026-09-25, superseded by Draft 105 -- same commit does both)
+
+Read this one carefully before touching the file. 62e87db restored a per-pose scale table that normalizes each frame's **silhouette bounding-box height** to the run cycle's average. That premise is wrong for character animation: a crouched takeoff and a tucked apex are *supposed* to have a shorter bounding box than a standing frame, and a landing with legs extended a taller one. The frames are drawn at **one body scale** (matched by head and torso size, which is how sprite sets are normalized, not by bounding box). So the table multiplies the takeoff by 1.135 and the apex by 1.157, which is exactly the "grows about 1.5× on jump" Josh keeps seeing, and shrinks the landing by 0.891. The art is consistent; the code is not.
+
+Do:
+1. **Delete `POSE_SCALE_CORRECTION`** and every use of it. The Traveler's scale is `TRAVELER_H / PLAYER_CANVAS_H` once, at creation, and is never touched again on a pose change. Remove the comment block that says the art is inconsistent; replace it with one line: "All frames share one body scale; never normalize by bounding box."
+2. Keep the dev log from Draft 103 (`scaleX`, `displayHeight`, `frame.width` on every pose change); all three must be identical for every pose. `displayHeight` here means the sprite's, which is constant because the canvas is constant; the visible silhouette will vary by pose, and that is correct.
+3. Do not re-measure bounding boxes, do not add a new correction table, do not scale the physics body per pose. If, after this, the Traveler still looks larger mid-jump, it is the **camera or a tween** (check for a camera zoom, a `scale` tween on jump, or `setDisplaySize` in the jump handler), not the frames.
+
+**Verify.** Run → jump → land → run with the log open: one scale value for every pose. By eye: the hood, satchel, and lantern are the same size in the air as on the ground. Clean build. `src/` → no version bump. Mark shipped, log Recently-shipped.
+
+*End of Draft 104.*
+
+### Draft 105 — Fogline runner, the jump size for real: the art was 15 % big on the three jump frames AND the code table compounded it. New sheet v2 + delete the table. (Supersedes 104.) — ✅ SHIPPED 8280d99 (2026-09-25)
+
+Both sides were wrong, and in the same direction. Cowork re-measured using the **lantern** (the one object identical in every frame): the lantern glow is 33–34 px tall on all eight run frames and was 38–40 px on takeoff, apex, and land, so the three jump frames were drawn ~15 % too large (Cowork's slicing error). `POSE_SCALE_CORRECTION` then normalized silhouette bounding-box height, which multiplied the tucked takeoff and apex by another 1.13–1.16, giving the ~1.5× Josh sees. Bounding-box normalization is the wrong premise for character animation (a tucked pose is supposed to have a shorter box); the lantern is the right ruler.
+
+Fixed on the asset side: the three jump frames are rescaled so their lantern matches the run frames (34 px), re-padded onto the same 736×691 canvas, and a new sheet built. **`Walkable Zones/Zone 2/sprites/runner/traveler-runner-sheet-v2.webp`** (5152×1382, same 7×2 layout and frame order as before; md5 `0a361e80a9b18aa34872f25e148cdd53`) with `traveler-runner-sheet.json` unchanged.
+
+Do:
+1. Serve **`traveler-runner-sheet-v2.webp` under that new name** (rename, so no cache can hand back the old sheet), point the preload at it, delete the old sheet from `public/`.
+2. **Delete `POSE_SCALE_CORRECTION`** and its uses (per Draft 104). One `setScale(TRAVELER_H / PLAYER_CANVAS_H)` at creation, never per pose. Replace the "asset inconsistency" comment with: "All frames share one body scale (verified by lantern size). Never normalize by bounding box."
+3. Keep the dev log; `scaleX` must be one constant for every pose.
+
+**Verify.** Deployed preview, hard reload: run → jump → land → run, the hood and lantern stay one size in the air and on the ground; log shows one scale. Clean build. `src/`, `public/` → no version bump. Mark shipped (and mark 104 superseded), log Recently-shipped.
+
+*End of Draft 105.*
